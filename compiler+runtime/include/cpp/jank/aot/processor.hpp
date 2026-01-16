@@ -8,6 +8,8 @@ namespace jank::aot
 {
   struct processor
   {
-    jtl::result<void, error_ref> compile(jtl::immutable_string const &module) const;
+    jtl::result<void, error_ref> build_executable(jtl::immutable_string const &module) const;
+    jtl::result<void, error_ref> compile_object(jtl::immutable_string const &module_name,
+                                                jtl::immutable_string const &cpp_source) const;
   };
 }

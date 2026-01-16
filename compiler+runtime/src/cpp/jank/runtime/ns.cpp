@@ -225,6 +225,13 @@ namespace jank::runtime
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
+  object_ref ns::with_meta(object_ref const)
+  {
+    throw std::runtime_error{
+      "Value of type 'ns' does not support 'with-meta'.",
+    };
+  }
+
   bool ns::operator==(ns const &rhs) const
   {
     return name == rhs.name;

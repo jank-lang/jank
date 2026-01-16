@@ -12,7 +12,7 @@ namespace jank::runtime
       return false;
     }
 
-    auto const typed_rhs = expect_object<obj::character>(rhs);
+    auto const typed_rhs{ expect_object<obj::character>(rhs) };
     return typed_rhs->to_hash() == static_cast<uhash>(lhs);
   }
 
@@ -37,16 +37,16 @@ namespace jank::runtime
       return 0;
     }
 
-    if(l != jank_nil)
+    if(l != jank_nil())
     {
-      if(r == jank_nil)
+      if(r == jank_nil())
       {
         return 1;
       }
 
       return visit_object(
-        [](auto const typed_l, auto const r) -> i64 {
-          using L = typename decltype(typed_l)::value_type;
+        [](auto const typed_l, auto const &r) -> i64 {
+          using L = typename jtl::decay_t<decltype(typed_l)>::value_type;
           if constexpr(behavior::comparable<L>)
           {
             return typed_l->compare(*r);

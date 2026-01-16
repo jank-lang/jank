@@ -33,6 +33,7 @@ namespace jank::analyze
     using cpp_type_ref = jtl::ref<struct cpp_type>;
     using cpp_value_ref = jtl::ref<struct cpp_value>;
     using cpp_cast_ref = jtl::ref<struct cpp_cast>;
+    using cpp_unsafe_cast_ref = jtl::ref<struct cpp_unsafe_cast>;
     using cpp_call_ref = jtl::ref<struct cpp_call>;
     using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
     using cpp_member_call_ref = jtl::ref<struct cpp_member_call>;
@@ -130,6 +131,8 @@ namespace jank::codegen
     jtl::option<handle>
     gen(analyze::expr::cpp_cast_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
+    gen(analyze::expr::cpp_unsafe_cast_ref const, analyze::expr::function_arity const &);
+    jtl::option<handle>
     gen(analyze::expr::cpp_call_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
     gen(analyze::expr::cpp_constructor_call_ref const, analyze::expr::function_arity const &);
@@ -154,16 +157,23 @@ namespace jank::codegen
     void build_footer();
     jtl::immutable_string expression_str();
 
+    void format_elided_var(jtl::immutable_string const &start,
+                           jtl::immutable_string const &end,
+                           jtl::immutable_string const &ret_tmp,
+                           native_vector<analyze::expression_ref> const &arg_exprs,
+                           analyze::expr::function_arity const &fn_arity,
+                           bool ret_box_needed);
     void format_dynamic_call(jtl::immutable_string const &source_tmp,
                              jtl::immutable_string const &ret_tmp,
                              native_vector<analyze::expression_ref> const &arg_exprs,
                              analyze::expr::function_arity const &fn_arity);
+                            analyze::expr::function_arity const &fn_arity);
 
     analyze::expr::function_ref root_fn;
     jtl::immutable_string module;
 
     compilation_target target{};
-    runtime::obj::symbol struct_name;
+    jtl::immutable_string struct_name;
     jtl::string_builder cpp_raw_buffer;
     jtl::string_builder module_header_buffer;
     jtl::string_builder module_footer_buffer;

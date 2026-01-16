@@ -1,7 +1,5 @@
 #pragma once
 
-#include <gc_cpp.h>
-
 #include <jtl/primitive.hpp>
 #include <jtl/trait/transform.hpp>
 #include <jtl/assert.hpp>
@@ -101,23 +99,8 @@ namespace jtl
   ref<T> make_ref(Args &&...args)
   {
     static_assert(sizeof(ref<T>) == sizeof(T *));
-    T *ret{};
-    if constexpr(requires { T::pointer_free; })
-    {
-      if constexpr(T::pointer_free)
-      {
-        ret = new(PointerFreeGC) T{ jtl::forward<Args>(args)... };
-      }
-      else
-      {
-        ret = new(GC) T{ jtl::forward<Args>(args)... };
-      }
-    }
-    else
-    {
-      ret = new(GC) T{ jtl::forward<Args>(args)... };
-    }
-
+    /* TODO: Figure out cleanup for this. */
+    T *ret{ new(GC) T{ jtl::forward<Args>(args)... } };
     jank_debug_assert(ret);
     return ret;
   }

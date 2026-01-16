@@ -18,7 +18,7 @@
                                                 :or {optimization-flag "-O0"
                                                      output-file default-output-file}}]
   (str "jank " optimization-flag
-       " --module-path=" module-path
+       " --module-path " module-path
        " compile " main-module
        " -o " output-file))
 

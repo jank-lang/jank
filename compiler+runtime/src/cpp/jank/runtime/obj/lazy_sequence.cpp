@@ -37,8 +37,8 @@ namespace jank::runtime::obj
       return {};
     }
     auto const r(runtime::fresh_seq(s));
-    jank_debug_assert(r != jank_nil);
-    return make_box<lazy_sequence>(jank_nil, r);
+    jank_debug_assert(r != jank_nil());
+    return make_box<lazy_sequence>(jank_nil(), r);
   }
 
   object_ref lazy_sequence::first() const
@@ -89,7 +89,7 @@ namespace jank::runtime::obj
     {
       return 1;
     }
-    return hash::ordered(s.erase());
+    return hash::ordered(s.erase().data);
   }
 
   cons_ref lazy_sequence::conj(object_ref const head) const
@@ -104,7 +104,7 @@ namespace jank::runtime::obj
     if(sv.is_some())
     {
       auto ls{ sv };
-      sv = jank_nil;
+      sv = jank_nil();
       if(ls.is_some() && ls->type == object_type::lazy_sequence)
       {
         ls = unwrap(ls);
@@ -118,7 +118,7 @@ namespace jank::runtime::obj
     if(fn.is_some())
     {
       sv = dynamic_call(fn);
-      fn = jank_nil;
+      fn = jank_nil();
     }
   }
 
@@ -152,7 +152,7 @@ namespace jank::runtime::obj
 
   lazy_sequence_ref lazy_sequence::with_meta(object_ref const m) const
   {
-    auto const ret(make_box<lazy_sequence>(jank_nil, seq()));
+    auto const ret(make_box<lazy_sequence>(jank_nil(), seq()));
     auto const meta(behavior::detail::validate_meta(m));
     ret->meta = meta;
     return ret;

@@ -22,71 +22,80 @@ namespace jank::runtime
    * dynamic code. We may not every know if the source is callable at all, so
    * codegen will use this suite of fns instead. */
   object_ref dynamic_call(object_ref const source);
-  object_ref dynamic_call(object_ref const source, object_ref);
-  object_ref dynamic_call(object_ref const source, object_ref, object_ref);
-  object_ref dynamic_call(object_ref const source, object_ref, object_ref, object_ref);
-  object_ref dynamic_call(object_ref const source, object_ref, object_ref, object_ref, object_ref);
+  object_ref dynamic_call(object_ref const source, object_ref const);
+  object_ref dynamic_call(object_ref const source, object_ref const, object_ref const);
   object_ref
-  dynamic_call(object_ref const source, object_ref, object_ref, object_ref, object_ref, object_ref);
+  dynamic_call(object_ref const source, object_ref const, object_ref const, object_ref const);
   object_ref dynamic_call(object_ref const source,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref);
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const);
   object_ref dynamic_call(object_ref const source,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref);
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const);
   object_ref dynamic_call(object_ref const source,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref);
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const);
   object_ref dynamic_call(object_ref const source,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref);
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const);
   object_ref dynamic_call(object_ref const source,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref);
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const);
   object_ref dynamic_call(object_ref const source,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          object_ref,
-                          obj::persistent_list_ref);
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const);
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const);
+  object_ref dynamic_call(object_ref const source,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          obj::persistent_list_ref const);
 
-  object_ref apply_to(object_ref source, object_ref args);
+  object_ref apply_to(object_ref const source, object_ref const args);
 
   namespace behavior
   {
@@ -98,42 +107,56 @@ namespace jank::runtime
       virtual ~callable() = default;
 
       virtual object_ref call();
-      virtual object_ref call(object_ref);
-      virtual object_ref call(object_ref, object_ref);
-      virtual object_ref call(object_ref, object_ref, object_ref);
-      virtual object_ref call(object_ref, object_ref, object_ref, object_ref);
-      virtual object_ref call(object_ref, object_ref, object_ref, object_ref, object_ref);
+      virtual object_ref call(object_ref const);
+      virtual object_ref call(object_ref const, object_ref const);
+      virtual object_ref call(object_ref const, object_ref const, object_ref const);
       virtual object_ref
-        call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref);
-      virtual object_ref
-        call(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref, object_ref);
-      virtual object_ref call(object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref);
-      virtual object_ref call(object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref);
-      virtual object_ref call(object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref,
-                              object_ref);
+      call(object_ref const, object_ref const, object_ref const, object_ref const);
+      virtual object_ref call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const);
+      virtual object_ref call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const);
+      virtual object_ref call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const);
+      virtual object_ref call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const);
+      virtual object_ref call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const);
+      virtual object_ref call(object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const,
+                              object_ref const);
 
       /* Callables need a way to get back to the root object so we can do helpful
        * error reporting on failed calls. */

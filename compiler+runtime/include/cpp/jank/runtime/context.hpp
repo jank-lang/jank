@@ -45,29 +45,29 @@ namespace jank::runtime
     context(context &&) noexcept = delete;
 
     ns_ref intern_ns(jtl::immutable_string const &);
-    ns_ref intern_ns(obj::symbol_ref const &);
-    ns_ref remove_ns(obj::symbol_ref const &);
+    ns_ref intern_ns(obj::symbol_ref const);
+    ns_ref remove_ns(obj::symbol_ref const);
     /* Looks up a ns by its symbol. Does not resolve aliases. Does not intern. */
-    ns_ref find_ns(obj::symbol_ref const &);
+    ns_ref find_ns(obj::symbol_ref const);
     /* Resolves a symbol which could be an alias to its ns, based on the aliases
      * in the current ns. Does not intern. */
-    ns_ref resolve_ns(obj::symbol_ref const &);
+    ns_ref resolve_ns(obj::symbol_ref const);
     ns_ref current_ns() const;
 
     /* Adds the current ns to unqualified symbols and resolves the ns of qualified symbols.
      * Does not intern. */
-    obj::symbol_ref qualify_symbol(obj::symbol_ref const &) const;
-    jtl::option<object_ref> find_local(obj::symbol_ref const &);
+    obj::symbol_ref qualify_symbol(obj::symbol_ref const) const;
+    jtl::option<object_ref> find_local(obj::symbol_ref const);
 
-    jtl::result<var_ref, jtl::immutable_string> intern_var(obj::symbol_ref const &qualified_sym);
+    jtl::result<var_ref, jtl::immutable_string> intern_var(obj::symbol_ref const qualified_name);
     jtl::result<var_ref, jtl::immutable_string> intern_var(jtl::immutable_string const &);
     jtl::result<var_ref, jtl::immutable_string>
     intern_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
-    jtl::result<var_ref, jtl::immutable_string> intern_owned_var(obj::symbol_ref const &);
+    jtl::result<var_ref, jtl::immutable_string> intern_owned_var(obj::symbol_ref const);
     jtl::result<var_ref, jtl::immutable_string> intern_owned_var(jtl::immutable_string const &);
     jtl::result<var_ref, jtl::immutable_string>
     intern_owned_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
-    var_ref find_var(obj::symbol_ref const &);
+    var_ref find_var(obj::symbol_ref const);
     var_ref find_var(jtl::immutable_string const &ns, jtl::immutable_string const &name);
 
     jtl::result<obj::keyword_ref, jtl::immutable_string>
@@ -77,11 +77,11 @@ namespace jank::runtime
     jtl::result<obj::keyword_ref, jtl::immutable_string>
     intern_keyword(jtl::immutable_string const &s);
 
-    object_ref macroexpand1(object_ref o);
-    object_ref macroexpand(object_ref o);
+    object_ref macroexpand1(object_ref const o);
+    object_ref macroexpand(object_ref const o);
 
-    object_ref eval_file(jtl::immutable_string const &path);
-    object_ref eval_string(jtl::immutable_string const &code);
+    jtl::option<object_ref> eval_file(jtl::immutable_string const &path);
+    jtl::option<object_ref> eval_string(jtl::immutable_string const &code);
     jtl::result<void, error_ref> eval_cpp_string(jtl::immutable_string const &code) const;
     object_ref read_string(jtl::immutable_string const &code);
     native_vector<analyze::expression_ref>
@@ -106,7 +106,9 @@ namespace jank::runtime
 
     object_ref eval(object_ref const o);
 
+    jtl::immutable_string get_output_module_name(jtl::immutable_string const &module_name) const;
     jtl::string_result<void> write_module(jtl::immutable_string const &module_name,
+                                          jtl::immutable_string const &cpp_code,
                                           jtl::ref<llvm::Module> const &module) const;
 
     /* Generates a unique name for use with anything from codgen structs,
@@ -114,10 +116,9 @@ namespace jank::runtime
     jtl::immutable_string unique_namespaced_string() const;
     jtl::immutable_string unique_namespaced_string(jtl::immutable_string const &prefix) const;
     jtl::immutable_string unique_string() const;
-    jtl::immutable_string unique_munged_string() const;
     jtl::immutable_string unique_string(jtl::immutable_string const &prefix) const;
-    obj::symbol unique_symbol() const;
-    obj::symbol unique_symbol(jtl::immutable_string const &prefix) const;
+    obj::symbol_ref unique_symbol() const;
+    obj::symbol_ref unique_symbol(jtl::immutable_string const &prefix) const;
 
     folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;
     folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ref>> keywords;
@@ -160,12 +161,7 @@ namespace jank::runtime
     var_ref no_recur_var;
     var_ref gensym_env_var;
 
-    /* Hold onto the CLI Options for use at runtime */
-    util::cli::options opts;
-
-    /* XXX: We can't use thread_local here, due to bdwgc not supporting it. */
-    static native_unordered_map<std::thread::id, native_list<thread_binding_frame>>
-      thread_binding_frames;
+    static thread_local native_list<thread_binding_frame> thread_binding_frames;
 
     /* This must go last, since it'll try to access other bits in the runtime context during
      * its initialization and we need them to be ready. */

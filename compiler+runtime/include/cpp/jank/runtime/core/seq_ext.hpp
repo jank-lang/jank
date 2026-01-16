@@ -10,11 +10,11 @@
 namespace jank::runtime
 {
   template <typename It>
-  bool equal(object const &o, It const begin, It const end)
+  bool equal(object const &o, It const &begin, It const &end)
   {
     return visit_seqable(
-      [](auto const typed_o, auto const begin, auto const end) -> bool {
-        using T = typename decltype(typed_o)::value_type;
+      [](auto const typed_o, auto const &begin, auto const &end) -> bool {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         /* nil is seqable, but we don't want it to be equal to an empty collection.
            An empty seq itself is nil, but that's different. */
@@ -45,7 +45,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  auto rest(oref<T> const seq)
+  auto rest(oref<T> const &seq)
   {
     if(seq.is_nil())
     {

@@ -55,7 +55,7 @@ namespace jank::runtime::obj::detail
     inserter = '{';
     for(auto i(begin); i != end; ++i)
     {
-      auto const pair(*i);
+      auto const &pair(*i);
       if(to_code)
       {
         runtime::to_code_string(pair.first, buff);

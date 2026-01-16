@@ -68,11 +68,6 @@ jank_glob_install_without_prefix(
 )
 
 jank_glob_install_without_prefix(
-  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/cli11/"
-  PATTERN "${CMAKE_SOURCE_DIR}/third-party/cli11/include/*"
-)
-
-jank_glob_install_without_prefix(
   INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/ftxui/"
   PATTERN "${CMAKE_SOURCE_DIR}/third-party/ftxui/include/*"
 )

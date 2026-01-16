@@ -59,7 +59,7 @@ namespace jank::runtime::obj
                object_ref const step,
                range::bounds_check_t const bounds_check,
                array_chunk_ref const chunk,
-               range_ptr const chunk_next)
+               range_ref const chunk_next)
     : start{ start }
     , end{ end }
     , step{ step }
@@ -102,12 +102,12 @@ namespace jank::runtime::obj
                                         : static_cast<bounds_check_t>(negative_step_bounds_check));
   }
 
-  range_ptr range::seq()
+  range_ref range::seq()
   {
     return this;
   }
 
-  range_ptr range::fresh_seq() const
+  range_ref range::fresh_seq() const
   {
     return make_box<range>(start, end, step, bounds_check);
   }
@@ -150,7 +150,7 @@ namespace jank::runtime::obj
     chunk_next = make_box<range>(val, end, step, bounds_check);
   }
 
-  range_ptr range::next() const
+  range_ref range::next() const
   {
     if(cached_next.is_some())
     {
@@ -172,7 +172,7 @@ namespace jank::runtime::obj
     return chunked_next();
   }
 
-  range_ptr range::next_in_place()
+  range_ref range::next_in_place()
   {
     force_chunk();
     if(chunk->count() > 1)
@@ -190,7 +190,7 @@ namespace jank::runtime::obj
     return chunk;
   }
 
-  range_ptr range::chunked_next() const
+  range_ref range::chunked_next() const
   {
     force_chunk();
     if(chunk_next.is_nil())
@@ -230,7 +230,7 @@ namespace jank::runtime::obj
     return hash::ordered(&base);
   }
 
-  range_ptr range::with_meta(object_ref const m) const
+  range_ref range::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
     auto ret(fresh_seq());

@@ -31,7 +31,10 @@
                            (str "-DCMAKE_BUILD_TYPE=" build-type)
                            (str "-Djank_analyze=" analyze)
                            (str "-Djank_sanitize=" sanitize)
-                           (str "-Djank_coverage=" coverage)]
+                           (str "-Djank_coverage=" coverage)
+                           ; We force phase 2 building to use less memory in CI by
+                           ; compiling to cpp files instead of object files.
+                           "-Djank_force_phase_2=on"]
           configure-flags (cond-> configure-flags
                             (not= "on" analyze)
                             (conj "-DCMAKE_C_COMPILER_LAUNCHER=ccache"
@@ -55,7 +58,16 @@
       (util/with-elapsed-time duration
         (util/quiet-shell {:dir compiler+runtime-dir
                            :extra-env exports}
-                          "./bin/compile -v")
+                          "./bin/clean")
+        (util/log-info-with-time duration "Cleaned"))
+
+      (util/with-elapsed-time duration
+        (util/quiet-shell {:dir compiler+runtime-dir
+                           :extra-env exports}
+                          (str "./bin/compile -v"
+                               ; This uses more memory in CI, so we limit parallelism.
+                               (when (= "Release" build-type)
+                                 " -j1")))
         (util/log-info-with-time duration "Compiled"))
 
       (util/quiet-shell {:dir compiler+runtime-dir

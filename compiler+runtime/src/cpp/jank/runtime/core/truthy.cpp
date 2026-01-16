@@ -29,7 +29,7 @@ namespace jank::runtime
     return truthy(o.data);
   }
 
-  bool truthy(obj::nil_ref)
+  bool truthy(obj::nil_ref const)
   {
     return false;
   }

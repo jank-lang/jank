@@ -155,6 +155,12 @@ namespace jtl
       detail::panic(*this);
     }
 
+    constexpr R &expect_ok()
+    {
+      assert_ok();
+      return std::get<R>(data);
+    }
+
     constexpr R const &expect_ok() const
     {
       assert_ok();

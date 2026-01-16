@@ -32,7 +32,7 @@ namespace jank::jit
   static jtl::immutable_string default_shared_lib_name(jtl::immutable_string const &lib)
 #if defined(__APPLE__)
   {
-    return util::format("{}.dylib", lib);
+    return util::format("lib{}.dylib", lib);
   }
 #elif defined(__linux__)
   {
@@ -252,6 +252,7 @@ namespace jank::jit
   {
     profile::timer const timer{ "jit eval_string" };
     auto const &formatted{ s };
+    /* TODO: There is some sort of immutable_string or result bug here. */
     //auto const &formatted{ util::format_cpp_source(s).expect_ok() };
     //util::println("// eval_string:\n{}\n", formatted);
     auto err(interpreter->ParseAndExecute({ formatted.data(), formatted.size() }, ret));

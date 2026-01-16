@@ -356,7 +356,7 @@ namespace jank::error
 
   void plan::add(read::source const &body_source, note const &n)
   {
-    if(n.source == read::source::unknown)
+    if(n.source == read::source::unknown())
     {
       return;
     }

@@ -154,6 +154,8 @@ namespace jank::error
         return "Invalid C++ member function call.";
       case kind::analyze_invalid_cpp_capture:
         return "Invalid C++ capture.";
+      case kind::analyze_invalid_cpp_position:
+        return "Unable to use this form as a first-class value. It needs to be called directly.";
       case kind::analyze_mismatched_if_types:
         return "Mismatched if types.";
       case kind::analyze_invalid_cpp_function_call:
@@ -170,10 +172,14 @@ namespace jank::error
         return "Invalid C++ raw.";
       case kind::analyze_invalid_cpp_type:
         return "Invalid C++ type.";
+      case kind::analyze_invalid_cpp_type_position:
+        return "Invalid position for a C++ type.";
       case kind::analyze_invalid_cpp_value:
         return "Invalid C++ value.";
       case kind::analyze_invalid_cpp_cast:
         return "Invalid C++ cast.";
+      case kind::analyze_invalid_cpp_unsafe_cast:
+        return "Invalid C++ unsafe-cast.";
       case kind::analyze_invalid_cpp_box:
         return "Invalid C++ box.";
       case kind::analyze_invalid_cpp_unbox:
@@ -238,7 +244,7 @@ namespace jank::error
   {
     auto source{ runtime::object_source(expansion) };
     /* We just want to point at the start of the expansion, not underline the
-       * whole thing. It may be huge! */
+     * whole thing. It may be huge! */
     source.end = source.start;
     e.notes.emplace_back("Expanded from this macro.", source, note::kind::info);
   }
@@ -259,6 +265,17 @@ namespace jank::error
     , source{ source }
     , notes{ notes }
   {
+  }
+
+  base::base(enum kind const k, read::source const &source, runtime::object_ref const expansion)
+    : kind{
+      k
+  }
+    , message{ kind_to_message(k) }
+    , source{ source }
+    , notes{ { default_note_message, source } }
+  {
+    add_expansion_note(*this, expansion);
   }
 
   base::base(enum kind const k, jtl::immutable_string const &message, read::source const &source)
@@ -451,11 +468,11 @@ namespace jank::error
    * begin with. In that case, we update the existing note rather than adding a new one. */
   jtl::ref<base> base::add_usage(read::source const &usage_source)
   {
-    if(usage_source == read::source::unknown || usage_source.overlaps(source))
+    if(usage_source == read::source::unknown() || usage_source.overlaps(source))
     {
       return this;
     }
-    else if(source == read::source::unknown)
+    else if(source == read::source::unknown())
     {
       source = usage_source;
       notes[0].source = usage_source;
@@ -474,7 +491,7 @@ namespace jank::error
 
   error_ref internal_failure(jtl::immutable_string const &message)
   {
-    auto const e{ make_error(kind::internal_failure, message, read::source::unknown) };
+    auto const e{ make_error(kind::internal_failure, message, read::source::unknown()) };
     e->trace = std::make_unique<cpptrace::stacktrace>(cpptrace::generate_trace());
     return e;
   }

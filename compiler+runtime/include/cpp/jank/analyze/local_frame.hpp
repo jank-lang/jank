@@ -18,7 +18,7 @@ namespace jank::runtime
 
 namespace jank::analyze::cpp_util
 {
-  jtl::ptr<void> untyped_object_ptr_type();
+  jtl::ptr<void> untyped_object_ref_type();
 }
 
 namespace jank::analyze
@@ -41,14 +41,14 @@ namespace jank::analyze
     bool has_unboxed_usage{};
     /* TODO: This gets stomped when a binding is shadowed. Do we
      * need to handle shadowing more delicately? */
-    jtl::ptr<void> type{ analyze::cpp_util::untyped_object_ptr_type() };
+    jtl::ptr<void> type{ analyze::cpp_util::untyped_object_ref_type() };
 
     runtime::object_ref to_runtime_data() const;
   };
 
   using local_binding_ptr = jtl::ptr<local_binding>;
 
-  struct local_frame : gc
+  struct local_frame
   {
     enum class frame_type : u8
     {
@@ -104,16 +104,17 @@ namespace jank::analyze
 
     /* This is used to find both captures and regular locals, since it's
      * impossible to know which one a sym is without finding it. */
-    jtl::option<binding_find_result> find_local_or_capture(runtime::obj::symbol_ref sym);
+    jtl::option<binding_find_result> find_local_or_capture(runtime::obj::symbol_ref const sym);
     static void register_captures(binding_find_result const &result);
     static void
     register_captures(jtl::ptr<local_frame> frame, named_recursion_find_result const &result);
 
     /* This can be used when you have a capture, but you want to trace it back to the
      * originating local. */
-    jtl::option<binding_find_result> find_originating_local(runtime::obj::symbol_ref sym);
+    jtl::option<binding_find_result> find_originating_local(runtime::obj::symbol_ref const sym);
 
-    jtl::option<named_recursion_find_result> find_named_recursion(runtime::obj::symbol_ref sym);
+    jtl::option<named_recursion_find_result>
+    find_named_recursion(runtime::obj::symbol_ref const sym);
 
     static bool within_same_fn(jtl::ptr<local_frame>, jtl::ptr<local_frame>);
 

@@ -6,10 +6,10 @@
 
 namespace jank::runtime
 {
-  bool is_map(object_ref o);
-  bool equal(object_ref l, object_ref r);
-  void to_string(object_ref o, jtl::string_builder &buff);
-  void to_code_string(object_ref o, jtl::string_builder &buff);
+  bool is_map(object_ref const o);
+  bool equal(object_ref const l, object_ref const r);
+  void to_string(object_ref const o, jtl::string_builder &buff);
+  void to_code_string(object_ref const o, jtl::string_builder &buff);
 
   namespace behavior::detail
   {
@@ -22,7 +22,7 @@ namespace jank::runtime::obj::detail
   /* Array maps and hash maps share a lot of common code, so we have a common base.
    * No virtual fns are used, so this structure won't survive release optimizations. */
   template <typename PT, typename ST, typename V>
-  struct base_persistent_map : gc
+  struct base_persistent_map
   {
     static constexpr bool pointer_free{ false };
     static constexpr bool is_map_like{ true };

@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using persistent_string_ref = oref<struct persistent_string>;
   using persistent_string_sequence_ref = oref<struct persistent_string_sequence>;
 
-  struct persistent_string : gc
+  struct persistent_string
   {
     static constexpr object_type obj_type{ object_type::persistent_string };
     static constexpr bool pointer_free{ false };
@@ -42,8 +42,8 @@ namespace jank::runtime::obj
     /* behavior::associatively_readable */
     object_ref get(object_ref const key) const;
     object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref key) const;
-    bool contains(object_ref key) const;
+    object_ref get_entry(object_ref const key) const;
+    bool contains(object_ref const key) const;
 
     /* behavior::indexable */
     object_ref nth(object_ref const index) const;

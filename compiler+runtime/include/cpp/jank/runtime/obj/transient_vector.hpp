@@ -7,7 +7,7 @@ namespace jank::runtime::obj
 {
   using transient_vector_ref = oref<struct transient_vector>;
 
-  struct transient_vector : gc
+  struct transient_vector
   {
     static constexpr object_type obj_type{ object_type::transient_vector };
     static constexpr bool pointer_free{ false };
@@ -35,7 +35,7 @@ namespace jank::runtime::obj
     usize count() const;
 
     /* behavior::conjable_in_place */
-    transient_vector_ref conj_in_place(object_ref head);
+    transient_vector_ref conj_in_place(object_ref const head);
 
     /* behavior::persistentable */
     persistent_type_ref to_persistent();

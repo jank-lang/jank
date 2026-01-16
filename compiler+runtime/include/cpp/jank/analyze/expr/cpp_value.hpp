@@ -24,6 +24,8 @@ namespace jank::analyze::expr
       variable,
       enum_constant,
       function,
+
+      /* The following must be in call position. */
       member_access,
       member_call,
       operator_call
@@ -32,7 +34,7 @@ namespace jank::analyze::expr
     cpp_value(expression_position position,
               local_frame_ptr frame,
               bool needs_box,
-              runtime::obj::symbol_ref sym,
+              runtime::obj::symbol_ref const sym,
               jtl::ptr<void> type,
               jtl::ptr<void> scope,
               value_kind val_kind);

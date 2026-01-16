@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using cons_ref = oref<struct cons>;
   using repeat_ref = oref<struct repeat>;
 
-  struct repeat : gc
+  struct repeat
   {
     static constexpr object_type obj_type{ object_type::repeat };
     static constexpr bool pointer_free{ false };
@@ -17,11 +17,11 @@ namespace jank::runtime::obj
     static constexpr i64 infinite{ -1 };
 
     repeat() = default;
-    repeat(object_ref value);
-    repeat(object_ref count, object_ref value);
+    repeat(object_ref const value);
+    repeat(object_ref const count, object_ref const value);
 
-    static object_ref create(object_ref value);
-    static object_ref create(object_ref count, object_ref value);
+    static object_ref create(object_ref const value);
+    static object_ref create(object_ref const count, object_ref const value);
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -42,10 +42,10 @@ namespace jank::runtime::obj
     repeat_ref next_in_place();
 
     /* behavior::conjable */
-    obj::cons_ref conj(object_ref head) const;
+    obj::cons_ref conj(object_ref const head) const;
 
     /* behavior::metadatable */
-    repeat_ref with_meta(object_ref m) const;
+    repeat_ref with_meta(object_ref const m) const;
 
     object base{ obj_type };
     object_ref value{};

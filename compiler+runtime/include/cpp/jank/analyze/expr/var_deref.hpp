@@ -23,8 +23,8 @@ namespace jank::analyze::expr
     var_deref(expression_position position,
               local_frame_ptr frame,
               bool needs_box,
-              runtime::obj::symbol_ref qualified_name,
-              runtime::var_ref var);
+              runtime::obj::symbol_ref const qualified_name,
+              runtime::var_ref const var);
 
     runtime::object_ref to_runtime_data() const override;
 

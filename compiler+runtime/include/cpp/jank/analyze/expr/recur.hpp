@@ -24,8 +24,9 @@ namespace jank::analyze::expr
     recur(expression_position position,
           local_frame_ptr frame,
           bool needs_box,
-          runtime::obj::persistent_list_ref args,
+          runtime::obj::persistent_list_ref const args,
           native_vector<expression_ref> &&arg_exprs,
+          native_vector<expression_ref> &&op_equal_exprs,
           jtl::option<let_ref> const &loop_target);
 
     runtime::object_ref to_runtime_data() const override;
@@ -33,6 +34,7 @@ namespace jank::analyze::expr
 
     runtime::obj::persistent_list_ref args{};
     native_vector<expression_ref> arg_exprs;
+    native_vector<expression_ref> op_equal_exprs;
     /* If this recur is targeting a loop*, we'll have the expression here so we
      * can know how many args are needed. Otherwise, we use the current fn context. */
     jtl::option<let_ref> loop_target;

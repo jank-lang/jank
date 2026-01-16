@@ -9,6 +9,8 @@
             [leiningen.core.main :as lmain])
   (:import [java.io File]))
 
+(defonce verbose? (atom false))
+
 (defn build-declarative-flag [flag value]
   (case flag
     :direct-call
@@ -42,7 +44,6 @@
                   (build-declarative-flag flag value))
                 (:jank project))))
 
-
 (defn shell-out! [project classpath command compiler-args runtime-args]
   (let [jank (b.f/which "jank")
         env (System/getenv)
@@ -53,6 +54,8 @@
                      runtime-args)
         ; TODO: Better error handling.
         _ (assert (some? jank))
+        _ (when @verbose?
+            (println ">" (clojure.string/join " " args)))
         proc (apply ps/shell
                     {:continue true
                      :dir (:root project)
@@ -126,12 +129,25 @@
             :help (-> fn-ref meta :doc)})
          subtask-kw->var)))
 
+(defn process-args [args]
+  (loop [args args
+         ret []]
+    (if (empty? args)
+      ret
+      (let [arg (first args)
+            ret (case arg
+                  "-v" (do
+                         (reset! verbose? true)
+                         ret)
+                  (conj ret arg))]
+        (recur (rest args) ret)))))
+
 (defn jank
   "Compile, run and repl into jank."
   [project subcmd & args]
   ;(clojure.pprint/pprint (:jank project))
   (if-some [handler (subtask-kw->var (keyword subcmd))]
-    (apply handler project args)
+    (apply handler project (process-args args))
     (do
       (lmain/warn "Invalid subcommand!")
       (print-help!)

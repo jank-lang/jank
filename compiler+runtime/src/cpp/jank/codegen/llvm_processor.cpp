@@ -29,6 +29,7 @@
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/util/clang.hpp>
+#include <jank/util/cli.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 
@@ -132,6 +133,7 @@ namespace jank::codegen
     static llvm::Value *gen(analyze::expr::cpp_type_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_value_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_cast_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_unsafe_cast_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_call_ref, analyze::expr::function_arity const &);
     llvm::Value *
     gen(analyze::expr::cpp_constructor_call_ref, analyze::expr::function_arity const &);
@@ -182,8 +184,8 @@ namespace jank::codegen
 
     llvm::Function *ensure_static_wrapper(jtl::ptr<void> scope);
 
-    llvm::Value *gen_var(obj::symbol_ref qualified_name) const;
-    llvm::Value *gen_var_root(obj::symbol_ref qualified_name, var_root_kind kind) const;
+    llvm::Value *gen_var(obj::symbol_ref const qualified_name) const;
+    llvm::Value *gen_var_root(obj::symbol_ref const qualified_name, var_root_kind kind) const;
     llvm::Value *gen_c_string(jtl::immutable_string const &s) const;
 
     void create_function();
@@ -191,21 +193,21 @@ namespace jank::codegen
     void create_global_ctor() const;
     llvm::GlobalVariable *create_global_var(jtl::immutable_string const &name) const;
 
-    llvm::Value *gen_global(runtime::obj::nil_ref) const;
-    llvm::Value *gen_global(runtime::obj::boolean_ref b) const;
-    llvm::Value *gen_global(runtime::obj::integer_ref i) const;
-    llvm::Value *gen_global(runtime::obj::big_integer_ref i) const;
-    llvm::Value *gen_global(runtime::obj::big_decimal_ref i) const;
-    llvm::Value *gen_global(runtime::obj::real_ref r) const;
-    llvm::Value *gen_global(runtime::obj::ratio_ref r) const;
-    llvm::Value *gen_global(runtime::obj::persistent_string_ref s) const;
-    llvm::Value *gen_global(runtime::obj::symbol_ref s) const;
-    llvm::Value *gen_global(runtime::obj::keyword_ref k) const;
-    llvm::Value *gen_global(runtime::obj::character_ref c) const;
-    llvm::Value *gen_global(runtime::obj::re_pattern_ref re) const;
-    llvm::Value *gen_global(runtime::obj::uuid_ref u) const;
-    llvm::Value *gen_global(runtime::obj::inst_ref i) const;
-    llvm::Value *gen_global_from_read_string(runtime::object_ref o) const;
+    llvm::Value *gen_global(runtime::obj::nil_ref const) const;
+    llvm::Value *gen_global(runtime::obj::boolean_ref const b) const;
+    llvm::Value *gen_global(runtime::obj::integer_ref const i) const;
+    llvm::Value *gen_global(runtime::obj::big_integer_ref const i) const;
+    llvm::Value *gen_global(runtime::obj::big_decimal_ref const i) const;
+    llvm::Value *gen_global(runtime::obj::real_ref const r) const;
+    llvm::Value *gen_global(runtime::obj::ratio_ref const r) const;
+    llvm::Value *gen_global(runtime::obj::persistent_string_ref const s) const;
+    llvm::Value *gen_global(runtime::obj::symbol_ref const s) const;
+    llvm::Value *gen_global(runtime::obj::keyword_ref const k) const;
+    llvm::Value *gen_global(runtime::obj::character_ref const c) const;
+    llvm::Value *gen_global(runtime::obj::re_pattern_ref const re) const;
+    llvm::Value *gen_global(runtime::obj::uuid_ref const u) const;
+    llvm::Value *gen_global(runtime::obj::inst_ref const i) const;
+    llvm::Value *gen_global_from_read_string(runtime::object_ref const o) const;
     llvm::Value *gen_function_instance(analyze::expr::function_ref expr,
                                        analyze::expr::function_arity const &fn_arity);
     llvm::Value *gen_aot_call(Cpp::AotCall const &call,
@@ -269,6 +271,11 @@ namespace jank::codegen
   static jtl::immutable_string unique_munged_string()
   {
     return runtime::munge(__rt_ctx->unique_namespaced_string());
+  }
+
+  static jtl::immutable_string unique_munged_string(jtl::immutable_string const &prefix)
+  {
+    return runtime::munge(__rt_ctx->unique_namespaced_string(prefix));
   }
 
   static llvm::Type *llvm_builtin_type(reusable_context const &ctx,
@@ -587,20 +594,25 @@ namespace jank::codegen
 
   static llvm::Value *load_if_needed(jtl::ref<reusable_context> const ctx, llvm::Value * const arg)
   {
-    return load_if_needed(ctx, arg, cpp_util::untyped_object_ptr_type());
+    return load_if_needed(ctx, arg, cpp_util::untyped_object_ref_type());
   }
 
   reusable_context::reusable_context(jtl::immutable_string const &module_name,
                                      std::unique_ptr<llvm::LLVMContext> llvm_ctx)
     : module_name{ module_name }
-    , ctor_name{ __rt_ctx->unique_munged_string() }
+    , ctor_name{ unique_munged_string("jank_global_init") }
+    //, llvm_ctx{ std::make_unique<llvm::LLVMContext>() }
+    //, llvm_ctx{ reinterpret_cast<std::unique_ptr<llvm::orc::ThreadSafeContext> *>(
+    //              reinterpret_cast<void *>(
+    //                &static_cast<clang::Interpreter &>(*__rt_ctx->jit_prc.interpreter)))
+    //              ->getContext() }
     , lam{ std::make_unique<llvm::LoopAnalysisManager>() }
     , fam{ std::make_unique<llvm::FunctionAnalysisManager>() }
     , cgam{ std::make_unique<llvm::CGSCCAnalysisManager>() }
     , mam{ std::make_unique<llvm::ModuleAnalysisManager>() }
     , pic{ std::make_unique<llvm::PassInstrumentationCallbacks>() }
   {
-    auto m{ std::make_unique<llvm::Module>(__rt_ctx->unique_munged_string().c_str(), *llvm_ctx) };
+    auto m{ std::make_unique<llvm::Module>(unique_munged_string(module_name).c_str(), *llvm_ctx) };
     module = llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) };
 
     auto const raw_ctx{ extract_context(module) };
@@ -855,7 +867,7 @@ namespace jank::codegen
         continue;
       }
 
-      gen_ret(gen_global(jank_nil));
+      gen_ret(gen_global(jank_nil()));
     }
 
     if(target != compilation_target::function)
@@ -918,7 +930,7 @@ namespace jank::codegen
 
       /* Here if compiling into a jank module, a var-root can be initialized directly with the parameter
        * being used by the call to "jank_var_bind_root". There is no deref needed. */
-      if(__rt_ctx->opts.direct_call && target == compilation_target::module)
+      if(util::cli::opts.direct_call && target == compilation_target::module)
       {
         auto const global_var_root(gen_var_root(expr->name, var_root_kind::binded_def));
         ctx->builder->CreateStore(var_root, global_var_root);
@@ -946,8 +958,8 @@ namespace jank::codegen
     auto const set_dynamic_fn(
       llvm_module->getOrInsertFunction("jank_var_set_dynamic", set_dynamic_fn_type));
 
-    auto const dynamic{ truthy(
-      get(expr->name->meta.unwrap_or(jank_nil), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+    auto const dynamic{ truthy(get(expr->name->meta.unwrap_or(jank_nil()),
+                                   __rt_ctx->intern_keyword("dynamic").expect_ok())) };
 
     auto const dynamic_global{ gen_global(make_box(dynamic)) };
 
@@ -973,7 +985,7 @@ namespace jank::codegen
      * When generating the IR for a var-root, if the function is a jank_load function,
      * the var_root is derefed directly in the "jank_load" function.
      * If it is any other function, the var_root is initialized and derefed in the global ctor. */
-    if(__rt_ctx->opts.direct_call && !(expr->var->dynamic))
+    if(util::cli::opts.direct_call && !(expr->var->dynamic))
     {
       if(root_fn->name.starts_with("jank_load"))
       {
@@ -1329,12 +1341,9 @@ namespace jank::codegen
           field_type = llvm::cast<llvm::AllocaInst>(locals[name].data)->getAllocatedType();
         }
         else
-        {
           field_type = ctx->builder->getPtrTy();
-        }
         ctx->capture_field_types[name] = field_type;
       }
-
       llvm_processor const nested{ expr, ctx };
       auto const res{ nested.gen() };
       if(res.is_err())
@@ -1382,6 +1391,8 @@ namespace jank::codegen
           arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
         }
 
+        /* TODO: Provide access to higher local, so we can access the local from the
+         * original loop. We could be in a nested let right now, which shadows that name. */
         auto const arg_alloc{ locals[expr->loop_target.unwrap()->pairs[i].first] };
         jank_debug_assert(arg_alloc);
         deferred_stores.emplace_back(arg_handle, arg_alloc);
@@ -1737,7 +1748,7 @@ namespace jank::codegen
     }
     else
     {
-      else_ = gen_global(jank_nil);
+      else_ = gen_global(jank_nil());
       if(expr->position == expression_position::tail)
       {
         else_ = gen_ret(else_);
@@ -1812,7 +1823,7 @@ namespace jank::codegen
 
     /* Since this code path never completes, it doesn't matter what we return.
      * Using `jank_nil` to satisfy some IR requirements. */
-    auto const ret{ gen_global(jank_nil) };
+    auto const ret{ gen_global(jank_nil()) };
     if(expr->position == expression_position::tail)
     {
       return gen_ret(ret);
@@ -2611,7 +2622,7 @@ namespace jank::codegen
     }
     link_module(*ctx, parse_res->TheModule.get());
 
-    auto const ret{ gen_global(jank_nil) };
+    auto const ret{ gen_global(jank_nil()) };
     if(expr->position == expression_position::tail)
     {
       return gen_ret(ret);
@@ -2744,6 +2755,47 @@ namespace jank::codegen
     }
 
     return converted;
+  }
+
+  llvm::Value *
+  llvm_processor::impl::gen(expr::cpp_unsafe_cast_ref const expr, expr::function_arity const &arity)
+  {
+    auto const output_type{ expr->type };
+    auto const is_output_type_ptr{ Cpp::IsPointerType(output_type) };
+    auto const is_output_type_integral{ Cpp::IsIntegral(output_type) };
+    auto const output_llvm_type{ llvm_type(*ctx, llvm_ctx, output_type).type };
+    auto const input_type{ Cpp::GetNonReferenceType(cpp_util::expression_type(expr->value_expr)) };
+    auto const is_input_type_ptr{ Cpp::IsPointerType(input_type) };
+    auto const is_input_type_integral{ Cpp::IsIntegral(input_type) };
+    auto const value{ gen(expr->value_expr, arity) };
+
+    /* Since LLVM IR has opaque pointers, we don't need to do anything for pointer -> pointer
+     * casts. Only int <-> pointer casts require an extra instruction. */
+    if(is_output_type_ptr)
+    {
+      if(is_input_type_ptr)
+      {
+        return value;
+      }
+      else if(is_input_type_integral)
+      {
+        return ctx->builder->CreateIntToPtr(value, output_llvm_type.data);
+      }
+    }
+    else if(is_output_type_integral)
+    {
+      if(is_input_type_ptr)
+      {
+        return ctx->builder->CreatePtrToInt(value, output_llvm_type.data);
+      }
+      else if(is_input_type_integral)
+      {
+        return value;
+      }
+    }
+
+    jank_assert("Unexpected unsafe cast.");
+    return nullptr;
   }
 
   llvm::Value *llvm_processor::impl::gen_aot_call(Cpp::AotCall const &call,
@@ -2916,7 +2968,7 @@ namespace jank::codegen
     {
       if(is_void)
       {
-        return gen_ret(gen_global(jank_nil));
+        return gen_ret(gen_global(jank_nil()));
       }
 
       auto const ret_load{ ctx->builder->CreateLoad(ctx->builder->getPtrTy(), ret_alloc, "ret") };
@@ -2925,7 +2977,7 @@ namespace jank::codegen
 
     if(is_void)
     {
-      return gen_global(jank_nil);
+      return gen_global(jank_nil());
     }
     return ret_alloc;
   }
@@ -3304,7 +3356,7 @@ namespace jank::codegen
     llvm::SmallVector<llvm::Value *, 1> const args{ val };
     ctx->builder->CreateCall(fn, args);
 
-    auto const ret{ gen_global(jank_nil) };
+    auto const ret{ gen_global(jank_nil()) };
     if(expr->position == expression_position::tail)
     {
       return gen_ret(ret);

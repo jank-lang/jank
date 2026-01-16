@@ -38,7 +38,7 @@ namespace jank::analyze
   }
 
   static jtl::option<local_frame::binding_find_result>
-  find_local_impl(local_frame_ptr const start, obj::symbol_ref sym, bool const allow_captures)
+  find_local_impl(local_frame_ptr const start, obj::symbol_ref const sym, bool const allow_captures)
   {
     decltype(local_frame::binding_find_result::crossed_fns) crossed_fns;
 
@@ -94,6 +94,13 @@ namespace jank::analyze
       res.first->second.has_boxed_usage = true;
       /* To start with, we assume it's only boxed. */
       res.first->second.has_unboxed_usage = false;
+
+      /* Native values which are captured get auto-boxed, so we need to adjust the type
+       * of the binding. */
+      if(!cpp_util::is_any_object(res.first->second.type))
+      {
+        res.first->second.type = cpp_util::untyped_object_ptr_type();
+      }
     }
   }
 

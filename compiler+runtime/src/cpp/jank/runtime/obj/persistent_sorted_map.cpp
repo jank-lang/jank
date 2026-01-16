@@ -40,7 +40,7 @@ namespace jank::runtime::obj
   {
     return make_box<persistent_sorted_map>(visit_object(
       [](auto const typed_seq) -> persistent_sorted_map::value_type {
-        using T = typename decltype(typed_seq)::value_type;
+        using T = typename jtl::decay_t<decltype(typed_seq)>::value_type;
 
         if constexpr(behavior::seqable<T>)
         {
@@ -75,7 +75,7 @@ namespace jank::runtime::obj
     {
       return res->second;
     }
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref persistent_sorted_map::get(object_ref const key, object_ref const fallback) const
@@ -95,7 +95,7 @@ namespace jank::runtime::obj
     {
       return make_box<persistent_vector>(std::in_place, key, res->second);
     }
-    return jank_nil;
+    return jank_nil();
   }
 
   bool persistent_sorted_map::contains(object_ref const key) const

@@ -16,7 +16,7 @@ namespace jank::runtime::obj::detail
     iterator_sequence() = default;
 
     /* NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility) */
-    iterator_sequence(object_ref const &c, It const &b, It const &e, usize const s);
+    iterator_sequence(object_ref const c, It const &b, It const &e, usize const s);
 
     /* behavior::object_like */
     bool equal(object const &o) const;

@@ -19,11 +19,11 @@ using namespace jank::runtime;
 static object_ref greet_str(object_ref name)
 {
   auto const s_obj(try_object<obj::persistent_string>(name));
-  auto const new_str{ "Hello from cpp module, " + s_obj->to_string() + "!"};
-  return make_box(new_str).erase();
+  auto const new_str{ "Hello from cpp module, " + s_obj->to_string() + "!" };
+  return make_box(new_str).erase().data;
 }
 
-extern "C" jank_object_ref jank_load_my_lib()
+extern "C" void jank_load_my_lib()
 {
   auto const ns_name{ "my-lib" };
   auto const ns(__rt_ctx->intern_ns(ns_name));
@@ -41,6 +41,5 @@ extern "C" jank_object_ref jank_load_my_lib()
   intern_fn("greet-str", &greet_str);
 
   __rt_ctx->module_loader.set_is_loaded(ns_name);
-  std::cout<<"Loaded '"<<ns_name<<"\n";
-  return jank_nil.erase();
+  std::cout << "Loaded '" << ns_name << "\n";
 }

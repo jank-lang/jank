@@ -3,130 +3,222 @@
 
 (def namespaces
   '[
-    ;clojure.core-test.abs    ; Uncaught exception: not a number: nil - actual: (not (= -9223372036854775809N 9223372036854775809N))
-    ;clojure.core-test.aclone ; TODO: port int-array, TODO: port aclone
-    ;clojure.core-test.add-watch ; Exception: TODO: port sync
+    ; clojure.core-test.abs ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.aclone ; analyze/invalid-cpp-operator-call error: Binary operator aget is not supported for 'jank::runtime::object *' and 'jank::runtime::object *', TODO: port int-array, TODO: port aclone
+    ; clojure.core-test.add-watch ; TODO: port sync
+    ; clojure.core-test.ancestors ; analyze/unresolved-symbol error: Unable to resolve symbol 'Object'.
     clojure.core-test.and
     clojure.core-test.any-qmark
-    ;clojure.core-test.associative-qmark ; TODO: port to-array
-    clojure.core-test.bigdec ; Unable to resolve symbol 'java.math.BigDecimal'., Read error (312 - 314): invalid number: chars 'M' are invalid for radix 10
-    ;clojure.core-test.bigint ; TODO: port inc' & dec'.
-    ;clojure.core-test.binding ; TODO: port future
-    ;clojure.core-test.bit-and ; Uncaught exception: invalid object type: 0
-    ;clojure.core-test.bit-and-not ; Uncaught exception: invalid object type: 0
-    ;clojure.core-test.bit-clear ;invalid object type: 0
-    ;clojure.core-test.bit-flip ;invalid object type: 0
-    ;clojure.core-test.bit-not ; Uncaught exception: invalid object type: 0
-    ;clojure.core-test.bit-or ; Uncaught exception: invalid object type: 0
-    ;clojure.core-test.bit-set ; invalid object type: 0
-    ;clojure.core-test.bit-shift-left ; invalid object type: 0
-    ;clojure.core-test.bit-shift-right  ; invalid object type: 0
-    ;clojure.core-test.bit-test ; Uncaught exception: invalid object type: 0
-    ;clojure.core-test.bit-xor ; Uncaught exception: invalid object type: 0
+    ; clojure.core-test.assoc ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.assoc-bang ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.associative-qmark ; TODO: port to-array
+    ; clojure.core-test.atom ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.bigdec ; Uncaught exception: not a number: "1"
+    ; clojure.core-test.bigint ; Uncaught exception: not a number: "1"
+    ; clojure.core-test.binding ; TODO: port future
+    ; clojure.core-test.bit-and ; Panic encountered: invalid object type: nil, raw value 0
+    ; clojure.core-test.bit-and-not ; Panic encountered: invalid object type: nil, raw value 0
+    ; clojure.core-test.bit-clear ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.bit-flip ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.bit-not ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.bit-or ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.bit-set ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.bit-shift-left ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.bit-shift-right ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.bit-test ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.bit-xor ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.boolean
-    ;clojure.core-test.bound-fn ; TODO: port future
-    ;clojure.core-test.bound-fn-star ; TODO: port future
+    clojure.core-test.boolean-qmark
+    ; clojure.core-test.bound-fn ; TODO: port future
+    ; clojure.core-test.bound-fn-star ; TODO: port future
     clojure.core-test.butlast
-    ;clojure.core-test.byte ; TODO: port byte, Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.char ; TODO: port char
+    ; clojure.core-test.byte ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'. TODO: port byte, Expecting whitespace after the last token. due to M.
+    ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
+    ; clojure.core-test.char ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'. TODO: port char
     clojure.core-test.char-qmark
-    ;clojure.core-test.compare ; Uncaught exception: not comparable: []
+    ; clojure.core-test.coll-qmark ; TODO: port array-map, TODO: port object-array
+    clojure.core-test.comment
+    ; clojure.core-test.compare ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.conj
-    ;clojure.core-test.count ;https://github.com/jank-lang/jank/issues/244
-    ;clojure.core-test.dec ; TODO underflow \n Uncaught exception: failed
+    ; clojure.core-test.conj-bang ; analyze/unresolved-symbol error: Unable to resolve symbol 'Error'.
+    ; clojure.core-test.cons ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.constantly
+    ; clojure.core-test.contains-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.count ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/244
+    ; clojure.core-test.counted-qmark ; TODO: port array-map, TODO: port object-array
+    ; clojure.core-test.cycle ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.dec ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.decimal-qmark
-    ;clojure.core-test.denominator ; Failed a test. Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.double
+    ; clojure.core-test.denominator ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.derive ; analyze/unresolved-symbol error: Unable to resolve symbol 'String'.
+    ; clojure.core-test.descendants ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
+    ; clojure.core-test.disj ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.disj-bang ; analyze/unresolved-symbol error: Unable to resolve symbol 'Error'.
+    ; clojure.core-test.dissoc ; analyze/unresolved-symbol error: Unable to resolve symbol 'defrecord'.
+    ; clojure.core-test.dissoc-bang ; analyze/unresolved-symbol error: Unable to resolve symbol 'Error'.
+    ; clojure.core-test.doseq ; analyze/unresolved-symbol error: Unable to resolve symbol 'y'.
+    ; clojure.core-test.double ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.double-qmark
-    ;clojure.core-test.drop ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
-    ;clojure.core-test.drop-last ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/244
-    ;clojure.core-test.drop-while ; Assertion failed! val.is_some(), In clojure.core-test.drop-while$fn_8-90, duplicate definition of symbol '_fn_55_1', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/212
-    ;clojure.core-test.empty ; expected: (= (quote ()) (empty (range))) actual: (not (= () nil))
-    ;clojure.core-test.even-qmark ; Uncaught exception: invalid object type: 3, Expecting whitespace after the last token. due to M.
+    ; clojure.core-test.drop ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
+    ; clojure.core-test.drop-last ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/244
+    ; clojure.core-test.drop-while ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/212
+    ; clojure.core-test.empty ; FIXME: Failing test.
+    ; clojure.core-test.empty-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
+    ; clojure.core-test.even-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.false-qmark
-    clojure.core-test.first ; In clojure.core-test.first$fn_2-61, duplicate definition of symbol '_jank_global_init_60'
-    ;clojure.core-test.float ; Failed a test. Expecting whitespace after the last token. due to M.
+    ; clojure.core-test.ffirst ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.find
+    clojure.core-test.first
+    ; clojure.core-test.float ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.float-qmark
-    ;clojure.core-test.fnil  ; Assertion failed! ret, unloadable.
-    ;clojure.core-test.format ;TODO: port format
-    ;clojure.core-test.get ; Assertion failed! ret, unloadable.
-    clojure.core-test.ident-qmark ; Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.identical-qmark  ; Assertion failed! ret, unloadable
-    ;clojure.core-test.inc ; overflow, overflow untested, Uncaught exception: not a number: nil.
-    ;clojure.core-test.int ; Failed a test. Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.int-qmark ; Falied a test. Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.integer-qmark ; Failed a test. Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.intern ;unloadable
+    clojure.core-test.fn-qmark
+    ; clojure.core-test.fnext ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.fnil
+    ; clojure.core-test.format ; TODO: port format
+    ; clojure.core-test.get ; TODO: port to-array
+    ; clojure.core-test.get-in ; FIXME: Failing test. 
+    ; clojure.core-test.gt ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.hash-map ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.hash-set
+    clojure.core-test.ident-qmark
+    clojure.core-test.identical-qmark
+    ; clojure.core-test.ifn-qmark ; TODO: port promise
+    ; clojure.core-test.inc ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.int ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.int-qmark ; FIXME: Failing test.
+    ; clojure.core-test.integer-qmark ; FIXME: Failing test.
+    clojure.core-test.interleave
+    ; clojure.core-test.intern ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.interpose
+    ; clojure.core-test.juxt ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.key ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
+    ; clojure.core-test.keys ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.keyword
-    clojure.core-test.keyword-qmark ; Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.long  ; Unable to resolve symbol 'Exception'., Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.max ; Unable to resolve symbol 'Exception'.
-    ;clojure.core-test.min ; Uncaught exception: not a number: "x"
-    ;clojure.core-test.minus ; Unable to resolve symbol 'Exception'., Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.mod ; Unable to resolve symbol 'Exception'., Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.name ; Uncaught exception: not nameable: nil, In clojure.core-test.name$fn_2-59, duplicate definition of symbol '_jank_global_init_58'
-    ;clojure.core-test.namespace ; Uncaught exception: not nameable: nil, https://github.com/jank-lang/jank/issues/254
-    ;clojure.core-test.nan-qmark ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/244
-    ;clojure.core-test.neg-int-qmark ; Failed a test. Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.neg-qmark ; Unable to resolve symbol 'Exception'., Expecting whitespace after the last token. due to M.
+    clojure.core-test.keyword-qmark
+    ; clojure.core-test.last ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.list-qmark ; TODO: port array-map, TODO: port object-array
+    ; clojure.core-test.long ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.lt ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.lt-eq ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.make-hierarchy
+    ; clojure.core-test.map-qmark ; TODO: port array-map, TODO: port object-array
+    ; clojure.core-test.mapcat ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.max ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.merge ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.min ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.minus ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.mod ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.name ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.namespace ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/254
+    ; clojure.core-test.nan-qmark ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/244
+    ; clojure.core-test.neg-int-qmark ; FIXME: Failing test.
+    ; clojure.core-test.neg-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.next
+    ; clojure.core-test.nfirst ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.nil-qmark
-    ;clojure.core-test.not ;Read error (478 - 478): unsupported reader macro
-    ;clojure.core-test.nth ; Uncaught exception: index out of bounds: -1, In clojure.core-test.nth$fn_2-64, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/244, Exception: index out of bounds: -1
-    ;clojure.core-test.nthnext ; Uncaught exception: not a number: nil, In clojure.core-test.nthnext$fn_2-83, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244
-    ;clojure.core-test.nthrest ; Uncaught exception: not a number: nil, In clojure.core-test.nthrest$fn_2-85, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244 , https://github.com/jank-lang/jank/issues/247
-    clojure.core-test.num ; Expecting whitespace after the last token. due to M.
-    clojure.core-test.number-qmark ; Expecting whitespace after the last token. due to M.
+    ; clojure.core-test.nnext ; Uncaught exception: {:error :not-an-ns-or-sym, :data {:value clojure.core-test.not_eq}}
+    ; clojure.core-test.not ; parse_invalid_reader_symbolic-value error: This reader tag (#js) is not supported. '#uuid', '#inst' and '#cpp' are the only tags currently supported.
+    ; clojure.core-test.not_empty ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.not-eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
+    ; clojure.core-test.nth ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.nthnext ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244
+    ; clojure.core-test.nthrest ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244 , https://github.com/jank-lang/jank/issues/247
+    ; clojure.core-test.num ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.number-qmark
     clojure.core-test.number-range
-    ;clojure.core-test.numerator ; Failed a test. Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.odd-qmark ; Uncaught exception: invalid object type: 3. Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.or ; unloadable, In clojure.core-test.or$fn_2-159, duplicate definition of symbol '_fn_2_0', unloadable
-    ;clojure.core-test.partial ;unloadable
-    ;clojure.core-test.plus ; error: Unable to resolve symbol 'Exception'
-    ;clojure.core-test.plus-squote ; error: Unable to resolve symbol 'clojure.lang.BigInt'.
-    clojure.core-test.pos-int-qmark ; Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.pos-qmark ; Uncaught exception: not a number: nil. Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.pr-str ; Uncaught exception: invalid call to clojure.core/pr-str with 2 args provided, In clojure.core-test.pr-str$fn_2-49, duplicate definition of symbol '_fn_2_0', unloadable
-    ;clojure.core-test.print-str ; TODO: port print-str, In clojure.core-test.print-str$fn_2-49, duplicate definition of symbol '_jank_global_init_48', unloadable
-    ;clojure.core-test.println-str ; unloadable, In clojure.core-test.println-str$fn_2-51, duplicate definition of symbol '_fn_2_0', unloadable
-    ;clojure.core-test.prn-str ; unloadable, In clojure.core-test.prn-str$fn_2-51, duplicate definition of symbol '_fn_2_0', unloadable
-    clojure.core-test.qualified-ident-qmark ; Expecting whitespace after the last token. due to M.
-    clojure.core-test.qualified-keyword-qmark ; Expecting whitespace after the last token. due to M.
-    clojure.core-test.qualified-symbol-qmark ; Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.quot ; Failed tests. Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.rand ; unloadable, In clojure.core-test.rand$fn_2-71, duplicate definition of symbol '_jank_global_init_70', unloadable
-    ;clojure.core-test.rand-int ; unloadable, In clojure.core-test.rand-int$fn_2-56, duplicate definition of symbol '_fn_2_0', unloadable
-    clojure.core-test.ratio-qmark ; Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.rational-qmark ; (= true (rational? 0N))
-    ;clojure.core-test.rationalize ; TODO: port rationalize, Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.rem ; Fails the test cases.
-    ;clojure.core-test.remove-watch ;Exception: TODO: port sync
+    ; clojure.core-test.numerator ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.odd-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.or
+    ; clojure.core-test.parents ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
+    ; clojure.core-test.parse-boolean ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.parse-double ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.parse-long ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.parse-uuid ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.partial ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.peek ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.persistent-bang ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.plus ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.plus-squote ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.BigInt'.
+    ; clojure.core-test.pop-bang ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.pos-int-qmark
+    ; clojure.core-test.pos-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.pr-str ; Uncaught exception: invalid call to #object [clojure.core/pr-str jit_function 0x112436c68] with 2 args provided
+    ; clojure.core-test.print-str ; TODO: port print-str
+    ; clojure.core-test.println-str ; TODO: port println-str
+    ; clojure.core-test.prn-str ; TODO: port prn-str
+    clojure.core-test.qualified-ident-qmark
+    clojure.core-test.qualified-keyword-qmark
+    clojure.core-test.qualified-symbol-qmark
+    ; clojure.core-test.quot ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.rand
+    clojure.core-test.rand-int
+    ; clojure.core-test.rand-nth ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.random-sample ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.random-uuid ; internal/codegen-failure error: Unable to compile C++ source. unknown type name 'i64'; did you mean 'jank::i64'?
+    ; clojure.core-test.ratio-qmark ; FIXME: Failing test.
+    ; clojure.core-test.rational-qmark ; FIXME: Failing test.
+    ; clojure.core-test.rationalize ; TODO: port rationalize
+    ; clojure.core-test.realized-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map.
+    ; clojure.core-test.rem ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.remove-watch ; TODO: port sync
+    ; clojure.core-test.repeat ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.rest
+    ; clojure.core-test.reverse ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.reversible-qmark ; TODO: port reversible?, TODO: port object-array
+    ; clojure.core-test.rseq ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.second
-    ;clojure.core-test.seq ; Unable to find binding for local 'input' in fn 'try_body, error: Characters 'M' are invalid for a base 10 number.
-    ;clojure.core-test.sequential-qmark ; TODO: port to-array, In clojure.core-test.sequential-qmark$fn_2-98, duplicate definition of symbol '_fn_2_0', unloadable
-    ;clojure.core-test.short ; TODO: port short, Unable to resolve symbol 'java.lang.Short'., Expecting whitespace after the last token. due to M.
-    clojure.core-test.simple-ident-qmark ; Expecting whitespace after the last token. due to M.
-    clojure.core-test.simple-keyword-qmark ; Expecting whitespace after the last token. due to M.
-    clojure.core-test.simple-symbol-qmark ; Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.slash ; Unable to resolve symbol 'Exception'., Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.some-qmark ;Read error (437 - 437): unsupported reader macro
-    ;clojure.core-test.star ; error: Unable to resolve symbol 'Exception'.
-    ;clojure.core-test.star-squote ; error: Unable to resolve symbol 'clojure.lang.BigInt'.
-    ;clojure.core-test.str ; TODO: port double, Expecting whitespace after the last token. due to M.
+    ; clojure.core-test.select-keys ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.seq ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.seq-qmark ; TODO: port rseq, TODO: port array-map, TODO: port object-array
+    ; clojure.core-test.seqable-qmark ; TODO: port array-map, TODO: port object-array
+    ; clojure.core-test.sequential-qmark ; TODO: port to-array
+    ; clojure.core-test.set ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.set-qmark ; TODO: port array-map, TODO: port object-array
+    ; clojure.core-test.short ; analyze/macro-expansion-exception error: index out of bounds: 2,  TODO: port short
+    ; clojure.core-test.shuffle ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.simple-ident-qmark
+    clojure.core-test.simple-keyword-qmark
+    clojure.core-test.simple-symbol-qmark
+    ; clojure.core-test.slash ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.some ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.some-fn ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.some-qmark ; parse_invalid_reader_symbolic-value error: This reader tag (#js) is not supported. '#uuid', '#inst' and '#cpp' are the only tags currently supported.
+    ; clojure.core-test.sort ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.sort-by ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
+    ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?
+    ; clojure.core-test.star ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.star-squote ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.str ; FIXME: Failing test.
     clojure.core-test.string-qmark
-    ;clojure.core-test.subs ; Uncaught exception: end index 1 is less than start 2, In clojure.core-test.subs$fn_2-70, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/244
-    ;clojure.core-test.symbol  ; Read error (1409 - 1414): invalid ratio: expecting an integer denominator
-    clojure.core-test.symbol-qmark ; Expecting whitespace after the last token. due to M.
-    ;clojure.core-test.take ; Uncaught exception: not a number: nil, In clojure.core-test.take$fn_2-57, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/245 , https://github.com/jank-lang/jank/issues/243
-    ;clojure.core-test.take-last ; Uncaught exception: not a number: nil, In clojure.core-test.take-last$fn_2-43, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244
-    ;clojure.core-test.take-while ; Uncaught exception: invalid call with 1 arg to: nil, In clojure.core-test.take-while$fn_2-86, duplicate definition of symbol '_fn_2_0', https://github.com/jank-lang/jank/issues/243
-    ;clojure.core-test.taps ; Read error (0 - 0): unbound symbol: clojure.lang.IPending
+    ; clojure.core-test.subs ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/244
+    ; clojure.core-test.subvec ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.symbol ; lex/invalid-ratio error: A ratio denominator must be an integer.
+    clojure.core-test.symbol-qmark
+    ; clojure.core-test.take ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/245 , https://github.com/jank-lang/jank/issues/243
+    ; clojure.core-test.take-last ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/244
+    ; clojure.core-test.take-nth ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.take-while ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/243
+    ; clojure.core-test.taps ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.IPending'.
     clojure.core-test.true-qmark
-    ;clojure.core-test.unsigned-bit-shift-right ; Uncaught exception: invalid object type: 0, In clojure.core-test.unsigned-bit-shift-right$fn_2-37, duplicate definition of symbol '_jank_global_init_36', Exception: invalid object type: 0
-    ;clojure.core-test.with-out-str ; Exception: TODO: port with-out-str
-    ;clojure.core-test.with-precision ; TODO: port with-precision, Read error (372 - 374): invalid number: chars 'M' are invalid for radix 10
-    ;clojure.core-test.zero-qmark ; Unable to resolve symbol 'Exception'., Expecting whitespace after the last token. due to M.
+    ; clojure.core-test.underive ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.unsigned-bit-shift-right ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.update ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.uuid-qmark
+    ; clojure.core-test.val ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
+    ; clojure.core-test.vals ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.var-qmark
+    ; clojure.core-test.vec ; analyze/invalid-cpp-operator-call error: Binary operator aget is not supported for 'jank::runtime::object *' and 'jank::runtime::object *'.
+    ; clojure.core-test.vector-qmark ; TODO: port array-map, TODO: port object-array
+    clojure.core-test.when
+    clojure.core-test.when-first
+    ; clojure.core-test.when-let ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.with-out-str ; TODO: port with-out-str
+    ; clojure.core-test.with-precision ; TODO: port with-precision, INFO: SKIP - defprotocol
+    ; clojure.core-test.zero-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.zipmap ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
   ])
 
 (defn -main []

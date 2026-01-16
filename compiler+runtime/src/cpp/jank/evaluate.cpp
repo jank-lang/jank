@@ -73,12 +73,9 @@ namespace jank::evaluate
     else if constexpr(std::same_as<T, expr::try_>)
     {
       walk(expr.body, f);
-      if(!expr.catch_bodies.empty())
+      if(expr.catch_body.is_some())
       {
-        for(auto const &catch_body : expr.catch_bodies)
-        {
-          walk(catch_body.body, f);
-        }
+        walk(expr.catch_body.unwrap().body, f);
       }
       if(expr.finally_body.is_some())
       {
@@ -161,7 +158,7 @@ namespace jank::evaluate
     arity.fn_ctx = fn_ctx;
 
     arity.fn_ctx->param_count = arity.params.size();
-    for(auto const sym : arity.params)
+    for(auto const &sym : arity.params)
     {
       arity.frame->locals.emplace(sym, local_binding{ sym, sym->name, none, arity.frame });
     }
@@ -174,7 +171,7 @@ namespace jank::evaluate
       expr_to_add = jtl::make_ref<expr::cpp_cast>(expr->position,
                                                   expr->frame,
                                                   expr->needs_box,
-                                                  cpp_util::untyped_object_ptr_type(),
+                                                  cpp_util::untyped_object_ref_type(),
                                                   expr_type,
                                                   conversion_policy::into_object,
                                                   expr);
@@ -217,7 +214,7 @@ namespace jank::evaluate
       return wrap_expression(jtl::make_ref<expr::primitive_literal>(expression_position::tail,
                                                                     an_prc.root_frame,
                                                                     true,
-                                                                    jank_nil),
+                                                                    jank_nil()),
                              name,
                              {});
     }
@@ -270,7 +267,7 @@ namespace jank::evaluate
     auto var(__rt_ctx->intern_var(expr->name).expect_ok());
     var->meta = expr->name->meta;
 
-    auto const meta(var->meta.unwrap_or(jank_nil));
+    auto const meta(var->meta.unwrap_or(jank_nil()));
     auto const dynamic(get(meta, __rt_ctx->intern_keyword("dynamic").expect_ok()));
     var->set_dynamic(truthy(dynamic));
 
@@ -607,10 +604,11 @@ namespace jank::evaluate
       }
 
       __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
-      auto const expr_str{ cg_prc.expression_str() + ".erase()" };
+      auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
       clang::Value v;
       __rt_ctx->jit_prc.eval_string({ expr_str.data(), expr_str.size() }, &v);
-      return try_object<obj::jit_function>(v.convertTo<runtime::object *>());
+      auto ret{ try_object<obj::jit_function>(v.convertTo<runtime::object *>()) };
+      return ret;
     }
   }
 
@@ -634,7 +632,7 @@ namespace jank::evaluate
 
   object_ref eval(expr::do_ref const expr)
   {
-    object_ref ret{ jank_nil };
+    object_ref ret{ jank_nil() };
     for(auto const &form : expr->values)
     {
       ret = eval(form);
@@ -663,7 +661,7 @@ namespace jank::evaluate
     {
       return eval(expr->else_.unwrap());
     }
-    return jank_nil;
+    return jank_nil();
   }
 
   object_ref eval(expr::throw_ref const expr)
@@ -677,7 +675,28 @@ namespace jank::evaluate
 
   object_ref eval(expr::try_ref const expr)
   {
-    return dynamic_call(eval(wrap_expression(expr, "try", {})));
+    util::scope_exit const finally{ [=]() {
+      if(expr->finally_body)
+      {
+        eval(expr->finally_body.unwrap());
+      }
+    } };
+
+    if(!expr->catch_body)
+    {
+      return eval(expr->body);
+    }
+    try
+    {
+      return eval(expr->body);
+    }
+    catch(object_ref const e)
+    {
+      return dynamic_call(eval(wrap_expression(expr->catch_body.unwrap().body,
+                                               "catch",
+                                               { expr->catch_body.unwrap().sym })),
+                          e);
+    }
   }
 
   object_ref eval(expr::case_ref const expr)
@@ -688,7 +707,7 @@ namespace jank::evaluate
   object_ref eval(expr::cpp_raw_ref const expr)
   {
     __rt_ctx->jit_prc.eval_string(expr->code);
-    return runtime::jank_nil;
+    return runtime::jank_nil();
   }
 
   object_ref eval(expr::cpp_type_ref const)
@@ -708,6 +727,13 @@ namespace jank::evaluate
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
     return dynamic_call(eval(wrap_expression(expr, "cpp_cast", {})));
+  }
+
+  object_ref eval(expr::cpp_unsafe_cast_ref const expr)
+  {
+    /* TODO: How do we get source info here? Or can we detect this earlier? */
+    cpp_util::ensure_convertible(expr).expect_ok();
+    return dynamic_call(eval(wrap_expression(expr, "cpp_unsafe_cast", {})));
   }
 
   object_ref eval(expr::cpp_call_ref const expr)
