@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-2dc33731.js";
+            window.path_to_searchindex_js = "../searchindex-321014a5.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-bf1be8da.js"></script>
@@ -193,6 +193,14 @@ is never called.</p>
 <p>The <code>cpp/raw</code> form always evaluates to <code>nil</code>. At runtime, <code>foo</code> will do nothing
 but return <code>nil</code>, since the JIT compilation is where the effect of <code>cpp/raw</code>
 actually happens.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Unlike in C++, you will not need to <code>#include</code> in every source file, since the
+global C++ environment is affected by each file inclusion. This is simply due
+to how Clang’s JIT compilation works. However, this means you should be even
+more careful with how much you include and how name collisions might happen
+within your jank projects.</p>
+</blockquote>
 <h2 id="a-helpful-idiom"><a class="header" href="#a-helpful-idiom">A helpful idiom</a></h2>
 <p>Hopefully this becomes a less common idiom simply by not being needed, but for
 now it’s common enough. If you run into issues trying to access a member, call a
