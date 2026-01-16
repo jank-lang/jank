@@ -21,6 +21,13 @@ The `cpp/raw` form always evaluates to `nil`. At runtime, `foo` will do nothing
 but return `nil`, since the JIT compilation is where the effect of `cpp/raw`
 actually happens.
 
+> [!NOTE]
+> Unlike in C++, you will not need to `#include` in every source file, since the
+> global C++ environment is affected by each file inclusion. This is simply due
+> to how Clang's JIT compilation works. However, this means you should be even
+> more careful with how much you include and how name collisions might happen
+> within your jank projects.
+
 ## A helpful idiom
 Hopefully this becomes a less common idiom simply by not being needed, but for
 now it's common enough. If you run into issues trying to access a member, call a
