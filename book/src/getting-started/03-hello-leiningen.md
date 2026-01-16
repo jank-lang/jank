@@ -96,6 +96,7 @@ setting everything up so that jank can do this.
 
 ```bash
 $ lein run
+<maybe some first time output for lein to fetch dependencies>
 Hello, world!
 ```
 
