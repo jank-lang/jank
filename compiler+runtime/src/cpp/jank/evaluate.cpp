@@ -262,6 +262,8 @@ namespace jank::evaluate
     return ret;
   }
 
+  var_ref global_var;
+
   object_ref eval(expr::def_ref const expr)
   {
     auto var(__rt_ctx->intern_var(expr->name).expect_ok());
@@ -276,6 +278,7 @@ namespace jank::evaluate
       return var;
     }
 
+    global_var = var;
     auto const evaluated_value(eval(expr->value.unwrap()));
     var->bind_root(evaluated_value);
 
@@ -569,6 +572,11 @@ namespace jank::evaluate
 
   object_ref eval(expr::function_ref const expr)
   {
+    return eval(expr, "");
+  }
+
+  object_ref eval(expr::function_ref const expr, jtl::immutable_string const &)
+  {
     profile::timer const timer{ util::format("eval jit function {}", expr->name) };
     auto const &module(
       module::nest_module(expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
@@ -603,12 +611,25 @@ namespace jank::evaluate
         util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
       }
 
-      __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
-      auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
-      clang::Value v;
-      __rt_ctx->jit_prc.eval_string({ expr_str.data(), expr_str.size() }, &v);
-      auto ret{ try_object<obj::jit_function>(v.convertTo<runtime::object *>()) };
-      return ret;
+      if(global_var.is_some())
+      {
+        auto const ret{ make_box<obj::deferred_cpp_function>() };
+        ret->declaration_code = cg_prc.declaration_str();
+        ret->expression_code = cg_prc.expression_str() + ".erase().data";
+        ret->meta = expr->meta;
+        ret->var = global_var;
+        global_var = jank_nil();
+        return ret;
+      }
+      else
+      {
+        __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
+        auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
+        clang::Value v;
+        __rt_ctx->jit_prc.eval_string({ expr_str.data(), expr_str.size() }, &v);
+        auto ret{ try_object<obj::jit_function>(v.convertTo<runtime::object *>()) };
+        return ret;
+      }
     }
   }
 

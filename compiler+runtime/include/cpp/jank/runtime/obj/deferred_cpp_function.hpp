@@ -1,0 +1,51 @@
+#pragma once
+
+#include <jank/runtime/object.hpp>
+#include <jank/runtime/behavior/callable.hpp>
+
+namespace jank::runtime
+{
+  struct var;
+}
+
+namespace jank::runtime::obj
+{
+  using deferred_cpp_function_ref = oref<struct deferred_cpp_function>;
+  using jit_function_ref = oref<struct jit_function>;
+  using var_ref = oref<runtime::var>;
+
+  struct deferred_cpp_function : behavior::callable
+  {
+    static constexpr object_type obj_type{ object_type::deferred_cpp_function };
+    static constexpr bool pointer_free{ false };
+
+    deferred_cpp_function() = default;
+    deferred_cpp_function(deferred_cpp_function &&) noexcept = default;
+    deferred_cpp_function(deferred_cpp_function const &) = default;
+    deferred_cpp_function(object_ref const meta);
+
+    /* behavior::object_like */
+    bool equal(object const &) const;
+    jtl::immutable_string to_string();
+    void to_string(jtl::string_builder &buff);
+    jtl::immutable_string to_code_string();
+    uhash to_hash() const;
+
+    /* behavior::metadatable */
+    deferred_cpp_function_ref with_meta(object_ref const m);
+
+    /* behavior::callable */
+    using behavior::callable::call;
+    object_ref call(object_ref const) override;
+
+    arity_flag_t get_arity_flags() const override;
+    object_ref this_object_ref() override;
+
+    object base{ obj_type };
+    jtl::option<object_ref> meta;
+    jtl::immutable_string declaration_code;
+    jtl::immutable_string expression_code;
+    var_ref var;
+    jit_function_ref compiled_fn;
+  };
+}

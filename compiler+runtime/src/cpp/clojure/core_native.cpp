@@ -117,7 +117,8 @@ namespace clojure::core_native
   object_ref is_fn(object_ref const o)
   {
     return make_box(o->type == object_type::native_function_wrapper
-                    || o->type == object_type::jit_function);
+                    || o->type == object_type::jit_function
+                    || o->type == object_type::deferred_cpp_function);
   }
 
   object_ref is_multi_fn(object_ref const o)
