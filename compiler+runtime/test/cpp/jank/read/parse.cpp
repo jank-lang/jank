@@ -286,6 +286,44 @@ namespace jank::read::parse
               == lex::token{ 9, 10, lex::token_kind::character, "\\backspace" });
       }
 
+      SUBCASE("Unicode literals")
+      {
+        SUBCASE("Valid")
+        {
+          /* These cases test 2 bytes, 3 bytes, and 4 bytes Unicode variants
+           * (the 1 byte variant is covered by ASCII tests). */
+          lex::processor lp{ R"(\¡ \ষ \𐅦)" };
+          processor p{ lp.begin(), lp.end() };
+
+          usize offset{};
+          for(jtl::immutable_string const &ch : { "\\¡", "\\ষ", "\\𐅦" })
+          {
+            auto const r(p.next());
+            CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::character>(ch.substr(1))));
+
+            auto const len(ch.size());
+            CHECK(r.expect_ok().unwrap().start
+                  == lex::token{ offset, len, lex::token_kind::character, ch });
+            CHECK(r.expect_ok().unwrap().end == r.expect_ok().unwrap().start);
+
+            /* +1 for space */
+            offset += len + 1;
+          }
+        }
+
+        SUBCASE("Invalid")
+        {
+          lex::processor lp{ R"(\𐅪a \vϴ)" };
+          processor p{ lp.begin(), lp.end() };
+
+          for(usize i{}; i < 2; ++i)
+          {
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+        }
+      }
+
       SUBCASE("Hex unicode")
       {
         SUBCASE("Valid")

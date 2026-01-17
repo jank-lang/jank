@@ -592,13 +592,14 @@ namespace jank::read::lex
           require_space = false;
 
           auto const ch(peek());
-          ++pos;
 
           if(ch.is_err())
           {
+            ++pos;
             return ch.expect_err();
           }
 
+          pos += ch.expect_ok().len;
           while(pos <= file.size())
           {
             auto const pt(peek());
