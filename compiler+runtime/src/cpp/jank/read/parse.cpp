@@ -28,41 +28,32 @@ namespace jank::read::parse
     }
     else if(s.size() == 2)
     {
-      auto const is_char0_utf8 {
-        static_cast<unsigned char>(s[0]) >= 0xC0 && static_cast<unsigned char>(s[0]) <= 0xDF
-      };
-      auto const is_char1_utf8{
-        static_cast<unsigned char>(s[1]) >= 0x80 && static_cast<unsigned char>(s[1]) <= 0xBF
-      };
+      auto const is_char0_utf8{ static_cast<unsigned char>(s[0]) >= 0xC0
+                                && static_cast<unsigned char>(s[0]) <= 0xDF };
+      auto const is_char1_utf8{ static_cast<unsigned char>(s[1]) >= 0x80
+                                && static_cast<unsigned char>(s[1]) <= 0xBF };
       return is_char0_utf8 && is_char1_utf8;
     }
     else if(s.size() == 3)
     {
-      auto const is_char0_utf8{
-        static_cast<unsigned char>(s[0]) >= 0xE0 && static_cast<unsigned char>(s[0]) <= 0xEF
-      };
-      auto const is_char1_utf8{
-        static_cast<unsigned char>(s[1]) >= 0x80 && static_cast<unsigned char>(s[1]) <= 0xBF
-      };
-      auto const is_char2_utf8{
-        static_cast<unsigned char>(s[2]) >= 0x80 && static_cast<unsigned char>(s[2]) <= 0xBF
-      };
+      auto const is_char0_utf8{ static_cast<unsigned char>(s[0]) >= 0xE0
+                                && static_cast<unsigned char>(s[0]) <= 0xEF };
+      auto const is_char1_utf8{ static_cast<unsigned char>(s[1]) >= 0x80
+                                && static_cast<unsigned char>(s[1]) <= 0xBF };
+      auto const is_char2_utf8{ static_cast<unsigned char>(s[2]) >= 0x80
+                                && static_cast<unsigned char>(s[2]) <= 0xBF };
       return is_char0_utf8 && is_char1_utf8 && is_char2_utf8;
     }
     else if(s.size() == 4)
     {
-      auto const is_char0_utf8{
-        static_cast<unsigned char>(s[0]) >= 0xF0 && static_cast<unsigned char>(s[0]) <= 0xF7
-      };
-      auto const is_char1_utf8{
-        static_cast<unsigned char>(s[1]) >= 0x80 && static_cast<unsigned char>(s[1]) <= 0xBF
-      };
-      auto const is_char2_utf8{
-        static_cast<unsigned char>(s[2]) >= 0x80 && static_cast<unsigned char>(s[2]) <= 0xBF
-      };
-      auto const is_char3_utf8{
-        static_cast<unsigned char>(s[3]) >= 0x80 && static_cast<unsigned char>(s[3]) <= 0xBF
-      };
+      auto const is_char0_utf8{ static_cast<unsigned char>(s[0]) >= 0xF0
+                                && static_cast<unsigned char>(s[0]) <= 0xF7 };
+      auto const is_char1_utf8{ static_cast<unsigned char>(s[1]) >= 0x80
+                                && static_cast<unsigned char>(s[1]) <= 0xBF };
+      auto const is_char2_utf8{ static_cast<unsigned char>(s[2]) >= 0x80
+                                && static_cast<unsigned char>(s[2]) <= 0xBF };
+      auto const is_char3_utf8{ static_cast<unsigned char>(s[3]) >= 0x80
+                                && static_cast<unsigned char>(s[3]) <= 0xBF };
       return is_char0_utf8 && is_char1_utf8 && is_char2_utf8 && is_char3_utf8;
     }
     return false;
@@ -541,8 +532,8 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(std::get<jtl::immutable_string_view>(start_token.data));
     auto const character(get_char_from_literal(sv));
-    static constexpr auto const min_unicode_str_length { 3 };
-    static constexpr auto const max_unicode_str_length { 5 };
+    static constexpr auto const min_unicode_str_length{ 3 };
+    static constexpr auto const max_unicode_str_length{ 5 };
 
     if(character.is_none())
     {
@@ -562,7 +553,8 @@ namespace jank::read::parse
                                    start_token,
                                    start_token };
       }
-      else if(sv[0] == '\\' && sv.size() >= min_unicode_str_length && sv.size() <= max_unicode_str_length)
+      else if(sv[0] == '\\' && sv.size() >= min_unicode_str_length
+              && sv.size() <= max_unicode_str_length)
       {
         auto const str(sv.substr(1));
 
