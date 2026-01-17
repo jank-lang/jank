@@ -541,6 +541,8 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(std::get<jtl::immutable_string_view>(start_token.data));
     auto const character(get_char_from_literal(sv));
+    static constexpr auto const min_unicode_str_length { 3 };
+    static constexpr auto const max_unicode_str_length { 5 };
 
     if(character.is_none())
     {
@@ -560,7 +562,7 @@ namespace jank::read::parse
                                    start_token,
                                    start_token };
       }
-      else if(sv[0] == '\\' && sv.size() >= 3 && sv.size() <= 5)
+      else if(sv[0] == '\\' && sv.size() >= min_unicode_str_length && sv.size() <= max_unicode_str_length)
       {
         auto const str(sv.substr(1));
 
