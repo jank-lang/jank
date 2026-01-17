@@ -595,7 +595,7 @@ namespace jank::read::lex
 
           if(ch.is_err())
           {
-            pos++;
+            ++pos;
             return ch.expect_err();
           }
 
