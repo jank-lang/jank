@@ -75,9 +75,15 @@ namespace jank::read::parse
     object_result parse_reader_macro_var_quote();
     object_result parse_reader_macro_symbolic_values();
     object_result parse_regex();
-    object_result parse_tagged_uuid();
-    object_result parse_tagged_inst();
-    object_result parse_tagged_cpp();
+    object_result parse_tagged_uuid(runtime::object_ref const &form,
+                                    lex::token const &start_token,
+                                    lex::token const &str_end) const;
+    object_result parse_tagged_inst(runtime::object_ref const &form,
+                                    lex::token const &start_token,
+                                    lex::token const &str_end) const;
+    object_result parse_tagged_cpp(runtime::object_ref const &form,
+                                   lex::token const &start_token,
+                                   lex::token const &str_end) const;
     object_result parse_reader_macro_tagged();
     object_result parse_reader_macro_comment();
     object_result parse_reader_macro_conditional(bool splice);
@@ -112,6 +118,11 @@ namespace jank::read::parse
   public:
     lex::processor::iterator token_current, token_end;
     jtl::option<lex::token_kind> expected_closer;
+    /*  The Clojure reader relaxes tagged literal syntax rules when dealing with
+     *  a form in an unsupported reader conditional. This is done because an
+     *  implementation of Clojure on a specific platform can't make any assumptions
+     *  on what tagged literals other platform implementations will support. */
+    runtime::var_ref suppress_read_var;
     /* Splicing, in reader conditionals, is not allowed at the top level. When we're parsing
      * some other form, such as a list, we'll bind this var to true. */
     runtime::var_ref splicing_allowed_var;
