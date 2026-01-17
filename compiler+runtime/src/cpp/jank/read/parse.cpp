@@ -20,7 +20,7 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
-  static bool is_utf8_char(jtl::immutable_string_view s)
+  static bool is_utf8_char(jtl::immutable_string const &s)
   {
     if(s.size() == 1)
     {
