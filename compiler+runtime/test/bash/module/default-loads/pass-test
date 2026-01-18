@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -xeuo pipefail
+
+jank --module-path src run-main default-loads.core | grep '#{clojure.core clojure.core-native default-loads.core jank.compiler-native}'
