@@ -40,6 +40,7 @@
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/jit_closure.hpp>
+#include <jank/runtime/obj/deferred_cpp_function.hpp>
 #include <jank/runtime/obj/multi_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/native_pointer_wrapper.hpp>
@@ -183,6 +184,8 @@ namespace jank::runtime
         return fn(expect_object<obj::jit_function>(erased), std::forward<Args>(args)...);
       case object_type::jit_closure:
         return fn(expect_object<obj::jit_closure>(erased), std::forward<Args>(args)...);
+      case object_type::deferred_cpp_function:
+        return fn(expect_object<obj::deferred_cpp_function>(erased), std::forward<Args>(args)...);
       case object_type::multi_function:
         return fn(expect_object<obj::multi_function>(erased), std::forward<Args>(args)...);
       case object_type::atom:

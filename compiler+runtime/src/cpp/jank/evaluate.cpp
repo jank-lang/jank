@@ -262,6 +262,12 @@ namespace jank::evaluate
     return ret;
   }
 
+  /* If we're directly evaluating the value for a def, this will be set to the var the
+   * def has interned. This is used when creating deferred functions, since they need
+   * to know the var which owns the function they're proxying. */
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  thread_local var_ref current_def_var;
+
   object_ref eval(expr::def_ref const expr)
   {
     auto var(__rt_ctx->intern_var(expr->name).expect_ok());
@@ -276,8 +282,10 @@ namespace jank::evaluate
       return var;
     }
 
+    current_def_var = var;
     auto const evaluated_value(eval(expr->value.unwrap()));
     var->bind_root(evaluated_value);
+    current_def_var = jank_nil();
 
     return var;
   }
@@ -569,6 +577,11 @@ namespace jank::evaluate
 
   object_ref eval(expr::function_ref const expr)
   {
+    return eval(expr, "");
+  }
+
+  object_ref eval(expr::function_ref const expr, jtl::immutable_string const &)
+  {
     profile::timer const timer{ util::format("eval jit function {}", expr->name) };
     auto const &module(
       module::nest_module(expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
@@ -603,12 +616,26 @@ namespace jank::evaluate
         util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
       }
 
-      __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
-      auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
-      clang::Value v;
-      __rt_ctx->jit_prc.eval_string({ expr_str.data(), expr_str.size() }, &v);
-      auto ret{ try_object<obj::jit_function>(v.convertTo<runtime::object *>()) };
-      return ret;
+      if(current_def_var.is_some()
+         && util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
+      {
+        auto const ret{ make_box<obj::deferred_cpp_function>(expr->meta,
+                                                             cg_prc.declaration_str(),
+                                                             cg_prc.expression_str()
+                                                               + ".erase().data",
+                                                             current_def_var) };
+        current_def_var = jank_nil();
+        return ret;
+      }
+      else
+      {
+        __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
+        auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
+        clang::Value v;
+        __rt_ctx->jit_prc.eval_string({ expr_str.data(), expr_str.size() }, &v);
+        auto const ret{ try_object<obj::jit_function>(v.convertTo<runtime::object *>()) };
+        return ret;
+      }
     }
   }
 

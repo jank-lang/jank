@@ -67,6 +67,7 @@ namespace jank::runtime
     native_function_wrapper,
     jit_function,
     jit_closure,
+    deferred_cpp_function,
     multi_function,
 
     native_pointer_wrapper,
@@ -199,6 +200,8 @@ namespace jank::runtime
         return "jit_function";
       case object_type::jit_closure:
         return "jit_closure";
+      case object_type::deferred_cpp_function:
+        return "deferred_cpp_function";
       case object_type::multi_function:
         return "multi_function";
 

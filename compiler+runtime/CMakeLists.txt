@@ -470,6 +470,7 @@ add_library(
   src/cpp/jank/runtime/obj/native_function_wrapper.cpp
   src/cpp/jank/runtime/obj/jit_function.cpp
   src/cpp/jank/runtime/obj/jit_closure.cpp
+  src/cpp/jank/runtime/obj/deferred_cpp_function.cpp
   src/cpp/jank/runtime/obj/multi_function.cpp
   src/cpp/jank/runtime/obj/native_pointer_wrapper.cpp
   src/cpp/jank/runtime/obj/symbol.cpp
