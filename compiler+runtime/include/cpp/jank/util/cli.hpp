@@ -65,6 +65,10 @@ namespace jank::util::cli
   {
     lazy,
     eager,
+    /* TODO: We can support a batch mode which lazily creates proxy fns during eval
+     * and then batches them all together into one compilation to replace the proxies.
+     * This would then be the default for run and run-main, whereas lazy would be
+     * the default for everything else. */
   };
 
   constexpr char const *compilation_eagerness_str(compilation_eagerness const eagerness)
