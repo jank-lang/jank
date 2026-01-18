@@ -14,6 +14,19 @@ namespace jank::runtime::obj
   using jit_function_ref = oref<struct jit_function>;
   using var_ref = oref<runtime::var>;
 
+  /* When compiling with C++ codegen, we support lazily compiling functions using this
+   * deferred function object. When a function is within a def, we will create this function
+   * type instead of JIT compiling the C++ to create an actual function object. This function
+   * object just stores the generated C++ code and will JIT compile it if the function gets
+   * called.
+   *
+   * In many cases, especially when compiling modules, most functions are not called. This
+   * allows us to drastically cut down on compile times, since JIT compiling C++ is a very
+   * expensive task.
+   *
+   * When this function is called, it will JIT compile the C++ code, get a real function
+   * object, replace the root of the var with that object, and then continue to proxy
+   * calls to that object for anyone who still has a handle to this one. */
   struct deferred_cpp_function : behavior::callable
   {
     static constexpr object_type obj_type{ object_type::deferred_cpp_function };
