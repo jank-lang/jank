@@ -398,6 +398,14 @@ OPTIONS
         }
         throw sb.release();
       }
+
+      /* Regardless of what's requested, if we're generating IR, we need to force eagerness.
+       * This is because deferred fns only support C++ compilation AND laziness doesn't buy
+       * us very much for IR gen, since we don't have the cost of C++ compilation to pay. */
+      if(opts.codegen == codegen_type::llvm_ir)
+      {
+        opts.eagerness = compilation_eagerness::eager;
+      }
     }
     catch(jtl::immutable_string const &msg)
     {
