@@ -61,6 +61,25 @@ namespace jank::util::cli
     }
   }
 
+  enum class compilation_eagerness : u8
+  {
+    lazy,
+    eager,
+  };
+
+  constexpr char const *compilation_eagerness_str(compilation_eagerness const eagerness)
+  {
+    switch(eagerness)
+    {
+      case compilation_eagerness::lazy:
+        return "lazy";
+      case compilation_eagerness::eager:
+        return "eager";
+      default:
+        return "unknown";
+    }
+  }
+
   struct options
   {
     /* Runtime. */
@@ -81,6 +100,7 @@ namespace jank::util::cli
     bool debug{};
     u8 optimization_level{};
     bool direct_call{};
+    compilation_eagerness eagerness{ compilation_eagerness::lazy };
 
     /* Run command. */
     jtl::immutable_string target_file;

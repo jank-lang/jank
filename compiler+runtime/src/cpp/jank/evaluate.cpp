@@ -262,7 +262,11 @@ namespace jank::evaluate
     return ret;
   }
 
-  var_ref global_var;
+  /* If we're directly evaluating the value for a def, this will be set to the var the
+   * def has interned. This is used when creating deferred functions, since they need
+   * to know the var which owns the function they're proxying. */
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  thread_local var_ref current_def_var;
 
   object_ref eval(expr::def_ref const expr)
   {
@@ -278,9 +282,10 @@ namespace jank::evaluate
       return var;
     }
 
-    global_var = var;
+    current_def_var = var;
     auto const evaluated_value(eval(expr->value.unwrap()));
     var->bind_root(evaluated_value);
+    current_def_var = jank_nil();
 
     return var;
   }
@@ -611,14 +616,15 @@ namespace jank::evaluate
         util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
       }
 
-      if(global_var.is_some())
+      if(current_def_var.is_some()
+         && util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
       {
-        auto const ret{ make_box<obj::deferred_cpp_function>() };
-        ret->declaration_code = cg_prc.declaration_str();
-        ret->expression_code = cg_prc.expression_str() + ".erase().data";
-        ret->meta = expr->meta;
-        ret->var = global_var;
-        global_var = jank_nil();
+        auto const ret{ make_box<obj::deferred_cpp_function>(expr->meta,
+                                                             cg_prc.declaration_str(),
+                                                             cg_prc.expression_str()
+                                                               + ".erase().data",
+                                                             current_def_var) };
+        current_def_var = jank_nil();
         return ret;
       }
       else
@@ -627,7 +633,7 @@ namespace jank::evaluate
         auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
         clang::Value v;
         __rt_ctx->jit_prc.eval_string({ expr_str.data(), expr_str.size() }, &v);
-        auto ret{ try_object<obj::jit_function>(v.convertTo<runtime::object *>()) };
+        auto const ret{ try_object<obj::jit_function>(v.convertTo<runtime::object *>()) };
         return ret;
       }
     }

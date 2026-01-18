@@ -19,10 +19,12 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::deferred_cpp_function };
     static constexpr bool pointer_free{ false };
 
-    deferred_cpp_function() = default;
+    deferred_cpp_function(object_ref const meta,
+                          jtl::immutable_string const &declaration_code,
+                          jtl::immutable_string const &expression_code,
+                          var_ref const var);
     deferred_cpp_function(deferred_cpp_function &&) noexcept = default;
     deferred_cpp_function(deferred_cpp_function const &) = default;
-    deferred_cpp_function(object_ref const meta);
 
     /* behavior::object_like */
     bool equal(object const &) const;
