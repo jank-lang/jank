@@ -955,6 +955,8 @@ namespace jank::runtime::module
       locked_ordered_modules->push_back(module);
     }
 
+    set_is_loaded(module);
+
     return ok();
   }
 

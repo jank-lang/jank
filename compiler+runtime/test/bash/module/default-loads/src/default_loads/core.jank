@@ -1,0 +1,3 @@
+(ns default-loads.core)
+
+(defn -main [] (print (loaded-libs)))
