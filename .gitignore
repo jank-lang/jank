@@ -1,4 +1,5 @@
 /compiler+runtime/test.jank
+/compiler+runtime/dev
 jank-generated.hpp
 .jank-repl-history
 a.out

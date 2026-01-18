@@ -757,7 +757,12 @@ namespace jank::runtime::module
         std::time_t source_modified_time{};
         module_type module_type{};
 
-        if(entry.jank.is_some() && entry.jank.unwrap().exists())
+        if(entry.cpp.is_some() && entry.cpp.unwrap().exists())
+        {
+          source_modified_time = entry.cpp.unwrap().last_modified_at();
+          module_type = module_type::cpp;
+        }
+        else if(entry.jank.is_some() && entry.jank.unwrap().exists())
         {
           source_modified_time = entry.jank.unwrap().last_modified_at();
           module_type = module_type::jank;
@@ -766,11 +771,6 @@ namespace jank::runtime::module
         {
           source_modified_time = entry.cljc.unwrap().last_modified_at();
           module_type = module_type::cljc;
-        }
-        else if(entry.cpp.is_some() && entry.cpp.unwrap().exists())
-        {
-          source_modified_time = entry.cpp.unwrap().last_modified_at();
-          module_type = module_type::cpp;
         }
         else
         {
@@ -913,11 +913,6 @@ namespace jank::runtime::module
 
   jtl::result<void, error_ref> loader::load(jtl::immutable_string const &module, origin const ori)
   {
-    if(ori != origin::source && loader::is_loaded(module))
-    {
-      return ok();
-    }
-
     auto const &found_module{ loader::find(module, ori) };
     if(found_module.is_err())
     {
@@ -955,11 +950,13 @@ namespace jank::runtime::module
       return res;
     }
 
-    loader::set_is_loaded(module);
     {
       auto const locked_ordered_modules{ __rt_ctx->loaded_modules_in_order.wlock() };
       locked_ordered_modules->push_back(module);
     }
+
+    set_is_loaded(module);
+
     return ok();
   }
 

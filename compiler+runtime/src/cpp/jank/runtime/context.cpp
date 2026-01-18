@@ -67,7 +67,9 @@ namespace jank::runtime
 
     auto const loaded_libs_sym(make_box<obj::symbol>("*loaded-libs*"));
     loaded_libs_var = core->intern_var(loaded_libs_sym);
-    loaded_libs_var->bind_root(make_box<obj::atom>(obj::persistent_sorted_set::empty()));
+    loaded_libs_var->bind_root(make_box<obj::atom>(
+      obj::persistent_sorted_set::create_from_seq(make_box<obj::persistent_vector>(
+        runtime::detail::native_persistent_vector{ make_box<obj::symbol>("clojure.core") }))));
     loaded_libs_var->dynamic.store(true);
 
     auto const assert_sym(make_box<obj::symbol>("*assert*"));
