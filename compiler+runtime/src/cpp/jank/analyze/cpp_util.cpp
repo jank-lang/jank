@@ -26,12 +26,16 @@ namespace jank::analyze::cpp_util
     static_cast<void>(runtime::__rt_ctx->jit_prc.interpreter->Parse("1"));
   }
 
-  jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> const scope)
+  jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> scope)
   {
     if(!scope)
     {
       return ok();
     }
+
+    /* We might have a type alias, which will not be considered a template, so we want
+     * to get to the bottom of it. */
+    scope = Cpp::GetUnderlyingScope(scope);
 
     /* If we have a template specialization and we want to access one of its members, we
      * need to be sure that it's fully instantiated. If we don't, the member won't
