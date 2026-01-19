@@ -3315,12 +3315,11 @@
 
 (defn mapcat
   "Returns the result of applying concat to the result of applying map
-   to f and colls. Thus function f should return a collection. Returns
-   a transducer when no collections are provided"
+  to f and colls.  Thus function f should return a collection. Returns
+  a transducer when no collections are provided"
   ([f] (comp (map f) cat))
-  ; TODO: Variadic.
-  ([f coll]
-   (apply concat (map f coll))))
+  ([f & colls]
+   (apply concat (apply map f colls))))
 
 (defn tree-seq
   "Returns a lazy sequence of the nodes in a tree, via a depth-first walk.
