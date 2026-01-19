@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::pass_template_alias
+          {
+            struct foo
+            { };
+
+            using foo_vec = std::vector<foo>;
+          }")
+(let* [v (cpp/jank.cpp.constructor.complex.pass_template_alias.foo_vec)]
+  :success)
