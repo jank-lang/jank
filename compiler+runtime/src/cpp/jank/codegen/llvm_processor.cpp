@@ -182,7 +182,7 @@ namespace jank::codegen
     void register_parent_catch_clauses(llvm::LandingPadInst *landing_pad,
                                        native_set<llvm::Value *> &registered_rtti);
 
-    llvm::Function *ensure_static_wrapper(jtl::ptr<void> scope);
+    llvm::Function *ensure_static_wrapper(jtl::ptr<void> scope) const;
 
     llvm::Value *gen_var(obj::symbol_ref const qualified_name) const;
     llvm::Value *gen_var_root(obj::symbol_ref const qualified_name, var_root_kind kind) const;
@@ -1871,8 +1871,8 @@ namespace jank::codegen
         llvm::StructType::get(*llvm_ctx, { ctx->builder->getPtrTy(), ctx->builder->getInt32Ty() })
       };
       auto const undef{ llvm::UndefValue::get(lpad_type) };
-      auto const val0{ ctx->builder->CreateInsertValue(undef, ex_ptr, { 0 }) };
-      auto const val1{ ctx->builder->CreateInsertValue(val0, selector, { 1 }) };
+      auto const agg_val{ ctx->builder->CreateInsertValue(undef, ex_ptr, { 0 }) };
+      auto const val1{ ctx->builder->CreateInsertValue(agg_val, selector, { 1 }) };
       ctx->builder->CreateResume(val1);
     }
   }
@@ -2697,7 +2697,6 @@ namespace jank::codegen
     if(expr->val_kind == expr::cpp_value::value_kind::variable && Cpp::IsVariable(expr->scope)
        && !is_copyable)
     {
-      auto const var_name{ Cpp::GetQualifiedCompleteName(expr->scope) };
       auto const fn_type(llvm::FunctionType::get(ctx->builder->getPtrTy(), false));
       auto const fn{ ensure_static_wrapper(expr->scope) };
       auto const addr{ ctx->builder->CreateCall(fn_type, fn) };
@@ -3371,7 +3370,7 @@ namespace jank::codegen
   /* We generate a static wrapper function to return the address of the static member variable.
    * This allows us to access the variable from the JIT, as we cannot take the address of
    * a static member directly if it is not defined in the current module. */
-  llvm::Function *llvm_processor::impl::ensure_static_wrapper(jtl::ptr<void> scope)
+  llvm::Function *llvm_processor::impl::ensure_static_wrapper(jtl::ptr<void> scope) const
   {
     auto const var_name{ Cpp::GetQualifiedCompleteName(scope) };
     if(auto const it{ ctx->static_wrapper_cache.find(var_name) };
