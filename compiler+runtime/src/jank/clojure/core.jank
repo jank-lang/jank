@@ -26,7 +26,6 @@
 
 (def ^:dynamic *in* nil)
 (def ^:dynamic *out* nil)
-(def ^:dynamic *command-line-args* nil)
 (def ^:dynamic *warn-on-reflection* nil)
 (def ^:dynamic *compile-path* nil)
 (def ^:dynamic *unchecked-math* nil)

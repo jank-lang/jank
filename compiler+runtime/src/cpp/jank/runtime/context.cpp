@@ -75,6 +75,11 @@ namespace jank::runtime
     assert_var->bind_root(jank_true);
     assert_var->dynamic.store(true);
 
+    auto const command_line_args_sym(make_box<obj::symbol>("*command-line-args*"));
+    auto const command_line_args_var{ core->intern_var(command_line_args_sym) };
+    command_line_args_var->bind_root(jank_nil());
+    command_line_args_var->dynamic.store(true);
+
     /* These are not actually interned. They're extra private. */
     current_module_var
       = make_box<runtime::var>(core, make_box<obj::symbol>("*current-module*"))->set_dynamic(true);
