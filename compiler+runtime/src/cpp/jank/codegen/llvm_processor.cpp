@@ -1871,8 +1871,9 @@ namespace jank::codegen
         llvm::StructType::get(*llvm_ctx, { ctx->builder->getPtrTy(), ctx->builder->getInt32Ty() })
       };
       auto const undef{ llvm::UndefValue::get(lpad_type) };
-      auto const agg_val{ ctx->builder->CreateInsertValue(undef, ex_ptr, { 0 }) };
-      auto const val1{ ctx->builder->CreateInsertValue(agg_val, selector, { 1 }) };
+      auto const val0{ ctx->builder->CreateInsertValue(undef, ex_ptr, { 0 }) };
+      // NOLINTNEXTLINE(readability-suspicious-call-argument)
+      auto const val1{ ctx->builder->CreateInsertValue(val0, selector, { 1 }) };
       ctx->builder->CreateResume(val1);
     }
   }
