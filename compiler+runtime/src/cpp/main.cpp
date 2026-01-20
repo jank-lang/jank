@@ -14,6 +14,7 @@
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/persistent_vector_sequence.hpp>
 #include <jank/runtime/detail/type.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/c_api.h>
@@ -389,6 +390,17 @@ int main(int const argc, char const **argv)
 #endif
 
     Cpp::EnableDebugOutput(false);
+
+    {
+      runtime::detail::native_transient_vector extra_args;
+      for(auto const &s : opts.extra_opts)
+      {
+        extra_args.push_back(make_box<runtime::obj::persistent_string>(s));
+      }
+      __rt_ctx->intern_var("clojure.core", "*command-line-args*")
+        .expect_ok()
+        ->bind_root(make_box<obj::persistent_vector>(extra_args.persistent())->seq());
+    }
 
     switch(jank::util::cli::opts.command)
     {
