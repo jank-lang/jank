@@ -2436,7 +2436,7 @@ namespace jank::analyze
 
     /* We can't (yet) guarantee that each branch of an if returns the same unboxed type,
      * so we're unable to unbox them. */
-    needs_box = true;
+    // needs_box = true;
 
     auto const form_count(o->count());
     if(form_count < 3)
@@ -2466,9 +2466,12 @@ namespace jank::analyze
       return condition_expr.expect_err();
     }
     /* TODO: Support native types if they're compatible with bool. */
-    condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
-                                               cpp_util::untyped_object_ref_type(),
-                                               macro_expansions);
+    if(cpp_util::expression_type(condition_expr.expect_ok()).data != Cpp::GetType("bool"))
+    {
+      condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
+                                                 cpp_util::untyped_object_ref_type(),
+                                                 macro_expansions);
+    }
     if(condition_expr.is_err())
     {
       return condition_expr.expect_err();
@@ -2766,7 +2769,8 @@ namespace jank::analyze
             auto const catch_type_form(catch_it.first().unwrap());
             catch_it = catch_it.rest();
             auto const catch_sym_form(catch_it.first().unwrap());
-            auto const catch_type(analyze(catch_type_form, current_frame, position, fn_ctx, true));
+            auto const catch_type(
+              analyze(catch_type_form, current_frame, expression_position::type, fn_ctx, true));
             if(catch_type.is_err())
             {
               return error::analyze_invalid_try(catch_type.expect_err()->message,
@@ -2964,8 +2968,7 @@ namespace jank::analyze
       auto const pre_eval_expr(
         jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta));
       auto const oref(evaluate::eval(pre_eval_expr));
-
-      return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o);
+      return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, oref);
     }
 
     return jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta);
@@ -3715,7 +3718,7 @@ namespace jank::analyze
     for(usize i{}; i < arg_count; ++i, it = it.rest())
     {
       auto arg_expr{
-        analyze(it.first().unwrap(), current_frame, expression_position::value, fn_ctx, true)
+        analyze(it.first().unwrap(), current_frame, expression_position::value, fn_ctx, false)
       };
       if(arg_expr.is_err())
       {

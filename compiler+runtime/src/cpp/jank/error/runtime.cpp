@@ -36,13 +36,6 @@ namespace jank::error
     return e;
   }
 
-  error_ref runtime_unable_to_load_module(error_ref const cause)
-  {
-    auto const e{ make_error(kind::runtime_unable_to_load_module, read::source::unknown) };
-    e->cause = cause;
-    return e;
-  }
-
   error_ref internal_runtime_failure(jtl::immutable_string const &message)
   {
     return make_error(kind::internal_runtime_failure, message, read::source::unknown());

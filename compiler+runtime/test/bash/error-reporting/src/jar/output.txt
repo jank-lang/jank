@@ -1,6 +1,3 @@
-─ runtime/unable-to-load-module ────────────────────────────────────────────────
-error: Unable to load module.                                                   
-                                                                                
 
 ─ analyze/invalid-recur-from-try ───────────────────────────────────────────────
 error: It's not permitted to use 'recur' through a 'try'.                       

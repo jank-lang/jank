@@ -304,6 +304,16 @@ namespace jank::analyze::cpp_util
     return res;
   }
 
+  jtl::immutable_string get_qualified_type_name(jtl::ptr<void> const type)
+  {
+    if(type == untyped_object_ptr_type())
+    {
+      return "jank::runtime::object_ref";
+    }
+    /* TODO: Handle typed object refs, too. */
+
+    /* TODO: We probably want a recursive approach to this, for types and scopes. */
+    auto const qual_type{ clang::QualType::getFromOpaquePtr(type) };
     if(qual_type->isNullPtrType())
     {
       return "std::nullptr_t";

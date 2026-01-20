@@ -1341,7 +1341,9 @@ namespace jank::codegen
           field_type = llvm::cast<llvm::AllocaInst>(locals[name].data)->getAllocatedType();
         }
         else
+        {
           field_type = ctx->builder->getPtrTy();
+        }
         ctx->capture_field_types[name] = field_type;
       }
       llvm_processor const nested{ expr, ctx };
@@ -1865,9 +1867,9 @@ namespace jank::codegen
     else
     {
       /* No parent handler in this function scope - resume unwinding to the caller. */
-      auto const lpad_type{ llvm::StructType::get(*llvm_ctx,
-                                                  { ctx->builder->getPtrTy(),
-                                                    ctx->builder->getInt32Ty() }) };
+      auto const lpad_type{
+        llvm::StructType::get(*llvm_ctx, { ctx->builder->getPtrTy(), ctx->builder->getInt32Ty() })
+      };
       auto const undef{ llvm::UndefValue::get(lpad_type) };
       auto const val0{ ctx->builder->CreateInsertValue(undef, ex_ptr, { 0 }) };
       auto const val1{ ctx->builder->CreateInsertValue(val0, selector, { 1 }) };
@@ -1998,7 +2000,7 @@ namespace jank::codegen
     {
       if(catch_cleanup_block)
       {
-         lpad_and_catch_body_stack.emplace_back(catch_cleanup_block, nullptr);
+        lpad_and_catch_body_stack.emplace_back(catch_cleanup_block, nullptr);
       }
     }
     util::scope_exit const pop_lpad{ [&]() {
@@ -2052,7 +2054,7 @@ namespace jank::codegen
       /* Store the result */
       if(!catch_val)
       {
-        catch_val = gen_global(jank_nil);
+        catch_val = gen_global(jank_nil());
         ctx->builder->CreateStore(catch_val, result_slot);
       }
       else
@@ -2259,7 +2261,7 @@ namespace jank::codegen
      * 'finally' block has executed.
      * */
     llvm::AllocaInst *result_slot{ entry_builder.CreateAlloca(ptr_ty, nullptr, "try.result.slot") };
-    ctx->builder->CreateStore(gen_global(jank_nil), result_slot);
+    ctx->builder->CreateStore(gen_global(jank_nil()), result_slot);
 
     llvm::AllocaInst *dispatch_ex_slot{
       entry_builder.CreateAlloca(ptr_ty, nullptr, "dispatch.ex")
@@ -2323,7 +2325,8 @@ namespace jank::codegen
     /* --- Try block --- */
     {
       /* Push current handler info for nested tries to use. */
-      ctx->exception_handlers.push_back({ dispatch_block, exception_phi, selector_phi, expr, landing_pad_block });
+      ctx->exception_handlers.push_back(
+        { dispatch_block, exception_phi, selector_phi, expr, landing_pad_block });
       util::scope_exit const pop_handler{ [this]() { ctx->exception_handlers.pop_back(); } };
 
       lpad_and_catch_body_stack.emplace_back(landing_pad_block, catch_body_block);
@@ -2348,7 +2351,7 @@ namespace jank::codegen
         }
         else
         {
-          ctx->builder->CreateStore(gen_global(jank_nil), result_slot);
+          ctx->builder->CreateStore(gen_global(jank_nil()), result_slot);
         }
 
         if(has_finally)
@@ -3379,7 +3382,7 @@ namespace jank::codegen
 
     /* Create a wrapper function that returns the address of the variable.
      * Important: Don't use inline/always_inline or the function won't be emitted! */
-    auto const wrapper_name{ __rt_ctx->unique_munged_string() };
+    auto const wrapper_name{ unique_munged_string() };
     auto const wrapper_code{
       util::format("extern \"C\" auto {}() {{ return &{}; }}", wrapper_name, var_name)
     };
