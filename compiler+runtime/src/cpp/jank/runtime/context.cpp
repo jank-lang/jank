@@ -77,6 +77,11 @@ namespace jank::runtime
     assert_var->bind_root(jank_true);
     assert_var->dynamic.store(true);
 
+    auto const reader_opt_sym(make_box<obj::symbol>("*reader-opts*"));
+    reader_opts_var = core->intern_var(reader_opt_sym);
+    reader_opts_var->bind_root(jank_nil());
+    reader_opts_var->dynamic.store(true);
+
     auto const command_line_args_sym(make_box<obj::symbol>("*command-line-args*"));
     auto const command_line_args_var{ core->intern_var(command_line_args_sym) };
     command_line_args_var->bind_root(jank_nil());
@@ -308,6 +313,57 @@ namespace jank::runtime
     }
 
     return ret;
+  }
+
+  object_ref context::read_file(jtl::immutable_string const &file_path)
+  {
+    auto const file(module::loader::read_file(file_path));
+    if(file.is_err())
+    {
+      throw file.expect_err();
+    }
+
+    return read_string(file.expect_ok().view());
+  }
+
+  object_ref context::read_first_form(jtl::immutable_string const &code,
+                                      obj::persistent_array_map_ref const &reader_opts)
+  {
+    /* Clojure usually loads the value for `clojure.core/\*read-eval*` from the properties file.
+     * See here: https://github.com/clojure/clojure/blob/6a4ba6aedc8575768b2fff6d9c9c7e6503a0a93a/src/jvm/clojure/lang/RT.java#L198 */
+    auto const reader_eval_enabled{ __rt_ctx->find_var("clojure.core", "*read-eval*")->deref() };
+
+    if(reader_eval_enabled != jank_true)
+    {
+      throw std::runtime_error{ util::format("Reading disallowed - *read-eval* bound to {}",
+                                             runtime::to_code_string(reader_eval_enabled)) };
+    }
+
+    binding_scope const reader_opts_binding{ obj::persistent_hash_map::create_unique(
+      std::make_pair(reader_opts_var, reader_opts)) };
+    profile::timer const timer{ "rt read_first_form" };
+    read::lex::processor l_prc{ code };
+    read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+    auto const first_form{ p_prc.next() };
+
+    if(first_form.is_err())
+    {
+      throw first_form.expect_err();
+    }
+
+    if(first_form.expect_ok().is_none())
+    {
+      auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
+
+      if(!reader_opts->contains(eof_kw))
+      {
+        throw std::runtime_error{ "EOF while reading." };
+      }
+
+      return reader_opts->get(eof_kw);
+    }
+
+    return first_form.expect_ok().unwrap().ptr;
   }
 
   native_vector<analyze::expression_ref>

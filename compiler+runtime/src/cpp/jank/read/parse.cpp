@@ -1092,6 +1092,45 @@ namespace jank::read::parse
 
   processor::object_result processor::parse_reader_macro_conditional(bool const splice)
   {
+    auto const reader_opts{ __rt_ctx->reader_opts_var->deref() };
+    auto const has_reader_opts{ reader_opts != jank_nil() };
+    bool in_preserve_mode{};
+    obj::persistent_hash_set_ref features{};
+
+    if(has_reader_opts)
+    {
+      auto const reader_opts_map{ try_object<obj::persistent_array_map>(reader_opts) };
+      auto const read_cond_kw{ __rt_ctx->intern_keyword("", "read-cond").expect_ok() };
+      auto const read_cond{ reader_opts_map->get(read_cond_kw) };
+
+      if(read_cond == jank_nil())
+      {
+        throw std::runtime_error{ "Conditional read not allowed" };
+      }
+
+      auto const reader_cond{ try_object<obj::keyword>(read_cond) };
+
+      if(reader_cond == __rt_ctx->intern_keyword("", "preserve"))
+      {
+        in_preserve_mode = true;
+      }
+      else if(reader_cond == __rt_ctx->intern_keyword("", "allow"))
+      {
+      }
+      else
+      {
+        throw std::runtime_error{ "Conditional read not allowed" };
+      }
+
+      auto const features_kw{ __rt_ctx->intern_keyword("", "features").expect_ok() };
+      auto const feature_set{ reader_opts_map->get(features_kw) };
+
+      if(feature_set != jank_nil())
+      {
+        features = try_object<obj::persistent_hash_set>(feature_set);
+      }
+    }
+
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
@@ -1120,6 +1159,11 @@ namespace jank::read::parse
                                                      "#? expects an even number of forms.");
     }
 
+    if(in_preserve_mode)
+    {
+      return object_source_info{ list, start_token, list_end };
+    }
+
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
@@ -1130,7 +1174,8 @@ namespace jank::read::parse
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This
        * matches Clojure's behavior. */
-      if(equal(kw, jank_keyword) || equal(kw, default_keyword))
+      if(equal(kw, jank_keyword) || equal(kw, default_keyword)
+         || (has_reader_opts && features->contains(kw)))
       {
         if(splice)
         {

@@ -860,4 +860,44 @@ namespace jank::runtime
     }
 #endif
   }
+
+  object_ref read_string(object_ref const form_string, object_ref const opts)
+  {
+    return visit_object(
+      [](auto const typed_o, auto const opts) -> object_ref {
+        using T = typename decltype(typed_o)::value_type;
+        auto const typed_opts{ try_object<obj::persistent_array_map>(opts) };
+
+        if constexpr(std::same_as<T, obj::persistent_string>)
+        {
+          return __rt_ctx->read_first_form(typed_o->data, typed_opts);
+        }
+        else
+        {
+          throw std::runtime_error{ "Argument to read needs to be a string representing a form." };
+        }
+      },
+      form_string,
+      opts);
+  }
+
+  object_ref read(object_ref const file_path)
+  {
+    return visit_object(
+      [](auto const typed_o) -> object_ref {
+        using T = typename decltype(typed_o)::value_type;
+
+        if constexpr(std::same_as<T, obj::persistent_string>)
+        {
+          return __rt_ctx->read_file(typed_o->data);
+        }
+        else
+        {
+          throw std::runtime_error{
+            "Argument to read needs to be a string representing a file path."
+          };
+        }
+      },
+      file_path);
+  }
 }
