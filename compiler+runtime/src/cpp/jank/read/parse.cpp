@@ -337,7 +337,11 @@ namespace jank::read::parse
       {
         auto const error{ it.latest.unwrap().expect_err() };
 
-        if(!is_reader_suppressed || error->kind != error::kind::parse_invalid_reader_symbolic_value)
+        if(!is_reader_suppressed
+           || (error->kind != error::kind::parse_invalid_reader_symbolic_value
+               && error->kind != error::kind::parse_invalid_reader_tag_value
+               && error->kind != error::kind::parse_invalid_uuid
+               && error->kind != error::kind::parse_invalid_inst))
         {
           return err(error);
         }
