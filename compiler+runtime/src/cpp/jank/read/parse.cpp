@@ -920,7 +920,7 @@ namespace jank::read::parse
     {
       return error::parse_invalid_reader_tag_value(
         "The form after '#uuid' must be a string literal.",
-        { start_token.start, latest_token.end });
+        { start_token.start, start_token.end });
     }
 
     auto const str(expect_object<obj::persistent_string>(form));
@@ -933,7 +933,7 @@ namespace jank::read::parse
     catch(jank::runtime::object * const e)
     {
       return error::parse_invalid_uuid(try_object<obj::persistent_string>(e)->data,
-                                       { start_token.start, latest_token.end });
+                                       { start_token.start, start_token.end });
     }
   }
 
@@ -945,7 +945,7 @@ namespace jank::read::parse
     {
       return error::parse_invalid_reader_tag_value(
         "The form after '#inst' must be a string literal.",
-        { start_token.start, latest_token.end });
+        { start_token.start, start_token.end });
     }
 
     auto const str(expect_object<obj::persistent_string>(form));
@@ -958,7 +958,7 @@ namespace jank::read::parse
     catch(jank::runtime::object * const e)
     {
       return error::parse_invalid_inst(try_object<obj::persistent_string>(e)->data,
-                                       { start_token.start, latest_token.end });
+                                       { start_token.start, start_token.end });
     }
   }
 
@@ -1000,7 +1000,7 @@ namespace jank::read::parse
       default:
         return error::parse_invalid_reader_tag_value(
           "The form after '#cpp' must either be a string, boolean, integer or real literal.",
-          { start_token.start, latest_token.end });
+          { start_token.start, start_token.end });
     }
 #pragma clang diagnostic pop
 
@@ -1092,7 +1092,7 @@ namespace jank::read::parse
         return error::parse_invalid_reader_symbolic_value(
           "The *default-data-reader-fn* var must be a function which will be called with the tag "
           "and the form just after the tag.",
-          { start_token.start, latest_token.end });
+          { start_token.start, sym_end.end });
       }
     }
 
@@ -1113,7 +1113,7 @@ namespace jank::read::parse
       return error::parse_invalid_reader_symbolic_value(
         "This reader tag is not supported. '#uuid', '#inst' and '#cpp' are the only default tags "
         "currently supported.",
-        { start_token.start, latest_token.end });
+        { start_token.start, sym_end.end });
     }
   }
 
