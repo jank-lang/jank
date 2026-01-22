@@ -84,6 +84,7 @@ namespace jank::runtime::obj
     /* behavior::transientable */
     transient_array_map_ref to_transient() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     value_type data{};
   };
 }

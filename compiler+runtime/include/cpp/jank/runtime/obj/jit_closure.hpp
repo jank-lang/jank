@@ -84,6 +84,7 @@ namespace jank::runtime::obj
 
     object_ref this_object_ref() final;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     void *context{};
     object *(*arity_0)(object *){};
@@ -93,17 +94,9 @@ namespace jank::runtime::obj
     object *(*arity_4)(object *, object *, object *, object *, object *){};
     object *(*arity_5)(object *, object *, object *, object *, object *, object *){};
     object *(*arity_6)(object *, object *, object *, object *, object *, object *, object *){};
-    object *(*arity_7)(object *,
-
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *){};
+    object *(
+      *arity_7)(object *, object *, object *, object *, object *, object *, object *, object *){};
     object *(*arity_8)(object *,
-
                        object *,
                        object *,
                        object *,
@@ -113,7 +106,6 @@ namespace jank::runtime::obj
                        object *,
                        object *){};
     object *(*arity_9)(object *,
-
                        object *,
                        object *,
                        object *,
@@ -124,7 +116,6 @@ namespace jank::runtime::obj
                        object *,
                        object *){};
     object *(*arity_10)(object *,
-
                         object *,
                         object *,
                         object *,

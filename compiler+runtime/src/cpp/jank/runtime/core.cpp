@@ -1,3 +1,5 @@
+#include <pthread.h>
+
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
@@ -700,5 +702,115 @@ namespace jank::runtime
       reference);
 
     return reference;
+  }
+
+  object_ref future(object_ref const fn)
+  {
+    auto const bindings{ __rt_ctx->thread_binding_frames };
+    auto const ret{ make_box<obj::future>() };
+    ret->thread = std::thread{ [=]() {
+      __rt_ctx->thread_binding_frames = bindings;
+
+      try
+      {
+        auto const res{ dynamic_call(fn) };
+        {
+          auto const locked_state{ ret->state.wlock() };
+          locked_state->status = obj::future_status::done;
+          locked_state->result = res;
+        }
+      }
+      catch(object_ref const o)
+      {
+        auto const locked_state{ ret->state.wlock() };
+        locked_state->error = o;
+      }
+      catch(std::exception const &e)
+      {
+        auto const locked_state{ ret->state.wlock() };
+        locked_state->error = make_box(e.what());
+      }
+      /* In this case, we don't know what was thrown, but at least we can preserve
+       * the fact that *something* was thrown. */
+      catch(...)
+      {
+        auto const locked_state{ ret->state.wlock() };
+        locked_state->error = make_box("Unknown exception");
+      }
+    } };
+    return ret;
+  }
+
+  void cancel_future(object_ref const future)
+  {
+    auto const fut{ try_object<obj::future>(future) };
+
+    /* We need to hold this lock the whole time we're checking, to ensure the thread
+     * doesn't finish while we're here checking. */
+    auto const locked_state{ fut->state.rlock() };
+    if(locked_state->status == obj::future_status::running)
+    {
+      auto const locked_thread{ fut->thread.wlock() };
+      auto const thread_handle{ locked_thread->native_handle() };
+      pthread_cancel(thread_handle);
+    }
+  }
+
+  bool is_future_cancelled(object_ref const future)
+  {
+    auto const fut{ try_object<obj::future>(future) };
+    void *thread_state{};
+    int code{};
+
+    /* We need to hold this lock the whole time we're checking, to ensure the thread
+     * doesn't finish while we're here checking. */
+    auto locked_state{ fut->state.ulock() };
+    switch(locked_state->status)
+    {
+      case obj::future_status::done:
+        return false;
+      case obj::future_status::cancelled:
+        return true;
+      case obj::future_status::running:
+        break;
+    }
+
+    /* It's undefined behavior to have multiple threads join a single thread object at the
+     * same time, so we need to synchronize here. */
+    {
+      auto const locked_thread{ fut->thread.wlock() };
+      auto const thread_handle{ locked_thread->native_handle() };
+      code = pthread_tryjoin_np(thread_handle, &thread_state);
+    }
+
+    switch(code)
+    {
+      /* We'll get this if two threads are joining each other. Not cancelled. */
+      case EDEADLK:
+        return false;
+      /* We'll get this if the thread is not joinable. Not cancelled. */
+      case EINVAL:
+        return false;
+      /* We'll get this if no matching thread is found. Not cancelled. */
+      case ESRCH:
+        return false;
+      /* We'll get this if the thread has not yet been terminated. Not cancelled. */
+      case EBUSY:
+        return false;
+    }
+
+    /* Our join succeeded, but we can only join once, so we need to save the result here
+     * so we can short circuit next time. */
+    auto const write_locked_state{ locked_state.moveFromUpgradeToWrite() };
+    if(thread_state == PTHREAD_CANCELED)
+    {
+      write_locked_state->status = obj::future_status::cancelled;
+      return true;
+    }
+    else
+    {
+      write_locked_state->status = obj::future_status::done;
+      return false;
+    }
   }
 }

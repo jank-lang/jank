@@ -15,8 +15,6 @@ namespace jank::runtime::obj
     static constexpr bool is_sequential{ true };
 
     cons() = default;
-    cons(cons &&) noexcept = default;
-    cons(cons const &) = default;
     cons(object_ref const head, object_ref const tail);
 
     /* behavior::object_like */
@@ -40,10 +38,13 @@ namespace jank::runtime::obj
     /* behavior::conjable */
     cons_ref conj(object_ref const head) const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     object_ref head{};
     object_ref tail{};
-    mutable uhash hash{};
     jtl::option<object_ref> meta;
+
+    /*** XXX: Everything here is thread-safe. ***/
+    mutable std::atomic<uhash> hash{};
   };
 }

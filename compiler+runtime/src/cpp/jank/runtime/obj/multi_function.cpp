@@ -16,10 +16,10 @@ namespace jank::runtime::obj
     : dispatch{ dispatch }
     , default_dispatch_value{ default_ }
     , hierarchy{ hierarchy }
-    , method_table{ persistent_hash_map::empty() }
-    , method_cache{ persistent_hash_map::empty() }
-    , prefer_table{ persistent_hash_map::empty() }
     , name{ try_object<symbol>(name) }
+    , method_cache{ persistent_hash_map::empty() }
+    , method_table{ persistent_hash_map::empty() }
+    , prefer_table{ persistent_hash_map::empty() }
   {
   }
 
@@ -198,7 +198,7 @@ namespace jank::runtime::obj
 
   multi_function_ref multi_function::reset()
   {
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     cached_hierarchy = jank_nil();
     method_table = prefer_table = method_cache = persistent_hash_map::empty();
     return this;
@@ -206,7 +206,7 @@ namespace jank::runtime::obj
 
   persistent_hash_map_ref multi_function::reset_cache()
   {
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     cached_hierarchy = hierarchy;
     method_cache = method_table;
     return method_cache;
@@ -215,7 +215,7 @@ namespace jank::runtime::obj
   multi_function_ref
   multi_function::add_method(object_ref const dispatch_val, object_ref const method)
   {
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
 
     method_table = method_table->assoc(dispatch_val, method);
     reset_cache();
@@ -224,7 +224,7 @@ namespace jank::runtime::obj
 
   multi_function_ref multi_function::remove_method(object_ref const dispatch_val)
   {
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     method_table = method_table->dissoc(dispatch_val);
     reset_cache();
     return this;
@@ -232,7 +232,7 @@ namespace jank::runtime::obj
 
   multi_function_ref multi_function::prefer_method(object_ref const x, object_ref const y)
   {
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
 
     if(is_preferred(deref(hierarchy), y, x))
     {
@@ -331,7 +331,7 @@ namespace jank::runtime::obj
   object_ref multi_function::find_and_cache_best_method(object_ref const dispatch_val)
   {
     /* TODO: Clojure uses a RW lock here for better parallelism. */
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     object_ref best_value{ jank_nil() };
     persistent_vector_sequence_ref best_entry{};
 

@@ -24,10 +24,13 @@ namespace jank::runtime::obj
     /* behavior::derefable */
     object_ref deref();
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
+
+    /*** XXX: Everything here is thread-safe. ***/
+    std::mutex mutex;
     object_ref val{};
     object_ref fn{};
     object_ref error{};
-    std::mutex mutex;
   };
 }

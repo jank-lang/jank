@@ -120,9 +120,6 @@ namespace jank::runtime
     obj::symbol_ref unique_symbol() const;
     obj::symbol_ref unique_symbol(jtl::immutable_string const &prefix) const;
 
-    folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;
-    folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ref>> keywords;
-
     struct binding_scope
     {
       binding_scope();
@@ -137,17 +134,8 @@ namespace jank::runtime
     obj::persistent_hash_map_ref get_thread_bindings() const;
     jtl::option<thread_binding_frame> current_thread_binding_frame();
 
-    /* The analyze processor is reused across evaluations so we can keep the semantic information
-     * of previous code. This is essential for REPL use.
-     *
-     * TODO: Is it? I think we can remove this. */
-    /* TODO: This needs to be synchronized, if it's kept. */
-    analyze::processor an_prc;
+    /*** XXX: Everything here is immutable after initialization. ***/
     jtl::immutable_string binary_version;
-    /* TODO: This needs to be a dynamic var. */
-    native_unordered_map<jtl::immutable_string, native_vector<jtl::immutable_string>>
-      module_dependencies;
-    folly::Synchronized<native_deque<jtl::immutable_string>> loaded_modules_in_order;
     jtl::immutable_string binary_cache_dir;
     module::loader module_loader;
 
@@ -161,6 +149,10 @@ namespace jank::runtime
     var_ref no_recur_var;
     var_ref gensym_env_var;
 
+    /*** XXX: Everything here is thread-safe. ***/
+    folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;
+    folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ref>> keywords;
+    folly::Synchronized<native_deque<jtl::immutable_string>> loaded_modules_in_order;
     static thread_local native_list<thread_binding_frame> thread_binding_frames;
 
     /* This must go last, since it'll try to access other bits in the runtime context during

@@ -213,6 +213,7 @@ namespace jank::runtime
                                     obj::persistent_vector::empty()),
                       make_box<obj::symbol>(name)),
         make_box<obj::symbol>("fn*")) };
+      analyze::processor an_prc;
       auto const expr(analyze::pass::optimize(
         an_prc.analyze(form, analyze::expression_position::statement).expect_ok()));
       auto const fn{ static_box_cast<analyze::expr::function>(expr) };
@@ -314,6 +315,7 @@ namespace jank::runtime
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
+    analyze::processor an_prc;
     native_vector<analyze::expression_ref> ret{};
     for(auto const &form : p_prc)
     {
@@ -381,8 +383,6 @@ namespace jank::runtime
 
   jtl::result<void, error_ref> context::compile_module(jtl::immutable_string const &module)
   {
-    module_dependencies.clear();
-
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
       std::make_pair(compile_files_var, jank_true)) };
 
@@ -391,6 +391,7 @@ namespace jank::runtime
 
   object_ref context::eval(object_ref const o)
   {
+    analyze::processor an_prc;
     auto const expr(
       analyze::pass::optimize(an_prc.analyze(o, analyze::expression_position::value).expect_ok()));
     return evaluate::eval(expr);

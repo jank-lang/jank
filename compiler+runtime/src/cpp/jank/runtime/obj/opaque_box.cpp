@@ -46,7 +46,9 @@ namespace jank::runtime::obj
 
   opaque_box_ref opaque_box::with_meta(object_ref const m)
   {
-    meta = behavior::detail::validate_meta(m);
-    return this;
+    auto const meta(behavior::detail::validate_meta(m));
+    auto ret(make_box<opaque_box>(data, canonical_type));
+    ret->meta = meta;
+    return ret;
   }
 }

@@ -123,6 +123,7 @@ namespace jank::analyze
 
     runtime::object_ref to_runtime_data() const;
 
+    /* XXX: Everything here is not thread-safe, but is not meant to be shared. */
     frame_type type;
     jtl::option<jtl::ptr<local_frame>> parent;
     native_unordered_map<runtime::obj::symbol_ref, local_binding> locals;

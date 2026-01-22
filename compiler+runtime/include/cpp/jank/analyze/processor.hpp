@@ -230,7 +230,7 @@ namespace jank::analyze
                                                 bool needs_box);
 
     /* Returns whether the form is a special symbol. */
-    bool is_special(runtime::object_ref const form);
+    static bool is_special(runtime::object_ref const form);
 
     using special_function_type
       = expression_result (processor::*)(runtime::obj::persistent_list_ref const,
@@ -239,7 +239,7 @@ namespace jank::analyze
                                          jtl::option<expr::function_context_ref> const &,
                                          bool);
 
-    native_unordered_map<runtime::obj::symbol_ref, special_function_type> specials;
+    /*** XXX: Not thread-safe, but not shared. ***/
     native_unordered_map<runtime::var_ref, expression_ref> vars;
     local_frame_ptr root_frame;
     native_vector<runtime::object_ref> macro_expansions;

@@ -48,6 +48,7 @@ namespace jank::runtime::obj
     /* behavior::sequenceable_in_place */
     native_array_sequence_ref next_in_place();
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     jtl::ptr<object_ref> arr{};
     usize index{};

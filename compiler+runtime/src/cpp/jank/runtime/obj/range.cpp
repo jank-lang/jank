@@ -92,9 +92,10 @@ namespace jank::runtime::obj
     {
       return persistent_list::empty();
     }
-    /* TODO: Repeat object. */
-    //else if(is_zero(step))
-    //{ return repeat::create(start); }
+    else if(is_zero(step))
+    {
+      return repeat::create(start);
+    }
     return make_box<range>(start,
                            end,
                            step,
@@ -117,6 +118,7 @@ namespace jank::runtime::obj
     return start;
   }
 
+  /* XXX: Must be locked when called. */
   void range::force_chunk() const
   {
     if(chunk.is_some())
@@ -152,6 +154,7 @@ namespace jank::runtime::obj
 
   range_ref range::next() const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     if(cached_next.is_some())
     {
       return cached_next;
@@ -174,6 +177,7 @@ namespace jank::runtime::obj
 
   range_ref range::next_in_place()
   {
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     force_chunk();
     if(chunk->count() > 1)
     {
@@ -186,12 +190,14 @@ namespace jank::runtime::obj
 
   array_chunk_ref range::chunked_first() const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     force_chunk();
     return chunk;
   }
 
   range_ref range::chunked_next() const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     force_chunk();
     if(chunk_next.is_nil())
     {

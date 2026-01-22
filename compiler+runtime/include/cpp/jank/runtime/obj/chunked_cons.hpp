@@ -47,6 +47,7 @@ namespace jank::runtime::obj
     object_ref chunked_first() const;
     object_ref chunked_next() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     object_ref head{};
     object_ref tail{};

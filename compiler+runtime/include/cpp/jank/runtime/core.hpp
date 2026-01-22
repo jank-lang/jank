@@ -111,4 +111,8 @@ namespace jank::runtime
 
   object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn);
   object_ref remove_watch(object_ref const reference, object_ref const key);
+
+  object_ref future(object_ref const fn);
+  void cancel_future(object_ref const future);
+  bool is_future_cancelled(object_ref const future);
 }

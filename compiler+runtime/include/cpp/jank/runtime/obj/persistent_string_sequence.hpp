@@ -42,6 +42,7 @@ namespace jank::runtime::obj
     /* behavior::sequenceable_in_place */
     persistent_string_sequence_ref next_in_place();
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     obj::persistent_string_ref str{};
     usize index{};

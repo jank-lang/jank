@@ -57,8 +57,9 @@ namespace jank::runtime::obj
   jit_function_ref jit_function::with_meta(object_ref const m)
   {
     auto const new_meta(behavior::detail::validate_meta(m));
-    meta = new_meta;
-    return this;
+    auto const ret{ make_box<jit_function>(*this) };
+    ret->meta = new_meta;
+    return ret;
   }
 
   object_ref jit_function::call()
