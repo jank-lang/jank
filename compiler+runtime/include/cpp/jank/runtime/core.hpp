@@ -57,6 +57,7 @@ namespace jank::runtime
 
   object_ref atom(object_ref const o);
   object_ref deref(object_ref const o);
+  bool is_realized(object_ref const o);
   object_ref swap_atom(object_ref const atom, object_ref const fn);
   object_ref swap_atom(object_ref const atom, object_ref const fn, object_ref const a1);
   object_ref

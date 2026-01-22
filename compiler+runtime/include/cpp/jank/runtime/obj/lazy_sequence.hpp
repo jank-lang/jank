@@ -42,6 +42,9 @@ namespace jank::runtime::obj
     /* behavior::sequenceable_in_place */
     //lazy_sequence_ref next_in_place();
 
+    /* behavior::realizable */
+    bool is_realized() const;
+
     /* behavior::metadatable */
     lazy_sequence_ref with_meta(object_ref const m) const;
 

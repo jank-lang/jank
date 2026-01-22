@@ -1,13 +1,15 @@
 #include <pthread.h>
+#include <cxxabi.h>
 
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/behavior/derefable.hpp>
 #include <jank/runtime/behavior/ref_like.hpp>
+#include <jank/runtime/behavior/realizable.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/sequence_range.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime
 {
@@ -460,7 +462,27 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not derefable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ util::format("not derefable: {}",
+                                                 object_type_str(typed_o->base.type)) };
+        }
+      },
+      o);
+  }
+
+  bool is_realized(object_ref const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> bool {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
+
+        if constexpr(behavior::realizable<T>)
+        {
+          return typed_o->is_realized();
+        }
+        else
+        {
+          throw std::runtime_error{ util::format("not realizable: {}",
+                                                 object_type_str(typed_o->base.type)) };
         }
       },
       o);
@@ -723,19 +745,33 @@ namespace jank::runtime
       catch(object_ref const o)
       {
         auto const locked_state{ ret->state.wlock() };
+        locked_state->status = obj::future_status::done;
         locked_state->error = o;
       }
       catch(std::exception const &e)
       {
         auto const locked_state{ ret->state.wlock() };
+        locked_state->status = obj::future_status::done;
         locked_state->error = make_box(e.what());
+      }
+      /* When we cancel, pthread will implicitly throw this force unwind. We want to intercept
+       * that so we can mark our thread as cancelled. We then rethrow, since pthread is excepting
+       * this to unwind all the way. */
+      catch(abi::__forced_unwind const &fu)
+      {
+        auto const locked_state{ ret->state.wlock() };
+        locked_state->status = obj::future_status::cancelled;
+        locked_state->error = make_box("Thread was cancelled.");
+        throw;
       }
       /* In this case, we don't know what was thrown, but at least we can preserve
        * the fact that *something* was thrown. */
       catch(...)
       {
         auto const locked_state{ ret->state.wlock() };
-        locked_state->error = make_box("Unknown exception");
+        locked_state->status = obj::future_status::done;
+        locked_state->error = make_box("Unknown exception.");
+        throw;
       }
     } };
     return ret;

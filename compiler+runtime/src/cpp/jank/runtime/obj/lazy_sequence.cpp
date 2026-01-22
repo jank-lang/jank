@@ -153,6 +153,12 @@ namespace jank::runtime::obj
     return ls;
   }
 
+  bool lazy_sequence::is_realized() const
+  {
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
+    return fn.is_some() || sv.is_some();
+  }
+
   lazy_sequence_ref lazy_sequence::with_meta(object_ref const m) const
   {
     auto const ret(make_box<lazy_sequence>(jank_nil(), seq()));

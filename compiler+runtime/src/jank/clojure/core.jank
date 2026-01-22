@@ -7277,9 +7277,8 @@ fails, attempts to require sym's namespace and retries."
 
 (defn realized?
   "Returns true if a value has been produced for a promise, delay, future or lazy sequence."
-  [#_clojure.lang.IPending x]
-  ;; (.isRealized x)
-  (throw "TODO: port realized?"))
+  [x]
+  (cpp/jank.runtime.is_realized x))
 
 (defn random-sample
   "Returns items from coll with random probability of prob (0.0 -

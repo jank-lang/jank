@@ -53,4 +53,20 @@ namespace jank::runtime::obj
 
     return locked_state->result;
   }
+
+  bool future::is_realized() const
+  {
+    auto const locked_state{ state.rlock() };
+    switch(locked_state->status)
+    {
+      case future_status::running:
+        return false;
+      case future_status::done:
+      case future_status::cancelled:
+        return true;
+      default:
+        throw std::runtime_error{ util::format("Invalid future status: {}",
+                                               static_cast<int>(locked_state->status)) };
+    }
+  }
 }
