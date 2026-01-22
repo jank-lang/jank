@@ -19,9 +19,9 @@ namespace jank::util::cli
   {
     if(*it == long_flag)
     {
-      ++it;
       if(needs_value)
       {
+        ++it;
         if(it == end)
         {
           throw util::format("The '{}' flag requires an argument, but one was not provided.",
@@ -204,6 +204,10 @@ OPTIONS
         else if(check_flag(it, end, value, "--perf", false))
         {
           opts.perf_profiling_enabled = true;
+        }
+        else if(check_flag(it, end, value, "--debug", false))
+        {
+          opts.debug = true;
         }
         else if(check_flag(it, end, value, "--direct-call", false))
         {
