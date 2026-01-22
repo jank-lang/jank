@@ -823,16 +823,16 @@ namespace jank::runtime
     {
       /* We'll get this if two threads are joining each other. Not cancelled. */
       case EDEADLK:
-        return false;
       /* We'll get this if the thread is not joinable. Not cancelled. */
       case EINVAL:
-        return false;
       /* We'll get this if no matching thread is found. Not cancelled. */
       case ESRCH:
-        return false;
       /* We'll get this if the thread has not yet been terminated. Not cancelled. */
       case EBUSY:
         return false;
+      /* No error. */
+      default:
+        break;
     }
 
     /* Our join succeeded, but we can only join once, so we need to save the result here

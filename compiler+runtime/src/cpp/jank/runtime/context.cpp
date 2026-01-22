@@ -160,7 +160,7 @@ namespace jank::runtime
     return eval_string(file.expect_ok().view());
   }
 
-  jtl::option<object_ref> context::eval_string(jtl::immutable_string const &code)
+  jtl::option<object_ref> context::eval_string(jtl::immutable_string const &code) const
   {
     profile::timer const timer{ "rt eval_string" };
     read::lex::processor l_prc{ code };

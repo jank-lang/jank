@@ -55,7 +55,7 @@ namespace jank::runtime::obj
       /* If the thread threw an exception, we'll hang onto it. When we're dereferenced,
        * the exception will be re-thrown. */
       jtl::option<object_ref> error;
-      future_status status;
+      future_status status{ future_status::running };
     };
 
     folly::Synchronized<mutable_state> state;
