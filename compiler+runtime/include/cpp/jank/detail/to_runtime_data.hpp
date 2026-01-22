@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <filesystem>
 
 #include <jtl/ptr.hpp>

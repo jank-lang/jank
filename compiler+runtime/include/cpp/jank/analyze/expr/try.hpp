@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <jtl/option.hpp>
 
 #include <jank/analyze/expression.hpp>

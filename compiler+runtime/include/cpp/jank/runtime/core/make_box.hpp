@@ -9,19 +9,9 @@
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/obj/big_decimal.hpp>
-#include <jank/runtime/obj/native_pointer_wrapper.hpp>
 
 namespace jank::runtime
 {
-  template <typename T>
-  requires(!behavior::object_like<T> && !std::is_same_v<std::remove_const_t<T>, char>)
-  [[gnu::flatten, gnu::hot, gnu::visibility("default")]]
-  inline auto make_box(T * const d)
-  {
-    return make_box<obj::native_pointer_wrapper>(
-      const_cast<void *>(reinterpret_cast<void const *>(d)));
-  }
-
   /* TODO: Constexpr more of these. */
   [[gnu::flatten, gnu::hot, gnu::visibility("default")]]
   inline auto make_box(std::nullptr_t const &)
