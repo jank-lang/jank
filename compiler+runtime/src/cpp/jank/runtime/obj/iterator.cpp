@@ -28,7 +28,7 @@ namespace jank::runtime::obj
 
   iterator_ref iterator::next() const
   {
-    iterator_ref const n{ cached_next.load() };
+    iterator_ref const n{ cached_next.load() ?: iterator_ref{} };
     if(n.is_some())
     {
       return n;
@@ -43,7 +43,7 @@ namespace jank::runtime::obj
 
   iterator_ref iterator::next_in_place()
   {
-    iterator_ref const n{ cached_next.load() };
+    iterator_ref const n{ cached_next.load() ?: iterator_ref{} };
     if(n.is_some())
     {
       current = n->first();
