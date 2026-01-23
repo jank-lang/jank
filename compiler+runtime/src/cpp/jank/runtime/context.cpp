@@ -327,13 +327,14 @@ namespace jank::runtime
   }
 
   object_ref context::read_first_form(jtl::immutable_string const &code,
-                                      obj::persistent_array_map_ref const &reader_opts)
+                                      obj::persistent_array_map_ref const reader_opts)
   {
-    /* Clojure usually loads the value for `clojure.core/\*read-eval*` from the properties file.
-     * See here: https://github.com/clojure/clojure/blob/6a4ba6aedc8575768b2fff6d9c9c7e6503a0a93a/src/jvm/clojure/lang/RT.java#L198 */
+    /* TODO: Clojure usually loads the value for `clojure.core/\*read-eval*` from the properties file.
+     *  See here: https://github.com/clojure/clojure/blob/6a4ba6aedc8575768b2fff6d9c9c7e6503a0a93a/src/jvm/clojure/lang/RT.java#L198 */
     auto const reader_eval_enabled{ __rt_ctx->find_var("clojure.core", "*read-eval*")->deref() };
+    auto const unknown_kw{ __rt_ctx->intern_var("", "unknown").expect_ok() };
 
-    if(reader_eval_enabled != jank_true)
+    if(reader_eval_enabled == unknown_kw)
     {
       throw std::runtime_error{ util::format("Reading disallowed - *read-eval* bound to {}",
                                              runtime::to_code_string(reader_eval_enabled)) };
@@ -354,8 +355,9 @@ namespace jank::runtime
     if(first_form.expect_ok().is_none())
     {
       auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
+      auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };
 
-      if(!reader_opts->contains(eof_kw))
+      if(!reader_opts->contains(eof_kw) || reader_opts->contains(eof_throw_kw))
       {
         throw std::runtime_error{ "EOF while reading." };
       }

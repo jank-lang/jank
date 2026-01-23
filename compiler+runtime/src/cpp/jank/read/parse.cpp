@@ -1093,7 +1093,10 @@ namespace jank::read::parse
   processor::object_result processor::parse_reader_macro_conditional(bool const splice)
   {
     auto const reader_opts{ __rt_ctx->reader_opts_var->deref() };
-    auto const has_reader_opts{ reader_opts != jank_nil() };
+    auto const has_reader_opts{ reader_opts.is_some() };
+    // When reading in some form via the Clojure read function the end user might wish
+    // to keep even the unsupported reader conditional branch, in such cases they opt-in
+    // to the preserve mode.
     bool in_preserve_mode{};
     obj::persistent_hash_set_ref features{};
 
@@ -1103,7 +1106,7 @@ namespace jank::read::parse
       auto const read_cond_kw{ __rt_ctx->intern_keyword("", "read-cond").expect_ok() };
       auto const read_cond{ reader_opts_map->get(read_cond_kw) };
 
-      if(read_cond == jank_nil())
+      if(read_cond.is_nil())
       {
         throw std::runtime_error{ "Conditional read not allowed" };
       }
@@ -1125,7 +1128,7 @@ namespace jank::read::parse
       auto const features_kw{ __rt_ctx->intern_keyword("", "features").expect_ok() };
       auto const feature_set{ reader_opts_map->get(features_kw) };
 
-      if(feature_set != jank_nil())
+      if(feature_set.is_some())
       {
         features = try_object<obj::persistent_hash_set>(feature_set);
       }
