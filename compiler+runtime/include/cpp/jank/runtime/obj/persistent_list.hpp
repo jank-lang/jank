@@ -80,6 +80,7 @@ namespace jank::runtime::obj
     object_ref peek() const;
     persistent_list_ref pop() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     value_type data;
     jtl::option<object_ref> meta;

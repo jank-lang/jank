@@ -53,17 +53,11 @@ namespace jank::runtime::obj
     bool operator==(symbol const &rhs) const;
     bool operator<(symbol const &rhs) const;
 
-    void set_ns(jtl::immutable_string const &);
-    void set_name(jtl::immutable_string const &);
-
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
-
-    /* These require mutation fns, since changing them will affect the hash. */
     jtl::immutable_string ns;
     jtl::immutable_string name;
-
     jtl::option<object_ref> meta;
-    mutable uhash hash{};
   };
 }
 

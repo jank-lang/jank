@@ -17,9 +17,9 @@ namespace jank::runtime::obj
                                                jtl::immutable_string const &expression_code,
                                                var_ref const var)
     : meta{ meta }
+    , var{ var }
     , declaration_code{ declaration_code }
     , expression_code{ expression_code }
-    , var{ var }
   {
   }
 
@@ -56,15 +56,9 @@ namespace jank::runtime::obj
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
-  deferred_cpp_function_ref deferred_cpp_function::with_meta(object_ref const m)
-  {
-    auto const new_meta(behavior::detail::validate_meta(m));
-    meta = new_meta;
-    return this;
-  }
-
   object_ref deferred_cpp_function::call(object_ref const args)
   {
+    std::lock_guard<std::recursive_mutex> const lock{ compilation_mutex };
     /* It's possible that we're called again, even after we've compiled our actual function.
      * This can happen if the value of this function is captured, rather than used directly
      * through a var. In that case, we just proxy the args on to the compiled fn. */

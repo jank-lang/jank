@@ -75,6 +75,7 @@ namespace jank::runtime::obj
     /* behavior::countable */
     usize count() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ object_type::integer_range };
     integer_ref start{};
     integer_ref end{};

@@ -1308,7 +1308,7 @@ namespace jank::read::parse
     object_ref ret{};
 
     /* Specials, such as fn*, let*, try, etc. just get left alone. We can't qualify them more. */
-    if(__rt_ctx->an_prc.is_special(form))
+    if(analyze::processor::is_special(form))
     {
       ret = make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("quote"), form);
     }

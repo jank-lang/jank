@@ -97,15 +97,18 @@ namespace jank::runtime::obj
     object_ref get_method(object_ref const dispatch_val);
     object_ref find_and_cache_best_method(object_ref const dispatch_val);
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     object_ref dispatch{};
     object_ref default_dispatch_value{};
     object_ref hierarchy{};
-    mutable object_ref cached_hierarchy{};
-    persistent_hash_map_ref method_table{};
-    mutable persistent_hash_map_ref method_cache{};
-    persistent_hash_map_ref prefer_table{};
     symbol_ref name{};
-    std::recursive_mutex data_lock;
+
+    /*** XXX: Everything here is thread-safe. ***/
+    std::recursive_mutex mutex;
+    mutable object_ref cached_hierarchy{};
+    mutable persistent_hash_map_ref method_cache{};
+    persistent_hash_map_ref method_table{};
+    persistent_hash_map_ref prefer_table{};
   };
 }

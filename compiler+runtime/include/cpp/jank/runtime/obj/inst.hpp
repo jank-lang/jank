@@ -24,8 +24,8 @@ namespace jank::runtime::obj
     jtl::immutable_string to_code_string() const;
     uhash to_hash() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     inst_time_point value;
-    mutable uhash hash{};
   };
 }

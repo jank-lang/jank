@@ -29,6 +29,7 @@ namespace jank::runtime::obj
       return reinterpret_cast<T *>(data);
     }
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     void *data{};
   };

@@ -66,4 +66,10 @@ namespace jank::runtime::obj
     }
     return val;
   }
+
+  bool delay::is_realized() const
+  {
+    std::lock_guard<std::mutex> const lock{ mutex };
+    return val.is_some();
+  }
 }

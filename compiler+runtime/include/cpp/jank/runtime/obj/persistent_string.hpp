@@ -64,6 +64,7 @@ namespace jank::runtime::obj
     obj::persistent_string_sequence_ref seq() const;
     obj::persistent_string_sequence_ref fresh_seq() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     jtl::immutable_string data;
   };

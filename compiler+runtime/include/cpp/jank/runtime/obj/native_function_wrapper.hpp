@@ -139,6 +139,7 @@ namespace jank::runtime
       /* behavior::metadatable */
       native_function_wrapper_ref with_meta(object_ref const m) const;
 
+      /*** XXX: Everything here is immutable after initialization. ***/
       object base{ obj_type };
       obj::detail::function_type data{};
       jtl::option<object_ref> meta;

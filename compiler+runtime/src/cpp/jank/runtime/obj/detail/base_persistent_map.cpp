@@ -118,13 +118,8 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   uhash base_persistent_map<PT, ST, V>::to_hash() const
   {
-    if(hash)
-    {
-      return hash;
-    }
-
-    return hash = hash::unordered(static_cast<PT const *>(this)->data.begin(),
-                                  static_cast<PT const *>(this)->data.end());
+    return hash::unordered(static_cast<PT const *>(this)->data.begin(),
+                           static_cast<PT const *>(this)->data.end());
   }
 
   template <typename PT, typename ST, typename V>

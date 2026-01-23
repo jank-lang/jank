@@ -28,24 +28,26 @@ namespace jank::runtime::obj
 
   iterator_ref iterator::next() const
   {
-    if(cached_next.is_some())
+    iterator_ref const n{ cached_next.load() ?: iterator_ref{} };
+    if(n.is_some())
     {
-      return cached_next;
+      return n;
     }
 
     auto const next(dynamic_call(fn, current));
     auto const ret(make_box<iterator>(fn, next));
-    cached_next = ret;
+    cached_next.store(reinterpret_cast<iterator *>(ret.data));
 
     return ret;
   }
 
   iterator_ref iterator::next_in_place()
   {
-    if(cached_next.is_some())
+    iterator_ref const n{ cached_next.load() ?: iterator_ref{} };
+    if(n.is_some())
     {
-      current = cached_next->first();
-      cached_next = jank_nil();
+      current = n->first();
+      cached_next.store(reinterpret_cast<iterator *>(jank_nil().data));
     }
     else
     {

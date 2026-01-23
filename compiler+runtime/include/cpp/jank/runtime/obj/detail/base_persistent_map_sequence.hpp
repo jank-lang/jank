@@ -52,6 +52,7 @@ namespace jank::runtime::obj::detail
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head);
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ PT::obj_type };
     object_ref coll{};
     IT begin{}, end{};

@@ -403,10 +403,11 @@ namespace jank::runtime::module
     paths += util::format(":{}", (jank_path / binary_cache_dir.c_str()).native());
     paths += util::format(":{}", (jank_path / "../src/jank").native());
 
-    this->paths = paths;
+    auto const locked_state{ state.wlock() };
+    locked_state->paths = paths;
 
     //util::println("module paths: {}", paths);
-    register_module_path(entries, paths, false);
+    register_module_path(locked_state->entries, paths, false);
   }
 
   object_ref file_entry::to_runtime_data() const
@@ -716,7 +717,12 @@ namespace jank::runtime::module
     static std::regex const underscore{ "_" };
     native_transient_string patched_module{ module };
     patched_module = std::regex_replace(patched_module, underscore, "-");
-    auto const &found(find_module(entries, paths, patched_module));
+
+    jtl::option<loader::entry> found;
+    {
+      auto const locked_state{ state.wlock() };
+      found = find_module(locked_state->entries, locked_state->paths, patched_module);
+    }
 
     if(found.is_none())
     {
@@ -1090,18 +1096,20 @@ namespace jank::runtime::module
 
   void loader::add_path(jtl::immutable_string const &path)
   {
+    auto const locked_state{ state.wlock() };
     jtl::string_builder sb;
-    sb(paths);
+    sb(locked_state->paths);
     sb(module_separator);
     sb(path);
-    paths = sb.release();
-    register_path(entries, path);
+    locked_state->paths = sb.release();
+    register_path(locked_state->entries, path);
   }
 
   object_ref loader::to_runtime_data() const
   {
+    auto const locked_state{ state.rlock() };
     runtime::object_ref entry_maps(make_box<runtime::obj::persistent_array_map>());
-    for(auto const &e : entries)
+    for(auto const &e : locked_state->entries)
     {
       entry_maps = runtime::assoc(entry_maps,
                                   make_box(e.first),
@@ -1119,6 +1127,8 @@ namespace jank::runtime::module
     return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
                                                              make_box("module::loader"),
                                                              make_box("entries"),
-                                                             entry_maps);
+                                                             entry_maps,
+                                                             make_box("paths"),
+                                                             make_box(locked_state->paths));
   }
 }

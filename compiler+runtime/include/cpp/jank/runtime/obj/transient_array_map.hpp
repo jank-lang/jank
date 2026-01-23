@@ -56,9 +56,9 @@ namespace jank::runtime::obj
 
     void assert_active() const;
 
+    /*** XXX: Everything here is not thread-safe, but is not shared. ***/
     object base{ obj_type };
     value_type data;
-    mutable uhash hash{};
     bool active{ true };
   };
 }

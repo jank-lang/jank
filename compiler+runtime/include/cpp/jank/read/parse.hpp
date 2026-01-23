@@ -110,6 +110,7 @@ namespace jank::read::parse
     static bool syntax_quote_is_unquote(runtime::object_ref const form, bool splice);
 
   public:
+    /*** XXX: Everything here is not thread-safe, but not shared. ***/
     lex::processor::iterator token_current, token_end;
     jtl::option<lex::token_kind> expected_closer;
     /* Splicing, in reader conditionals, is not allowed at the top level. When we're parsing

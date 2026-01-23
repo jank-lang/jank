@@ -19,9 +19,9 @@ namespace jank::util::cli
   {
     if(*it == long_flag)
     {
-      ++it;
       if(needs_value)
       {
+        ++it;
         if(it == end)
         {
           throw util::format("The '{}' flag requires an argument, but one was not provided.",
@@ -181,6 +181,7 @@ OPTIONS
         /**** These are all of the global flags which can apply to any command. ****/
         if(check_flag(it, end, value, "--", false))
         {
+          ++it;
           /* This implies that everything coming after is meant for the running program. */
           std::copy(it, end, std::back_inserter(opts.extra_opts));
           break;
@@ -204,6 +205,10 @@ OPTIONS
         else if(check_flag(it, end, value, "--perf", false))
         {
           opts.perf_profiling_enabled = true;
+        }
+        else if(check_flag(it, end, value, "--debug", false))
+        {
+          opts.debug = true;
         }
         else if(check_flag(it, end, value, "--direct-call", false))
         {

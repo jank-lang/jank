@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 
@@ -36,8 +38,6 @@ namespace jank::runtime::obj
                           jtl::immutable_string const &declaration_code,
                           jtl::immutable_string const &expression_code,
                           var_ref const var);
-    deferred_cpp_function(deferred_cpp_function &&) noexcept = default;
-    deferred_cpp_function(deferred_cpp_function const &) = default;
 
     /* behavior::object_like */
     bool equal(object const &) const;
@@ -46,9 +46,6 @@ namespace jank::runtime::obj
     jtl::immutable_string to_code_string();
     uhash to_hash() const;
 
-    /* behavior::metadatable */
-    deferred_cpp_function_ref with_meta(object_ref const m);
-
     /* behavior::callable */
     using behavior::callable::call;
     object_ref call(object_ref const) override;
@@ -56,11 +53,15 @@ namespace jank::runtime::obj
     arity_flag_t get_arity_flags() const override;
     object_ref this_object_ref() override;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     jtl::option<object_ref> meta;
+    var_ref var;
+
+    /*** XXX: Everything here is thread-safe. ***/
+    std::recursive_mutex compilation_mutex;
+    jit_function_ref compiled_fn;
     jtl::immutable_string declaration_code;
     jtl::immutable_string expression_code;
-    var_ref var;
-    jit_function_ref compiled_fn;
   };
 }

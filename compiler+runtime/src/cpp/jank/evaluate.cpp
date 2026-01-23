@@ -282,10 +282,19 @@ namespace jank::evaluate
       return var;
     }
 
-    current_def_var = var;
-    auto const evaluated_value(eval(expr->value.unwrap()));
-    var->bind_root(evaluated_value);
-    current_def_var = jank_nil();
+    auto const value{ expr->value.unwrap() };
+    if(value->kind == analyze::expression_kind::function)
+    {
+      current_def_var = var;
+      auto const evaluated_value(eval(value));
+      var->bind_root(evaluated_value);
+      current_def_var = jank_nil();
+    }
+    else
+    {
+      auto const evaluated_value(eval(value));
+      var->bind_root(evaluated_value);
+    }
 
     return var;
   }

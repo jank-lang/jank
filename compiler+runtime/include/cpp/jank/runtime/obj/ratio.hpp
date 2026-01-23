@@ -53,6 +53,7 @@ namespace jank::runtime::obj
     i64 to_integer() const;
     f64 to_real() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     ratio_data data;
   };

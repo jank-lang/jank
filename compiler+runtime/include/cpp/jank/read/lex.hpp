@@ -264,6 +264,7 @@ namespace jank::read::lex
     iterator begin();
     iterator end();
 
+    /*** XXX: Everything here is not thread-safe, but not shared. ***/
     movable_position pos;
     /* Whether the previous token requires a space after it. */
     bool require_space{};

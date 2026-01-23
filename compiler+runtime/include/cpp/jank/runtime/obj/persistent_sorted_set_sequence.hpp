@@ -24,6 +24,7 @@ namespace jank::runtime::obj
       persistent_sorted_set_sequence,
       runtime::detail::native_persistent_sorted_set::const_iterator>::iterator_sequence;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
   };
 }
