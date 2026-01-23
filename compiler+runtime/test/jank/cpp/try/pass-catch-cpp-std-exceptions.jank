@@ -1,4 +1,5 @@
 ;; Test catching various C++ std exception types
+
 (cpp/raw "
 #include <stdexcept>
 #include <typeinfo>

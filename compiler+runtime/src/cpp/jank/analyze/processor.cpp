@@ -2433,11 +2433,6 @@ namespace jank::analyze
                         bool needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
-
-    /* We can't (yet) guarantee that each branch of an if returns the same unboxed type,
-     * so we're unable to unbox them. */
-    // needs_box = true;
-
     auto const form_count(o->count());
     if(form_count < 3)
     {

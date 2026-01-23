@@ -1,7 +1,6 @@
-((fn* []
-  (let* [x :success]
-      (fn* y []
-           x
-           (fn* []
-                (y)))
-    x)))
+(let* [x :success]
+  (fn* y []
+    x
+    (fn* []
+      (y)))
+  x)

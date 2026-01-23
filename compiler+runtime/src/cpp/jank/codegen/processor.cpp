@@ -1305,37 +1305,19 @@ namespace jank::codegen
                                      analyze::expr::function_arity const &)
   {
     auto ret(runtime::munge(expr->binding->native_name));
+    auto const boxed{ util::format("jank::runtime::make_box({})", ret) };
 
-    if(expr->needs_box)
+    switch(expr->position)
     {
-      auto const boxed{ util::format("jank::runtime::make_box({})", ret) };
-      switch(expr->position)
-      {
-        case analyze::expression_position::statement:
-        case analyze::expression_position::value:
-        case analyze::expression_position::call:
-          return handle(boxed, ret);
-        case analyze::expression_position::tail:
-          util::format_to(body_buffer, "return {};", boxed);
-          return none;
-        case analyze::expression_position::type:
-          throw error::internal_codegen_failure("Unexpected expression in type position.");
-      }
-    }
-    else
-    {
-      switch(expr->position)
-      {
-        case analyze::expression_position::statement:
-        case analyze::expression_position::value:
-        case analyze::expression_position::call:
-          return ret;
-        case analyze::expression_position::tail:
-          util::format_to(body_buffer, "return {};", ret);
-          return none;
-        case analyze::expression_position::type:
-          throw error::internal_codegen_failure("Unexpected expression in type position.");
-      }
+      case analyze::expression_position::statement:
+      case analyze::expression_position::value:
+      case analyze::expression_position::call:
+        return expr->needs_box ? handle(boxed, ret) : ret;
+      case analyze::expression_position::tail:
+        util::format_to(body_buffer, "return {};", boxed);
+        return none;
+      case analyze::expression_position::type:
+        throw error::internal_codegen_failure("Unexpected expression in type position.");
     }
   }
 
@@ -1505,7 +1487,7 @@ namespace jank::codegen
         }
         else
         {
-          util::format_to(body_buffer, "{ auto {}({}); ", munged_name, val_tmp.unwrap().str(false));
+          util::format_to(body_buffer, "{ auto {}({}); ", munged_name, val_tmp.unwrap().str(true));
         }
       }
       else
@@ -1949,77 +1931,59 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::cpp_value_ref const expr, analyze::expr::function_arity const &)
   {
-    if(expr->needs_box)
+    using value_kind = expr::cpp_value::value_kind;
+
+    std::string generated_code{ "nullptr" };
+    jtl::immutable_string unboxed_source{ "nullptr" };
+
+    if(expr->val_kind == value_kind::null)
     {
-      if(expr->val_kind == expr::cpp_value::value_kind::null)
+      if(expr->needs_box)
       {
-        if(expr->position == expression_position::tail)
-        {
-          util::format_to(body_buffer, "return jank::runtime::jank_nil();");
-          return none;
-        }
-        return handle("jank::runtime::jank_nil()", jtl::immutable_string("nullptr"));
+        generated_code = "jank::runtime::jank_nil()";
       }
+    }
+    else if(expr->val_kind == value_kind::bool_true || expr->val_kind == value_kind::bool_false)
+    {
+      auto const is_bool_true = (expr->val_kind == value_kind::bool_true);
+      unboxed_source = is_bool_true ? "true" : "false";
 
-      if(expr->val_kind == expr::cpp_value::value_kind::bool_true
-         || expr->val_kind == expr::cpp_value::value_kind::bool_false)
+      if(expr->needs_box)
       {
-        auto const val{ expr->val_kind == expr::cpp_value::value_kind::bool_true };
-        if(expr->position == expression_position::tail)
-        {
-          util::format_to(body_buffer,
-                          "return {};",
-                          val ? "jank::runtime::jank_true" : "jank::runtime::jank_false");
-          return none;
-        }
-        return handle((val ? "jank::runtime::jank_true" : "jank::runtime::jank_false"),
-                      jtl::immutable_string(val ? "true" : "false"));
+        generated_code = is_bool_true ? "jank::runtime::jank_true" : "jank::runtime::jank_false";
       }
-
-      auto tmp{ Cpp::GetQualifiedCompleteName(expr->scope) };
-      auto const boxed{ util::format("jank::runtime::make_box({})", tmp) };
-
-      if(expr->position == expression_position::tail)
+      else
       {
-        util::format_to(body_buffer, "return {};", boxed);
-        return none;
+        generated_code = util::format("{}", is_bool_true);
       }
-
-      return handle(boxed, tmp);
     }
     else
     {
-      if(expr->val_kind == expr::cpp_value::value_kind::null)
-      {
-        if(expr->position == expression_position::tail)
-        {
-          util::format_to(body_buffer, "return nullptr;");
-          return none;
-        }
-        return "nullptr";
-      }
-      if(expr->val_kind == expr::cpp_value::value_kind::bool_true
-         || expr->val_kind == expr::cpp_value::value_kind::bool_false)
-      {
-        auto const val{ expr->val_kind == expr::cpp_value::value_kind::bool_true };
-        if(expr->position == expression_position::tail)
-        {
-          util::format_to(body_buffer, "return {};", val);
-          return none;
-        }
-        return util::format("{}", val);
-      }
+      auto const scope_name = Cpp::GetQualifiedCompleteName(expr->scope);
+      unboxed_source = scope_name;
 
-      auto tmp{ Cpp::GetQualifiedCompleteName(expr->scope) };
-
-      if(expr->position == expression_position::tail)
+      if(expr->needs_box)
       {
-        util::format_to(body_buffer, "return {};", tmp);
-        return none;
+        generated_code = util::format("jank::runtime::make_box({})", scope_name);
       }
-
-      return tmp;
+      else
+      {
+        generated_code = scope_name;
+      }
     }
+
+    if(expr->position == expression_position::tail)
+    {
+      util::format_to(body_buffer, "return {};", generated_code);
+      return none;
+    }
+
+    if(expr->needs_box)
+    {
+      return handle(generated_code, unboxed_source);
+    }
+
+    return generated_code;
   }
 
   jtl::option<handle>

@@ -1,5 +1,4 @@
 ;; Test to verify that object slicing does not occur when catching by base type
-;; See ERR61-CPP: Catch exceptions by lvalue reference
 
 (cpp/raw "
 #include <string>

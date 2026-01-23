@@ -1,4 +1,5 @@
 ;; Test catching C++ void* exception
+
 (cpp/raw "namespace jank::cpp::try_::pass_catch_cpp_pointer {
   using void_ptr = void*;
   void_ptr const thrown_ptr = (void_ptr)0x1234;
