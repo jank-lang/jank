@@ -24,6 +24,8 @@ Clojure.
 * `future` can only forward exceptions which are `std::exception` or `object_ref`
   * Other exceptions will be forwarded as `"Unknown exception"`
 * `future-cancel` returns `nil`, not the result of the cancellation
+* `future-cancelled?` always returns `false` on macOS, since there is no
+  reliable way to check this with pthread
 
 ## Object model
 * No stable boxes for small integers (the JVM pre-allocates `1`, `2`, `3`, etc)
