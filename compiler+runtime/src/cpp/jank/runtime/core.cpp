@@ -757,6 +757,7 @@ namespace jank::runtime
       /* When we cancel, pthread will implicitly throw this force unwind. We want to intercept
        * that so we can mark our thread as cancelled. We then rethrow, since pthread is excepting
        * this to unwind all the way. */
+#ifdef JANK_LINUX_LIKE
       catch(abi::__forced_unwind const &fu)
       {
         auto const locked_state{ ret->state.wlock() };
@@ -764,6 +765,7 @@ namespace jank::runtime
         locked_state->error = make_box("Thread was cancelled.");
         throw;
       }
+#endif
       /* In this case, we don't know what was thrown, but at least we can preserve
        * the fact that *something* was thrown. */
       catch(...)
@@ -795,8 +797,6 @@ namespace jank::runtime
   bool is_future_cancelled(object_ref const future)
   {
     auto const fut{ try_object<obj::future>(future) };
-    void *thread_state{};
-    int code{};
 
     /* We need to hold this lock the whole time we're checking, to ensure the thread
      * doesn't finish while we're here checking. */
@@ -810,6 +810,16 @@ namespace jank::runtime
       case obj::future_status::running:
         break;
     }
+
+#ifdef JANK_MACOS_LIKE
+    /* macOS doesn't have pthread_tryjoin_np, or any similar function, so we can only
+     * pthread_join, to get the cancellation state, which is blocking. So we just have
+     * to return false here. That means it's not currently possible to know if a thread
+     * was cancelled on macOS. */
+    return false;
+#else
+    void *thread_state{};
+    int code{};
 
     /* It's undefined behavior to have multiple threads join a single thread object at the
      * same time, so we need to synchronize here. */
@@ -848,5 +858,6 @@ namespace jank::runtime
       write_locked_state->status = obj::future_status::done;
       return false;
     }
+#endif
   }
 }

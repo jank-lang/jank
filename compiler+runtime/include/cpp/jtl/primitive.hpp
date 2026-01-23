@@ -69,12 +69,16 @@ namespace jtl
 
   static constexpr platform const current_platform{
 #if defined(_WIN32) || defined(__CYGWIN__)
+  #define JANK_WINDOWS_LIKE
     platform::windows_like
 #elif defined(__linux__)
+  #define JANK_LINUX_LIKE
     platform::linux_like
 #elif defined(__APPLE__) && defined(__MACH__)
+  #define JANK_MACOS_LIKE
     platform::macos_like
 #elif defined(unix) || defined(__unix__) || defined(__unix)
+  #define JANK_OTHER_UNIX_LIKE
     platform::other_unix_like
 #else
   #error Unsupported environment.
