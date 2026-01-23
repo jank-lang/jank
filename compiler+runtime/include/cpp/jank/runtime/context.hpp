@@ -86,7 +86,7 @@ namespace jank::runtime
     object_ref read_string(jtl::immutable_string const &code);
     object_ref read_file(jtl::immutable_string const &file_path);
     object_ref read_first_form(jtl::immutable_string const &code,
-                               obj::persistent_array_map_ref const &reader_opts);
+                               obj::persistent_array_map_ref const reader_opts);
     native_vector<analyze::expression_ref>
     analyze_string(jtl::immutable_string const &code, bool const eval = true);
 

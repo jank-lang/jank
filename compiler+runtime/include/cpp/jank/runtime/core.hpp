@@ -118,5 +118,5 @@ namespace jank::runtime
   bool is_future_cancelled(object_ref const future);
 
   object_ref read_string(object_ref const form_string, object_ref const opts);
-  object_ref read(object_ref const file_path);
+  object_ref read_file(object_ref const file_path);
 }
