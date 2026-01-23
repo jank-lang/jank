@@ -35,7 +35,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-cb025ac8.js";
+            window.path_to_searchindex_js = "searchindex-9cdaf01a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-bf1be8da.js"></script>
@@ -203,6 +203,14 @@ jank from args for your program
 <li><code>aget</code> is a special form</li>
 <li><code>aset</code> is a macro</li>
 <li><code>keyword</code> is more strict about valid inputs</li>
+<li><code>future</code> can only forward exceptions which are <code>std::exception</code> or <code>object_ref</code>
+<ul>
+<li>Other exceptions will be forwarded as <code>"Unknown exception"</code></li>
+</ul>
+</li>
+<li><code>future-cancel</code> returns <code>nil</code>, not the result of the cancellation</li>
+<li><code>future-cancelled?</code> always returns <code>false</code> on macOS, since there is no
+reliable way to check this with pthread</li>
 </ul>
 <h2 id="object-model"><a class="header" href="#object-model">Object model</a></h2>
 <ul>
