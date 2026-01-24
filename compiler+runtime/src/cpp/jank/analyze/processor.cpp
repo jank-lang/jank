@@ -1630,11 +1630,8 @@ namespace jank::analyze
     auto const params(runtime::expect_object<runtime::obj::persistent_vector>(params_obj));
     /* Using recur from this function is fine, even if we're in a try, since the jump target
      * is this function. */
-    __rt_ctx
-      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)))
-      .expect_ok();
-    util::scope_exit const finally{ []() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    context::binding_scope const _{ runtime::obj::persistent_hash_map::create_unique(
+      std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)) };
 
     auto frame{ jtl::make_ref<local_frame>(local_frame::frame_type::fn, current_frame) };
 
@@ -2402,17 +2399,12 @@ namespace jank::analyze
     loop_details = some(nullptr);
     /* Using recur from this loop is fine, even if we're in a try, since the jump target
      * is this loop. */
-    __rt_ctx
-      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)))
-      .expect_ok();
-    util::scope_exit const finally{ [&]() {
-      loop_details = old_loop_details;
-      __rt_ctx->pop_thread_bindings().expect_ok();
-    } };
+    context::binding_scope const _(runtime::obj::persistent_hash_map::create_unique(
+      std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)));
+    util::scope_exit const finally{ [&]() { loop_details = old_loop_details; } };
 
     /* We always analyze loops in tail position, since `recur` always expects to be in
-     * tail position and it can be used within a loop. We then later reset the position
+     * tail position, and it can be used within a loop. We then later reset the position
      * of this expression back to what it should be. */
     auto let{ analyze_let(list, current_frame, expression_position::tail, fn_ctx, true) };
     if(let.is_err())
@@ -2433,6 +2425,9 @@ namespace jank::analyze
                         bool needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
+    //    /* We can't (yet) guarantee that each branch of an if returns the same unboxed type,
+    // * so we're unable to unbox them. */
+    //    needs_box = true;
     auto const form_count(o->count());
     if(form_count < 3)
     {
@@ -2667,11 +2662,8 @@ namespace jank::analyze
     auto ret{ jtl::make_ref<expr::try_>(position, try_frame, true, jtl::make_ref<expr::do_>()) };
 
     /* Clojure JVM doesn't support recur across try/catch/finally, so we don't either. */
-    __rt_ctx
-      ->push_thread_bindings(runtime::obj::persistent_hash_map::create_unique(
-        std::make_pair(__rt_ctx->no_recur_var, runtime::jank_true)))
-      .expect_ok();
-    util::scope_exit const finally{ []() { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    context::binding_scope const _(runtime::obj::persistent_hash_map::create_unique(
+      std::make_pair(__rt_ctx->no_recur_var, runtime::jank_true)));
 
     enum class try_expression_type : u8
     {
