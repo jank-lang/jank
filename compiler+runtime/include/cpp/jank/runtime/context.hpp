@@ -83,10 +83,10 @@ namespace jank::runtime
     jtl::option<object_ref> eval_file(jtl::immutable_string const &path);
     jtl::option<object_ref> eval_string(jtl::immutable_string const &code) const;
     jtl::result<void, error_ref> eval_cpp_string(jtl::immutable_string const &code) const;
-    object_ref read_string(jtl::immutable_string const &code);
-    object_ref read_file(jtl::immutable_string const &file_path);
-    object_ref read_first_form(jtl::immutable_string const &code,
-                               obj::persistent_array_map_ref const reader_opts);
+    object_ref read_string(jtl::immutable_string const &code,
+                           object_ref const reader_opts,
+                           int const form_count = 1);
+    object_ref read_file(jtl::immutable_string const &file_path, object_ref const reader_opts);
     native_vector<analyze::expression_ref>
     analyze_string(jtl::immutable_string const &code, bool const eval = true);
 

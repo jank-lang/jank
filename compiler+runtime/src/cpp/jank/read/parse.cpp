@@ -1108,7 +1108,9 @@ namespace jank::read::parse
 
       if(read_cond.is_nil())
       {
-        throw std::runtime_error{ "Conditional read not allowed" };
+        throw std::runtime_error{
+          "Conditional read not allowed. Set `:read-cond` option to either `:preserve` or `:allow`."
+        };
       }
 
       auto const reader_cond{ try_object<obj::keyword>(read_cond) };
@@ -1122,7 +1124,10 @@ namespace jank::read::parse
       }
       else
       {
-        throw std::runtime_error{ "Conditional read not allowed" };
+        throw std::runtime_error{ util::format(
+          "Conditional read not allowed. Set `:read-cond` option to either "
+          ":preserve or :allow currently set to {}.",
+          runtime::to_code_string(read_cond)) };
       }
 
       auto const features_kw{ __rt_ctx->intern_keyword("", "features").expect_ok() };

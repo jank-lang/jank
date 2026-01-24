@@ -294,41 +294,12 @@ namespace jank::runtime
     return ok();
   }
 
-  object_ref context::read_string(jtl::immutable_string const &code)
+  object_ref context::read_string(jtl::immutable_string const &code,
+                                  object_ref const reader_opts,
+                                  int const form_count)
   {
     profile::timer const timer{ "rt read_string" };
 
-    /* When reading an arbitrary string, we don't want the last *current-file* to
-     * be set as source file, so we need to bind it to nil. */
-    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
-      std::make_pair(current_file_var, jank_nil())) };
-
-    read::lex::processor l_prc{ code };
-    read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
-    object_ref ret{ jank_nil() };
-    for(auto const &form : p_prc)
-    {
-      ret = form.expect_ok().unwrap().ptr;
-    }
-
-    return ret;
-  }
-
-  object_ref context::read_file(jtl::immutable_string const &file_path)
-  {
-    auto const file(module::loader::read_file(file_path));
-    if(file.is_err())
-    {
-      throw file.expect_err();
-    }
-
-    return read_string(file.expect_ok().view());
-  }
-
-  object_ref context::read_first_form(jtl::immutable_string const &code,
-                                      obj::persistent_array_map_ref const reader_opts)
-  {
     /* TODO: Clojure usually loads the value for `clojure.core/\*read-eval*` from the properties file.
      *  See here: https://github.com/clojure/clojure/blob/6a4ba6aedc8575768b2fff6d9c9c7e6503a0a93a/src/jvm/clojure/lang/RT.java#L198 */
     auto const reader_eval_enabled{ __rt_ctx->find_var("clojure.core", "*read-eval*")->deref() };
@@ -342,30 +313,56 @@ namespace jank::runtime
 
     binding_scope const reader_opts_binding{ obj::persistent_hash_map::create_unique(
       std::make_pair(reader_opts_var, reader_opts)) };
-    profile::timer const timer{ "rt read_first_form" };
+    /* When reading an arbitrary string, we don't want the last *current-file* to
+     * be set as source file, so we need to bind it to nil. */
+    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
+      std::make_pair(current_file_var, jank_nil())) };
+
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-    auto const first_form{ p_prc.next() };
 
-    if(first_form.is_err())
+    auto count{ form_count };
+    auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
+    auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };
+    object_ref ret{ jank_nil() };
+
+    for(auto const &form : p_prc)
     {
-      throw first_form.expect_err();
-    }
-
-    if(first_form.expect_ok().is_none())
-    {
-      auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
-      auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };
-
-      if(!reader_opts->contains(eof_kw) || reader_opts->contains(eof_throw_kw))
+      if(count <= 0)
       {
-        throw std::runtime_error{ "EOF while reading." };
+        break;
       }
 
-      return reader_opts->get(eof_kw);
+      if(form.expect_ok().is_none())
+      {
+        if(!contains(reader_opts, eof_kw) || contains(reader_opts, eof_throw_kw))
+        {
+          throw std::runtime_error{ "EOF while reading." };
+        }
+
+        ret = get(reader_opts, eof_kw);
+      }
+      else
+      {
+        ret = form.expect_ok().unwrap().ptr;
+      }
+
+      count -= 1;
     }
 
-    return first_form.expect_ok().unwrap().ptr;
+    return ret;
+  }
+
+  object_ref
+  context::read_file(jtl::immutable_string const &file_path, object_ref const reader_opts)
+  {
+    auto const file(module::loader::read_file(file_path));
+    if(file.is_err())
+    {
+      throw file.expect_err();
+    }
+
+    return read_string(file.expect_ok().data(), reader_opts);
   }
 
   native_vector<analyze::expression_ref>
