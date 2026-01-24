@@ -869,11 +869,10 @@ namespace jank::runtime
     }
 
     auto const typed_o{ dyn_cast<obj::persistent_string>(form_string) };
-    auto const typed_opts{ try_object<obj::persistent_array_map>(opts) };
-    return __rt_ctx->read_first_form(typed_o->data, typed_opts);
+    return __rt_ctx->read_string(typed_o->data, opts);
   }
 
-  object_ref read_file(object_ref const file_path)
+  object_ref read_file(object_ref const file_path, object_ref const opts)
   {
     if(file_path->type != object_type::persistent_string)
     {
@@ -881,6 +880,6 @@ namespace jank::runtime
     }
 
     auto const typed_o{ dyn_cast<obj::persistent_string>(file_path) };
-    return __rt_ctx->read_file(typed_o->data);
+    return __rt_ctx->read_file(typed_o->data, opts);
   }
 }
