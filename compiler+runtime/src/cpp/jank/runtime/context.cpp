@@ -311,12 +311,11 @@ namespace jank::runtime
                                              runtime::to_code_string(reader_eval_enabled)) };
     }
 
-    binding_scope const reader_opts_binding{ obj::persistent_hash_map::create_unique(
-      std::make_pair(reader_opts_var, reader_opts)) };
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
-      std::make_pair(current_file_var, jank_nil())) };
+      std::make_pair(current_file_var, jank_nil()),
+      std::make_pair(reader_opts_var, reader_opts)) };
 
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };

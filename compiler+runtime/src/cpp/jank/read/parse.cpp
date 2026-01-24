@@ -1109,7 +1109,7 @@ namespace jank::read::parse
       if(read_cond.is_nil())
       {
         throw std::runtime_error{
-          "Conditional read not allowed. Set `:read-cond` option to either `:preserve` or `:allow`."
+          "Conditional read not allowed. Set :read-cond option to either :preserve or :allow."
         };
       }
 
@@ -1125,7 +1125,7 @@ namespace jank::read::parse
       else
       {
         throw std::runtime_error{ util::format(
-          "Conditional read not allowed. Set `:read-cond` option to either "
+          "Conditional read not allowed. Set :read-cond option to either "
           ":preserve or :allow currently set to {}.",
           runtime::to_code_string(read_cond)) };
       }
