@@ -1098,13 +1098,12 @@ namespace jank::read::parse
     // to keep even the unsupported reader conditional branch, in such cases they opt-in
     // to the preserve mode.
     bool in_preserve_mode{};
-    obj::persistent_hash_set_ref features{};
+    object_ref features{};
 
     if(has_reader_opts)
     {
-      auto const reader_opts_map{ try_object<obj::persistent_array_map>(reader_opts) };
       auto const read_cond_kw{ __rt_ctx->intern_keyword("", "read-cond").expect_ok() };
-      auto const read_cond{ reader_opts_map->get(read_cond_kw) };
+      auto const read_cond{ get(reader_opts, read_cond_kw) };
 
       if(read_cond.is_nil())
       {
@@ -1131,11 +1130,11 @@ namespace jank::read::parse
       }
 
       auto const features_kw{ __rt_ctx->intern_keyword("", "features").expect_ok() };
-      auto const feature_set{ reader_opts_map->get(features_kw) };
+      auto const feature_set{ get(reader_opts, features_kw) };
 
       if(feature_set.is_some())
       {
-        features = try_object<obj::persistent_hash_set>(feature_set);
+        features = feature_set;
       }
     }
 
@@ -1183,7 +1182,7 @@ namespace jank::read::parse
        * matter. If :default comes first, we'll always take it. In short, order is important. This
        * matches Clojure's behavior. */
       if(equal(kw, jank_keyword) || equal(kw, default_keyword)
-         || (has_reader_opts && features->contains(kw)))
+         || (has_reader_opts && contains(features, kw)))
       {
         if(splice)
         {
