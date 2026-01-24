@@ -296,7 +296,7 @@ namespace jank::runtime
 
   object_ref context::read_string(jtl::immutable_string const &code,
                                   object_ref const reader_opts,
-                                  int const form_count)
+                                  int const nth_form)
   {
     profile::timer const timer{ "rt read_string" };
 
@@ -321,7 +321,7 @@ namespace jank::runtime
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-    auto count{ form_count };
+    auto count{ nth_form };
     auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
     auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };
     object_ref ret{ jank_nil() };
@@ -351,6 +351,11 @@ namespace jank::runtime
     }
 
     return ret;
+  }
+
+  object_ref context::read_string(jtl::immutable_string const &code)
+  {
+    return read_string(code, make_box<obj::persistent_array_map>());
   }
 
   object_ref
