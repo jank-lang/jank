@@ -17,7 +17,7 @@ namespace jank::runtime
   using var_thread_binding_ref = oref<struct var_thread_binding>;
   using var_unbound_root_ref = oref<struct var_unbound_root>;
 
-  struct var
+  struct var : object
   {
     static constexpr object_type obj_type{ object_type::var };
     static constexpr bool pointer_free{ false };
@@ -32,17 +32,14 @@ namespace jank::runtime
         bool thread_bound);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    jtl::immutable_string to_code_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    uhash to_hash() const override;
 
     /* behavior::object_like extended */
     bool equal(var const &) const;
-
-    /* behavior::metadatable */
-    var_ref with_meta(object_ref const m);
 
     bool is_bound() const;
     object_ref get_root() const;
@@ -65,13 +62,13 @@ namespace jank::runtime
 
     var_ref clone() const;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
     ns_ref n;
     /* Unqualified. */
     obj::symbol_ref name{};
     jtl::option<object_ref> meta;
-    mutable uhash hash{};
 
+    /*** XXX: Everything here is thread-safe. ***/
   private:
     folly::Synchronized<object_ref> root;
 
@@ -80,7 +77,7 @@ namespace jank::runtime
     std::atomic_bool thread_bound{ false };
   };
 
-  struct var_thread_binding
+  struct var_thread_binding : object
   {
     static constexpr object_type obj_type{ object_type::var_thread_binding };
     static constexpr bool pointer_free{ false };
@@ -88,13 +85,12 @@ namespace jank::runtime
     var_thread_binding(object_ref const value, std::thread::id id);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
     object_ref value{};
     std::thread::id thread_id;
   };
@@ -104,7 +100,7 @@ namespace jank::runtime
     obj::persistent_hash_map_ref bindings{};
   };
 
-  struct var_unbound_root
+  struct var_unbound_root : object
   {
     static constexpr object_type obj_type{ object_type::var_unbound_root };
     static constexpr bool pointer_free{ true };
@@ -112,13 +108,10 @@ namespace jank::runtime
     var_unbound_root(var_ref const var);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    using object::to_string;
+    void to_string(jtl::string_builder &buff) const override;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
     var_ref var;
   };
 }

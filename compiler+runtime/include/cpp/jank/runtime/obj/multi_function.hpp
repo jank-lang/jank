@@ -11,7 +11,9 @@ namespace jank::runtime::obj
   using persistent_hash_map_ref = oref<struct persistent_hash_map>;
   using multi_function_ref = oref<struct multi_function>;
 
-  struct multi_function : behavior::callable
+  struct multi_function
+    : object
+    , behavior::callable
   {
     static constexpr object_type obj_type{ object_type::multi_function };
     static constexpr bool pointer_free{ false };
@@ -21,13 +23,6 @@ namespace jank::runtime::obj
                    object_ref const dispatch,
                    object_ref const default_,
                    object_ref const hierarchy);
-
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string();
-    void to_string(jtl::string_builder &buff);
-    jtl::immutable_string to_code_string();
-    uhash to_hash() const;
 
     /* behavior::callable */
     object_ref call() override;
@@ -98,7 +93,6 @@ namespace jank::runtime::obj
     object_ref find_and_cache_best_method(object_ref const dispatch_val);
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     object_ref dispatch{};
     object_ref default_dispatch_value{};
     object_ref hierarchy{};

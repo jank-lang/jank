@@ -23,7 +23,6 @@ namespace jank::runtime::obj
                                          persistent_sorted_map_sequence,
                                          runtime::detail::native_persistent_sorted_map>;
 
-    persistent_sorted_map() = default;
     persistent_sorted_map(persistent_sorted_map &&) noexcept = default;
     persistent_sorted_map(persistent_sorted_map const &) = default;
     persistent_sorted_map(value_type &&d);

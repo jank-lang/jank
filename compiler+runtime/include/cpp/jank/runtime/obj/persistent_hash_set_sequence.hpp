@@ -23,8 +23,5 @@ namespace jank::runtime::obj
     using obj::detail::iterator_sequence<
       persistent_hash_set_sequence,
       runtime::detail::native_persistent_hash_set::iterator>::iterator_sequence;
-
-    /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
   };
 }

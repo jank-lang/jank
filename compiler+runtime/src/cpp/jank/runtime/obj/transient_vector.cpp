@@ -8,53 +8,32 @@
 
 namespace jank::runtime::obj
 {
+  transient_vector::transient_vector()
+    : object{ obj_type }
+  {
+  }
+
   transient_vector::transient_vector(runtime::detail::native_persistent_vector &&d)
-    : data{ std::move(d).transient() }
+    : object{ obj_type }
+    , data{ std::move(d).transient() }
   {
   }
 
   transient_vector::transient_vector(runtime::detail::native_persistent_vector const &d)
-    : data{ d.transient() }
+    : object{ obj_type }
+    , data{ d.transient() }
   {
   }
 
   transient_vector::transient_vector(runtime::detail::native_transient_vector &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
   transient_vector_ref transient_vector::empty()
   {
     return make_box<transient_vector>();
-  }
-
-  bool transient_vector::equal(object const &o) const
-  {
-    /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
-  }
-
-  jtl::immutable_string transient_vector::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void transient_vector::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string transient_vector::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash transient_vector::to_hash() const
-  {
-    /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   usize transient_vector::count() const

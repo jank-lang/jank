@@ -16,44 +16,23 @@ namespace jank::runtime::obj
                                                jtl::immutable_string const &declaration_code,
                                                jtl::immutable_string const &expression_code,
                                                var_ref const var)
-    : meta{ meta }
+    : object{ obj_type }
+    , meta{ meta }
     , var{ var }
     , declaration_code{ declaration_code }
     , expression_code{ expression_code }
   {
   }
 
-  bool deferred_cpp_function::equal(object const &rhs) const
-  {
-    return &base == &rhs;
-  }
-
-  jtl::immutable_string deferred_cpp_function::to_string()
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void deferred_cpp_function::to_string(jtl::string_builder &buff)
+  void deferred_cpp_function::to_string(jtl::string_builder &buff) const
   {
     auto const name(get(meta.unwrap_or(jank_nil()), __rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
       "#object [{} {} {}]",
       (name->type == object_type::nil ? "unknown" : try_object<persistent_string>(name)->data),
-      object_type_str(base.type),
-      &base);
-  }
-
-  jtl::immutable_string deferred_cpp_function::to_code_string()
-  {
-    return to_string();
-  }
-
-  uhash deferred_cpp_function::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
+      object_type_str(type),
+      this);
   }
 
   object_ref deferred_cpp_function::call(object_ref const args)
@@ -96,6 +75,6 @@ namespace jank::runtime::obj
 
   object_ref deferred_cpp_function::this_object_ref()
   {
-    return &this->base;
+    return this;
   }
 }

@@ -29,7 +29,9 @@ namespace jank::runtime::obj
    * When this function is called, it will JIT compile the C++ code, get a real function
    * object, replace the root of the var with that object, and then continue to proxy
    * calls to that object for anyone who still has a handle to this one. */
-  struct deferred_cpp_function : behavior::callable
+  struct deferred_cpp_function
+    : object
+    , behavior::callable
   {
     static constexpr object_type obj_type{ object_type::deferred_cpp_function };
     static constexpr bool pointer_free{ false };
@@ -40,11 +42,8 @@ namespace jank::runtime::obj
                           var_ref const var);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string();
-    void to_string(jtl::string_builder &buff);
-    jtl::immutable_string to_code_string();
-    uhash to_hash() const;
+    using object::to_string;
+    void to_string(jtl::string_builder &buff) const override;
 
     /* behavior::callable */
     using behavior::callable::call;
@@ -54,7 +53,6 @@ namespace jank::runtime::obj
     object_ref this_object_ref() override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     jtl::option<object_ref> meta;
     var_ref var;
 

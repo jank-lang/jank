@@ -8,19 +8,19 @@ namespace jank::runtime::obj
   using cons_ref = oref<struct cons>;
   using nil_ref = oref<struct nil>;
 
-  struct nil
+  struct nil : object
   {
     static constexpr object_type obj_type{ object_type::nil };
     static constexpr bool pointer_free{ true };
 
-    nil() = default;
+    nil();
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string const &to_string() const;
-    jtl::immutable_string const &to_code_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;
@@ -48,9 +48,6 @@ namespace jank::runtime::obj
 
     /* behavior::sequenceable_in_place */
     nil_ref next_in_place();
-
-    /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
   };
 }
 

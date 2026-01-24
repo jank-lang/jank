@@ -7,7 +7,7 @@ namespace jank::runtime::obj
 {
   using transient_vector_ref = oref<struct transient_vector>;
 
-  struct transient_vector
+  struct transient_vector : object
   {
     static constexpr object_type obj_type{ object_type::transient_vector };
     static constexpr bool pointer_free{ false };
@@ -15,7 +15,7 @@ namespace jank::runtime::obj
     using value_type = runtime::detail::native_transient_vector;
     using persistent_type_ref = oref<struct persistent_vector>;
 
-    transient_vector() = default;
+    transient_vector();
     transient_vector(transient_vector &&) noexcept = default;
     transient_vector(transient_vector const &) = default;
     transient_vector(runtime::detail::native_persistent_vector const &d);
@@ -23,13 +23,6 @@ namespace jank::runtime::obj
     transient_vector(value_type &&d);
 
     static transient_vector_ref empty();
-
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
 
     /* behavior::countable */
     usize count() const;
@@ -53,7 +46,7 @@ namespace jank::runtime::obj
 
     void assert_active() const;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is not thread-safe, but not shared. ***/
     value_type data;
     bool active{ true };
   };

@@ -10,19 +10,21 @@
 
 namespace jank::runtime::obj
 {
+  native_function_wrapper::native_function_wrapper()
+    : object{ obj_type }
+  {
+  }
+
   native_function_wrapper::native_function_wrapper(detail::function_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
   native_function_wrapper::native_function_wrapper(detail::function_type const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
-  }
-
-  bool native_function_wrapper::equal(object const &o) const
-  {
-    return &base == &o;
   }
 
   void native_function_wrapper::to_string(jtl::string_builder &buff) const
@@ -31,25 +33,8 @@ namespace jank::runtime::obj
     util::format_to(buff,
                     "#object [{} {} {}]",
                     (name.is_nil() ? "unknown" : try_object<persistent_string>(name)->data),
-                    object_type_str(base.type),
-                    &base);
-  }
-
-  jtl::immutable_string native_function_wrapper::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  jtl::immutable_string native_function_wrapper::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash native_function_wrapper::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
+                    object_type_str(type),
+                    this);
   }
 
   template <usize N, typename... Args>
@@ -198,6 +183,6 @@ namespace jank::runtime::obj
 
   object_ref native_function_wrapper::this_object_ref()
   {
-    return &this->base;
+    return this;
   }
 }

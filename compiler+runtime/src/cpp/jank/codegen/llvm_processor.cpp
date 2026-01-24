@@ -710,7 +710,7 @@ namespace jank::codegen
 
     if(is_closure)
     {
-      static constexpr auto offset_of_base{ offsetof(runtime::obj::jit_closure, base) };
+      static constexpr auto offset_of_base{ offsetof(runtime::obj::jit_closure, type) };
       static constexpr auto offset_of_context{ offsetof(runtime::obj::jit_closure, context) };
       jank_debug_assert(offset_of_base < offset_of_context);
       static constexpr auto offset_of_context_from_base{ offset_of_context - offset_of_base };

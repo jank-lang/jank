@@ -5,6 +5,11 @@
 
 namespace jank::runtime::obj
 {
+  cons::cons()
+    : object{ obj_type }
+  {
+  }
+
   cons::cons(object_ref const head, object_ref const tail)
     : head{ head }
     , tail{ tail }
@@ -64,7 +69,7 @@ namespace jank::runtime::obj
       return h;
     }
 
-    h = hash::ordered(&base);
+    h = hash::ordered(this);
     hash.store(h);
     return h;
   }

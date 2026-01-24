@@ -9,48 +9,26 @@
 
 namespace jank::runtime::obj
 {
+  transient_sorted_map::transient_sorted_map()
+    : object{ obj_type }
+  {
+  }
+
   transient_sorted_map::transient_sorted_map(runtime::detail::native_persistent_sorted_map const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
   transient_sorted_map::transient_sorted_map(runtime::detail::native_persistent_sorted_map &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
   transient_sorted_map_ref transient_sorted_map::empty()
   {
     return make_box<transient_sorted_map>();
-  }
-
-  bool transient_sorted_map::equal(object const &o) const
-  {
-    /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
-  }
-
-  void transient_sorted_map::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string transient_sorted_map::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  jtl::immutable_string transient_sorted_map::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash transient_sorted_map::to_hash() const
-  {
-    /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   usize transient_sorted_map::count() const

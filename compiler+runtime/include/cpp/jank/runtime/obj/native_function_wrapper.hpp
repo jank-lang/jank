@@ -64,23 +64,22 @@ namespace jank::runtime
   {
     using native_function_wrapper_ref = oref<struct native_function_wrapper>;
 
-    struct native_function_wrapper : behavior::callable
+    struct native_function_wrapper
+      : object
+      , behavior::callable
     {
       static constexpr object_type obj_type{ object_type::native_function_wrapper };
       static constexpr bool pointer_free{ false };
 
-      native_function_wrapper() = default;
+      native_function_wrapper();
       native_function_wrapper(native_function_wrapper &&) noexcept = default;
       native_function_wrapper(native_function_wrapper const &) = default;
       native_function_wrapper(obj::detail::function_type &&d);
       native_function_wrapper(obj::detail::function_type const &d);
 
       /* behavior::object_like */
-      bool equal(object const &) const;
-      jtl::immutable_string to_string() const;
-      void to_string(jtl::string_builder &buff) const;
-      jtl::immutable_string to_code_string() const;
-      uhash to_hash() const;
+      using object::to_string;
+      void to_string(jtl::string_builder &buff) const override;
 
       /* behavior::callable */
       object_ref call() final;
@@ -140,7 +139,6 @@ namespace jank::runtime
       native_function_wrapper_ref with_meta(object_ref const m) const;
 
       /*** XXX: Everything here is immutable after initialization. ***/
-      object base{ obj_type };
       obj::detail::function_type data{};
       jtl::option<object_ref> meta;
     };

@@ -6,22 +6,22 @@ namespace jank::runtime::obj
 {
   using boolean_ref = oref<struct boolean>;
 
-  struct boolean
+  struct boolean : object
   {
     static constexpr object_type obj_type{ object_type::boolean };
     static constexpr bool pointer_free{ true };
 
-    boolean() = default;
+    boolean();
     boolean(boolean &&) noexcept = default;
     boolean(boolean const &) = default;
     boolean(bool const d);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;
@@ -34,28 +34,27 @@ namespace jank::runtime::obj
     f64 to_real() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     bool data{};
   };
 
   using integer_ref = oref<struct integer>;
 
-  struct integer
+  struct integer : object
   {
     static constexpr object_type obj_type{ object_type::integer };
     static constexpr bool pointer_free{ true };
 
-    integer() = default;
+    integer();
     integer(integer &&) noexcept = default;
     integer(integer const &) = default;
     integer(i64 const d);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;
@@ -68,29 +67,28 @@ namespace jank::runtime::obj
     f64 to_real() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     /* TODO: Is it faster to have the data first or the base first? */
     i64 data{};
   };
 
   using real_ref = oref<struct real>;
 
-  struct real
+  struct real : object
   {
     static constexpr object_type obj_type{ object_type::real };
     static constexpr bool pointer_free{ true };
 
-    real() = default;
+    real();
     real(real &&) noexcept = default;
     real(real const &) = default;
     real(f64 const d);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;

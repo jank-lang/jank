@@ -12,7 +12,7 @@ namespace jank::runtime::obj
 {
   using transient_hash_map_ref = oref<struct transient_hash_map>;
 
-  struct transient_hash_map
+  struct transient_hash_map : object
   {
     static constexpr object_type obj_type{ object_type::transient_hash_map };
     static constexpr bool pointer_free{ false };
@@ -20,7 +20,7 @@ namespace jank::runtime::obj
     using value_type = runtime::detail::native_transient_hash_map;
     using persistent_type_ref = oref<struct persistent_hash_map>;
 
-    transient_hash_map() = default;
+    transient_hash_map();
     transient_hash_map(transient_hash_map &&) noexcept = default;
     transient_hash_map(transient_hash_map const &) = default;
     transient_hash_map(runtime::detail::native_persistent_hash_map const &d);
@@ -29,13 +29,6 @@ namespace jank::runtime::obj
     transient_hash_map(value_type &&d);
 
     static transient_hash_map_ref empty();
-
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
 
     /* behavior::countable */
     usize count() const;
@@ -63,7 +56,6 @@ namespace jank::runtime::obj
     void assert_active() const;
 
     /*** XXX: Everything here is not thread-safe, but is not shared. ***/
-    object base{ obj_type };
     value_type data;
     bool active{ true };
   };

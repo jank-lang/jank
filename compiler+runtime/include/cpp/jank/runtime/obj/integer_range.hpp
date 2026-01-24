@@ -12,7 +12,7 @@ namespace jank::runtime::obj
 
   /* An integer range from X to Y, exclusive, incrementing by S. */
   /* For non-integer values, use the range object */
-  struct integer_range
+  struct integer_range : object
   {
     static constexpr object_type obj_type{ object_type::integer_range };
     static constexpr bool pointer_free{ false };
@@ -21,7 +21,7 @@ namespace jank::runtime::obj
     using bounds_check_t = bool (*)(integer_ref const, integer_ref const);
 
     /* Constructors are only to be used within integer_range.cpp. Prefer integer_range::create. */
-    integer_range() = default;
+    integer_range();
     integer_range(integer_range &&) noexcept = default;
     integer_range(integer_range const &) = default;
     integer_range(integer_ref const end);
@@ -44,11 +44,11 @@ namespace jank::runtime::obj
     create(integer_ref const start, obj::integer_ref const end, obj::integer_ref const step);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::seqable */
     integer_range_ref seq() const;
@@ -76,7 +76,6 @@ namespace jank::runtime::obj
     usize count() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ object_type::integer_range };
     integer_ref start{};
     integer_ref end{};
     integer_ref step{};

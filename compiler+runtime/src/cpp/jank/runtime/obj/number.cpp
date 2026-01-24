@@ -7,8 +7,14 @@
 namespace jank::runtime::obj
 {
   /***** boolean *****/
+  boolean::boolean()
+    : object{ obj_type }
+  {
+  }
+
   boolean::boolean(bool const d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
@@ -61,8 +67,14 @@ namespace jank::runtime::obj
   }
 
   /***** integer *****/
+  integer::integer()
+    : object{ obj_type }
+  {
+  }
+
   integer::integer(i64 const d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
@@ -130,8 +142,14 @@ namespace jank::runtime::obj
   }
 
   /***** real *****/
+  real::real()
+    : object{ obj_type }
+  {
+  }
+
   real::real(f64 const d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 

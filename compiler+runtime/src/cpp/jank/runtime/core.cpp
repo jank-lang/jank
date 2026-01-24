@@ -463,7 +463,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not derefable: {}",
-                                                 object_type_str(typed_o->base.type)) };
+                                                 object_type_str(typed_o->type)) };
         }
       },
       o);
@@ -482,7 +482,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not realizable: {}",
-                                                 object_type_str(typed_o->base.type)) };
+                                                 object_type_str(typed_o->type)) };
         }
       },
       o);

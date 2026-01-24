@@ -7,23 +7,22 @@ namespace jank::runtime::obj
 {
   using jit_function_ref = oref<struct jit_function>;
 
-  struct jit_function : behavior::callable
+  struct jit_function
+    : object
+    , behavior::callable
   {
     static constexpr object_type obj_type{ object_type::jit_function };
     static constexpr bool pointer_free{ false };
 
-    jit_function() = default;
+    jit_function();
     jit_function(jit_function &&) noexcept = default;
     jit_function(jit_function const &) = default;
     jit_function(arity_flag_t arity_flags);
     jit_function(object_ref const meta);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string();
-    void to_string(jtl::string_builder &buff);
-    jtl::immutable_string to_code_string();
-    uhash to_hash() const;
+    using object::to_string;
+    void to_string(jtl::string_builder &buff) const override;
 
     /* behavior::metadatable */
     jit_function_ref with_meta(object_ref const m);
@@ -85,7 +84,6 @@ namespace jank::runtime::obj
     object_ref this_object_ref() override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     object *(*arity_0)(object *){};
     object *(*arity_1)(object *, object *){};
     object *(*arity_2)(object *, object *, object *){};

@@ -10,20 +10,13 @@ namespace jank::runtime::obj
 {
   using atom_ref = oref<struct atom>;
 
-  struct atom
+  struct atom : object
   {
     static constexpr object_type obj_type{ object_type::atom };
     static constexpr bool pointer_free{ false };
 
-    atom() = default;
+    atom();
     atom(object_ref const o);
-
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
 
     /* behavior::derefable */
     object_ref deref() const;
@@ -52,9 +45,6 @@ namespace jank::runtime::obj
     /* behavior::ref_like */
     void add_watch(object_ref const key, object_ref const fn);
     void remove_watch(object_ref const key);
-
-    /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
 
     /*** XXX: Everything here is thread-safe. ***/
 

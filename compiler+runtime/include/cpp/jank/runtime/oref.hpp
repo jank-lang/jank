@@ -57,7 +57,7 @@ namespace jank::runtime
     template <typename T>
     requires behavior::object_like<T>
     oref(T * const typed_data) noexcept
-      : data{ &typed_data->base }
+      : data{ typed_data }
     {
       jank_assert(this->data);
     }
@@ -65,7 +65,7 @@ namespace jank::runtime
     template <typename T>
     requires behavior::object_like<T>
     oref(T const * const typed_data) noexcept
-      : data{ const_cast<object *>(&typed_data->base) }
+      : data{ const_cast<T *>(typed_data) }
     {
       jank_assert(this->data);
     }
@@ -113,12 +113,12 @@ namespace jank::runtime
     requires behavior::object_like<T>
     oref &operator=(oref<T> const &rhs) noexcept
     {
-      if(data == &rhs->base)
+      if(data == rhs.data)
       {
         return *this;
       }
 
-      data = &rhs->base;
+      data = rhs.get();
       return *this;
     }
 
@@ -234,7 +234,7 @@ namespace jank::runtime
 
     void reset(T * const o) noexcept
     {
-      data = o->base;
+      data = o;
     }
 
     void reset(oref<T> const &o) noexcept
@@ -327,7 +327,7 @@ namespace jank::runtime
 
     object *get() const noexcept
     {
-      return &reinterpret_cast<T *>(data)->base;
+      return static_cast<object *>(static_cast<T *>(data));
     }
 
     oref<object> erase() const noexcept
@@ -336,7 +336,7 @@ namespace jank::runtime
       {
         return {};
       }
-      return &reinterpret_cast<T *>(data)->base;
+      return static_cast<object *>(static_cast<T *>(data));
     }
 
     bool is_some() const noexcept

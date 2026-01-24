@@ -41,6 +41,33 @@ namespace jank::runtime
     return *this;
   }
 
+  bool object::equal(object const &o) const
+  {
+    return &o == this;
+  }
+
+  jtl::immutable_string object::to_string() const
+  {
+    jtl::string_builder buff;
+    to_string(buff);
+    return buff.release();
+  }
+
+  void object::to_string(jtl::string_builder &buff) const
+  {
+    util::format_to(buff, "#object [{} {}]", object_type_str(type), this);
+  }
+
+  jtl::immutable_string object::to_code_string() const
+  {
+    return to_string();
+  }
+
+  uhash object::to_hash() const
+  {
+    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
+  }
+
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
     if(lhs->type != rhs->type)

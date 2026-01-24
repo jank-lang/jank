@@ -4637,7 +4637,7 @@ namespace jank::analyze
         {
           return error::internal_analyze_failure(
             util::format("Unimplemented analysis for object type '{}'.",
-                         object_type_str(typed_o->base.type)),
+                         object_type_str(typed_o->type)),
             object_source(o),
             latest_expansion(macro_expansions));
         }

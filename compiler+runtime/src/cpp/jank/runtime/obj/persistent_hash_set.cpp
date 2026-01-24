@@ -5,18 +5,26 @@
 
 namespace jank::runtime::obj
 {
+  persistent_hash_set::persistent_hash_set()
+    : object{ obj_type }
+  {
+  }
+
   persistent_hash_set::persistent_hash_set(value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
   persistent_hash_set::persistent_hash_set(value_type const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
   persistent_hash_set::persistent_hash_set(jtl::option<object_ref> const &meta, value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
     , meta{ meta }
   {
   }
@@ -43,7 +51,7 @@ namespace jank::runtime::obj
 
   bool persistent_hash_set::equal(object const &o) const
   {
-    if(&o == &base)
+    if(&o == static_cast<object const *>(this))
     {
       return true;
     }

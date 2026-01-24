@@ -13,7 +13,8 @@ namespace jank::runtime::obj
                                  object_ref const dispatch,
                                  object_ref const default_,
                                  object_ref const hierarchy)
-    : dispatch{ dispatch }
+    : object{ obj_type }
+    , dispatch{ dispatch }
     , default_dispatch_value{ default_ }
     , hierarchy{ hierarchy }
     , name{ try_object<symbol>(name) }
@@ -21,37 +22,6 @@ namespace jank::runtime::obj
     , method_table{ persistent_hash_map::empty() }
     , prefer_table{ persistent_hash_map::empty() }
   {
-  }
-
-  bool multi_function::equal(object const &rhs) const
-  {
-    return &base == &rhs;
-  }
-
-  jtl::immutable_string multi_function::to_string()
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void multi_function::to_string(jtl::string_builder &buff)
-  {
-    util::format_to(buff,
-                    "#object [{} {} {}]",
-                    name->to_string(),
-                    object_type_str(base.type),
-                    &base);
-  }
-
-  jtl::immutable_string multi_function::to_code_string()
-  {
-    return to_string();
-  }
-
-  uhash multi_function::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   object_ref multi_function::call()
@@ -193,7 +163,7 @@ namespace jank::runtime::obj
 
   object_ref multi_function::this_object_ref()
   {
-    return &this->base;
+    return this;
   }
 
   multi_function_ref multi_function::reset()

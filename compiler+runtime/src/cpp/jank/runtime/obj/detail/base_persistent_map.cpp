@@ -9,15 +9,22 @@
 namespace jank::runtime::obj::detail
 {
   template <typename PT, typename ST, typename V>
+  base_persistent_map<PT, ST, V>::base_persistent_map()
+    : object{ PT::obj_type }
+  {
+  }
+
+  template <typename PT, typename ST, typename V>
   base_persistent_map<PT, ST, V>::base_persistent_map(jtl::option<object_ref> const &meta)
-    : meta{ meta }
+    : object{ PT::obj_type }
+    , meta{ meta }
   {
   }
 
   template <typename PT, typename ST, typename V>
   bool base_persistent_map<PT, ST, V>::equal(object const &o) const
   {
-    if(&o == &base)
+    if(&o == static_cast<object const *>(this))
     {
       return true;
     }

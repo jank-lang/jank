@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   using persistent_hash_set_ref = oref<struct persistent_hash_set>;
   using persistent_hash_set_sequence_ref = oref<struct persistent_hash_set_sequence>;
 
-  struct persistent_hash_set
+  struct persistent_hash_set : object
   {
     static constexpr object_type obj_type{ object_type::persistent_hash_set };
     static constexpr bool pointer_free{ false };
@@ -17,7 +17,7 @@ namespace jank::runtime::obj
 
     using value_type = runtime::detail::native_persistent_hash_set;
 
-    persistent_hash_set() = default;
+    persistent_hash_set();
     persistent_hash_set(persistent_hash_set &&) noexcept = default;
     persistent_hash_set(persistent_hash_set const &) = default;
     persistent_hash_set(value_type &&d);
@@ -26,13 +26,15 @@ namespace jank::runtime::obj
 
     template <typename... Args>
     persistent_hash_set(std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type }
+      , data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
     persistent_hash_set(object_ref const meta, std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type }
+      , data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
     }
@@ -42,11 +44,11 @@ namespace jank::runtime::obj
     static persistent_hash_set_ref create_from_seq(object_ref const seq);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::metadatable */
     persistent_hash_set_ref with_meta(object_ref const m) const;
@@ -71,7 +73,6 @@ namespace jank::runtime::obj
     persistent_hash_set_ref disj(object_ref const o) const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     value_type data;
     jtl::option<object_ref> meta;
   };

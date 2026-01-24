@@ -9,7 +9,8 @@
 namespace jank::runtime
 {
   ns::ns(obj::symbol_ref const name)
-    : name{ name }
+    : object{ obj_type }
+    , name{ name }
     , vars{ obj::persistent_hash_map::empty() }
     , aliases{ obj::persistent_hash_map::empty() }
   {
@@ -218,11 +219,6 @@ namespace jank::runtime
   void ns::to_string(jtl::string_builder &buff) const
   {
     name->to_string(buff);
-  }
-  uhash ns::to_hash() const
-  /* TODO: Cache this? */
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   object_ref ns::with_meta(object_ref const)

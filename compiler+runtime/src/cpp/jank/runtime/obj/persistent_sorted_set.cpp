@@ -5,25 +5,34 @@
 
 namespace jank::runtime::obj
 {
+  persistent_sorted_set::persistent_sorted_set()
+    : object{ obj_type }
+  {
+  }
+
   persistent_sorted_set::persistent_sorted_set(value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
   {
   }
 
   persistent_sorted_set::persistent_sorted_set(
     runtime::detail::native_persistent_sorted_set const &d)
-    : data{ d }
+    : object{ obj_type }
+    , data{ d }
   {
   }
 
   persistent_sorted_set::persistent_sorted_set(object_ref const meta, value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
     , meta{ meta }
   {
   }
 
   persistent_sorted_set::persistent_sorted_set(jtl::option<object_ref> const &meta, value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type }
+    , data{ std::move(d) }
     , meta{ meta }
   {
   }
@@ -50,7 +59,7 @@ namespace jank::runtime::obj
 
   bool persistent_sorted_set::equal(object const &o) const
   {
-    if(&o == &base)
+    if(&o == this)
     {
       return true;
     }

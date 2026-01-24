@@ -14,14 +14,16 @@
 namespace jank::runtime
 {
   var::var(ns_ref const n, obj::symbol_ref const name)
-    : n{ n }
+    : object{ obj_type }
+    , n{ n }
     , name{ name }
     , root{ make_box<var_unbound_root>(this) }
   {
   }
 
   var::var(ns_ref const n, obj::symbol_ref const name, object_ref const root)
-    : n{ n }
+    : object{ obj_type }
+    , n{ n }
     , name{ name }
     , root{ root }
   {
@@ -32,7 +34,8 @@ namespace jank::runtime
            object_ref const root,
            bool const dynamic,
            bool const thread_bound)
-    : n{ n }
+    : object{ obj_type }
+    , n{ n }
     , name{ name }
     , root{ root }
     , dynamic{ dynamic }
@@ -79,18 +82,7 @@ namespace jank::runtime
 
   uhash var::to_hash() const
   {
-    if(hash)
-    {
-      return hash;
-    }
-
-    return hash = hash::combine(n->to_hash(), name->to_hash());
-  }
-
-  var_ref var::with_meta(object_ref const m)
-  {
-    meta = behavior::detail::validate_meta(m);
-    return this;
+    return hash::combine(n->to_hash(), name->to_hash());
   }
 
   bool var::is_bound() const
@@ -187,14 +179,10 @@ namespace jank::runtime
   }
 
   var_thread_binding::var_thread_binding(object_ref const value, std::thread::id const id)
-    : value{ value }
+    : object{ obj_type }
+    , value{ value }
     , thread_id{ id }
   {
-  }
-
-  bool var_thread_binding::equal(object const &o) const
-  {
-    return &base == &o;
   }
 
   jtl::immutable_string var_thread_binding::to_string() const
@@ -218,35 +206,14 @@ namespace jank::runtime
   }
 
   var_unbound_root::var_unbound_root(var_ref const var)
-    : var{ var }
+    : object{ obj_type }
+    , var{ var }
   {
-  }
-
-  bool var_unbound_root::equal(object const &o) const
-  {
-    return &base == &o;
-  }
-
-  jtl::immutable_string var_unbound_root::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
   }
 
   void var_unbound_root::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "unbound@{} for var {}", &base, var->to_string());
-  }
-
-  jtl::immutable_string var_unbound_root::to_code_string() const
-  {
-    return var_unbound_root::to_string();
-  }
-
-  uhash var_unbound_root::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
+    util::format_to(buff, "unbound@{} for var {}", this, var->to_string());
   }
 }
 

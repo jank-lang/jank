@@ -112,18 +112,26 @@ namespace jank::runtime
 
 namespace jank::runtime::obj
 {
+  big_integer::big_integer()
+    : object{ obj_type }
+  {
+  }
+
   big_integer::big_integer(native_big_integer const &val)
-    : data(val)
+    : object{ obj_type }
+    , data{ val }
   {
   }
 
   big_integer::big_integer(native_big_integer &&val)
-    : data(std::move(val))
+    : object{ obj_type }
+    , data{ std::move(val) }
   {
   }
 
   big_integer::big_integer(i64 const val)
-    : data(val)
+    : object{ obj_type }
+    , data{ val }
   {
   }
 

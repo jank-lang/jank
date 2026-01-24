@@ -7,7 +7,7 @@ namespace jank::runtime::obj
 {
   using transient_sorted_set_ref = oref<struct transient_sorted_set>;
 
-  struct transient_sorted_set
+  struct transient_sorted_set : object
   {
     static constexpr object_type obj_type{ object_type::transient_sorted_set };
     static constexpr bool pointer_free{ false };
@@ -15,20 +15,13 @@ namespace jank::runtime::obj
     using value_type = runtime::detail::native_transient_sorted_set;
     using persistent_type_ref = oref<struct persistent_sorted_set>;
 
-    transient_sorted_set() = default;
+    transient_sorted_set();
     transient_sorted_set(transient_sorted_set &&) noexcept = default;
     transient_sorted_set(transient_sorted_set const &) = default;
     transient_sorted_set(value_type const &d);
     transient_sorted_set(value_type &&d);
 
     static transient_sorted_set_ref empty();
-
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
 
     /* behavior::countable */
     usize count() const;
@@ -53,7 +46,7 @@ namespace jank::runtime::obj
 
     void assert_active() const;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is not thread-safe, but not shared. ***/
     value_type data;
     bool active{ true };
   };

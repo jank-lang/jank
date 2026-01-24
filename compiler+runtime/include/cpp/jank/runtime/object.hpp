@@ -247,18 +247,24 @@ namespace jank::runtime
     return "unknown";
   }
 
-  struct object
+  struct object : gc
   {
     object() = default;
     object(object const &) noexcept;
     object(object &&) noexcept;
     object(object_type) noexcept;
+    virtual ~object() = default;
 
     object &operator=(object const &) noexcept;
     object &operator=(object &&) noexcept;
 
+    virtual bool equal(object const &) const;
+    virtual jtl::immutable_string to_string() const;
+    virtual void to_string(jtl::string_builder &) const;
+    virtual jtl::immutable_string to_code_string() const;
+    virtual uhash to_hash() const;
+
     object_type type{};
-    std::atomic<i32> ref_count{};
   };
 
   namespace obj
@@ -276,32 +282,7 @@ namespace jank::runtime::behavior
   concept object_like = requires(T * const t) {
     { T::obj_type } -> std::convertible_to<object_type>;
 
-    /* Determines is the specified object is equal, but not necessarily identical, to
-     * the current object. Identical means having the same address, the same identity.
-     * Equal just means having equal values. Equivalent means having equal values of the
-     * same type. :O Here, we're just focused on equality. */
-    { t->equal(std::declval<object const &>()) } -> std::convertible_to<bool>;
-
-    /* Returns a string version of the object, generally for printing or displaying. This
-     * is distinct from its code representation, which doesn't yet have a corresponding
-     * function in this behavior. */
-    { t->to_string() } -> std::convertible_to<jtl::immutable_string>;
-    { t->to_string(std::declval<jtl::string_builder &>()) } -> std::same_as<void>;
-
-    /* Returns the code representation of the object. */
-    { t->to_code_string() } -> std::convertible_to<jtl::immutable_string>;
-
-    /* Returns a deterministic hash value for the object. For some objects, like functions
-     * and transients, the hash is actually just the object's address. For others, it's
-     * based on the value, or values, within the object. There are a set of hash functions
-     * which should be used for this in hash.hpp. */
-    { t->to_hash() } -> std::convertible_to<i64>;
-
-    /* Every object needs to have this base field, which is the actual object field.
-     * When we pass around object pointers, we pass around pointers to this field within
-     * the overall object. This field stores the type of the object and we use that
-     * type to shift the object pointer and cast it into the fully typed object. */
-    { t->base } -> std::same_as<object &>;
+    std::is_base_of_v<object, T>;
   };
 }
 

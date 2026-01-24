@@ -3,16 +3,11 @@
 
 namespace jank::runtime::obj
 {
-
   re_pattern::re_pattern(jtl::immutable_string const &s)
-    : pattern{ s }
+    : object{ obj_type }
+    , pattern{ s }
     , regex{ s.c_str(), std::regex_constants::ECMAScript }
   {
-  }
-
-  bool re_pattern::equal(object const &o) const
-  {
-    return &base == &o;
   }
 
   void re_pattern::to_string(jtl::string_builder &buff) const
@@ -32,10 +27,5 @@ namespace jank::runtime::obj
     buff(pattern);
     buff('"');
     return buff.release();
-  }
-
-  uhash re_pattern::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 }

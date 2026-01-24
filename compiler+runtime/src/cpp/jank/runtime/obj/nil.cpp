@@ -4,18 +4,23 @@
 
 namespace jank::runtime::obj
 {
+  nil::nil()
+    : object{ obj_type }
+  {
+  }
+
   bool nil::equal(object const &o) const
   {
     return o.type == obj_type;
   }
 
-  jtl::immutable_string const &nil::to_string() const
+  jtl::immutable_string nil::to_string() const
   {
     static jtl::immutable_string const s{ "nil" };
     return s;
   }
 
-  jtl::immutable_string const &nil::to_code_string() const
+  jtl::immutable_string nil::to_code_string() const
   {
     return to_string();
   }
@@ -42,7 +47,7 @@ namespace jank::runtime::obj
 
   object_ref nil::get(object_ref const)
   {
-    return &base;
+    return this;
   }
 
   object_ref nil::get(object_ref const, object_ref const fallback)
@@ -52,7 +57,7 @@ namespace jank::runtime::obj
 
   object_ref nil::get_entry(object_ref const)
   {
-    return &base;
+    return this;
   }
 
   bool nil::contains(object_ref const) const
