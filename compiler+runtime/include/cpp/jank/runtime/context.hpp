@@ -156,7 +156,6 @@ namespace jank::runtime
     var_ref assert_var;
     var_ref no_recur_var;
     var_ref gensym_env_var;
-    var_ref read_eval_var;
     var_ref reader_opts_var;
 
     /*** XXX: Everything here is thread-safe. ***/
