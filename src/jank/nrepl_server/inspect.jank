@@ -6,7 +6,7 @@
 
 namespace nrepl_server::inspect
 {
-  std::string hash_to_hex_string(unsigned int i)
+  inline std::string hash_to_hex_string(unsigned int i)
   {
     return std::format(\"0x{:x}\", i);
   }
