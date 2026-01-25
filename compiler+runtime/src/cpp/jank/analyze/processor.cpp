@@ -2425,9 +2425,11 @@ namespace jank::analyze
                         bool needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
-    //    /* We can't (yet) guarantee that each branch of an if returns the same unboxed type,
-    // * so we're unable to unbox them. */
-    //    needs_box = true;
+
+    /* We can't (yet) guarantee that each branch of an if returns the same unboxed type,
+     * so we're unable to unbox them. */
+    needs_box = true;
+
     auto const form_count(o->count());
     if(form_count < 3)
     {
@@ -3705,7 +3707,7 @@ namespace jank::analyze
     for(usize i{}; i < arg_count; ++i, it = it.rest())
     {
       auto arg_expr{
-        analyze(it.first().unwrap(), current_frame, expression_position::value, fn_ctx, false)
+        analyze(it.first().unwrap(), current_frame, expression_position::value, fn_ctx, true)
       };
       if(arg_expr.is_err())
       {
