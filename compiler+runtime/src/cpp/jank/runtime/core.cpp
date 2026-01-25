@@ -869,7 +869,7 @@ namespace jank::runtime
     }
 
     auto const typed_o{ dyn_cast<obj::persistent_string>(form_string) };
-    return __rt_ctx->read_string(typed_o->data, opts);
+    return __rt_ctx->read_string(typed_o->data, opts, 1);
   }
 
   object_ref read_file(object_ref const file_path, object_ref const opts)

@@ -324,6 +324,8 @@ namespace jank::runtime
     auto count{ nth_form };
     auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
     auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };
+    auto const throw_on_eof{ equal(get(reader_opts, eof_kw, eof_throw_kw), eof_throw_kw) };
+    auto throw_eof{ throw_on_eof };
     object_ref ret{ jank_nil() };
 
     for(auto const &form : p_prc)
@@ -337,12 +339,10 @@ namespace jank::runtime
 
       if(form.expect_ok().is_none())
       {
-        auto const is_eof{ (!contains(reader_opts, eof_kw) || contains(reader_opts, eof_throw_kw))
-                           && count <= 0 };
-
-        if(is_eof)
+        if(throw_on_eof && count <= 0)
         {
-          throw std::runtime_error{ "EOF while reading." };
+          throw_eof = true;
+          break;
         }
 
         ret = get(reader_opts, eof_kw);
@@ -351,6 +351,13 @@ namespace jank::runtime
       {
         ret = form.expect_ok().unwrap().ptr;
       }
+
+      throw_eof = false;
+    }
+
+    if(throw_eof)
+    {
+      throw std::runtime_error{ "EOF while reading." };
     }
 
     return ret;
