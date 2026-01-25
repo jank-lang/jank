@@ -140,11 +140,6 @@ namespace jank::runtime
     native_unordered_map<jtl::immutable_string, native_vector<jtl::immutable_string>>
       module_dependencies;
 
-    /* TODO: Remove this in favor of calling module's `jank_load` functions
-     * on demand. At the moment it is being used to load all the compiled modules
-     * in ahead of time compiled binaries at startup (which is not an ideal way to
-     * achieve that). */
-    folly::Synchronized<native_deque<jtl::immutable_string>> loaded_modules_in_order;
     jtl::immutable_string binary_cache_dir;
     module::loader module_loader;
 
@@ -161,6 +156,11 @@ namespace jank::runtime
     /*** XXX: Everything here is thread-safe. ***/
     folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;
     folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ref>> keywords;
+
+    /* TODO: Remove this in favor of calling module's `jank_load` functions
+     * on demand. At the moment it is being used to load all the compiled modules
+     * in ahead of time compiled binaries at startup (which is not an ideal way to
+     * achieve that). */
     folly::Synchronized<native_deque<jtl::immutable_string>> loaded_modules_in_order;
     static thread_local native_list<thread_binding_frame> thread_binding_frames;
 
