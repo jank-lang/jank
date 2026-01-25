@@ -1,10 +1,10 @@
 #!/usr/bin/env bb
 
 (ns jank.test.error-reporting
-  (:require [babashka.process :as b.p]
-            [babashka.fs :as b.f]
-            [clojure.string :as string]
-            [jank.util :as util]))
+    (:require [babashka.process :as b.p]
+              [babashka.fs :as b.f]
+              [clojure.string :as string]
+              [jank.util :as util]))
 
 ; This test suite finds `input.jank` files, each in their own directory,
 ; and runs them. They're all expected to fail and the stdout is captured
@@ -27,8 +27,7 @@
   "Removes ANSI color codes from the given string."
   [s]
   (-> (clojure.string/replace s #"\x1B\[[0-9;]*[mK]" "")
-      (clojure.string/replace #"\r\n" "\n")
-      (clojure.string/replace (str (char 0)) "")))
+      (clojure.string/replace #"\r\n" "\n")))
 
 (defn find-tests! []
   (let [inputs (b.f/glob src-dir "**/input.jank")]
@@ -43,13 +42,13 @@
 
 (defn run-input! [test]
   (when (:has-setup? test)
-    (b.p/shell {:out :string
-                :dir (:dir test)}
-               "./setup"))
+        (b.p/shell {:out :string
+                    :dir (:dir test)}
+                   "./setup"))
   (let [res @(b.p/process {:out :string
                            :err :out
                            :dir (:dir test)}
-                          "jank --module-path .:jar.jar run input.jank")]
+              "jank --module-path .:jar.jar run input.jank")]
     (assoc test :output (strip-ansi-codes (string/trim (:out res))))))
 
 (defn generate! [tests]
@@ -63,7 +62,7 @@
     (doseq [test tests]
       (print "testing dir" (b.f/file-name (:dir test)) "=> ")
       (let [expected (try
-                       (strip-ansi-codes (string/trim (slurp (:output-file test))))
+                       (slurp (:output-file test))
                        (catch Exception _
                          ""))]
         (if (= (:output test) expected)
@@ -79,14 +78,14 @@
 
 (defn -main [& args]
   (if-not (= (count args) 1)
-    (do
-      (println "Usage: ./bin/test/error_reporting.clj <test|generate>")
-      (System/exit 1))
-    (let [cmd (first args)
-          tests (map run-input! (find-tests!))]
-      (case cmd
-        "generate" (generate! tests)
-        "test" (test! tests)))))
+          (do
+            (println "Usage: ./bin/test/error_reporting.clj <test|generate>")
+            (System/exit 1))
+          (let [cmd (first args)
+                tests (map run-input! (find-tests!))]
+            (case cmd
+                  "generate" (generate! tests)
+                  "test" (test! tests)))))
 
 (when (= *file* (System/getProperty "babashka.file"))
-  (apply -main *command-line-args*))
+      (apply -main *command-line-args*))
