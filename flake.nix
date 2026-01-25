@@ -56,7 +56,7 @@
         packages = rec {
           default = jank-release;
 
-          jank-release = pkgs.stdenv.mkDerivation (finalAttrs: {
+          jank-release = llvmPackages.stdenv.mkDerivation (finalAttrs: {
             pname = "jank";
             version = "git";
 
@@ -71,6 +71,7 @@
 
             nativeBuildInputs =
               [
+                llvmPackages.clang
                 llvmPackages.libclang.dev
               ]
               ++ (with pkgs; [
@@ -112,8 +113,6 @@
             cmakeBuildDir = "./compiler+runtime/build";
             cmakeDir = "..";
             cmakeFlags = [
-              "-DCMAKE_C_COMPILER=${llvmPackages.clang}/bin/clang"
-              "-DCMAKE_CXX_COMPILER=${llvmPackages.clang}/bin/clang++"
               # TODO: Updating RPATHs during install causes the step to fail as it
               # tries to rewrite non-existent RPATHs like /lib. Needs more
               # investigation.
@@ -142,7 +141,7 @@
           });
         };
 
-        devShells.default = pkgs.mkShell {
+        devShells.default = (pkgs.mkShell.override {stdenv = llvmPackages.stdenv;}) {
           packages = let
             cmake' = pkgs.writeShellScriptBin "cmake" ''
               exec ${pkgs.cmake}/bin/cmake -DCMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags} "$@"
@@ -182,8 +181,6 @@
             ];
 
           shellHook = ''
-            export CC=${llvmPackages.clang}/bin/clang
-            export CXX=${llvmPackages.clang}/bin/clang++
             export CXXFLAGS=${lib.escapeShellArg cmakeCxxFlags}
             export LDFLAGS=${lib.escapeShellArg cmakeLinkerFlags}
             export ASAN_OPTIONS=detect_leaks=0
