@@ -142,43 +142,35 @@
         };
 
         devShells.default = (pkgs.mkShell.override {stdenv = llvmPackages.stdenv;}) {
-          packages = let
-            cmake' = pkgs.writeShellScriptBin "cmake" ''
-              exec ${pkgs.cmake}/bin/cmake -DCMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags} "$@"
-            '';
-          in
-            with pkgs; [
-              stdenv.cc.cc.lib
+          packages = with pkgs; [
+            ## Required tools.
+            cmake
+            ninja
+            pkg-config
+            llvmPackages.libclang
+            llvmPackages.libllvm
 
-              ## Required tools.
-              cmake
-              cmake'
-              ninja
-              pkg-config
-              llvmPackages.libclang
-              llvmPackages.libllvm
+            ## Required libs.
+            boehmgc
+            openssl
 
-              ## Required libs.
-              boehmgc
-              openssl
+            ## Dev tools.
+            babashka
+            entr
+            gcovr
+            lcov
+            git
+            nixd
+            shellcheck
+            # For clangd & clang-tidy.
+            clang-tools
+            gdb
+            clangbuildanalyzer
+            openjdk
 
-              ## Dev tools.
-              babashka
-              entr
-              gcovr
-              lcov
-              git
-              nixd
-              shellcheck
-              # For clangd & clang-tidy.
-              clang-tools
-              gdb
-              clangbuildanalyzer
-              openjdk
-
-              ## Dev libs.
-              doctest
-            ];
+            ## Dev libs.
+            doctest
+          ];
 
           shellHook = ''
             export CXXFLAGS=${lib.escapeShellArg cmakeCxxFlags}
