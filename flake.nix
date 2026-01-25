@@ -16,7 +16,7 @@
         lib,
         ...
       }: let
-        llvm = pkgs.llvmPackages_22;
+        llvmPackages = pkgs.llvmPackages_22;
         # for cpptrace; versions from cpptrace/cmake/OptionVariables.cmake
         libdwarf-lite-src = pkgs.fetchFromGitHub {
           owner = "jeremy-rifkin";
@@ -33,11 +33,11 @@
         cmakeCxxFlags =
           lib.concatStringsSep " "
           [
-            (lib.trim (lib.readFile "${llvm.clang}/nix-support/cc-cflags"))
-            (lib.trim (lib.readFile "${llvm.clang}/nix-support/libc-crt1-cflags"))
-            (lib.trim (lib.readFile "${llvm.clang}/nix-support/cc-ldflags"))
+            (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/cc-cflags"))
+            (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/libc-crt1-cflags"))
+            (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/cc-ldflags"))
             "-Wl,-rpath,${pkgs.stdenv.cc.libc}/lib"
-            "-L${lib.getLib llvm.libllvm.lib}/lib"
+            "-L${lib.getLib llvmPackages.libllvm.lib}/lib"
             "-L${lib.getLib pkgs.bzip2}/lib"
             "-L${lib.getLib pkgs.openssl}/lib"
             "-L${lib.getLib pkgs.zlib}/lib"
@@ -67,7 +67,7 @@
 
             nativeBuildInputs =
               [
-                llvm.libclang.dev
+                llvmPackages.libclang.dev
               ]
               ++ (with pkgs; [
                 cmake
@@ -77,7 +77,7 @@
 
             buildInputs =
               [
-                llvm.libllvm.dev
+                llvmPackages.libllvm.dev
               ]
               ++ (with pkgs; [
                 bzip2
@@ -105,8 +105,8 @@
             cmakeBuildDir = "./compiler+runtime/build";
             cmakeDir = "..";
             cmakeFlags = [
-              "-DCMAKE_C_COMPILER=${llvm.clang}/bin/clang"
-              "-DCMAKE_CXX_COMPILER=${llvm.clang}/bin/clang++"
+              "-DCMAKE_C_COMPILER=${llvmPackages.clang}/bin/clang"
+              "-DCMAKE_CXX_COMPILER=${llvmPackages.clang}/bin/clang++"
               # TODO: Updating RPATHs during install causes the step to fail as it
               # tries to rewrite non-existent RPATHs like /lib. Needs more
               # investigation.
@@ -149,8 +149,8 @@
               cmake'
               ninja
               pkg-config
-              llvm.libclang
-              llvm.libllvm
+              llvmPackages.libclang
+              llvmPackages.libllvm
 
               ## Required libs.
               boehmgc
@@ -175,8 +175,8 @@
             ];
 
           shellHook = ''
-            export CC=${llvm.clang}/bin/clang
-            export CXX=${llvm.clang}/bin/clang++
+            export CC=${llvmPackages.clang}/bin/clang
+            export CXX=${llvmPackages.clang}/bin/clang++
             export CMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags}
             export ASAN_OPTIONS=detect_leaks=0
           '';
