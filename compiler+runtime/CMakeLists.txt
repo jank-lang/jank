@@ -654,6 +654,7 @@ foreach(lib ${jank_lib_link_dirs_prop})
 endforeach()
 list(APPEND jank_lib_linker_flags_list ${jank_linker_flags})
 list(APPEND jank_lib_linker_flags_list ${CMAKE_CXX_FLAGS})
+list(APPEND jank_lib_linker_flags_list ${CMAKE_SHARED_LINKER_FLAGS})
 list(JOIN jank_lib_linker_flags_list " " jank_lib_linker_flags_unescaped)
 string(REPLACE "\"" "\\\"" jank_lib_linker_flags_str "${jank_lib_linker_flags_unescaped}")
 

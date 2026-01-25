@@ -30,21 +30,25 @@
           rev = "v1.5.7";
           sha256 = "sha256-tNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44=";
         };
-        cmakeCxxFlags =
-          lib.concatStringsSep " "
-          [
-            (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/cc-cflags"))
-            (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/libc-crt1-cflags"))
-            (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/cc-ldflags"))
-            "-Wl,-rpath,${pkgs.stdenv.cc.libc}/lib"
-            "-L${lib.getLib llvmPackages.libllvm.lib}/lib"
-            "-L${lib.getLib pkgs.bzip2}/lib"
-            "-L${lib.getLib pkgs.openssl}/lib"
-            "-L${lib.getLib pkgs.zlib}/lib"
-            "-L${lib.getLib pkgs.zstd}/lib"
-            "-L${lib.getLib pkgs.libedit}/lib"
-            "-L${lib.getLib pkgs.libxml2}/lib"
-          ];
+        # Manually set compilation and linker flags, rather than depending on
+        # them to be implicitly set in the clang wrapper scripts. This is so
+        # that the jank build process can pick up the flags such that they can
+        # be passed along to downstream jank AOT compilation commands.
+        cmakeCxxFlags = lib.concatStringsSep " " [
+          (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/cc-cflags"))
+          (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/libc-crt1-cflags"))
+        ];
+        cmakeLinkerFlags = lib.concatStringsSep " " [
+          (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/cc-ldflags"))
+          "-Wl,-rpath,${llvmPackages.stdenv.cc.libc}/lib"
+          "-L${lib.getLib llvmPackages.libllvm.lib}/lib"
+          "-L${lib.getLib pkgs.bzip2}/lib"
+          "-L${lib.getLib pkgs.openssl}/lib"
+          "-L${lib.getLib pkgs.zlib}/lib"
+          "-L${lib.getLib pkgs.zstd}/lib"
+          "-L${lib.getLib pkgs.libedit}/lib"
+          "-L${lib.getLib pkgs.libxml2}/lib"
+        ];
       in {
         legacyPackages = pkgs;
         formatter = pkgs.alejandra;
@@ -99,6 +103,9 @@
             preConfigure = ''
               cmakeFlagsArray+=(
                 "-DCMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags}"
+                "-DCMAKE_EXE_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
+                "-DCMAKE_SHARED_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
+                "-DCMAKE_MODULE_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
               )
             '';
 
@@ -177,7 +184,8 @@
           shellHook = ''
             export CC=${llvmPackages.clang}/bin/clang
             export CXX=${llvmPackages.clang}/bin/clang++
-            export CMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags}
+            export CXXFLAGS=${lib.escapeShellArg cmakeCxxFlags}
+            export LDFLAGS=${lib.escapeShellArg cmakeLinkerFlags}
             export ASAN_OPTIONS=detect_leaks=0
           '';
 
