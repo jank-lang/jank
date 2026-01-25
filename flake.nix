@@ -147,6 +147,7 @@
             cmake
             ninja
             pkg-config
+            llvmPackages.clang
             llvmPackages.libclang
             llvmPackages.libllvm
 
