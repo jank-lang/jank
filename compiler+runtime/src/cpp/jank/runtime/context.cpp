@@ -77,6 +77,11 @@ namespace jank::runtime
     assert_var->bind_root(jank_true);
     assert_var->dynamic.store(true);
 
+    auto const read_eval_sym(make_box<obj::symbol>("clojure.core", "*read-eval*"));
+    read_eval_var = core->intern_var(read_eval_sym);
+    read_eval_var->bind_root(jank_true);
+    read_eval_var->dynamic.store(true);
+
     auto const reader_opt_sym(make_box<obj::symbol>("*reader-opts*"));
     reader_opts_var = core->intern_var(reader_opt_sym);
     reader_opts_var->bind_root(jank_nil());
@@ -299,27 +304,23 @@ namespace jank::runtime
                                   int const nth_form)
   {
     profile::timer const timer{ "rt read_string" };
-
     /* TODO: Clojure usually loads the value for `clojure.core/\*read-eval*` from the properties file.
      *  See here: https://github.com/clojure/clojure/blob/6a4ba6aedc8575768b2fff6d9c9c7e6503a0a93a/src/jvm/clojure/lang/RT.java#L198 */
-    auto const reader_eval_enabled{ __rt_ctx->find_var("clojure.core", "*read-eval*")->deref() };
-    auto const unknown_kw{ __rt_ctx->intern_var("", "unknown").expect_ok() };
-
-    if(reader_eval_enabled == unknown_kw)
-    {
-      throw std::runtime_error{ util::format("Reading disallowed - *read-eval* bound to {}",
-                                             runtime::to_code_string(reader_eval_enabled)) };
-    }
-
+    auto const unknown_kw{ __rt_ctx->intern_keyword("", "unknown").expect_ok() };
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
       std::make_pair(current_file_var, jank_nil()),
       std::make_pair(reader_opts_var, reader_opts)) };
 
+    if(read_eval_var->deref() == unknown_kw)
+    {
+      throw std::runtime_error{ util::format("Reading disallowed - *read-eval* bound to {}",
+                                             runtime::to_code_string(read_eval_var->deref())) };
+    }
+
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
     auto count{ nth_form };
     auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
     auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };
@@ -332,9 +333,14 @@ namespace jank::runtime
         break;
       }
 
+      count -= 1;
+
       if(form.expect_ok().is_none())
       {
-        if(!contains(reader_opts, eof_kw) || contains(reader_opts, eof_throw_kw))
+        auto const is_eof{ (!contains(reader_opts, eof_kw) || contains(reader_opts, eof_throw_kw))
+                           && count <= 0 };
+
+        if(is_eof)
         {
           throw std::runtime_error{ "EOF while reading." };
         }
@@ -345,8 +351,6 @@ namespace jank::runtime
       {
         ret = form.expect_ok().unwrap().ptr;
       }
-
-      count -= 1;
     }
 
     return ret;
