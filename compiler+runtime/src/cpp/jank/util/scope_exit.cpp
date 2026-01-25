@@ -7,24 +7,43 @@ namespace jank::util
 {
   scope_exit::scope_exit(scope_exit::function_type &&f)
     : func{ std::move(f) }
+    , should_propagate_exceptions{ false }
   {
   }
 
-  scope_exit::~scope_exit()
+  scope_exit::scope_exit(scope_exit::function_type &&f, bool should_propagate_exceptions)
+    : func{ std::move(f) }
+    , should_propagate_exceptions{ should_propagate_exceptions }
   {
-    try
+  }
+
+  scope_exit::~scope_exit() noexcept(false)
+  {
+    if(!active)
+    {
+      return;
+    }
+
+    if(should_propagate_exceptions)
     {
       func();
     }
-    catch(runtime::object_ref const o)
+    else
     {
-      /* TODO: Panic */
-      util::println(stderr, "Exception caught in scope_exit: {}", runtime::to_string(o));
-    }
-    catch(std::exception const &e)
-    {
-      /* TODO: Panic */
-      util::println(stderr, "Exception caught in scope_exit: {}", e.what());
+      try
+      {
+        func();
+      }
+      catch(runtime::object_ref const o)
+      {
+        /* TODO: Panic */
+        util::println(stderr, "Exception caught in scope_exit: {}", runtime::to_string(o));
+      }
+      catch(std::exception const &e)
+      {
+        /* TODO: Panic */
+        util::println(stderr, "Exception caught in scope_exit: {}", e.what());
+      }
     }
   }
 }

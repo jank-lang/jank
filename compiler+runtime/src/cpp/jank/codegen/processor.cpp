@@ -1779,19 +1779,8 @@ namespace jank::codegen
       util::format_to(body_buffer, "auto const finally{ [&](){ ");
       gen(expr->finally_body.unwrap(), fn_arity);
       util::format_to(body_buffer, "} };");
-      /* We use a local struct for RAII to ensure the finally block is called even
-     * if the try block returns. We can't use jank::util::scope_exit because it
-     * swallows exceptions. */
       util::format_to(body_buffer, R"(
-      struct guard_t
-      {
-        decltype(finally) f;
-        bool active{ true };
-        ~guard_t() noexcept(false)
-        {
-          if(active) { f(); }
-        }
-      } guard{ finally };
+      jank::util::scope_exit guard{ finally, true };
     )");
       util::format_to(body_buffer, "try {");
     }
@@ -1828,9 +1817,9 @@ namespace jank::codegen
 
     if(expr->finally_body.is_some())
     {
-      util::format_to(body_buffer,
-                      "} catch(...) { guard.active = false; finally(); throw; } guard.active = "
-                      "false; finally();");
+      util::format_to(
+        body_buffer,
+        "} catch(...) { guard.release(); finally(); throw; } guard.release(); finally();");
     }
 
     util::format_to(body_buffer, "}");
