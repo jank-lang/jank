@@ -28,7 +28,6 @@ namespace jank::runtime::obj
     persistent_sorted_map(value_type &&d);
     persistent_sorted_map(value_type const &d);
     persistent_sorted_map(object_ref const meta, value_type &&d);
-    persistent_sorted_map(jtl::option<object_ref> const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_sorted_map(runtime::detail::in_place_unique, Args &&...args)

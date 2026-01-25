@@ -158,6 +158,11 @@ namespace jank::runtime::obj
     return ret;
   }
 
+  object_ref symbol::get_meta() const
+  {
+    return meta;
+  }
+
   jtl::immutable_string const &symbol::get_name() const
   {
     return name;

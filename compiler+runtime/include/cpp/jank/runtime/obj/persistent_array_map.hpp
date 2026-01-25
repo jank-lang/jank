@@ -27,7 +27,7 @@ namespace jank::runtime::obj
     persistent_array_map(persistent_array_map const &) = default;
     persistent_array_map(value_type &&d);
     persistent_array_map(value_type const &d);
-    persistent_array_map(jtl::option<object_ref> const &meta, value_type &&d);
+    persistent_array_map(object_ref const meta, value_type &&d);
 
     template <typename... Args>
     persistent_array_map(runtime::detail::in_place_unique, Args &&...args)

@@ -228,6 +228,11 @@ namespace jank::runtime
     };
   }
 
+  object_ref ns::get_meta() const
+  {
+    return meta;
+  }
+
   bool ns::operator==(ns const &rhs) const
   {
     return name == rhs.name;

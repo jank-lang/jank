@@ -27,13 +27,13 @@ namespace jank::runtime::obj
     persistent_hash_map() = default;
     persistent_hash_map(persistent_hash_map &&) noexcept = default;
     persistent_hash_map(persistent_hash_map const &) = default;
-    persistent_hash_map(jtl::option<object_ref> const &meta,
+    persistent_hash_map(object_ref const meta,
                         runtime::detail::native_array_map const &m,
                         object_ref const key,
                         object_ref const val);
     persistent_hash_map(value_type &&d);
     persistent_hash_map(value_type const &d);
-    persistent_hash_map(jtl::option<object_ref> const &meta, value_type &&d);
+    persistent_hash_map(object_ref const meta, value_type &&d);
 
     template <typename... Args>
     persistent_hash_map(runtime::detail::in_place_unique, Args &&...args)

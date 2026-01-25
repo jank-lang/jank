@@ -30,6 +30,7 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     chunked_cons_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /* behavior::seqable */
     chunked_cons_ref seq() const;
@@ -50,6 +51,6 @@ namespace jank::runtime::obj
     /*** XXX: Everything here is immutable after initialization. ***/
     object_ref head{};
     object_ref tail{};
-    jtl::option<object_ref> meta;
+    object_ref meta;
   };
 }

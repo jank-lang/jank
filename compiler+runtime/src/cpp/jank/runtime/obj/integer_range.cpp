@@ -173,6 +173,11 @@ namespace jank::runtime::obj
     return ret;
   }
 
+  object_ref integer_range::get_meta() const
+  {
+    return meta;
+  }
+
   usize integer_range::count() const
   {
     auto const s{ step->data };

@@ -53,7 +53,7 @@ namespace jank::runtime::obj
     object_ref this_object_ref() override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    jtl::option<object_ref> meta;
+    object_ref meta;
     var_ref var;
 
     /*** XXX: Everything here is thread-safe. ***/

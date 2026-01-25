@@ -34,6 +34,7 @@ namespace jank::runtime::obj
   }
 
   transient_hash_map::transient_hash_map(runtime::detail::native_array_map const &m)
+    : object{ obj_type }
   {
     for(auto const &e : m)
     {

@@ -26,7 +26,7 @@ namespace jank::runtime::obj
 
   void deferred_cpp_function::to_string(jtl::string_builder &buff) const
   {
-    auto const name(get(meta.unwrap_or(jank_nil()), __rt_ctx->intern_keyword("name").expect_ok()));
+    auto const name(get(meta, __rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
       "#object [{} {} {}]",
@@ -46,7 +46,7 @@ namespace jank::runtime::obj
       return apply_to(compiled_fn, args);
     }
 
-    //auto const name(get(meta.unwrap_or(jank_nil()), __rt_ctx->intern_keyword("name").expect_ok()));
+    //auto const name(get(meta, __rt_ctx->intern_keyword("name").expect_ok()));
     //util::println(
     //  "lazily creating {}",
     //  (name->type == object_type::nil ? "unknown" : try_object<persistent_string>(name)->data));

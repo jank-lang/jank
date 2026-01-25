@@ -11,7 +11,8 @@ namespace jank::runtime::obj
   }
 
   cons::cons(object_ref const head, object_ref const tail)
-    : head{ head }
+    : object{ obj_type }
+    , head{ head }
     , tail{ tail }
   {
   }
@@ -85,5 +86,10 @@ namespace jank::runtime::obj
     auto ret(fresh_seq());
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref cons::get_meta() const
+  {
+    return meta;
   }
 }

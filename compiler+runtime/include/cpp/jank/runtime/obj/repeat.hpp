@@ -46,10 +46,11 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     repeat_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     object_ref value{};
     object_ref count{};
-    jtl::option<object_ref> meta{};
+    object_ref meta{};
   };
 }

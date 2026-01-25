@@ -15,7 +15,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  base_persistent_map<PT, ST, V>::base_persistent_map(jtl::option<object_ref> const &meta)
+  base_persistent_map<PT, ST, V>::base_persistent_map(object_ref const meta)
     : object{ PT::obj_type }
     , meta{ meta }
   {
@@ -196,6 +196,12 @@ namespace jank::runtime::obj::detail
     auto ret(make_box<PT>(static_cast<PT const *>(this)->data));
     ret->meta = meta;
     return ret;
+  }
+
+  template <typename PT, typename ST, typename V>
+  object_ref base_persistent_map<PT, ST, V>::get_meta() const
+  {
+    return meta;
   }
 
   template struct base_persistent_map<persistent_array_map,

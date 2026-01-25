@@ -26,7 +26,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_vector::persistent_vector(jtl::option<object_ref> const &meta, value_type &&d)
+  persistent_vector::persistent_vector(object_ref const meta, value_type &&d)
     : object{ obj_type }
     , data{ std::move(d) }
     , meta{ meta }
@@ -195,6 +195,11 @@ namespace jank::runtime::obj
     auto ret(make_box<persistent_vector>(data));
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref persistent_vector::get_meta() const
+  {
+    return meta;
   }
 
   object_ref persistent_vector::get(object_ref const key) const

@@ -851,8 +851,7 @@ namespace jank::codegen
                                 false));
       auto const set_meta_fn(llvm_module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
-      auto const meta_val(
-        gen_global_from_read_string(strip_source_from_meta(expr->name->meta.unwrap())));
+      auto const meta_val(gen_global_from_read_string(strip_source_from_meta(expr->name->meta)));
       ctx->builder->CreateCall(set_meta_fn, { ref, meta_val });
     }
 
@@ -864,8 +863,8 @@ namespace jank::codegen
     auto const set_dynamic_fn(
       llvm_module->getOrInsertFunction("jank_var_set_dynamic", set_dynamic_fn_type));
 
-    auto const dynamic{ truthy(get(expr->name->meta.unwrap_or(jank_nil()),
-                                   __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+    auto const dynamic{ truthy(
+      get(expr->name->meta, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
 
     auto const dynamic_global{ gen_global(make_box(dynamic)) };
 
@@ -3424,7 +3423,7 @@ namespace jank::codegen
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
-      if(s->meta)
+      if(s->meta.is_some())
       {
         auto const set_meta_fn_type(
           llvm::FunctionType::get(ctx->builder->getVoidTy(),
@@ -3434,7 +3433,7 @@ namespace jank::codegen
 
         /* TODO: Can strip here, when the flag is enabled: strip_source_from_meta
          * Otherwise, we need this info for macro expansion errors. i.e. `(foo ~'bar) */
-        auto const meta(gen_global_from_read_string(s->meta.unwrap()));
+        auto const meta(gen_global_from_read_string(s->meta));
         ctx->builder->CreateCall(set_meta_fn, { call, meta });
       }
 
@@ -3556,7 +3555,7 @@ namespace jank::codegen
 
           if constexpr(behavior::metadatable<T>)
           {
-            if(typed_o->meta)
+            if(typed_o->get_meta().is_some())
             {
               auto const set_meta_fn_type(
                 llvm::FunctionType::get(ctx->builder->getVoidTy(),
@@ -3567,7 +3566,7 @@ namespace jank::codegen
 
               /* TODO: This shouldn't be its own global; we don't need to reference it later. */
               auto const meta(
-                gen_global_from_read_string(strip_source_from_meta(typed_o->meta.unwrap())));
+                gen_global_from_read_string(strip_source_from_meta(typed_o->get_meta())));
               auto const meta_name(util::format("{}_meta", name));
               meta->setName(meta_name.c_str());
               ctx->builder->CreateCall(set_meta_fn, { call, meta });

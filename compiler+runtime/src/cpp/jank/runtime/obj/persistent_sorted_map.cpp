@@ -24,12 +24,6 @@ namespace jank::runtime::obj
     this->meta = meta;
   }
 
-  persistent_sorted_map::persistent_sorted_map(jtl::option<object_ref> const &meta, value_type &&d)
-    : parent_type{ meta }
-    , data{ std::move(d) }
-  {
-  }
-
   persistent_sorted_map_ref persistent_sorted_map::empty()
   {
     static auto const ret(make_box<persistent_sorted_map>());

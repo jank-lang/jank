@@ -58,6 +58,11 @@ namespace jank::runtime
     /* behavior::derefable */
     object_ref deref() const;
 
+    /* behavior::metadatable */
+    var_ref with_meta(object_ref m);
+    object_ref get_meta() const;
+    void set_meta(object_ref const m);
+
     bool operator==(var const &rhs) const;
 
     var_ref clone() const;
@@ -66,11 +71,11 @@ namespace jank::runtime
     ns_ref n;
     /* Unqualified. */
     obj::symbol_ref name{};
-    jtl::option<object_ref> meta;
 
     /*** XXX: Everything here is thread-safe. ***/
   private:
     folly::Synchronized<object_ref> root;
+    folly::Synchronized<object_ref> meta;
 
   public:
     std::atomic_bool dynamic{ false };

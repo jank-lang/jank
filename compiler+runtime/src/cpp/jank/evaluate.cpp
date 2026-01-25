@@ -271,9 +271,9 @@ namespace jank::evaluate
   object_ref eval(expr::def_ref const expr)
   {
     auto var(__rt_ctx->intern_var(expr->name).expect_ok());
-    var->meta = expr->name->meta;
+    auto const meta(expr->name->meta);
+    var->set_meta(meta);
 
-    auto const meta(var->meta.unwrap_or(jank_nil()));
     auto const dynamic(get(meta, __rt_ctx->intern_keyword("dynamic").expect_ok()));
     var->set_dynamic(truthy(dynamic));
 
@@ -490,7 +490,7 @@ namespace jank::evaluate
     runtime::detail::native_persistent_list const npl{ ret.rbegin(), ret.rend() };
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_list>(expr->meta.unwrap(), jtl::move(npl));
+      return make_box<obj::persistent_list>(expr->meta, jtl::move(npl));
     }
     else
     {
@@ -507,7 +507,7 @@ namespace jank::evaluate
     }
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_vector>(expr->meta.unwrap(), ret.persistent());
+      return make_box<obj::persistent_vector>(expr->meta, ret.persistent());
     }
     else
     {
@@ -530,7 +530,7 @@ namespace jank::evaluate
 
       if(expr->meta.is_some())
       {
-        return make_box<obj::persistent_array_map>(expr->meta.unwrap(),
+        return make_box<obj::persistent_array_map>(expr->meta,
                                                    runtime::detail::in_place_unique{},
                                                    array_box,
                                                    size * 2);
@@ -552,7 +552,7 @@ namespace jank::evaluate
 
       if(expr->meta.is_some())
       {
-        return make_box<obj::persistent_hash_map>(expr->meta.unwrap(), trans.persistent());
+        return make_box<obj::persistent_hash_map>(expr->meta, trans.persistent());
       }
       else
       {
@@ -570,7 +570,7 @@ namespace jank::evaluate
     }
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_hash_set>(expr->meta.unwrap(), jtl::move(ret).persistent());
+      return make_box<obj::persistent_hash_set>(expr->meta, jtl::move(ret).persistent());
     }
     else
     {

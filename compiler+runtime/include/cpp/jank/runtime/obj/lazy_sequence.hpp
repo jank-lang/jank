@@ -47,6 +47,7 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     lazy_sequence_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
   private:
     object_ref resolve_fn() const;
@@ -60,7 +61,7 @@ namespace jank::runtime::obj
 
   public:
     /*** XXX: Everything here is immutable after initialization. ***/
-    jtl::option<object_ref> meta;
+    object_ref meta;
 
     /*** XXX: Everything here is thread-safe. ***/
     mutable std::recursive_mutex mutex;

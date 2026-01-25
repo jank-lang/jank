@@ -127,4 +127,9 @@ namespace jank::runtime::obj
     ret->meta = meta;
     return ret;
   }
+
+  object_ref repeat::get_meta() const
+  {
+    return meta;
+  }
 }

@@ -23,7 +23,7 @@ namespace jank::runtime::obj
     persistent_vector(persistent_vector const &) = default;
     persistent_vector(value_type &&d);
     persistent_vector(value_type const &d);
-    persistent_vector(jtl::option<object_ref> const &meta, value_type &&d);
+    persistent_vector(object_ref const meta, value_type &&d);
 
     template <typename... Args>
     persistent_vector(std::in_place_t, Args &&...args)
@@ -59,6 +59,7 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     persistent_vector_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /* behavior::seqable */
     persistent_vector_sequence_ref seq() const;
@@ -96,6 +97,6 @@ namespace jank::runtime::obj
 
     /*** XXX: Everything here is immutable after initialization. ***/
     value_type data;
-    jtl::option<object_ref> meta;
+    object_ref meta;
   };
 }

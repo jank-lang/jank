@@ -32,7 +32,7 @@ namespace jank::runtime::obj
     jank_debug_assert(!this->data.empty());
   }
 
-  native_vector_sequence::native_vector_sequence(jtl::option<object_ref> const &meta,
+  native_vector_sequence::native_vector_sequence(object_ref const meta,
                                                  native_vector<object_ref> &&data)
     : object{ obj_type }
     , data{ jtl::move(data) }
@@ -131,6 +131,11 @@ namespace jank::runtime::obj
     auto ret(fresh_seq());
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref native_vector_sequence::get_meta() const
+  {
+    return meta;
   }
 
 }

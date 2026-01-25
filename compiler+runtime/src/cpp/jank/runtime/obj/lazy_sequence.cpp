@@ -173,4 +173,9 @@ namespace jank::runtime::obj
     ret->meta = meta;
     return ret;
   }
+
+  object_ref lazy_sequence::get_meta() const
+  {
+    return meta;
+  }
 }

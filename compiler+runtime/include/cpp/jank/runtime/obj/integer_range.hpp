@@ -71,6 +71,7 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     integer_range_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /* behavior::countable */
     usize count() const;
@@ -85,6 +86,6 @@ namespace jank::runtime::obj
     /* mutable array_chunk_ptr chunk{}; */
     /* mutable integer_range_ptr chunk_next{}; */
     /* mutable integer_range_ptr cached_next{}; */
-    jtl::option<object_ref> meta{};
+    object_ref meta{};
   };
 }

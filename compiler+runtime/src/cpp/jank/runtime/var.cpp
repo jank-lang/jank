@@ -173,6 +173,25 @@ namespace jank::runtime
     return *root.rlock();
   }
 
+  var_ref var::with_meta(object_ref const m)
+  {
+    auto const new_meta(behavior::detail::validate_meta(m));
+    auto const locked_meta{ meta.wlock() };
+    *locked_meta = new_meta;
+    return this;
+  }
+
+  object_ref var::get_meta() const
+  {
+    auto const locked_meta{ meta.rlock() };
+    return *locked_meta;
+  }
+
+  void var::set_meta(object_ref const m)
+  {
+    with_meta(m);
+  }
+
   var_ref var::clone() const
   {
     return make_box<var>(n, name, get_root(), dynamic.load(), thread_bound.load());

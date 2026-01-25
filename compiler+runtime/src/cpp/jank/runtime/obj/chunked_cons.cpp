@@ -196,4 +196,9 @@ namespace jank::runtime::obj
     ret->meta = meta;
     return ret;
   }
+
+  object_ref chunked_cons::get_meta() const
+  {
+    return meta;
+  }
 }

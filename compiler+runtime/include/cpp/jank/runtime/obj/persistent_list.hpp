@@ -26,7 +26,7 @@ namespace jank::runtime::obj
     persistent_list(persistent_list &&) noexcept = default;
     persistent_list(persistent_list const &) = default;
     persistent_list(value_type const &d);
-    persistent_list(jtl::option<object_ref> const &meta, value_type const &d);
+    persistent_list(object_ref const meta, value_type const &d);
 
     /* TODO: This is broken when `args` is a value_type list we're looking to wrap in another list.
      * It just uses the copy ctor. */
@@ -60,6 +60,7 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     persistent_list_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /* behavior::seqable */
     obj::persistent_list_ref seq() const;
@@ -84,6 +85,6 @@ namespace jank::runtime::obj
 
     /*** XXX: Everything here is immutable after initialization. ***/
     value_type data;
-    jtl::option<object_ref> meta;
+    object_ref meta;
   };
 }

@@ -21,7 +21,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_array_map::persistent_array_map(jtl::option<object_ref> const &meta, value_type &&d)
+  persistent_array_map::persistent_array_map(object_ref const meta, value_type &&d)
     : parent_type{ meta }
     , data{ std::move(d) }
   {

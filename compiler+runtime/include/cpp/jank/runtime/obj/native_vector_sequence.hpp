@@ -1,7 +1,5 @@
 #pragma once
 
-#include <jtl/option.hpp>
-
 #include <jank/runtime/object.hpp>
 
 namespace jank::runtime::obj
@@ -20,7 +18,7 @@ namespace jank::runtime::obj
     native_vector_sequence(native_vector_sequence const &) = default;
     native_vector_sequence(native_vector<object_ref> const &data, usize index);
     native_vector_sequence(native_vector<object_ref> &&data);
-    native_vector_sequence(jtl::option<object_ref> const &meta, native_vector<object_ref> &&data);
+    native_vector_sequence(object_ref const meta, native_vector<object_ref> &&data);
     native_vector_sequence(native_vector<object_ref> &&data, usize index);
 
     /* behavior::object_like */
@@ -47,10 +45,11 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     native_vector_sequence_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     native_vector<object_ref> data{};
     usize index{};
-    jtl::option<object_ref> meta;
+    object_ref meta;
   };
 }

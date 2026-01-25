@@ -29,7 +29,7 @@ namespace jank::runtime::obj
 
   void native_function_wrapper::to_string(jtl::string_builder &buff) const
   {
-    auto const name(get(meta.unwrap_or(jank_nil()), __rt_ctx->intern_keyword("name").expect_ok()));
+    auto const name(get(meta, __rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(buff,
                     "#object [{} {} {}]",
                     (name.is_nil() ? "unknown" : try_object<persistent_string>(name)->data),
@@ -63,7 +63,7 @@ namespace jank::runtime::obj
       if(f.meta.is_some())
       {
         auto const name_kw(__rt_ctx->intern_keyword("name").expect_ok());
-        auto const name_meta(runtime::get(f.meta.unwrap(), name_kw));
+        auto const name_meta(runtime::get(f.meta, name_kw));
         if(name_meta != jank_nil())
         {
           name = to_string(name_meta);
@@ -179,6 +179,11 @@ namespace jank::runtime::obj
     auto ret(make_box<native_function_wrapper>(data));
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref native_function_wrapper::get_meta() const
+  {
+    return meta;
   }
 
   object_ref native_function_wrapper::this_object_ref()

@@ -26,6 +26,7 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     jit_closure_ref with_meta(object_ref const m);
+    object_ref get_meta() const;
 
     /* behavior::callable */
     object_ref call() final;
@@ -124,7 +125,7 @@ namespace jank::runtime::obj
                         object *,
                         object *,
                         object *){};
-    jtl::option<object_ref> meta;
+    object_ref meta;
     arity_flag_t arity_flags{};
   };
 }

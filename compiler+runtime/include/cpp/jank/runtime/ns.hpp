@@ -46,12 +46,13 @@ namespace jank::runtime
 
     /* behavior::metadatable */
     object_ref with_meta(object_ref m);
+    object_ref get_meta() const;
 
     bool operator==(ns const &rhs) const;
 
     /* XXX: Everything here is immutable after initialization. */
     obj::symbol_ref name{};
-    jtl::option<object_ref> meta;
+    object_ref meta;
 
     /* XXX: Everything here is thread-safe. */
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */

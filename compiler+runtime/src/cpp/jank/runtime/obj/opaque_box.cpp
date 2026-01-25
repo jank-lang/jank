@@ -35,4 +35,9 @@ namespace jank::runtime::obj
     ret->meta = meta;
     return ret;
   }
+
+  object_ref opaque_box::get_meta() const
+  {
+    return meta;
+  }
 }

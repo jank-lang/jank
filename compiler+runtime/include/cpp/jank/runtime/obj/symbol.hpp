@@ -45,6 +45,7 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     symbol_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /* behavior::nameable */
     jtl::immutable_string const &get_name() const;
@@ -56,7 +57,7 @@ namespace jank::runtime::obj
     /*** XXX: Everything here is immutable after initialization. ***/
     jtl::immutable_string ns;
     jtl::immutable_string name;
-    jtl::option<object_ref> meta;
+    object_ref meta;
   };
 }
 

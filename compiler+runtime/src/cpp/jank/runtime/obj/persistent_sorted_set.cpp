@@ -30,13 +30,6 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_sorted_set::persistent_sorted_set(jtl::option<object_ref> const &meta, value_type &&d)
-    : object{ obj_type }
-    , data{ std::move(d) }
-    , meta{ meta }
-  {
-  }
-
   persistent_sorted_set_ref persistent_sorted_set::empty()
   {
     static auto const ret(make_box<persistent_sorted_set>());
@@ -135,6 +128,11 @@ namespace jank::runtime::obj
     auto ret(make_box<persistent_sorted_set>(data));
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref persistent_sorted_set::get_meta() const
+  {
+    return meta;
   }
 
   persistent_sorted_set_ref persistent_sorted_set::conj(object_ref const head) const
