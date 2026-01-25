@@ -2393,7 +2393,8 @@ namespace jank::analyze
                           jtl::option<expr::function_context_ref> const &fn_ctx,
                           bool const)
   {
-    /* The flag is setting `loop_details` to `some(nullptr)`, which conveys that
+    /* When we analyze a loop, we actually just set a flag and then analyze a let.
+     * The flag is setting `loop_details` to `some(nullptr)`, which conveys that
      * we're in a loop. */
     auto const old_loop_details{ loop_details };
     loop_details = some(nullptr);
