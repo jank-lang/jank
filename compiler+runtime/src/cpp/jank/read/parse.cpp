@@ -1094,9 +1094,9 @@ namespace jank::read::parse
   {
     auto const reader_opts{ __rt_ctx->reader_opts_var->deref() };
     auto const has_reader_opts{ reader_opts.is_some() };
-    // When reading in some form via the Clojure read function the end user might wish
-    // to keep even the unsupported reader conditional branch, in such cases they opt-in
-    // to the preserve mode.
+    // When reading in a form via the Clojure read functions the end user might wish
+    // to keep even the unsupported reader conditional branches, in such cases they
+    // can opt-in to the preserve mode by setting the :read-cond reader option.
     bool in_preserve_mode{};
     object_ref features{};
 
@@ -1107,9 +1107,8 @@ namespace jank::read::parse
 
       if(read_cond.is_nil())
       {
-        throw std::runtime_error{
-          "Conditional read not allowed. Set :read-cond option to either :preserve or :allow."
-        };
+        throw std::runtime_error{ "Conditional read is not allowed by default. Set the :read-cond "
+                                  "reader option to either :preserve or :allow." };
       }
 
       auto const reader_cond{ try_object<obj::keyword>(read_cond) };
@@ -1124,8 +1123,8 @@ namespace jank::read::parse
       else
       {
         throw std::runtime_error{ util::format(
-          "Conditional read not allowed. Set :read-cond option to either "
-          ":preserve or :allow currently set to {}.",
+          "Conditional read is not allowed by default. Set the :read-cond reader option to either "
+          ":preserve or :allow, currently it's set to {}.",
           runtime::to_code_string(read_cond)) };
       }
 
@@ -1179,8 +1178,9 @@ namespace jank::read::parse
     {
       auto const kw(*it);
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
-       * matter. If :default comes first, we'll always take it. In short, order is important. This
-       * matches Clojure's behavior. */
+       * matter. If :default comes first, we'll always take it, same for any features provided
+       * as part of the reader options. In short, order is important. This matches Clojure's
+       * behavior. */
       if(equal(kw, jank_keyword) || equal(kw, default_keyword)
          || (has_reader_opts && contains(features, kw)))
       {
