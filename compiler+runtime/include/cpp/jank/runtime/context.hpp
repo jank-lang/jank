@@ -85,7 +85,7 @@ namespace jank::runtime
     jtl::result<void, error_ref> eval_cpp_string(jtl::immutable_string const &code) const;
     object_ref read_string(jtl::immutable_string const &code,
                            object_ref const reader_opts,
-                           int const nth_form = std::numeric_limits<int>::max());
+                           jank::u64 const nth_form = std::numeric_limits<jank::u64>::max());
     object_ref read_string(jtl::immutable_string const &code);
     object_ref read_file(jtl::immutable_string const &file_path, object_ref const reader_opts);
     native_vector<analyze::expression_ref>
