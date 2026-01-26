@@ -9,6 +9,7 @@ namespace jank::runtime::obj
   struct tagged_literal : object
   {
     static constexpr object_type obj_type{ object_type::tagged_literal };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     tagged_literal(object_ref const tag, object_ref const form);

@@ -1,23 +1,21 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/behavior/callable.hpp>
 
 namespace jank::runtime::obj
 {
   using jit_function_ref = oref<struct jit_function>;
 
-  struct jit_function
-    : object
-    , behavior::callable
+  struct jit_function : object
   {
     static constexpr object_type obj_type{ object_type::jit_function };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
     static constexpr bool pointer_free{ false };
 
     jit_function();
     jit_function(jit_function &&) noexcept = default;
     jit_function(jit_function const &) = default;
-    jit_function(arity_flag_t arity_flags);
+    jit_function(callable_arity_flags arity_flags);
     jit_function(object_ref const meta);
 
     /* behavior::object_like */
@@ -29,38 +27,30 @@ namespace jank::runtime::obj
     object_ref get_meta() const;
 
     /* behavior::callable */
-    object_ref call() override;
-    object_ref call(object_ref const) override;
-    object_ref call(object_ref const, object_ref const) override;
-    object_ref call(object_ref const, object_ref const, object_ref const) override;
+    object_ref call() const override;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
+    object_ref call(object_ref const, object_ref const, object_ref const) const override;
     object_ref
-    call(object_ref const, object_ref const, object_ref const, object_ref const) override;
+    call(object_ref const, object_ref const, object_ref const, object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const) override;
-    object_ref call(object_ref const,
-                    object_ref const,
-                    object_ref const,
-                    object_ref const,
-                    object_ref const,
-                    object_ref const) override;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const,
-                    object_ref const) override;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const,
-                    object_ref const) override;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
@@ -68,8 +58,7 @@ namespace jank::runtime::obj
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const,
-                    object_ref const) override;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
@@ -78,11 +67,19 @@ namespace jank::runtime::obj
                     object_ref const,
                     object_ref const,
                     object_ref const,
+                    object_ref const) const override;
+    object_ref call(object_ref const,
                     object_ref const,
-                    object_ref const) override;
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) const override;
 
-    arity_flag_t get_arity_flags() const override;
-    object_ref this_object_ref() override;
+    callable_arity_flags get_arity_flags() const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     object *(*arity_0)(object *){};
@@ -125,6 +122,6 @@ namespace jank::runtime::obj
                         object *,
                         object *){};
     object_ref meta;
-    arity_flag_t arity_flags{};
+    callable_arity_flags arity_flags{};
   };
 }

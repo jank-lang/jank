@@ -11,30 +11,30 @@
 namespace jank::runtime::obj
 {
   transient_hash_map::transient_hash_map()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   transient_hash_map::transient_hash_map(runtime::detail::native_persistent_hash_map &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d).transient() }
   {
   }
 
   transient_hash_map::transient_hash_map(runtime::detail::native_persistent_hash_map const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d.transient() }
   {
   }
 
   transient_hash_map::transient_hash_map(runtime::detail::native_transient_hash_map &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
   {
   }
 
   transient_hash_map::transient_hash_map(runtime::detail::native_array_map const &m)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
     for(auto const &e : m)
     {

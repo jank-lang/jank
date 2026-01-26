@@ -4,7 +4,8 @@
 namespace jank::runtime::obj
 {
   volatile_::volatile_(object_ref const o)
-    : val{ o }
+    : object{ obj_type, obj_behaviors }
+    , val{ o }
   {
     jank_debug_assert(val.is_some());
   }

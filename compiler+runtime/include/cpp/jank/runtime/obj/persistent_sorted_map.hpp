@@ -16,6 +16,7 @@ namespace jank::runtime::obj
                                        runtime::detail::native_persistent_sorted_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_sorted_map };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
 
     using transient_type = transient_sorted_map;
     using parent_type
@@ -74,8 +75,9 @@ namespace jank::runtime::obj
     persistent_sorted_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
-    object_ref call(object_ref const, object_ref const) const;
+    using object::call;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
 
     /* behavior::transientable */
     obj::transient_sorted_map_ref to_transient() const;

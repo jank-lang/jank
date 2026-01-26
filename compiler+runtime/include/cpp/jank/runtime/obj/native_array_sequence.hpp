@@ -10,6 +10,7 @@ namespace jank::runtime::obj
   struct native_array_sequence : object
   {
     static constexpr object_type obj_type{ object_type::native_array_sequence };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -21,7 +22,7 @@ namespace jank::runtime::obj
 
     template <typename... Args>
     native_array_sequence(object_ref const first, Args const &...rest)
-      : object{ obj_type }
+      : object{ obj_type, obj_behaviors }
       , arr{ make_array_box<object_ref>(first, rest...) }
       , size{ sizeof...(Args) + 1 }
     {

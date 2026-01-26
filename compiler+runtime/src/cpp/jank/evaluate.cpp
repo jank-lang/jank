@@ -8,7 +8,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/meta.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/jit/processor.hpp>
@@ -321,144 +321,98 @@ namespace jank::evaluate
 
     try
     {
-      return visit_object(
-        [&](auto const typed_source) -> object_ref {
-          using T = typename decltype(typed_source)::value_type;
+      native_vector<object_ref> arg_vals;
+      arg_vals.reserve(expr->arg_exprs.size());
+      for(auto const &arg_expr : expr->arg_exprs)
+      {
+        arg_vals.emplace_back(eval(arg_expr));
+      }
 
-          if constexpr(std::is_base_of_v<behavior::callable, T>)
+      switch(arg_vals.size())
+      {
+        case 0:
+          return dynamic_call(source);
+        case 1:
+          return dynamic_call(source, arg_vals[0]);
+        case 2:
+          return dynamic_call(source, arg_vals[0], arg_vals[1]);
+        case 3:
+          return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2]);
+        case 4:
+          return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3]);
+        case 5:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4]);
+        case 6:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4],
+                              arg_vals[5]);
+        case 7:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4],
+                              arg_vals[5],
+                              arg_vals[6]);
+        case 8:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4],
+                              arg_vals[5],
+                              arg_vals[6],
+                              arg_vals[7]);
+        case 9:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4],
+                              arg_vals[5],
+                              arg_vals[6],
+                              arg_vals[7],
+                              arg_vals[8]);
+        case 10:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4],
+                              arg_vals[5],
+                              arg_vals[6],
+                              arg_vals[7],
+                              arg_vals[8],
+                              arg_vals[9]);
+        default:
           {
-            native_vector<object_ref> arg_vals;
-            arg_vals.reserve(expr->arg_exprs.size());
-            for(auto const &arg_expr : expr->arg_exprs)
-            {
-              arg_vals.emplace_back(eval(arg_expr));
-            }
-
-            switch(arg_vals.size())
-            {
-              case 0:
-                return dynamic_call(source);
-              case 1:
-                return dynamic_call(source, arg_vals[0]);
-              case 2:
-                return dynamic_call(source, arg_vals[0], arg_vals[1]);
-              case 3:
-                return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2]);
-              case 4:
-                return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3]);
-              case 5:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4]);
-              case 6:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4],
-                                    arg_vals[5]);
-              case 7:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4],
-                                    arg_vals[5],
-                                    arg_vals[6]);
-              case 8:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4],
-                                    arg_vals[5],
-                                    arg_vals[6],
-                                    arg_vals[7]);
-              case 9:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4],
-                                    arg_vals[5],
-                                    arg_vals[6],
-                                    arg_vals[7],
-                                    arg_vals[8]);
-              case 10:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4],
-                                    arg_vals[5],
-                                    arg_vals[6],
-                                    arg_vals[7],
-                                    arg_vals[8],
-                                    arg_vals[9]);
-              default:
-                {
-                  return dynamic_call(source,
-                                      arg_vals[0],
-                                      arg_vals[1],
-                                      arg_vals[2],
-                                      arg_vals[3],
-                                      arg_vals[4],
-                                      arg_vals[5],
-                                      arg_vals[6],
-                                      arg_vals[7],
-                                      arg_vals[8],
-                                      arg_vals[9],
-                                      try_object<obj::persistent_list>(arg_vals[10]));
-                }
-            }
+            return dynamic_call(source,
+                                arg_vals[0],
+                                arg_vals[1],
+                                arg_vals[2],
+                                arg_vals[3],
+                                arg_vals[4],
+                                arg_vals[5],
+                                arg_vals[6],
+                                arg_vals[7],
+                                arg_vals[8],
+                                arg_vals[9],
+                                try_object<obj::persistent_list>(arg_vals[10]));
           }
-          else if constexpr(std::same_as<T, obj::persistent_hash_set>
-                            || std::same_as<T, obj::persistent_vector>
-                            || std::same_as<T, obj::transient_vector>)
-          {
-            auto const s(expr->arg_exprs.size());
-            if(s != 1)
-            {
-              throw std::runtime_error{
-                util::format("Invalid call with {} args to: {}", s, typed_source->to_string())
-              };
-            }
-            return typed_source->call(eval(expr->arg_exprs[0]));
-          }
-          else if constexpr(std::same_as<T, obj::keyword>
-                            || std::same_as<T, obj::persistent_hash_map>
-                            || std::same_as<T, obj::persistent_array_map>
-                            || std::same_as<T, obj::transient_hash_set>)
-          {
-            auto const s(expr->arg_exprs.size());
-            switch(s)
-            {
-              case 1:
-                return typed_source->call(eval(expr->arg_exprs[0]));
-              case 2:
-                return typed_source->call(eval(expr->arg_exprs[0]), eval(expr->arg_exprs[1]));
-              default:
-                throw std::runtime_error{
-                  util::format("Invalid call with {} args to: {}", s, typed_source->to_string())
-                };
-            }
-          }
-          else
-          {
-            throw std::runtime_error{ util::format("Invalid call with {} args to: {}",
-                                                   expr->arg_exprs.size(),
-                                                   typed_source->to_string()) };
-          }
-        },
-        source);
+      }
     }
     catch(error_ref const e)
     {

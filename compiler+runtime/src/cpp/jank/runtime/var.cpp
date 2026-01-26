@@ -1,7 +1,7 @@
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
@@ -14,7 +14,7 @@
 namespace jank::runtime
 {
   var::var(ns_ref const n, obj::symbol_ref const name)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , n{ n }
     , name{ name }
     , root{ make_box<var_unbound_root>(this) }
@@ -22,7 +22,7 @@ namespace jank::runtime
   }
 
   var::var(ns_ref const n, obj::symbol_ref const name, object_ref const root)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , n{ n }
     , name{ name }
     , root{ root }
@@ -34,7 +34,7 @@ namespace jank::runtime
            object_ref const root,
            bool const dynamic,
            bool const thread_bound)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , n{ n }
     , name{ name }
     , root{ root }
@@ -198,7 +198,7 @@ namespace jank::runtime
   }
 
   var_thread_binding::var_thread_binding(object_ref const value, std::thread::id const id)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , value{ value }
     , thread_id{ id }
   {
@@ -225,7 +225,7 @@ namespace jank::runtime
   }
 
   var_unbound_root::var_unbound_root(var_ref const var)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , var{ var }
   {
   }

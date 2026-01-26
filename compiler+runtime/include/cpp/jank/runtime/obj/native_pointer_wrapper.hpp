@@ -9,6 +9,7 @@ namespace jank::runtime::obj
   struct native_pointer_wrapper : object
   {
     static constexpr object_type obj_type{ object_type::native_pointer_wrapper };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     native_pointer_wrapper();

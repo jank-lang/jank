@@ -6,18 +6,19 @@
 namespace jank::runtime::obj
 {
   chunk_buffer::chunk_buffer()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   chunk_buffer::chunk_buffer(usize const capacity)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , capacity{ capacity }
   {
     buffer.reserve(capacity);
   }
 
   chunk_buffer::chunk_buffer(object_ref const capacity)
+    : object{ obj_type, obj_behaviors }
   {
     auto const c(to_int(capacity));
     if(c < 0)

@@ -9,6 +9,7 @@ namespace jank::runtime::obj
   struct array_chunk : object
   {
     static constexpr object_type obj_type{ object_type::array_chunk };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     array_chunk();

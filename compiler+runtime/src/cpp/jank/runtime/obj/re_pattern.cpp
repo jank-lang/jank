@@ -4,7 +4,7 @@
 namespace jank::runtime::obj
 {
   re_pattern::re_pattern(jtl::immutable_string const &s)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , pattern{ s }
     , regex{ s.c_str(), std::regex_constants::ECMAScript }
   {

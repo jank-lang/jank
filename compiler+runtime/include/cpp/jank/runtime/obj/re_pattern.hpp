@@ -12,6 +12,7 @@ namespace jank::runtime::obj
   struct re_pattern : object
   {
     static constexpr object_type obj_type{ object_type::re_pattern };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     re_pattern(jtl::immutable_string const &s);

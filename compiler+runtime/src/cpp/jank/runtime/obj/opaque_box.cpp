@@ -6,7 +6,7 @@
 namespace jank::runtime::obj
 {
   opaque_box::opaque_box(jtl::ptr<void> const data, jtl::immutable_string const &canonical_type)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ data }
     , canonical_type{ canonical_type }
   {

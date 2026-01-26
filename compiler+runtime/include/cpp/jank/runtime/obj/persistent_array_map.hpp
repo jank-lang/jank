@@ -16,6 +16,7 @@ namespace jank::runtime::obj
                                        runtime::detail::native_array_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_array_map };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
     static constexpr u8 max_size{ value_type::max_size };
     using parent_type = obj::detail::base_persistent_map<persistent_array_map,
                                                          persistent_array_map_sequence,
@@ -78,8 +79,9 @@ namespace jank::runtime::obj
     persistent_array_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
-    object_ref call(object_ref const, object_ref const) const;
+    using object::call;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
 
     /* behavior::transientable */
     transient_array_map_ref to_transient() const;

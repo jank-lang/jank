@@ -7,18 +7,18 @@
 namespace jank::runtime::obj
 {
   transient_sorted_set::transient_sorted_set()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   transient_sorted_set::transient_sorted_set(runtime::detail::native_persistent_sorted_set const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d }
   {
   }
 
   transient_sorted_set::transient_sorted_set(runtime::detail::native_persistent_sorted_set &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
   {
   }
@@ -48,7 +48,7 @@ namespace jank::runtime::obj
     return make_box<persistent_sorted_set>(data);
   }
 
-  object_ref transient_sorted_set::call(object_ref const elem)
+  object_ref transient_sorted_set::call(object_ref const elem) const
   {
     assert_active();
     auto const found(data.find(elem));
@@ -59,7 +59,7 @@ namespace jank::runtime::obj
     return jank_nil();
   }
 
-  object_ref transient_sorted_set::call(object_ref const elem, object_ref const fallback)
+  object_ref transient_sorted_set::call(object_ref const elem, object_ref const fallback) const
   {
     assert_active();
     auto const found(data.find(elem));
@@ -70,17 +70,17 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ref transient_sorted_set::get(object_ref const elem)
+  object_ref transient_sorted_set::get(object_ref const elem) const
   {
     return call(elem);
   }
 
-  object_ref transient_sorted_set::get(object_ref const elem, object_ref const fallback)
+  object_ref transient_sorted_set::get(object_ref const elem, object_ref const fallback) const
   {
     return call(elem, fallback);
   }
 
-  object_ref transient_sorted_set::get_entry(object_ref const elem)
+  object_ref transient_sorted_set::get_entry(object_ref const elem) const
   {
     auto found{ call(elem) };
     if(found == jank_nil())

@@ -12,6 +12,7 @@ namespace jank::runtime::obj
   struct symbol : object
   {
     static constexpr object_type obj_type{ object_type::symbol };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     symbol();

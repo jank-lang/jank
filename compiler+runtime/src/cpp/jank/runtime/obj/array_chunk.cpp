@@ -7,25 +7,25 @@
 namespace jank::runtime::obj
 {
   array_chunk::array_chunk()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   array_chunk::array_chunk(native_vector<object_ref> const &buffer)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , buffer{ buffer }
   {
   }
 
   array_chunk::array_chunk(native_vector<object_ref> const &buffer, usize const offset)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , buffer{ buffer }
     , offset{ offset }
   {
   }
 
   array_chunk::array_chunk(native_vector<object_ref> &&buffer, usize const offset)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , buffer{ std::move(buffer) }
     , offset{ offset }
   {

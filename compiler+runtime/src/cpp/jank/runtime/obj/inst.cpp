@@ -10,7 +10,7 @@
 namespace jank::runtime::obj
 {
   inst::inst()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , value{ std::chrono::system_clock::now() }
   {
   }
@@ -58,7 +58,7 @@ namespace jank::runtime::obj
 #endif
 
   inst::inst(jtl::immutable_string const &s)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , value{ inst_from_string(s) }
   {
   }

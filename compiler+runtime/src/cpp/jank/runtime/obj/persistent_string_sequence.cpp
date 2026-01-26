@@ -6,12 +6,12 @@
 namespace jank::runtime::obj
 {
   persistent_string_sequence::persistent_string_sequence()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   persistent_string_sequence::persistent_string_sequence(persistent_string_ref const s)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , str{ s }
   {
     jank_debug_assert(!s->data.empty());
@@ -19,7 +19,7 @@ namespace jank::runtime::obj
 
   persistent_string_sequence::persistent_string_sequence(persistent_string_ref const s,
                                                          usize const i)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , str{ s }
     , index{ i }
   {

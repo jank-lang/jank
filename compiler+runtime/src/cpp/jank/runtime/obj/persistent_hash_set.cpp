@@ -6,24 +6,24 @@
 namespace jank::runtime::obj
 {
   persistent_hash_set::persistent_hash_set()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   persistent_hash_set::persistent_hash_set(value_type &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
   {
   }
 
   persistent_hash_set::persistent_hash_set(value_type const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d }
   {
   }
 
   persistent_hash_set::persistent_hash_set(object_ref const meta, value_type &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
     , meta{ meta }
   {

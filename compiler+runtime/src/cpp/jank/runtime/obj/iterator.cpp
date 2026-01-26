@@ -1,17 +1,17 @@
 #include <jank/runtime/obj/iterator.hpp>
-#include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/visit.hpp>
 
 namespace jank::runtime::obj
 {
   iterator::iterator()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   iterator::iterator(object_ref const fn, object_ref const start)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , fn{ fn }
     , current{ start }
   {

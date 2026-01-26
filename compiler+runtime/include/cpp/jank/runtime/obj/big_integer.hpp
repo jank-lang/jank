@@ -33,6 +33,7 @@ namespace jank::runtime::obj
   struct big_integer : object
   {
     static constexpr object_type obj_type{ object_type::big_integer };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ true };
 
     big_integer();

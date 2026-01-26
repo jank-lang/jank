@@ -6,12 +6,12 @@
 namespace jank::runtime::obj
 {
   cons::cons()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   cons::cons(object_ref const head, object_ref const tail)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , head{ head }
     , tail{ tail }
   {

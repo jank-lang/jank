@@ -10,24 +10,24 @@
 namespace jank::runtime::obj
 {
   persistent_vector::persistent_vector()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   persistent_vector::persistent_vector(value_type &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
   {
   }
 
   persistent_vector::persistent_vector(value_type const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d }
   {
   }
 
   persistent_vector::persistent_vector(object_ref const meta, value_type &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
     , meta{ meta }
   {

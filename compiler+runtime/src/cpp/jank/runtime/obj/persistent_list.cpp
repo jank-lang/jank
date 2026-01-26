@@ -7,19 +7,19 @@
 namespace jank::runtime::obj
 {
   persistent_list::persistent_list()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   persistent_list::persistent_list(runtime::detail::native_persistent_list const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d }
   {
   }
 
   persistent_list::persistent_list(object_ref const meta,
                                    runtime::detail::native_persistent_list const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d }
     , meta{ meta }
   {

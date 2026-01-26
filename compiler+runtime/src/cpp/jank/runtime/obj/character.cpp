@@ -34,18 +34,18 @@ namespace jank::runtime::obj
   }
 
   character::character()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   character::character(jtl::immutable_string const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d }
   {
   }
 
   character::character(char const ch)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ 1, ch }
   {
   }

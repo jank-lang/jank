@@ -10,6 +10,7 @@ namespace jank::runtime::obj
   struct transient_sorted_set : object
   {
     static constexpr object_type obj_type{ object_type::transient_sorted_set };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_sorted_set;
@@ -33,13 +34,14 @@ namespace jank::runtime::obj
     persistent_type_ref to_persistent();
 
     /* behavior::callable */
-    object_ref call(object_ref const);
-    object_ref call(object_ref const, object_ref const fallback);
+    using object::call;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const fallback) const override;
 
     /* behavior::associatively_readable */
-    object_ref get(object_ref const elem);
-    object_ref get(object_ref const elem, object_ref const fallback);
-    object_ref get_entry(object_ref const elem);
+    object_ref get(object_ref const elem) const;
+    object_ref get(object_ref const elem, object_ref const fallback) const;
+    object_ref get_entry(object_ref const elem) const;
     bool contains(object_ref const elem) const;
 
     transient_sorted_set_ref disjoin_in_place(object_ref const elem);

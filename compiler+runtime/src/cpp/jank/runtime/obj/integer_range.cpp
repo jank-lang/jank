@@ -18,12 +18,12 @@ namespace jank::runtime::obj
   }
 
   integer_range::integer_range()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   integer_range::integer_range(integer_ref const end)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , start{ make_box<integer>(0) }
     , end{ end }
     , step{ make_box<integer>(1) }
@@ -32,7 +32,7 @@ namespace jank::runtime::obj
   }
 
   integer_range::integer_range(integer_ref const start, integer_ref const end)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
     , step{ make_box<integer>(1) }
@@ -43,7 +43,7 @@ namespace jank::runtime::obj
   integer_range::integer_range(integer_ref const start,
                                integer_ref const end,
                                integer_ref const step)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
     , step{ step }
@@ -57,7 +57,7 @@ namespace jank::runtime::obj
                                integer_ref const end,
                                integer_ref const step,
                                integer_range::bounds_check_t const bounds_check)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
     , step{ step }

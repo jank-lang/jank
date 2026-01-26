@@ -9,6 +9,7 @@ namespace jank::runtime::obj
   struct boolean : object
   {
     static constexpr object_type obj_type{ object_type::boolean };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ true };
 
     boolean();
@@ -42,6 +43,7 @@ namespace jank::runtime::obj
   struct integer : object
   {
     static constexpr object_type obj_type{ object_type::integer };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ true };
 
     integer();
@@ -76,6 +78,7 @@ namespace jank::runtime::obj
   struct real : object
   {
     static constexpr object_type obj_type{ object_type::real };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ true };
 
     real();
@@ -101,7 +104,6 @@ namespace jank::runtime::obj
     f64 to_real() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     f64 data{};
   };
 }

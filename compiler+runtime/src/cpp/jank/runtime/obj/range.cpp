@@ -19,12 +19,12 @@ namespace jank::runtime::obj
   }
 
   range::range()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   range::range(object_ref const end)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , start{ make_box(0) }
     , end{ end }
     , step{ make_box(1) }
@@ -33,7 +33,7 @@ namespace jank::runtime::obj
   }
 
   range::range(object_ref const start, object_ref const end)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
     , step{ make_box(1) }
@@ -42,7 +42,7 @@ namespace jank::runtime::obj
   }
 
   range::range(object_ref const start, object_ref const end, object_ref const step)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
     , step{ step }
@@ -55,7 +55,7 @@ namespace jank::runtime::obj
                object_ref const end,
                object_ref const step,
                range::bounds_check_t const bounds_check)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
     , step{ step }
@@ -69,7 +69,7 @@ namespace jank::runtime::obj
                range::bounds_check_t const bounds_check,
                array_chunk_ref const chunk,
                range_ref const chunk_next)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
     , step{ step }

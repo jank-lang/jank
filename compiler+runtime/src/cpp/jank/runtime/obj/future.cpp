@@ -1,12 +1,11 @@
 #include <jank/runtime/obj/future.hpp>
-#include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
   future::future()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 

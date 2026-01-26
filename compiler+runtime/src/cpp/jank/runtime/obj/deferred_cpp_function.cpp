@@ -8,6 +8,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime::obj
@@ -16,7 +17,7 @@ namespace jank::runtime::obj
                                                jtl::immutable_string const &declaration_code,
                                                jtl::immutable_string const &expression_code,
                                                var_ref const var)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , meta{ meta }
     , var{ var }
     , declaration_code{ declaration_code }
@@ -35,7 +36,7 @@ namespace jank::runtime::obj
       this);
   }
 
-  object_ref deferred_cpp_function::call(object_ref const args)
+  object_ref deferred_cpp_function::call(object_ref const args) const
   {
     std::lock_guard<std::recursive_mutex> const lock{ compilation_mutex };
     /* It's possible that we're called again, even after we've compiled our actual function.
@@ -67,14 +68,9 @@ namespace jank::runtime::obj
     return apply_to(compiled_fn, args);
   }
 
-  behavior::callable::arity_flag_t deferred_cpp_function::get_arity_flags() const
+  callable_arity_flags deferred_cpp_function::get_arity_flags() const
   {
     /* Deferred fns are always [& args], which they then apply to the proxied fn. */
-    return behavior::callable::build_arity_flags(0, true, false);
-  }
-
-  object_ref deferred_cpp_function::this_object_ref()
-  {
-    return this;
+    return build_arity_flags(0, true, false);
   }
 }

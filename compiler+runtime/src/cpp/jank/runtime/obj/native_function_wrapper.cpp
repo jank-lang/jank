@@ -11,18 +11,18 @@
 namespace jank::runtime::obj
 {
   native_function_wrapper::native_function_wrapper()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   native_function_wrapper::native_function_wrapper(detail::function_type &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
   {
   }
 
   native_function_wrapper::native_function_wrapper(detail::function_type const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d }
   {
   }
@@ -75,23 +75,24 @@ namespace jank::runtime::obj
     return (*func_ptr)(std::forward<Args>(args)...);
   }
 
-  object_ref native_function_wrapper::call()
+  object_ref native_function_wrapper::call() const
   {
     return apply_function(*this);
   }
 
-  object_ref native_function_wrapper::call(object_ref const arg1)
+  object_ref native_function_wrapper::call(object_ref const arg1) const
   {
     return apply_function(*this, arg1);
   }
 
-  object_ref native_function_wrapper::call(object_ref const arg1, object_ref const arg2)
+  object_ref native_function_wrapper::call(object_ref const arg1, object_ref const arg2) const
   {
     return apply_function(*this, arg1, arg2);
   }
 
-  object_ref
-  native_function_wrapper::call(object_ref const arg1, object_ref const arg2, object_ref const arg3)
+  object_ref native_function_wrapper::call(object_ref const arg1,
+                                           object_ref const arg2,
+                                           object_ref const arg3) const
   {
     return apply_function(*this, arg1, arg2, arg3);
   }
@@ -99,7 +100,7 @@ namespace jank::runtime::obj
   object_ref native_function_wrapper::call(object_ref const arg1,
                                            object_ref const arg2,
                                            object_ref const arg3,
-                                           object_ref const arg4)
+                                           object_ref const arg4) const
   {
     return apply_function(*this, arg1, arg2, arg3, arg4);
   }
@@ -108,7 +109,7 @@ namespace jank::runtime::obj
                                            object_ref const arg2,
                                            object_ref const arg3,
                                            object_ref const arg4,
-                                           object_ref const arg5)
+                                           object_ref const arg5) const
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5);
   }
@@ -118,7 +119,7 @@ namespace jank::runtime::obj
                                            object_ref const arg3,
                                            object_ref const arg4,
                                            object_ref const arg5,
-                                           object_ref const arg6)
+                                           object_ref const arg6) const
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6);
   }
@@ -129,7 +130,7 @@ namespace jank::runtime::obj
                                            object_ref const arg4,
                                            object_ref const arg5,
                                            object_ref const arg6,
-                                           object_ref const arg7)
+                                           object_ref const arg7) const
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
   }
@@ -141,7 +142,7 @@ namespace jank::runtime::obj
                                            object_ref const arg5,
                                            object_ref const arg6,
                                            object_ref const arg7,
-                                           object_ref const arg8)
+                                           object_ref const arg8) const
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
   }
@@ -154,7 +155,7 @@ namespace jank::runtime::obj
                                            object_ref const arg6,
                                            object_ref const arg7,
                                            object_ref const arg8,
-                                           object_ref const arg9)
+                                           object_ref const arg9) const
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
   }
@@ -168,7 +169,7 @@ namespace jank::runtime::obj
                                            object_ref const arg7,
                                            object_ref const arg8,
                                            object_ref const arg9,
-                                           object_ref const arg10)
+                                           object_ref const arg10) const
   {
     return apply_function(*this, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10);
   }
@@ -184,10 +185,5 @@ namespace jank::runtime::obj
   object_ref native_function_wrapper::get_meta() const
   {
     return meta;
-  }
-
-  object_ref native_function_wrapper::this_object_ref()
-  {
-    return this;
   }
 }

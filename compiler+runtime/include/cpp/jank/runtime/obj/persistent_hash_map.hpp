@@ -17,6 +17,7 @@ namespace jank::runtime::obj
                                        runtime::detail::native_persistent_hash_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_hash_map };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
     using parent_type
       = obj::detail::base_persistent_map<persistent_hash_map,
                                          persistent_hash_map_sequence,
@@ -80,8 +81,9 @@ namespace jank::runtime::obj
     persistent_hash_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
-    object_ref call(object_ref const, object_ref const) const;
+    using object::call;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
 
     /* behavior::transientable */
     obj::transient_hash_map_ref to_transient() const;

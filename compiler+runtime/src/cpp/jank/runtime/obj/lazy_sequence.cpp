@@ -2,7 +2,7 @@
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/cons.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/seq.hpp>
@@ -12,19 +12,19 @@
 namespace jank::runtime::obj
 {
   lazy_sequence::lazy_sequence()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   lazy_sequence::lazy_sequence(object_ref const fn)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , fn{ fn }
   {
     jank_debug_assert(fn.is_some());
   }
 
   lazy_sequence::lazy_sequence(object_ref const fn, object_ref const sequence)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , fn{ fn }
     , s{ sequence }
   {

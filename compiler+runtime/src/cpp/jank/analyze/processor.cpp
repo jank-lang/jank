@@ -11,6 +11,7 @@
 #include <jank/runtime/behavior/sequential.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/set_like.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/core/make_box.hpp>

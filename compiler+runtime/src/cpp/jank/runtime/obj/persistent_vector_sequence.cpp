@@ -6,12 +6,12 @@
 namespace jank::runtime::obj
 {
   persistent_vector_sequence::persistent_vector_sequence()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ref const v)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , vec{ v }
   {
     jank_debug_assert(!v->data.empty());
@@ -19,7 +19,7 @@ namespace jank::runtime::obj
 
   persistent_vector_sequence::persistent_vector_sequence(persistent_vector_ref const v,
                                                          usize const i)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , vec{ v }
     , index{ i }
   {

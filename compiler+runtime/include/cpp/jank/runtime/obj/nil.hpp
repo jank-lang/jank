@@ -11,6 +11,7 @@ namespace jank::runtime::obj
   struct nil : object
   {
     static constexpr object_type obj_type{ object_type::nil };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ true };
 
     nil();

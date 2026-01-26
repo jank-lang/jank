@@ -247,24 +247,156 @@ namespace jank::runtime
     return "unknown";
   }
 
+  enum class object_behavior : u8
+  {
+    none = 0,
+    call = 1 << 0,
+    //associatively_readable,
+    //associatively_writable,
+    //chunkable,
+    //collection_like,
+    //comparable,
+    //conjable,
+    //countable,
+    //derefable,
+    //indexable,
+    //map_like,
+    //metadatable,
+    //nameable,
+    //number_like,
+    //realizable,
+    //ref_like,
+    //seqable,
+    //sequential,
+    //set_like,
+    //stackable,
+    //transientable
+  };
+
+  constexpr object_behavior
+  operator&(object_behavior const behaviors, object_behavior const behavior)
+  {
+    return static_cast<object_behavior>(
+      static_cast<std::underlying_type_t<object_behavior>>(behaviors)
+      & static_cast<std::underlying_type_t<object_behavior>>(behavior));
+  }
+
+  constexpr object_behavior
+  operator|(object_behavior const behaviors, object_behavior const behavior)
+  {
+    return static_cast<object_behavior>(
+      static_cast<std::underlying_type_t<object_behavior>>(behaviors)
+      | static_cast<std::underlying_type_t<object_behavior>>(behavior));
+  }
+
+  using callable_arity_flags = u8;
+
+  using object_ref = oref<struct object>;
+
   struct object : gc
   {
-    object() = default;
+    object() = delete;
     object(object const &) noexcept;
     object(object &&) noexcept;
-    object(object_type) noexcept;
+    object(object_type, object_behavior) noexcept;
     virtual ~object() = default;
 
     object &operator=(object const &) noexcept;
     object &operator=(object &&) noexcept;
 
+    /* object_like */
     virtual bool equal(object const &) const;
     virtual jtl::immutable_string to_string() const;
     virtual void to_string(jtl::string_builder &) const;
     virtual jtl::immutable_string to_code_string() const;
     virtual uhash to_hash() const;
 
+    /* callable */
+    virtual object_ref call() const;
+    virtual object_ref call(object_ref const) const;
+    virtual object_ref call(object_ref const, object_ref const) const;
+    virtual object_ref call(object_ref const, object_ref const, object_ref const) const;
+    virtual object_ref
+    call(object_ref const, object_ref const, object_ref const, object_ref const) const;
+    virtual object_ref call(object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const) const;
+    virtual object_ref call(object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const) const;
+    virtual object_ref call(object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const) const;
+    virtual object_ref call(object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const) const;
+    virtual object_ref call(object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const) const;
+    virtual object_ref call(object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const) const;
+
+    /* When dynamically calling a function, we need to know three things:
+      *
+      * 1. Is the function variadic?
+      * 2. Is there an ambiguous fixed overload?
+      * 3. How many fixed arguments are required before the packed args?
+      *
+      * We cannot perform the correct call without all of this information. Since function calls
+      * are on the hottest path there is, we pack all of this into a single byte. Questions
+      * 1 and 2 each get a bit and question 3 gets 6 bits to store the fixed arg count.
+      *
+      * From there, when we use it, we strip out the bit for question 2 and we switch/case on
+      * the rest. This allows us to do a O(1) jump on the combination of whether it's variadic
+      * and the required fixed args. Finally, we only need the question 2 bit to disambiguate
+      * one branch of each switch.
+      *
+      * The ambiguity comes in this case:
+      *
+      * ```
+      * (defn ambiguous
+      *   ([a] 1)
+      *   ([a & args] args))
+      * (ambiguous :a)
+      * ```
+      *
+      * When we call `ambiguous` with a single arg, we want it to match the fixed unary arity.
+      * However, given just questions 1 and 3, we will see that we've met the required args
+      * and that the function is variadic and we'll instead dispatch to the variadic arity, with
+      * an empty sequence for `args`.
+      */
+    virtual callable_arity_flags get_arity_flags() const;
+
     object_type type{};
+    object_behavior behaviors{ object_behavior::none };
   };
 
   namespace obj

@@ -16,8 +16,9 @@ namespace jank::runtime
   {
   }
 
-  object::object(object_type const type) noexcept
+  object::object(object_type const type, object_behavior const behaviors) noexcept
     : type{ type }
+    , behaviors{ behaviors }
   {
   }
 
@@ -66,6 +67,107 @@ namespace jank::runtime
   uhash object::to_hash() const
   {
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
+  }
+
+  /* callable */
+  object_ref object::call() const
+  {
+    throw invalid_arity<0>{ runtime::to_code_string(this) };
+  }
+
+  object_ref object::call(object_ref const) const
+  {
+    throw invalid_arity<1>{ runtime::to_code_string(this) };
+  }
+
+  object_ref object::call(object_ref const, object_ref const) const
+  {
+    throw invalid_arity<2>{ runtime::to_code_string(this) };
+  }
+
+  object_ref object::call(object_ref const, object_ref const, object_ref const) const
+  {
+    throw invalid_arity<3>{ runtime::to_code_string(this) };
+  }
+
+  object_ref
+  object::call(object_ref const, object_ref const, object_ref const, object_ref const) const
+  {
+    throw invalid_arity<4>{ runtime::to_code_string(this) };
+  }
+
+  object_ref object::call(object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const) const
+  {
+    throw invalid_arity<5>{ runtime::to_code_string(this) };
+  }
+
+  object_ref object::call(object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const) const
+  {
+    throw invalid_arity<6>{ runtime::to_code_string(this) };
+  }
+
+  object_ref object::call(object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const) const
+  {
+    throw invalid_arity<7>{ runtime::to_code_string(this) };
+  }
+
+  object_ref object::call(object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const) const
+  {
+    throw invalid_arity<8>{ runtime::to_code_string(this) };
+  }
+
+  object_ref object::call(object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const) const
+  {
+    throw invalid_arity<9>{ runtime::to_code_string(this) };
+  }
+
+  object_ref object::call(object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const) const
+  {
+    throw invalid_arity<10>{ runtime::to_code_string(this) };
+  }
+
+  callable_arity_flags object::get_arity_flags() const
+  {
+    return 0;
   }
 
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept

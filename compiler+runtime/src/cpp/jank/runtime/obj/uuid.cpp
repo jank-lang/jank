@@ -29,13 +29,13 @@ namespace jank::runtime::obj
   }
 
   uuid::uuid()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , value{ random() }
   {
   }
 
   uuid::uuid(jtl::immutable_string const &s)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , value{ from_string(s) }
   {
   }

@@ -13,6 +13,7 @@ namespace jank::runtime::obj
   struct re_matcher : object
   {
     static constexpr object_type obj_type{ object_type::re_matcher };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     re_matcher(re_pattern_ref const re, jtl::immutable_string const &s);

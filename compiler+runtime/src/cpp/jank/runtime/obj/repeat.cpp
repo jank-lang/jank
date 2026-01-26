@@ -7,19 +7,19 @@
 namespace jank::runtime::obj
 {
   repeat::repeat()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   repeat::repeat(object_ref const value)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , value{ value }
     , count{ make_box(infinite) }
   {
   }
 
   repeat::repeat(object_ref const count, object_ref const value)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , value{ value }
     , count{ count }
   {

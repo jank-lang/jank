@@ -10,6 +10,7 @@ namespace jank::runtime::obj
   struct chunk_buffer : object
   {
     static constexpr object_type obj_type{ object_type::chunk_buffer };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     chunk_buffer();

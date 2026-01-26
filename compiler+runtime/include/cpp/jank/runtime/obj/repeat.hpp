@@ -12,6 +12,7 @@ namespace jank::runtime::obj
   struct repeat : object
   {
     static constexpr object_type obj_type{ object_type::repeat };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
     static constexpr i64 infinite{ -1 };

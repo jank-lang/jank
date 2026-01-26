@@ -18,6 +18,7 @@ namespace jank::runtime
   struct ns : object
   {
     static constexpr object_type obj_type{ object_type::ns };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     ns() = delete;

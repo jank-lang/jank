@@ -9,18 +9,18 @@
 namespace jank::runtime::obj
 {
   persistent_string::persistent_string()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   persistent_string::persistent_string(jtl::immutable_string const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d }
   {
   }
 
   persistent_string::persistent_string(jtl::immutable_string &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
   {
   }

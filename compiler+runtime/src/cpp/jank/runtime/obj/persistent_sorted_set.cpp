@@ -6,25 +6,25 @@
 namespace jank::runtime::obj
 {
   persistent_sorted_set::persistent_sorted_set()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   persistent_sorted_set::persistent_sorted_set(value_type &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
   {
   }
 
   persistent_sorted_set::persistent_sorted_set(
     runtime::detail::native_persistent_sorted_set const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d }
   {
   }
 
   persistent_sorted_set::persistent_sorted_set(object_ref const meta, value_type &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
     , meta{ meta }
   {
@@ -143,7 +143,7 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  object_ref persistent_sorted_set::call(object_ref const o)
+  object_ref persistent_sorted_set::call(object_ref const o) const
   {
     auto const found(data.find(o));
     if(found != data.end())

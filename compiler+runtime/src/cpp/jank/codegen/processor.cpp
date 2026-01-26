@@ -7,6 +7,7 @@
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/analyze/visit.hpp>
@@ -2714,6 +2715,8 @@ namespace jank::codegen
       return;
     }
 
+    util::format_to(body_buffer, "using object::call;\n");
+
     analyze::expr::function_arity const *variadic_arity{};
     analyze::expr::function_arity const *highest_fixed_arity{};
     for(auto const &arity : root_fn->arities)
@@ -2748,7 +2751,7 @@ namespace jank::codegen
         param_shadows_fn |= param->name == root_fn->name;
       }
 
-      util::format_to(body_buffer, ") final {");
+      util::format_to(body_buffer, ") const final {");
 
       //util::format_to(body_buffer, "jank::profile::timer __timer{ \"{}\" };", root_fn->name);
 
@@ -2802,8 +2805,8 @@ namespace jank::codegen
 
       util::format_to(body_buffer,
                       R"(
-          callable::arity_flag_t get_arity_flags() const final
-          { return callable::build_arity_flags({}, true, {}); }
+          jank::runtime::callable_arity_flags get_arity_flags() const final
+          { return jank::runtime::build_arity_flags({}, true, {}); }
         )",
                       variadic_arity->fn_ctx->param_count - 1,
                       variadic_ambiguous);

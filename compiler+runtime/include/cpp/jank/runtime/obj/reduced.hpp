@@ -9,9 +9,9 @@ namespace jank::runtime::obj
   struct reduced : object
   {
     static constexpr object_type obj_type{ object_type::reduced };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
-    reduced() = default;
     reduced(object_ref const o);
 
     /* behavior::derefable */

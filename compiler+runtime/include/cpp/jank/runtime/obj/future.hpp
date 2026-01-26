@@ -20,6 +20,7 @@ namespace jank::runtime::obj
   struct future : object
   {
     static constexpr object_type obj_type{ object_type::future };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     future();

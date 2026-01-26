@@ -18,6 +18,7 @@ namespace jank::runtime::obj
   struct range : object
   {
     static constexpr object_type obj_type{ object_type::range };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
     static constexpr i64 chunk_size{ 32 };

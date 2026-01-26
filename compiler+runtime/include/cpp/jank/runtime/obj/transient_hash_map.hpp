@@ -15,6 +15,7 @@ namespace jank::runtime::obj
   struct transient_hash_map : object
   {
     static constexpr object_type obj_type{ object_type::transient_hash_map };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_hash_map;
@@ -50,8 +51,9 @@ namespace jank::runtime::obj
     persistent_type_ref to_persistent();
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
-    object_ref call(object_ref const, object_ref const) const;
+    using object::call;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
 
     void assert_active() const;
 

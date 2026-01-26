@@ -12,6 +12,7 @@ namespace jank::runtime::obj
   struct persistent_vector : object
   {
     static constexpr object_type obj_type{ object_type::persistent_vector };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -27,14 +28,14 @@ namespace jank::runtime::obj
 
     template <typename... Args>
     persistent_vector(std::in_place_t, Args &&...args)
-      : object{ obj_type }
+      : object{ obj_type, obj_behaviors }
       , data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
     persistent_vector(object_ref const meta, std::in_place_t, Args &&...args)
-      : object{ obj_type }
+      : object{ obj_type, obj_behaviors }
       , data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
@@ -90,7 +91,8 @@ namespace jank::runtime::obj
     object_ref nth(object_ref const index, object_ref const fallback) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
+    using object::call;
+    object_ref call(object_ref const) const override;
 
     /* behavior::transientable */
     obj::transient_vector_ref to_transient() const;

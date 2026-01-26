@@ -1,5 +1,5 @@
-#include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/obj/atom.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
@@ -8,12 +8,12 @@
 namespace jank::runtime::obj
 {
   atom::atom()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   atom::atom(object_ref const o)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , val{ o.data }
     , watches{ persistent_hash_map::empty() }
   {

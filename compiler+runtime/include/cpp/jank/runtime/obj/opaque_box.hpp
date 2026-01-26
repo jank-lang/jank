@@ -11,6 +11,7 @@ namespace jank::runtime::obj
   struct opaque_box : object
   {
     static constexpr object_type obj_type{ object_type::opaque_box };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     opaque_box(jtl::ptr<void> data, jtl::immutable_string const &canonical_type);

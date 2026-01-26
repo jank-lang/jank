@@ -5,7 +5,7 @@
 namespace jank::runtime::obj
 {
   nil::nil()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 

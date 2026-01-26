@@ -15,6 +15,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/aot/resource.hpp>
 #include <jank/error/runtime.hpp>
 #include <jank/profile/time.hpp>
@@ -576,9 +577,7 @@ extern "C"
                                                    jank_bool const is_variadic,
                                                    jank_bool const is_variadic_ambiguous)
   {
-    return behavior::callable::build_arity_flags(highest_fixed_arity,
-                                                 is_variadic,
-                                                 is_variadic_ambiguous);
+    return build_arity_flags(highest_fixed_arity, is_variadic, is_variadic_ambiguous);
   }
 
   jank_object_ref jank_function_create(jank_arity_flags const arity_flags)

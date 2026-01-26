@@ -20,6 +20,7 @@ namespace jank::runtime
   struct var : object
   {
     static constexpr object_type obj_type{ object_type::var };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     var() = delete;
@@ -85,6 +86,7 @@ namespace jank::runtime
   struct var_thread_binding : object
   {
     static constexpr object_type obj_type{ object_type::var_thread_binding };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     var_thread_binding(object_ref const value, std::thread::id id);
@@ -108,6 +110,7 @@ namespace jank::runtime
   struct var_unbound_root : object
   {
     static constexpr object_type obj_type{ object_type::var_unbound_root };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ true };
 
     var_unbound_root(var_ref const var);

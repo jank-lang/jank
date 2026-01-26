@@ -5,7 +5,7 @@
 namespace jank::runtime::obj
 {
   native_array_sequence::native_array_sequence(object_ref * const arr, usize const size)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , arr{ arr }
     , size{ size }
   {
@@ -16,7 +16,7 @@ namespace jank::runtime::obj
   native_array_sequence::native_array_sequence(object_ref * const arr,
                                                usize const index,
                                                usize const size)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , arr{ arr }
     , index{ index }
     , size{ size }

@@ -20,31 +20,31 @@ namespace jank::runtime::obj
   }
 
   symbol::symbol()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   symbol::symbol(jtl::immutable_string const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
     separate(*this, d);
   }
 
   symbol::symbol(jtl::immutable_string &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
     separate(*this, std::move(d));
   }
 
   symbol::symbol(jtl::immutable_string const &ns, jtl::immutable_string const &n)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , ns{ ns }
     , name{ n }
   {
   }
 
   symbol::symbol(jtl::immutable_string &&ns, jtl::immutable_string &&n)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , ns{ std::move(ns) }
     , name{ std::move(n) }
   {
@@ -53,7 +53,7 @@ namespace jank::runtime::obj
   symbol::symbol(object_ref const meta,
                  jtl::immutable_string const &ns,
                  jtl::immutable_string const &n)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , ns{ ns }
     , name{ n }
     , meta{ meta }
@@ -61,7 +61,7 @@ namespace jank::runtime::obj
   }
 
   symbol::symbol(object_ref const ns, object_ref const n)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , ns{ runtime::to_string(ns) }
     , name{ runtime::to_string(n) }
   {

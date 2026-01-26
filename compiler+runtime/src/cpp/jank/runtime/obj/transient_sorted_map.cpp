@@ -10,18 +10,18 @@
 namespace jank::runtime::obj
 {
   transient_sorted_map::transient_sorted_map()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   transient_sorted_map::transient_sorted_map(runtime::detail::native_persistent_sorted_map const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d }
   {
   }
 
   transient_sorted_map::transient_sorted_map(runtime::detail::native_persistent_sorted_map &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
   {
   }

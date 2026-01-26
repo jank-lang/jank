@@ -9,24 +9,24 @@
 namespace jank::runtime::obj
 {
   transient_vector::transient_vector()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   transient_vector::transient_vector(runtime::detail::native_persistent_vector &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d).transient() }
   {
   }
 
   transient_vector::transient_vector(runtime::detail::native_persistent_vector const &d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d.transient() }
   {
   }
 
   transient_vector::transient_vector(runtime::detail::native_transient_vector &&d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(d) }
   {
   }

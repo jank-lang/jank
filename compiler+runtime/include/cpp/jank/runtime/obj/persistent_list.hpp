@@ -13,6 +13,7 @@ namespace jank::runtime::obj
     using value_type = runtime::detail::native_persistent_list;
 
     static constexpr object_type obj_type{ object_type::persistent_list };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -32,14 +33,14 @@ namespace jank::runtime::obj
      * It just uses the copy ctor. */
     template <typename... Args>
     persistent_list(std::in_place_t, Args &&...args)
-      : object{ obj_type }
+      : object{ obj_type, obj_behaviors }
       , data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
     persistent_list(object_ref const meta, std::in_place_t, Args &&...args)
-      : object{ obj_type }
+      : object{ obj_type, obj_behaviors }
       , data{ std::forward<Args>(args)... }
       , meta{ meta }
     {

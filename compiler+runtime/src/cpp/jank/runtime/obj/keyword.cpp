@@ -6,12 +6,12 @@
 namespace jank::runtime::obj
 {
   keyword::keyword()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   keyword::keyword(runtime::detail::must_be_interned, jtl::immutable_string_view const &s)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , sym{ make_box<obj::symbol>(s) }
   {
   }
@@ -19,7 +19,7 @@ namespace jank::runtime::obj
   keyword::keyword(runtime::detail::must_be_interned,
                    jtl::immutable_string_view const &ns,
                    jtl::immutable_string_view const &n)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , sym{ make_box<obj::symbol>(ns, n) }
   {
   }
@@ -67,12 +67,12 @@ namespace jank::runtime::obj
     return sym->ns;
   }
 
-  object_ref keyword::call(object_ref const m)
+  object_ref keyword::call(object_ref const m) const
   {
     return runtime::get(m, this);
   }
 
-  object_ref keyword::call(object_ref const m, object_ref const fallback)
+  object_ref keyword::call(object_ref const m, object_ref const fallback) const
   {
     return runtime::get(m, this, fallback);
   }

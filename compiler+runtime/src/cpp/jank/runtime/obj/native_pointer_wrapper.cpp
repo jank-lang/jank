@@ -5,12 +5,12 @@
 namespace jank::runtime::obj
 {
   native_pointer_wrapper::native_pointer_wrapper()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   native_pointer_wrapper::native_pointer_wrapper(void * const d)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ d }
   {
   }

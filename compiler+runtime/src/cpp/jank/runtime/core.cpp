@@ -7,6 +7,7 @@
 #include <jank/runtime/behavior/derefable.hpp>
 #include <jank/runtime/behavior/ref_like.hpp>
 #include <jank/runtime/behavior/realizable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -350,13 +351,7 @@ namespace jank::runtime
 
   bool is_callable(object_ref const o)
   {
-    return visit_object(
-      [=](auto const typed_o) -> bool {
-        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
-
-        return std::is_base_of_v<behavior::callable, T>;
-      },
-      o);
+    return (o->behaviors & object_behavior::call) != object_behavior::none;
   }
 
   uhash to_hash(object_ref const o)

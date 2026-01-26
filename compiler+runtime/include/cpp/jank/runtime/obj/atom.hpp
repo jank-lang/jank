@@ -13,6 +13,7 @@ namespace jank::runtime::obj
   struct atom : object
   {
     static constexpr object_type obj_type{ object_type::atom };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     atom();

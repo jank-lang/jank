@@ -5,12 +5,12 @@
 namespace jank::runtime::obj
 {
   native_vector_sequence::native_vector_sequence()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   native_vector_sequence::native_vector_sequence(native_vector<object_ref> const &data, usize index)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ data }
     , index{ index }
   {
@@ -18,14 +18,14 @@ namespace jank::runtime::obj
   }
 
   native_vector_sequence::native_vector_sequence(native_vector<object_ref> &&data)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ jtl::move(data) }
   {
     jank_debug_assert(!this->data.empty());
   }
 
   native_vector_sequence::native_vector_sequence(native_vector<object_ref> &&data, usize index)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ jtl::move(data) }
     , index{ index }
   {
@@ -34,7 +34,7 @@ namespace jank::runtime::obj
 
   native_vector_sequence::native_vector_sequence(object_ref const meta,
                                                  native_vector<object_ref> &&data)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ jtl::move(data) }
     , meta{ meta }
   {

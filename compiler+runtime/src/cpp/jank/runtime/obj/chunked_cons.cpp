@@ -8,12 +8,12 @@
 namespace jank::runtime::obj
 {
   chunked_cons::chunked_cons()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   chunked_cons::chunked_cons(object_ref const head, object_ref const tail)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , head{ head }
     , tail{ tail }
   {
@@ -21,7 +21,7 @@ namespace jank::runtime::obj
   }
 
   chunked_cons::chunked_cons(object_ref const meta, object_ref const head, object_ref const tail)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , head{ head }
     , tail{ tail }
     , meta{ meta }

@@ -10,13 +10,13 @@ namespace jank::runtime::obj::detail
 {
   template <typename PT, typename ST, typename V>
   base_persistent_map<PT, ST, V>::base_persistent_map()
-    : object{ PT::obj_type }
+    : object{ PT::obj_type, PT::obj_behaviors }
   {
   }
 
   template <typename PT, typename ST, typename V>
   base_persistent_map<PT, ST, V>::base_persistent_map(object_ref const meta)
-    : object{ PT::obj_type }
+    : object{ PT::obj_type, PT::obj_behaviors }
     , meta{ meta }
   {
   }

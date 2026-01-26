@@ -12,6 +12,7 @@ namespace jank::runtime::obj
   struct inst : object
   {
     static constexpr object_type obj_type{ object_type::inst };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ true };
 
     inst();

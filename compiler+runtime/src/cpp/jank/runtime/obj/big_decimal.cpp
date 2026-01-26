@@ -109,36 +109,36 @@ namespace jank::runtime
 namespace jank::runtime::obj
 {
   big_decimal::big_decimal()
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
   {
   }
 
   big_decimal::big_decimal(native_big_decimal const &val)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ val }
   {
   }
 
   big_decimal::big_decimal(native_big_decimal &&val)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ std::move(val) }
   {
   }
 
   big_decimal::big_decimal(jtl::immutable_string const &val)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ val.c_str() }
   {
   }
 
   big_decimal::big_decimal(native_big_integer const &val)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data{ val.real() }
   {
   }
 
   big_decimal::big_decimal(ratio const &val)
-    : object{ obj_type }
+    : object{ obj_type, obj_behaviors }
     , data(native_big_decimal(val.data.numerator) / val.data.denominator)
   {
   }
