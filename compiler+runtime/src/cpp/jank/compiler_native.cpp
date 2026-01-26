@@ -55,7 +55,12 @@ extern "C" void jank_load_jank_compiler_native()
   using namespace jank;
   using namespace jank::runtime;
 
-  auto const ns(__rt_ctx->intern_ns("jank.compiler-native"));
+  auto const ns_name{ "jank.compiler-native" };
+  auto const ns(__rt_ctx->intern_ns(ns_name));
+
+  /* Will not be required, once we implement this module in jank with
+   * cpp interop. */
+  __rt_ctx->module_loader.set_is_loaded(ns_name);
 
   auto const intern_fn([=](jtl::immutable_string const &name, auto const fn) {
     ns->intern_var(name)->bind_root(

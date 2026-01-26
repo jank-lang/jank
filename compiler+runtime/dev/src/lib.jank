@@ -1,0 +1,3 @@
+(ns lib)
+
+(defn hello [] (println "Hello"))
