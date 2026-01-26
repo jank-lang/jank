@@ -2188,7 +2188,13 @@ namespace jank::codegen
     }
     jank_debug_assert(expr->arg_exprs.size() <= param_types.size());
 
-    util::format_to(body_buffer, "{} {}{ ", cpp_util::get_qualified_type_name(expr->type), ret_tmp);
+    util::format_to(body_buffer, "{} {} ", cpp_util::get_qualified_type_name(expr->type), ret_tmp);
+
+    /* For aggregate initialization, we want to use the uniform initialization syntax. However,
+     * for any other initialization, we're expecting to call a ctor, so we use parens. This
+     * removes any ambiguity when there is a ctor which takes an initializer list, which we
+     * don't currently support. */
+    util::format_to(body_buffer, "{}", (expr->is_aggregate ? "{" : "("));
 
     bool need_comma{};
     for(usize arg_idx{}; arg_idx < expr->arg_exprs.size(); ++arg_idx)
@@ -2242,7 +2248,7 @@ namespace jank::codegen
       }
     }
 
-    util::format_to(body_buffer, " };");
+    util::format_to(body_buffer, "{};", (expr->is_aggregate ? "}" : ")"));
 
     if(expr->position == expression_position::tail)
     {
