@@ -2459,12 +2459,9 @@ namespace jank::analyze
       return condition_expr.expect_err();
     }
     /* TODO: Support native types if they're compatible with bool. */
-    if(cpp_util::expression_type(condition_expr.expect_ok()).data != Cpp::GetType("bool"))
-    {
-      condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
-                                                 cpp_util::untyped_object_ref_type(),
-                                                 macro_expansions);
-    }
+    condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
+                                               cpp_util::untyped_object_ref_type(),
+                                               macro_expansions);
     if(condition_expr.is_err())
     {
       return condition_expr.expect_err();

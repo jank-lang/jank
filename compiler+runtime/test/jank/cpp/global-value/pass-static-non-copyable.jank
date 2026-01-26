@@ -18,7 +18,6 @@
             };
             foo const bar::boop{ 5 };
           }")
-
 (let* [foo cpp/jank.cpp.global_value.pass_static_non_copyable.bar.boop]
   (if (= 5 (cpp/.-data foo))
     :success
