@@ -157,10 +157,6 @@ else()
     ${jank_llvm_install_libs}
     DESTINATION lib/jank/${PROJECT_VERSION}/lib
   )
-
-  # Install unversioned symlinks so we can easily just link to -lLLVM.
-  install_symlink(libLLVM.so.${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}git libLLVM.so lib/jank/${PROJECT_VERSION}/lib)
-  install_symlink(libclang-cpp.so.${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}git libclang-cpp.so lib/jank/${PROJECT_VERSION}/lib)
 endif()
 
   jank_glob_install_without_prefix(
