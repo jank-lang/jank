@@ -10,6 +10,7 @@ namespace jank::runtime::obj
         runtime::detail::native_persistent_hash_map::const_iterator>
   {
     static constexpr object_type obj_type{ object_type::persistent_hash_map_sequence };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
 
     using base_persistent_map_sequence::base_persistent_map_sequence;
   };

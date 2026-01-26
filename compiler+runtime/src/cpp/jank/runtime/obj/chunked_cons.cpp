@@ -7,15 +7,22 @@
 
 namespace jank::runtime::obj
 {
+  chunked_cons::chunked_cons()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   chunked_cons::chunked_cons(object_ref const head, object_ref const tail)
-    : head{ head }
+    : object{ obj_type, obj_behaviors }
+    , head{ head }
     , tail{ tail }
   {
     jank_debug_assert(head.is_some());
   }
 
   chunked_cons::chunked_cons(object_ref const meta, object_ref const head, object_ref const tail)
-    : head{ head }
+    : object{ obj_type, obj_behaviors }
+    , head{ head }
     , tail{ tail }
     , meta{ meta }
   {
@@ -174,7 +181,7 @@ namespace jank::runtime::obj
 
   uhash chunked_cons::to_hash() const
   {
-    return hash::ordered(&base);
+    return hash::ordered(this);
   }
 
   cons_ref chunked_cons::conj(object_ref const head) const
@@ -188,5 +195,10 @@ namespace jank::runtime::obj
     auto ret(fresh_seq());
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref chunked_cons::get_meta() const
+  {
+    return meta;
   }
 }

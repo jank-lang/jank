@@ -1,5 +1,5 @@
-#include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/obj/atom.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
@@ -7,37 +7,16 @@
 
 namespace jank::runtime::obj
 {
+  atom::atom()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   atom::atom(object_ref const o)
-    : val{ o.data }
+    : object{ obj_type, obj_behaviors }
+    , val{ o.data }
     , watches{ persistent_hash_map::empty() }
   {
-  }
-
-  bool atom::equal(object const &o) const
-  {
-    return &o == &base;
-  }
-
-  jtl::immutable_string atom::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void atom::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string atom::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash atom::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   object_ref atom::deref() const

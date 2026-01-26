@@ -18,8 +18,14 @@ namespace jank::runtime::obj
     return lte(val, end);
   }
 
+  range::range()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   range::range(object_ref const end)
-    : start{ make_box(0) }
+    : object{ obj_type, obj_behaviors }
+    , start{ make_box(0) }
     , end{ end }
     , step{ make_box(1) }
     , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
@@ -27,7 +33,8 @@ namespace jank::runtime::obj
   }
 
   range::range(object_ref const start, object_ref const end)
-    : start{ start }
+    : object{ obj_type, obj_behaviors }
+    , start{ start }
     , end{ end }
     , step{ make_box(1) }
     , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
@@ -35,7 +42,8 @@ namespace jank::runtime::obj
   }
 
   range::range(object_ref const start, object_ref const end, object_ref const step)
-    : start{ start }
+    : object{ obj_type, obj_behaviors }
+    , start{ start }
     , end{ end }
     , step{ step }
     , bounds_check{ is_pos(step) ? static_cast<bounds_check_t>(positive_step_bounds_check)
@@ -47,7 +55,8 @@ namespace jank::runtime::obj
                object_ref const end,
                object_ref const step,
                range::bounds_check_t const bounds_check)
-    : start{ start }
+    : object{ obj_type, obj_behaviors }
+    , start{ start }
     , end{ end }
     , step{ step }
     , bounds_check{ bounds_check }
@@ -60,7 +69,8 @@ namespace jank::runtime::obj
                range::bounds_check_t const bounds_check,
                array_chunk_ref const chunk,
                range_ref const chunk_next)
-    : start{ start }
+    : object{ obj_type, obj_behaviors }
+    , start{ start }
     , end{ end }
     , step{ step }
     , bounds_check{ bounds_check }
@@ -103,7 +113,7 @@ namespace jank::runtime::obj
                                         : static_cast<bounds_check_t>(negative_step_bounds_check));
   }
 
-  range_ref range::seq()
+  range_ref range::seq() const
   {
     return this;
   }
@@ -216,24 +226,24 @@ namespace jank::runtime::obj
     return runtime::sequence_equal(this, &o);
   }
 
-  void range::to_string(jtl::string_builder &buff)
+  void range::to_string(jtl::string_builder &buff) const
   {
     runtime::to_string(seq(), buff);
   }
 
-  jtl::immutable_string range::to_string()
+  jtl::immutable_string range::to_string() const
   {
     return runtime::to_string(seq());
   }
 
-  jtl::immutable_string range::to_code_string()
+  jtl::immutable_string range::to_code_string() const
   {
     return runtime::to_code_string(seq());
   }
 
   uhash range::to_hash() const
   {
-    return hash::ordered(&base);
+    return hash::ordered(this);
   }
 
   range_ref range::with_meta(object_ref const m) const
@@ -242,5 +252,10 @@ namespace jank::runtime::obj
     auto ret(fresh_seq());
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref range::get_meta() const
+  {
+    return meta;
   }
 }

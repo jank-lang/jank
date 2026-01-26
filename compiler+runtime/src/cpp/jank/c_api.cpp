@@ -15,6 +15,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/aot/resource.hpp>
 #include <jank/error/runtime.hpp>
 #include <jank/profile/time.hpp>
@@ -576,9 +577,7 @@ extern "C"
                                                    jank_bool const is_variadic,
                                                    jank_bool const is_variadic_ambiguous)
   {
-    return behavior::callable::build_arity_flags(highest_fixed_arity,
-                                                 is_variadic,
-                                                 is_variadic_ambiguous);
+    return build_arity_flags(highest_fixed_arity, is_variadic, is_variadic_ambiguous);
   }
 
   jank_object_ref jank_function_create(jank_arity_flags const arity_flags)
@@ -975,16 +974,7 @@ extern "C"
   {
     auto const o_obj(reinterpret_cast<object *>(o));
     auto const meta_obj(reinterpret_cast<object *>(meta));
-    runtime::visit_object(
-      [&](auto const typed_o) {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(behavior::metadatable<T>)
-        {
-          typed_o->meta = behavior::detail::validate_meta(meta_obj);
-        }
-      },
-      o_obj);
+    runtime::reset_meta(o_obj, meta_obj);
   }
 
   void jank_throw(jank_object_ref const o)

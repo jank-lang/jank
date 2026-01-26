@@ -1,7 +1,5 @@
 #pragma once
 
-#include <jtl/option.hpp>
-
 #include <jank/runtime/object.hpp>
 
 namespace jank::runtime::obj
@@ -9,26 +7,27 @@ namespace jank::runtime::obj
   using cons_ref = oref<struct cons>;
   using native_vector_sequence_ref = oref<struct native_vector_sequence>;
 
-  struct native_vector_sequence
+  struct native_vector_sequence : object
   {
     static constexpr object_type obj_type{ object_type::native_vector_sequence };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    native_vector_sequence() = default;
+    native_vector_sequence();
     native_vector_sequence(native_vector_sequence &&) noexcept = default;
     native_vector_sequence(native_vector_sequence const &) = default;
     native_vector_sequence(native_vector<object_ref> const &data, usize index);
     native_vector_sequence(native_vector<object_ref> &&data);
-    native_vector_sequence(jtl::option<object_ref> const &meta, native_vector<object_ref> &&data);
+    native_vector_sequence(object_ref const meta, native_vector<object_ref> &&data);
     native_vector_sequence(native_vector<object_ref> &&data, usize index);
 
     /* behavior::object_like */
-    bool equal(object const &o) const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_string() const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash();
+    bool equal(object const &o) const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::seqable */
     native_vector_sequence_ref seq();
@@ -47,11 +46,11 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     native_vector_sequence_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     native_vector<object_ref> data{};
     usize index{};
-    jtl::option<object_ref> meta;
+    object_ref meta;
   };
 }

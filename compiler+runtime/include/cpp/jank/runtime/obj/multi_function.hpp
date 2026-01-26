@@ -3,7 +3,6 @@
 #include <mutex>
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/behavior/callable.hpp>
 
 namespace jank::runtime::obj
 {
@@ -11,9 +10,10 @@ namespace jank::runtime::obj
   using persistent_hash_map_ref = oref<struct persistent_hash_map>;
   using multi_function_ref = oref<struct multi_function>;
 
-  struct multi_function : behavior::callable
+  struct multi_function : object
   {
     static constexpr object_type obj_type{ object_type::multi_function };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
     static constexpr bool pointer_free{ false };
 
     multi_function() = delete;
@@ -22,46 +22,31 @@ namespace jank::runtime::obj
                    object_ref const default_,
                    object_ref const hierarchy);
 
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string();
-    void to_string(jtl::string_builder &buff);
-    jtl::immutable_string to_code_string();
-    uhash to_hash() const;
-
     /* behavior::callable */
-    object_ref call() override;
-    object_ref call(object_ref const) override;
-    object_ref call(object_ref const, object_ref const) override;
-    object_ref call(object_ref const, object_ref const, object_ref const) override;
+    object_ref call() const override;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
+    object_ref call(object_ref const, object_ref const, object_ref const) const override;
     object_ref
-    call(object_ref const, object_ref const, object_ref const, object_ref const) override;
+    call(object_ref const, object_ref const, object_ref const, object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const) override;
-    object_ref call(object_ref const,
-                    object_ref const,
-                    object_ref const,
-                    object_ref const,
-                    object_ref const,
-                    object_ref const) override;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const,
-                    object_ref const) override;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const,
-                    object_ref const) override;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
@@ -69,8 +54,7 @@ namespace jank::runtime::obj
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const,
-                    object_ref const) override;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
@@ -79,9 +63,17 @@ namespace jank::runtime::obj
                     object_ref const,
                     object_ref const,
                     object_ref const,
+                    object_ref const) const override;
+    object_ref call(object_ref const,
                     object_ref const,
-                    object_ref const) override;
-    object_ref this_object_ref() final;
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) const override;
 
     multi_function_ref reset();
     persistent_hash_map_ref reset_cache();
@@ -93,12 +85,11 @@ namespace jank::runtime::obj
     static bool is_a(object_ref const hierarchy, object_ref const x, object_ref const y);
     bool is_dominant(object_ref const hierarchy, object_ref const x, object_ref const y) const;
 
-    object_ref get_fn(object_ref const dispatch_val);
-    object_ref get_method(object_ref const dispatch_val);
+    object_ref get_fn(object_ref const dispatch_val) const;
+    object_ref get_method(object_ref const dispatch_val) const;
     object_ref find_and_cache_best_method(object_ref const dispatch_val);
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     object_ref dispatch{};
     object_ref default_dispatch_value{};
     object_ref hierarchy{};

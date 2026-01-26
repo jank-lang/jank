@@ -3,7 +3,6 @@
 #include <any>
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime
@@ -64,56 +63,47 @@ namespace jank::runtime
   {
     using native_function_wrapper_ref = oref<struct native_function_wrapper>;
 
-    struct native_function_wrapper : behavior::callable
+    struct native_function_wrapper : object
     {
       static constexpr object_type obj_type{ object_type::native_function_wrapper };
+      static constexpr object_behavior obj_behaviors{ object_behavior::call };
       static constexpr bool pointer_free{ false };
 
-      native_function_wrapper() = default;
+      native_function_wrapper();
       native_function_wrapper(native_function_wrapper &&) noexcept = default;
       native_function_wrapper(native_function_wrapper const &) = default;
       native_function_wrapper(obj::detail::function_type &&d);
       native_function_wrapper(obj::detail::function_type const &d);
 
       /* behavior::object_like */
-      bool equal(object const &) const;
-      jtl::immutable_string to_string() const;
-      void to_string(jtl::string_builder &buff) const;
-      jtl::immutable_string to_code_string() const;
-      uhash to_hash() const;
+      using object::to_string;
+      void to_string(jtl::string_builder &buff) const override;
 
       /* behavior::callable */
-      object_ref call() final;
-      object_ref call(object_ref const) final;
-      object_ref call(object_ref const, object_ref const) final;
-      object_ref call(object_ref const, object_ref const, object_ref const) final;
-      object_ref call(object_ref const, object_ref const, object_ref const, object_ref const) final;
+      object_ref call() const final;
+      object_ref call(object_ref const) const final;
+      object_ref call(object_ref const, object_ref const) const final;
+      object_ref call(object_ref const, object_ref const, object_ref const) const final;
+      object_ref
+      call(object_ref const, object_ref const, object_ref const, object_ref const) const final;
       object_ref call(object_ref const,
                       object_ref const,
                       object_ref const,
                       object_ref const,
-                      object_ref const) final;
-      object_ref call(object_ref const,
-                      object_ref const,
-                      object_ref const,
-                      object_ref const,
-                      object_ref const,
-                      object_ref const) final;
+                      object_ref const) const final;
       object_ref call(object_ref const,
                       object_ref const,
                       object_ref const,
                       object_ref const,
                       object_ref const,
-                      object_ref const,
-                      object_ref const) final;
+                      object_ref const) const final;
       object_ref call(object_ref const,
                       object_ref const,
                       object_ref const,
                       object_ref const,
                       object_ref const,
                       object_ref const,
-                      object_ref const,
-                      object_ref const) final;
+                      object_ref const) const final;
       object_ref call(object_ref const,
                       object_ref const,
                       object_ref const,
@@ -121,8 +111,7 @@ namespace jank::runtime
                       object_ref const,
                       object_ref const,
                       object_ref const,
-                      object_ref const,
-                      object_ref const) final;
+                      object_ref const) const final;
       object_ref call(object_ref const,
                       object_ref const,
                       object_ref const,
@@ -131,18 +120,25 @@ namespace jank::runtime
                       object_ref const,
                       object_ref const,
                       object_ref const,
+                      object_ref const) const final;
+      object_ref call(object_ref const,
                       object_ref const,
-                      object_ref const) final;
-
-      object_ref this_object_ref() final;
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const,
+                      object_ref const) const final;
 
       /* behavior::metadatable */
       native_function_wrapper_ref with_meta(object_ref const m) const;
+      object_ref get_meta() const;
 
       /*** XXX: Everything here is immutable after initialization. ***/
-      object base{ obj_type };
       obj::detail::function_type data{};
-      jtl::option<object_ref> meta;
+      object_ref meta;
     };
   }
 }

@@ -6,14 +6,21 @@
 
 namespace jank::runtime::obj
 {
+  repeat::repeat()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   repeat::repeat(object_ref const value)
-    : value{ value }
+    : object{ obj_type, obj_behaviors }
+    , value{ value }
     , count{ make_box(infinite) }
   {
   }
 
   repeat::repeat(object_ref const count, object_ref const value)
-    : value{ value }
+    : object{ obj_type, obj_behaviors }
+    , value{ value }
     , count{ count }
   {
     if(0 >= to_int(count))
@@ -37,7 +44,7 @@ namespace jank::runtime::obj
     return make_box<repeat>(count, value);
   }
 
-  repeat_ref repeat::seq()
+  repeat_ref repeat::seq() const
   {
     return this;
   }
@@ -93,24 +100,24 @@ namespace jank::runtime::obj
     return runtime::sequence_equal(this, &o);
   }
 
-  void repeat::to_string(jtl::string_builder &buff)
+  void repeat::to_string(jtl::string_builder &buff) const
   {
     runtime::to_string(seq(), buff);
   }
 
-  jtl::immutable_string repeat::to_string()
+  jtl::immutable_string repeat::to_string() const
   {
     return runtime::to_string(seq());
   }
 
-  jtl::immutable_string repeat::to_code_string()
+  jtl::immutable_string repeat::to_code_string() const
   {
     return runtime::to_code_string(seq());
   }
 
   uhash repeat::to_hash() const
   {
-    return hash::ordered(&base);
+    return hash::ordered(this);
   }
 
   repeat_ref repeat::with_meta(object_ref const m) const
@@ -119,5 +126,10 @@ namespace jank::runtime::obj
     auto ret(fresh_seq());
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref repeat::get_meta() const
+  {
+    return meta;
   }
 }

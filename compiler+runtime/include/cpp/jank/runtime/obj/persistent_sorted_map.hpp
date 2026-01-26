@@ -16,6 +16,7 @@ namespace jank::runtime::obj
                                        runtime::detail::native_persistent_sorted_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_sorted_map };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
 
     using transient_type = transient_sorted_map;
     using parent_type
@@ -23,13 +24,11 @@ namespace jank::runtime::obj
                                          persistent_sorted_map_sequence,
                                          runtime::detail::native_persistent_sorted_map>;
 
-    persistent_sorted_map() = default;
     persistent_sorted_map(persistent_sorted_map &&) noexcept = default;
     persistent_sorted_map(persistent_sorted_map const &) = default;
     persistent_sorted_map(value_type &&d);
     persistent_sorted_map(value_type const &d);
     persistent_sorted_map(object_ref const meta, value_type &&d);
-    persistent_sorted_map(jtl::option<object_ref> const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_sorted_map(runtime::detail::in_place_unique, Args &&...args)
@@ -76,8 +75,9 @@ namespace jank::runtime::obj
     persistent_sorted_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
-    object_ref call(object_ref const, object_ref const) const;
+    using object::call;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
 
     /* behavior::transientable */
     obj::transient_sorted_map_ref to_transient() const;

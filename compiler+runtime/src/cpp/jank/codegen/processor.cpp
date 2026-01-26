@@ -7,6 +7,7 @@
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/analyze/visit.hpp>
@@ -141,9 +142,9 @@ namespace jank::codegen
 #pragma clang diagnostic pop
     }
 
-    static bool should_gen_meta(jtl::option<object_ref> const &meta)
+    static bool should_gen_meta(object_ref const meta)
     {
-      return meta.is_some() && !runtime::is_empty(meta.unwrap());
+      return meta.is_some() && !runtime::is_empty(meta);
     }
 
     static void
@@ -227,7 +228,7 @@ namespace jank::codegen
             if(typed_o->meta.is_some())
             {
               util::format_to(buffer, "jank::runtime::make_box<jank::runtime::obj::symbol>( ");
-              gen_constant(typed_o->meta.unwrap(), buffer, true);
+              gen_constant(typed_o->meta, buffer, true);
               util::format_to(buffer, R"(, "{}", "{}"))", typed_o->ns, typed_o->name);
             }
             else
@@ -286,7 +287,7 @@ namespace jank::codegen
               if(should_gen_meta(typed_o->meta))
               {
                 util::format_to(buffer, "->with_meta(");
-                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                gen_constant(typed_o->meta, buffer, true);
                 util::format_to(buffer, ")");
               }
             }
@@ -296,7 +297,7 @@ namespace jank::codegen
                               "jank::runtime::make_box<jank::runtime::obj::persistent_vector>(");
               if(should_gen_meta(typed_o->meta))
               {
-                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                gen_constant(typed_o->meta, buffer, true);
                 util::format_to(buffer, ",");
               }
               util::format_to(buffer, "std::in_place ");
@@ -316,7 +317,7 @@ namespace jank::codegen
               if(should_gen_meta(typed_o->meta))
               {
                 util::format_to(buffer, "->with_meta(");
-                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                gen_constant(typed_o->meta, buffer, true);
                 util::format_to(buffer, ")");
               }
             }
@@ -326,7 +327,7 @@ namespace jank::codegen
                               "jank::runtime::make_box<jank::runtime::obj::persistent_list>(");
               if(should_gen_meta(typed_o->meta))
               {
-                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                gen_constant(typed_o->meta, buffer, true);
                 util::format_to(buffer, ",");
               }
               util::format_to(buffer, "std::in_place ");
@@ -346,7 +347,7 @@ namespace jank::codegen
               if(should_gen_meta(typed_o->meta))
               {
                 util::format_to(buffer, "->with_meta(");
-                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                gen_constant(typed_o->meta, buffer, true);
                 util::format_to(buffer, ")");
               }
             }
@@ -356,7 +357,7 @@ namespace jank::codegen
                               "jank::runtime::make_box<jank::runtime::obj::persistent_hash_set>(");
               if(should_gen_meta(typed_o->meta))
               {
-                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                gen_constant(typed_o->meta, buffer, true);
                 util::format_to(buffer, ",");
               }
               util::format_to(buffer, "std::in_place ");
@@ -376,7 +377,7 @@ namespace jank::codegen
               if(should_gen_meta(typed_o->meta))
               {
                 util::format_to(buffer, "->with_meta(");
-                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                gen_constant(typed_o->meta, buffer, true);
                 util::format_to(buffer, ")");
               }
             }
@@ -388,7 +389,7 @@ namespace jank::codegen
                 util::format_to(
                   buffer,
                   "jank::runtime::obj::persistent_array_map::create_unique_with_meta(");
-                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                gen_constant(typed_o->meta, buffer, true);
                 need_comma = true;
               }
               else
@@ -417,7 +418,7 @@ namespace jank::codegen
               if(should_gen_meta(typed_o->meta))
               {
                 util::format_to(buffer, "->with_meta(");
-                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                gen_constant(typed_o->meta, buffer, true);
                 util::format_to(buffer, ")");
               }
             }
@@ -434,7 +435,7 @@ namespace jank::codegen
               if(has_meta)
               {
                 util::format_to(buffer, ",");
-                gen_constant(typed_o->meta.unwrap(), buffer, true);
+                gen_constant(typed_o->meta, buffer, true);
               }
             }
           }
@@ -549,7 +550,7 @@ namespace jank::codegen
     jtl::option<jtl::immutable_string> meta;
     if(expr->name->meta.is_some())
     {
-      meta = detail::lift_constant(lifted_constants, expr->name->meta.unwrap());
+      meta = detail::lift_constant(lifted_constants, expr->name->meta);
     }
 
     /* Forward declarations just intern the var and evaluate to it. */
@@ -558,7 +559,7 @@ namespace jank::codegen
       if(meta.is_some())
       {
         auto const dynamic{ truthy(
-          get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+          get(expr->name->meta, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
 
         util::format_to(body_buffer,
                         "{}->with_meta({})->set_dynamic({});",
@@ -591,7 +592,7 @@ namespace jank::codegen
         if(meta.is_some())
         {
           auto const dynamic{ truthy(
-            get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+            get(expr->name->meta, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
           util::format_to(body_buffer,
                           "{}->bind_root({})->with_meta({})->set_dynamic({});",
                           var_tmp,
@@ -616,7 +617,7 @@ namespace jank::codegen
         if(meta.is_some())
         {
           auto const dynamic{ truthy(
-            get(expr->name->meta.unwrap(), __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+            get(expr->name->meta, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
           util::format_to(body_buffer,
                           "{}->bind_root({})->with_meta({})->set_dynamic({});",
                           var_tmp,
@@ -1125,7 +1126,7 @@ namespace jank::codegen
                     ret_tmp);
     if(expr->meta.is_some())
     {
-      detail::gen_constant(expr->meta.unwrap(), body_buffer, true);
+      detail::gen_constant(expr->meta, body_buffer, true);
       util::format_to(body_buffer, ", ");
     }
     util::format_to(body_buffer, "std::in_place ");
@@ -1161,7 +1162,7 @@ namespace jank::codegen
                     ret_tmp);
     if(expr->meta.is_some())
     {
-      detail::gen_constant(expr->meta.unwrap(), body_buffer, true);
+      detail::gen_constant(expr->meta, body_buffer, true);
       util::format_to(body_buffer, ", ");
     }
     util::format_to(body_buffer, "std::in_place ");
@@ -1203,7 +1204,7 @@ namespace jank::codegen
       {
         util::format_to(body_buffer,
                         "jank::runtime::obj::persistent_array_map::create_unique_with_meta(");
-        detail::gen_constant(expr->meta.unwrap(), body_buffer, true);
+        detail::gen_constant(expr->meta, body_buffer, true);
         need_comma = true;
       }
       else
@@ -1230,7 +1231,7 @@ namespace jank::codegen
       {
         util::format_to(body_buffer,
                         "jank::runtime::obj::persistent_hash_map::create_unique_with_meta(");
-        detail::gen_constant(expr->meta.unwrap(), body_buffer, true);
+        detail::gen_constant(expr->meta, body_buffer, true);
         need_comma = true;
       }
       else
@@ -1277,7 +1278,7 @@ namespace jank::codegen
       ret_tmp);
     if(expr->meta.is_some())
     {
-      detail::gen_constant(expr->meta.unwrap(), body_buffer, true);
+      detail::gen_constant(expr->meta, body_buffer, true);
       util::format_to(body_buffer, ", ");
     }
     util::format_to(body_buffer, "std::in_place ");
@@ -2720,6 +2721,8 @@ namespace jank::codegen
       return;
     }
 
+    util::format_to(body_buffer, "using object::call;\n");
+
     analyze::expr::function_arity const *variadic_arity{};
     analyze::expr::function_arity const *highest_fixed_arity{};
     for(auto const &arity : root_fn->arities)
@@ -2754,7 +2757,7 @@ namespace jank::codegen
         param_shadows_fn |= param->name == root_fn->name;
       }
 
-      util::format_to(body_buffer, ") final {");
+      util::format_to(body_buffer, ") const final {");
 
       //util::format_to(body_buffer, "jank::profile::timer __timer{ \"{}\" };", root_fn->name);
 
@@ -2808,8 +2811,8 @@ namespace jank::codegen
 
       util::format_to(body_buffer,
                       R"(
-          callable::arity_flag_t get_arity_flags() const final
-          { return callable::build_arity_flags({}, true, {}); }
+          jank::runtime::callable_arity_flags get_arity_flags() const final
+          { return jank::runtime::build_arity_flags({}, true, {}); }
         )",
                       variadic_arity->fn_ctx->param_count - 1,
                       variadic_ambiguous);

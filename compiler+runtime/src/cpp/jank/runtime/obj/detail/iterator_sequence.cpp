@@ -11,11 +11,18 @@ namespace jank::runtime
 namespace jank::runtime::obj::detail
 {
   template <typename Derived, typename It>
+  iterator_sequence<Derived, It>::iterator_sequence()
+    : object{ Derived::obj_type, Derived::obj_behaviors }
+  {
+  }
+
+  template <typename Derived, typename It>
   iterator_sequence<Derived, It>::iterator_sequence(object_ref const c,
                                                     It const &b,
                                                     It const &e,
                                                     usize const s)
-    : coll{ c }
+    : object{ Derived::obj_type, Derived::obj_behaviors }
+    , coll{ c }
     , begin{ b }
     , end{ e }
     , size{ s }

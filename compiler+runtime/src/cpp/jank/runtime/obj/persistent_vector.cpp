@@ -9,18 +9,26 @@
 
 namespace jank::runtime::obj
 {
+  persistent_vector::persistent_vector()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   persistent_vector::persistent_vector(value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
   {
   }
 
   persistent_vector::persistent_vector(value_type const &d)
-    : data{ d }
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
   {
   }
 
-  persistent_vector::persistent_vector(jtl::option<object_ref> const &meta, value_type &&d)
-    : data{ std::move(d) }
+  persistent_vector::persistent_vector(object_ref const meta, value_type &&d)
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
     , meta{ meta }
   {
   }
@@ -61,7 +69,7 @@ namespace jank::runtime::obj
 
   bool persistent_vector::equal(object const &o) const
   {
-    if(&o == &base)
+    if(&o == this)
     {
       return true;
     }
@@ -187,6 +195,11 @@ namespace jank::runtime::obj
     auto ret(make_box<persistent_vector>(data));
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref persistent_vector::get_meta() const
+  {
+    return meta;
   }
 
   object_ref persistent_vector::get(object_ref const key) const

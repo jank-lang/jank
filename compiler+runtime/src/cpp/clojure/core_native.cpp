@@ -4,7 +4,7 @@
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt/print.hpp>

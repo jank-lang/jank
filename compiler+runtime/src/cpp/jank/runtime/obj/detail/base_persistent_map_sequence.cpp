@@ -8,7 +8,8 @@ namespace jank::runtime::obj::detail
   base_persistent_map_sequence<PT, IT>::base_persistent_map_sequence(object_ref const c,
                                                                      IT const &b,
                                                                      IT const &e)
-    : coll{ c }
+    : object{ PT::obj_type, PT::obj_behaviors }
+    , coll{ c }
     , begin{ b }
     , end{ e }
   {
@@ -81,7 +82,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename IT>
   uhash base_persistent_map_sequence<PT, IT>::to_hash() const
   {
-    return hash::unordered(&static_cast<PT const *>(this)->base);
+    return hash::unordered(static_cast<PT const *>(this));
   }
 
   template <typename PT, typename IT>

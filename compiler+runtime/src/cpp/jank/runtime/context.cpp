@@ -16,6 +16,7 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/pass/optimize.hpp>
@@ -750,13 +751,12 @@ namespace jank::runtime
           }
 
           auto const var(find_var(first_sym_obj));
-          /* None means it's not a var, so not a macro. No meta means no :macro set. */
-          if(var.is_nil() || var->meta.is_none())
+          if(var.is_nil())
           {
             return typed_o;
           }
 
-          auto const meta(var->meta.unwrap());
+          auto const meta(var->get_meta());
           auto const found_macro(get(meta, intern_keyword("", "macro", true).expect_ok()));
           if(found_macro.is_nil() || !truthy(found_macro))
           {

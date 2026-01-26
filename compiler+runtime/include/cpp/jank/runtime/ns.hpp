@@ -15,9 +15,10 @@ namespace jank::runtime
 
   using ns_ref = oref<struct ns>;
 
-  struct ns
+  struct ns : object
   {
     static constexpr object_type obj_type{ object_type::ns };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     ns() = delete;
@@ -39,24 +40,25 @@ namespace jank::runtime
     obj::persistent_hash_map_ref get_mappings() const;
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    jtl::immutable_string to_code_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
 
     /* behavior::metadatable */
     object_ref with_meta(object_ref m);
+    object_ref get_meta() const;
 
     bool operator==(ns const &rhs) const;
 
-    object base{ obj_type };
+    /* XXX: Everything here is immutable after initialization. */
     obj::symbol_ref name{};
-    jtl::option<object_ref> meta;
+    object_ref meta;
+
+    /* XXX: Everything here is thread-safe. */
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
     folly::Synchronized<obj::persistent_hash_map_ref> vars;
     folly::Synchronized<obj::persistent_hash_map_ref> aliases;
-
     std::atomic_uint64_t symbol_counter{};
   };
 }

@@ -5,13 +5,20 @@
 
 namespace jank::runtime::obj
 {
+  chunk_buffer::chunk_buffer()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   chunk_buffer::chunk_buffer(usize const capacity)
-    : capacity{ capacity }
+    : object{ obj_type, obj_behaviors }
+    , capacity{ capacity }
   {
     buffer.reserve(capacity);
   }
 
   chunk_buffer::chunk_buffer(object_ref const capacity)
+    : object{ obj_type, obj_behaviors }
   {
     auto const c(to_int(capacity));
     if(c < 0)
@@ -20,33 +27,6 @@ namespace jank::runtime::obj
     }
     this->capacity = c;
     buffer.reserve(c);
-  }
-
-  bool chunk_buffer::equal(object const &o) const
-  {
-    return &o == &base;
-  }
-
-  jtl::immutable_string chunk_buffer::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void chunk_buffer::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string chunk_buffer::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash chunk_buffer::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   usize chunk_buffer::count() const

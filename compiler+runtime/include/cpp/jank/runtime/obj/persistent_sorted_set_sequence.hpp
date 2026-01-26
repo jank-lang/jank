@@ -15,6 +15,7 @@ namespace jank::runtime::obj
                                      runtime::detail::native_persistent_sorted_set::const_iterator>
   {
     static constexpr object_type obj_type{ object_type::persistent_sorted_set_sequence };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -23,8 +24,5 @@ namespace jank::runtime::obj
     using obj::detail::iterator_sequence<
       persistent_sorted_set_sequence,
       runtime::detail::native_persistent_sorted_set::const_iterator>::iterator_sequence;
-
-    /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
   };
 }

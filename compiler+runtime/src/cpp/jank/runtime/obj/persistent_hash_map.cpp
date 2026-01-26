@@ -9,7 +9,7 @@
 
 namespace jank::runtime::obj
 {
-  persistent_hash_map::persistent_hash_map(jtl::option<object_ref> const &meta,
+  persistent_hash_map::persistent_hash_map(object_ref const meta,
                                            runtime::detail::native_array_map const &m,
                                            object_ref const key,
                                            object_ref const val)
@@ -34,7 +34,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_hash_map::persistent_hash_map(jtl::option<object_ref> const &meta, value_type &&d)
+  persistent_hash_map::persistent_hash_map(object_ref const meta, value_type &&d)
     : parent_type{ meta }
     , data{ std::move(d) }
   {

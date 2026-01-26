@@ -5,15 +5,22 @@
 
 namespace jank::runtime::obj
 {
+  persistent_string_sequence::persistent_string_sequence()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   persistent_string_sequence::persistent_string_sequence(persistent_string_ref const s)
-    : str{ s }
+    : object{ obj_type, obj_behaviors }
+    , str{ s }
   {
     jank_debug_assert(!s->data.empty());
   }
 
   persistent_string_sequence::persistent_string_sequence(persistent_string_ref const s,
                                                          usize const i)
-    : str{ s }
+    : object{ obj_type, obj_behaviors }
+    , str{ s }
     , index{ i }
   {
     jank_debug_assert(!s->data.empty() && i < s->data.size());

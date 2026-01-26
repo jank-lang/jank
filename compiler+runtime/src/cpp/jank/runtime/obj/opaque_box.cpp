@@ -6,7 +6,8 @@
 namespace jank::runtime::obj
 {
   opaque_box::opaque_box(jtl::ptr<void> const data, jtl::immutable_string const &canonical_type)
-    : data{ data }
+    : object{ obj_type, obj_behaviors }
+    , data{ data }
     , canonical_type{ canonical_type }
   {
   }
@@ -22,23 +23,6 @@ namespace jank::runtime::obj
     return b->data == data;
   }
 
-  void opaque_box::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string opaque_box::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  jtl::immutable_string opaque_box::to_code_string() const
-  {
-    return to_string();
-  }
-
   uhash opaque_box::to_hash() const
   {
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(data.data));
@@ -50,5 +34,10 @@ namespace jank::runtime::obj
     auto ret(make_box<opaque_box>(data, canonical_type));
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref opaque_box::get_meta() const
+  {
+    return meta;
   }
 }

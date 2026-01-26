@@ -30,12 +30,13 @@ namespace jank::runtime::obj
 {
   using big_integer_ref = oref<struct big_integer>;
 
-  struct big_integer
+  struct big_integer : object
   {
     static constexpr object_type obj_type{ object_type::big_integer };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ true };
 
-    big_integer() = default;
+    big_integer();
     big_integer(big_integer &&) noexcept = default;
     big_integer(big_integer const &) = default;
 
@@ -46,11 +47,11 @@ namespace jank::runtime::obj
     explicit big_integer(jtl::immutable_string const &, i64, bool);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;
@@ -71,7 +72,6 @@ namespace jank::runtime::obj
     void init(jtl::immutable_string const &);
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     native_big_integer data{};
   };
 

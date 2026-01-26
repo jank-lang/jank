@@ -9,7 +9,7 @@
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>

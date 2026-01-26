@@ -11,6 +11,7 @@
 #include <jank/runtime/behavior/sequential.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/set_like.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/core/make_box.hpp>
@@ -1334,7 +1335,7 @@ namespace jank::analyze
                                           latest_expansion(macro_expansions))
           ->add_usage(read::parse::reparse_nth(l, 2));
       }
-      auto const meta_with_doc(runtime::assoc(qualified_sym->meta.unwrap_or(runtime::jank_nil()),
+      auto const meta_with_doc(runtime::assoc(qualified_sym->meta,
                                               __rt_ctx->intern_keyword("doc").expect_ok(),
                                               docstring_obj));
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
@@ -3107,10 +3108,10 @@ namespace jank::analyze
 
       /* If this expression doesn't need to be boxed, based on where it's called, we can dig
        * into the call details itself to see if the function supports unboxed returns. Most don't. */
-      if(var_deref && var_deref->var->meta.is_some())
+      if(var_deref)
       {
         auto const arity_meta(
-          runtime::get_in(var_deref->var->meta.unwrap(),
+          runtime::get_in(var_deref->var->get_meta(),
                           make_box<runtime::obj::persistent_vector>(
                             std::in_place,
                             __rt_ctx->intern_keyword("", "arities", true).expect_ok(),
@@ -3232,7 +3233,7 @@ namespace jank::analyze
                                                        current_frame,
                                                        needs_arg_box,
                                                        std::move(packed_arg_exprs),
-                                                       none));
+                                                       jank_nil()));
     }
 
     auto const recursion_ref(llvm::dyn_cast<expr::recursion_reference>(source.data));
@@ -4637,7 +4638,7 @@ namespace jank::analyze
         {
           return error::internal_analyze_failure(
             util::format("Unimplemented analysis for object type '{}'.",
-                         object_type_str(typed_o->base.type)),
+                         object_type_str(typed_o->type)),
             object_source(o),
             latest_expansion(macro_expansions));
         }

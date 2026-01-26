@@ -6,27 +6,20 @@ namespace jank::runtime::obj
 {
   using volatile_ref = oref<struct volatile_>;
 
-  struct volatile_
+  struct volatile_ : object
   {
     static constexpr object_type obj_type{ object_type::volatile_ };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
-    volatile_() = default;
     volatile_(object_ref const o);
-
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
 
     /* behavior::derefable */
     object_ref deref() const;
 
     object_ref reset(object_ref const o);
 
-    object base{ obj_type };
+    /*** XXX: Everything here is not thread-safe, but not shared. ***/
     object_ref val{};
   };
 }

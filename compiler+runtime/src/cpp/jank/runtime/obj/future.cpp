@@ -1,35 +1,12 @@
 #include <jank/runtime/obj/future.hpp>
-#include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
-  bool future::equal(object const &o) const
+  future::future()
+    : object{ obj_type, obj_behaviors }
   {
-    return &o == &base;
-  }
-
-  jtl::immutable_string future::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void future::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string future::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash future::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   object_ref future::deref()
