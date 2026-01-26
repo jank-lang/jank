@@ -147,10 +147,14 @@ if(APPLE)
     DESTINATION lib/jank/${PROJECT_VERSION}/lib
   )
 else()
+  file(
+    GLOB jank_llvm_install_libs
+    LIST_DIRECTORIES false
+    ${llvm_dir}/lib/libLLVM.*
+    ${llvm_dir}/lib/libclang-cpp.*)
   install(
     FILES
-    ${llvm_dir}/lib/libLLVM.so.${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}git
-    ${llvm_dir}/lib/libclang-cpp.so.${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}git
+    ${jank_llvm_install_libs}
     DESTINATION lib/jank/${PROJECT_VERSION}/lib
   )
 
