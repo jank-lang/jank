@@ -163,6 +163,17 @@ namespace jank::runtime
     return expect_object<var_thread_binding>(ret);
   }
 
+  object_ref var::call(object_ref const args) const
+  {
+    return apply_to(deref(), args);
+  }
+
+  callable_arity_flags var::get_arity_flags() const
+  {
+    /* Vars are always [& args], which they then apply to the proxied fn. */
+    return build_arity_flags(0, true, false);
+  }
+
   object_ref var::deref() const
   {
     auto const binding(get_thread_binding());

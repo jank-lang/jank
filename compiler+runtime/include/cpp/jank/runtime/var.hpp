@@ -20,7 +20,7 @@ namespace jank::runtime
   struct var : object
   {
     static constexpr object_type obj_type{ object_type::var };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
     static constexpr bool pointer_free{ false };
 
     var() = delete;
@@ -55,6 +55,11 @@ namespace jank::runtime
 
     obj::symbol_ref to_qualified_symbol() const;
     var_thread_binding_ref get_thread_binding() const;
+
+    /* behavior::callable */
+    using object::call;
+    object_ref call(object_ref const) const override;
+    callable_arity_flags get_arity_flags() const override;
 
     /* behavior::derefable */
     object_ref deref() const;
