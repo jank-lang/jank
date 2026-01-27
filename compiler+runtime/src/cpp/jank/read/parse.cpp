@@ -720,17 +720,25 @@ namespace jank::read::parse
         obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    native_vector<processor::object_result> const items(begin(), end());
+
+    if(expected_closer.is_some())
+    {
+      return error::parse_unterminated_set({ start_token.start, latest_token.end });
+    }
+
+    expected_closer = prev_expected_closer;
 
     native_unordered_map<runtime::object_ref, object_source_info> parsed_items{};
     runtime::detail::native_transient_hash_set ret;
-    for(auto it(begin()); it != end(); ++it)
+    for(auto const &it : items)
     {
-      if(it.latest.unwrap().is_err())
+      if(it.is_err())
       {
-        return err(it.latest.unwrap().expect_err());
+        return err(it.expect_err());
       }
 
-      auto const item(it.latest.unwrap().expect_ok().unwrap());
+      auto const item(it.expect_ok().unwrap());
 
       if(auto const parsed_item = parsed_items.find(item.ptr); parsed_item != parsed_items.end())
       {
@@ -746,10 +754,6 @@ namespace jank::read::parse
 
       parsed_items.insert({ item.ptr, item });
       ret.insert(item.ptr);
-    }
-    if(expected_closer.is_some())
-    {
-      return error::parse_unterminated_set({ start_token.start, latest_token.end });
     }
 
     expected_closer = prev_expected_closer;
