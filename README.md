@@ -104,6 +104,13 @@ If you'd like your name, company, or logo here, you can
   </a>
 </p>
 
+<!-- fosskers -->
+<p align="center">
+  <a href="https://github.com/fosskers">
+    fosskers
+  </a>
+</p>
+
 ## In the news
 <div align="center">
 
