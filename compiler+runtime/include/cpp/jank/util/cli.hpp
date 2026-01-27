@@ -92,6 +92,7 @@ namespace jank::util::cli
     bool profiler_enabled{};
     bool perf_profiling_enabled{};
     bool gc_incremental{};
+    bool disable_read{ false };
     codegen_type codegen{ codegen_type::cpp };
 
     /* Native dependencies. */
