@@ -47,13 +47,14 @@ namespace jank::analyze
       auto const local_result(it->locals.find(sym));
       if(local_result != it->locals.end())
       {
-        return local_frame::binding_find_result{ &local_result->second, std::move(crossed_fns) };
+        return local_frame::binding_find_result{ &local_result->second.back(),
+                                                 std::move(crossed_fns) };
       }
 
       if(allow_captures)
       {
         auto const capture_result(it->captures.find(sym));
-        if(capture_result != it->locals.end())
+        if(capture_result != it->captures.end())
         {
           return local_frame::binding_find_result{ &capture_result->second,
                                                    std::move(crossed_fns) };

@@ -1697,7 +1697,7 @@ namespace jank::analyze
         }
       }
 
-      frame->locals.emplace(sym, local_binding{ sym, sym->name, none, current_frame });
+      frame->locals[sym].emplace_back(sym, sym->name, none, current_frame);
       param_symbols.emplace_back(sym);
     }
 
@@ -2203,13 +2203,13 @@ namespace jank::analyze
       }
       auto const it(ret->pairs.emplace_back(sym, res.expect_ok()));
       auto const expr_type{ cpp_util::non_void_expression_type(it.second) };
-      ret->frame->locals.emplace(sym,
-                                 local_binding{ sym,
-                                                __rt_ctx->unique_namespaced_string(sym->name),
-                                                it.second,
-                                                current_frame,
-                                                it.second->needs_box,
-                                                .type = expr_type });
+      ret->frame->locals[sym].emplace_back(
+        local_binding{ sym,
+                       __rt_ctx->unique_namespaced_string(sym->name),
+                       it.second,
+                       current_frame,
+                       it.second->needs_box,
+                       .type = expr_type });
     }
 
     usize const form_count{ o->count() - 2 };
@@ -2315,7 +2315,7 @@ namespace jank::analyze
                                             meta_source(sym_obj),
                                             latest_expansion(macro_expansions));
       }
-      ret->frame->locals.emplace(sym, local_binding{ sym, sym->name, none, current_frame });
+      ret->frame->locals[sym].emplace_back(sym, sym->name, none, current_frame);
     }
 
     for(usize i{}; i < binding_parts; i += 2)
@@ -2340,7 +2340,7 @@ namespace jank::analyze
 
       /* Populate the local frame we prepared for sym in the previous loop with its binding. */
       auto it(ret->pairs.emplace_back(sym, fexpr));
-      auto &local(ret->frame->locals.find(sym)->second);
+      auto &local(ret->frame->locals.find(sym)->second.back());
       local.value_expr = some(it.second);
       local.needs_box = it.second->needs_box;
     }
@@ -2781,7 +2781,7 @@ namespace jank::analyze
                                                 latest_expansion(macro_expansions));
             }
 
-            catch_frame->locals.emplace(sym, local_binding{ sym, sym->name, none, catch_frame });
+            catch_frame->locals[sym].emplace_back(sym, sym->name, none, catch_frame);
 
             /* Now we just turn the body into a do block and have the do analyzer handle the rest. */
             auto const do_list(

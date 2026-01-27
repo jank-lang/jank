@@ -126,7 +126,10 @@ namespace jank::analyze
     /* XXX: Everything here is not thread-safe, but is not meant to be shared. */
     frame_type type;
     jtl::option<jtl::ptr<local_frame>> parent;
-    native_unordered_map<runtime::obj::symbol_ref, local_binding> locals;
+    /* Locals can be shadowed, so we can have one frame which has several locals with the same
+     * name, but different type, boxing, and usage information. We want to keep these separate,
+     * so we keep a queue. The latest local is at the back of the queue. */
+    native_unordered_map<runtime::obj::symbol_ref, native_deque<local_binding>> locals;
     native_unordered_map<runtime::obj::symbol_ref, local_binding> captures;
     /* This is only set if the frame type is fn. */
     jtl::ptr<expr::function_context> fn_ctx;
