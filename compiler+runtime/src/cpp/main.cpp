@@ -11,6 +11,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
@@ -417,6 +418,11 @@ int main(int const argc, char const **argv)
       __rt_ctx->intern_var("clojure.core", "*command-line-args*")
         .expect_ok()
         ->bind_root(make_box<obj::persistent_vector>(extra_args.persistent())->seq());
+      __rt_ctx->intern_var("clojure.core", "*read-eval*")
+        .expect_ok()
+        ->bind_root(opts.disable_read ? __rt_ctx->intern_keyword(":unknown").expect_ok().erase()
+                                      : jank_true)
+        ->set_dynamic(true);
     }
 
     switch(jank::util::cli::opts.command)

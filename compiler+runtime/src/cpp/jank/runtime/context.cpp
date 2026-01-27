@@ -77,13 +77,6 @@ namespace jank::runtime
     assert_var->bind_root(jank_true);
     assert_var->dynamic.store(true);
 
-    /* TODO: Clojure usually loads the value for `clojure.core/\*read-eval*` from the properties file.
-     *  See here: https://github.com/clojure/clojure/blob/6a4ba6aedc8575768b2fff6d9c9c7e6503a0a93a/src/jvm/clojure/lang/RT.java#L198 */
-    auto const read_eval_sym(make_box<obj::symbol>("clojure.core", "*read-eval*"));
-    auto const read_eval_var{ core->intern_var(read_eval_sym) };
-    read_eval_var->bind_root(jank_true);
-    read_eval_var->dynamic.store(true);
-
     auto const reader_opt_sym(make_box<obj::symbol>("*reader-opts*"));
     reader_opts_var = core->intern_var(reader_opt_sym);
     reader_opts_var->bind_root(jank_nil());
