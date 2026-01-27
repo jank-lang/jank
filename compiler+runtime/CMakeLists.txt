@@ -198,7 +198,7 @@ endfunction()
 # can configure jank correctly during the build phase and then it'll just
 # continue to work with that setup once it's installed.
 execute_process(
-  COMMAND bash -c "${CMAKE_CXX_COMPILER} -xc++ -E -v /dev/null 2>&1 | sed -n -e '/^.include/,\${' -e '/^ \\/.*/p' -e '}' | sed 's/^[[:space:]]\\{1,\\}/-I/' | sed 's/ (framework directory)//'"
+  COMMAND bash -c "${CMAKE_CXX_COMPILER} -xc++ -E -v /dev/null 2>&1 | sed -n -e '/^.include/,\${' -e '/^ \\/.*/p' -e '}' | sed 's/^[[:space:]]\\{1,\\}/-isystem/' | sed 's/ (framework directory)//'"
   RESULT_VARIABLE clang_system_includes_result
   OUTPUT_VARIABLE clang_system_includes_unescaped
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -654,6 +654,7 @@ foreach(lib ${jank_lib_link_dirs_prop})
 endforeach()
 list(APPEND jank_lib_linker_flags_list ${jank_linker_flags})
 list(APPEND jank_lib_linker_flags_list ${CMAKE_CXX_FLAGS})
+list(APPEND jank_lib_linker_flags_list ${CMAKE_SHARED_LINKER_FLAGS})
 list(JOIN jank_lib_linker_flags_list " " jank_lib_linker_flags_unescaped)
 string(REPLACE "\"" "\\\"" jank_lib_linker_flags_str "${jank_lib_linker_flags_unescaped}")
 
