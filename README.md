@@ -107,7 +107,7 @@ If you'd like your name, company, or logo here, you can
 <!-- fosskers -->
 <p align="center">
   <a href="https://github.com/fosskers">
-    fosskers
+    Colin Woodbury
   </a>
 </p>
 
