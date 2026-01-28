@@ -1,0 +1,41 @@
+;; Test catching various C++ std exception types
+
+(cpp/raw "
+#include <stdexcept>
+#include <typeinfo>
+#include <vector>
+
+namespace jank::cpp::try_::pass_catch_cpp_std_exceptions {
+  void throw_runtime_error() { throw std::runtime_error(\"runtime error\"); }
+  void throw_bad_cast() { throw std::bad_cast(); }
+  void throw_runtime_error_as_exception() { throw std::runtime_error(\"derived error\"); }
+}
+")
+
+;; 1. std::runtime_error
+(let [caught (atom nil)]
+  (try
+    (cpp/jank.cpp.try_.pass_catch_cpp_std_exceptions.throw_runtime_error)
+    (catch cpp/std.logic_error e)
+    (catch cpp/std.runtime_error e
+      (reset! caught (cpp/.what e))))
+  (assert (= "runtime error" @caught) "Should catch std::runtime_error"))
+
+;; 2. std::bad_cast
+(let [caught (atom nil)]
+  (try
+    (cpp/jank.cpp.try_.pass_catch_cpp_std_exceptions.throw_bad_cast)
+    (catch cpp/std.runtime_error e)
+    (catch cpp/std.bad_cast e
+      (reset! caught (cpp/.what e))))
+  (assert (= "std::bad_cast" @caught) "Should catch std::bad_cast"))
+
+;; 3. std::exception (base class catch)
+(let []
+  (try
+    (cpp/jank.cpp.try_.pass_catch_cpp_std_exceptions.throw_runtime_error_as_exception)
+    (catch cpp/std.exception e
+      (assert (= "derived error" (cpp/.what e)))
+      :success)))
+
+:success

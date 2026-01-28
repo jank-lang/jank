@@ -1,0 +1,18 @@
+;; Test nested functions with finally
+;; This is distinct from nested try/catch within the same function because it verifies
+;; that exception unwinding and finally execution works correctly across function boundaries.
+(let* [steps (atom [])
+       b     (fn* b []
+               (try
+                 (throw :bthrow)
+                 (catch cpp/jank.runtime.object_ref e (swap! steps conj :b-catch) (throw e))
+                 (finally (swap! steps conj :b-finally))))
+       a     (fn* a []
+               (try
+                 (b)
+                 (catch cpp/jank.runtime.object_ref e (swap! steps conj :a-catch))
+                 (finally (swap! steps conj :a-finally))))]
+  (a)
+  (if (= [:b-catch :b-finally :a-catch :a-finally] @steps)
+    :success
+    :failure))

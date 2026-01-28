@@ -1,7 +1,6 @@
 (fn* []
   (try
     :success
-    (catch _
-      )
+    (catch cpp/jank.runtime.object_ref _)
     (finally
       (recur))))

@@ -1,0 +1,33 @@
+;; Test to verify that object slicing does not occur when catching by base type
+
+(cpp/raw "
+#include <string>
+namespace jank::cpp::try_::pass_catch_no_slicing
+{
+  struct Base {
+    virtual std::string name() const { return \"Base\"; }
+    virtual ~Base() = default;
+  };
+
+  struct Derived : Base
+    {
+      std::string name() const override { return \"Derived\"; }
+    };
+
+    void throw_derived()
+    {
+      throw Derived();
+    }
+}")
+
+(let [result (atom nil)]
+  (try
+    (cpp/jank.cpp.try_.pass_catch_no_slicing.throw_derived)
+    (catch cpp/jank.cpp.try_.pass_catch_no_slicing.Base e
+      ;; If slicing occurred, e would be a Base object and name() would return "Base"
+      ;; Since we catch by reference (implicitly), it should remain Derived
+      (reset! result (cpp/.name e))))
+
+  (assert (= "Derived" @result) "Object slicing occurred! Expected 'Derived' but got 'Base'"))
+
+:success

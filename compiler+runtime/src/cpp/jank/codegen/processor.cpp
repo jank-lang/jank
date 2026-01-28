@@ -1309,7 +1309,14 @@ namespace jank::codegen
       case analyze::expression_position::call:
         return ret;
       case analyze::expression_position::tail:
-        util::format_to(body_buffer, "return {};", ret);
+        if(expr->needs_box)
+        {
+          util::format_to(body_buffer, "return jank::runtime::make_box({});", ret);
+        }
+        else
+        {
+          util::format_to(body_buffer, "return {};", ret);
+        }
         return none;
       case analyze::expression_position::type:
         throw error::internal_codegen_failure("Unexpected expression in type position.");
@@ -1762,65 +1769,57 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::try_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
-    auto const has_catch{ expr->catch_body.is_some() };
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("try")));
+    auto const has_catch{ !expr->catch_bodies.empty() };
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("try")));
     util::format_to(body_buffer, "jank::runtime::object_ref {}{ };", ret_tmp);
 
     util::format_to(body_buffer, "{");
     if(expr->finally_body.is_some())
     {
-      util::format_to(body_buffer, "jank::util::scope_exit const finally{ [&](){ ");
+      util::format_to(body_buffer, "auto const finally{ [&](){ ");
       gen(expr->finally_body.unwrap(), fn_arity);
       util::format_to(body_buffer, "} };");
+      util::format_to(body_buffer, R"(
+      jank::util::scope_exit guard{ finally, true };
+    )");
+      util::format_to(body_buffer, "try {");
     }
 
     if(has_catch)
     {
       util::format_to(body_buffer, "try {");
-      auto const &body_tmp(gen(expr->body, fn_arity));
-      if(body_tmp.is_some())
+      if(auto const &body_tmp(gen(expr->body, fn_arity)); body_tmp.is_some())
       {
         util::format_to(body_buffer, "{} = {};", ret_tmp, body_tmp.unwrap().str(true));
       }
-      if(expr->position == analyze::expression_position::tail)
-      {
-        util::format_to(body_buffer, "return {};", ret_tmp);
-      }
       util::format_to(body_buffer, "}");
-
-      /* There's a gotcha here, tied to how we throw exceptions. We're catching an object_ref, which
-       * means we need to be throwing an object_ref. Since we're not using inheritance, we can't
-       * rely on a catch-all and C++ doesn't do implicit conversions into catch types. So, if we
-       * throw a persistent_string_ref, for example, it will not be caught as an object_ref.
-       *
-       * We mitigate this by ensuring during the codegen for throw that we type-erase to
-       * an object_ref.
-       */
-      util::format_to(body_buffer,
-                      "catch(jank::runtime::object_ref const {}) {",
-                      runtime::munge(expr->catch_body.unwrap().sym->name));
-      auto const &catch_tmp(gen(expr->catch_body.unwrap().body, fn_arity));
-      if(catch_tmp.is_some())
+      for(auto const &[sym, type, body] : expr->catch_bodies)
       {
-        util::format_to(body_buffer, "{} = {};", ret_tmp, catch_tmp.unwrap().str(true));
+        util::format_to(
+          body_buffer,
+          "catch({} & {}) {",
+          cpp_util::get_qualified_type_name(Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))),
+          runtime::munge(sym->name));
+        if(auto const &catch_tmp(gen(body, fn_arity)); catch_tmp.is_some())
+        {
+          util::format_to(body_buffer, "{} = {};", ret_tmp, catch_tmp.unwrap().str(true));
+        }
+        util::format_to(body_buffer, "}");
       }
-      if(expr->position == analyze::expression_position::tail)
-      {
-        util::format_to(body_buffer, "return {};", ret_tmp);
-      }
-      util::format_to(body_buffer, "}");
     }
     else
     {
-      auto const &body_tmp(gen(expr->body, fn_arity));
-      if(body_tmp.is_some())
+      if(auto const &body_tmp(gen(expr->body, fn_arity)); body_tmp.is_some())
       {
         util::format_to(body_buffer, "{} = {};", ret_tmp, body_tmp.unwrap().str(true));
       }
-      if(expr->position == analyze::expression_position::tail)
-      {
-        util::format_to(body_buffer, "return {};", ret_tmp);
-      }
+    }
+
+    if(expr->finally_body.is_some())
+    {
+      util::format_to(
+        body_buffer,
+        "} catch(...) { guard.release(); finally(); throw; } guard.release(); finally();");
     }
 
     util::format_to(body_buffer, "}");

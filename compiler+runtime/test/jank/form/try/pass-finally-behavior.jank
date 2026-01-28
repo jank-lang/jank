@@ -1,0 +1,44 @@
+;; Tests for finally block behavior
+
+;; 1. Finally executes but does not affect return value (no exception)
+(let [a (atom [])]
+  (assert
+   (= [:try]
+      (try
+        (swap! a conj :try)
+        (finally
+          (swap! a conj :finally)))))
+  (assert (= [:try :finally] @a) (pr-str @a)))
+
+;; 2. Finally executes but does not affect return value (with exception)
+(let [a (atom [])]
+  (try
+    (try
+      (swap! a conj :inner-try)
+      (throw "skip finally")
+      (swap! a conj :inner-try-after-throw)
+      (finally
+        (swap! a conj :inner-finally)))
+    (catch cpp/jank.runtime.object_ref e
+      (swap! a conj [:outer-catch e])))
+  (assert (= [:inner-try :inner-finally [:outer-catch "skip finally"]] @a)
+          (pr-str @a)))
+
+;; 3. Finally value is discarded (no exception)
+(assert
+ (=
+  (try 1
+    (catch cpp/jank.runtime.object_ref _ 2)
+    (finally 3))
+  1))
+
+;; 4. Finally value is discarded (with exception)
+(assert
+ (=
+  (try
+    (throw :anything)
+    (catch cpp/jank.runtime.object_ref _ 2)
+    (finally 3))
+  2))
+
+:success

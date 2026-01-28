@@ -1,0 +1,12 @@
+;; Comprehensive tests for try-catch-finally execution order
+(let [execution-order (atom [])]
+  (try
+    (swap! execution-order conj :try)
+    (throw :exception)
+    (catch cpp/jank.runtime.object_ref e1
+      (swap! execution-order conj :catch))
+    (finally
+      (swap! execution-order conj :finally)))
+  (assert (= [:try :catch :finally] @execution-order) "Basic execution order failed"))
+
+:success

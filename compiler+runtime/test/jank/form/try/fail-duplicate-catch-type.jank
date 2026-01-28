@@ -1,0 +1,7 @@
+;; Test that duplicate catch types are rejected at compile time
+(try
+  (throw :test)
+  (catch cpp/jank.runtime.object_ref e1
+    :first)
+  (catch cpp/jank.runtime.object_ref e2
+    :second))

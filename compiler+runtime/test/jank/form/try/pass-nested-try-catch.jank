@@ -1,0 +1,25 @@
+;; Test nested try/catch scenarios
+
+;; Test 1: Inner catch handles exception completely
+(assert
+ (= :inner-caught
+    (try
+      (try
+        (throw :inner-exception)
+        (catch cpp/jank.runtime.object_ref e1
+          :inner-caught))
+      (catch cpp/jank.runtime.object_ref outer-e
+        :outer-caught))))
+
+;; Test 2: Inner catch rethrows to outer catch
+(assert
+ (= :success
+    (try
+      (try
+        (throw :success)
+        (catch cpp/jank.runtime.object_ref e1
+          (throw e1)))
+      (catch cpp/jank.runtime.object_ref e2
+        (if (= e2 :success) :success)))))
+
+:success

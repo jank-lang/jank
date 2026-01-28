@@ -3,7 +3,7 @@
          (let* [a 5
                 b (try
                     7
-                    (catch _
+                    (catch cpp/jank.runtime.object_ref _
                       ))]
            [])))
 

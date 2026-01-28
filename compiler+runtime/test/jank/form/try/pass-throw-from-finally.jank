@@ -1,0 +1,23 @@
+;; Test throwing from finally block
+
+;; 1. Throw from finally suppresses pending exception
+(assert
+ (= :finally-exception
+    (try
+      (try
+        (throw :initial-exception)
+        (finally
+          (throw :finally-exception)))
+      (catch cpp/jank.runtime.object_ref e e))))
+
+;; 2. Throw from finally with no pending exception
+(assert
+ (= :finally-exception
+    (try
+      (try
+        :success
+        (finally
+          (throw :finally-exception)))
+      (catch cpp/jank.runtime.object_ref e e))))
+
+:success
