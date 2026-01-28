@@ -2324,12 +2324,12 @@ namespace jank::analyze
       auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[i]));
       auto const &val(bindings->data[i + 1]);
 
-      auto const res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
-      if(res.is_err())
+      auto const value_res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
+      if(value_res.is_err())
       {
-        return res.expect_err();
+        return value_res.expect_err();
       }
-      auto maybe_fexpr(res.expect_ok());
+      auto maybe_fexpr(value_res.expect_ok());
       if(maybe_fexpr->kind != expression_kind::function)
       {
         return error::analyze_invalid_letfn(
@@ -2337,13 +2337,15 @@ namespace jank::analyze
           meta_source(val),
           latest_expansion(macro_expansions));
       }
-      auto fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
+      auto const fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
 
       /* Populate the local frame we prepared for sym in the previous loop with its binding. */
-      auto it(ret->pairs.emplace_back(sym, fexpr));
-      auto &local(ret->frame->locals.find(sym)->second.back());
-      local.value_expr = some(it.second);
-      local.needs_box = it.second->needs_box;
+      auto const expr_type{ cpp_util::non_void_expression_type(fexpr) };
+      auto &binding(ret->frame->locals.find(sym)->second.back());
+      binding.value_expr = some(fexpr);
+      binding.needs_box = fexpr->needs_box;
+      binding.type = expr_type;
+      ret->pairs.emplace_back(&binding, fexpr);
     }
 
     usize const form_count{ o->count() - 2 };

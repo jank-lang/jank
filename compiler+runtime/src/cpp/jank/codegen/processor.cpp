@@ -1589,8 +1589,8 @@ namespace jank::codegen
     native_set<jtl::immutable_string> seen_names;
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
-      auto const &name{ local.unwrap().binding->native_name };
+      auto const local(pair.first);
+      auto const &name{ local->native_name };
       if(seen_names.contains(name))
       {
         has_shadowed_bindings = true;
@@ -1601,9 +1601,9 @@ namespace jank::codegen
 
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
+      auto const local(pair.first);
       auto const val_expr(llvm::cast<analyze::expr::function>(pair.second.data));
-      auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+      auto const &munged_name(runtime::munge(local->native_name));
       auto const type_name{ (
         has_shadowed_bindings
           ? "jank::runtime::object_ref"
@@ -1613,18 +1613,17 @@ namespace jank::codegen
 
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
+      auto const local(pair.first);
       auto const &val_tmp(gen(pair.second, fn_arity));
-      auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+      auto const &munged_name(runtime::munge(local->native_name));
 
       util::format_to(body_buffer, "{} = {}; ", munged_name, val_tmp.unwrap().str(false));
     }
 
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
-
-      auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+      auto const local(pair.first);
+      auto const &munged_name(runtime::munge(local->native_name));
       auto const val_expr(llvm::cast<analyze::expr::function>(pair.second.data));
       for(auto const &capture_pair : val_expr->captures())
       {

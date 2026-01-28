@@ -1499,8 +1499,8 @@ namespace jank::codegen
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
     {
-      locals[pair.first] = gen(pair.second, arity);
-      locals[pair.first]->setName(pair.first->to_string().c_str());
+      locals[pair.first->name] = gen(pair.second, arity);
+      locals[pair.first->name]->setName(pair.first->name->to_string().c_str());
     }
 
     for(auto const &deferred_init : deferred_inits)
