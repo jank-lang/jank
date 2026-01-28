@@ -860,4 +860,26 @@ namespace jank::runtime
     }
 #endif
   }
+
+  object_ref read_string(object_ref const form_string, object_ref const opts)
+  {
+    if(form_string->type != object_type::persistent_string)
+    {
+      throw std::runtime_error{ "Argument to read needs to be a string representing a form." };
+    }
+
+    auto const typed_o{ dyn_cast<obj::persistent_string>(form_string) };
+    return __rt_ctx->read_string(typed_o->data, opts, 1);
+  }
+
+  object_ref read_file(object_ref const file_path, object_ref const opts)
+  {
+    if(file_path->type != object_type::persistent_string)
+    {
+      throw std::runtime_error{ "Argument to read needs to be a string representing a file path." };
+    }
+
+    auto const typed_o{ dyn_cast<obj::persistent_string>(file_path) };
+    return __rt_ctx->read_file(typed_o->data, opts);
+  }
 }

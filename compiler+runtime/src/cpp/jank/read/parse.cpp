@@ -1092,6 +1092,51 @@ namespace jank::read::parse
 
   processor::object_result processor::parse_reader_macro_conditional(bool const splice)
   {
+    auto const reader_opts{ __rt_ctx->reader_opts_var->deref() };
+    auto const has_reader_opts{ reader_opts.is_some() };
+    // When reading in a form via the Clojure read functions the end user might wish
+    // to keep even the unsupported reader conditional branches, in such cases they
+    // can opt-in to the preserve mode by setting the :read-cond reader option.
+    bool in_preserve_mode{};
+    object_ref features{};
+
+    if(has_reader_opts)
+    {
+      auto const read_cond_kw{ __rt_ctx->intern_keyword("", "read-cond").expect_ok() };
+      auto const read_cond{ get(reader_opts, read_cond_kw) };
+
+      if(read_cond.is_nil())
+      {
+        throw std::runtime_error{ "Conditional read is not allowed by default. Set the :read-cond "
+                                  "reader option to either :preserve or :allow." };
+      }
+
+      auto const reader_cond{ try_object<obj::keyword>(read_cond) };
+
+      if(reader_cond == __rt_ctx->intern_keyword("", "preserve"))
+      {
+        in_preserve_mode = true;
+      }
+      else if(reader_cond == __rt_ctx->intern_keyword("", "allow"))
+      {
+      }
+      else
+      {
+        throw std::runtime_error{ util::format(
+          "Conditional read is not allowed by default. Set the :read-cond reader option to either "
+          ":preserve or :allow, currently it's set to {}.",
+          runtime::to_code_string(read_cond)) };
+      }
+
+      auto const features_kw{ __rt_ctx->intern_keyword("", "features").expect_ok() };
+      auto const feature_set{ get(reader_opts, features_kw) };
+
+      if(feature_set.is_some())
+      {
+        features = feature_set;
+      }
+    }
+
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
@@ -1120,6 +1165,11 @@ namespace jank::read::parse
                                                      "#? expects an even number of forms.");
     }
 
+    if(in_preserve_mode)
+    {
+      return object_source_info{ list, start_token, list_end };
+    }
+
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
 
@@ -1128,9 +1178,11 @@ namespace jank::read::parse
     {
       auto const kw(*it);
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
-       * matter. If :default comes first, we'll always take it. In short, order is important. This
-       * matches Clojure's behavior. */
-      if(equal(kw, jank_keyword) || equal(kw, default_keyword))
+       * matter. If :default comes first, we'll always take it, same for any features provided
+       * as part of the reader options. In short, order is important. This matches Clojure's
+       * behavior. */
+      if(equal(kw, jank_keyword) || equal(kw, default_keyword)
+         || (has_reader_opts && contains(features, kw)))
       {
         if(splice)
         {

@@ -77,6 +77,11 @@ namespace jank::runtime
     assert_var->bind_root(jank_true);
     assert_var->dynamic.store(true);
 
+    auto const reader_opt_sym(make_box<obj::symbol>("*reader-opts*"));
+    reader_opts_var = core->intern_var(reader_opt_sym);
+    reader_opts_var->bind_root(jank_nil());
+    reader_opts_var->dynamic.store(true);
+
     auto const command_line_args_sym(make_box<obj::symbol>("*command-line-args*"));
     auto const command_line_args_var{ core->intern_var(command_line_args_sym) };
     command_line_args_var->bind_root(jank_nil());
@@ -289,25 +294,85 @@ namespace jank::runtime
     return ok();
   }
 
-  object_ref context::read_string(jtl::immutable_string const &code)
+  object_ref context::read_string(jtl::immutable_string const &code,
+                                  object_ref const reader_opts,
+                                  jank::u64 const nth_form)
   {
     profile::timer const timer{ "rt read_string" };
-
+    auto const unknown_kw{ __rt_ctx->intern_keyword("", "unknown").expect_ok() };
+    auto const read_eval_enabled{ __rt_ctx->find_var("clojure.core", "*read-eval*")->deref() };
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
-      std::make_pair(current_file_var, jank_nil())) };
+      std::make_pair(current_file_var, jank_nil()),
+      std::make_pair(reader_opts_var, reader_opts)) };
+
+    if(equal(read_eval_enabled, unknown_kw))
+    {
+      throw std::runtime_error{ util::format(
+        "Reading is disallowed when clojure.core/*read-eval* is bound to {}.",
+        runtime::to_code_string(read_eval_enabled)) };
+    }
 
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+    auto count{ nth_form };
+    auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
+    auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };
+    auto const throw_on_eof{ equal(get(reader_opts, eof_kw, eof_throw_kw), eof_throw_kw) };
+    auto throw_eof{ throw_on_eof };
+    object_ref ret{ get(reader_opts, eof_kw) };
 
-    object_ref ret{ jank_nil() };
     for(auto const &form : p_prc)
     {
-      ret = form.expect_ok().unwrap().ptr;
+      if(count <= 0)
+      {
+        break;
+      }
+
+      count -= 1;
+
+      if(form.expect_ok().is_none())
+      {
+        if(throw_on_eof && count <= 0)
+        {
+          throw_eof = true;
+          break;
+        }
+
+        ret = get(reader_opts, eof_kw);
+      }
+      else
+      {
+        ret = form.expect_ok().unwrap().ptr;
+      }
+
+      throw_eof = false;
+    }
+
+    if(throw_eof)
+    {
+      throw std::runtime_error{ "EOF while reading." };
     }
 
     return ret;
+  }
+
+  object_ref context::read_string(jtl::immutable_string const &code)
+  {
+    return read_string(code, make_box<obj::persistent_array_map>());
+  }
+
+  object_ref
+  context::read_file(jtl::immutable_string const &file_path, object_ref const reader_opts)
+  {
+    auto const file(module::loader::read_file(file_path));
+    if(file.is_err())
+    {
+      throw file.expect_err();
+    }
+
+    return read_string(file.expect_ok().data(), reader_opts);
   }
 
   native_vector<analyze::expression_ref>
