@@ -1,0 +1,66 @@
+#!/usr/bin/env bb
+
+(ns jank.test.direct-call
+  (:require [babashka.fs :as fs]
+            [babashka.process :as proc]
+            [clojure.test :as t :refer [deftest is use-fixtures]]))
+
+(def this-nsym (ns-name *ns*))
+
+(def module-path "test/bash/direct-call/src")
+(def run-file "test/bash/direct-call/src/jank_test/direct_call/run.jank")
+(def do-case-file "test/bash/direct-call/src/jank_test/direct_call/do_case.jank")
+(def expected-output "42\n")
+(def do-case-output "Foo\n")
+(def base-cmd (str "jank --module-path " module-path " --direct-call --codegen cpp"))
+
+(defn sh! [cmd]
+  (let [{:keys [exit out err] :as res}
+        (proc/shell {:out :string :err :string :continue true} cmd)]
+    (is (= 0 exit) (pr-str (select-keys res [:cmd :exit :out :err])))
+    out))
+
+(defn object-paths [module]
+  (fs/glob "." (str "target/**/jank_test/direct_call/" module ".o")))
+
+(use-fixtures
+  :each
+  (fn [f]
+    (doseq [dir ["target" "build/target"]]
+      (when (fs/exists? dir)
+        (fs/delete-tree dir)))
+    (println "Cleaned up module caches")
+    (f)))
+
+(deftest run-with-source-dependency
+  (is (= expected-output (sh! (str base-cmd " run " run-file)))))
+
+(deftest run-do-case-top-level-do
+  (is (= do-case-output (sh! (str base-cmd " run " do-case-file)))))
+
+(deftest run-with-compiled-dependency
+  (sh! (str base-cmd " compile-module jank-test.direct-call.util"))
+  (is (seq (object-paths "util")))
+  (is (= expected-output (sh! (str base-cmd " run " run-file)))))
+
+(deftest compile-module-with-source-dependency
+  (sh! (str base-cmd " compile-module jank-test.direct-call.core"))
+  (is (seq (object-paths "core")))
+  (is (seq (object-paths "util")))
+  (is (= expected-output (sh! (str base-cmd " run " run-file)))))
+
+(deftest compile-module-with-compiled-dependency
+  (sh! (str base-cmd " compile-module jank-test.direct-call.util"))
+  (sh! (str base-cmd " compile-module jank-test.direct-call.core"))
+  (is (seq (object-paths "core")))
+  (is (seq (object-paths "util")))
+  (is (= expected-output (sh! (str base-cmd " run " run-file)))))
+
+(defn -main []
+  (System/exit
+    (if (t/successful? (t/run-tests this-nsym))
+      0
+      1)))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))

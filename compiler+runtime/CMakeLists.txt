@@ -936,7 +936,7 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module --direct-call -o ${jank_clojure_core_output} clojure.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(
