@@ -187,7 +187,9 @@ namespace jank::evaluate
         auto found_local(expr->frame->find_local_or_capture(form.name));
         if(found_local && !found_local.unwrap().crossed_fns.empty())
         {
-          arity.frame->captures[form.name] = *found_local.unwrap().binding;
+          arity.frame->captures.emplace(
+            form.name,
+            local_capture{ *found_local.unwrap().binding, found_local.unwrap().binding });
         }
       }
     });

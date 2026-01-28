@@ -2600,7 +2600,7 @@ namespace jank::codegen
           /* Captures aren't const since they could be late-assigned, in the case of a letfn. */
           util::format_to(header_buffer,
                           "jank::runtime::object_ref {};",
-                          runtime::munge(v.second.native_name));
+                          runtime::munge(v.second.binding.native_name));
         }
       }
 
@@ -2648,7 +2648,7 @@ namespace jank::codegen
           util::format_to(header_buffer,
                           "{} jank::runtime::object_ref {}",
                           (need_comma ? "," : ""),
-                          runtime::munge(v.second.native_name));
+                          runtime::munge(v.second.binding.native_name));
           need_comma = true;
         }
       }
@@ -2673,7 +2673,7 @@ namespace jank::codegen
           }
           used_captures.emplace(hash);
 
-          auto const name{ runtime::munge(v.second.native_name) };
+          auto const name{ runtime::munge(v.second.binding.native_name) };
           util::format_to(header_buffer, ", {}{ {} }", name, name);
         }
       }
@@ -2936,9 +2936,8 @@ namespace jank::codegen
           }
           else
           {
-            auto const originating_local(root_fn->frame->find_local_or_capture(v.first));
-            handle const h{ originating_local.unwrap().binding };
-            auto const local_type{ originating_local.unwrap().binding->type };
+            handle const h{ v.second.originating_binding };
+            auto const local_type{ v.second.originating_binding->type };
             auto const needs_conversion{ !cpp_util::is_any_object(local_type) };
 
             if(needs_conversion)
