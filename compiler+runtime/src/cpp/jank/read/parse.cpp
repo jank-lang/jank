@@ -14,6 +14,7 @@
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 /* TODO: Make common symbol boxes once and reuse those. */
 namespace jank::read::parse
@@ -337,7 +338,7 @@ namespace jank::read::parse
       {
         auto const error{ it.latest.unwrap().expect_err() };
 
-        if(!is_reader_suppressed)
+        if(!is_reader_suppressed || error::is_insuppressible_error(error->kind))
         {
           return err(error);
         }
