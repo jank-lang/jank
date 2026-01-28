@@ -899,6 +899,19 @@ endif()
 # Build a string of all of our AOT compilation flags so we can share them with our incremental PCH.
 set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
 
+# We pass the macOS SDK root into the JIT runtime, but the same path
+# needs to be used when compiling the incremental PCH. Without this, you
+# will see lots of include errors and, in particular, this guy:
+# > We don't know how to get the definition of mbstate_t on your platform.
+if(APPLE)
+  execute_process(
+    COMMAND /usr/bin/xcrun --show-sdk-path
+    OUTPUT_VARIABLE jank_xcrun_sysroot
+    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  set(jank_additional_pch_flags -isysroot ${jank_xcrun_sysroot})
+endif()
+
 separate_arguments(jank_incremental_pch_cxx_flags UNIX_COMMAND ${CMAKE_CXX_FLAGS})
 list(REMOVE_ITEM jank_incremental_pch_cxx_flags -fPIC)
 add_custom_command(
@@ -909,6 +922,7 @@ add_custom_command(
   COMMAND ${CMAKE_CXX_COMPILER}
           #${jank_incremental_pch_cxx_flags}
           ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes}
+          ${jank_additional_pch_flags}
           -Xclang -fincremental-extensions
           -Xclang -emit-pch
           -Xclang -fmodules-embed-all-files
