@@ -1691,7 +1691,7 @@ namespace jank::analyze
           {
             /* C++ doesn't allow multiple params with the same name, so we generate a unique
              * name for shared params. */
-            param = make_box<runtime::obj::symbol>(__rt_ctx->unique_namespaced_string("shadowed"));
+            param = make_box<runtime::obj::symbol>(__rt_ctx->unique_string("shadowed"));
             break;
           }
         }
@@ -2032,7 +2032,7 @@ namespace jank::analyze
         auto const op_equal_call{ analyze_call(
           make_box<obj::persistent_list>(std::in_place,
                                          op_equal_sym,
-                                         loop_details.unwrap()->pairs[arg_index].first,
+                                         loop_details.unwrap()->pairs[arg_index].first->name,
                                          form),
           current_frame,
           expression_position::statement,
@@ -2196,20 +2196,21 @@ namespace jank::analyze
                                           latest_expansion(macro_expansions));
       }
 
-      auto const res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
-      if(res.is_err())
+      auto const value_res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
+      if(value_res.is_err())
       {
-        return res.expect_err();
+        return value_res.expect_err();
       }
-      auto const it(ret->pairs.emplace_back(sym, res.expect_ok()));
-      auto const expr_type{ cpp_util::non_void_expression_type(it.second) };
-      ret->frame->locals[sym].emplace_back(
+      auto const value_expr{ value_res.expect_ok() };
+      auto const expr_type{ cpp_util::non_void_expression_type(value_expr) };
+      auto const &binding{ ret->frame->locals[sym].emplace_back(
         local_binding{ sym,
-                       __rt_ctx->unique_namespaced_string(sym->name),
-                       it.second,
+                       __rt_ctx->unique_string(sym->name),
+                       value_expr,
                        current_frame,
-                       it.second->needs_box,
-                       .type = expr_type });
+                       value_expr->needs_box,
+                       .type = expr_type }) };
+      ret->pairs.emplace_back(&binding, value_expr);
     }
 
     usize const form_count{ o->count() - 2 };

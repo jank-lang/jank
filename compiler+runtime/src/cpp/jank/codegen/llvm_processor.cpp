@@ -1238,7 +1238,7 @@ namespace jank::codegen
 
         /* TODO: Provide access to higher local, so we can access the local from the
          * original loop. We could be in a nested let right now, which shadows that name. */
-        auto const arg_alloc{ locals[expr->loop_target.unwrap()->pairs[i].first] };
+        auto const arg_alloc{ locals[expr->loop_target.unwrap()->pairs[i].first->name] };
         jank_debug_assert(arg_alloc);
         deferred_stores.emplace_back(arg_handle, arg_alloc);
       }
@@ -1408,18 +1408,11 @@ namespace jank::codegen
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
-      if(local.is_none())
-      {
-        throw std::runtime_error{ util::format("ICE: unable to find local: {}",
-                                               pair.first->to_string()) };
-      }
-
       auto const value{ gen(pair.second, arity) };
-      locals[pair.first] = value;
+      locals[pair.first->name] = value;
       if(value->getName().empty())
       {
-        value->setName(util::format("{}_init", pair.first->to_string()).c_str());
+        value->setName(util::format("{}_init", pair.first->name->to_string()).c_str());
       }
     }
 
@@ -1436,9 +1429,9 @@ namespace jank::codegen
         auto const alloc{ ctx->builder->CreateAlloca(
           ctx->builder->getPtrTy(),
           llvm::ConstantInt::get(ctx->builder->getInt64Ty(), 1)) };
-        alloc->setName(pair.first->to_string().c_str());
-        ctx->builder->CreateStore(load_if_needed(ctx, locals[pair.first]), alloc);
-        locals[pair.first] = alloc;
+        alloc->setName(pair.first->name->to_string().c_str());
+        ctx->builder->CreateStore(load_if_needed(ctx, locals[pair.first->name]), alloc);
+        locals[pair.first->name] = alloc;
       }
 
       auto const current_fn(ctx->builder->GetInsertBlock()->getParent());
@@ -1506,13 +1499,6 @@ namespace jank::codegen
     auto old_locals(locals);
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
-      if(local.is_none())
-      {
-        throw std::runtime_error{ util::format("ICE: unable to find local: {}",
-                                               pair.first->to_string()) };
-      }
-
       locals[pair.first] = gen(pair.second, arity);
       locals[pair.first]->setName(pair.first->to_string().c_str());
     }

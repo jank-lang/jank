@@ -1371,8 +1371,8 @@ namespace jank::codegen
       for(usize i{}; i < expr->arg_exprs.size(); ++i)
       {
         auto const &pair{ let->pairs[i] };
-        auto const local{ let->frame->find_local_or_capture(pair.first) };
-        auto const &local_name(runtime::munge(local.unwrap().binding->native_name));
+        auto const local{ pair.first };
+        auto const &local_name(runtime::munge(local->native_name));
         auto const &val_name(arg_tmp_it->str(true));
 
         if(local_name != val_name)
@@ -1461,10 +1461,10 @@ namespace jank::codegen
 
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
+      auto const local(pair.first);
       auto const local_type{ cpp_util::expression_type(pair.second) };
       auto const &val_tmp(gen(pair.second, fn_arity));
-      auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+      auto const &munged_name(runtime::munge(local->native_name));
 
       /* Every binding is wrapped in its own scope, to allow shadowing.
        *

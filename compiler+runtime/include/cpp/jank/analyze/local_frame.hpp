@@ -47,6 +47,7 @@ namespace jank::analyze
   };
 
   using local_binding_ptr = jtl::ptr<local_binding>;
+  using local_binding_ref = jtl::ref<local_binding>;
 
   struct local_frame
   {
@@ -137,4 +138,5 @@ namespace jank::analyze
 
   /* TODO: Use a ref. */
   using local_frame_ptr = jtl::ptr<local_frame>;
+  using local_frame_ref = jtl::ref<local_frame>;
 }

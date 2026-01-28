@@ -7,6 +7,8 @@
 namespace jank::analyze
 {
   using local_frame_ptr = jtl::ptr<struct local_frame>;
+  using local_frame_ref = jtl::ref<struct local_frame>;
+  using local_binding_ref = jtl::ref<struct local_binding>;
 
   enum class expression_position : u8
   {
