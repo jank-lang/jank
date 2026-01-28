@@ -1313,6 +1313,22 @@ namespace jank::read::parse
                       make_box<obj::persistent_hash_set>(std::in_place, make_box(1))));
         }
 
+        SUBCASE("Ignore unmatched conditionals")
+        {
+          lex::processor lp{ "#?(:cljs #js {} :jank {})" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_array_map>()));
+        }
+
+        SUBCASE("Validate normal syntax everywhere")
+        {
+          lex::processor lp{ "#?(:cljs #js #{:k :k} :jank {})" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_err());
+        }
+
         SUBCASE("Splice")
         {
           SUBCASE("Not seqable")
@@ -1375,6 +1391,23 @@ namespace jank::read::parse
                                                            make_box(0),
                                                            make_box(1),
                                                            make_box(2))));
+          }
+
+          SUBCASE("Ignore unmatched conditionals")
+          {
+            lex::processor lp{ "[#?@(:cljs #js {} :jank [42])]" };
+            processor p{ lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(equal(r.expect_ok().unwrap().ptr,
+                        make_box<obj::persistent_vector>(std::in_place, make_box(42))));
+          }
+
+          SUBCASE("Validate normal syntax everywhere")
+          {
+            lex::processor lp{ "[#?@(:cljs #js #{:k :k} :jank {})]" };
+            processor p{ lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(r.is_err());
           }
         }
       }
