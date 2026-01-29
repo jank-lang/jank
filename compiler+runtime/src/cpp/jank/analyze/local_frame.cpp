@@ -31,6 +31,14 @@ namespace jank::analyze
       make_box(has_unboxed_usage));
   }
 
+  runtime::object_ref local_capture::to_runtime_data() const
+  {
+    return obj::persistent_array_map::create_unique(make_box("binding"),
+                                                    binding.to_runtime_data(),
+                                                    make_box("originating_binding"),
+                                                    originating_binding->to_runtime_data());
+  }
+
   local_frame::local_frame(frame_type const &type, jtl::option<jtl::ptr<local_frame>> const &p)
     : type{ type }
     , parent{ p }
@@ -47,15 +55,16 @@ namespace jank::analyze
       auto const local_result(it->locals.find(sym));
       if(local_result != it->locals.end())
       {
-        return local_frame::binding_find_result{ &local_result->second, std::move(crossed_fns) };
+        return local_frame::binding_find_result{ &local_result->second.back(),
+                                                 std::move(crossed_fns) };
       }
 
       if(allow_captures)
       {
         auto const capture_result(it->captures.find(sym));
-        if(capture_result != it->locals.end())
+        if(capture_result != it->captures.end())
         {
-          return local_frame::binding_find_result{ &capture_result->second,
+          return local_frame::binding_find_result{ &capture_result->second.binding,
                                                    std::move(crossed_fns) };
         }
       }
@@ -88,18 +97,19 @@ namespace jank::analyze
     for(auto const &crossed_fn : result.crossed_fns)
     {
       /* We intentionally copy the binding here. */
-      auto res(crossed_fn->captures.emplace(result.binding->name, *result.binding));
+      auto res(crossed_fn->captures.emplace(result.binding->name,
+                                            local_capture{ *result.binding, result.binding }));
       /* We know it needs a box, since it's captured. */
-      res.first->second.needs_box = true;
-      res.first->second.has_boxed_usage = true;
+      res.first->second.binding.needs_box = true;
+      res.first->second.binding.has_boxed_usage = true;
       /* To start with, we assume it's only boxed. */
-      res.first->second.has_unboxed_usage = false;
+      res.first->second.binding.has_unboxed_usage = false;
 
       /* Native values which are captured get auto-boxed, so we need to adjust the type
        * of the binding. */
-      if(!cpp_util::is_any_object(res.first->second.type))
+      if(!cpp_util::is_any_object(res.first->second.binding.type))
       {
-        res.first->second.type = cpp_util::untyped_object_ptr_type();
+        res.first->second.binding.type = cpp_util::untyped_object_ptr_type();
       }
     }
   }
@@ -116,12 +126,6 @@ namespace jank::analyze
       b.value_expr = result.fn_frame->fn_ctx->fn;
     }
     register_captures(binding_find_result{ &b, result.crossed_fns });
-  }
-
-  jtl::option<local_frame::binding_find_result>
-  local_frame::find_originating_local(obj::symbol_ref const sym)
-  {
-    return find_local_impl(this, sym, false);
   }
 
   jtl::option<local_frame::named_recursion_find_result>

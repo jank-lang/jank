@@ -16,7 +16,7 @@
         lib,
         ...
       }: let
-        llvm = pkgs.llvmPackages_22;
+        llvmPackages = pkgs.llvmPackages_22;
         # for cpptrace; versions from cpptrace/cmake/OptionVariables.cmake
         libdwarf-lite-src = pkgs.fetchFromGitHub {
           owner = "jeremy-rifkin";
@@ -30,21 +30,25 @@
           rev = "v1.5.7";
           sha256 = "sha256-tNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44=";
         };
-        cmakeCxxFlags =
-          lib.concatStringsSep " "
-          [
-            (lib.trim (lib.readFile "${llvm.clang}/nix-support/cc-cflags"))
-            (lib.trim (lib.readFile "${llvm.clang}/nix-support/libc-crt1-cflags"))
-            (lib.trim (lib.readFile "${llvm.clang}/nix-support/cc-ldflags"))
-            "-Wl,-rpath,${pkgs.stdenv.cc.libc}/lib"
-            "-L${lib.getLib llvm.libllvm.lib}/lib"
-            "-L${lib.getLib pkgs.bzip2}/lib"
-            "-L${lib.getLib pkgs.openssl}/lib"
-            "-L${lib.getLib pkgs.zlib}/lib"
-            "-L${lib.getLib pkgs.zstd}/lib"
-            "-L${lib.getLib pkgs.libedit}/lib"
-            "-L${lib.getLib pkgs.libxml2}/lib"
-          ];
+        # Manually set compilation and linker flags, rather than depending on
+        # them to be implicitly set in the clang wrapper scripts. This is so
+        # that the jank build process can pick up the flags such that they can
+        # be passed along to downstream jank AOT compilation commands.
+        cmakeCxxFlags = lib.concatStringsSep " " [
+          (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/cc-cflags"))
+          (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/libc-crt1-cflags"))
+        ];
+        cmakeLinkerFlags = lib.concatStringsSep " " [
+          (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/cc-ldflags"))
+          "-Wl,-rpath,${llvmPackages.stdenv.cc.libc}/lib"
+          "-L${lib.getLib llvmPackages.libllvm.lib}/lib"
+          "-L${lib.getLib pkgs.bzip2}/lib"
+          "-L${lib.getLib pkgs.openssl}/lib"
+          "-L${lib.getLib pkgs.zlib}/lib"
+          "-L${lib.getLib pkgs.zstd}/lib"
+          "-L${lib.getLib pkgs.libedit}/lib"
+          "-L${lib.getLib pkgs.libxml2}/lib"
+        ];
       in {
         legacyPackages = pkgs;
         formatter = pkgs.alejandra;
@@ -52,7 +56,7 @@
         packages = rec {
           default = jank-release;
 
-          jank-release = pkgs.stdenv.mkDerivation (finalAttrs: {
+          jank-release = llvmPackages.stdenv.mkDerivation (finalAttrs: {
             pname = "jank";
             version = "git";
 
@@ -67,7 +71,8 @@
 
             nativeBuildInputs =
               [
-                llvm.libclang.dev
+                llvmPackages.clang
+                llvmPackages.libclang.dev
               ]
               ++ (with pkgs; [
                 cmake
@@ -77,7 +82,7 @@
 
             buildInputs =
               [
-                llvm.libllvm.dev
+                llvmPackages.libllvm.dev
               ]
               ++ (with pkgs; [
                 bzip2
@@ -99,14 +104,15 @@
             preConfigure = ''
               cmakeFlagsArray+=(
                 "-DCMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags}"
+                "-DCMAKE_EXE_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
+                "-DCMAKE_SHARED_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
+                "-DCMAKE_MODULE_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
               )
             '';
 
             cmakeBuildDir = "./compiler+runtime/build";
             cmakeDir = "..";
             cmakeFlags = [
-              "-DCMAKE_C_COMPILER=${llvm.clang}/bin/clang"
-              "-DCMAKE_CXX_COMPILER=${llvm.clang}/bin/clang++"
               # TODO: Updating RPATHs during install causes the step to fail as it
               # tries to rewrite non-existent RPATHs like /lib. Needs more
               # investigation.
@@ -135,49 +141,41 @@
           });
         };
 
-        devShells.default = pkgs.mkShell {
-          packages = let
-            cmake' = pkgs.writeShellScriptBin "cmake" ''
-              exec ${pkgs.cmake}/bin/cmake -DCMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags} "$@"
-            '';
-          in
-            with pkgs; [
-              stdenv.cc.cc.lib
+        devShells.default = (pkgs.mkShell.override {stdenv = llvmPackages.stdenv;}) {
+          packages = with pkgs; [
+            ## Required tools.
+            cmake
+            ninja
+            pkg-config
+            llvmPackages.clang
+            llvmPackages.libclang
+            llvmPackages.libllvm
 
-              ## Required tools.
-              cmake
-              cmake'
-              ninja
-              pkg-config
-              llvm.libclang
-              llvm.libllvm
+            ## Required libs.
+            boehmgc
+            openssl
 
-              ## Required libs.
-              boehmgc
-              openssl
+            ## Dev tools.
+            babashka
+            entr
+            gcovr
+            lcov
+            git
+            nixd
+            shellcheck
+            # For clangd & clang-tidy.
+            clang-tools
+            gdb
+            clangbuildanalyzer
+            openjdk
 
-              ## Dev tools.
-              babashka
-              entr
-              gcovr
-              lcov
-              git
-              nixd
-              shellcheck
-              # For clangd & clang-tidy.
-              clang-tools
-              gdb
-              clangbuildanalyzer
-              openjdk
-
-              ## Dev libs.
-              doctest
-            ];
+            ## Dev libs.
+            doctest
+          ];
 
           shellHook = ''
-            export CC=${llvm.clang}/bin/clang
-            export CXX=${llvm.clang}/bin/clang++
-            export CMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags}
+            export CXXFLAGS=${lib.escapeShellArg cmakeCxxFlags}
+            export LDFLAGS=${lib.escapeShellArg cmakeLinkerFlags}
             export ASAN_OPTIONS=detect_leaks=0
           '';
 

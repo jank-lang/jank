@@ -1372,8 +1372,8 @@ namespace jank::codegen
       for(usize i{}; i < expr->arg_exprs.size(); ++i)
       {
         auto const &pair{ let->pairs[i] };
-        auto const local{ let->frame->find_local_or_capture(pair.first) };
-        auto const &local_name(runtime::munge(local.unwrap().binding->native_name));
+        auto const local{ pair.first };
+        auto const &local_name(runtime::munge(local->native_name));
         auto const &val_name(arg_tmp_it->str(true));
 
         if(local_name != val_name)
@@ -1462,10 +1462,10 @@ namespace jank::codegen
 
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
+      auto const local(pair.first);
       auto const local_type{ cpp_util::expression_type(pair.second) };
       auto const &val_tmp(gen(pair.second, fn_arity));
-      auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+      auto const &munged_name(runtime::munge(local->native_name));
 
       /* Every binding is wrapped in its own scope, to allow shadowing.
        *
@@ -1590,8 +1590,8 @@ namespace jank::codegen
     native_set<jtl::immutable_string> seen_names;
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
-      auto const &name{ local.unwrap().binding->native_name };
+      auto const local(pair.first);
+      auto const &name{ local->native_name };
       if(seen_names.contains(name))
       {
         has_shadowed_bindings = true;
@@ -1602,9 +1602,9 @@ namespace jank::codegen
 
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
+      auto const local(pair.first);
       auto const val_expr(llvm::cast<analyze::expr::function>(pair.second.data));
-      auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+      auto const &munged_name(runtime::munge(local->native_name));
       auto const type_name{ (
         has_shadowed_bindings
           ? "jank::runtime::object_ref"
@@ -1614,18 +1614,17 @@ namespace jank::codegen
 
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
+      auto const local(pair.first);
       auto const &val_tmp(gen(pair.second, fn_arity));
-      auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+      auto const &munged_name(runtime::munge(local->native_name));
 
       util::format_to(body_buffer, "{} = {}; ", munged_name, val_tmp.unwrap().str(false));
     }
 
     for(auto const &pair : expr->pairs)
     {
-      auto const local(expr->frame->find_local_or_capture(pair.first));
-
-      auto const &munged_name(runtime::munge(local.unwrap().binding->native_name));
+      auto const local(pair.first);
+      auto const &munged_name(runtime::munge(local->native_name));
       auto const val_expr(llvm::cast<analyze::expr::function>(pair.second.data));
       for(auto const &capture_pair : val_expr->captures())
       {
@@ -2189,7 +2188,13 @@ namespace jank::codegen
     }
     jank_debug_assert(expr->arg_exprs.size() <= param_types.size());
 
-    util::format_to(body_buffer, "{} {}{ ", cpp_util::get_qualified_type_name(expr->type), ret_tmp);
+    util::format_to(body_buffer, "{} {} ", cpp_util::get_qualified_type_name(expr->type), ret_tmp);
+
+    /* For aggregate initialization, we want to use the uniform initialization syntax. However,
+     * for any other initialization, we're expecting to call a ctor, so we use parens. This
+     * removes any ambiguity when there is a ctor which takes an initializer list, which we
+     * don't currently support. */
+    util::format_to(body_buffer, "{}", (expr->is_aggregate ? "{" : "("));
 
     bool need_comma{};
     for(usize arg_idx{}; arg_idx < expr->arg_exprs.size(); ++arg_idx)
@@ -2243,7 +2248,7 @@ namespace jank::codegen
       }
     }
 
-    util::format_to(body_buffer, " };");
+    util::format_to(body_buffer, "{};", (expr->is_aggregate ? "}" : ")"));
 
     if(expr->position == expression_position::tail)
     {
@@ -2596,7 +2601,7 @@ namespace jank::codegen
           /* Captures aren't const since they could be late-assigned, in the case of a letfn. */
           util::format_to(header_buffer,
                           "jank::runtime::object_ref {};",
-                          runtime::munge(v.second.native_name));
+                          runtime::munge(v.second.binding.native_name));
         }
       }
 
@@ -2644,7 +2649,7 @@ namespace jank::codegen
           util::format_to(header_buffer,
                           "{} jank::runtime::object_ref {}",
                           (need_comma ? "," : ""),
-                          runtime::munge(v.second.native_name));
+                          runtime::munge(v.second.binding.native_name));
           need_comma = true;
         }
       }
@@ -2669,7 +2674,7 @@ namespace jank::codegen
           }
           used_captures.emplace(hash);
 
-          auto const name{ runtime::munge(v.second.native_name) };
+          auto const name{ runtime::munge(v.second.binding.native_name) };
           util::format_to(header_buffer, ", {}{ {} }", name, name);
         }
       }
@@ -2934,9 +2939,8 @@ namespace jank::codegen
           }
           else
           {
-            auto const originating_local(root_fn->frame->find_local_or_capture(v.first));
-            handle const h{ originating_local.unwrap().binding };
-            auto const local_type{ originating_local.unwrap().binding->type };
+            handle const h{ v.second.originating_binding };
+            auto const local_type{ v.second.originating_binding->type };
             auto const needs_conversion{ !cpp_util::is_any_object(local_type) };
 
             if(needs_conversion)

@@ -4280,7 +4280,7 @@
   ^{:private true
     :dynamic true
     :doc "An atom holding a sorted set of symbols representing loaded libs"}
-  *loaded-libs* (atom (sorted-set)))
+  *loaded-libs* (atom (sorted-set 'clojure.core)))
 
 (defonce
   ^{:private true

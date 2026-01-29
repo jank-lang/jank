@@ -26,10 +26,10 @@ namespace jank::analyze::expr
     auto pair_maps(make_box<obj::persistent_vector>());
     for(auto const &e : pairs)
     {
-      pair_maps = pair_maps->conj(make_box<obj::persistent_vector>(
-        std::in_place,
-        jank::detail::to_runtime_data(*frame->find_local_or_capture(e.first).unwrap().binding),
-        e.second->to_runtime_data()));
+      pair_maps
+        = pair_maps->conj(make_box<obj::persistent_vector>(std::in_place,
+                                                           jank::detail::to_runtime_data(*e.first),
+                                                           e.second->to_runtime_data()));
     }
 
     return merge(expression::to_runtime_data(),

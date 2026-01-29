@@ -1,0 +1,18 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::pass_ambiguous_initializer_list
+          {
+            struct foo
+            {
+              foo(int a, int b)
+                : a{ a + b }
+              { }
+
+              foo(std::initializer_list<int> const &)
+                : a{ -77 }
+              { }
+
+              int a{};
+            };
+          }")
+(let* [f (cpp/jank.cpp.constructor.complex.pass_ambiguous_initializer_list.foo. #cpp 1 #cpp 2)]
+  (if (= 3 (cpp/.-a f))
+    :success))
