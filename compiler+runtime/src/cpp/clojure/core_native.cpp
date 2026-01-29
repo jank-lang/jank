@@ -287,10 +287,9 @@ namespace clojure::core_native
     return make_box(hash::unordered(coll.data)).erase();
   }
 
-  /* TODO: implement opts for `read-string` */
-  object_ref read_string(object_ref const /* opts */, object_ref const str)
+  object_ref read_string(object_ref const opts, object_ref const str)
   {
-    return __rt_ctx->read_string(runtime::to_string(str));
+    return __rt_ctx->read_string(runtime::to_string(str), opts);
   }
 
   object_ref jank_version()

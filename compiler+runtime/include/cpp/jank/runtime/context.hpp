@@ -83,7 +83,11 @@ namespace jank::runtime
     jtl::option<object_ref> eval_file(jtl::immutable_string const &path);
     jtl::option<object_ref> eval_string(jtl::immutable_string const &code) const;
     jtl::result<void, error_ref> eval_cpp_string(jtl::immutable_string const &code) const;
+    object_ref read_string(jtl::immutable_string const &code,
+                           object_ref const reader_opts,
+                           jank::u64 const nth_form = std::numeric_limits<jank::u64>::max());
     object_ref read_string(jtl::immutable_string const &code);
+    object_ref read_file(jtl::immutable_string const &file_path, object_ref const reader_opts);
     native_vector<analyze::expression_ref>
     analyze_string(jtl::immutable_string const &code, bool const eval = true);
 
@@ -152,6 +156,7 @@ namespace jank::runtime
     var_ref assert_var;
     var_ref no_recur_var;
     var_ref gensym_env_var;
+    var_ref reader_opts_var;
 
     /*** XXX: Everything here is thread-safe. ***/
     folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;
