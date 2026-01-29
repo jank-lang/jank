@@ -2858,6 +2858,24 @@ namespace jank::codegen
                       current_ns->name->get_name(),
                       current_ns->symbol_counter.load());
 
+      /* BDWGC doesn't pick up globals in JIT compiled code, so we need to register both
+       * our lifted vars and lifted constants. Since they're right next to each other,
+       * we can just register the range of the first -> last. */
+      if(!lifted_vars.empty())
+      {
+        auto const &first{ *lifted_vars.begin() };
+        auto last{ lifted_vars.begin() };
+        std::advance(last, lifted_vars.size() - 1);
+        util::format_to(footer_buffer,
+                        R"(GC_add_roots(&{}::{}, (&{}::{} + sizeof({}::{}) + 1));)",
+                        ns,
+                        first.second.native_name,
+                        ns,
+                        last->second.native_name,
+                        ns,
+                        last->second.native_name);
+      }
+
       for(auto const &v : lifted_vars)
       {
         /* Since global ctors don't run when loading object files, we
@@ -2867,7 +2885,7 @@ namespace jank::codegen
         {
           util::format_to(
             footer_buffer,
-            R"(new  (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
+            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
             ns,
             v.second.native_name,
             v.first);
@@ -2876,13 +2894,27 @@ namespace jank::codegen
         {
           util::format_to(
             footer_buffer,
-            R"(new  (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
+            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
             ns,
             v.second.native_name,
             v.first);
         }
       }
 
+      if(!lifted_constants.empty())
+      {
+        auto const &first{ *lifted_constants.begin() };
+        auto last{ lifted_constants.begin() };
+        std::advance(last, lifted_constants.size() - 1);
+        util::format_to(footer_buffer,
+                        R"(GC_add_roots(&{}::{}, (&{}::{} + sizeof({}::{}) + 1));)",
+                        ns,
+                        first.second,
+                        ns,
+                        last->second,
+                        ns,
+                        last->second);
+      }
 
       for(auto const &v : lifted_constants)
       {
