@@ -25,6 +25,7 @@
 #include <jank/util/string.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
+#include <jank/util/markdown.hpp>
 #include <jank/error/report.hpp>
 #include <jank/environment/check_health.hpp>
 #include <jank/runtime/convert/builtin.hpp>
@@ -407,6 +408,9 @@ int main(int const argc, char const **argv)
 #endif
 
     Cpp::EnableDebugOutput(false);
+
+    jank::util::test_markdown();
+    return 0;
 
     {
       runtime::detail::native_transient_vector extra_args;

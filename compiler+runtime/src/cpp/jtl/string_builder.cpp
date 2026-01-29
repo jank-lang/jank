@@ -44,6 +44,12 @@ namespace jtl
         return "\u001b[0m";
       case terminal_style::bold:
         return "\u001b[1m";
+      case terminal_style::no_bold:
+        return "\u001b[22m";
+      case terminal_style::italic:
+        return "\u001b[3m";
+      case terminal_style::no_italic:
+        return "\u001b[23m";
       case terminal_style::underline:
         return "\u001b[4m";
       case terminal_style::no_underline:
@@ -98,8 +104,7 @@ namespace jtl
 
   string_builder::~string_builder()
   {
-    /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
-    GC_free(buffer);
+    clear();
   }
 
   string_builder &string_builder::operator()(bool const d) &
@@ -395,6 +400,13 @@ namespace jtl
   bool string_builder::empty() const
   {
     return pos == 0;
+  }
+
+  void string_builder::clear()
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-no-malloc) */
+    GC_free(buffer);
+    buffer = nullptr;
   }
 
   jtl::immutable_string string_builder::release()

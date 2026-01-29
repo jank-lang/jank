@@ -7,7 +7,10 @@ namespace jtl
   enum class terminal_style : u8
   {
     reset = 0,
-    bold,
+    bold = 1,
+    no_bold = 22,
+    italic = 3,
+    no_italic = 23,
     underline = 4,
     no_underline = 24,
     black = 30,

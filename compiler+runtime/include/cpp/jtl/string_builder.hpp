@@ -83,6 +83,8 @@ namespace jtl
     usize size() const;
     bool empty() const;
 
+    void clear();
+
     jtl::immutable_string release();
     std::string str() const;
     jtl::immutable_string_view view() const &;

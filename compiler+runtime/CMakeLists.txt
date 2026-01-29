@@ -434,6 +434,7 @@ add_library(
   src/cpp/jank/util/path.cpp
   src/cpp/jank/util/try.cpp
   src/cpp/jank/util/clang.cpp
+  src/cpp/jank/util/markdown.cpp
   src/cpp/jank/profile/time.cpp
   src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp
@@ -954,7 +955,7 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} clojure.core
+  COMMAND echo ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} clojure.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(
