@@ -147,13 +147,13 @@ namespace jank::runtime
       return {};
     }
 
-    auto &tbfs(runtime::context::thread_binding_frames);
-    if(tbfs.empty())
+    auto tbfs(__rt_ctx->thread_binding_frames.rlock());
+    if(tbfs->empty())
     {
       return {};
     }
 
-    auto const found(tbfs.front().bindings->get_entry(this));
+    auto const found(tbfs->front().bindings->get_entry(this));
     if(found.is_nil())
     {
       return {};

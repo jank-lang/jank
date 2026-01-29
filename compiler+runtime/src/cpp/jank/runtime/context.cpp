@@ -37,9 +37,6 @@
 namespace jank::runtime
 {
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  thread_local decltype(context::thread_binding_frames) context::thread_binding_frames{};
-
-  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   context *__rt_ctx{};
 
   context::context()
@@ -819,10 +816,10 @@ namespace jank::runtime
   jtl::string_result<void> context::push_thread_bindings()
   {
     auto bindings(obj::persistent_hash_map::empty());
-    auto &tbfs(thread_binding_frames);
-    if(!tbfs.empty())
+    auto tbfs(thread_binding_frames.rlock());
+    if(!tbfs->empty())
     {
-      bindings = tbfs.front().bindings;
+      bindings = tbfs->front().bindings;
     }
     /* Nothing to preserve, if there are no current bindings. */
     else
@@ -848,11 +845,11 @@ namespace jank::runtime
   context::push_thread_bindings(obj::persistent_hash_map_ref const bindings)
   {
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
-    auto &tbfs(thread_binding_frames);
+    auto tbfs(thread_binding_frames.wlock());
     auto const thread_id{ std::this_thread::get_id() };
-    if(!tbfs.empty())
+    if(!tbfs->empty())
     {
-      frame.bindings = tbfs.front().bindings;
+      frame.bindings = tbfs->front().bindings;
     }
 
     for(auto it(bindings->fresh_seq()); it.is_some(); it = it->next_in_place())
@@ -884,40 +881,40 @@ namespace jank::runtime
       }
     }
 
-    tbfs.push_front(std::move(frame));
+    tbfs->push_front(std::move(frame));
     return ok();
   }
 
   jtl::string_result<void> context::pop_thread_bindings()
   {
-    auto &tbfs(thread_binding_frames);
-    if(tbfs.empty())
+    auto tbfs(thread_binding_frames.wlock());
+    if(tbfs->empty())
     {
       return err("Mismatched thread binding pop");
     }
 
-    tbfs.pop_front();
+    tbfs->pop_front();
 
     return ok();
   }
 
   obj::persistent_hash_map_ref context::get_thread_bindings() const
   {
-    auto const &tbfs(thread_binding_frames);
-    if(tbfs.empty())
+    auto const tbfs(thread_binding_frames.rlock());
+    if(tbfs->empty())
     {
       return obj::persistent_hash_map::empty();
     }
-    return tbfs.front().bindings;
+    return tbfs->front().bindings;
   }
 
   jtl::option<thread_binding_frame> context::current_thread_binding_frame()
   {
-    auto &tbfs(thread_binding_frames);
-    if(tbfs.empty())
+    auto tbfs(thread_binding_frames.rlock());
+    if(tbfs->empty())
     {
       return none;
     }
-    return tbfs.front();
+    return tbfs->front();
   }
 }
