@@ -13,7 +13,7 @@ namespace jank::analyze::expr
 
   struct let : expression
   {
-    using pair_type = std::pair<runtime::obj::symbol_ref, expression_ref>;
+    using pair_type = std::pair<local_binding_ref, expression_ref>;
 
     static constexpr expression_kind expr_kind{ expression_kind::let };
 

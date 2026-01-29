@@ -46,7 +46,17 @@ namespace jank::analyze
     runtime::object_ref to_runtime_data() const;
   };
 
-  using local_binding_ptr = jtl::ptr<local_binding>;
+  using local_binding_ref = jtl::ref<local_binding>;
+
+  struct local_capture
+  {
+    local_binding binding;
+    local_binding_ref originating_binding;
+
+    runtime::object_ref to_runtime_data() const;
+  };
+
+  using local_capture_ref = jtl::ref<local_capture>;
 
   struct local_frame
   {
@@ -92,7 +102,7 @@ namespace jank::analyze
 
     struct binding_find_result
     {
-      local_binding_ptr binding;
+      local_binding_ref binding;
       native_vector<jtl::ptr<local_frame>> crossed_fns;
     };
 
@@ -109,10 +119,6 @@ namespace jank::analyze
     static void
     register_captures(jtl::ptr<local_frame> frame, named_recursion_find_result const &result);
 
-    /* This can be used when you have a capture, but you want to trace it back to the
-     * originating local. */
-    jtl::option<binding_find_result> find_originating_local(runtime::obj::symbol_ref const sym);
-
     jtl::option<named_recursion_find_result>
     find_named_recursion(runtime::obj::symbol_ref const sym);
 
@@ -126,12 +132,16 @@ namespace jank::analyze
     /* XXX: Everything here is not thread-safe, but is not meant to be shared. */
     frame_type type;
     jtl::option<jtl::ptr<local_frame>> parent;
-    native_unordered_map<runtime::obj::symbol_ref, local_binding> locals;
-    native_unordered_map<runtime::obj::symbol_ref, local_binding> captures;
+    /* Locals can be shadowed, so we can have one frame which has several locals with the same
+     * name, but different type, boxing, and usage information. We want to keep these separate,
+     * so we keep a queue. The latest local is at the back of the queue. */
+    native_unordered_map<runtime::obj::symbol_ref, native_deque<local_binding>> locals;
+    native_unordered_map<runtime::obj::symbol_ref, local_capture> captures;
     /* This is only set if the frame type is fn. */
     jtl::ptr<expr::function_context> fn_ctx;
   };
 
   /* TODO: Use a ref. */
   using local_frame_ptr = jtl::ptr<local_frame>;
+  using local_frame_ref = jtl::ref<local_frame>;
 }
