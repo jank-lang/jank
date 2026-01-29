@@ -23,10 +23,13 @@ namespace jank::util
    *
    * *italic*
    *
+   * terminal colors `redfoo`
+   *
    * ```<syntax>
    * ```
    *
    * 1. item 1
+   *   a. sub item
    * 2. item 2
    *
    * * item 1
@@ -110,33 +113,14 @@ namespace jank::util
     }
   }
 
-  static void parse_text_span(jtl::immutable_string const &line, markdown_ref const md)
+  static void parse_text_span(jtl::immutable_string line, markdown_ref const md)
   {
-    usize current_word{};
-    bool last_word{};
-    bool first_word{ true };
     jtl::string_builder span;
     text_style style;
-    while(true)
+    bool reading_inline_code{};
+    while(!line.empty())
     {
-      auto const old_word{ current_word };
-      auto const first_word_offset{ (first_word ? 0 : 1) };
-      current_word = line.find(' ', current_word + first_word_offset);
-      //util::println("old_word = {}, current_word = {}", old_word, current_word);
-      if(current_word == jtl::immutable_string::npos)
-      {
-        last_word = true;
-      }
-
-      auto word{ line.substr(old_word + first_word_offset,
-                             current_word - old_word - first_word_offset) };
-      //util::println("word = '{}'", word);
-
-      if(!first_word)
-      {
-        span(' ');
-      }
-      if(word.starts_with("**"))
+      if(line.starts_with("**"))
       {
         if(!span.empty())
         {
@@ -144,9 +128,10 @@ namespace jank::util
           span.clear();
         }
         style.bold = !style.bold;
-        word = word.substr(2);
+        line = line.substr(2);
+        //println("toggled bold, line is now '{}'", line);
       }
-      if(word.starts_with("*"))
+      if(line.starts_with("*"))
       {
         if(!span.empty())
         {
@@ -154,18 +139,36 @@ namespace jank::util
           span.clear();
         }
         style.italic = !style.italic;
-        word = word.substr(1);
+        line = line.substr(1);
+        //println("toggled italics, line is now '{}'", line);
       }
-
-      // **foo*bar**
-
-      span(word);
-
-      if(last_word)
+      if(line.starts_with("`"))
       {
-        break;
+        if(reading_inline_code)
+        {
+          md->nodes.emplace_back(inline_code{ span.release(), style });
+          span.clear();
+          reading_inline_code = false;
+        }
+        else if(!span.empty())
+        {
+          md->nodes.emplace_back(text_span{ span.release(), style });
+          span.clear();
+          reading_inline_code = true;
+        }
+        line = line.substr(1);
       }
-      first_word = false;
+
+      span(line[0]);
+
+      if(1 < line.size())
+      {
+        line = line.substr(1);
+      }
+      else
+      {
+        line = "";
+      }
     }
 
     /* TODO: Helper for this? */
@@ -271,7 +274,6 @@ namespace jank::util
     {
       sb(jtl::terminal_style::no_italic);
     }
-    sb(' ');
   }
 
   void render_markdown(line_break const &, jtl::string_builder &sb, usize const)
@@ -281,8 +283,16 @@ namespace jank::util
 
   void render_markdown(inline_code const &code, jtl::string_builder &sb, usize const)
   {
+    if(code.style.bold)
+    {
+      sb(jtl::terminal_style::bold);
+    }
+    if(code.style.italic)
+    {
+      sb(jtl::terminal_style::italic);
+    }
     format_to(sb,
-              "{}{}{} ",
+              "{}{}{}",
               jtl::terminal_style::bright_red,
               code.content,
               jtl::terminal_style::reset);
@@ -311,7 +321,10 @@ This is also a sentence.
 
 This is a new  paragraph.
 
-**This is bold.** *This is italicized.*)") };
+## Now for some styling
+**This is bold. *This is** italicized.*
+
+Here is some `code`. Here is **some `bold code`.**)") };
     util::println("{}", render_markdown(md));
   }
 }
