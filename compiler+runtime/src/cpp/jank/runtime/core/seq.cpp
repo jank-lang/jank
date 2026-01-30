@@ -567,26 +567,12 @@ namespace jank::runtime
 
   object_ref get(object_ref const m, object_ref const key)
   {
-    if(m->has_behavior(object_behavior::get))
-    {
-      return m->get(key);
-    }
-    else
-    {
-      return {};
-    }
+    return m->get(key);
   }
 
   object_ref get(object_ref const m, object_ref const key, object_ref const fallback)
   {
-    if(m->has_behavior(object_behavior::get))
-    {
-      return m->get(key, fallback);
-    }
-    else
-    {
-      return fallback;
-    }
+    return m->get(key, fallback);
   }
 
   object_ref get_in(object_ref const m, object_ref const keys)
@@ -638,19 +624,7 @@ namespace jank::runtime
 
   object_ref find(object_ref const s, object_ref const key)
   {
-    if(s.is_nil())
-    {
-      return s;
-    }
-
-    if(s->has_behavior(object_behavior::find))
-    {
-      return s->find(key);
-    }
-    else
-    {
-      return {};
-    }
+    return s->find(key);
   }
 
   bool contains(object_ref const s, object_ref const key)

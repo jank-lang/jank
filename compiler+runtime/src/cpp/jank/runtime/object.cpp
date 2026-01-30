@@ -179,12 +179,12 @@ namespace jank::runtime
 
   object_ref object::get(object_ref const) const
   {
-    throw error::runtime_unsupported_behavior(type, "get", object_source(this));
+    return {};
   }
 
-  object_ref object::get(object_ref const, object_ref const) const
+  object_ref object::get(object_ref const, object_ref const fallback) const
   {
-    throw error::runtime_unsupported_behavior(type, "get", object_source(this));
+    return fallback;
   }
 
   bool object::contains(object_ref const) const
@@ -194,7 +194,7 @@ namespace jank::runtime
 
   object_ref object::find(object_ref const) const
   {
-    throw error::runtime_unsupported_behavior(type, "find", object_source(this));
+    return {};
   }
 
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept

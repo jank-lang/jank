@@ -163,6 +163,11 @@ namespace jank::codegen
                            native_vector<analyze::expression_ref> const &arg_exprs,
                            analyze::expr::function_arity const &fn_arity,
                            bool ret_box_needed);
+    void format_elided_var_member(jtl::immutable_string const &member,
+                                  jtl::immutable_string const &ret_tmp,
+                                  native_vector<analyze::expression_ref> const &arg_exprs,
+                                  analyze::expr::function_arity const &fn_arity,
+                                  bool ret_box_needed);
     void format_dynamic_call(jtl::immutable_string const &source_tmp,
                              jtl::immutable_string const &ret_tmp,
                              native_vector<analyze::expression_ref> const &arg_exprs,

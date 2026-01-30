@@ -720,7 +720,7 @@ namespace jank::codegen
     }
     util::format_to(body_buffer, "auto &&{}({}{}", ret_tmp, ret_box, start);
     bool need_comma{};
-    for(size_t i{}; i < runtime::max_params && i < arg_tmps.size(); ++i)
+    for(size_t i{}; i < arg_tmps.size(); ++i)
     {
       if(need_comma)
       {
@@ -730,6 +730,44 @@ namespace jank::codegen
       need_comma = true;
     }
     util::format_to(body_buffer, "{}{});", end, (ret_box_needed ? ")" : ""));
+  }
+
+  void processor::format_elided_var_member(jtl::immutable_string const &member,
+                                           jtl::immutable_string const &ret_tmp,
+                                           native_vector<analyze::expression_ref> const &arg_exprs,
+                                           analyze::expr::function_arity const &fn_arity,
+                                           bool ret_box_needed)
+  {
+    native_vector<handle> arg_tmps;
+    arg_tmps.reserve(arg_exprs.size());
+    for(auto const &arg_expr : arg_exprs)
+    {
+      arg_tmps.emplace_back(gen(arg_expr, fn_arity).unwrap());
+    }
+    jank_debug_assert(!arg_tmps.empty());
+
+    jtl::immutable_string ret_box;
+    if(ret_box_needed)
+    {
+      ret_box = "jank::runtime::make_box(";
+    }
+    util::format_to(body_buffer,
+                    "auto &&{}({}{}->{}(",
+                    ret_tmp,
+                    ret_box,
+                    arg_tmps[0].str(false),
+                    member);
+    bool need_comma{};
+    for(size_t i{ 1 }; i < arg_tmps.size(); ++i)
+    {
+      if(need_comma)
+      {
+        util::format_to(body_buffer, ", ");
+      }
+      util::format_to(body_buffer, "{}", arg_tmps[i].str(false));
+      need_comma = true;
+    }
+    util::format_to(body_buffer, "){});", (ret_box_needed ? ")" : ""));
   }
 
   void processor::format_direct_call(jtl::immutable_string const &source_tmp,
@@ -778,12 +816,7 @@ namespace jank::codegen
       }
       else if(sym == "get")
       {
-        format_elided_var("jank::runtime::get(",
-                          ")",
-                          ret_tmp.str(false),
-                          expr->arg_exprs,
-                          fn_arity,
-                          false);
+        format_elided_var_member("get", ret_tmp.str(false), expr->arg_exprs, fn_arity, false);
         elided = true;
       }
       else if(expr->arg_exprs.empty())
