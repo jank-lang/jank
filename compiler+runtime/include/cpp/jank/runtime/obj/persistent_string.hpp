@@ -23,8 +23,8 @@ namespace jank::runtime::obj
 
     static persistent_string_ref empty()
     {
-      static auto const ret(make_box<persistent_string>());
-      return ret;
+      static persistent_string const ret;
+      return &ret;
     }
 
     /* behavior::object_like */
