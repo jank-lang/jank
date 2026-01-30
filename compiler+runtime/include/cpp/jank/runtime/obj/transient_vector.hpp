@@ -10,7 +10,8 @@ namespace jank::runtime::obj
   struct transient_vector : object
   {
     static constexpr object_type obj_type{ object_type::transient_vector };
-    static constexpr object_behavior obj_behaviors{ object_behavior::call };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
+                                                    | object_behavior::find };
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_vector;
@@ -38,11 +39,13 @@ namespace jank::runtime::obj
     using object::call;
     object_ref call(object_ref const) const override;
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const idx) const;
-    object_ref get(object_ref const idx, object_ref const fallback) const;
-    object_ref get_entry(object_ref const idx) const;
-    bool contains(object_ref const elem) const;
+    /* behavior::get */
+    object_ref get(object_ref const idx) const override;
+    object_ref get(object_ref const idx, object_ref const fallback) const override;
+    bool contains(object_ref const elem) const override;
+
+    /* behavior::find */
+    object_ref find(object_ref const key) const override;
 
     transient_vector_ref pop_in_place();
 

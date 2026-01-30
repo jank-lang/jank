@@ -54,14 +54,14 @@ namespace jank::runtime::obj
       CHECK(!v->contains(under));
       CHECK(!v->contains(non_int));
     }
-    TEST_CASE("get_entry")
+    TEST_CASE("find")
     {
-      CHECK(equal(v->get_entry(min), make_box<persistent_vector>(std::in_place, min, min_char)));
-      CHECK(equal(v->get_entry(mid), make_box<persistent_vector>(std::in_place, mid, mid_char)));
-      CHECK(equal(v->get_entry(max), make_box<persistent_vector>(std::in_place, max, max_char)));
-      CHECK(equal(v->get_entry(over), jank_nil()));
-      CHECK(equal(v->get_entry(under), jank_nil()));
-      CHECK(equal(v->get_entry(non_int), jank_nil()));
+      CHECK(equal(v->find(min), make_box<persistent_vector>(std::in_place, min, min_char)));
+      CHECK(equal(v->find(mid), make_box<persistent_vector>(std::in_place, mid, mid_char)));
+      CHECK(equal(v->find(max), make_box<persistent_vector>(std::in_place, max, max_char)));
+      CHECK(equal(v->find(over), jank_nil()));
+      CHECK(equal(v->find(under), jank_nil()));
+      CHECK(equal(v->find(non_int), jank_nil()));
     }
     TEST_CASE("equal")
     {

@@ -12,7 +12,7 @@ namespace jank::runtime::obj
   struct persistent_string : object
   {
     static constexpr object_type obj_type{ object_type::persistent_string };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::get };
     static constexpr bool pointer_free{ false };
 
     persistent_string();
@@ -40,11 +40,10 @@ namespace jank::runtime::obj
     /* behavior::comparable extended */
     i64 compare(persistent_string const &) const;
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const key) const;
-    object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref const key) const;
-    bool contains(object_ref const key) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
 
     /* behavior::indexable */
     object_ref nth(object_ref const index) const;

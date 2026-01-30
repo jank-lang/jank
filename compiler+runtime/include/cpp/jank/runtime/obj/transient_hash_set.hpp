@@ -10,7 +10,7 @@ namespace jank::runtime::obj
   struct transient_hash_set : object
   {
     static constexpr object_type obj_type{ object_type::transient_hash_set };
-    static constexpr object_behavior obj_behaviors{ object_behavior::call };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get };
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_hash_set;
@@ -39,11 +39,10 @@ namespace jank::runtime::obj
     object_ref call(object_ref const) const override;
     object_ref call(object_ref const, object_ref const fallback) const override;
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const elem) const;
-    object_ref get(object_ref const elem, object_ref const fallback) const;
-    object_ref get_entry(object_ref const elem) const;
-    bool contains(object_ref const elem) const;
+    /* behavior::get */
+    object_ref get(object_ref const elem) const override;
+    object_ref get(object_ref const elem, object_ref const fallback) const override;
+    bool contains(object_ref const elem) const override;
 
     transient_hash_set_ref disjoin_in_place(object_ref const elem);
 

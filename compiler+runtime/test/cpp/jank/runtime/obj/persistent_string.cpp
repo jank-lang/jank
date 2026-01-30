@@ -47,20 +47,6 @@ namespace jank::runtime::obj
       CHECK(!s.contains(under));
       CHECK(!s.contains(non_int));
     }
-    TEST_CASE("get_entry not implemented")
-    {
-      try
-      {
-        s.get_entry(min);
-        CHECK(false);
-      }
-      catch(std::exception const &e)
-      {
-        std::string const actual{ e.what() };
-        auto const expected{ "get_entry not supported on string" };
-        CHECK_EQ(actual, expected);
-      }
-    }
     TEST_CASE("to_code_string")
     {
       static auto const s{ make_box("?") };

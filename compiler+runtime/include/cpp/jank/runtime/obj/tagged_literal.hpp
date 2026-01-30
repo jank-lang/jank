@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   struct tagged_literal : object
   {
     static constexpr object_type obj_type{ object_type::tagged_literal };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::get };
     static constexpr bool pointer_free{ false };
 
     tagged_literal(object_ref const tag, object_ref const form);
@@ -21,11 +21,10 @@ namespace jank::runtime::obj
     jtl::immutable_string to_code_string() const override;
     uhash to_hash() const override;
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const key) const;
-    object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref const key) const;
-    bool contains(object_ref const key) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     object_ref tag{};

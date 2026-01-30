@@ -17,7 +17,8 @@ namespace jank::runtime::obj
                                        runtime::detail::native_persistent_hash_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_hash_map };
-    static constexpr object_behavior obj_behaviors{ object_behavior::call };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
+                                                    | object_behavior::find };
     using parent_type
       = obj::detail::base_persistent_map<persistent_hash_map,
                                          persistent_hash_map_sequence,
@@ -70,11 +71,13 @@ namespace jank::runtime::obj
 
     static persistent_hash_map_ref create_from_seq(object_ref const seq);
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const key) const;
-    object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref const key) const;
-    bool contains(object_ref const key) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
+
+    /* behavior::find */
+    object_ref find(object_ref const key) const override;
 
     /* behavior::associatively_writable */
     persistent_hash_map_ref assoc(object_ref const key, object_ref const val) const;

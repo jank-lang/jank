@@ -82,7 +82,7 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ref persistent_sorted_map::get_entry(object_ref const key) const
+  object_ref persistent_sorted_map::find(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res != data.end())

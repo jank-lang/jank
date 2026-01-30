@@ -65,4 +65,15 @@ namespace jank::error
   {
     return make_error(kind::runtime_non_metadatable_value, message, source);
   }
+
+  error_ref runtime_unsupported_behavior(runtime::object_type const type,
+                                         jtl::immutable_string const &behavior,
+                                         read::source const &source)
+  {
+    return make_error(kind::runtime_unsupported_behavior,
+                      util::format("Objects of type '{}' do not support the '{}' behavior.",
+                                   runtime::object_type_str(type),
+                                   behavior),
+                      source);
+  }
 }

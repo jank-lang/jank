@@ -251,7 +251,8 @@ namespace jank::runtime
   {
     none = 0,
     call = 1 << 0,
-    //associatively_readable,
+    get = 1 << 1,
+    find = 1 << 2,
     //associatively_writable,
     //chunkable,
     //collection_like,
@@ -310,8 +311,9 @@ namespace jank::runtime
     virtual void to_string(jtl::string_builder &) const;
     virtual jtl::immutable_string to_code_string() const;
     virtual uhash to_hash() const;
+    bool has_behavior(object_behavior) const;
 
-    /* callable */
+    /* behavior::call */
     virtual object_ref call() const;
     virtual object_ref call(object_ref const) const;
     virtual object_ref call(object_ref const, object_ref const) const;
@@ -394,6 +396,14 @@ namespace jank::runtime
       * an empty sequence for `args`.
       */
     virtual callable_arity_flags get_arity_flags() const;
+
+    /* behavior::get */
+    virtual object_ref get(object_ref key) const;
+    virtual object_ref get(object_ref key, object_ref fallback) const;
+    virtual bool contains(object_ref key) const;
+
+    /* behavior::find */
+    virtual object_ref find(object_ref key) const;
 
     object_type type{};
     object_behavior behaviors{ object_behavior::none };

@@ -150,12 +150,32 @@ namespace jank::runtime::obj
     {
       return *found;
     }
-    return jank_nil();
+    return {};
   }
 
   transient_sorted_set_ref persistent_sorted_set::to_transient() const
   {
     return make_box<transient_sorted_set>(data);
+  }
+
+  object_ref persistent_sorted_set::get(object_ref const key) const
+  {
+    auto const found(data.find(key));
+    if(found != data.end())
+    {
+      return *found;
+    }
+    return {};
+  }
+
+  object_ref persistent_sorted_set::get(object_ref const key, object_ref const fallback) const
+  {
+    auto const found(data.find(key));
+    if(found != data.end())
+    {
+      return *found;
+    }
+    return fallback;
   }
 
   bool persistent_sorted_set::contains(object_ref const o) const

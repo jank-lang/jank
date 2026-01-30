@@ -224,7 +224,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref persistent_vector::get_entry(object_ref const key) const
+  object_ref persistent_vector::find(object_ref const key) const
   {
     if(key->type == object_type::integer)
     {

@@ -99,11 +99,6 @@ namespace jank::runtime::obj
     return false;
   }
 
-  object_ref persistent_string::get_entry(object_ref const) const
-  {
-    throw std::runtime_error{ util::format("get_entry not supported on string") };
-  }
-
   object_ref persistent_string::nth(object_ref const index) const
   {
     if(index->type == object_type::integer)

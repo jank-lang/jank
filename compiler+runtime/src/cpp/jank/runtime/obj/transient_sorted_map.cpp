@@ -59,7 +59,7 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ref transient_sorted_map::get_entry(object_ref const key) const
+  object_ref transient_sorted_map::find(object_ref const key) const
   {
     assert_active();
     auto const res(data.find(key));

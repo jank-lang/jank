@@ -11,7 +11,7 @@ namespace jank::runtime::obj
   struct nil : object
   {
     static constexpr object_type obj_type{ object_type::nil };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::get };
     static constexpr bool pointer_free{ true };
 
     nil();
@@ -29,11 +29,10 @@ namespace jank::runtime::obj
     /* behavior::comparable extended */
     i64 compare(nil const &) const;
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const key);
-    object_ref get(object_ref const key, object_ref const fallback);
-    object_ref get_entry(object_ref const key);
-    bool contains(object_ref const key) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
 
     /* behavior::associatively_writable */
     obj::persistent_array_map_ref assoc(object_ref const key, object_ref const val) const;

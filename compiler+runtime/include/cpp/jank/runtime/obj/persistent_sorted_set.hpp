@@ -12,7 +12,7 @@ namespace jank::runtime::obj
   struct persistent_sorted_set : object
   {
     static constexpr object_type obj_type{ object_type::persistent_sorted_set };
-    static constexpr object_behavior obj_behaviors{ object_behavior::call };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_set_like{ true };
 
@@ -71,7 +71,11 @@ namespace jank::runtime::obj
     /* behavior::transientable */
     obj::transient_sorted_set_ref to_transient() const;
 
-    bool contains(object_ref const o) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const o) const override;
+
     persistent_sorted_set_ref disj(object_ref const o) const;
 
     /*** XXX: Everything here is immutable after initialization. ***/

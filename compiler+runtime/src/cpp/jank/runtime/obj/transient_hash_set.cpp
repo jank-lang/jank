@@ -86,18 +86,6 @@ namespace jank::runtime::obj
     return call(elem, fallback);
   }
 
-  object_ref transient_hash_set::get_entry(object_ref const elem) const
-  {
-    auto const found = call(elem);
-    auto const nil(jank_nil());
-    if(found == nil)
-    {
-      return nil;
-    }
-
-    return make_box<persistent_vector>(std::in_place, found, found);
-  }
-
   bool transient_hash_set::contains(object_ref const elem) const
   {
     assert_active();

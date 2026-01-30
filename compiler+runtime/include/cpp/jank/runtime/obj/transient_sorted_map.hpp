@@ -10,7 +10,8 @@ namespace jank::runtime::obj
   struct transient_sorted_map : object
   {
     static constexpr object_type obj_type{ object_type::transient_sorted_map };
-    static constexpr object_behavior obj_behaviors{ object_behavior::call };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
+                                                    | object_behavior::find };
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_sorted_map;
@@ -27,11 +28,13 @@ namespace jank::runtime::obj
     /* behavior::countable */
     usize count() const;
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const key) const;
-    object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref const key) const;
-    bool contains(object_ref const key) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
+
+    /* behavior::find */
+    object_ref find(object_ref const key) const override;
 
     /* behavior::associatively_writable_in_place */
     transient_sorted_map_ref assoc_in_place(object_ref const key, object_ref const val);

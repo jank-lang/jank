@@ -80,17 +80,6 @@ namespace jank::runtime::obj
     return call(elem, fallback);
   }
 
-  object_ref transient_sorted_set::get_entry(object_ref const elem) const
-  {
-    auto found{ call(elem) };
-    if(found == jank_nil())
-    {
-      return found;
-    }
-
-    return make_box<persistent_vector>(std::in_place, found, found);
-  }
-
   bool transient_sorted_set::contains(object_ref const elem) const
   {
     assert_active();

@@ -92,7 +92,7 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ref persistent_hash_map::get_entry(object_ref const key) const
+  object_ref persistent_hash_map::find(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res)

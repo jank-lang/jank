@@ -146,7 +146,7 @@ namespace jank::runtime::obj
     auto const found(data.find(o));
     if(!found)
     {
-      return jank_nil();
+      return {};
     }
     return *found;
   }
@@ -154,6 +154,21 @@ namespace jank::runtime::obj
   transient_hash_set_ref persistent_hash_set::to_transient() const
   {
     return make_box<transient_hash_set>(data);
+  }
+
+  object_ref persistent_hash_set::get(object_ref const key) const
+  {
+    return call(key);
+  }
+
+  object_ref persistent_hash_set::get(object_ref const key, object_ref const fallback) const
+  {
+    auto const found(data.find(key));
+    if(!found)
+    {
+      return fallback;
+    }
+    return *found;
   }
 
   bool persistent_hash_set::contains(object_ref const o) const

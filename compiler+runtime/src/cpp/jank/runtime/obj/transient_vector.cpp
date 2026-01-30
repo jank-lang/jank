@@ -118,7 +118,7 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref transient_vector::get_entry(object_ref const idx) const
+  object_ref transient_vector::find(object_ref const idx) const
   {
     if(idx->type == object_type::integer)
     {
@@ -132,7 +132,7 @@ namespace jank::runtime::obj
     }
     else
     {
-      throw std::runtime_error{ util::format("get_entry on a vector must be an integer; found {}",
+      throw std::runtime_error{ util::format("find on a vector must be an integer; found {}",
                                              runtime::to_string(idx)) };
     }
   }

@@ -80,24 +80,6 @@ namespace jank::runtime::obj
     return get(key, jank_nil());
   }
 
-  object_ref tagged_literal::get_entry(object_ref const key) const
-  {
-    auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
-    auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
-
-    if(tag_kw == key)
-    {
-      return make_box<persistent_vector>(std::in_place, tag_kw, tag);
-    }
-
-    if(form_kw == key)
-    {
-      return make_box<persistent_vector>(std::in_place, form_kw, form);
-    }
-
-    return jank_nil();
-  }
-
   bool tagged_literal::contains(object_ref const key) const
   {
     auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };

@@ -224,6 +224,8 @@ namespace jank::error
         return "Invalid unbox type.";
       case kind::runtime_non_metadatable_value:
         return "Non metadatable value.";
+      case kind::runtime_unsupported_behavior:
+        return "Unsupported behavior.";
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
 

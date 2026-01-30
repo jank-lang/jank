@@ -153,7 +153,7 @@ namespace jank::runtime
       return {};
     }
 
-    auto const found(tbfs->front().bindings->get_entry(this));
+    auto const found(tbfs->front().bindings->find(this));
     if(found.is_nil())
     {
       return {};

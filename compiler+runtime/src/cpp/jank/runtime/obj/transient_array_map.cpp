@@ -50,7 +50,7 @@ namespace jank::runtime::obj
     return data.find(key).unwrap_or(fallback);
   }
 
-  object_ref transient_array_map::get_entry(object_ref const key) const
+  object_ref transient_array_map::find(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res.is_some())

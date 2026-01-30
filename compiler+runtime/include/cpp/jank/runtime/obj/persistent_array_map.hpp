@@ -16,7 +16,8 @@ namespace jank::runtime::obj
                                        runtime::detail::native_array_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_array_map };
-    static constexpr object_behavior obj_behaviors{ object_behavior::call };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
+                                                    | object_behavior::find };
     static constexpr u8 max_size{ value_type::max_size };
     using parent_type = obj::detail::base_persistent_map<persistent_array_map,
                                                          persistent_array_map_sequence,
@@ -68,11 +69,13 @@ namespace jank::runtime::obj
                                             sizeof...(args));
     }
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const key) const;
-    object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref const key) const;
-    bool contains(object_ref const key) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
+
+    /* behavior::find */
+    object_ref find(object_ref const key) const override;
 
     /* behavior::associatively_writable */
     object_ref assoc(object_ref const key, object_ref const val) const;
