@@ -471,13 +471,27 @@ namespace jank::runtime
     return o;
   }
 
-  /* TODO:  these. */
+  /* TODO: constexpr these. */
   template <typename T, typename... Args>
   jtl::ref<T> make_box(Args &&...args)
   {
     static_assert(sizeof(jtl::ref<T>) == sizeof(T *));
-    /* TODO: Figure out cleanup for this. */
-    T *ret{ new(GC) T{ std::forward<Args>(args)... } };
+    T *ret{};
+    if constexpr(requires { T::pointer_free; })
+    {
+      if constexpr(T::pointer_free)
+      {
+        ret = new(PointerFreeGC) T{ std::forward<Args>(args)... };
+      }
+      else
+      {
+        ret = new(GC) T{ std::forward<Args>(args)... };
+      }
+    }
+    else
+    {
+      ret = new(GC) T{ std::forward<Args>(args)... };
+    }
     if(!ret)
     {
       throw std::runtime_error{ "unable to allocate box" };
@@ -497,7 +511,22 @@ namespace jank::runtime
   oref<T> make_box(Args &&...args)
   {
     static_assert(sizeof(oref<T>) == sizeof(T *));
-    oref<T> ret{ new(GC) T{ std::forward<Args>(args)... } };
+    oref<T> ret;
+    if constexpr(requires { T::pointer_free; })
+    {
+      if constexpr(T::pointer_free)
+      {
+        ret = new(PointerFreeGC) T{ std::forward<Args>(args)... };
+      }
+      else
+      {
+        ret = new(GC) T{ std::forward<Args>(args)... };
+      }
+    }
+    else
+    {
+      ret = new(GC) T{ std::forward<Args>(args)... };
+    }
     return ret;
   }
 
