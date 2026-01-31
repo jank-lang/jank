@@ -696,6 +696,14 @@ namespace jank::read::parse
 
     TEST_CASE("List")
     {
+      SUBCASE("With lexer errors")
+      {
+        lex::processor lp{ "(0v)" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_err());
+      }
+
       SUBCASE("Empty")
       {
         lex::processor lp{ "() ( ) (  )" };
@@ -776,10 +784,26 @@ namespace jank::read::parse
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
+
+      SUBCASE("Unterminated in the middle")
+      {
+        lex::processor lp{ "[(]" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r1(p.next());
+        CHECK(r1.is_err());
+      }
     }
 
     TEST_CASE("Vector")
     {
+      SUBCASE("With lexer errors")
+      {
+        lex::processor lp{ "[0v]" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_err());
+      }
+
       SUBCASE("Empty")
       {
         lex::processor lp{ "[] [ ] [  ]" };
@@ -847,10 +871,26 @@ namespace jank::read::parse
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
+
+      SUBCASE("Unterminated in the middle")
+      {
+        lex::processor lp{ "([)" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r1(p.next());
+        CHECK(r1.is_err());
+      }
     }
 
     TEST_CASE("Map")
     {
+      SUBCASE("With lexer errors")
+      {
+        lex::processor lp{ "{0v}" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_err());
+      }
+
       SUBCASE("Empty")
       {
         lex::processor lp{ "{} { } {,,}" };
@@ -981,6 +1021,14 @@ namespace jank::read::parse
       SUBCASE("Unterminated")
       {
         lex::processor lp{ "{1" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r1(p.next());
+        CHECK(r1.is_err());
+      }
+
+      SUBCASE("Unterminated in the middle")
+      {
+        lex::processor lp{ "({)" };
         processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
@@ -1159,6 +1207,14 @@ namespace jank::read::parse
 
       SUBCASE("Set")
       {
+        SUBCASE("With lexer errors")
+        {
+          lex::processor lp{ "#{0v}" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_err());
+        }
+
         SUBCASE("Empty")
         {
           lex::processor lp{ "#{}" };
@@ -1199,6 +1255,14 @@ namespace jank::read::parse
         SUBCASE("Unterminated")
         {
           lex::processor lp{ "#{1" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r1(p.next());
+          CHECK(r1.is_err());
+        }
+
+        SUBCASE("Unterminated in the middle")
+        {
+          lex::processor lp{ "(#{)" };
           processor p{ lp.begin(), lp.end() };
           auto const r1(p.next());
           CHECK(r1.is_err());
