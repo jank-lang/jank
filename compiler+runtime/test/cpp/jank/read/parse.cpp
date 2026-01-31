@@ -1195,6 +1195,14 @@ namespace jank::read::parse
           auto const r1(p.next());
           CHECK(r1.is_err());
         }
+
+        SUBCASE("Unterminated")
+        {
+          lex::processor lp{ "#{1" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r1(p.next());
+          CHECK(r1.is_err());
+        }
       }
 
       SUBCASE("Comment")

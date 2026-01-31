@@ -228,11 +228,11 @@ namespace jank::read::parse
         case lex::token_kind::close_square_bracket:
         case lex::token_kind::close_paren:
         case lex::token_kind::close_curly_bracket:
+          ++token_current;
           if(expected_closer != latest_token.kind)
           {
             return error::parse_unexpected_closing_character(latest_token);
           }
-          ++token_current;
           expected_closer = none;
           return ok(none);
         case lex::token_kind::single_quote:
@@ -338,7 +338,7 @@ namespace jank::read::parse
       {
         auto const error{ it.latest.unwrap().expect_err() };
 
-        if(!is_reader_suppressed || error::is_insuppressible_error(error->kind))
+        if(!is_reader_suppressed || error::is_insuppressible(error->kind))
         {
           return err(error);
         }
@@ -350,13 +350,13 @@ namespace jank::read::parse
       }
       ret.push_back(it.latest.unwrap().expect_ok().unwrap().ptr);
     }
+
     if(expected_closer.is_some())
     {
       return error::parse_unterminated_list({ start_token.start, latest_token.end });
     }
 
     expected_closer = prev_expected_closer;
-
     return object_source_info{ make_box<obj::persistent_list>(
                                  source_to_meta(start_token.start, latest_token.end),
                                  std::in_place,
@@ -378,22 +378,24 @@ namespace jank::read::parse
         obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
     util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    native_vector<processor::object_result> const items(begin(), end());
 
-    runtime::detail::native_transient_vector ret;
-    for(auto it(begin()); it != end(); ++it)
-    {
-      if(it.latest.unwrap().is_err())
-      {
-        return err(it.latest.unwrap().expect_err());
-      }
-      ret.push_back(it.latest.unwrap().expect_ok().unwrap().ptr);
-    }
     if(expected_closer.is_some())
     {
       return error::parse_unterminated_vector(start_token.start);
     }
 
     expected_closer = prev_expected_closer;
+
+    runtime::detail::native_transient_vector ret;
+    for(auto &it : items)
+    {
+      if(it.is_err())
+      {
+        return err(it.expect_err());
+      }
+      ret.push_back(it.expect_ok().unwrap().ptr);
+    }
     return object_source_info{ make_box<obj::persistent_vector>(
                                  source_to_meta(start_token.start, latest_token.end),
                                  ret.persistent()),
@@ -757,7 +759,6 @@ namespace jank::read::parse
       ret.insert(item.ptr);
     }
 
-    expected_closer = prev_expected_closer;
     return object_source_info{ make_box<obj::persistent_hash_set>(
                                  source_to_meta(start_token.start, latest_token.end),
                                  jtl::move(ret).persistent()),
