@@ -624,7 +624,7 @@ namespace jank::evaluate
 
   object_ref eval(expr::do_ref const expr)
   {
-    object_ref ret{ jank_nil() };
+    object_ref ret{};
     for(auto const &form : expr->values)
     {
       ret = eval(form);
@@ -653,7 +653,7 @@ namespace jank::evaluate
     {
       return eval(expr->else_.unwrap());
     }
-    return jank_nil();
+    return {};
   }
 
   object_ref eval(expr::throw_ref const expr)
@@ -699,7 +699,7 @@ namespace jank::evaluate
   object_ref eval(expr::cpp_raw_ref const expr)
   {
     __rt_ctx->jit_prc.eval_string(expr->code);
-    return runtime::jank_nil();
+    return {};
   }
 
   object_ref eval(expr::cpp_type_ref const)

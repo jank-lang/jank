@@ -1587,7 +1587,7 @@ namespace jank::read::parse
   processor::object_result processor::parse_nil()
   {
     ++token_current;
-    return object_source_info{ jank_nil(), latest_token, latest_token };
+    return object_source_info{ {}, latest_token, latest_token };
   }
 
   processor::object_result processor::parse_boolean()

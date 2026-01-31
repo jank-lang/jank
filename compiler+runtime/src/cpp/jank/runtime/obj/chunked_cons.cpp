@@ -97,10 +97,6 @@ namespace jank::runtime::obj
         {
           o->head = typed_tail->first();
           o->tail = typed_tail->next();
-          if(o->tail == jank_nil())
-          {
-            o->tail = jank_nil();
-          }
           return o;
         }
         else

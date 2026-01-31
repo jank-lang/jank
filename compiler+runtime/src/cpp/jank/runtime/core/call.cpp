@@ -17,7 +17,7 @@ namespace jank::runtime
     switch(arity_flags)
     {
       case mask_variadic_arity(0):
-        return source->call(jank_nil());
+        return source->call({});
       default:
         return source->call();
     }
@@ -35,7 +35,7 @@ namespace jank::runtime
       case mask_variadic_arity(1):
         if(!is_variadic_ambiguous(arity_flags))
         {
-          return source->call(a1, jank_nil());
+          return source->call(a1, {});
         }
       default:
         return source->call(a1);
@@ -56,7 +56,7 @@ namespace jank::runtime
       case mask_variadic_arity(2):
         if(!is_variadic_ambiguous(arity_flags))
         {
-          return source->call(a1, a2, jank_nil());
+          return source->call(a1, a2, {});
         }
       default:
         return source->call(a1, a2);
@@ -82,7 +82,7 @@ namespace jank::runtime
       case mask_variadic_arity(3):
         if(!is_variadic_ambiguous(arity_flags))
         {
-          return source->call(a1, a2, a3, jank_nil());
+          return source->call(a1, a2, a3, {});
         }
       default:
         return source->call(a1, a2, a3);
@@ -111,7 +111,7 @@ namespace jank::runtime
       case mask_variadic_arity(4):
         if(!is_variadic_ambiguous(arity_flags))
         {
-          return source->call(a1, a2, a3, a4, jank_nil());
+          return source->call(a1, a2, a3, a4, {});
         }
       default:
         return source->call(a1, a2, a3, a4);
@@ -143,7 +143,7 @@ namespace jank::runtime
       case mask_variadic_arity(5):
         if(!is_variadic_ambiguous(arity_flags))
         {
-          return source->call(a1, a2, a3, a4, a5, jank_nil());
+          return source->call(a1, a2, a3, a4, a5, {});
         }
       default:
         return source->call(a1, a2, a3, a4, a5);
@@ -178,7 +178,7 @@ namespace jank::runtime
       case mask_variadic_arity(6):
         if(!is_variadic_ambiguous(arity_flags))
         {
-          return source->call(a1, a2, a3, a4, a5, a6, jank_nil());
+          return source->call(a1, a2, a3, a4, a5, a6, {});
         }
       default:
         return source->call(a1, a2, a3, a4, a5, a6);
@@ -216,7 +216,7 @@ namespace jank::runtime
       case mask_variadic_arity(7):
         if(!is_variadic_ambiguous(arity_flags))
         {
-          return source->call(a1, a2, a3, a4, a5, a6, a7, jank_nil());
+          return source->call(a1, a2, a3, a4, a5, a6, a7, {});
         }
       default:
         return source->call(a1, a2, a3, a4, a5, a6, a7);
@@ -257,7 +257,7 @@ namespace jank::runtime
       case mask_variadic_arity(8):
         if(!is_variadic_ambiguous(arity_flags))
         {
-          return source->call(a1, a2, a3, a4, a5, a6, a7, a8, jank_nil());
+          return source->call(a1, a2, a3, a4, a5, a6, a7, a8, {});
         }
       default:
         return source->call(a1, a2, a3, a4, a5, a6, a7, a8);
@@ -316,7 +316,7 @@ namespace jank::runtime
       case mask_variadic_arity(9):
         if(!is_variadic_ambiguous(arity_flags))
         {
-          return source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, jank_nil());
+          return source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, {});
         }
       default:
         return source->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);

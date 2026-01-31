@@ -133,7 +133,7 @@ namespace jank::runtime::obj
     auto const first(data.first());
     if(first.is_none())
     {
-      return jank_nil();
+      return {};
     }
     return first.unwrap();
   }

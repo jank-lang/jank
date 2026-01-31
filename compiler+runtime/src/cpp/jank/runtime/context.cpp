@@ -77,7 +77,7 @@ namespace jank::runtime
 
     auto const command_line_args_sym(make_box<obj::symbol>("*command-line-args*"));
     auto const command_line_args_var{ core->intern_var(command_line_args_sym) };
-    command_line_args_var->bind_root(jank_nil());
+    command_line_args_var->bind_root({});
     command_line_args_var->dynamic.store(true);
 
     /* These are not actually interned. They're extra private. */
@@ -167,7 +167,7 @@ namespace jank::runtime
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     bool no_op{ true };
-    object_ref ret{ jank_nil() };
+    object_ref ret{};
     native_vector<object_ref> forms{};
     for(auto const &form : p_prc)
     {
@@ -299,7 +299,7 @@ namespace jank::runtime
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
-    object_ref ret{ jank_nil() };
+    object_ref ret{};
     for(auto const &form : p_prc)
     {
       ret = form.expect_ok().unwrap().ptr;
@@ -761,7 +761,7 @@ namespace jank::runtime
           }
 
           /* TODO: Provide &env. */
-          auto const args(cons(cons(rest(typed_o), jank_nil()), typed_o));
+          auto const args(cons(cons(rest(typed_o), {}), typed_o));
           return apply_to(var->deref(), args);
         }
       },

@@ -60,7 +60,7 @@ namespace jank::runtime::obj
     auto const found(data.find(elem));
     if(!found)
     {
-      return jank_nil();
+      return {};
     }
     return *found;
   }

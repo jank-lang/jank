@@ -745,7 +745,7 @@ namespace jank::runtime
     {
       throw std::runtime_error{ util::format("index out of bounds: {}", index) };
     }
-    else if(o == jank_nil())
+    else if(o.is_nil())
     {
       return o;
     }
@@ -782,7 +782,7 @@ namespace jank::runtime
   object_ref nth(object_ref const o, object_ref const idx, object_ref const fallback)
   {
     auto const index(to_int(idx));
-    if(index < 0 || o == jank_nil())
+    if(index < 0 || o.is_nil())
     {
       return fallback;
     }
@@ -818,7 +818,7 @@ namespace jank::runtime
 
   object_ref peek(object_ref const o)
   {
-    if(o == jank_nil())
+    if(o.is_nil())
     {
       return o;
     }
@@ -841,7 +841,7 @@ namespace jank::runtime
 
   object_ref pop(object_ref const o)
   {
-    if(o == jank_nil())
+    if(o.is_nil())
     {
       return o;
     }
@@ -875,7 +875,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil();
+          return {};
         }
       },
       o);
@@ -1043,7 +1043,7 @@ namespace jank::runtime
   {
     auto const &buffer(try_object<obj::chunk_buffer>(buff));
     buffer->append(val);
-    return jank_nil();
+    return {};
   }
 
   object_ref chunk(object_ref const buff)

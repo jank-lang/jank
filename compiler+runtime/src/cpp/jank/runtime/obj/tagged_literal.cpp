@@ -77,7 +77,7 @@ namespace jank::runtime::obj
 
   object_ref tagged_literal::get(object_ref const key) const
   {
-    return get(key, jank_nil());
+    return get(key, {});
   }
 
   bool tagged_literal::contains(object_ref const key) const

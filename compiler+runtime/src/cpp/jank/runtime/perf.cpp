@@ -31,6 +31,6 @@ namespace jank::runtime::perf
       auto const res(f->call());
       ankerl::nanobench::doNotOptimizeAway(res);
     });
-    return jank_nil();
+    return {};
   }
 }

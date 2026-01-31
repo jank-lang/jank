@@ -57,7 +57,7 @@ namespace jank::runtime::obj
     {
       return make_box<persistent_vector>(std::in_place, key, res.unwrap());
     }
-    return jank_nil();
+    return {};
   }
 
   bool transient_array_map::contains(object_ref const key) const

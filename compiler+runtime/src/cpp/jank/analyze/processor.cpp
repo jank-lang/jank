@@ -80,7 +80,7 @@ namespace jank::analyze
     auto const expansion(
       runtime::get(meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
-    if(expansion == jank_nil())
+    if(expansion.is_nil())
     {
       return nullptr;
     }
@@ -94,7 +94,7 @@ namespace jank::analyze
   {
     if(expansions.empty())
     {
-      return jank_nil();
+      return {};
     }
 
     /* Try to find an expansion which specifically has the `jank/macro-expansion` key
@@ -105,7 +105,7 @@ namespace jank::analyze
       auto const expansion(
         runtime::get(latest_meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
-      if(expansion != jank_nil())
+      if(expansion.is_some())
       {
         return expansion;
       }
@@ -2116,9 +2116,7 @@ namespace jank::analyze
 
     if(ret.values.empty())
     {
-      auto const nil{
-        analyze_primitive_literal(jank_nil(), current_frame, position, fn_ctx, needs_box)
-      };
+      auto const nil{ analyze_primitive_literal({}, current_frame, position, fn_ctx, needs_box) };
       if(nil.is_err())
       {
         return nil.expect_err();
@@ -2237,11 +2235,9 @@ namespace jank::analyze
 
     if(ret->body->values.empty())
     {
-      auto const nil{ analyze_primitive_literal(jank_nil(),
-                                                ret->frame,
-                                                expression_position::tail,
-                                                fn_ctx,
-                                                needs_box) };
+      auto const nil{
+        analyze_primitive_literal({}, ret->frame, expression_position::tail, fn_ctx, needs_box)
+      };
       if(nil.is_err())
       {
         return nil.expect_err();
@@ -2372,11 +2368,9 @@ namespace jank::analyze
 
     if(ret->body->values.empty())
     {
-      auto const nil{ analyze_primitive_literal(jank_nil(),
-                                                ret->frame,
-                                                expression_position::tail,
-                                                fn_ctx,
-                                                needs_box) };
+      auto const nil{
+        analyze_primitive_literal({}, ret->frame, expression_position::tail, fn_ctx, needs_box)
+      };
       if(nil.is_err())
       {
         return nil.expect_err();
@@ -4046,7 +4040,7 @@ namespace jank::analyze
       /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
        * want to remove the cpp/cast and the type and then add back in a new head. Since
        * cpp_call takes in a cpp_value, it doesn't look at the head, but it needs to be there. */
-      auto const call_l{ make_box(l->data.rest().rest().conj(jank_nil())) };
+      auto const call_l{ make_box(l->data.rest().rest().conj({})) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
     if(cpp_util::is_any_object(type_expr->type) && cpp_util::is_trait_convertible(value_type))
@@ -4167,7 +4161,7 @@ namespace jank::analyze
       /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
        * want to remove the cpp/cast and the type and then add back in a new head. Since
        * cpp_call takes in a cpp_value, it doesn't look at the head, but it needs to be there. */
-      auto const call_l{ make_box(l->data.rest().rest().conj(jank_nil())) };
+      auto const call_l{ make_box(l->data.rest().rest().conj({})) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
     else if(Cpp::IsCStyleConvertible(value_type, type_expr->type))

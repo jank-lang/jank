@@ -45,7 +45,7 @@ namespace jank::runtime::obj
     {
       return res->second;
     }
-    return jank_nil();
+    return {};
   }
 
   object_ref transient_sorted_map::get(object_ref const key, object_ref const fallback) const
@@ -67,7 +67,7 @@ namespace jank::runtime::obj
     {
       return make_box<persistent_vector>(std::in_place, key, res->second);
     }
-    return jank_nil();
+    return {};
   }
 
   bool transient_sorted_map::contains(object_ref const key) const

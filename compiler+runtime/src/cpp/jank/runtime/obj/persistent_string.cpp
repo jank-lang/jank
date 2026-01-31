@@ -69,7 +69,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_string::get(object_ref const key) const
   {
-    return get(key, jank_nil());
+    return get(key, {});
   }
 
   object_ref persistent_string::get(object_ref const key, object_ref const fallback) const

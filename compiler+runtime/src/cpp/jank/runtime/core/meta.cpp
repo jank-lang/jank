@@ -27,7 +27,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil();
+          return {};
         }
       },
       m);
@@ -115,7 +115,7 @@ namespace jank::runtime
     using namespace jank::runtime;
 
     auto const source(get(meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
-    if(source == jank_nil())
+    if(source.is_nil())
     {
       return read::source::unknown();
     }
@@ -158,7 +158,7 @@ namespace jank::runtime
   read::source object_source(object_ref const o)
   {
     auto const meta(runtime::meta(o));
-    if(meta == jank_nil())
+    if(meta.is_nil())
     {
       return read::source::unknown();
     }

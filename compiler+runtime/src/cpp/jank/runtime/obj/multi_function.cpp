@@ -222,7 +222,7 @@ namespace jank::runtime::obj
                                     object_ref const y) const
   {
     auto const x_prefs(prefer_table->get(x));
-    if(x_prefs != jank_nil() && expect_object<persistent_hash_set>(x_prefs)->contains(y))
+    if(x_prefs.is_some() && expect_object<persistent_hash_set>(x_prefs)->contains(y))
     {
       return true;
     }
@@ -231,7 +231,7 @@ namespace jank::runtime::obj
       __rt_ctx->intern_var("clojure.core", "parents").expect_ok()->deref()
     };
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y))); it != jank_nil();
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y))); it.is_some();
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, x, first(it)))
@@ -240,7 +240,7 @@ namespace jank::runtime::obj
       }
     }
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x))); it != jank_nil();
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x))); it.is_some();
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, first(it), y))
@@ -270,7 +270,7 @@ namespace jank::runtime::obj
   object_ref multi_function::get_fn(object_ref const dispatch_val) const
   {
     auto const target(get_method(dispatch_val));
-    if(target == jank_nil())
+    if(target.is_nil())
     {
       throw std::runtime_error{ util::format("No method in multimethod '{}' for dispatch value: {}",
                                              runtime::to_string(name),
@@ -287,7 +287,7 @@ namespace jank::runtime::obj
     }
 
     auto target(method_cache->get(dispatch_val));
-    if(target != jank_nil())
+    if(target.is_some())
     {
       return target;
     }
@@ -299,7 +299,7 @@ namespace jank::runtime::obj
   {
     /* TODO: Clojure uses a RW lock here for better parallelism. */
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
-    object_ref best_value{ jank_nil() };
+    object_ref best_value{};
     persistent_vector_sequence_ref best_entry{};
 
     for(auto it(method_table->fresh_seq()); it.is_some(); it = it->next_in_place())
@@ -334,7 +334,7 @@ namespace jank::runtime::obj
     else
     {
       best_value = method_table->get(default_dispatch_value);
-      if(best_value == jank_nil())
+      if(best_value.is_nil())
       {
         return best_value;
       }

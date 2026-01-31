@@ -56,7 +56,7 @@ namespace jank::runtime::obj
     {
       return *found;
     }
-    return jank_nil();
+    return {};
   }
 
   object_ref transient_sorted_set::call(object_ref const elem, object_ref const fallback) const

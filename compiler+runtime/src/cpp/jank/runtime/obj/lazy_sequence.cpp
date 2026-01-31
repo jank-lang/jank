@@ -46,7 +46,7 @@ namespace jank::runtime::obj
 
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
     auto const r(runtime::fresh_seq(s));
-    jank_debug_assert(r != jank_nil());
+    jank_debug_assert(r.is_some());
     return make_box<lazy_sequence>(jank_nil(), r);
   }
 

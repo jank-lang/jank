@@ -574,7 +574,7 @@ namespace jank::codegen
       }
       else
       {
-        util::format_to(body_buffer, "{}->with_meta(jank::runtime::jank_nil())", var_tmp);
+        util::format_to(body_buffer, "{}->with_meta({})", var_tmp);
         if(expr->position == expression_position::tail)
         {
           util::format_to(body_buffer, "return {};", var_tmp);
@@ -603,10 +603,7 @@ namespace jank::codegen
         }
         else
         {
-          util::format_to(body_buffer,
-                          "{}->bind_root({})->with_meta(jank::runtime::jank_nil());",
-                          var_tmp,
-                          val.str(true));
+          util::format_to(body_buffer, "{}->bind_root({})->with_meta({});", var_tmp, val.str(true));
           return var_tmp;
         }
       case analyze::expression_position::tail:
@@ -627,10 +624,7 @@ namespace jank::codegen
         }
         else
         {
-          util::format_to(body_buffer,
-                          "{}->bind_root({})->with_meta(jank::runtime::jank_nil());",
-                          var_tmp,
-                          val.str(true));
+          util::format_to(body_buffer, "{}->bind_root({})->with_meta({});", var_tmp, val.str(true));
         }
         return none;
       case analyze::expression_position::type:
@@ -1715,7 +1709,7 @@ namespace jank::codegen
       case analyze::expression_position::tail:
         if(last.is_none())
         {
-          util::format_to(body_buffer, "return jank::runtime::jank_nil();");
+          util::format_to(body_buffer, "return { };");
         }
         else
         {
@@ -1786,7 +1780,7 @@ namespace jank::codegen
 
     if(expr->position == analyze::expression_position::tail)
     {
-      util::format_to(body_buffer, "return jank::runtime::jank_nil();");
+      util::format_to(body_buffer, "return { };");
     }
 
     return "jank::runtime::jank_nil()";
@@ -1915,7 +1909,7 @@ namespace jank::codegen
 
     if(expr->position == analyze::expression_position::tail)
     {
-      util::format_to(body_buffer, "return jank::runtime::jank_nil();");
+      util::format_to(body_buffer, "return { };");
       return none;
     }
     return none;
@@ -1975,7 +1969,7 @@ namespace jank::codegen
     {
       if(expr->position == expression_position::tail)
       {
-        util::format_to(body_buffer, "return jank::runtime::jank_nil();");
+        util::format_to(body_buffer, "return { };");
         return none;
       }
       return "jank::runtime::jank_nil()";
@@ -2543,7 +2537,7 @@ namespace jank::codegen
 
     if(expr->position == expression_position::tail)
     {
-      util::format_to(body_buffer, "return jank::runtime::jank_nil();");
+      util::format_to(body_buffer, "return { };");
       return none;
     }
 
@@ -2824,7 +2818,7 @@ namespace jank::codegen
 
       if(arity.body->values.empty())
       {
-        util::format_to(body_buffer, "return jank::runtime::jank_nil();");
+        util::format_to(body_buffer, "return { };");
       }
 
       if(arity.fn_ctx->is_recur_recursive)
