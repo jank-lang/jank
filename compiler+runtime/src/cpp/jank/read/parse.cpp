@@ -175,10 +175,6 @@ namespace jank::read::parse
   processor::processor(lex::processor::iterator const &b, lex::processor::iterator const &e)
     : token_current{ b }
     , token_end{ e }
-    , suppress_read_var{ make_box<var>(__rt_ctx->intern_ns(make_box<obj::symbol>("clojure.core")),
-                                       make_box<obj::symbol>("*suppress-read*"),
-                                       jank_false)
-                           ->set_dynamic(true) }
     , splicing_allowed_var{ make_box<var>(
                               __rt_ctx->intern_ns(make_box<obj::symbol>("clojure.core")),
                               make_box<obj::symbol>("*splicing-allowed?*"),
@@ -329,7 +325,6 @@ namespace jank::read::parse
 
     context::binding_scope const bindings{ obj::persistent_hash_map::create_unique(
       std::make_pair(splicing_allowed_var, jank_true)) };
-    auto const is_reader_suppressed{ suppress_read_var->deref() == jank_true };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
@@ -375,7 +370,6 @@ namespace jank::read::parse
 
     context::binding_scope const bindings{ obj::persistent_hash_map::create_unique(
       std::make_pair(splicing_allowed_var, jank_true)) };
-    auto const is_reader_suppressed{ suppress_read_var->deref() == jank_true };
     runtime::detail::native_transient_vector ret;
 
     for(auto it(begin()); it != end(); ++it)
@@ -421,7 +415,6 @@ namespace jank::read::parse
       std::make_pair(splicing_allowed_var, jank_true)) };
     native_unordered_map<runtime::object_ref, jtl::option<object_source_info>> parsed_keys{};
     object_ref map{ make_box<obj::transient_array_map>() };
-    auto const is_reader_suppressed{ suppress_read_var->deref() == jank_true };
 
     for(auto item(begin()); item != end(); ++item)
     {
@@ -717,7 +710,6 @@ namespace jank::read::parse
 
     context::binding_scope const bindings{ obj::persistent_hash_map::create_unique(
       std::make_pair(splicing_allowed_var, jank_true)) };
-    auto const is_reader_suppressed{ suppress_read_var->deref() == jank_true };
     native_unordered_map<runtime::object_ref, jtl::option<object_source_info>> parsed_items{};
     runtime::detail::native_transient_hash_set ret;
 
@@ -1163,9 +1155,10 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
-    context::binding_scope const suppress_read_scope{ obj::persistent_hash_map::create_unique(
-      std::make_pair(suppress_read_var, jank_true)) };
+    is_reader_suppressed = true;
     auto list_result(next());
+    is_reader_suppressed = false;
+
     if(list_result.is_err())
     {
       return list_result;

@@ -119,14 +119,6 @@ namespace jank::read::parse
     /*** XXX: Everything here is not thread-safe, but not shared. ***/
     lex::processor::iterator token_current, token_end;
     jtl::option<lex::token_kind> expected_closer;
-    /*  The Clojure reader relaxes tagged literal syntax rules when dealing with
-     *  a form in an unsupported reader conditional. This is done because an
-     *  implementation of Clojure on a specific platform can't make any assumptions
-     *  on what tagged literals other platform implementations will support.
-     *
-     *  Unlike Clojure, in jank's implementation we only leak lexer errors for
-     *  unsupported reader conditionals while parser errors are suppressed.*/
-    runtime::var_ref suppress_read_var;
     /* Splicing, in reader conditionals, is not allowed at the top level. When we're parsing
      * some other form, such as a list, we'll bind this var to true. */
     runtime::var_ref splicing_allowed_var;
@@ -137,6 +129,14 @@ namespace jank::read::parse
     native_list<runtime::object_ref> pending_forms;
     lex::token latest_token;
     jtl::option<shorthand_function_details> shorthand;
+    /*  The Clojure reader relaxes tagged literal syntax rules when dealing with
+     *  a form in an unsupported reader conditional. This is done because an
+     *  implementation of Clojure on a specific platform can't make any assumptions
+     *  on what tagged literals other platform implementations will support.
+     *
+     *  Unlike Clojure, in jank's implementation we only leak lexer errors for
+     *  unsupported reader conditionals while most parser errors are suppressed.*/
+    bool is_reader_suppressed{ false };
     /* Whether or not the next form is considered quoted. */
     bool quoted{};
     /* Whether or not the next form is considered syntax-quoted. */
