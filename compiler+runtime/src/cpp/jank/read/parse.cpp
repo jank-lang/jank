@@ -1048,10 +1048,7 @@ namespace jank::read::parse
     auto const form_end(form_result.expect_ok().unwrap().end);
     auto const form(form_result.expect_ok().unwrap().ptr);
     auto const data_readers{ __rt_ctx->find_var("clojure.core", "*data-readers*")->deref() };
-    auto const data_reader{ visit_map_like(
-      [](auto const typed_o, obj::symbol_ref const sym) -> object_ref { return typed_o->get(sym); },
-      data_readers,
-      sym) };
+    auto const data_reader{ get(data_readers, sym) };
 
     if(data_reader.is_some())
     {
