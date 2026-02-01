@@ -299,19 +299,23 @@ namespace jank::runtime
                                   jank::u64 const nth_form)
   {
     profile::timer const timer{ "rt read_string" };
-    auto const unknown_kw{ __rt_ctx->intern_keyword("", "unknown").expect_ok() };
-    auto const read_eval_enabled{ __rt_ctx->find_var("clojure.core", "*read-eval*")->deref() };
+    auto const unknown_kw{ __rt_ctx->intern_keyword("unknown").expect_ok() };
+    auto const read_eval_var{ __rt_ctx->find_var("clojure.core", "*read-eval*") };
+    if(read_eval_var.is_some())
+    {
+      util::println("{}", runtime::to_code_string(read_eval_var->deref()));
+    }
+    auto const read_eval_enabled{ read_eval_var.is_nil() || !equal(read_eval_var, unknown_kw) };
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
       std::make_pair(current_file_var, jank_nil()),
       std::make_pair(reader_opts_var, reader_opts)) };
 
-    if(equal(read_eval_enabled, unknown_kw))
+    if(!read_eval_enabled)
     {
       throw std::runtime_error{ util::format(
-        "Reading is disallowed when clojure.core/*read-eval* is bound to {}.",
-        runtime::to_code_string(read_eval_enabled)) };
+        "Reading is disallowed when clojure.core/*read-eval* is bound to ':unknown'.") };
     }
 
     read::lex::processor l_prc{ code };
@@ -361,6 +365,15 @@ namespace jank::runtime
   object_ref context::read_string(jtl::immutable_string const &code)
   {
     return read_string(code, make_box<obj::persistent_array_map>());
+  }
+
+  object_ref context::forcefully_read_string(jtl::immutable_string const &code)
+  {
+    auto const read_eval_enabled_var{ __rt_ctx->find_var("clojure.core", "*read-eval*") };
+    /* TODO: Profile C++ codegen. */
+    binding_scope const bindings{ obj::persistent_hash_map::create_unique(
+      std::make_pair(read_eval_enabled_var, jank_true)) };
+    return read_string(code);
   }
 
   object_ref

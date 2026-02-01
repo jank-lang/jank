@@ -287,11 +287,6 @@ namespace clojure::core_native
     return make_box(hash::unordered(coll.data)).erase();
   }
 
-  object_ref read_string(object_ref const opts, object_ref const str)
-  {
-    return __rt_ctx->read_string(runtime::to_string(str), opts);
-  }
-
   object_ref jank_version()
   {
     return make_box(JANK_VERSION);
@@ -510,7 +505,6 @@ extern "C" void jank_load_clojure_core_native()
   intern_fn("compile", &core_native::compile);
   intern_fn("eval", &core_native::eval);
   intern_fn("hash-unordered-coll", &core_native::hash_unordered);
-  intern_fn("read-string", &core_native::read_string);
   intern_fn("jank-version", &core_native::jank_version);
   intern_fn("parse-long", &parse_long);
   intern_fn("parse-double", &parse_double);

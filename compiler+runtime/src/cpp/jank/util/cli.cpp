@@ -286,7 +286,7 @@ OPTIONS
         }
         else if(check_flag(it, end, value, "--disable-read", false))
         {
-          opts.disable_read = false;
+          opts.disable_read = true;
         }
 
         /**** These are command-specific flags which we will store until we know the command. ****/

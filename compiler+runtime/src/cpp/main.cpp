@@ -420,7 +420,7 @@ int main(int const argc, char const **argv)
         ->bind_root(make_box<obj::persistent_vector>(extra_args.persistent())->seq());
       __rt_ctx->intern_var("clojure.core", "*read-eval*")
         .expect_ok()
-        ->bind_root(opts.disable_read ? __rt_ctx->intern_keyword(":unknown").expect_ok().erase()
+        ->bind_root(opts.disable_read ? __rt_ctx->intern_keyword("unknown").expect_ok().erase()
                                       : jank_true)
         ->set_dynamic(true);
     }
