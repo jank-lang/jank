@@ -16,7 +16,8 @@ Clojure.
 ## Parser
 * No load operation for `data_readers.(cljc|jank)` at start-up to extend
   supported tags
-* No parser error is thrown in case of unsupported reader conditionals.
+* Only lexer errors and unbalanced forms are rejected in unsupported reader
+  conditionals
 
 ## clojure.core
 * Baked into the `jank` binary, not shipped separately
