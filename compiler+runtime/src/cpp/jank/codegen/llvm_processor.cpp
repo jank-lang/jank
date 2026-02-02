@@ -112,6 +112,7 @@ namespace jank::codegen
     static llvm::Value *gen(analyze::expr::cpp_type_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_value_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_cast_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_unsafe_cast_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_call_ref, analyze::expr::function_arity const &);
     llvm::Value *
     gen(analyze::expr::cpp_constructor_call_ref, analyze::expr::function_arity const &);
@@ -1235,6 +1236,8 @@ namespace jank::codegen
           arg_handle = ctx->builder->CreateLoad(ctx->builder->getPtrTy(), arg_handle);
         }
 
+        /* TODO: Provide access to higher local, so we can access the local from the
+         * original loop. We could be in a nested let right now, which shadows that name. */
         auto const arg_alloc{ locals[expr->loop_target.unwrap()->pairs[i].first] };
         jank_debug_assert(arg_alloc);
         deferred_stores.emplace_back(arg_handle, arg_alloc);
@@ -2271,6 +2274,47 @@ namespace jank::codegen
     }
 
     return converted;
+  }
+
+  llvm::Value *
+  llvm_processor::impl::gen(expr::cpp_unsafe_cast_ref const expr, expr::function_arity const &arity)
+  {
+    auto const output_type{ expr->type };
+    auto const is_output_type_ptr{ Cpp::IsPointerType(output_type) };
+    auto const is_output_type_integral{ Cpp::IsIntegral(output_type) };
+    auto const output_llvm_type{ llvm_type(*ctx, llvm_ctx, output_type).type };
+    auto const input_type{ Cpp::GetNonReferenceType(cpp_util::expression_type(expr->value_expr)) };
+    auto const is_input_type_ptr{ Cpp::IsPointerType(input_type) };
+    auto const is_input_type_integral{ Cpp::IsIntegral(input_type) };
+    auto const value{ gen(expr->value_expr, arity) };
+
+    /* Since LLVM IR has opaque pointers, we don't need to do anything for pointer -> pointer
+     * casts. Only int <-> pointer casts require an extra instruction. */
+    if(is_output_type_ptr)
+    {
+      if(is_input_type_ptr)
+      {
+        return value;
+      }
+      else if(is_input_type_integral)
+      {
+        return ctx->builder->CreateIntToPtr(value, output_llvm_type.data);
+      }
+    }
+    else if(is_output_type_integral)
+    {
+      if(is_input_type_ptr)
+      {
+        return ctx->builder->CreatePtrToInt(value, output_llvm_type.data);
+      }
+      else if(is_input_type_integral)
+      {
+        return value;
+      }
+    }
+
+    jank_assert("Unexpected unsafe cast.");
+    return nullptr;
   }
 
   llvm::Value *llvm_processor::impl::gen_aot_call(Cpp::AotCall const &call,

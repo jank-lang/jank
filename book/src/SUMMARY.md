@@ -20,6 +20,9 @@ TODO:
   AOT compiling programs (and distributing them)
   Printing codegen
   Known issues
+  Reference
+   Special forms
+   Error pages
 -->
 
 * [Reaching into C++](cpp-interop/index.md)
@@ -28,7 +31,8 @@ TODO:
   * [Working with native values](cpp-interop/native-values.md)
   * [Working with native types](cpp-interop/native-types.md)
   * [Working with native functions](cpp-interop/native-functions.md)
-  * [The reasoning for the cpp namespace](cpp-interop/cpp-ns.md)
+  * [Casting between native types](cpp-interop/cast.md)
+  * [The cpp namespace](cpp-interop/cpp-ns.md)
 
 * [Differences from Clojure](differences-from-clojure.md)
 * [For C++ Developers](for-cpp-developers.md)

@@ -1,4 +1,3 @@
 (cpp/raw "namespace jank::cpp::global_value::pass_namespace_level { int boop{ 5 }; }")
 (if (= 5 cpp/jank.cpp.global_value.pass_namespace_level.boop)
-  :success
-  :failure)
+  :success)

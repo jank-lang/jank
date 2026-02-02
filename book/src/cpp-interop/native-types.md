@@ -1,9 +1,10 @@
 # Working with native types
 
 ## Accessing C++ types
-C++ types are available under the `cpp/` namespace, if you replace `::` with
-`.`. For example, `std::string` becomes `cpp/std.string`. This also works for
-type aliases.
+C++ types are available directly, if you replace `::` with
+`.`. For example, `std::string` becomes `std.string`. This also works for
+type aliases. If there's an ambiguity between jank symbols and C++ symbols, you
+can use the `cpp/` prefix to clarify. For example, `cpp/std.string`.
 
 ## Complex literal types
 If your C++ type is not representable using jank's interop syntax, due to

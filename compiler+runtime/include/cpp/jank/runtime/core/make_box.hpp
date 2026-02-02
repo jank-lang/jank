@@ -87,6 +87,13 @@ namespace jank::runtime
   }
 
   [[gnu::flatten, gnu::hot, gnu::visibility("default")]]
+  inline obj::persistent_string_ref make_box(signed char const * const s)
+  {
+    jank_assert(s != nullptr);
+    return make_box<obj::persistent_string>(reinterpret_cast<char const *>(s));
+  }
+
+  [[gnu::flatten, gnu::hot, gnu::visibility("default")]]
   inline auto make_box(detail::native_persistent_list const &l)
   {
     return make_box<obj::persistent_list>(l);

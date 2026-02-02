@@ -14,10 +14,10 @@ namespace jank::runtime
    *
    * Each specialization of it needs to implement two static functions:
    *
-   * 1. to_object
+   * 1. into_object
    * 2. from_object
    *
-   * The input of `to_object` will always be a `T` and the output can be whichever
+   * The input of `into_object` will always be a `T` and the output can be whichever
    * boxed object type is fitting. As always, prefer to use fully typed objects like
    * `obj::persistent_hash_map_ref` instead of `object_ref`.
    *
@@ -39,8 +39,8 @@ namespace jank::runtime
   concept any_object_ref = (typed_object_ref<T> || untyped_object_ref<T>);
 
   template <typename T>
-  concept convertible_to_object = requires(T const &t) {
-    { convert<T>::to_object(t) } -> any_object_ref;
+  concept convertible_into_object = requires(T const &t) {
+    { convert<T>::into_object(t) } /*-> any_object_ref*/;
   };
 
   template <typename T>
@@ -49,7 +49,7 @@ namespace jank::runtime
   };
 
   template <typename T>
-  concept convertible = (convertible_to_object<T> && convertible_from_object<T>);
+  concept convertible = (convertible_into_object<T> && convertible_from_object<T>);
 
   template <typename T>
   concept has_conversion_members = requires(T const &t, object_ref const o) {

@@ -232,4 +232,10 @@ namespace jank::runtime
     }
     return stripped;
   }
+
+  object_ref with_source_meta(object_ref const o, read::source const &source)
+  {
+    auto const source_meta{ source_to_meta(source) };
+    return with_meta(o, merge(meta(o), source_meta));
+  }
 }

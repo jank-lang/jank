@@ -259,6 +259,19 @@ namespace jank::error
                       expansion);
   }
 
+  error_ref analyze_invalid_cpp_position(jtl::immutable_string const &sym,
+                                         read::source const &source,
+                                         runtime::object_ref const expansion)
+  {
+    return make_error(
+      kind::analyze_invalid_cpp_position,
+      util::format("Unable to use this form as a value. It needs to be called directly. For "
+                   "example, `({} ...)`.",
+                   sym),
+      source,
+      expansion);
+  }
+
   error_ref analyze_mismatched_if_types(jtl::immutable_string const &message,
                                         read::source const &source,
                                         runtime::object_ref const expansion)
@@ -315,6 +328,12 @@ namespace jank::error
     return make_error(kind::analyze_invalid_cpp_type, message, source, expansion);
   }
 
+  error_ref
+  analyze_invalid_cpp_type_position(read::source const &source, runtime::object_ref const expansion)
+  {
+    return make_error(kind::analyze_invalid_cpp_type_position, source, expansion);
+  }
+
   error_ref analyze_invalid_cpp_value(jtl::immutable_string const &message,
                                       read::source const &source,
                                       runtime::object_ref const expansion)
@@ -327,6 +346,29 @@ namespace jank::error
                                      runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_cast, message, source, expansion);
+  }
+
+  error_ref analyze_invalid_cpp_cast(jtl::immutable_string const &message,
+                                     read::source const &source,
+                                     error::note const &note,
+                                     runtime::object_ref const expansion)
+  {
+    return make_error(kind::analyze_invalid_cpp_cast, message, source, note, expansion);
+  }
+
+  error_ref analyze_invalid_cpp_unsafe_cast(jtl::immutable_string const &message,
+                                            read::source const &source,
+                                            runtime::object_ref const expansion)
+  {
+    return make_error(kind::analyze_invalid_cpp_unsafe_cast, message, source, expansion);
+  }
+
+  error_ref analyze_invalid_cpp_unsafe_cast(jtl::immutable_string const &message,
+                                            read::source const &source,
+                                            error::note const &note,
+                                            runtime::object_ref const expansion)
+  {
+    return make_error(kind::analyze_invalid_cpp_unsafe_cast, message, source, note, expansion);
   }
 
   error_ref analyze_invalid_cpp_box(jtl::immutable_string const &message,

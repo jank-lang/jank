@@ -197,6 +197,11 @@ namespace jank::analyze
                                        expression_position,
                                        jtl::option<expr::function_context_ref> const &,
                                        bool needs_box);
+    expression_result analyze_cpp_unsafe_cast(runtime::obj::persistent_list_ref const,
+                                              local_frame_ptr,
+                                              expression_position,
+                                              jtl::option<expr::function_context_ref> const &,
+                                              bool needs_box);
     expression_result analyze_cpp_box(runtime::obj::persistent_list_ref const,
                                       local_frame_ptr,
                                       expression_position,

@@ -24,6 +24,8 @@ namespace jank::analyze::expr
       variable,
       enum_constant,
       function,
+
+      /* The following must be in call position. */
       member_access,
       member_call,
       operator_call
