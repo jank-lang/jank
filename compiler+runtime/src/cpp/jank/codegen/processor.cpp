@@ -1766,8 +1766,8 @@ namespace jank::codegen
     util::format_to(body_buffer, "jank::runtime::object_ref {}{ };", ret_tmp);
 
     util::format_to(body_buffer, "{");
-    auto const finally_name(runtime::munge(__rt_ctx->unique_string("finally")).data());
-    auto const finally_guard_name(runtime::munge(__rt_ctx->unique_string("finally_guard")).data());
+    auto const finally_name(runtime::munge(__rt_ctx->unique_string("finally")));
+    auto const finally_guard_name(runtime::munge(__rt_ctx->unique_string("finally_guard")));
     if(expr->finally_body.is_some())
     {
       util::format_to(body_buffer, "auto const {}{ [&](){ ", finally_name);
