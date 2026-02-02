@@ -568,10 +568,8 @@ namespace jank::codegen
       expr->name->to_string());
 
     jtl::option<jtl::immutable_string> meta;
-    auto const dynamic{
-      truthy(get(expr->name->meta.unwrap_or(jank_nil()),
-                 __rt_ctx->intern_keyword("dynamic").expect_ok()))
-    };
+    auto const dynamic{ truthy(get(expr->name->meta.unwrap_or(jank_nil()),
+                                   __rt_ctx->intern_keyword("dynamic").expect_ok())) };
     jtl::option<jtl::immutable_string> var_native;
     if(expr->name->meta.is_some())
     {
@@ -640,12 +638,11 @@ namespace jank::codegen
         /* Only update the cached root when we opted into direct-call caching. */
         if(var_native.is_some())
         {
-          util::format_to(
-            body_buffer,
-            "if(var_root_{}.is_nil()) {{ var_root_{} = {}->get_root(); }}",
-            var_native.unwrap(),
-            var_native.unwrap(),
-            var_tmp);
+          util::format_to(body_buffer,
+                          "if(var_root_{}.is_nil()) {{ var_root_{} = {}->get_root(); }}",
+                          var_native.unwrap(),
+                          var_native.unwrap(),
+                          var_tmp);
         }
         return var_tmp;
       case analyze::expression_position::tail:
@@ -670,12 +667,11 @@ namespace jank::codegen
         /* Also update the cached root in statement/tail positions. */
         if(var_native.is_some())
         {
-          util::format_to(
-            body_buffer,
-            "if(var_root_{}.is_nil()) {{ var_root_{} = {}->get_root(); }}",
-            var_native.unwrap(),
-            var_native.unwrap(),
-            var_tmp);
+          util::format_to(body_buffer,
+                          "if(var_root_{}.is_nil()) {{ var_root_{} = {}->get_root(); }}",
+                          var_native.unwrap(),
+                          var_native.unwrap(),
+                          var_tmp);
         }
 
         if(expr->position == analyze::expression_position::tail)
@@ -699,13 +695,15 @@ namespace jank::codegen
     if(util::cli::opts.direct_call && !is_dynamic && target == compilation_target::module
        && detail::should_defer_var_init(lifted_vars.at(qualified_name), qualified_name, module))
     {
-      util::format_to(body_buffer,
-                      "if({}.is_nil()) {{ {} = jank::runtime::__rt_ctx->intern_var(\"{}\").expect_ok(); {} = {}->get_root(); }}",
-                      var,
-                      var,
-                      qualified_name,
-                      var_root,
-                      var);
+      util::format_to(
+        body_buffer,
+        "if({}.is_nil()) {{ {} = jank::runtime::__rt_ctx->intern_var(\"{}\").expect_ok(); {} = "
+        "{}->get_root(); }}",
+        var,
+        var,
+        qualified_name,
+        var_root,
+        var);
     }
 
     switch(expr->position)
@@ -736,10 +734,8 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::var_ref_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const &var(lift_var(lifted_vars,
-                             expr->qualified_name->to_string(),
-                             false,
-                             expr->var->dynamic.load()));
+    auto const &var(
+      lift_var(lifted_vars, expr->qualified_name->to_string(), false, expr->var->dynamic.load()));
     switch(expr->position)
     {
       case analyze::expression_position::statement:
@@ -1129,13 +1125,15 @@ namespace jank::codegen
         if(target == compilation_target::module
            && detail::should_defer_var_init(lifted_vars.at(qualified_name), qualified_name, module))
         {
-          util::format_to(body_buffer,
-                          "if({}.is_nil()) {{ {} = jank::runtime::__rt_ctx->intern_var(\"{}\").expect_ok(); {} = {}->get_root(); }}",
-                          var_native_name,
-                          var_native_name,
-                          qualified_name,
-                          source_tmp_root,
-                          var_native_name);
+          util::format_to(
+            body_buffer,
+            "if({}.is_nil()) {{ {} = jank::runtime::__rt_ctx->intern_var(\"{}\").expect_ok(); {} = "
+            "{}->get_root(); }}",
+            var_native_name,
+            var_native_name,
+            qualified_name,
+            source_tmp_root,
+            var_native_name);
         }
 
         /* The cached var root could be a jit fn, native fn, keyword, map, etc.
@@ -2816,9 +2814,7 @@ namespace jank::codegen
           {
             if(v.second.owned)
             {
-              util::format_to(header_buffer,
-                              ", var_root_{}{}",
-                              v.second.native_name);
+              util::format_to(header_buffer, ", var_root_{}{}", v.second.native_name);
             }
             else
             {
@@ -2990,8 +2986,7 @@ namespace jank::codegen
        * jank_load has executed (require runs there), so defer those (direct-call only). */
       for(auto const &v : lifted_vars)
       {
-        if(util::cli::opts.direct_call
-           && detail::should_defer_var_init(v.second, v.first, module))
+        if(util::cli::opts.direct_call && detail::should_defer_var_init(v.second, v.first, module))
         {
           util::format_to(footer_buffer,
                           "new (&{}::{}) jank::runtime::var_ref{};",
@@ -3084,23 +3079,21 @@ namespace jank::codegen
           }
           else
           {
-            util::format_to(
-              footer_buffer,
-              R"({}::{} = jank::runtime::__rt_ctx->intern_var("{}").expect_ok();)",
-              ns,
-              v.second.native_name,
-              v.first);
+            util::format_to(footer_buffer,
+                            R"({}::{} = jank::runtime::__rt_ctx->intern_var("{}").expect_ok();)",
+                            ns,
+                            v.second.native_name,
+                            v.first);
           }
 
           if(!v.second.dynamic)
           {
-            util::format_to(
-              footer_buffer,
-              "{}::var_root_{} = {}::{}->get_root();",
-              ns,
-              v.second.native_name,
-              ns,
-              v.second.native_name);
+            util::format_to(footer_buffer,
+                            "{}::var_root_{} = {}::{}->get_root();",
+                            ns,
+                            v.second.native_name,
+                            ns,
+                            v.second.native_name);
           }
         }
       }
