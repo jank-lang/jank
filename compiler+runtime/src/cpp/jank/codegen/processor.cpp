@@ -2894,11 +2894,9 @@ namespace jank::codegen
         auto last{ lifted_vars.begin() };
         std::advance(last, lifted_vars.size() - 1);
         util::format_to(footer_buffer,
-                        R"(GC_add_roots(&{}::{}, (&{}::{} + sizeof({}::{}) + 1));)",
+                        R"(GC_add_roots(&{}::{}, (&{}::{} + 1));)",
                         ns,
                         first.second.native_name,
-                        ns,
-                        last->second.native_name,
                         ns,
                         last->second.native_name);
       }
