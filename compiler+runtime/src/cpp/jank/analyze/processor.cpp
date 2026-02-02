@@ -2698,14 +2698,11 @@ namespace jank::analyze
             {
               return try_expression_type::catch_;
             }
-            else
+            if(runtime::equal(first, finally_))
             {
-              if(runtime::equal(first, finally_))
-              {
-                return try_expression_type::finally_;
-              }
-              return try_expression_type::other;
+              return try_expression_type::finally_;
             }
+            return try_expression_type::other;
           }
         },
         []() { return try_expression_type::other; },
