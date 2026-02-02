@@ -1,0 +1,8 @@
+(ns jank-test.direct-call.redefs-run
+  (:require jank-test.direct-call.redefs-core
+            jank-test.direct-call.redefs-util))
+
+(println (jank-test.direct-call.redefs-core/call-val))
+(println
+  (with-redefs [jank-test.direct-call.redefs-util/val (fn [] 999)]
+    (jank-test.direct-call.redefs-core/call-val)))

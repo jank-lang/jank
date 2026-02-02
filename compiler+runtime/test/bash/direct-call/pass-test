@@ -13,6 +13,11 @@
 (def expected-output "42\n")
 (def do-case-output "Foo\n")
 (def base-cmd (str "jank --module-path " module-path " --direct-call --codegen cpp"))
+(def base-cmd-no-direct-call (str "jank --module-path " module-path " --codegen cpp"))
+
+(def redefs-run-file "test/bash/direct-call/src/jank_test/direct_call/redefs_run.jank")
+(def redefs-direct-call-output "1\n1\n")
+(def redefs-control-output "1\n999\n")
 
 (defn sh! [cmd]
   (let [{:keys [exit out err] :as res}
@@ -55,6 +60,12 @@
   (is (seq (object-paths "core")))
   (is (seq (object-paths "util")))
   (is (= expected-output (sh! (str base-cmd " run " run-file)))))
+
+(deftest with-redefs-direct-call
+  (is (= redefs-direct-call-output (sh! (str base-cmd " run " redefs-run-file)))))
+
+(deftest with-redefs-control
+  (is (= redefs-control-output (sh! (str base-cmd-no-direct-call " run " redefs-run-file)))))
 
 (defn -main []
   (System/exit
