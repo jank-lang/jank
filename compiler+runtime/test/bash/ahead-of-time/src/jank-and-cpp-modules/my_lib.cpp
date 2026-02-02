@@ -7,7 +7,7 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/core/meta.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -16,7 +16,7 @@ using jank_object_ref = void *;
 using namespace jank;
 using namespace jank::runtime;
 
-static object_ref greet_str(object_ref name)
+static object_ref greet_str(object_ref const name)
 {
   auto const s_obj(try_object<obj::persistent_string>(name));
   auto const new_str{ "Hello from cpp module, " + s_obj->to_string() + "!" };
