@@ -18,7 +18,7 @@ namespace jank::util
     }
 
     function_type func;
-    bool should_propagate_exceptions;
+    bool should_propagate_exceptions{ false };
     bool active{ true };
   };
 }

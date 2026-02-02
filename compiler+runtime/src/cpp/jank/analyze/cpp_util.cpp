@@ -75,12 +75,11 @@ namespace jank::analyze::cpp_util
     /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception
      * handling since they are distinct types. We use resolve_literal_type to get the
      * exact type for "char". */
+    static auto const char_literal_type{ resolve_literal_type("char").expect_ok() };
+
     if(sym == "char")
     {
-      if(auto const res{ resolve_literal_type("char").expect_ok() })
-      {
-        return apply_pointers(res, ptr_count);
-      }
+      return apply_pointers(char_literal_type, ptr_count);
     }
 
     auto const type{ Cpp::GetType(sym) };

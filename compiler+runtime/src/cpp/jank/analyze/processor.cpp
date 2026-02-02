@@ -2681,7 +2681,7 @@ namespace jank::analyze
       auto const item(it->first());
       auto const type(runtime::visit_seqable(
         [](auto const typed_item) {
-          using T = typename jtl::decay_t<decltype(typed_item)>::value_type;
+          using T = jtl::decay_t<decltype(typed_item)>::value_type;
 
           if constexpr(std::same_as<T, obj::nil>)
           {
@@ -2689,17 +2689,16 @@ namespace jank::analyze
           }
           else
           {
-            auto const first(runtime::first(typed_item->seq()));
-            if(runtime::equal(first, catch_))
+            if(auto const first(runtime::first(typed_item->seq())); runtime::equal(first, catch_))
             {
               return try_expression_type::catch_;
             }
-            else if(runtime::equal(first, finally_))
-            {
-              return try_expression_type::finally_;
-            }
             else
             {
+              if(runtime::equal(first, finally_))
+              {
+                return try_expression_type::finally_;
+              }
               return try_expression_type::other;
             }
           }
@@ -2899,6 +2898,52 @@ namespace jank::analyze
     if(ret->finally_body.is_some())
     {
       ret->finally_body.unwrap()->frame = finally_frame;
+    }
+
+    auto const ensure_boxed_return
+      = [&](jtl::ref<expr::do_> const body_do) -> jtl::result<void, error_ref> {
+      if(!body_do->values.empty())
+      {
+        auto const last_expression{ body_do->values.back() };
+        auto const last_expression_type{ cpp_util::expression_type(last_expression) };
+
+        if(!cpp_util::is_any_object(last_expression_type)
+           && !cpp_util::is_trait_convertible(last_expression_type))
+        {
+          /* TODO: Error. */
+          return error::analyze_invalid_cpp_conversion(
+            util::format("Body is returning a native object of type '{}', which is not "
+                         "convertible to a jank runtime object.",
+                         Cpp::GetTypeAsString(last_expression_type)),
+            object_source(list),
+            latest_expansion(macro_expansions));
+        }
+
+        auto const new_last_expression{ apply_implicit_conversion(
+          last_expression,
+          last_expression_type,
+          cpp_util::untyped_object_ref_type(),
+          macro_expansions) };
+        if(new_last_expression.is_err())
+        {
+          return new_last_expression.expect_err();
+        }
+        body_do->values.back() = new_last_expression.expect_ok();
+      }
+      return ok();
+    };
+
+    if(auto const res{ ensure_boxed_return(ret->body) }; res.is_err())
+    {
+      return res.expect_err();
+    }
+
+    for(auto const &catch_body : ret->catch_bodies)
+    {
+      if(auto const res{ ensure_boxed_return(catch_body.body) }; res.is_err())
+      {
+        return res.expect_err();
+      }
     }
 
     return ret;

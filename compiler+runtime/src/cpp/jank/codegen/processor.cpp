@@ -1309,14 +1309,7 @@ namespace jank::codegen
       case analyze::expression_position::call:
         return ret;
       case analyze::expression_position::tail:
-        if(expr->needs_box)
-        {
-          util::format_to(body_buffer, "return jank::runtime::make_box({});", ret);
-        }
-        else
-        {
-          util::format_to(body_buffer, "return {};", ret);
-        }
+        util::format_to(body_buffer, "return {};", ret);
         return none;
       case analyze::expression_position::type:
         throw error::internal_codegen_failure("Unexpected expression in type position.");
