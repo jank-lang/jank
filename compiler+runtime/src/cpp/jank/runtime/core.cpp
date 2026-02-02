@@ -1,6 +1,8 @@
 #include <pthread.h>
 #include <cxxabi.h>
 
+#include <gc/gc.h>
+
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
@@ -11,6 +13,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/scope_exit.hpp>
 
 namespace jank::runtime
 {
@@ -727,6 +730,13 @@ namespace jank::runtime
     auto const ret{ make_box<obj::future>() };
     /* NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage): False positive. */
     ret->thread = std::thread{ [=]() {
+      /* GC threads should be explicitly registered so that the GC is prepared to perform
+       * allocations from this thread. Unregistering is equally important. */
+      GC_stack_base sb{};
+      GC_get_stack_base(&sb);
+      GC_register_my_thread(&sb);
+      util::scope_exit const unregister{ []() { GC_unregister_my_thread(); } };
+
       __rt_ctx->thread_binding_frames = bindings;
 
       try

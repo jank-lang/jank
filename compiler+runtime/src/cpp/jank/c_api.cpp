@@ -1,4 +1,5 @@
 #include <cstdarg>
+#include <utility>
 
 #include <Interpreter/Compatibility.h>
 #include <llvm-c/Target.h>
@@ -8,7 +9,7 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ExecutionEngine/Orc/Mangling.h>
 
-#include <utility>
+#include <gc/gc.h>
 
 #include <jank/c_api.h>
 #include <jank/runtime/visit.hpp>
@@ -1034,6 +1035,7 @@ extern "C"
        * like strings, use the GC for allocations. It can still be configured later. */
       GC_set_all_interior_pointers(1);
       GC_init();
+      GC_allow_register_threads();
 
       llvm::llvm_shutdown_obj const Y{};
 
