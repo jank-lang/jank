@@ -57,7 +57,6 @@ namespace jank::runtime::obj
 
     object base{ obj_type };
     value_type data;
-    mutable uhash hash{};
     bool active{ true };
   };
 }

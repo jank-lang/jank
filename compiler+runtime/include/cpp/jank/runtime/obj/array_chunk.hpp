@@ -30,6 +30,7 @@ namespace jank::runtime::obj
     object_ref nth(object_ref const index) const;
     object_ref nth(object_ref const index, object_ref const fallback) const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     native_vector<object_ref> buffer;
     usize offset{};

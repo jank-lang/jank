@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include <jtl/option.hpp>
 
 #include <jank/runtime/object.hpp>
@@ -24,8 +26,6 @@ namespace jank::runtime::obj
 
     /* Constructors are only to be used within range.cpp. Prefer range::create. */
     range() = default;
-    range(range &&) noexcept = default;
-    range(range const &) = default;
     range(object_ref const end);
     range(object_ref const start, object_ref const end);
     range(object_ref const start, object_ref const end, object_ref const step);
@@ -73,14 +73,18 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     range_ref with_meta(object_ref const m) const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     object_ref start{};
     object_ref end{};
     object_ref step{};
     bounds_check_t bounds_check{};
+    jtl::option<object_ref> meta{};
+
+    /*** XXX: Everything here is thread-safe. ***/
+    mutable std::recursive_mutex mutex;
     mutable obj::array_chunk_ref chunk{};
     mutable range_ref chunk_next{};
     mutable range_ref cached_next{};
-    jtl::option<object_ref> meta{};
   };
 }

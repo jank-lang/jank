@@ -47,6 +47,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     repeat_ref with_meta(object_ref const m) const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     object_ref value{};
     object_ref count{};

@@ -49,6 +49,7 @@ namespace jank::runtime::obj
     /* behavior::sequenceable_in_place */
     nil_ref next_in_place();
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
   };
 }

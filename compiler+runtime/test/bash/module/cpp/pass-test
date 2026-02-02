@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+jank --module-path src run-main jank-test.test-runner | grep '^:success$'

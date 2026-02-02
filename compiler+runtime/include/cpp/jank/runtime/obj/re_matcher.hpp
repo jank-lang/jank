@@ -24,8 +24,8 @@ namespace jank::runtime::obj
     jtl::immutable_string to_code_string() const;
     uhash to_hash() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
-
     re_pattern_ref re;
     std::string match_input{};
     object_ref groups{};

@@ -403,10 +403,11 @@ namespace jank::runtime::module
     paths += util::format(":{}", (jank_path / binary_cache_dir.c_str()).native());
     paths += util::format(":{}", (jank_path / "../src/jank").native());
 
-    this->paths = paths;
+    auto const locked_state{ state.wlock() };
+    locked_state->paths = paths;
 
     //util::println("module paths: {}", paths);
-    register_module_path(entries, paths, false);
+    register_module_path(locked_state->entries, paths, false);
   }
 
   object_ref file_entry::to_runtime_data() const
@@ -716,7 +717,12 @@ namespace jank::runtime::module
     static std::regex const underscore{ "_" };
     native_transient_string patched_module{ module };
     patched_module = std::regex_replace(patched_module, underscore, "-");
-    auto const &found(find_module(entries, paths, patched_module));
+
+    jtl::option<loader::entry> found;
+    {
+      auto const locked_state{ state.wlock() };
+      found = find_module(locked_state->entries, locked_state->paths, patched_module);
+    }
 
     if(found.is_none())
     {
@@ -757,7 +763,12 @@ namespace jank::runtime::module
         std::time_t source_modified_time{};
         module_type module_type{};
 
-        if(entry.jank.is_some() && entry.jank.unwrap().exists())
+        if(entry.cpp.is_some() && entry.cpp.unwrap().exists())
+        {
+          source_modified_time = entry.cpp.unwrap().last_modified_at();
+          module_type = module_type::cpp;
+        }
+        else if(entry.jank.is_some() && entry.jank.unwrap().exists())
         {
           source_modified_time = entry.jank.unwrap().last_modified_at();
           module_type = module_type::jank;
@@ -766,11 +777,6 @@ namespace jank::runtime::module
         {
           source_modified_time = entry.cljc.unwrap().last_modified_at();
           module_type = module_type::cljc;
-        }
-        else if(entry.cpp.is_some() && entry.cpp.unwrap().exists())
-        {
-          source_modified_time = entry.cpp.unwrap().last_modified_at();
-          module_type = module_type::cpp;
         }
         else
         {
@@ -913,11 +919,6 @@ namespace jank::runtime::module
 
   jtl::result<void, error_ref> loader::load(jtl::immutable_string const &module, origin const ori)
   {
-    if(ori != origin::source && loader::is_loaded(module))
-    {
-      return ok();
-    }
-
     auto const &found_module{ loader::find(module, ori) };
     if(found_module.is_err())
     {
@@ -955,11 +956,13 @@ namespace jank::runtime::module
       return res;
     }
 
-    loader::set_is_loaded(module);
     {
       auto const locked_ordered_modules{ __rt_ctx->loaded_modules_in_order.wlock() };
       locked_ordered_modules->push_back(module);
     }
+
+    set_is_loaded(module);
+
     return ok();
   }
 
@@ -1090,18 +1093,20 @@ namespace jank::runtime::module
 
   void loader::add_path(jtl::immutable_string const &path)
   {
+    auto const locked_state{ state.wlock() };
     jtl::string_builder sb;
-    sb(paths);
+    sb(locked_state->paths);
     sb(module_separator);
     sb(path);
-    paths = sb.release();
-    register_path(entries, path);
+    locked_state->paths = sb.release();
+    register_path(locked_state->entries, path);
   }
 
   object_ref loader::to_runtime_data() const
   {
+    auto const locked_state{ state.rlock() };
     runtime::object_ref entry_maps(make_box<runtime::obj::persistent_array_map>());
-    for(auto const &e : entries)
+    for(auto const &e : locked_state->entries)
     {
       entry_maps = runtime::assoc(entry_maps,
                                   make_box(e.first),
@@ -1119,6 +1124,8 @@ namespace jank::runtime::module
     return runtime::obj::persistent_array_map::create_unique(make_box("__type"),
                                                              make_box("module::loader"),
                                                              make_box("entries"),
-                                                             entry_maps);
+                                                             entry_maps,
+                                                             make_box("paths"),
+                                                             make_box(locked_state->paths));
   }
 }

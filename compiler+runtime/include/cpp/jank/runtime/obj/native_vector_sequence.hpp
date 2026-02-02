@@ -48,6 +48,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     native_vector_sequence_ref with_meta(object_ref const m) const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     native_vector<object_ref> data{};
     usize index{};

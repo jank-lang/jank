@@ -101,11 +101,6 @@ namespace jank::runtime::obj
 
   uhash inst::to_hash() const
   {
-    if(hash)
-    {
-      return hash;
-    }
-
-    return hash = static_cast<uhash>(value.time_since_epoch().count());
+    return static_cast<uhash>(value.time_since_epoch().count());
   }
 }

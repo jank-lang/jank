@@ -92,9 +92,9 @@ namespace jank::runtime::obj
     /* behavior::transientable */
     obj::transient_vector_ref to_transient() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     value_type data;
     jtl::option<object_ref> meta;
-    mutable uhash hash{};
   };
 }

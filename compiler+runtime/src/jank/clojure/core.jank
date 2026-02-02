@@ -26,7 +26,6 @@
 
 (def ^:dynamic *in* nil)
 (def ^:dynamic *out* nil)
-(def ^:dynamic *command-line-args* nil)
 (def ^:dynamic *warn-on-reflection* nil)
 (def ^:dynamic *compile-path* nil)
 (def ^:dynamic *unchecked-math* nil)
@@ -3315,12 +3314,11 @@
 
 (defn mapcat
   "Returns the result of applying concat to the result of applying map
-   to f and colls. Thus function f should return a collection. Returns
-   a transducer when no collections are provided"
+  to f and colls.  Thus function f should return a collection. Returns
+  a transducer when no collections are provided"
   ([f] (comp (map f) cat))
-  ; TODO: Variadic.
-  ([f coll]
-   (apply concat (map f coll))))
+  ([f & colls]
+   (apply concat (apply map f colls))))
 
 (defn tree-seq
   "Returns a lazy sequence of the nodes in a tree, via a depth-first walk.
@@ -4282,7 +4280,7 @@
   ^{:private true
     :dynamic true
     :doc "An atom holding a sorted set of symbols representing loaded libs"}
-  *loaded-libs* (atom (sorted-set)))
+  *loaded-libs* (atom (sorted-set 'clojure.core)))
 
 (defonce
   ^{:private true
@@ -4866,27 +4864,6 @@
   thread, but needs the same bindings in place."
   [& fntail]
   `(bound-fn* (fn ~@fntail)))
-
-(defn- binding-conveyor-fn
-  [f]
-  ;; (let [frame (clojure.lang.Var/cloneThreadBindingFrame)]
-  ;;   (fn
-  ;;     ([]
-  ;;        (clojure.lang.Var/resetThreadBindingFrame frame)
-  ;;        (f))
-  ;;     ([x]
-  ;;        (clojure.lang.Var/resetThreadBindingFrame frame)
-  ;;        (f x))
-  ;;     ([x y]
-  ;;        (clojure.lang.Var/resetThreadBindingFrame frame)
-  ;;        (f x y))
-  ;;     ([x y z]
-  ;;        (clojure.lang.Var/resetThreadBindingFrame frame)
-  ;;        (f x y z))
-  ;;     ([x y z & args]
-  ;;        (clojure.lang.Var/resetThreadBindingFrame frame)
-  ;;        (apply f x y z args))))
-  (throw "TODO: port binding-conveyor-fn"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Refs ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defn-
@@ -7075,24 +7052,7 @@ fails, attempts to require sym's namespace and retries."
   not yet finished, calls to deref/@ will block, unless the variant
   of deref with timeout is used. See also - realized?."
   [f]
-  ;; (let [f (binding-conveyor-fn f)
-  ;;       fut (.submit clojure.lang.Agent/soloExecutor ^Callable f)]
-  ;;   (reify
-  ;;    clojure.lang.IDeref
-  ;;    (deref [_] (deref-future fut))
-  ;;    clojure.lang.IBlockingDeref
-  ;;    (deref
-  ;;     [_ timeout-ms timeout-val]
-  ;;     (deref-future fut timeout-ms timeout-val))
-  ;;    clojure.lang.IPending
-  ;;    (isRealized [_] (.isDone fut))
-  ;;    java.util.concurrent.Future
-  ;;     (get [_] (.get fut))
-  ;;     (get [_ timeout unit] (.get fut timeout unit))
-  ;;     (isCancelled [_] (.isCancelled fut))
-  ;;     (isDone [_] (.isDone fut))
-  ;;     (cancel [_ interrupt?] (.cancel fut interrupt?))))
-  (throw "TODO: port future-call"))
+  (cpp/jank.runtime.future f))
 
 (defmacro future
   "Takes a body of expressions and yields a future object that will
@@ -7101,20 +7061,18 @@ fails, attempts to require sym's namespace and retries."
   not yet finished, calls to deref/@ will block, unless the variant of
   deref with timeout is used. See also - realized?."
   [& body]
-  ;; `(future-call (^{:once true} fn* [] ~@body))
-  (throw "TODO: port future"))
+  `(future-call (fn* []
+                  ~@body)))
 
 (defn future-cancel
   "Cancels the future, if possible."
-  [#_java.util.concurrent.Future f]
-  ;; (.cancel f true)
-  (throw "TODO: port future-cancel"))
+  [f]
+  (cpp/jank.runtime.cancel_future f))
 
 (defn future-cancelled?
   "Returns true if future f is cancelled"
-  [#_java.util.concurrent.Future f]
-  ;; (.isCancelled f)
-  (throw "TODO: port future-cancelled?"))
+  [f]
+  (cpp/jank.runtime.is_future_cancelled f))
 
 (defn pmap
   "Like map, except f is applied in parallel. Semi-lazy in that the
@@ -7319,9 +7277,8 @@ fails, attempts to require sym's namespace and retries."
 
 (defn realized?
   "Returns true if a value has been produced for a promise, delay, future or lazy sequence."
-  [#_clojure.lang.IPending x]
-  ;; (.isRealized x)
-  (throw "TODO: port realized?"))
+  [x]
+  (cpp/jank.runtime.is_realized x))
 
 (defn random-sample
   "Returns items from coll with random probability of prob (0.0 -

@@ -75,6 +75,7 @@ namespace jank::evaluate
   runtime::object_ref eval(analyze::expr::set_ref);
   runtime::object_ref eval(analyze::expr::local_reference_ref);
   runtime::object_ref eval(analyze::expr::function_ref);
+  runtime::object_ref eval(analyze::expr::function_ref, jtl::immutable_string const &var_name);
   runtime::object_ref eval(analyze::expr::recur_ref);
   runtime::object_ref eval(analyze::expr::recursion_reference_ref);
   runtime::object_ref eval(analyze::expr::named_recursion_ref);

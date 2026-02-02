@@ -24,6 +24,7 @@ namespace jank::runtime::obj
     /* behavior::derefable */
     object_ref deref() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     object_ref val{};
   };

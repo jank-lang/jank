@@ -1183,38 +1183,39 @@ namespace jank::analyze
     return ok();
   }
 
+  static auto &specials()
+  {
+    using runtime::obj::symbol;
+    static native_unordered_map<runtime::obj::symbol_ref, processor::special_function_type> ret{
+      {             make_box<symbol>("def"),             &processor::analyze_def },
+      {             make_box<symbol>("fn*"),              &processor::analyze_fn },
+      {           make_box<symbol>("recur"),           &processor::analyze_recur },
+      {              make_box<symbol>("do"),              &processor::analyze_do },
+      {            make_box<symbol>("let*"),             &processor::analyze_let },
+      {          make_box<symbol>("letfn*"),           &processor::analyze_letfn },
+      {           make_box<symbol>("loop*"),            &processor::analyze_loop },
+      {              make_box<symbol>("if"),              &processor::analyze_if },
+      {           make_box<symbol>("quote"),           &processor::analyze_quote },
+      {             make_box<symbol>("var"),        &processor::analyze_var_call },
+      {           make_box<symbol>("throw"),           &processor::analyze_throw },
+      {             make_box<symbol>("try"),             &processor::analyze_try },
+      {           make_box<symbol>("case*"),            &processor::analyze_case },
+      {         make_box<symbol>("cpp/raw"),         &processor::analyze_cpp_raw },
+      {        make_box<symbol>("cpp/type"),        &processor::analyze_cpp_type },
+      {       make_box<symbol>("cpp/value"),       &processor::analyze_cpp_value },
+      {        make_box<symbol>("cpp/cast"),        &processor::analyze_cpp_cast },
+      { make_box<symbol>("cpp/unsafe-cast"), &processor::analyze_cpp_unsafe_cast },
+      {         make_box<symbol>("cpp/box"),         &processor::analyze_cpp_box },
+      {       make_box<symbol>("cpp/unbox"),       &processor::analyze_cpp_unbox },
+      {         make_box<symbol>("cpp/new"),         &processor::analyze_cpp_new },
+      {      make_box<symbol>("cpp/delete"),      &processor::analyze_cpp_delete },
+    };
+    return ret;
+  }
+
   processor::processor()
     : root_frame{ jtl::make_ref<local_frame>(local_frame::frame_type::root, none) }
   {
-    using runtime::obj::symbol;
-    for(auto const &p :
-        std::initializer_list<std::pair<runtime::obj::symbol_ref, special_function_type>>{
-          {             make_box<symbol>("def"),             &processor::analyze_def },
-          {             make_box<symbol>("fn*"),              &processor::analyze_fn },
-          {           make_box<symbol>("recur"),           &processor::analyze_recur },
-          {              make_box<symbol>("do"),              &processor::analyze_do },
-          {            make_box<symbol>("let*"),             &processor::analyze_let },
-          {          make_box<symbol>("letfn*"),           &processor::analyze_letfn },
-          {           make_box<symbol>("loop*"),            &processor::analyze_loop },
-          {              make_box<symbol>("if"),              &processor::analyze_if },
-          {           make_box<symbol>("quote"),           &processor::analyze_quote },
-          {             make_box<symbol>("var"),        &processor::analyze_var_call },
-          {           make_box<symbol>("throw"),           &processor::analyze_throw },
-          {             make_box<symbol>("try"),             &processor::analyze_try },
-          {           make_box<symbol>("case*"),            &processor::analyze_case },
-          {         make_box<symbol>("cpp/raw"),         &processor::analyze_cpp_raw },
-          {        make_box<symbol>("cpp/type"),        &processor::analyze_cpp_type },
-          {       make_box<symbol>("cpp/value"),       &processor::analyze_cpp_value },
-          {        make_box<symbol>("cpp/cast"),        &processor::analyze_cpp_cast },
-          { make_box<symbol>("cpp/unsafe-cast"), &processor::analyze_cpp_unsafe_cast },
-          {         make_box<symbol>("cpp/box"),         &processor::analyze_cpp_box },
-          {       make_box<symbol>("cpp/unbox"),       &processor::analyze_cpp_unbox },
-          {         make_box<symbol>("cpp/new"),         &processor::analyze_cpp_new },
-          {      make_box<symbol>("cpp/delete"),      &processor::analyze_cpp_delete },
-    })
-    {
-      specials.insert(p);
-    }
   }
 
   processor::expression_result processor::analyze(read::parse::processor::iterator parse_current,
@@ -1694,13 +1695,13 @@ namespace jank::analyze
           {
             /* C++ doesn't allow multiple params with the same name, so we generate a unique
              * name for shared params. */
-            param = make_box<runtime::obj::symbol>(__rt_ctx->unique_namespaced_string("shadowed"));
+            param = make_box<runtime::obj::symbol>(__rt_ctx->unique_string("shadowed"));
             break;
           }
         }
       }
 
-      frame->locals.emplace(sym, local_binding{ sym, sym->name, none, current_frame });
+      frame->locals[sym].emplace_back(sym, sym->name, none, current_frame);
       param_symbols.emplace_back(sym);
     }
 
@@ -2035,7 +2036,7 @@ namespace jank::analyze
         auto const op_equal_call{ analyze_call(
           make_box<obj::persistent_list>(std::in_place,
                                          op_equal_sym,
-                                         loop_details.unwrap()->pairs[arg_index].first,
+                                         loop_details.unwrap()->pairs[arg_index].first->name,
                                          form),
           current_frame,
           expression_position::statement,
@@ -2199,20 +2200,21 @@ namespace jank::analyze
                                           latest_expansion(macro_expansions));
       }
 
-      auto const res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
-      if(res.is_err())
+      auto const value_res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
+      if(value_res.is_err())
       {
-        return res.expect_err();
+        return value_res.expect_err();
       }
-      auto const it(ret->pairs.emplace_back(sym, res.expect_ok()));
-      auto const expr_type{ cpp_util::non_void_expression_type(it.second) };
-      ret->frame->locals.emplace(sym,
-                                 local_binding{ sym,
-                                                __rt_ctx->unique_namespaced_string(sym->name),
-                                                it.second,
-                                                current_frame,
-                                                it.second->needs_box,
-                                                .type = expr_type });
+      auto const value_expr{ value_res.expect_ok() };
+      auto const expr_type{ cpp_util::non_void_expression_type(value_expr) };
+      auto const &binding{ ret->frame->locals[sym].emplace_back(
+        local_binding{ sym,
+                       __rt_ctx->unique_string(sym->name),
+                       value_expr,
+                       current_frame,
+                       value_expr->needs_box,
+                       .type = expr_type }) };
+      ret->pairs.emplace_back(&binding, value_expr);
     }
 
     usize const form_count{ o->count() - 2 };
@@ -2318,7 +2320,7 @@ namespace jank::analyze
                                             meta_source(sym_obj),
                                             latest_expansion(macro_expansions));
       }
-      ret->frame->locals.emplace(sym, local_binding{ sym, sym->name, none, current_frame });
+      ret->frame->locals[sym].emplace_back(sym, sym->name, none, current_frame);
     }
 
     for(usize i{}; i < binding_parts; i += 2)
@@ -2326,12 +2328,12 @@ namespace jank::analyze
       auto const &sym(expect_object<runtime::obj::symbol>(bindings->data[i]));
       auto const &val(bindings->data[i + 1]);
 
-      auto const res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
-      if(res.is_err())
+      auto const value_res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
+      if(value_res.is_err())
       {
-        return res.expect_err();
+        return value_res.expect_err();
       }
-      auto maybe_fexpr(res.expect_ok());
+      auto maybe_fexpr(value_res.expect_ok());
       if(maybe_fexpr->kind != expression_kind::function)
       {
         return error::analyze_invalid_letfn(
@@ -2339,13 +2341,15 @@ namespace jank::analyze
           meta_source(val),
           latest_expansion(macro_expansions));
       }
-      auto fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
+      auto const fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
 
       /* Populate the local frame we prepared for sym in the previous loop with its binding. */
-      auto it(ret->pairs.emplace_back(sym, fexpr));
-      auto &local(ret->frame->locals.find(sym)->second);
-      local.value_expr = some(it.second);
-      local.needs_box = it.second->needs_box;
+      auto const expr_type{ cpp_util::non_void_expression_type(fexpr) };
+      auto &binding(ret->frame->locals.find(sym)->second.back());
+      binding.value_expr = some(fexpr);
+      binding.needs_box = fexpr->needs_box;
+      binding.type = expr_type;
+      ret->pairs.emplace_back(&binding, fexpr);
     }
 
     usize const form_count{ o->count() - 2 };
@@ -2840,15 +2844,10 @@ namespace jank::analyze
             bool const is_object{ cpp_util::is_any_object(catch_type_ref->type) };
             auto catch_frame(
               jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
-            catch_frame->locals.emplace(catch_sym,
-                                        local_binding{ catch_sym,
-                                                       catch_sym->name,
-                                                       none,
-                                                       catch_frame,
-                                                       is_object,
-                                                       false,
-                                                       false,
-                                                       catch_type_ref->type });
+            catch_frame->locals[catch_sym].emplace_back(catch_sym,
+                                                        catch_sym->name,
+                                                        none,
+                                                        catch_frame);
 
             /* Now we just turn the body into a do block and have the do analyzer handle the rest. */
             auto const do_list(catch_it.rest().conj(make_box<runtime::obj::symbol>("do")));
@@ -3133,8 +3132,8 @@ namespace jank::analyze
     if(first->type == runtime::object_type::symbol)
     {
       auto const sym(runtime::expect_object<runtime::obj::symbol>(first));
-      auto const found_special(specials.find(sym));
-      if(found_special != specials.end())
+      auto const found_special(specials().find(sym));
+      if(found_special != specials().end())
       {
         return (*this.*found_special->second)(o, current_frame, position, fn_ctx, needs_box);
       }
@@ -4747,7 +4746,7 @@ namespace jank::analyze
       return true;
     }
 
-    auto const found_special(specials.find(sym));
-    return found_special != specials.end();
+    auto const found_special(specials().find(sym));
+    return found_special != specials().end();
   }
 }

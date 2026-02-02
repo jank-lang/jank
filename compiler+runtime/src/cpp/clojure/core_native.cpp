@@ -117,7 +117,8 @@ namespace clojure::core_native
   object_ref is_fn(object_ref const o)
   {
     return make_box(o->type == object_type::native_function_wrapper
-                    || o->type == object_type::jit_function);
+                    || o->type == object_type::jit_function
+                    || o->type == object_type::deferred_cpp_function);
   }
 
   object_ref is_multi_fn(object_ref const o)
@@ -304,7 +305,12 @@ extern "C" void jank_load_clojure_core_native()
   using namespace jank::runtime;
   using namespace clojure;
 
-  auto const ns(__rt_ctx->intern_ns("clojure.core-native"));
+  auto const ns_name{ "clojure.core-native" };
+  auto const ns(__rt_ctx->intern_ns(ns_name));
+
+  /* Will not be required, once we implement this module in jank with
+   * cpp interop. */
+  __rt_ctx->module_loader.set_is_loaded(ns_name);
 
   auto const intern_val([=](jtl::immutable_string const &name, auto const val) {
     ns->intern_var(name)->bind_root(convert<decltype(val)>::into_object(val));

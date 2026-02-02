@@ -63,6 +63,7 @@ namespace jank::runtime::obj
 
     static object_ref create(jtl::immutable_string const &);
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     native_big_decimal data{};
   };

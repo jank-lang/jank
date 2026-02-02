@@ -1,0 +1,5 @@
+(ns core
+  (:require [lib] [lib-cpp]))
+
+(defn -main []
+  (lib/hello))

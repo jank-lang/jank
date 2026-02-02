@@ -14,6 +14,7 @@
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
+#include <jank/runtime/obj/persistent_vector_sequence.hpp>
 #include <jank/runtime/detail/type.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/c_api.h>
@@ -46,10 +47,13 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
+
+#ifndef JANK_PHASE_2
     {
       profile::timer const timer{ "load clojure.core" };
       __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
+#endif
 
     {
       profile::timer const timer{ "eval user code" };
@@ -78,10 +82,12 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
+#ifndef JANK_PHASE_2
     {
       profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
+#endif
 
     {
       profile::timer const timer{ "eval user code" };
@@ -169,10 +175,14 @@ namespace jank
                      util::cli::codegen_type_str(opts.codegen)));
     }
 
+
+#ifndef JANK_PHASE_2
     if(opts.target_module != "clojure.core")
     {
       __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
+#endif
+
     __rt_ctx->compile_module(opts.target_module).expect_ok();
   }
 
@@ -187,10 +197,13 @@ namespace jank
       throw std::runtime_error{ "Not yet implemented: REPL server" };
     }
 
+
+#ifndef JANK_PHASE_2
     {
       profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
+#endif
 
     dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>("user"));
     dynamic_call(__rt_ctx->intern_var("clojure.core", "refer").expect_ok(),
@@ -286,10 +299,12 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
+#ifndef JANK_PHASE_2
     {
       profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
     }
+#endif
 
     if(!opts.target_module.empty())
     {
@@ -337,10 +352,14 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
+
+#ifndef JANK_PHASE_2
     if(opts.target_module != "clojure.core")
     {
       __rt_ctx->compile_module("clojure.core").expect_ok();
     }
+#endif
+
     __rt_ctx->compile_module(opts.target_module).expect_ok();
 
     jank::aot::processor const aot_prc{};
@@ -385,10 +404,20 @@ int main(int const argc, char const **argv)
 
 #ifdef JANK_PHASE_2
     jank_load_clojure_core();
-    __rt_ctx->module_loader.set_is_loaded("/clojure.core");
 #endif
 
     Cpp::EnableDebugOutput(false);
+
+    {
+      runtime::detail::native_transient_vector extra_args;
+      for(auto const &s : opts.extra_opts)
+      {
+        extra_args.push_back(make_box<runtime::obj::persistent_string>(s));
+      }
+      __rt_ctx->intern_var("clojure.core", "*command-line-args*")
+        .expect_ok()
+        ->bind_root(make_box<obj::persistent_vector>(extra_args.persistent())->seq());
+    }
 
     switch(jank::util::cli::opts.command)
     {

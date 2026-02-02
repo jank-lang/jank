@@ -395,10 +395,10 @@ namespace jank::environment
 
 #ifdef JANK_PHASE_2
       jank_load_clojure_core();
-      runtime::__rt_ctx->module_loader.set_is_loaded("/clojure.core");
 #else
       runtime::__rt_ctx->load_module("/clojure.core", runtime::module::origin::latest).expect_ok();
 #endif
+
       runtime::__rt_ctx->module_loader.add_path(path_tmp);
       runtime::__rt_ctx->compile_module(util::cli::opts.target_module).expect_ok();
 

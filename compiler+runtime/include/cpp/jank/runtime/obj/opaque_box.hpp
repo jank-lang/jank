@@ -25,6 +25,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     opaque_box_ref with_meta(object_ref const m);
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     jtl::ptr<void> data{};
     jtl::immutable_string canonical_type;

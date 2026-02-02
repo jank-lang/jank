@@ -58,12 +58,15 @@ namespace jank::runtime::obj
 
   uhash cons::to_hash() const
   {
-    if(hash != 0)
+    auto h{ hash.load() };
+    if(h != 0)
     {
-      return hash;
+      return h;
     }
 
-    return hash = hash::ordered(&base);
+    h = hash::ordered(&base);
+    hash.store(h);
+    return h;
   }
 
   cons_ref cons::conj(object_ref const head) const

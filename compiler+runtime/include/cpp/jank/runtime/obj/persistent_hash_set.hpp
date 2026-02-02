@@ -70,6 +70,7 @@ namespace jank::runtime::obj
     bool contains(object_ref const o) const;
     persistent_hash_set_ref disj(object_ref const o) const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     value_type data;
     jtl::option<object_ref> meta;

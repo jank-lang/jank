@@ -29,8 +29,11 @@ namespace jank::runtime::obj
     void append(object_ref const o);
     obj::array_chunk_ref chunk();
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
-    native_vector<object_ref> buffer;
     usize capacity{};
+
+    /*** XXX: Everything here is not thread-safe, but is not shared. ***/
+    native_vector<object_ref> buffer;
   };
 }

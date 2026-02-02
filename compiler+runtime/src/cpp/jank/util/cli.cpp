@@ -19,9 +19,9 @@ namespace jank::util::cli
   {
     if(*it == long_flag)
     {
-      ++it;
       if(needs_value)
       {
+        ++it;
         if(it == end)
         {
           throw util::format("The '{}' flag requires an argument, but one was not provided.",
@@ -128,6 +128,8 @@ OPTIONS
                               The optimization level to use for AOT compilation.
           --codegen <llvm-ir, cpp> [default: cpp]
                               The type of code generation to use.
+          --eagerness <lazy, eager> [default: lazy]
+                              How eagerly to JIT compile functions.
   -I,     --include-dir <path>
                               Absolute or relative path to the directory for includes
                               resolution. Can be specified multiple times.
@@ -179,6 +181,7 @@ OPTIONS
         /**** These are all of the global flags which can apply to any command. ****/
         if(check_flag(it, end, value, "--", false))
         {
+          ++it;
           /* This implies that everything coming after is meant for the running program. */
           std::copy(it, end, std::back_inserter(opts.extra_opts));
           break;
@@ -202,6 +205,10 @@ OPTIONS
         else if(check_flag(it, end, value, "--perf", false))
         {
           opts.perf_profiling_enabled = true;
+        }
+        else if(check_flag(it, end, value, "--debug", false))
+        {
+          opts.debug = true;
         }
         else if(check_flag(it, end, value, "--direct-call", false))
         {
@@ -243,6 +250,21 @@ OPTIONS
           else
           {
             throw util::format("Invalid codegen type '{}'.", value);
+          }
+        }
+        else if(check_flag(it, end, value, "--eagerness", true))
+        {
+          if(value == "lazy")
+          {
+            opts.eagerness = compilation_eagerness::lazy;
+          }
+          else if(value == "eager")
+          {
+            opts.eagerness = compilation_eagerness::eager;
+          }
+          else
+          {
+            throw util::format("Invalid eagerness type '{}'.", value);
           }
         }
         else if(check_flag(it, end, value, "-I", "--include-dir", true))
@@ -380,6 +402,14 @@ OPTIONS
           util::format_to(sb, " {}", arg);
         }
         throw sb.release();
+      }
+
+      /* Regardless of what's requested, if we're generating IR, we need to force eagerness.
+       * This is because deferred fns only support C++ compilation AND laziness doesn't buy
+       * us very much for IR gen, since we don't have the cost of C++ compilation to pay. */
+      if(opts.codegen == codegen_type::llvm_ir)
+      {
+        opts.eagerness = compilation_eagerness::eager;
       }
     }
     catch(jtl::immutable_string const &msg)

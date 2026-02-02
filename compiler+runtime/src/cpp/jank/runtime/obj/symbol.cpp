@@ -136,12 +136,7 @@ namespace jank::runtime::obj
 
   uhash symbol::to_hash() const
   {
-    if(hash)
-    {
-      return hash;
-    }
-
-    return hash = hash::combine(hash::string(name), hash::string(ns));
+    return hash::combine(hash::string(name), hash::string(ns));
   }
 
   symbol_ref symbol::with_meta(object_ref const m) const
@@ -170,18 +165,6 @@ namespace jank::runtime::obj
   bool symbol::operator<(symbol const &rhs) const
   {
     return compare(rhs) < 0;
-  }
-
-  void symbol::set_ns(jtl::immutable_string const &s)
-  {
-    ns = s;
-    hash = 0;
-  }
-
-  void symbol::set_name(jtl::immutable_string const &s)
-  {
-    name = s;
-    hash = 0;
   }
 }
 

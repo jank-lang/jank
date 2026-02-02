@@ -67,6 +67,17 @@ namespace jank::detail
     return make_box(p.string());
   }
 
+  template <typename T>
+  object_ref to_runtime_data(native_deque<T> const &s)
+  {
+    runtime::detail::native_transient_vector ret;
+    for(auto const &e : s)
+    {
+      ret.push_back(to_runtime_data(e));
+    }
+    return make_box<obj::persistent_vector>(ret.persistent());
+  }
+
   template <typename K, typename V, typename H, typename C>
   object_ref to_runtime_data(native_unordered_map<K, V, H, C> const &m)
   {

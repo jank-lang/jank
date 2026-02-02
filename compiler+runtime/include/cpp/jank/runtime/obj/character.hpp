@@ -24,6 +24,7 @@ namespace jank::runtime::obj
     jtl::immutable_string to_code_string() const;
     uhash to_hash() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     /* Holds the raw form of the character bytes. Supports Unicode. */
     jtl::immutable_string data;

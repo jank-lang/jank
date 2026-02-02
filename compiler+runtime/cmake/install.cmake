@@ -147,16 +147,16 @@ if(APPLE)
     DESTINATION lib/jank/${PROJECT_VERSION}/lib
   )
 else()
+  file(
+    GLOB jank_llvm_install_libs
+    LIST_DIRECTORIES false
+    ${llvm_dir}/lib/libLLVM.*
+    ${llvm_dir}/lib/libclang-cpp.*)
   install(
     FILES
-    ${llvm_dir}/lib/libLLVM.so.${LLVM_VERSION_MAJOR}.0git
-    ${llvm_dir}/lib/libclang-cpp.so.${LLVM_VERSION_MAJOR}.0git
+    ${jank_llvm_install_libs}
     DESTINATION lib/jank/${PROJECT_VERSION}/lib
   )
-
-  # Install unversioned symlinks so we can easily just link to -lLLVM.
-  install_symlink(libLLVM.so.${LLVM_VERSION_MAJOR}.0git libLLVM.so lib/jank/${PROJECT_VERSION}/lib)
-  install_symlink(libclang-cpp.so.${LLVM_VERSION_MAJOR}.0git libclang-cpp.so lib/jank/${PROJECT_VERSION}/lib)
 endif()
 
   jank_glob_install_without_prefix(

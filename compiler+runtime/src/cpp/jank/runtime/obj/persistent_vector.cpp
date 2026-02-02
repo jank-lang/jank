@@ -110,12 +110,7 @@ namespace jank::runtime::obj
 
   uhash persistent_vector::to_hash() const
   {
-    if(hash != 0)
-    {
-      return hash;
-    }
-
-    return hash = hash::ordered(data.begin(), data.end());
+    return hash::ordered(data.begin(), data.end());
   }
 
   i64 persistent_vector::compare(object const &o) const

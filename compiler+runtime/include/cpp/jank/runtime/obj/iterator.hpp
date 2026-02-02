@@ -16,8 +16,6 @@ namespace jank::runtime::obj
     static constexpr bool is_sequential{ true };
 
     iterator() = default;
-    iterator(iterator &&) noexcept = default;
-    iterator(iterator const &) = default;
     iterator(object_ref const fn, object_ref const start);
 
     /* behavior::object_like */
@@ -39,11 +37,14 @@ namespace jank::runtime::obj
     /* behavior::sequenceable_in_place */
     iterator_ref next_in_place();
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     object base{ obj_type };
     /* TODO: Support chunking. */
     object_ref fn{};
     object_ref current{};
     object_ref previous{};
-    mutable iterator_ref cached_next{};
+
+    /*** XXX: Everything here is thread-safe. ***/
+    mutable std::atomic<iterator *> cached_next;
   };
 }
