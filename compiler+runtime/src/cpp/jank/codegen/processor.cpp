@@ -1762,18 +1762,21 @@ namespace jank::codegen
   processor::gen(analyze::expr::try_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
     auto const has_catch{ !expr->catch_bodies.empty() };
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_namespaced_string("try")));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("try")));
     util::format_to(body_buffer, "jank::runtime::object_ref {}{ };", ret_tmp);
 
     util::format_to(body_buffer, "{");
+    auto const finally_name(runtime::munge(__rt_ctx->unique_string("finally")).data());
+    auto const finally_guard_name(runtime::munge(__rt_ctx->unique_string("finally_guard")).data());
     if(expr->finally_body.is_some())
     {
-      util::format_to(body_buffer, "auto const finally{ [&](){ ");
+      util::format_to(body_buffer, "auto const {}{ [&](){ ", finally_name);
       gen(expr->finally_body.unwrap(), fn_arity);
       util::format_to(body_buffer, "} };");
-      util::format_to(body_buffer, R"(
-      jank::util::scope_exit guard{ finally, true };
-    )");
+      util::format_to(body_buffer,
+                      "jank::util::scope_exit {}{ {}, true };",
+                      finally_guard_name,
+                      finally_name);
       util::format_to(body_buffer, "try {");
     }
 
@@ -1809,9 +1812,12 @@ namespace jank::codegen
 
     if(expr->finally_body.is_some())
     {
-      util::format_to(
-        body_buffer,
-        "} catch(...) { guard.release(); finally(); throw; } guard.release(); finally();");
+      util::format_to(body_buffer,
+                      "} catch(...) { {}.release(); {}(); throw; } {}.release(); {}();",
+                      finally_guard_name,
+                      finally_name,
+                      finally_guard_name,
+                      finally_name);
     }
 
     util::format_to(body_buffer, "}");

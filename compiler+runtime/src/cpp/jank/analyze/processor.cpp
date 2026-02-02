@@ -2693,7 +2693,8 @@ namespace jank::analyze
           }
           else
           {
-            if(auto const first(runtime::first(typed_item->seq())); runtime::equal(first, catch_))
+            auto const first(runtime::first(typed_item->seq()));
+            if(runtime::equal(first, catch_))
             {
               return try_expression_type::catch_;
             }
@@ -2847,7 +2848,11 @@ namespace jank::analyze
             catch_frame->locals[catch_sym].emplace_back(catch_sym,
                                                         catch_sym->name,
                                                         none,
-                                                        catch_frame);
+                                                        catch_frame,
+                                                        is_object,
+                                                        false,
+                                                        false,
+                                                        catch_type_ref->type);
 
             /* Now we just turn the body into a do block and have the do analyzer handle the rest. */
             auto const do_list(catch_it.rest().conj(make_box<runtime::obj::symbol>("do")));
