@@ -45,7 +45,7 @@ namespace jank::runtime::obj
     bool contains(object_ref const elem) const override;
 
     /* behavior::find */
-    object_ref find(object_ref const key) const override;
+    object_ref find(object_ref const idx) const override;
 
     transient_vector_ref pop_in_place();
 

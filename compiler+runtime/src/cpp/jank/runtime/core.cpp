@@ -725,6 +725,7 @@ namespace jank::runtime
   {
     auto const bindings{ __rt_ctx->thread_binding_frames };
     auto const ret{ make_box<obj::future>() };
+    /* NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage): False positive. */
     ret->thread = std::thread{ [=]() {
       __rt_ctx->thread_binding_frames = bindings;
 

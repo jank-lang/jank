@@ -15,7 +15,7 @@ namespace jank::runtime
   object_ref with_meta_graceful(object_ref const o, object_ref const m);
   object_ref reset_meta(object_ref const o, object_ref const m);
 
-  read::source meta_source(object_ref const o);
+  read::source meta_source(object_ref const meta);
   read::source object_source(object_ref const o);
   obj::persistent_hash_map_ref source_to_meta(read::source const &source);
   obj::persistent_hash_map_ref
