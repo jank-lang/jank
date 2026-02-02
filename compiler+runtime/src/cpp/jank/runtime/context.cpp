@@ -724,7 +724,7 @@ namespace jank::runtime
     }
 
     auto const res(
-      locked_keywords->emplace(s, make_box<obj::keyword>(detail::must_be_interned{}, s)));
+      locked_keywords->emplace(s, make_box<obj::keyword>(runtime::detail::must_be_interned{}, s)));
     return res.first->second;
   }
 
