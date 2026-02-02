@@ -2804,13 +2804,12 @@ namespace jank::analyze
                 ->add_usage(read::parse::reparse_nth(item, 2));
             }
             auto const catch_type_ref(static_ref_cast<expr::cpp_type>(catch_type.expect_ok()));
+
             /* If we're catching a C++ class/struct by value, we want to promote it to a reference
              * to avoid object slicing and to enable polymorphism.
              * However, we must NOT promote types in the jank::runtime namespace (like object_ref),
              * as these are smart pointers expected to be passed by value in the runtime. */
-            if(!Cpp::IsPointerType(catch_type_ref->type)
-               && !Cpp::IsReferenceType(catch_type_ref->type)
-               && !Cpp::IsBuiltin(catch_type_ref->type))
+            if(!Cpp::IsPointerType(catch_type_ref->type))
             {
               /* Check if this type is in the jank::runtime namespace */
               auto const type_scope{ Cpp::GetScopeFromType(catch_type_ref->type) };
@@ -2901,24 +2900,11 @@ namespace jank::analyze
     }
 
     auto const ensure_boxed_return
-      = [&](jtl::ref<expr::do_> const body_do) -> jtl::result<void, error_ref> {
-      if(!body_do->values.empty())
+      = [&](jtl::ref<expr::do_> const do_ref_) -> jtl::result<void, error_ref> {
+      if(!do_ref_->values.empty())
       {
-        auto const last_expression{ body_do->values.back() };
+        auto const last_expression{ do_ref_->values.back() };
         auto const last_expression_type{ cpp_util::expression_type(last_expression) };
-
-        if(!cpp_util::is_any_object(last_expression_type)
-           && !cpp_util::is_trait_convertible(last_expression_type))
-        {
-          /* TODO: Error. */
-          return error::analyze_invalid_cpp_conversion(
-            util::format("Body is returning a native object of type '{}', which is not "
-                         "convertible to a jank runtime object.",
-                         Cpp::GetTypeAsString(last_expression_type)),
-            object_source(list),
-            latest_expansion(macro_expansions));
-        }
-
         auto const new_last_expression{ apply_implicit_conversion(
           last_expression,
           last_expression_type,
@@ -2928,7 +2914,7 @@ namespace jank::analyze
         {
           return new_last_expression.expect_err();
         }
-        body_do->values.back() = new_last_expression.expect_ok();
+        do_ref_->values.back() = new_last_expression.expect_ok();
       }
       return ok();
     };
