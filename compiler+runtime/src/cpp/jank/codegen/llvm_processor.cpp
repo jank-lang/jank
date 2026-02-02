@@ -3747,11 +3747,29 @@ namespace jank::codegen
   llvm::GlobalVariable *
   llvm_processor::impl::create_global_var(jtl::immutable_string const &name) const
   {
-    return new llvm::GlobalVariable{ ctx->builder->getPtrTy(),
-                                     false,
-                                     llvm::GlobalVariable::InternalLinkage,
-                                     llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
-                                     name.c_str() };
+    auto const global{
+      new llvm::GlobalVariable{ ctx->builder->getPtrTy(),
+                               false, llvm::GlobalVariable::InternalLinkage,
+                               llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
+                               name.c_str() }
+    };
+
+    /* We register each global with the GC, so it can be considered as a root. This ensures
+     * that values in IR globals are considered alive. */
+    llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
+    ctx->builder->SetInsertPoint(ctx->global_ctor_block);
+    auto const fn_type(
+      llvm::FunctionType::get(ctx->builder->getVoidTy(),
+                              { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+                              false));
+    auto const fn(llvm_module->getOrInsertFunction("GC_add_roots", fn_type));
+    auto const global_end{ ctx->builder->CreateInBoundsGEP(ctx->builder->getPtrTy(),
+                                                           global,
+                                                           { ctx->builder->getInt64(1) }) };
+    llvm::SmallVector<llvm::Value *, 2> const args{ global, global_end };
+    ctx->builder->CreateCall(fn, args);
+
+    return global;
   }
 
   llvm::StructType *
