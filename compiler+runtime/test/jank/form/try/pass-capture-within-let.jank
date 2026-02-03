@@ -2,5 +2,5 @@
   (try
     (let* [y x]
       y)
-    (catch _
-      )))
+    (catch cpp/jank.runtime.object_ref e
+      e)))

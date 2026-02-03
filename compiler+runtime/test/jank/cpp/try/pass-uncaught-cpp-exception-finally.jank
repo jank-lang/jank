@@ -1,0 +1,19 @@
+(cpp/raw "namespace jank::cpp::try_::pass_uncaught_cpp_exception_finally {
+  void throw_runtime_error() { throw std::runtime_error(\"runtime error\"); }
+}")
+
+(let [a (atom [])]
+  (try
+    (try
+      (cpp/jank.cpp.try_.pass_uncaught_cpp_exception_finally.throw_runtime_error)
+      ;; No matching catch for runtime_error (inner catch is for logic_error)
+      (catch cpp/std.logic_error e
+        (swap! a conj :wrong-catch))
+      (finally
+        (swap! a conj :finally-ran)))
+    (catch cpp/std.runtime_error e
+      (swap! a conj :caught-outer)))
+
+  (assert (= [:finally-ran :caught-outer] @a) (pr-str @a)))
+
+:success

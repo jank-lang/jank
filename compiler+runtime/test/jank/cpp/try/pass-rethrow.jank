@@ -1,0 +1,20 @@
+;; Test re-throwing exceptions
+(cpp/raw "namespace jank::cpp::try_::pass_rethrow {
+  void throw_runtime_error() { throw std::runtime_error(\"inner error\"); }
+  void throw_current() { throw; }
+}")
+
+(let [a (atom [])]
+  (try
+    (try
+      (cpp/jank.cpp.try_.pass_rethrow.throw_runtime_error)
+      (catch cpp/std.runtime_error e
+        (swap! a conj :caught-inner)
+        (cpp/jank.cpp.try_.pass_rethrow.throw_current)))
+    (catch cpp/std.runtime_error e
+      (assert (= "inner error" (cpp/.what e)))
+      (swap! a conj :caught-outer)))
+
+  (assert (= [:caught-inner :caught-outer] @a) (pr-str @a)))
+
+:success

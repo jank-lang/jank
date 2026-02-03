@@ -1,0 +1,9 @@
+
+;; Verifies that a full try block works inside a finally block (complex cleanup).
+(let [a (atom nil)]
+  (try
+    :main
+    (finally
+       (reset! a (try :finally-success (catch cpp/jank.runtime.object_ref _ :fail)))))
+  (assert (= @a :finally-success)))
+:success

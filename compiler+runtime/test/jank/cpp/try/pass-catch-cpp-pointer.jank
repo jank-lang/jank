@@ -1,0 +1,17 @@
+;; Test catching C++ void* exception
+
+(cpp/raw "namespace jank::cpp::try_::pass_catch_cpp_pointer {
+  using void_ptr = void*;
+  void_ptr const thrown_ptr = (void_ptr)0x1234;
+  void throw_void_ptr() { throw thrown_ptr; }
+}")
+
+(let [caught (atom false)]
+  (try
+    (cpp/jank.cpp.try_.pass_catch_cpp_pointer.throw_void_ptr)
+    (catch cpp/int i)
+    (catch cpp/jank.cpp.try_.pass_catch_cpp_pointer.void_ptr p
+      (reset! caught (cpp/== p cpp/jank.cpp.try_.pass_catch_cpp_pointer.thrown_ptr))))
+  (assert @caught "Should have caught void* with correct value"))
+
+:success
