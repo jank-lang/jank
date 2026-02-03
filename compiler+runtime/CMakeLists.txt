@@ -904,12 +904,7 @@ set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
 # will see lots of include errors and, in particular, this guy:
 # > We don't know how to get the definition of mbstate_t on your platform.
 if(APPLE)
-  execute_process(
-    COMMAND /usr/bin/xcrun --show-sdk-path
-    OUTPUT_VARIABLE jank_xcrun_sysroot
-    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE
-  )
-  set(jank_additional_pch_flags -isysroot ${jank_xcrun_sysroot})
+  set(jank_additional_pch_flags -isysroot ${CMAKE_OSX_SYSROOT})
 endif()
 
 separate_arguments(jank_incremental_pch_cxx_flags UNIX_COMMAND ${CMAKE_CXX_FLAGS})
