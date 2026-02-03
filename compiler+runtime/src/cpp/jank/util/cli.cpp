@@ -179,11 +179,13 @@ OPTIONS
       for(auto it{ flags.begin() }; it != end; ++it)
       {
         /**** These are all of the global flags which can apply to any command. ****/
-        if(check_flag(it, end, value, "--", false))
+        if(*it == "--")
         {
           ++it;
           /* This implies that everything coming after is meant for the running program. */
-          std::copy(it, end, std::back_inserter(opts.extra_opts));
+          auto it_next{ it };
+          ++it_next;
+          std::copy(it_next, end, std::back_inserter(opts.extra_opts));
           break;
         }
         else if(check_flag(it, end, value, "-h", "--help", false))
