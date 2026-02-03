@@ -30,6 +30,7 @@ namespace jank::analyze
     using throw_ref = jtl::ref<struct throw_>;
     using try_ref = jtl::ref<struct try_>;
     using case_ref = jtl::ref<struct case_>;
+    using cpp_raw_ref = jtl::ref<struct cpp_raw>;
     using cpp_type_ref = jtl::ref<struct cpp_type>;
     using cpp_value_ref = jtl::ref<struct cpp_value>;
     using cpp_cast_ref = jtl::ref<struct cpp_cast>;
@@ -41,6 +42,8 @@ namespace jank::analyze
     using cpp_builtin_operator_call_ref = jtl::ref<struct cpp_builtin_operator_call>;
     using cpp_box_ref = jtl::ref<struct cpp_box>;
     using cpp_unbox_ref = jtl::ref<struct cpp_unbox>;
+    using cpp_new_ref = jtl::ref<struct cpp_new>;
+    using cpp_delete_ref = jtl::ref<struct cpp_delete>;
   }
 }
 

@@ -29,6 +29,7 @@
 #include <jank/util/scope_exit.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/codegen/processor.hpp>
+#include <jank/codegen/optimize.hpp>
 #include <jank/aot/processor.hpp>
 #include <jank/error/codegen.hpp>
 #include <jank/error/runtime.hpp>
@@ -233,7 +234,7 @@ namespace jank::runtime
         codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
         //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
         auto const code{ cg_prc.declaration_str() };
-        auto module_name{ runtime::to_string(current_module_var->deref()) };
+        auto const module_name{ runtime::to_string(current_module_var->deref()) };
         //aot::processor const aot_prc;
         //auto const res{ aot_prc.compile_object(module_name, code) };
         //if(res.is_err())
@@ -249,6 +250,7 @@ namespace jank::runtime
           throw error::internal_codegen_failure(res);
         }
         auto &partial_tu{ parse_res.get() };
+        codegen::optimize(partial_tu.TheModule.get(), module_name);
         //auto module_name{ runtime::to_string(current_module_var->deref()) };
         write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
       }

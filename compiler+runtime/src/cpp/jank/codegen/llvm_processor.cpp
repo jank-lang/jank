@@ -3,8 +3,6 @@
 #include <Interpreter/Compatibility.h>
 #include <clang/Interpreter/CppInterOp.h>
 
-#include <llvm/Analysis/CGSCCPassManager.h>
-#include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -14,15 +12,13 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Linker/Linker.h>
-#include <llvm/Passes/PassBuilder.h>
-#include <llvm/Passes/StandardInstrumentations.h>
-#include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/analyze/visit.hpp>
 #include <jank/codegen/llvm_processor.hpp>
+#include <jank/codegen/optimize.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
@@ -68,15 +64,6 @@ namespace jank::codegen
     native_unordered_map<obj::symbol_ref, llvm::Value *> var_globals;
     native_unordered_map<obj::symbol_ref, llvm::Value *> var_root_globals;
     native_unordered_map<jtl::immutable_string, llvm::Value *> c_string_globals;
-
-    /* Optimization details. */
-    std::unique_ptr<llvm::LoopAnalysisManager> lam;
-    std::unique_ptr<llvm::FunctionAnalysisManager> fam;
-    std::unique_ptr<llvm::CGSCCAnalysisManager> cgam;
-    std::unique_ptr<llvm::ModuleAnalysisManager> mam;
-    std::unique_ptr<llvm::PassInstrumentationCallbacks> pic;
-    std::unique_ptr<llvm::StandardInstrumentations> si;
-    llvm::ModulePassManager mpm;
 
     struct exception_handler_info
     {
@@ -602,16 +589,6 @@ namespace jank::codegen
                                      std::unique_ptr<llvm::LLVMContext> llvm_ctx)
     : module_name{ module_name }
     , ctor_name{ unique_munged_string("jank_global_init") }
-    //, llvm_ctx{ std::make_unique<llvm::LLVMContext>() }
-    //, llvm_ctx{ reinterpret_cast<std::unique_ptr<llvm::orc::ThreadSafeContext> *>(
-    //              reinterpret_cast<void *>(
-    //                &static_cast<clang::Interpreter &>(*__rt_ctx->jit_prc.interpreter)))
-    //              ->getContext() }
-    , lam{ std::make_unique<llvm::LoopAnalysisManager>() }
-    , fam{ std::make_unique<llvm::FunctionAnalysisManager>() }
-    , cgam{ std::make_unique<llvm::CGSCCAnalysisManager>() }
-    , mam{ std::make_unique<llvm::ModuleAnalysisManager>() }
-    , pic{ std::make_unique<llvm::PassInstrumentationCallbacks>() }
   {
     auto m{ std::make_unique<llvm::Module>(unique_munged_string(module_name).c_str(), *llvm_ctx) };
     module = llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) };
@@ -619,28 +596,12 @@ namespace jank::codegen
     auto const raw_ctx{ extract_context(module) };
     builder = std::make_unique<llvm::IRBuilder<>>(*raw_ctx);
     global_ctor_block = llvm::BasicBlock::Create(*raw_ctx, "entry");
-    si = std::make_unique<llvm::StandardInstrumentations>(*raw_ctx,
-                                                          /*DebugLogging*/ false);
 
     /* The LLVM front-end tips documentation suggests setting the target triple and
      * data layout to improve back-end codegen performance. */
     auto const raw_module{ module.getModuleUnlocked() };
     raw_module->setTargetTriple(llvm::Triple{ util::default_target_triple().c_str() });
     raw_module->setDataLayout(__rt_ctx->jit_prc.interpreter->getExecutionEngine()->getDataLayout());
-
-    /* TODO: Add more passes and measure the order of the passes. */
-
-    si->registerCallbacks(*pic, mam.get());
-
-    llvm::PassBuilder pb;
-    pb.registerModuleAnalyses(*mam);
-    pb.registerCGSCCAnalyses(*cgam);
-    pb.registerFunctionAnalyses(*fam);
-    pb.registerLoopAnalyses(*lam);
-    pb.crossRegisterProxies(*lam, *fam, *cgam, *mam);
-    /* TODO: Configure this level based on the CLI optimization flag.
-     * Benchmark to find the best default. */
-    mpm = pb.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O2);
   }
 
   /* There are three places where a var-root could be generated,
@@ -4407,7 +4368,7 @@ namespace jank::codegen
     }
 #endif
 
-    _impl->ctx->mpm.run(*_impl->llvm_module, *_impl->ctx->mam);
+    codegen::optimize(_impl->llvm_module, get_module_name());
 
     if(print_settings == "2")
     {
