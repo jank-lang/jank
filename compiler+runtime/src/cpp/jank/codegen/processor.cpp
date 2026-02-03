@@ -2982,8 +2982,8 @@ namespace jank::codegen
                       current_ns->name->get_name(),
                       current_ns->symbol_counter.load());
 
-      /* Eager init for local vars and clojure.core; other namespaces may not exist until
-       * jank_load has executed (require runs there), so defer those (direct-call only). */
+      /* For direct-call eager init for local vars and clojure.core; other namespaces may not
+       * exist until jank_load has executed (require runs there), so defer those. */
       for(auto const &v : lifted_vars)
       {
         if(util::cli::opts.direct_call && detail::should_defer_var_init(v.second, v.first, module))
