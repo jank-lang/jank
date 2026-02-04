@@ -32,8 +32,8 @@ namespace jank::runtime::obj
 
   persistent_sorted_set_ref persistent_sorted_set::empty()
   {
-    static auto const ret(make_box<persistent_sorted_set>());
-    return ret;
+    static persistent_sorted_set const ret;
+    return &ret;
   }
 
   persistent_sorted_set_ref persistent_sorted_set::create_from_seq(object_ref const seq)

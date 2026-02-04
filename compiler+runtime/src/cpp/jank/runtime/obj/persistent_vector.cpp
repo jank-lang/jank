@@ -63,8 +63,8 @@ namespace jank::runtime::obj
 
   persistent_vector_ref persistent_vector::empty()
   {
-    static auto const ret(make_box<persistent_vector>());
-    return ret;
+    static persistent_vector const ret;
+    return &ret;
   }
 
   bool persistent_vector::equal(object const &o) const

@@ -26,8 +26,8 @@ namespace jank::runtime::obj
 
   persistent_sorted_map_ref persistent_sorted_map::empty()
   {
-    static auto const ret(make_box<persistent_sorted_map>());
-    return ret;
+    static persistent_sorted_map const ret;
+    return &ret;
   }
 
   persistent_sorted_map_ref persistent_sorted_map::create_from_seq(object_ref const seq)

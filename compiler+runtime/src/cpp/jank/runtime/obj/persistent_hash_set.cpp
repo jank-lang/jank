@@ -31,8 +31,8 @@ namespace jank::runtime::obj
 
   persistent_hash_set_ref persistent_hash_set::empty()
   {
-    static auto const ret(make_box<persistent_hash_set>());
-    return ret;
+    static persistent_hash_set const ret;
+    return &ret;
   }
 
   persistent_hash_set_ref persistent_hash_set::create_from_seq(object_ref const seq)

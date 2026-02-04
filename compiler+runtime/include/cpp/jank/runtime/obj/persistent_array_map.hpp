@@ -46,8 +46,8 @@ namespace jank::runtime::obj
 
     static persistent_array_map_ref empty()
     {
-      static auto const ret(make_box<persistent_array_map>());
-      return ret;
+      static persistent_array_map const ret;
+      return &ret;
     }
 
     using base_persistent_map::base_persistent_map;

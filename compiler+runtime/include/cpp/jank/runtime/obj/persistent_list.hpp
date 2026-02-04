@@ -48,8 +48,8 @@ namespace jank::runtime::obj
 
     static persistent_list_ref empty()
     {
-      static auto const ret(make_box<persistent_list>());
-      return ret;
+      static persistent_list const ret;
+      return &ret;
     }
 
     /* behavior::object_like */
