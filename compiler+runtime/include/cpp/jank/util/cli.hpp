@@ -102,7 +102,7 @@ namespace jank::util::cli
 
     /* Compilation. */
     bool debug{};
-    u8 optimization_level{};
+    u8 optimization_level{ 1 };
     bool direct_call{};
     compilation_eagerness eagerness{ compilation_eagerness::lazy };
 

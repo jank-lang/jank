@@ -33,7 +33,7 @@ namespace jank::codegen
     pb.registerLoopAnalyses(lam);
     pb.crossRegisterProxies(lam, fam, cgam, mam);
 
-    auto level{ llvm::OptimizationLevel::O2 };
+    auto level{ llvm::OptimizationLevel::O0 };
     switch(util::cli::opts.optimization_level)
     {
       case 0:
@@ -58,7 +58,7 @@ namespace jank::codegen
     //auto const preserve{ [&](llvm::GlobalValue const &GV) { return GV.getName() == load_fn; } };
 
     //mpm.addPass(llvm::InternalizePass(preserve));
-    mpm.addPass(llvm::GlobalDCEPass());
+    //mpm.addPass(llvm::GlobalDCEPass());
 
     mpm.run(*module, mam);
   }
