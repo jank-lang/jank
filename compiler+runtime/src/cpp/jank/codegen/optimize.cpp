@@ -12,7 +12,7 @@
 
 namespace jank::codegen
 {
-  void optimize(jtl::ref<llvm::Module> const module, jtl::immutable_string const &module_name)
+  void optimize(jtl::ref<llvm::Module> const module, jtl::immutable_string const &)
   {
     llvm::LoopAnalysisManager lam;
     llvm::FunctionAnalysisManager fam;
@@ -54,10 +54,10 @@ namespace jank::codegen
 
     mpm = pb.buildPerModuleDefaultPipeline(level);
 
-    std::string const load_fn{ runtime::module::module_to_load_function(module_name) };
-    auto const preserve{ [&](llvm::GlobalValue const &GV) { return GV.getName() == load_fn; } };
+    //std::string const load_fn{ runtime::module::module_to_load_function(module_name) };
+    //auto const preserve{ [&](llvm::GlobalValue const &GV) { return GV.getName() == load_fn; } };
 
-    mpm.addPass(llvm::InternalizePass(preserve));
+    //mpm.addPass(llvm::InternalizePass(preserve));
     mpm.addPass(llvm::GlobalDCEPass());
 
     mpm.run(*module, mam);
