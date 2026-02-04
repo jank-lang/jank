@@ -10,22 +10,31 @@
 
 namespace jank::runtime::obj
 {
+  transient_hash_map::transient_hash_map()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   transient_hash_map::transient_hash_map(runtime::detail::native_persistent_hash_map &&d)
-    : data{ std::move(d).transient() }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d).transient() }
   {
   }
 
   transient_hash_map::transient_hash_map(runtime::detail::native_persistent_hash_map const &d)
-    : data{ d.transient() }
+    : object{ obj_type, obj_behaviors }
+    , data{ d.transient() }
   {
   }
 
   transient_hash_map::transient_hash_map(runtime::detail::native_transient_hash_map &&d)
-    : data{ std::move(d) }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
   {
   }
 
   transient_hash_map::transient_hash_map(runtime::detail::native_array_map const &m)
+    : object{ obj_type, obj_behaviors }
   {
     for(auto const &e : m)
     {
@@ -36,35 +45,6 @@ namespace jank::runtime::obj
   transient_hash_map_ref transient_hash_map::empty()
   {
     return make_box<transient_hash_map>();
-  }
-
-  bool transient_hash_map::equal(object const &o) const
-  {
-    /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
-  }
-
-  void transient_hash_map::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string transient_hash_map::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  jtl::immutable_string transient_hash_map::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash transient_hash_map::to_hash() const
-  {
-    /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   usize transient_hash_map::count() const
@@ -81,7 +61,7 @@ namespace jank::runtime::obj
     {
       return *res;
     }
-    return jank_nil();
+    return {};
   }
 
   object_ref transient_hash_map::get(object_ref const key, object_ref const fallback) const
@@ -95,7 +75,7 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ref transient_hash_map::get_entry(object_ref const key) const
+  object_ref transient_hash_map::find(object_ref const key) const
   {
     assert_active();
     auto const res(data.find(key));
@@ -103,7 +83,7 @@ namespace jank::runtime::obj
     {
       return make_box<persistent_vector>(std::in_place, key, *res);
     }
-    return jank_nil();
+    return {};
   }
 
   bool transient_hash_map::contains(object_ref const key) const

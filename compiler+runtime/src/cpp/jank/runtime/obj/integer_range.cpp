@@ -17,8 +17,14 @@ namespace jank::runtime::obj
     return lte(val, end);
   }
 
+  integer_range::integer_range()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   integer_range::integer_range(integer_ref const end)
-    : start{ make_box<integer>(0) }
+    : object{ obj_type, obj_behaviors }
+    , start{ make_box<integer>(0) }
     , end{ end }
     , step{ make_box<integer>(1) }
     , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
@@ -26,7 +32,8 @@ namespace jank::runtime::obj
   }
 
   integer_range::integer_range(integer_ref const start, integer_ref const end)
-    : start{ start }
+    : object{ obj_type, obj_behaviors }
+    , start{ start }
     , end{ end }
     , step{ make_box<integer>(1) }
     , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
@@ -36,7 +43,8 @@ namespace jank::runtime::obj
   integer_range::integer_range(integer_ref const start,
                                integer_ref const end,
                                integer_ref const step)
-    : start{ start }
+    : object{ obj_type, obj_behaviors }
+    , start{ start }
     , end{ end }
     , step{ step }
     , bounds_check{ lt(static_cast<i64>(0), step.erase())
@@ -49,7 +57,8 @@ namespace jank::runtime::obj
                                integer_ref const end,
                                integer_ref const step,
                                integer_range::bounds_check_t const bounds_check)
-    : start{ start }
+    : object{ obj_type, obj_behaviors }
+    , start{ start }
     , end{ end }
     , step{ step }
     , bounds_check{ bounds_check }
@@ -153,7 +162,7 @@ namespace jank::runtime::obj
 
   uhash integer_range::to_hash() const
   {
-    return hash::ordered(&base);
+    return hash::ordered(this);
   }
 
   integer_range_ref integer_range::with_meta(object_ref const m) const
@@ -162,6 +171,11 @@ namespace jank::runtime::obj
     auto const ret(fresh_seq());
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref integer_range::get_meta() const
+  {
+    return meta;
   }
 
   usize integer_range::count() const

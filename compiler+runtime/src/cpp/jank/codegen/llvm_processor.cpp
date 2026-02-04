@@ -3,8 +3,6 @@
 #include <Interpreter/Compatibility.h>
 #include <clang/Interpreter/CppInterOp.h>
 
-#include <llvm/Analysis/CGSCCPassManager.h>
-#include <llvm/Analysis/LoopAnalysisManager.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -14,19 +12,18 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Linker/Linker.h>
-#include <llvm/Passes/PassBuilder.h>
-#include <llvm/Passes/StandardInstrumentations.h>
-#include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/Utils/ModuleUtils.h>
 
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/rtti.hpp>
 #include <jank/analyze/visit.hpp>
 #include <jank/codegen/llvm_processor.hpp>
+#include <jank/codegen/optimize.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/util/clang.hpp>
 #include <jank/util/cli.hpp>
@@ -67,15 +64,6 @@ namespace jank::codegen
     native_unordered_map<obj::symbol_ref, llvm::Value *> var_globals;
     native_unordered_map<obj::symbol_ref, llvm::Value *> var_root_globals;
     native_unordered_map<jtl::immutable_string, llvm::Value *> c_string_globals;
-
-    /* Optimization details. */
-    std::unique_ptr<llvm::LoopAnalysisManager> lam;
-    std::unique_ptr<llvm::FunctionAnalysisManager> fam;
-    std::unique_ptr<llvm::CGSCCAnalysisManager> cgam;
-    std::unique_ptr<llvm::ModuleAnalysisManager> mam;
-    std::unique_ptr<llvm::PassInstrumentationCallbacks> pic;
-    std::unique_ptr<llvm::StandardInstrumentations> si;
-    llvm::ModulePassManager mpm;
 
     struct exception_handler_info
     {
@@ -601,16 +589,6 @@ namespace jank::codegen
                                      std::unique_ptr<llvm::LLVMContext> llvm_ctx)
     : module_name{ module_name }
     , ctor_name{ unique_munged_string("jank_global_init") }
-    //, llvm_ctx{ std::make_unique<llvm::LLVMContext>() }
-    //, llvm_ctx{ reinterpret_cast<std::unique_ptr<llvm::orc::ThreadSafeContext> *>(
-    //              reinterpret_cast<void *>(
-    //                &static_cast<clang::Interpreter &>(*__rt_ctx->jit_prc.interpreter)))
-    //              ->getContext() }
-    , lam{ std::make_unique<llvm::LoopAnalysisManager>() }
-    , fam{ std::make_unique<llvm::FunctionAnalysisManager>() }
-    , cgam{ std::make_unique<llvm::CGSCCAnalysisManager>() }
-    , mam{ std::make_unique<llvm::ModuleAnalysisManager>() }
-    , pic{ std::make_unique<llvm::PassInstrumentationCallbacks>() }
   {
     auto m{ std::make_unique<llvm::Module>(unique_munged_string(module_name).c_str(), *llvm_ctx) };
     module = llvm::orc::ThreadSafeModule{ std::move(m), std::move(llvm_ctx) };
@@ -618,28 +596,12 @@ namespace jank::codegen
     auto const raw_ctx{ extract_context(module) };
     builder = std::make_unique<llvm::IRBuilder<>>(*raw_ctx);
     global_ctor_block = llvm::BasicBlock::Create(*raw_ctx, "entry");
-    si = std::make_unique<llvm::StandardInstrumentations>(*raw_ctx,
-                                                          /*DebugLogging*/ false);
 
     /* The LLVM front-end tips documentation suggests setting the target triple and
      * data layout to improve back-end codegen performance. */
     auto const raw_module{ module.getModuleUnlocked() };
     raw_module->setTargetTriple(llvm::Triple{ util::default_target_triple().c_str() });
     raw_module->setDataLayout(__rt_ctx->jit_prc.interpreter->getExecutionEngine()->getDataLayout());
-
-    /* TODO: Add more passes and measure the order of the passes. */
-
-    si->registerCallbacks(*pic, mam.get());
-
-    llvm::PassBuilder pb;
-    pb.registerModuleAnalyses(*mam);
-    pb.registerCGSCCAnalyses(*cgam);
-    pb.registerFunctionAnalyses(*fam);
-    pb.registerLoopAnalyses(*lam);
-    pb.crossRegisterProxies(*lam, *fam, *cgam, *mam);
-    /* TODO: Configure this level based on the CLI optimization flag.
-     * Benchmark to find the best default. */
-    mpm = pb.buildPerModuleDefaultPipeline(llvm::OptimizationLevel::O2);
   }
 
   /* There are three places where a var-root could be generated,
@@ -783,7 +745,7 @@ namespace jank::codegen
 
     if(is_closure)
     {
-      static constexpr auto offset_of_base{ offsetof(runtime::obj::jit_closure, base) };
+      static constexpr auto offset_of_base{ offsetof(runtime::obj::jit_closure, type) };
       static constexpr auto offset_of_context{ offsetof(runtime::obj::jit_closure, context) };
       jank_debug_assert(offset_of_base < offset_of_context);
       static constexpr auto offset_of_context_from_base{ offset_of_context - offset_of_base };
@@ -945,8 +907,7 @@ namespace jank::codegen
                                 false));
       auto const set_meta_fn(llvm_module->getOrInsertFunction("jank_set_meta", set_meta_fn_type));
 
-      auto const meta_val(
-        gen_global_from_read_string(strip_source_from_meta(expr->name->meta.unwrap())));
+      auto const meta_val(gen_global_from_read_string(strip_source_from_meta(expr->name->meta)));
       ctx->builder->CreateCall(set_meta_fn, { ref, meta_val });
     }
 
@@ -958,8 +919,8 @@ namespace jank::codegen
     auto const set_dynamic_fn(
       llvm_module->getOrInsertFunction("jank_var_set_dynamic", set_dynamic_fn_type));
 
-    auto const dynamic{ truthy(get(expr->name->meta.unwrap_or(jank_nil()),
-                                   __rt_ctx->intern_keyword("dynamic").expect_ok())) };
+    auto const dynamic{ truthy(
+      get(expr->name->meta, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
 
     auto const dynamic_global{ gen_global(make_box(dynamic)) };
 
@@ -3926,7 +3887,7 @@ namespace jank::codegen
       auto const call(ctx->builder->CreateCall(create_fn, args));
       ctx->builder->CreateStore(call, global);
 
-      if(s->meta)
+      if(s->meta.is_some())
       {
         auto const set_meta_fn_type(
           llvm::FunctionType::get(ctx->builder->getVoidTy(),
@@ -3936,7 +3897,7 @@ namespace jank::codegen
 
         /* TODO: Can strip here, when the flag is enabled: strip_source_from_meta
          * Otherwise, we need this info for macro expansion errors. i.e. `(foo ~'bar) */
-        auto const meta(gen_global_from_read_string(s->meta.unwrap()));
+        auto const meta(gen_global_from_read_string(s->meta));
         ctx->builder->CreateCall(set_meta_fn, { call, meta });
       }
 
@@ -4058,7 +4019,7 @@ namespace jank::codegen
 
           if constexpr(behavior::metadatable<T>)
           {
-            if(typed_o->meta)
+            if(typed_o->get_meta().is_some())
             {
               auto const set_meta_fn_type(
                 llvm::FunctionType::get(ctx->builder->getVoidTy(),
@@ -4069,7 +4030,7 @@ namespace jank::codegen
 
               /* TODO: This shouldn't be its own global; we don't need to reference it later. */
               auto const meta(
-                gen_global_from_read_string(strip_source_from_meta(typed_o->meta.unwrap())));
+                gen_global_from_read_string(strip_source_from_meta(typed_o->get_meta())));
               auto const meta_name(util::format("{}_meta", name));
               meta->setName(meta_name.c_str());
               ctx->builder->CreateCall(set_meta_fn, { call, meta });
@@ -4293,11 +4254,29 @@ namespace jank::codegen
   llvm::GlobalVariable *
   llvm_processor::impl::create_global_var(jtl::immutable_string const &name) const
   {
-    return new llvm::GlobalVariable{ ctx->builder->getPtrTy(),
-                                     false,
-                                     llvm::GlobalVariable::InternalLinkage,
-                                     llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
-                                     name.c_str() };
+    auto const global{
+      new llvm::GlobalVariable{ ctx->builder->getPtrTy(),
+                               false, llvm::GlobalVariable::InternalLinkage,
+                               llvm::ConstantPointerNull::get(ctx->builder->getPtrTy()),
+                               name.c_str() }
+    };
+
+    /* We register each global with the GC, so it can be considered as a root. This ensures
+     * that values in IR globals are considered alive. */
+    llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
+    ctx->builder->SetInsertPoint(ctx->global_ctor_block);
+    auto const fn_type(
+      llvm::FunctionType::get(ctx->builder->getVoidTy(),
+                              { ctx->builder->getPtrTy(), ctx->builder->getPtrTy() },
+                              false));
+    auto const fn(llvm_module->getOrInsertFunction("GC_add_roots", fn_type));
+    auto const global_end{ ctx->builder->CreateInBoundsGEP(ctx->builder->getPtrTy(),
+                                                           global,
+                                                           { ctx->builder->getInt64(1) }) };
+    llvm::SmallVector<llvm::Value *, 2> const args{ global, global_end };
+    ctx->builder->CreateCall(fn, args);
+
+    return global;
   }
 
   llvm::StructType *
@@ -4389,7 +4368,7 @@ namespace jank::codegen
     }
 #endif
 
-    _impl->ctx->mpm.run(*_impl->llvm_module, *_impl->ctx->mam);
+    codegen::optimize(_impl->llvm_module, get_module_name());
 
     if(print_settings == "2")
     {

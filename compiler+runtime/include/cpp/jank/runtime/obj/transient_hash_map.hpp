@@ -12,15 +12,17 @@ namespace jank::runtime::obj
 {
   using transient_hash_map_ref = oref<struct transient_hash_map>;
 
-  struct transient_hash_map
+  struct transient_hash_map : object
   {
     static constexpr object_type obj_type{ object_type::transient_hash_map };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
+                                                    | object_behavior::find };
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_hash_map;
     using persistent_type_ref = oref<struct persistent_hash_map>;
 
-    transient_hash_map() = default;
+    transient_hash_map();
     transient_hash_map(transient_hash_map &&) noexcept = default;
     transient_hash_map(transient_hash_map const &) = default;
     transient_hash_map(runtime::detail::native_persistent_hash_map const &d);
@@ -30,21 +32,16 @@ namespace jank::runtime::obj
 
     static transient_hash_map_ref empty();
 
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
-
     /* behavior::countable */
     usize count() const;
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const key) const;
-    object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref const key) const;
-    bool contains(object_ref const key) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
+
+    /* behavior::find */
+    object_ref find(object_ref const key) const override;
 
     /* behavior::associatively_writable_in_place */
     transient_hash_map_ref assoc_in_place(object_ref const key, object_ref const val);
@@ -57,13 +54,13 @@ namespace jank::runtime::obj
     persistent_type_ref to_persistent();
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
-    object_ref call(object_ref const, object_ref const) const;
+    using object::call;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
 
     void assert_active() const;
 
     /*** XXX: Everything here is not thread-safe, but is not shared. ***/
-    object base{ obj_type };
     value_type data;
     bool active{ true };
   };

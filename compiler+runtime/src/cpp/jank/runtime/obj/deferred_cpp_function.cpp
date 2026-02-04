@@ -8,6 +8,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime::obj
@@ -16,47 +17,26 @@ namespace jank::runtime::obj
                                                jtl::immutable_string const &declaration_code,
                                                jtl::immutable_string const &expression_code,
                                                var_ref const var)
-    : meta{ meta }
+    : object{ obj_type, obj_behaviors }
+    , meta{ meta }
     , var{ var }
     , declaration_code{ declaration_code }
     , expression_code{ expression_code }
   {
   }
 
-  bool deferred_cpp_function::equal(object const &rhs) const
+  void deferred_cpp_function::to_string(jtl::string_builder &buff) const
   {
-    return &base == &rhs;
-  }
-
-  jtl::immutable_string deferred_cpp_function::to_string()
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void deferred_cpp_function::to_string(jtl::string_builder &buff)
-  {
-    auto const name(get(meta.unwrap_or(jank_nil()), __rt_ctx->intern_keyword("name").expect_ok()));
+    auto const name(get(meta, __rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
       "#object [{} {} {}]",
       (name->type == object_type::nil ? "unknown" : try_object<persistent_string>(name)->data),
-      object_type_str(base.type),
-      &base);
+      object_type_str(type),
+      this);
   }
 
-  jtl::immutable_string deferred_cpp_function::to_code_string()
-  {
-    return to_string();
-  }
-
-  uhash deferred_cpp_function::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
-  }
-
-  object_ref deferred_cpp_function::call(object_ref const args)
+  object_ref deferred_cpp_function::call(object_ref const args) const
   {
     std::lock_guard<std::recursive_mutex> const lock{ compilation_mutex };
     /* It's possible that we're called again, even after we've compiled our actual function.
@@ -67,7 +47,7 @@ namespace jank::runtime::obj
       return apply_to(compiled_fn, args);
     }
 
-    //auto const name(get(meta.unwrap_or(jank_nil()), __rt_ctx->intern_keyword("name").expect_ok()));
+    //auto const name(get(meta, __rt_ctx->intern_keyword("name").expect_ok()));
     //util::println(
     //  "lazily creating {}",
     //  (name->type == object_type::nil ? "unknown" : try_object<persistent_string>(name)->data));
@@ -88,14 +68,9 @@ namespace jank::runtime::obj
     return apply_to(compiled_fn, args);
   }
 
-  behavior::callable::arity_flag_t deferred_cpp_function::get_arity_flags() const
+  callable_arity_flags deferred_cpp_function::get_arity_flags() const
   {
     /* Deferred fns are always [& args], which they then apply to the proxied fn. */
-    return behavior::callable::build_arity_flags(0, true, false);
-  }
-
-  object_ref deferred_cpp_function::this_object_ref()
-  {
-    return &this->base;
+    return build_arity_flags(0, true, false);
   }
 }

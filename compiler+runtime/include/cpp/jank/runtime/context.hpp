@@ -162,7 +162,7 @@ namespace jank::runtime
      * in ahead of time compiled binaries at startup (which is not an ideal way to
      * achieve that). */
     folly::Synchronized<native_deque<jtl::immutable_string>> loaded_modules_in_order;
-    static thread_local native_list<thread_binding_frame> thread_binding_frames;
+    folly::Synchronized<native_list<thread_binding_frame>> thread_binding_frames;
 
     /* This must go last, since it'll try to access other bits in the runtime context during
      * its initialization and we need them to be ready. */

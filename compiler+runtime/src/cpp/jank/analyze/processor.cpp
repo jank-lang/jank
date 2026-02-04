@@ -11,6 +11,7 @@
 #include <jank/runtime/behavior/sequential.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/set_like.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/core/make_box.hpp>
@@ -79,7 +80,7 @@ namespace jank::analyze
     auto const expansion(
       runtime::get(meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
-    if(expansion == jank_nil())
+    if(expansion.is_nil())
     {
       return nullptr;
     }
@@ -93,7 +94,7 @@ namespace jank::analyze
   {
     if(expansions.empty())
     {
-      return jank_nil();
+      return {};
     }
 
     /* Try to find an expansion which specifically has the `jank/macro-expansion` key
@@ -104,7 +105,7 @@ namespace jank::analyze
       auto const expansion(
         runtime::get(latest_meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
-      if(expansion != jank_nil())
+      if(expansion.is_some())
       {
         return expansion;
       }
@@ -1334,7 +1335,7 @@ namespace jank::analyze
                                           latest_expansion(macro_expansions))
           ->add_usage(read::parse::reparse_nth(l, 2));
       }
-      auto const meta_with_doc(runtime::assoc(qualified_sym->meta.unwrap_or(runtime::jank_nil()),
+      auto const meta_with_doc(runtime::assoc(qualified_sym->meta,
                                               __rt_ctx->intern_keyword("doc").expect_ok(),
                                               docstring_obj));
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
@@ -1589,14 +1590,6 @@ namespace jank::analyze
     auto const var(__rt_ctx->find_var(qualified_sym));
     if(var.is_nil())
     {
-      /* We tried to resolve this as a jank symbol, but we didn't find anything.
-       * Now we'll try again as a C++ symbol. We only do this if the ns is empty,
-       * since namespaces from C++ are encoded via '.' not '/'. */
-      if(sym->get_namespace().empty())
-      {
-        return analyze_cpp_symbol(sym, current_frame, position, fc, needs_box);
-      }
-
       return error::analyze_unresolved_symbol(
         util::format("Unable to resolve symbol '{}'.", sym->to_string()),
         meta_source(sym->meta),
@@ -2119,9 +2112,7 @@ namespace jank::analyze
 
     if(ret.values.empty())
     {
-      auto const nil{
-        analyze_primitive_literal(jank_nil(), current_frame, position, fn_ctx, needs_box)
-      };
+      auto const nil{ analyze_primitive_literal({}, current_frame, position, fn_ctx, needs_box) };
       if(nil.is_err())
       {
         return nil.expect_err();
@@ -2240,11 +2231,9 @@ namespace jank::analyze
 
     if(ret->body->values.empty())
     {
-      auto const nil{ analyze_primitive_literal(jank_nil(),
-                                                ret->frame,
-                                                expression_position::tail,
-                                                fn_ctx,
-                                                needs_box) };
+      auto const nil{
+        analyze_primitive_literal({}, ret->frame, expression_position::tail, fn_ctx, needs_box)
+      };
       if(nil.is_err())
       {
         return nil.expect_err();
@@ -2375,11 +2364,9 @@ namespace jank::analyze
 
     if(ret->body->values.empty())
     {
-      auto const nil{ analyze_primitive_literal(jank_nil(),
-                                                ret->frame,
-                                                expression_position::tail,
-                                                fn_ctx,
-                                                needs_box) };
+      auto const nil{
+        analyze_primitive_literal({}, ret->frame, expression_position::tail, fn_ctx, needs_box)
+      };
       if(nil.is_err())
       {
         return nil.expect_err();
@@ -3197,10 +3184,10 @@ namespace jank::analyze
 
       /* If this expression doesn't need to be boxed, based on where it's called, we can dig
        * into the call details itself to see if the function supports unboxed returns. Most don't. */
-      if(var_deref && var_deref->var->meta.is_some())
+      if(var_deref)
       {
         auto const arity_meta(
-          runtime::get_in(var_deref->var->meta.unwrap(),
+          runtime::get_in(var_deref->var->get_meta(),
                           make_box<runtime::obj::persistent_vector>(
                             std::in_place,
                             __rt_ctx->intern_keyword("", "arities", true).expect_ok(),
@@ -3322,7 +3309,7 @@ namespace jank::analyze
                                                        current_frame,
                                                        needs_arg_box,
                                                        std::move(packed_arg_exprs),
-                                                       none));
+                                                       jank_nil()));
     }
 
     auto const recursion_ref(llvm::dyn_cast<expr::recursion_reference>(source.data));
@@ -3681,20 +3668,9 @@ namespace jank::analyze
         return literal_res;
       }
 
-      /* If the ns doesn't include cpp/, this may not actually be a C++ symbol
-       * the user wanted. We should indicate that it was ambiguous. */
-      if(sym->get_namespace() == "cpp")
-      {
-        return error::analyze_unresolved_symbol(util::format("{}", scope_res.expect_err()),
-                                                object_source(sym),
-                                                latest_expansion(macro_expansions));
-      }
-
-      return error::analyze_unresolved_symbol(
-        util::format("Unable to resolve '{}' as either a jank symbol or C++ symbol.",
-                     sym->to_code_string()),
-        object_source(sym),
-        latest_expansion(macro_expansions));
+      return error::analyze_unresolved_cpp_symbol(scope_res.expect_err(),
+                                                  object_source(sym),
+                                                  latest_expansion(macro_expansions));
     }
 
     /* The scope could represent either a type or a value, if it's valid. However, it's
@@ -4132,7 +4108,7 @@ namespace jank::analyze
       /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
        * want to remove the cpp/cast and the type and then add back in a new head. Since
        * cpp_call takes in a cpp_value, it doesn't look at the head, but it needs to be there. */
-      auto const call_l{ make_box(l->data.rest().rest().conj(jank_nil())) };
+      auto const call_l{ make_box(l->data.rest().rest().conj({})) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
     if(cpp_util::is_any_object(type_expr->type) && cpp_util::is_trait_convertible(value_type))
@@ -4253,7 +4229,7 @@ namespace jank::analyze
       /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
        * want to remove the cpp/cast and the type and then add back in a new head. Since
        * cpp_call takes in a cpp_value, it doesn't look at the head, but it needs to be there. */
-      auto const call_l{ make_box(l->data.rest().rest().conj(jank_nil())) };
+      auto const call_l{ make_box(l->data.rest().rest().conj({})) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
     else if(Cpp::IsCStyleConvertible(value_type, type_expr->type))
@@ -4727,7 +4703,7 @@ namespace jank::analyze
         {
           return error::internal_analyze_failure(
             util::format("Unimplemented analysis for object type '{}'.",
-                         object_type_str(typed_o->base.type)),
+                         object_type_str(typed_o->type)),
             object_source(o),
             latest_expansion(macro_expansions));
         }
