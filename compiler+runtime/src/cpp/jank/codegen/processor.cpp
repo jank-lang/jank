@@ -690,7 +690,7 @@ namespace jank::codegen
     auto const is_dynamic{ expr->var->dynamic.load() };
     auto const qualified_name{ expr->var->to_qualified_symbol()->to_string() };
     auto const &var(lift_var(lifted_vars, qualified_name, false, is_dynamic));
-    auto const var_root{ util::format("var_root_{}", var) };
+    auto var_root{ util::format("var_root_{}", var) };
 
     if(util::cli::opts.direct_call && !is_dynamic && target == compilation_target::module
        && detail::should_defer_var_init(lifted_vars.at(qualified_name), qualified_name, module))
