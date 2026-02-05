@@ -7,15 +7,16 @@
 
 (def this-nsym (ns-name *ns*))
 
-(def module-path "test/bash/direct-call/src")
-(def run-file "test/bash/direct-call/src/jank_test/direct_call/run.jank")
-(def do-case-file "test/bash/direct-call/src/jank_test/direct_call/do_case.jank")
+(def test-dir (str (fs/canonicalize (fs/parent *file*))))
+(def module-path (str test-dir "/src"))
+(def run-file (str module-path "/jank_test/direct_call/run.jank"))
+(def do-case-file (str module-path "/jank_test/direct_call/do_case.jank"))
 (def expected-output "42\n")
 (def do-case-output "Foo\n")
 (def base-cmd (str "jank --module-path " module-path " --direct-call --codegen cpp"))
 (def base-cmd-no-direct-call (str "jank --module-path " module-path " --codegen cpp"))
 
-(def redefs-run-file "test/bash/direct-call/src/jank_test/direct_call/redefs_run.jank")
+(def redefs-run-file (str module-path "/jank_test/direct_call/redefs_run.jank"))
 (def redefs-direct-call-output "1\n1\n")
 (def redefs-control-output "1\n999\n")
 
