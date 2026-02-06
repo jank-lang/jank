@@ -1,0 +1,13 @@
+(ns test
+  (:refer-global :only [std.string std.string.npos]
+                 :rename {std.string string
+                          std.string.npos foo}))
+
+(ns test
+  (:refer-global :only [bool std.string.npos]
+                 :rename {bool string
+                          std.string.npos foo}))
+
+(let [s (string #cpp "success")]
+  (if (and (= -1 foo) (true? s))
+    (println :success)))

@@ -7,6 +7,7 @@
 #include <jank/runtime/core/call.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/sequence_range.hpp>
+#include <jank/error/runtime.hpp>
 #include <jank/util/fmt/print.hpp>
 
 namespace clojure::core_native
@@ -262,6 +263,35 @@ namespace clojure::core_native
     expect_object<runtime::ns>(current_ns)
       ->refer(try_object<obj::symbol>(sym), expect_object<runtime::var>(var))
       .expect_ok();
+    return {};
+  }
+
+  object_ref refer_global(object_ref const sym)
+  {
+    auto const current_ns{ __rt_ctx->current_ns() };
+    current_ns->refer_global(sym).expect_ok();
+    return {};
+  }
+
+  object_ref rename_referred_globals(object_ref const rename_map)
+  {
+    if(is_empty(rename_map))
+    {
+      return {};
+    }
+
+    auto const current_ns{ __rt_ctx->current_ns() };
+    current_ns->rename_referred_globals(rename_map).expect_ok();
+    return {};
+  }
+
+  object_ref throw_runtime_invalid_referred_global_rename(jtl::immutable_string const &msg,
+                                                          object_ref const rename,
+                                                          object_ref const existing)
+  {
+    throw error::runtime_invalid_referred_global_rename(msg,
+                                                        object_source(rename),
+                                                        object_source(existing));
     return {};
   }
 

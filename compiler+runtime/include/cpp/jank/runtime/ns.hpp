@@ -3,6 +3,7 @@
 #include <folly/Synchronized.h>
 
 #include <jank/runtime/var.hpp>
+#include <jank/error.hpp>
 
 namespace jank::runtime
 {
@@ -36,6 +37,9 @@ namespace jank::runtime
     ns_ref find_alias(obj::symbol_ref const sym) const;
 
     jtl::result<void, jtl::immutable_string> refer(obj::symbol_ref const sym, var_ref const var);
+    jtl::result<void, error_ref> refer_global(object_ref const sym);
+    jtl::result<void, error_ref> rename_referred_globals(object_ref const rename_map);
+    obj::symbol_ref find_referred_global(obj::symbol_ref const sym);
 
     obj::persistent_hash_map_ref get_mappings() const;
 
@@ -59,6 +63,7 @@ namespace jank::runtime
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
     folly::Synchronized<obj::persistent_hash_map_ref> vars;
     folly::Synchronized<obj::persistent_hash_map_ref> aliases;
+    folly::Synchronized<obj::persistent_hash_map_ref> referred_cpp_globals;
     std::atomic_uint64_t symbol_counter{};
   };
 }
