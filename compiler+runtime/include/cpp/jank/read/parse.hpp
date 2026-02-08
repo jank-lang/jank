@@ -75,9 +75,15 @@ namespace jank::read::parse
     object_result parse_reader_macro_var_quote();
     object_result parse_reader_macro_symbolic_values();
     object_result parse_regex();
-    object_result parse_tagged_uuid();
-    object_result parse_tagged_inst();
-    object_result parse_tagged_cpp();
+    object_result parse_tagged_uuid(runtime::object_ref const &form,
+                                    lex::token const &start_token,
+                                    lex::token const &str_end) const;
+    object_result parse_tagged_inst(runtime::object_ref const &form,
+                                    lex::token const &start_token,
+                                    lex::token const &str_end) const;
+    object_result parse_tagged_cpp(runtime::object_ref const &form,
+                                   lex::token const &start_token,
+                                   lex::token const &str_end) const;
     object_result parse_reader_macro_tagged();
     object_result parse_reader_macro_comment();
     object_result parse_reader_macro_conditional(bool splice);
@@ -100,6 +106,9 @@ namespace jank::read::parse
     iterator end();
 
   private:
+    jtl::result<native_vector<object_source_info>, error_ref>
+    gracefully_parse(lex::token_kind const &upto,
+                     error_ref (*unterminated_form_error)(read::source const &));
     jtl::result<runtime::object_ref, error_ref> syntax_quote(runtime::object_ref const form);
     jtl::result<runtime::object_ref, error_ref>
     syntax_quote_expand_seq(runtime::object_ref const seq);
