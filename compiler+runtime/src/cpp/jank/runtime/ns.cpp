@@ -208,10 +208,12 @@ namespace jank::runtime
       return error::runtime_invalid_referred_global_symbol(object_source(sym_obj));
     }
 
-    auto locked_globals(referred_cpp_globals.wlock());
-    if(auto const found{ (*locked_globals)->data.find(sym_obj) }; found)
     {
-      return ok();
+      auto locked_globals(referred_cpp_globals.rlock());
+      if(auto const found{ (*locked_globals)->data.find(sym_obj) }; found)
+      {
+        return ok();
+      }
     }
 
     auto const cpp_sym{ make_box<obj::symbol>("cpp", sym_obj->name) };
@@ -238,7 +240,10 @@ namespace jank::runtime
         object_source(sym_obj));
     }
 
-    *locked_globals = (*locked_globals)->assoc(sym_obj, sym_obj);
+    {
+      auto locked_globals(referred_cpp_globals.wlock());
+      *locked_globals = (*locked_globals)->assoc(sym_obj, sym_obj);
+    }
     return ok();
   }
 
@@ -268,11 +273,13 @@ namespace jank::runtime
           auto const old_name{ first(p) };
           auto const new_name{ second(p) };
 
-          if(old_name->type != object_type::symbol)
+          if(old_name->type != object_type::symbol
+             || !expect_object<obj::symbol>(old_name)->ns.empty())
           {
             return error::runtime_invalid_referred_global_symbol(object_source(old_name));
           }
-          if(new_name->type != object_type::symbol)
+          if(new_name->type != object_type::symbol
+             || !expect_object<obj::symbol>(new_name)->ns.empty())
           {
             return error::runtime_invalid_referred_global_symbol(object_source(new_name));
           }
