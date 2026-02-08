@@ -1,0 +1,5 @@
+(ns test
+  (:refer-global :only [std.string std.string.npos]
+                 :rename {std.string std.string.npos}))
+
+(println :success)

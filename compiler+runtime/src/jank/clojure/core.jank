@@ -4275,6 +4275,29 @@
             nil
             to-refer)))
 
+(defn refer-global
+  [& filters]
+  (let [allowed-keys #{:only :rename}]
+    (throw-if (odd? (count filters))
+              "refer-global requires an even number of filter arguments (key value ...).")
+    (let [actions (apply hash-map filters)
+          invalid-keys (seq (remove allowed-keys (keys actions)))
+          _ (when invalid-keys
+              (throw (ex-info :invalid-refer-global-filter-key
+                              {:invalid-keys (set invalid-keys)
+                               :allowed-keys allowed-keys})))
+          unique-globals (reduce (fn [acc [k v]]
+                                   (if-some [existing (get acc v)]
+                                     ; TODO: Throw this error_ref directly here, once we can.
+                                     (cpp/clojure.core_native.throw_runtime_invalid_referred_global_rename (str "Referred global '" k "' is being renamed to '" v "', but '" v "' is already a referred global.")
+                                                                                                           v existing)
+                                     (conj acc v)))
+                                 (into #{} (:only actions))
+                                 (:rename actions))]
+      (doseq [only (:only actions)]
+        (cpp/clojure.core_native.refer_global only))
+      (cpp/clojure.core_native.rename_referred_globals (:rename actions)))))
+
 ;; TODO: Should be a ref instead of atom
 (defonce
   ^{:private true
@@ -5443,6 +5466,17 @@
   "import is not implemented for jank, but a var is still bound to its symbol for portability. import always throws an exception"
   [& _]
   (throw "import is not supported in jank, for C/C++ dependency interoperability use cpp/raw with #include, e.g. (cpp/raw \"#include \"dependency.h\")\")"))
+
+(defmacro include
+  [& headers]
+  (if (empty? headers)
+    nil
+    (let [build-include (fn* build-include [header]
+                          `(cpp/raw ~(if (= "./" (subs header 0 (min 2 (count header))))
+                                       (str "#include \"" header "\"")
+                                       (str "#include <" header ">"))))
+          includes (map (comp build-include eval) headers)]
+      `(do ~@includes))))
 
 (defn into-array
   "Returns an array with components set to the values in aseq. The array's

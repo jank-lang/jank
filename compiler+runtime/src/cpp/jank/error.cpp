@@ -224,6 +224,10 @@ namespace jank::error
         return "Invalid unbox type.";
       case kind::runtime_non_metadatable_value:
         return "Non metadatable value.";
+      case kind::runtime_invalid_referred_global_symbol:
+        return "Invalid referred C++ global symbol.";
+      case kind::runtime_invalid_referred_global_rename:
+        return "Invalid referred C++ global rename.";
       case kind::runtime_unsupported_behavior:
         return "Unsupported behavior.";
       case kind::internal_runtime_failure:
