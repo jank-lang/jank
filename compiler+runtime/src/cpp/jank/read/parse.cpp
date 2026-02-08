@@ -1028,23 +1028,14 @@ namespace jank::read::parse
 
     if(data_reader.is_some())
     {
-      auto const data{ visit_object(
-        [](auto const typed_o, object_ref const form) -> object_ref {
-          using T = typename decltype(typed_o)::value_type;
-
-          if constexpr(std::is_base_of_v<behavior::callable, T>)
-          {
-            return typed_o->call(form);
-          }
-          else
-          {
-            throw std::runtime_error{ "A tagged literal's data reader needs to be a function." };
-          }
-        },
-        data_reader,
-        form) };
-
-      return object_source_info{ data, form_token, form_end };
+      if(is_callable(data_reader))
+      {
+        return object_source_info{ data_reader->call(form), form_token, form_end };
+      }
+      else
+      {
+        throw std::runtime_error{ "A tagged literal's data reader needs to be a function." };
+      }
     }
 
     auto const default_data_reader_fn{
@@ -1053,26 +1044,9 @@ namespace jank::read::parse
 
     if(default_data_reader_fn.is_some())
     {
-      auto const data{ visit_object(
-        [](auto const typed_o, obj::symbol_ref sym, object_ref form) -> jtl::option<object_ref> {
-          using T = typename decltype(typed_o)::value_type;
-
-          if constexpr(std::is_base_of_v<behavior::callable, T>)
-          {
-            return typed_o->call(sym, form);
-          }
-          else
-          {
-            return none;
-          }
-        },
-        default_data_reader_fn,
-        sym,
-        form) };
-
-      if(data.is_some())
+      if(is_callable(data_reader))
       {
-        return object_source_info{ data.unwrap(), form_token, form_end };
+        return object_source_info{ form->call(sym, form), form_token, form_end };
       }
       else
       {
