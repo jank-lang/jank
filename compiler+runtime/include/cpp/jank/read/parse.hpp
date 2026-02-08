@@ -75,9 +75,15 @@ namespace jank::read::parse
     object_result parse_reader_macro_var_quote();
     object_result parse_reader_macro_symbolic_values();
     object_result parse_regex();
-    object_result parse_tagged_uuid();
-    object_result parse_tagged_inst();
-    object_result parse_tagged_cpp();
+    object_result parse_tagged_uuid(runtime::object_ref const &form,
+                                    lex::token const &start_token,
+                                    lex::token const &str_end) const;
+    object_result parse_tagged_inst(runtime::object_ref const &form,
+                                    lex::token const &start_token,
+                                    lex::token const &str_end) const;
+    object_result parse_tagged_cpp(runtime::object_ref const &form,
+                                   lex::token const &start_token,
+                                   lex::token const &str_end) const;
     object_result parse_reader_macro_tagged();
     object_result parse_reader_macro_comment();
     object_result parse_reader_macro_conditional(bool splice);
@@ -123,6 +129,14 @@ namespace jank::read::parse
     native_list<runtime::object_ref> pending_forms;
     lex::token latest_token;
     jtl::option<shorthand_function_details> shorthand;
+    /*  The Clojure reader relaxes tagged literal syntax rules when dealing with
+     *  a form in an unsupported reader conditional. This is done because an
+     *  implementation of Clojure on a specific platform can't make any assumptions
+     *  on what tagged literals other platform implementations will support.
+     *
+     *  Unlike Clojure, in jank's implementation we only leak lexer errors for
+     *  unsupported reader conditionals while most parser errors are suppressed.*/
+    bool is_reader_suppressed{ false };
     /* Whether or not the next form is considered quoted. */
     bool quoted{};
     /* Whether or not the next form is considered syntax-quoted. */

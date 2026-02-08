@@ -14,6 +14,7 @@
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 /* TODO: Make common symbol boxes once and reuse those. */
 namespace jank::read::parse
@@ -223,11 +224,11 @@ namespace jank::read::parse
         case lex::token_kind::close_square_bracket:
         case lex::token_kind::close_paren:
         case lex::token_kind::close_curly_bracket:
+          ++token_current;
           if(expected_closer != latest_token.kind)
           {
             return error::parse_unexpected_closing_character(latest_token);
           }
-          ++token_current;
           expected_closer = none;
           return ok(none);
         case lex::token_kind::single_quote:
@@ -322,21 +323,28 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_paren);
 
-    __rt_ctx
-      ->push_thread_bindings(
-        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
-      .expect_ok();
-    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    context::binding_scope const bindings{ obj::persistent_hash_map::create_unique(
+      std::make_pair(splicing_allowed_var, jank_true)) };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
     {
       if(it.latest.unwrap().is_err())
       {
-        return err(it.latest.unwrap().expect_err());
+        auto const e{ it.latest.unwrap().expect_err() };
+
+        if(!is_reader_suppressed || error::is_insuppressible(e->kind))
+        {
+          return err(e);
+        }
+
+        ret.push_back(make_box<obj::opaque_box>(e.data, "jank::error::base const *"));
+        continue;
       }
+
       ret.push_back(it.latest.unwrap().expect_ok().unwrap().ptr);
     }
+
     if(expected_closer.is_some())
     {
       return error::parse_unterminated_list({ start_token.start, latest_token.end });
@@ -360,27 +368,35 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_square_bracket);
 
-    __rt_ctx
-      ->push_thread_bindings(
-        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
-      .expect_ok();
-    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
-
+    context::binding_scope const bindings{ obj::persistent_hash_map::create_unique(
+      std::make_pair(splicing_allowed_var, jank_true)) };
     runtime::detail::native_transient_vector ret;
+
     for(auto it(begin()); it != end(); ++it)
     {
-      if(it.latest.unwrap().is_err())
+      if(it->is_err())
       {
-        return err(it.latest.unwrap().expect_err());
+        auto const e{ it->expect_err() };
+
+        if(!is_reader_suppressed || error::is_insuppressible(e->kind))
+        {
+          return err(it->expect_err());
+        }
+
+        ret.push_back(make_box<obj::opaque_box>(e.data, "jank::error::base const *"));
+        continue;
       }
+
       ret.push_back(it.latest.unwrap().expect_ok().unwrap().ptr);
     }
+
     if(expected_closer.is_some())
     {
       return error::parse_unterminated_vector(start_token.start);
     }
 
     expected_closer = prev_expected_closer;
+
     return object_source_info{ make_box<obj::persistent_vector>(
                                  source_to_meta(start_token.start, latest_token.end),
                                  ret.persistent()),
@@ -395,12 +411,87 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
-    __rt_ctx
-      ->push_thread_bindings(
-        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
-      .expect_ok();
-    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
-    native_vector<processor::object_result> const items(begin(), end());
+    context::binding_scope const binding{ obj::persistent_hash_map::create_unique(
+      std::make_pair(splicing_allowed_var, jank_true)) };
+    native_unordered_map<runtime::object_ref, jtl::option<object_source_info>> parsed_keys{};
+    object_ref map{ make_box<obj::transient_array_map>() };
+
+    for(auto item(begin()); item != end(); ++item)
+    {
+      jtl::option<object_source_info> key_token{};
+      object_ref key{};
+      object_ref value{};
+
+      if(item->is_err())
+      {
+        auto const e{ item->expect_err() };
+
+        if(!is_reader_suppressed || error::is_insuppressible(e->kind))
+        {
+          return err(e);
+        }
+
+        key = make_box<obj::opaque_box>(e.data, "jank::error::base const *");
+      }
+      else
+      {
+        key_token = item->expect_ok().unwrap();
+        key = key_token.unwrap().ptr;
+
+        if(++item == end())
+        {
+          auto const e{ error::parse_odd_entries_in_map(
+            { start_token.start, latest_token.end },
+            { key_token.unwrap().start.start, key_token.unwrap().end.end }) };
+
+          if(!is_reader_suppressed || error::is_insuppressible(e->kind))
+          {
+            return err(e);
+          }
+
+          key = make_box<obj::opaque_box>(e.data, "jank::error::base const *");
+        }
+        else if(auto const parsed_key_token{ parsed_keys.find(key) };
+                parsed_key_token != parsed_keys.end() && parsed_key_token->second.is_some())
+        {
+          auto const e{
+            error::parse_duplicate_keys_in_map(
+              { key_token.unwrap().start.start, key_token.unwrap().end.end },
+              { "Original key.",
+                                             { parsed_key_token->second.unwrap().start.start,
+                  parsed_key_token->second.unwrap().end.end },
+                                             error::note::kind::info }
+              )
+          };
+
+          if(!is_reader_suppressed || error::is_insuppressible(e->kind))
+          {
+            return err(e);
+          }
+
+          key = make_box<obj::opaque_box>(e.data, "jank::error::base const *");
+        }
+      }
+
+      if(item->is_err())
+      {
+        auto const e{ item->expect_err() };
+
+        if(!is_reader_suppressed || error::is_insuppressible(e->kind))
+        {
+          return err(e);
+        }
+
+        value = make_box<obj::opaque_box>(e.data, "jank::error::base const *");
+      }
+      else
+      {
+        value = item->expect_ok().unwrap().ptr;
+      }
+
+      parsed_keys.insert({ key, key_token });
+      map = assoc_in_place(map, key, value);
+    }
 
     if(expected_closer.is_some())
     {
@@ -409,93 +500,7 @@ namespace jank::read::parse
 
     expected_closer = prev_expected_closer;
 
-    native_unordered_map<runtime::object_ref, object_source_info> parsed_keys{};
-
-    auto const build_map([&](auto &map) -> jtl::result<void, error_ref> {
-      using T = std::remove_reference_t<decltype(map)>;
-
-      for(auto item(items.begin()); item != items.end(); ++item)
-      {
-        if(item->is_err())
-        {
-          return err(item->expect_err());
-        }
-        auto const key(item->expect_ok().unwrap());
-
-        if(++item == items.end())
-        {
-          return error::parse_odd_entries_in_map({ start_token.start, latest_token.end },
-                                                 { key.start.start, key.end.end });
-        }
-
-        if(item->is_err())
-        {
-          return err(item->expect_err());
-        }
-        auto const value(item->expect_ok());
-
-        if(auto const parsed_key = parsed_keys.find(key.ptr); parsed_key != parsed_keys.end())
-        {
-          return error::parse_duplicate_keys_in_map(
-            {
-              key.start.start,
-              key.end.end
-          },
-            { "Original key.",
-              { parsed_key->second.start.start, parsed_key->second.end.end },
-              error::note::kind::info });
-        }
-
-        parsed_keys.insert({ key.ptr, key });
-
-        if constexpr(jtl::is_same<T, runtime::detail::native_array_map>)
-        {
-          map.insert_or_assign(key.ptr, value.unwrap().ptr);
-        }
-        else
-        {
-          map.insert(std::make_pair(key.ptr, value.unwrap().ptr));
-        }
-      }
-
-      return jtl::ok();
-    });
-
-    if((items.size() / 2) <= runtime::detail::native_array_map::max_size)
-    {
-      runtime::detail::native_array_map map{};
-      map.reserve(items.size() / 2);
-      auto const res{ build_map(map) };
-
-      if(res.is_err())
-      {
-        return res.expect_err();
-      }
-
-      return object_source_info{ make_box<obj::persistent_array_map>(
-                                   source_to_meta(start_token.start, latest_token.end),
-                                   jtl::move(map)),
-                                 start_token,
-                                 latest_token };
-    }
-    else
-    {
-      runtime::detail::native_transient_hash_map transient_map{};
-      auto const res{ build_map(transient_map) };
-
-      if(res.is_err())
-      {
-        return res.expect_err();
-      }
-
-      auto map{ transient_map.persistent() };
-
-      return object_source_info{ make_box<obj::persistent_hash_map>(
-                                   source_to_meta(start_token.start, latest_token.end),
-                                   jtl::move(map)),
-                                 start_token,
-                                 latest_token };
-    }
+    return object_source_info{ persistent(map), start_token, latest_token };
   }
 
   processor::object_result processor::parse_quote()
@@ -694,44 +699,65 @@ namespace jank::read::parse
     auto const prev_expected_closer(expected_closer);
     expected_closer = some(lex::token_kind::close_curly_bracket);
 
-    __rt_ctx
-      ->push_thread_bindings(
-        obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
-      .expect_ok();
-    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
-
-    native_unordered_map<runtime::object_ref, object_source_info> parsed_items{};
+    context::binding_scope const bindings{ obj::persistent_hash_map::create_unique(
+      std::make_pair(splicing_allowed_var, jank_true)) };
+    native_unordered_map<runtime::object_ref, jtl::option<object_source_info>> parsed_items{};
     runtime::detail::native_transient_hash_set ret;
+
     for(auto it(begin()); it != end(); ++it)
     {
-      if(it.latest.unwrap().is_err())
+      jtl::option<object_source_info> item_token{};
+      object_ref item{};
+
+      if(it->is_err())
       {
-        return err(it.latest.unwrap().expect_err());
+        auto const e{ it->expect_err() };
+
+        if(!is_reader_suppressed || error::is_insuppressible(e->kind))
+        {
+          return err(e);
+        }
+
+        item = make_box<obj::opaque_box>(e.data, "jank::error::base const *");
       }
-
-      auto const item(it.latest.unwrap().expect_ok().unwrap());
-
-      if(auto const parsed_item = parsed_items.find(item.ptr); parsed_item != parsed_items.end())
+      else
       {
-        return error::parse_duplicate_items_in_set(
+        item_token = it->expect_ok();
+        item = item_token.unwrap().ptr;
+
+        if(auto const parsed_item_token = parsed_items.find(item);
+           parsed_item_token != parsed_items.end() && parsed_item_token->second.is_some())
+        {
+          auto const e{
+            error::parse_duplicate_items_in_set(
+              { item_token.unwrap().start.start, item_token.unwrap().end.end },
+              { "Original item.",
+                                              { parsed_item_token->second.unwrap().start.start,
+                  parsed_item_token->second.unwrap().end.end },
+                                              error::note::kind::info }
+              )
+          };
+
+          if(!is_reader_suppressed || error::is_insuppressible(e->kind))
           {
-            item.start.start,
-            item.end.end
-        },
-          { "Original item.",
-            { parsed_item->second.start.start, parsed_item->second.end.end },
-            error::note::kind::info });
+            return err(e);
+          }
+
+          item = make_box<obj::opaque_box>(e.data, "jank::error::base const *");
+        }
       }
 
-      parsed_items.insert({ item.ptr, item });
-      ret.insert(item.ptr);
+      parsed_items.insert({ item, item_token });
+      ret.insert(item);
     }
+
     if(expected_closer.is_some())
     {
       return error::parse_unterminated_set({ start_token.start, latest_token.end });
     }
 
     expected_closer = prev_expected_closer;
+
     return object_source_info{ make_box<obj::persistent_hash_set>(
                                  source_to_meta(start_token.start, latest_token.end),
                                  jtl::move(ret).persistent()),
@@ -891,32 +917,18 @@ namespace jank::read::parse
     }
   }
 
-  processor::object_result processor::parse_tagged_uuid()
+  processor::object_result processor::parse_tagged_uuid(object_ref const &form,
+                                                        lex::token const &start_token,
+                                                        lex::token const &str_end) const
   {
-    auto const start_token(token_current.latest.unwrap().expect_ok());
-    auto str_result(next());
-
-    if(str_result.is_err())
-    {
-      return str_result;
-    }
-    else if(str_result.expect_ok().is_none())
-    {
-      return error::parse_invalid_reader_tag_value(
-        "The string literal after this '#uuid' is missing.",
-        { start_token.start, latest_token.end });
-    }
-
-    auto const str_end(str_result.expect_ok().unwrap().end);
-
     if(str_end.kind != lex::token_kind::string)
     {
       return error::parse_invalid_reader_tag_value(
         "The form after '#uuid' must be a string literal.",
-        { start_token.start, latest_token.end });
+        { start_token.start, start_token.end });
     }
 
-    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+    auto const str(expect_object<obj::persistent_string>(form));
 
     try
     {
@@ -926,37 +938,22 @@ namespace jank::read::parse
     catch(jank::runtime::object * const e)
     {
       return error::parse_invalid_uuid(try_object<obj::persistent_string>(e)->data,
-                                       { start_token.start, latest_token.end });
+                                       { start_token.start, start_token.end });
     }
   }
 
-  processor::object_result processor::parse_tagged_inst()
+  processor::object_result processor::parse_tagged_inst(object_ref const &form,
+                                                        lex::token const &start_token,
+                                                        lex::token const &str_end) const
   {
-    auto const start_token(token_current.latest.unwrap().expect_ok());
-    auto str_result(next());
-
-    if(str_result.is_err())
-    {
-      return str_result;
-    }
-    else if(str_result.expect_ok().is_none())
-    {
-      return error::parse_invalid_reader_tag_value(
-        "The string literal after this '#inst' is missing.",
-        { start_token.start, latest_token.end });
-    }
-
-    auto const str_end(str_result.expect_ok().unwrap().end);
-
-
     if(str_end.kind != lex::token_kind::string && str_end.kind != lex::token_kind::escaped_string)
     {
       return error::parse_invalid_reader_tag_value(
         "The form after '#inst' must be a string literal.",
-        { start_token.start, latest_token.end });
+        { start_token.start, start_token.end });
     }
 
-    auto const str(expect_object<obj::persistent_string>(str_result.expect_ok().unwrap().ptr));
+    auto const str(expect_object<obj::persistent_string>(form));
 
     try
     {
@@ -966,28 +963,14 @@ namespace jank::read::parse
     catch(jank::runtime::object * const e)
     {
       return error::parse_invalid_inst(try_object<obj::persistent_string>(e)->data,
-                                       { start_token.start, latest_token.end });
+                                       { start_token.start, start_token.end });
     }
   }
 
-  processor::object_result processor::parse_tagged_cpp()
+  processor::object_result processor::parse_tagged_cpp(object_ref const &form,
+                                                       lex::token const &start_token,
+                                                       lex::token const &str_end) const
   {
-    auto const start_token(token_current.latest.unwrap().expect_ok());
-    auto str_result(next());
-
-    if(str_result.is_err())
-    {
-      return str_result;
-    }
-    else if(str_result.expect_ok().is_none())
-    {
-      return error::parse_invalid_reader_tag_value(
-        "The string literal after this '#cpp' is missing.",
-        { start_token.start, latest_token.end });
-    }
-
-    auto const str_end(str_result.expect_ok().unwrap().end);
-
     jtl::immutable_string str{};
 
 #pragma clang diagnostic push
@@ -997,33 +980,32 @@ namespace jank::read::parse
       case lex::token_kind::string:
       case lex::token_kind::escaped_string:
         {
-          auto const string{ expect_object<obj::persistent_string>(
-            str_result.expect_ok().unwrap().ptr) };
+          auto const string{ expect_object<obj::persistent_string>(form) };
           str = util::format("\"{}\"", util::escape(string->data));
           break;
         }
       case lex::token_kind::boolean:
         {
-          auto const boolean{ expect_object<obj::boolean>(str_result.expect_ok().unwrap().ptr) };
+          auto const boolean{ expect_object<obj::boolean>(form) };
           str = util::format("{}", boolean->data);
           break;
         }
       case lex::token_kind::integer:
         {
-          auto const integer{ expect_object<obj::integer>(str_result.expect_ok().unwrap().ptr) };
+          auto const integer{ expect_object<obj::integer>(form) };
           str = util::format("static_cast<jank::i64>({})", integer->data);
           break;
         }
       case lex::token_kind::real:
         {
-          auto const real{ expect_object<obj::real>(str_result.expect_ok().unwrap().ptr) };
+          auto const real{ expect_object<obj::real>(form) };
           str = util::format("static_cast<jank::f64>({})", real->data);
           break;
         }
       default:
         return error::parse_invalid_reader_tag_value(
           "The form after '#cpp' must either be a string, boolean, integer or real literal.",
-          { start_token.start, latest_token.end });
+          { start_token.start, start_token.end });
     }
 #pragma clang diagnostic pop
 
@@ -1040,25 +1022,100 @@ namespace jank::read::parse
     auto const sym_result(next());
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
+    auto const form_token(token_current.latest.unwrap().expect_ok());
+    auto form_result(next());
+
+    if(form_result.is_err())
+    {
+      return form_result;
+    }
+    else if(form_result.expect_ok().is_none())
+    {
+      return error::parse_invalid_reader_tag_value(
+        util::format("There must be a form after the tagged literal '#{}'.", sym->name),
+        { form_token.start, latest_token.end });
+    }
+
+    auto const form_end(form_result.expect_ok().unwrap().end);
+    auto const form(form_result.expect_ok().unwrap().ptr);
+    auto const data_readers{ __rt_ctx->find_var("clojure.core", "*data-readers*")->deref() };
+    auto const data_reader{ get(data_readers, sym) };
+
+    if(data_reader.is_some())
+    {
+      auto const data{ visit_object(
+        [](auto const typed_o, object_ref const form) -> object_ref {
+          using T = typename decltype(typed_o)::value_type;
+
+          if constexpr(std::is_base_of_v<behavior::callable, T>)
+          {
+            return typed_o->call(form);
+          }
+          else
+          {
+            throw std::runtime_error{ "A tagged literal's data reader needs to be a function." };
+          }
+        },
+        data_reader,
+        form) };
+
+      return object_source_info{ data, form_token, form_end };
+    }
+
+    auto const default_data_reader_fn{
+      __rt_ctx->find_var("clojure.core", "*default-data-reader-fn*")->deref()
+    };
+
+    if(default_data_reader_fn.is_some())
+    {
+      auto const data{ visit_object(
+        [](auto const typed_o, obj::symbol_ref sym, object_ref form) -> jtl::option<object_ref> {
+          using T = typename decltype(typed_o)::value_type;
+
+          if constexpr(std::is_base_of_v<behavior::callable, T>)
+          {
+            return typed_o->call(sym, form);
+          }
+          else
+          {
+            return none;
+          }
+        },
+        default_data_reader_fn,
+        sym,
+        form) };
+
+      if(data.is_some())
+      {
+        return object_source_info{ data.unwrap(), form_token, form_end };
+      }
+      else
+      {
+        return error::parse_invalid_reader_symbolic_value(
+          "The *default-data-reader-fn* var must be a function which will be called with the tag "
+          "and the form just after the tag.",
+          { start_token.start, sym_end.end });
+      }
+    }
 
     if(sym->name == "uuid")
     {
-      return parse_tagged_uuid();
+      return parse_tagged_uuid(form, start_token, form_end);
     }
     else if(sym->name == "inst")
     {
-      return parse_tagged_inst();
+      return parse_tagged_inst(form, start_token, form_end);
     }
     else if(sym->name == "cpp")
     {
-      return parse_tagged_cpp();
+      return parse_tagged_cpp(form, start_token, form_end);
     }
     else
     {
       return error::parse_invalid_reader_symbolic_value(
-        "This reader tag is not supported. '#uuid', '#inst' and '#cpp' are the only tags currently "
-        "supported.",
-        { start_token.start, latest_token.end });
+        "This reader tag is not supported. '#uuid', '#inst' and '#cpp' are the only default tags "
+        "currently supported.",
+        { start_token.start, sym_end.end });
     }
   }
 
@@ -1086,7 +1143,10 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
+    is_reader_suppressed = true;
     auto list_result(next());
+    is_reader_suppressed = false;
+
     if(list_result.is_err())
     {
       return list_result;
@@ -1113,7 +1173,6 @@ namespace jank::read::parse
 
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
-
     auto const r{ make_sequence_range(list) };
     for(auto it(r.begin()); it != r.end(); ++it, ++it)
     {
@@ -1144,7 +1203,16 @@ namespace jank::read::parse
               auto const front(pending_forms.begin());
               for(auto it(++r.begin()); it != r.end(); ++it)
               {
-                pending_forms.insert(front, *it);
+                object_ref const form{ *it };
+
+                if(form->type == object_type::opaque_box)
+                {
+                  auto const typed_box{ try_object<obj::opaque_box>(form) };
+
+                  return static_cast<jank::error::base const *>(typed_box->data.data);
+                }
+
+                pending_forms.insert(front, form);
               }
 
               return object_source_info{ first, start_token, list_end };
@@ -1158,7 +1226,18 @@ namespace jank::read::parse
         }
         else
         {
-          return object_source_info{ *(++it), start_token, list_end };
+          auto const form{ *(++it) };
+
+          if(form->type == object_type::opaque_box)
+          {
+            auto const typed_box{ try_object<obj::opaque_box>(form) };
+
+            return static_cast<jank::error::base const *>(typed_box->data.data);
+          }
+          else
+          {
+            return object_source_info{ form, start_token, list_end };
+          }
         }
       }
     }

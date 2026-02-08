@@ -13,6 +13,12 @@ Clojure.
   jank from args for your program
     * Example: `jank -I include run test.jank -- a b c`
 
+## Parser
+* No load operation for `data_readers.(cljc|jank)` at start-up to extend
+  supported tags
+* Only lexer errors and unbalanced forms are rejected in unsupported reader
+  conditionals
+
 ## clojure.core
 * Baked into the `jank` binary, not shipped separately
 * No nested `require` support (same as ClojureScript)
