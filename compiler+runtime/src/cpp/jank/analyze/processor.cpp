@@ -1499,7 +1499,7 @@ namespace jank::analyze
                             jtl::option<expr::function_context_ref> const &fc,
                             bool needs_box)
   {
-    if(sym->ns == "cpp" && sym->name != "raw")
+    if((sym->ns == "cpp" && sym->name != "raw") || (sym->ns.empty() && sym->name.starts_with('.')))
     {
       return analyze_cpp_symbol(sym, current_frame, position, fc, needs_box);
     }
