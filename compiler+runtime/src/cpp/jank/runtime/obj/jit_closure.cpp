@@ -31,7 +31,7 @@ namespace jank::runtime::obj
 
   void jit_closure::to_string(jtl::string_builder &buff) const
   {
-    auto const name(get(meta, __rt_ctx->intern_keyword("name").expect_ok()));
+    auto const name(meta->get(__rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
       "#object [{} {} {}]",
