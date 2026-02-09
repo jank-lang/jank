@@ -4277,26 +4277,20 @@
 
 (defn refer-global
   [& filters]
-  (let [allowed-keys #{:only :rename}]
-    (throw-if (odd? (count filters))
-              "refer-global requires an even number of filter arguments (key value ...).")
-    (let [actions (apply hash-map filters)
-          invalid-keys (seq (remove allowed-keys (keys actions)))
-          _ (when invalid-keys
-              (throw (ex-info :invalid-refer-global-filter-key
-                              {:invalid-keys (set invalid-keys)
-                               :allowed-keys allowed-keys})))
-          unique-globals (reduce (fn [acc [k v]]
-                                   (if-some [existing (get acc v)]
-                                     ; TODO: Throw this error_ref directly here, once we can.
-                                     (cpp/clojure.core_native.throw_runtime_invalid_referred_global_rename (str "Referred global '" k "' is being renamed to '" v "', but '" v "' is already a referred global.")
-                                                                                                           v existing)
-                                     (conj acc v)))
-                                 (into #{} (:only actions))
-                                 (:rename actions))]
-      (doseq [only (:only actions)]
-        (cpp/clojure.core_native.refer_global only))
-      (cpp/clojure.core_native.rename_referred_globals (:rename actions)))))
+  (throw-if (odd? (count filters))
+            "refer-global requires an even number of filter arguments (key value ...).")
+  (let [actions (apply hash-map filters)
+        _ (reduce (fn [acc [k v]]
+                    (if-some [existing (get acc v)]
+                      ; TODO: Throw this error_ref directly here, once we can.
+                      (cpp/clojure.core_native.throw_runtime_invalid_referred_global_rename (str "Referred global '" k "' is being renamed to '" v "', but '" v "' is already a referred global.")
+                                                                                            v existing)
+                                                                                                                                                                                                 (conj acc v)))
+                    (into #{} (:only actions))
+                                                                                                                                                                                                 (:rename actions))]
+    (doseq [only (:only actions)]
+      (cpp/clojure.core_native.refer_global only))
+    (cpp/clojure.core_native.rename_referred_globals (:rename actions))))
 
 ;; TODO: Should be a ref instead of atom
 (defonce
