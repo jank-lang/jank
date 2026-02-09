@@ -1,0 +1,8 @@
+(alter-var-root #'*data-readers* (fn [_] {'foo identity 'bar 42}))
+
+#foo 42
+
+(alter-var-root #'*data-readers* (fn [_] {}))
+
+:success
+

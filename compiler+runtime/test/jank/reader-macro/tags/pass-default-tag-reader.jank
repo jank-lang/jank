@@ -1,0 +1,8 @@
+(alter-var-root #'*default-data-reader-fn* (fn [_] (fn [tag form] (identity form))))
+
+#foo 42
+
+(alter-var-root #'*default-data-reader-fn* (fn [_] nil))
+
+:success
+

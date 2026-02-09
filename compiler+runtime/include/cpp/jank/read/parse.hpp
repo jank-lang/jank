@@ -75,13 +75,13 @@ namespace jank::read::parse
     object_result parse_reader_macro_var_quote();
     object_result parse_reader_macro_symbolic_values();
     object_result parse_regex();
-    object_result parse_tagged_uuid(runtime::object_ref const &form,
+    object_result parse_tagged_uuid(runtime::object_ref const form,
                                     lex::token const &start_token,
                                     lex::token const &str_end) const;
-    object_result parse_tagged_inst(runtime::object_ref const &form,
+    object_result parse_tagged_inst(runtime::object_ref const form,
                                     lex::token const &start_token,
                                     lex::token const &str_end) const;
-    object_result parse_tagged_cpp(runtime::object_ref const &form,
+    object_result parse_tagged_cpp(runtime::object_ref const form,
                                    lex::token const &start_token,
                                    lex::token const &str_end) const;
     object_result parse_reader_macro_tagged();

@@ -1,0 +1,6 @@
+(alter-var-root #'*default-data-reader-fn* (fn [_] {}))
+
+#foo 42
+
+(alter-var-root #'*default-data-reader-fn* (fn [_] nil))
+

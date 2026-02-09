@@ -17,8 +17,8 @@ namespace jank::error
   /* TODO: Rename internal failures to have correct prefix. i.e. lex_internal_failure. */
   enum class kind : u8
   {
-    /* The following and it's corresponding max represents the range of errors which are thrown
-     * even when the reader is suppressed. */
+    /* Represents errors that, when encountered during parsing, prevent the parser
+     * from gracefully consuming the rest of the syntactic form. */
     suppressed_reader_error_min,
     lex_unexpected_eof = suppressed_reader_error_min,
     lex_expecting_whitespace,
@@ -67,6 +67,7 @@ namespace jank::error
     parse_invalid_reader_deref,
     parse_invalid_ratio,
     parse_invalid_keyword,
+    parse_invalid_data_reader,
     internal_parse_failure,
 
     analyze_invalid_case,
@@ -232,6 +233,8 @@ namespace jank::error
         return "parse/invalid-ratio";
       case kind::parse_invalid_keyword:
         return "parse/invalid-keyword";
+      case kind::parse_invalid_data_reader:
+        return "parse/invalid-data-reader";
       case kind::internal_parse_failure:
         return "internal/parse-failure";
 

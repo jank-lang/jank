@@ -343,9 +343,6 @@ namespace jank::read::parse
 
         if(error::is_insuppressible(e->kind))
         {
-          // TODO: The `in_suppressible` errors are those errors in which the
-          //  parser can't progress further. Maybe the comments could be improved
-          //  to reflect this fact.
           return e;
         }
 
@@ -382,7 +379,6 @@ namespace jank::read::parse
       return ret.expect_err();
     }
 
-    /* TODO: Reserve based on `ret.expect_ok().size`. */
     runtime::detail::native_transient_vector items;
 
     for(auto &it : ret.expect_ok())
@@ -410,7 +406,6 @@ namespace jank::read::parse
       return ret.expect_err();
     }
 
-    /* TODO: Reserve based on `ret.expect_ok().size`. */
     runtime::detail::native_transient_vector items;
 
     for(auto &it : ret.expect_ok())
@@ -899,7 +894,7 @@ namespace jank::read::parse
     }
   }
 
-  processor::object_result processor::parse_tagged_uuid(object_ref const &form,
+  processor::object_result processor::parse_tagged_uuid(object_ref const form,
                                                         lex::token const &start_token,
                                                         lex::token const &str_end) const
   {
@@ -924,7 +919,7 @@ namespace jank::read::parse
     }
   }
 
-  processor::object_result processor::parse_tagged_inst(object_ref const &form,
+  processor::object_result processor::parse_tagged_inst(object_ref const form,
                                                         lex::token const &start_token,
                                                         lex::token const &str_end) const
   {
@@ -949,7 +944,7 @@ namespace jank::read::parse
     }
   }
 
-  processor::object_result processor::parse_tagged_cpp(object_ref const &form,
+  processor::object_result processor::parse_tagged_cpp(object_ref const form,
                                                        lex::token const &start_token,
                                                        lex::token const &str_end) const
   {
@@ -1015,26 +1010,51 @@ namespace jank::read::parse
     {
       return error::parse_invalid_reader_tag_value(
         util::format("There must be a form after the tagged literal '#{}'.", sym->name),
-        { form_token.start, latest_token.end });
+        { form_token.start, sym_end.end });
     }
 
     auto const form_end(form_result.expect_ok().unwrap().end);
     auto const form(form_result.expect_ok().unwrap().ptr);
-    auto const data_readers{ __rt_ctx->find_var("clojure.core", "*data-readers*")->deref() };
-    auto const data_reader{ visit_map_like(
-      [](auto const typed_o, obj::symbol_ref const sym) -> object_ref { return typed_o->get(sym); },
-      data_readers,
-      sym) };
+    auto const data_readers_result{ __rt_ctx->find_var("clojure.core", "*data-readers*") };
 
-    if(data_reader.is_some())
+    if(data_readers_result.is_some())
     {
-      if(is_callable(data_reader))
+      auto const data_readers{ data_readers_result->deref() };
+      auto const data_reader_result{ visit_map_like(
+        [](auto const typed_o, obj::symbol_ref const sym)
+          -> jtl::result<runtime::object_ref, error_ref> { return typed_o->get(sym); },
+        [&]() -> jtl::result<runtime::object_ref, error_ref> {
+          return error::parse_invalid_data_reader(
+            util::format("The 'clojure.core/*data-readers*' var needs to be a map between the tag "
+                         "symbol and it's corresponding data reader function. Found a {} instead.",
+                         object_type_str(data_readers->type)),
+            { start_token.start, sym_end.end });
+        },
+        data_readers,
+        sym) };
+
+      if(data_reader_result.is_err())
       {
-        return object_source_info{ data_reader->call(form), form_token, form_end };
+        return data_reader_result.expect_err();
       }
-      else
+
+      auto const data_reader{ data_reader_result.expect_ok() };
+
+      if(data_reader.is_some())
       {
-        throw std::runtime_error{ "A tagged literal's data reader needs to be a function." };
+        if(is_callable(data_reader))
+        {
+          return object_source_info{ data_reader->call(form), form_token, form_end };
+        }
+        else
+        {
+          return error::parse_invalid_data_reader(
+            util::format("The data reader for the tagged literal '#{}' needs to be a function. "
+                         "Found a {} instead.",
+                         sym->to_string(),
+                         object_type_str(data_reader->type)),
+            { start_token.start, sym_end.end });
+        }
       }
     }
 
@@ -1044,15 +1064,17 @@ namespace jank::read::parse
 
     if(default_data_reader_fn.is_some())
     {
-      if(is_callable(data_reader))
+      if(is_callable(default_data_reader_fn))
       {
-        return object_source_info{ form->call(sym, form), form_token, form_end };
+        return object_source_info{ default_data_reader_fn->call(sym, form), form_token, form_end };
       }
       else
       {
         return error::parse_invalid_reader_symbolic_value(
-          "The *default-data-reader-fn* var must be a function which will be called with the tag "
-          "and the form just after the tag.",
+          util::format(
+            "The 'clojure.core/*default-data-reader-fn*' var must be a function toking 2 "
+            "arguments, the tag and the form immediately after the tag. Found {} instead.",
+            object_type_str(default_data_reader_fn->type)),
           { start_token.start, latest_token.end });
       }
     }
