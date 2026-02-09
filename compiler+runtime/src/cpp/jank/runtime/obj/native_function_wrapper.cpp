@@ -29,7 +29,7 @@ namespace jank::runtime::obj
 
   void native_function_wrapper::to_string(jtl::string_builder &buff) const
   {
-    auto const name(get(meta, __rt_ctx->intern_keyword("name").expect_ok()));
+    auto const name(meta->get(__rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(buff,
                     "#object [{} {} {}]",
                     (name.is_nil() ? "unknown" : try_object<persistent_string>(name)->data),
