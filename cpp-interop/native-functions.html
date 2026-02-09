@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-9cdaf01a.js";
+            window.path_to_searchindex_js = "../searchindex-8795116b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-bf1be8da.js"></script>
+        <script src="../toc-77800710.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -184,14 +184,14 @@ The simplest case is global functions, as well as static member functions. This
 applies to both C and C++ functions. In order to call these, just take the fully
 qualified name of the function and replace <code>::</code> with <code>.</code>. For example:</p>
 <ul>
-<li><code>std::rand</code> becomes <code>rand</code></li>
-<li><code>std::this_thread::get_id()</code> becomes <code>std.this_thread.get_id</code></li>
+<li><code>std::rand</code> becomes <code>cpp/rand</code></li>
+<li><code>std::this_thread::get_id</code> becomes <code>cpp/std.this_thread.get_id</code></li>
 </ul>
 <p>For example, we can use the C functions <code>srand</code>, <code>time</code>, and <code>rand</code> to seed the
 pseudo-random number generator with the current time and then get a number.</p>
 <pre><code class="language-clojure">(defn -main [&amp; args]
-  (srand (time cpp/nullptr))
-  (println "rand:" (rand)))
+  (cpp/srand (cpp/time cpp/nullptr))
+  (println "rand:" (cpp/rand)))
 </code></pre>
 <h2 id="overload-resolution"><a class="header" href="#overload-resolution">Overload resolution</a></h2>
 <p>Once we get out of C land and into C++ territory, the function name alone
@@ -206,14 +206,14 @@ function has many different overloads. Here, we specifically create <code>i</cod
 <code>int</code>, so overload resolution can happen.</p>
 <pre><code class="language-clojure">(defn -main [&amp; args]
   (let [i #cpp 42
-        s (std.to_string i)]
+        s (cpp/std.to_string i)]
     s))
 </code></pre>
 <p>However, if we try to rely on implicit trait conversions, or we pass an unsupported
 type, we’ll get a compiler error.</p>
 <pre><code class="language-clojure">(defn -main [&amp; args]
   (let [i 42
-        s (std.to_string i)]
+        s (cpp/std.to_string i)]
     s))
 </code></pre>
 <pre><code class="language-bash">$ jank run test.jank
@@ -227,22 +227,23 @@ error: No normal overload match was found. When considering automatic trait
   1  │ (defn -main [&amp; args]
   2  │   (let [i 42
      │   ^ Expanded from this macro.
-  3  │         s (std.to_string i)]
+  3  │         s (cpp/std.to_string i)]
      │            ^^^^^^^^^^^^^^^^^ Found here.
 ─────┴─────────────────────────────────────────────────────────────────────────
 </code></pre>
 <p>We could opt into a specific conversion, and thus a specific overload, by using <code>cpp/cast</code>.</p>
 <pre><code class="language-clojure">(defn -main [&amp; args]
   (let [i 42
-        s (std.to_string (cpp/cast cpp/int i))]
+        s (cpp/std.to_string (cpp/cast cpp/int i))]
     s))
 </code></pre>
 <h2 id="member-functions"><a class="header" href="#member-functions">Member functions</a></h2>
-<p>Member functions can be accessed using the <code>.foo</code> syntax. For example, let’s
-convert a jank object to a <code>std::string</code> and then see if it’s empty.</p>
+<p>Member functions can be accessed using the <code>.foo</code> syntax. The <code>cpp/</code> prefix for
+members is optional. For example, let’s convert a jank object to a <code>std::string</code>
+and then see if it’s empty.</p>
 <pre><code class="language-clojure">(defn empty? [o]
   (let [s (str o)
-        native-s (cpp/cast std.string s)]
+        native-s (cpp/cast cpp/std.string s)]
     (.empty native-s)))
 </code></pre>
 <p>Also note that member functions can be called through a pointer to the native
@@ -261,7 +262,7 @@ and then returns it when called.</p>
           };")
 
 (defn -main [&amp; args]
-  (let [f (call_me. "meow")]
+  (let [f (cpp/call_me. "meow")]
     (f)))
 </code></pre>
 <h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
@@ -286,7 +287,7 @@ use a different operator instead.</p>
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../cpp-interop/cast.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../cpp-interop/native-exceptions.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -300,7 +301,7 @@ use a different operator instead.</p>
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../cpp-interop/cast.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../cpp-interop/native-exceptions.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

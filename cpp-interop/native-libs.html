@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-9cdaf01a.js";
+            window.path_to_searchindex_js = "../searchindex-8795116b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-bf1be8da.js"></script>
+        <script src="../toc-77800710.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -270,9 +270,8 @@ start by doing everything incorrectly, so we can see the types of errors jank
 will raise and how to fix them.</p>
 <p>To start with, let’s update our <code>main.jank</code> to include our <code>compress.hpp</code> header
 from our native lib.</p>
-<pre><code class="language-clojure">(ns native-lib-tutorial.main)
-
-(cpp/raw "#include &lt;compress.hpp&gt;")
+<pre><code class="language-clojure">(ns native-lib-tutorial.main
+  (:include "compress.hpp"))
 
 (defn -main [&amp; args]
   (println "Hello, world!"))
@@ -309,7 +308,11 @@ Hello, world!
 <p>So our jank code is including the native lib header, but we’re not yet doing
 anything with it. Let’s call our actual <code>compress</code> function from jank now. Update the <code>-main</code>
 function within <code>main.jank</code> to look like the following.</p>
-<pre><code class="language-clojure">(defn -main [&amp; args]
+<pre><code class="language-clojure">(ns native-lib-tutorial.main
+  (:include "compress.hpp")
+  (:require-global :only [native_lib.compress]))
+
+(defn -main [&amp; args]
   (if (empty? args)
     (println "Try passing some data to compress!")
     (let [input (first args)
@@ -417,7 +420,7 @@ as you need.</p>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../cpp-interop/cpp-raw.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../cpp-interop/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -431,7 +434,7 @@ as you need.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../cpp-interop/cpp-raw.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../cpp-interop/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

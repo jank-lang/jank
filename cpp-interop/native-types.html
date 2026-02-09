@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-9cdaf01a.js";
+            window.path_to_searchindex_js = "../searchindex-8795116b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-bf1be8da.js"></script>
+        <script src="../toc-77800710.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -179,10 +179,9 @@
                     <main>
                         <h1 id="working-with-native-types"><a class="header" href="#working-with-native-types">Working with native types</a></h1>
 <h2 id="accessing-c-types"><a class="header" href="#accessing-c-types">Accessing C++ types</a></h2>
-<p>C++ types are available directly, if you replace <code>::</code> with
-<code>.</code>. For example, <code>std::string</code> becomes <code>std.string</code>. This also works for
-type aliases. If there’s an ambiguity between jank symbols and C++ symbols, you
-can use the <code>cpp/</code> prefix to clarify. For example, <code>cpp/std.string</code>.</p>
+<p>C++ types are available within the <code>cpp</code> namespace, if you replace <code>::</code> with
+<code>.</code>. For example, <code>std::string</code> becomes <code>cpp/std.string</code>. This also works for
+type aliases.</p>
 <h2 id="complex-literal-types"><a class="header" href="#complex-literal-types">Complex literal types</a></h2>
 <p>If your C++ type is not representable using jank’s interop syntax, due to
 template arguments or other shenanigans, you can use <code>cpp/type</code> to provide the
