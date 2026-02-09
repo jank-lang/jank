@@ -109,9 +109,8 @@ To start with, let's update our `main.jank` to include our `compress.hpp` header
 from our native lib.
 
 ```clojure
-(ns native-lib-tutorial.main)
-
-(cpp/raw "#include <compress.hpp>")
+(ns native-lib-tutorial.main
+  (:include "compress.hpp"))
 
 (defn -main [& args]
   (println "Hello, world!"))
@@ -161,6 +160,10 @@ anything with it. Let's call our actual `compress` function from jank now. Updat
 function within `main.jank` to look like the following.
 
 ```clojure
+(ns native-lib-tutorial.main
+  (:include "compress.hpp")
+  (:require-global :only [native_lib.compress]))
+
 (defn -main [& args]
   (if (empty? args)
     (println "Try passing some data to compress!")
