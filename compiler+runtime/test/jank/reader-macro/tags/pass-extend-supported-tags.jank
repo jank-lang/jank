@@ -1,8 +1,3 @@
-(alter-var-root #'*data-readers* (fn [_] {'foo identity 'bar 42}))
-
-#foo 42
-
-(alter-var-root #'*data-readers* (fn [_] {}))
-
-:success
-
+(binding [*data-readers* {'foo identity 'bar 42}]
+  (if (= 42 (read-string "#foo 42"))
+    :success))

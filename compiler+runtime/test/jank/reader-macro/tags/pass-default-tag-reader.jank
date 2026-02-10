@@ -1,8 +1,3 @@
-(alter-var-root #'*default-data-reader-fn* (fn [_] (fn [tag form] (identity form))))
-
-#foo 42
-
-(alter-var-root #'*default-data-reader-fn* (fn [_] nil))
-
-:success
-
+(binding [*default-data-reader-fn* (fn [tag form] (identity form))]
+  (if (= 42 (read-string "#foo 42"))
+    :success))

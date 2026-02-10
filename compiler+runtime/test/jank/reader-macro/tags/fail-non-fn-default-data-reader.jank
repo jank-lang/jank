@@ -1,0 +1,2 @@
+(binding [*default-data-reader-fn* 42]
+  (read-string "#foo 42"))

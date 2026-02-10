@@ -1058,24 +1058,29 @@ namespace jank::read::parse
       }
     }
 
-    auto const default_data_reader_fn{
-      __rt_ctx->find_var("clojure.core", "*default-data-reader-fn*")->deref()
-    };
-
-    if(default_data_reader_fn.is_some())
+    if(auto const default_data_reader_fn_result{
+         __rt_ctx->find_var("clojure.core", "*default-data-reader-fn*") };
+       default_data_reader_fn_result.is_some())
     {
-      if(is_callable(default_data_reader_fn))
+      auto const default_data_reader_fn{ default_data_reader_fn_result->deref() };
+
+      if(default_data_reader_fn.is_some())
       {
-        return object_source_info{ default_data_reader_fn->call(sym, form), form_token, form_end };
-      }
-      else
-      {
-        return error::parse_invalid_reader_symbolic_value(
-          util::format(
-            "The 'clojure.core/*default-data-reader-fn*' var must be a function toking 2 "
-            "arguments, the tag and the form immediately after the tag. Found {} instead.",
-            object_type_str(default_data_reader_fn->type)),
-          { start_token.start, latest_token.end });
+        if(is_callable(default_data_reader_fn))
+        {
+          return object_source_info{ default_data_reader_fn->call(sym, form),
+                                     form_token,
+                                     form_end };
+        }
+        else
+        {
+          return error::parse_invalid_reader_symbolic_value(
+            util::format(
+              "The 'clojure.core/*default-data-reader-fn*' var must be a function toking 2 "
+              "arguments, the tag and the form immediately after the tag. Found a {} instead.",
+              object_type_str(default_data_reader_fn->type)),
+            { start_token.start, latest_token.end });
+        }
       }
     }
 
@@ -1191,12 +1196,12 @@ namespace jank::read::parse
          * a form in an unsupported reader conditional. This is done because an
          * implementation of Clojure on a specific platform can't make any assumptions
          * on what tagged literals other platform implementations will support. */
-        if(is_supported_feature)
+        if(!is_supported_feature)
         {
-          result = e;
+          continue;
         }
 
-        continue;
+        result = e;
       }
 
       if(form_result.expect_ok().is_none())
@@ -1219,7 +1224,6 @@ namespace jank::read::parse
           return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
                                                     "Top-level #?@ usage is not allowed.");
         }
-
 
         result = visit_seqable(
           [&](auto const typed_s) -> processor::object_result {

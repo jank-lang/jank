@@ -1,6 +1,2 @@
-(alter-var-root #'*data-readers* (fn [_] []))
-
-#foo 42
-
-(alter-var-root #'*data-readers* (fn [_] {}))
-
+(binding [*data-readers* {'foo 42}]
+  (read-string "#foo 42"))
