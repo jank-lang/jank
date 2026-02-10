@@ -7044,13 +7044,15 @@ fails, attempts to require sym's namespace and retries."
   "Reads the file at the specified path into a string."
   [f]
   (let [fname (cpp/cast (cpp/type "char const*") f)
-        file (cpp/std.ifstream. fname)]
+        file (cpp/std.ifstream. fname)
+        size (cpp/std.filesystem.file_size fname)]
     (if-not (cpp/.is_open file)
       (throw (str f " (No such file or directory)"))
-      (let [size (cpp/std.filesystem.file_size fname)
-            out (cpp/std.string. size (cpp/char #cpp 0))]
-        (cpp/.read file (cpp/& (cpp/.front out)) size)
-        out))))
+      (if (zero? size)
+        ""
+        (let [out (cpp/std.string. size (cpp/char #cpp 0))]
+          (cpp/.read file (cpp/& (cpp/.front out)) size)
+          out)))))
 
 (defn spit
   "Opposite of slurp.  Opens f with writer, writes content, then
