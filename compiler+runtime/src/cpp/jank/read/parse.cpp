@@ -628,15 +628,37 @@ namespace jank::read::parse
         }
       },
       meta_val_result.expect_ok().unwrap().ptr));
-    auto target_val_result(next());
+
+    jtl::option<error_ref> error{};
 
     if(meta_result.is_err())
     {
-      return meta_result;
+      auto const e{ meta_result.expect_err() };
+
+      if(error::is_insuppressible(e->kind))
+      {
+        return e;
+      }
+
+      error = e;
+    }
+
+    auto target_val_result(next());
+
+    if(error.is_some())
+    {
+      return error.unwrap();
     }
 
     if(target_val_result.is_err())
     {
+      auto const e{ target_val_result.expect_err() };
+
+      if(error::is_insuppressible(e->kind))
+      {
+        return e;
+      }
+
       return target_val_result;
     }
     else if(target_val_result.expect_ok().is_none())
@@ -745,12 +767,20 @@ namespace jank::read::parse
   processor::object_result processor::parse_reader_macro_fn()
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
+    jtl::option<error_ref> error{};
 
     if(shorthand.is_some())
     {
-      return error::parse_nested_shorthand_function(
+      auto const e{ error::parse_nested_shorthand_function(
         start_token.start,
-        { "Outer #() form starts here.", shorthand.unwrap().source, error::note::kind::info });
+        { "Outer #() form starts here.", shorthand.unwrap().source, error::note::kind::info }) };
+
+      if(error::is_insuppressible(e->kind))
+      {
+        return e;
+      }
+
+      error = error.unwrap_or(e);
     }
 
     shorthand = shorthand_function_details{ {}, {}, start_token.start };
@@ -763,8 +793,20 @@ namespace jank::read::parse
     else if(list_result.expect_ok().is_none()
             || list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
     {
-      return error::internal_parse_failure("Value after #( must be present.",
-                                           { start_token.start, latest_token.end });
+      auto const e{ error::internal_parse_failure("Value after #( must be present.",
+                                                  { start_token.start, latest_token.end }) };
+
+      if(error::is_insuppressible(e->kind))
+      {
+        return e;
+      }
+
+      error = error.unwrap_or(e);
+    }
+
+    if(error.is_some())
+    {
+      return error.unwrap();
     }
 
     auto const call(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));

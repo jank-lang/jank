@@ -785,7 +785,6 @@ namespace jank::read::parse
         CHECK(r1.is_err());
       }
 
-      /* TODO: Check if it's complaining about a missing `]` or `)` in all of the test cases. */
       SUBCASE("Unterminated in the middle")
       {
         lex::processor lp{ "[(]" };
@@ -1150,8 +1149,6 @@ namespace jank::read::parse
                              .unwrap()) };
         CHECK(equal(get(m, __rt_ctx->intern_keyword("foo").expect_ok()), jank_true));
       }
-
-      /* TODO: Add graceful parse test for `^0 {}` & `^:k 0`, #(#()) cases. */
     }
 
     TEST_CASE("Reader macro")
