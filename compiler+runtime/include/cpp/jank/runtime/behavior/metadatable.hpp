@@ -9,7 +9,7 @@ namespace jank::runtime::behavior
   template <typename T>
   concept metadatable = requires(T * const t) {
     { t->with_meta(object_ref{}) } -> std::convertible_to<object_ref>;
-    { t->meta } -> std::convertible_to<jtl::option<object_ref>>;
+    { t->get_meta() } -> std::convertible_to<object_ref>;
   };
 
   namespace detail

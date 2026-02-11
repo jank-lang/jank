@@ -1,0 +1,10 @@
+(let* [f (fn* []
+           (try
+             (throw :test-throw)
+             (catch cpp/jank.runtime.object_ref e
+               (throw e))
+             (finally)))]
+
+  (try
+    (f)
+    (catch cpp/jank.runtime.object_ref e :success)))

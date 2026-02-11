@@ -6,48 +6,29 @@
 
 namespace jank::runtime::obj
 {
+  array_chunk::array_chunk()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   array_chunk::array_chunk(native_vector<object_ref> const &buffer)
-    : buffer{ buffer }
+    : object{ obj_type, obj_behaviors }
+    , buffer{ buffer }
   {
   }
 
   array_chunk::array_chunk(native_vector<object_ref> const &buffer, usize const offset)
-    : buffer{ buffer }
+    : object{ obj_type, obj_behaviors }
+    , buffer{ buffer }
     , offset{ offset }
   {
   }
 
   array_chunk::array_chunk(native_vector<object_ref> &&buffer, usize const offset)
-    : buffer{ std::move(buffer) }
+    : object{ obj_type, obj_behaviors }
+    , buffer{ std::move(buffer) }
     , offset{ offset }
   {
-  }
-
-  bool array_chunk::equal(object const &o) const
-  {
-    return &o == &base;
-  }
-
-  jtl::immutable_string array_chunk::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void array_chunk::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string array_chunk::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash array_chunk::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   array_chunk_ref array_chunk::chunk_next() const

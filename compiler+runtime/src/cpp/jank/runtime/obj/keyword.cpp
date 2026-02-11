@@ -5,22 +5,23 @@
 
 namespace jank::runtime::obj
 {
+  keyword::keyword()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   keyword::keyword(runtime::detail::must_be_interned, jtl::immutable_string_view const &s)
-    : sym{ make_box<obj::symbol>(s) }
+    : object{ obj_type, obj_behaviors }
+    , sym{ make_box<obj::symbol>(s) }
   {
   }
 
   keyword::keyword(runtime::detail::must_be_interned,
                    jtl::immutable_string_view const &ns,
                    jtl::immutable_string_view const &n)
-    : sym{ make_box<obj::symbol>(ns, n) }
+    : object{ obj_type, obj_behaviors }
+    , sym{ make_box<obj::symbol>(ns, n) }
   {
-  }
-
-  /* Keywords are interned, so we can always count on identity equality. */
-  bool keyword::equal(object const &o) const
-  {
-    return &base == &o;
   }
 
   static void to_string_impl(symbol const &sym, jtl::string_builder &buff)
@@ -39,11 +40,6 @@ namespace jank::runtime::obj
     jtl::string_builder buff;
     to_string_impl(*sym, buff);
     return buff.release();
-  }
-
-  jtl::immutable_string keyword::to_code_string() const
-  {
-    return to_string();
   }
 
   uhash keyword::to_hash() const
@@ -71,18 +67,18 @@ namespace jank::runtime::obj
     return sym->ns;
   }
 
-  object_ref keyword::call(object_ref const m)
+  object_ref keyword::call(object_ref const m) const
   {
     return runtime::get(m, this);
   }
 
-  object_ref keyword::call(object_ref const m, object_ref const fallback)
+  object_ref keyword::call(object_ref const m, object_ref const fallback) const
   {
     return runtime::get(m, this, fallback);
   }
 
   bool keyword::operator==(keyword const &rhs) const
   {
-    return *sym == *rhs.sym;
+    return this == &rhs;
   }
 }

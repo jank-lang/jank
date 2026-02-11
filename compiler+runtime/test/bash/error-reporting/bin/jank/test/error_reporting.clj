@@ -45,6 +45,7 @@
     (b.p/shell {:out :string
                 :dir (:dir test)}
                "./setup"))
+  (println "running dir" (b.f/file-name (:dir test)))
   (let [res @(b.p/process {:out :string
                            :err :out
                            :dir (:dir test)}

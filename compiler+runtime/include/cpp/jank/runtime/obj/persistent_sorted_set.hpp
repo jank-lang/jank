@@ -9,31 +9,33 @@ namespace jank::runtime::obj
   using persistent_sorted_set_ref = oref<struct persistent_sorted_set>;
   using persistent_sorted_set_sequence_ref = oref<struct persistent_sorted_set_sequence>;
 
-  struct persistent_sorted_set
+  struct persistent_sorted_set : object
   {
     static constexpr object_type obj_type{ object_type::persistent_sorted_set };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_set_like{ true };
 
     using value_type = runtime::detail::native_persistent_sorted_set;
 
-    persistent_sorted_set() = default;
+    persistent_sorted_set();
     persistent_sorted_set(persistent_sorted_set &&) noexcept = default;
     persistent_sorted_set(persistent_sorted_set const &) = default;
     persistent_sorted_set(value_type &&d);
     persistent_sorted_set(value_type const &d);
     persistent_sorted_set(object_ref const meta, value_type &&d);
-    persistent_sorted_set(jtl::option<object_ref> const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_sorted_set(std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type, obj_behaviors }
+      , data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
     persistent_sorted_set(object_ref const meta, std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type, obj_behaviors }
+      , data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
     }
@@ -42,14 +44,15 @@ namespace jank::runtime::obj
     static persistent_sorted_set_ref create_from_seq(object_ref const seq);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::metadatable */
     persistent_sorted_set_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /* behavior::seqable */
     persistent_sorted_set_sequence_ref seq() const;
@@ -62,18 +65,22 @@ namespace jank::runtime::obj
     persistent_sorted_set_ref conj(object_ref const head) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const);
+    using object::call;
+    object_ref call(object_ref const) const override;
 
     /* behavior::transientable */
     obj::transient_sorted_set_ref to_transient() const;
 
-    bool contains(object_ref const o) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const o) const override;
+
     persistent_sorted_set_ref disj(object_ref const o) const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     value_type data;
-    jtl::option<object_ref> meta;
+    object_ref meta;
   };
 }
 

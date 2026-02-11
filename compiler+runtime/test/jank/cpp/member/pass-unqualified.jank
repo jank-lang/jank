@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::cpp::member::pass_unqualified
+          {
+            struct bar
+            {
+              int a{};
+            };
+          }")
+(let* [b (cpp/jank.cpp.member.pass_unqualified.bar.)
+       a (.-a b)]
+  (if (= 0 a)
+    :success))

@@ -8,24 +8,25 @@ namespace jank::runtime::obj
   using persistent_vector_ref = oref<struct persistent_vector>;
   using persistent_vector_sequence_ref = oref<struct persistent_vector_sequence>;
 
-  struct persistent_vector_sequence
+  struct persistent_vector_sequence : object
   {
     static constexpr object_type obj_type{ object_type::persistent_vector_sequence };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    persistent_vector_sequence() = default;
+    persistent_vector_sequence();
     persistent_vector_sequence(persistent_vector_sequence &&) noexcept = default;
     persistent_vector_sequence(persistent_vector_sequence const &) = default;
     persistent_vector_sequence(obj::persistent_vector_ref const v);
     persistent_vector_sequence(obj::persistent_vector_ref const v, usize i);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_string() const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::countable */
     usize count() const;
@@ -43,7 +44,6 @@ namespace jank::runtime::obj
     persistent_vector_sequence_ref next_in_place();
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     obj::persistent_vector_ref vec{};
     usize index{};
   };

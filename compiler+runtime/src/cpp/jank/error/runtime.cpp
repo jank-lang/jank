@@ -65,4 +65,40 @@ namespace jank::error
   {
     return make_error(kind::runtime_non_metadatable_value, message, source);
   }
+
+  error_ref runtime_invalid_referred_global_symbol(read::source const &source)
+  {
+    return make_error(kind::runtime_invalid_referred_global_symbol, source);
+  }
+
+  error_ref runtime_invalid_referred_global_rename(jtl::immutable_string const &message,
+                                                   read::source const &source)
+  {
+    return make_error(kind::runtime_invalid_referred_global_rename, message, source);
+  }
+
+  error_ref runtime_invalid_referred_global_rename(jtl::immutable_string const &message,
+                                                   read::source const &rename_source,
+                                                   read::source const &original_name_source)
+  {
+    return make_error(
+      kind::runtime_invalid_referred_global_rename,
+      message,
+      rename_source,
+      native_vector<note>{
+        note{ "Renamed here.", rename_source },
+        note{ "Originally referred here.", original_name_source, error::note::kind::info }
+    });
+  }
+
+  error_ref runtime_unsupported_behavior(runtime::object_type const type,
+                                         jtl::immutable_string const &behavior,
+                                         read::source const &source)
+  {
+    return make_error(kind::runtime_unsupported_behavior,
+                      util::format("Objects of type '{}' do not support the '{}' behavior.",
+                                   runtime::object_type_str(type),
+                                   behavior),
+                      source);
+  }
 }

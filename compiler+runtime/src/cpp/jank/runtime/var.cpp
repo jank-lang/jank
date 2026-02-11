@@ -1,7 +1,7 @@
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/to_string.hpp>
@@ -14,14 +14,16 @@
 namespace jank::runtime
 {
   var::var(ns_ref const n, obj::symbol_ref const name)
-    : n{ n }
+    : object{ obj_type, obj_behaviors }
+    , n{ n }
     , name{ name }
     , root{ make_box<var_unbound_root>(this) }
   {
   }
 
   var::var(ns_ref const n, obj::symbol_ref const name, object_ref const root)
-    : n{ n }
+    : object{ obj_type, obj_behaviors }
+    , n{ n }
     , name{ name }
     , root{ root }
   {
@@ -32,7 +34,8 @@ namespace jank::runtime
            object_ref const root,
            bool const dynamic,
            bool const thread_bound)
-    : n{ n }
+    : object{ obj_type, obj_behaviors }
+    , n{ n }
     , name{ name }
     , root{ root }
     , dynamic{ dynamic }
@@ -79,18 +82,7 @@ namespace jank::runtime
 
   uhash var::to_hash() const
   {
-    if(hash)
-    {
-      return hash;
-    }
-
-    return hash = hash::combine(n->to_hash(), name->to_hash());
-  }
-
-  var_ref var::with_meta(object_ref const m)
-  {
-    meta = behavior::detail::validate_meta(m);
-    return this;
+    return hash::combine(n->to_hash(), name->to_hash());
   }
 
   bool var::is_bound() const
@@ -155,13 +147,13 @@ namespace jank::runtime
       return {};
     }
 
-    auto &tbfs(runtime::context::thread_binding_frames);
-    if(tbfs.empty())
+    auto tbfs(__rt_ctx->thread_binding_frames.rlock());
+    if(tbfs->empty())
     {
       return {};
     }
 
-    auto const found(tbfs.front().bindings->get_entry(this));
+    auto const found(tbfs->front().bindings->find(this));
     if(found.is_nil())
     {
       return {};
@@ -169,6 +161,17 @@ namespace jank::runtime
 
     auto const ret(expect_object<obj::persistent_vector>(found)->data[1]);
     return expect_object<var_thread_binding>(ret);
+  }
+
+  object_ref var::call(object_ref const args) const
+  {
+    return apply_to(deref(), args);
+  }
+
+  callable_arity_flags var::get_arity_flags() const
+  {
+    /* Vars are always [& args], which they then apply to the proxied fn. */
+    return build_arity_flags(0, true, false);
   }
 
   object_ref var::deref() const
@@ -181,20 +184,35 @@ namespace jank::runtime
     return *root.rlock();
   }
 
+  var_ref var::with_meta(object_ref const m)
+  {
+    auto const new_meta(behavior::detail::validate_meta(m));
+    auto const locked_meta{ meta.wlock() };
+    *locked_meta = new_meta;
+    return this;
+  }
+
+  object_ref var::get_meta() const
+  {
+    auto const locked_meta{ meta.rlock() };
+    return *locked_meta;
+  }
+
+  void var::set_meta(object_ref const m)
+  {
+    with_meta(m);
+  }
+
   var_ref var::clone() const
   {
     return make_box<var>(n, name, get_root(), dynamic.load(), thread_bound.load());
   }
 
   var_thread_binding::var_thread_binding(object_ref const value, std::thread::id const id)
-    : value{ value }
+    : object{ obj_type, obj_behaviors }
+    , value{ value }
     , thread_id{ id }
   {
-  }
-
-  bool var_thread_binding::equal(object const &o) const
-  {
-    return &base == &o;
   }
 
   jtl::immutable_string var_thread_binding::to_string() const
@@ -218,35 +236,14 @@ namespace jank::runtime
   }
 
   var_unbound_root::var_unbound_root(var_ref const var)
-    : var{ var }
+    : object{ obj_type, obj_behaviors }
+    , var{ var }
   {
-  }
-
-  bool var_unbound_root::equal(object const &o) const
-  {
-    return &base == &o;
-  }
-
-  jtl::immutable_string var_unbound_root::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
   }
 
   void var_unbound_root::to_string(jtl::string_builder &buff) const
   {
-    util::format_to(buff, "unbound@{} for var {}", &base, var->to_string());
-  }
-
-  jtl::immutable_string var_unbound_root::to_code_string() const
-  {
-    return var_unbound_root::to_string();
-  }
-
-  uhash var_unbound_root::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
+    util::format_to(buff, "unbound@{} for var {}", this, var->to_string());
   }
 }
 

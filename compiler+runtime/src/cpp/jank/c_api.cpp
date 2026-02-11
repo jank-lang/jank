@@ -1,4 +1,5 @@
 #include <cstdarg>
+#include <utility>
 
 #include <Interpreter/Compatibility.h>
 #include <llvm-c/Target.h>
@@ -8,13 +9,14 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/ExecutionEngine/Orc/Mangling.h>
 
-#include <utility>
+#include <gc/gc.h>
 
 #include <jank/c_api.h>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/aot/resource.hpp>
 #include <jank/error/runtime.hpp>
 #include <jank/profile/time.hpp>
@@ -576,9 +578,7 @@ extern "C"
                                                    jank_bool const is_variadic,
                                                    jank_bool const is_variadic_ambiguous)
   {
-    return behavior::callable::build_arity_flags(highest_fixed_arity,
-                                                 is_variadic,
-                                                 is_variadic_ambiguous);
+    return build_arity_flags(highest_fixed_arity, is_variadic, is_variadic_ambiguous);
   }
 
   jank_object_ref jank_function_create(jank_arity_flags const arity_flags)
@@ -975,16 +975,7 @@ extern "C"
   {
     auto const o_obj(reinterpret_cast<object *>(o));
     auto const meta_obj(reinterpret_cast<object *>(meta));
-    runtime::visit_object(
-      [&](auto const typed_o) {
-        using T = typename decltype(typed_o)::value_type;
-
-        if constexpr(behavior::metadatable<T>)
-        {
-          typed_o->meta = behavior::detail::validate_meta(meta_obj);
-        }
-      },
-      o_obj);
+    runtime::reset_meta(o_obj, meta_obj);
   }
 
   void jank_throw(jank_object_ref const o)
@@ -1043,21 +1034,8 @@ extern "C"
       /* The GC needs to initialized even before arg parsing, since our native types,
        * like strings, use the GC for allocations. It can still be configured later. */
       GC_set_all_interior_pointers(1);
-
-      /* Collection is disabled on macOS, due to a combination of two issues. Firstly,
-       * bdwgc will prematurely collect if we don't use malloc redirection. My research
-       * indicates that this is due to (at least) bdwgc not knowing about globals within
-       * JIT compiled C++. Secondly, we can't use malloc redirection on macOS due to an
-       * issue which leads to a crash in LLVM code.
-       *
-       * https://github.com/bdwgc/bdwgc/issues/829 */
-      if constexpr(jtl::current_platform == jtl::platform::macos_like)
-      {
-        /* Although this is called enable, by calling it right here, we actually disable the GC. */
-        GC_enable();
-      }
-
       GC_init();
+      GC_allow_register_threads();
 
       llvm::llvm_shutdown_obj const Y{};
 

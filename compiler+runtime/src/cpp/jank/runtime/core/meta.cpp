@@ -23,11 +23,11 @@ namespace jank::runtime
 
         if constexpr(behavior::metadatable<T>)
         {
-          return typed_m->meta.unwrap_or(jank_nil());
+          return typed_m->get_meta();
         }
         else
         {
-          return jank_nil();
+          return {};
         }
       },
       m);
@@ -87,33 +87,41 @@ namespace jank::runtime
         if constexpr(behavior::metadatable<T>)
         {
           auto const meta(behavior::detail::validate_meta(m));
-          typed_o->meta = meta;
+          if constexpr(requires(T *t) {
+                         { t->meta } -> jtl::is_convertible<object_ref>;
+                       })
+          {
+            typed_o->meta = meta;
+          }
+          else
+          {
+            typed_o->set_meta(meta);
+          }
           return m;
         }
         else
         {
           throw std::runtime_error{ util::format("not metadatable: {} [{}]",
                                                  typed_o->to_code_string(),
-                                                 object_type_str(typed_o->base.type)) };
+                                                 object_type_str(typed_o->type)) };
         }
       },
       o,
       m);
   }
 
-  read::source meta_source(jtl::option<runtime::object_ref> const &o)
+  read::source meta_source(runtime::object_ref const meta)
   {
     using namespace jank::runtime;
 
-    auto const meta(o.unwrap_or(jank_nil()));
     auto const source(get(meta, __rt_ctx->intern_keyword("jank/source").expect_ok()));
-    if(source == jank_nil())
+    if(source.is_nil())
     {
       return read::source::unknown();
     }
 
     auto const file(get(source, __rt_ctx->intern_keyword("file").expect_ok()));
-    if(file == jank_nil())
+    if(file.is_nil())
     {
       return read::source::unknown();
     }
@@ -150,7 +158,7 @@ namespace jank::runtime
   read::source object_source(object_ref const o)
   {
     auto const meta(runtime::meta(o));
-    if(meta == jank_nil())
+    if(meta.is_nil())
     {
       return read::source::unknown();
     }
@@ -216,21 +224,6 @@ namespace jank::runtime
   {
     auto const kw{ __rt_ctx->intern_keyword("jank/source").expect_ok() };
     return dissoc(meta, kw);
-  }
-
-  jtl::option<object_ref> strip_source_from_meta_opt(jtl::option<object_ref> const &meta)
-  {
-    if(meta.is_none())
-    {
-      return meta;
-    }
-
-    auto stripped{ strip_source_from_meta(meta.unwrap()) };
-    if(is_empty(stripped))
-    {
-      return none;
-    }
-    return stripped;
   }
 
   object_ref with_source_meta(object_ref const o, read::source const &source)

@@ -1,0 +1,14 @@
+
+;; Verifies that recur works when the target loop is INSIDE the finally block.
+(def a (atom []))
+(try
+  :ignored
+  (finally
+    (loop [i 0]
+      (if (< i 3)
+        (do
+          (swap! a conj i)
+          (recur (inc i)))
+        :success))))
+(assert (= @a [0 1 2]))
+:success

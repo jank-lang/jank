@@ -998,7 +998,7 @@ namespace jank::runtime::module
     }
 
     auto const load_fn_res{ __rt_ctx->jit_prc.find_symbol(load_function_name).expect_ok() };
-    reinterpret_cast<object *(*)()>(load_fn_res)();
+    reinterpret_cast<void (*)()>(load_fn_res)();
 
     return ok();
   }

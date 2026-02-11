@@ -4275,6 +4275,23 @@
             nil
             to-refer)))
 
+(defn refer-global
+  [& filters]
+  (throw-if (odd? (count filters))
+            "refer-global requires an even number of filter arguments (key value ...).")
+  (let [actions (apply hash-map filters)
+        _ (reduce (fn [acc [k v]]
+                    (if-some [existing (get acc v)]
+                      ; TODO: Throw this error_ref directly here, once we can.
+                      (cpp/clojure.core_native.throw_runtime_invalid_referred_global_rename (str "Referred global '" k "' is being renamed to '" v "', but '" v "' is already a referred global.")
+                                                                                            v existing)
+                                                                                                                                                                                                 (conj acc v)))
+                    (into #{} (:only actions))
+                                                                                                                                                                                                 (:rename actions))]
+    (doseq [only (:only actions)]
+      (cpp/clojure.core_native.refer_global only))
+    (cpp/clojure.core_native.rename_referred_globals (:rename actions))))
+
 ;; TODO: Should be a ref instead of atom
 (defonce
   ^{:private true
@@ -4360,7 +4377,7 @@
     (if load
       (try
         (load lib need-ns? require)
-        (catch e
+        (catch cpp/jank.runtime.object_ref e
           (when undefined-on-entry?
             (remove-ns lib))
           (throw e)))
@@ -5443,6 +5460,17 @@
   "import is not implemented for jank, but a var is still bound to its symbol for portability. import always throws an exception"
   [& _]
   (throw "import is not supported in jank, for C/C++ dependency interoperability use cpp/raw with #include, e.g. (cpp/raw \"#include \"dependency.h\")\")"))
+
+(defmacro include
+  [& headers]
+  (if (empty? headers)
+    nil
+    (let [build-include (fn* build-include [header]
+                          `(cpp/raw ~(if (= "./" (subs header 0 (min 2 (count header))))
+                                       (str "#include \"" header "\"")
+                                       (str "#include <" header ">"))))
+          includes (map (comp build-include eval) headers)]
+      `(do ~@includes))))
 
 (defn into-array
   "Returns an array with components set to the values in aseq. The array's
@@ -7012,27 +7040,19 @@ fails, attempts to require sym's namespace and retries."
     ;;  (clojure.core.protocols/kv-reduce coll f init)
    (reduce (fn [s [k v]] (f s k v)) init coll)))
 
-(defn- normalize-slurp-opts
-  [opts]
-  (if (string? (first opts))
-    (do
-      (println "WARNING: (slurp f enc) is deprecated, use (slurp f :encoding enc).")
-      [:encoding (first opts)])
-    opts))
-
 (defn slurp
-  "Opens a reader on f and reads all its contents, returning a string.
-  See clojure.java.io/reader for a complete list of supported arguments."
-  ([f & opts]
-   (let [opts (normalize-slurp-opts opts)
-         fname (cpp/cast (cpp/type "char const*") f)
-         file (cpp/std.ifstream. fname)]
-     (if-not (cpp/.is_open file)
-       (throw (str f " (No such file or directory)"))
-       (let [size (cpp/std.filesystem.file_size fname)
-             out (cpp/std.string. size (cpp/char 0))]
-         (cpp/.read file (cpp/& (cpp/.front out)) size)
-         out)))))
+  "Reads the file at the specified path into a string."
+  [f]
+  (let [fname (cpp/cast (cpp/type "char const*") f)
+        file (cpp/std.ifstream. fname)
+        size (cpp/std.filesystem.file_size fname)]
+    (if-not (cpp/.is_open file)
+      (throw (str f " (No such file or directory)"))
+      (if (zero? size)
+        ""
+        (let [out (cpp/std.string. size (cpp/char #cpp 0))]
+          (cpp/.read file (cpp/& (cpp/.front out)) size)
+          out)))))
 
 (defn spit
   "Opposite of slurp.  Opens f with writer, writes content, then

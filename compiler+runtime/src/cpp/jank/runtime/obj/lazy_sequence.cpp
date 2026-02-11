@@ -2,7 +2,7 @@
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/cons.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/seq.hpp>
@@ -11,14 +11,21 @@
 
 namespace jank::runtime::obj
 {
+  lazy_sequence::lazy_sequence()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   lazy_sequence::lazy_sequence(object_ref const fn)
-    : fn{ fn }
+    : object{ obj_type, obj_behaviors }
+    , fn{ fn }
   {
     jank_debug_assert(fn.is_some());
   }
 
   lazy_sequence::lazy_sequence(object_ref const fn, object_ref const sequence)
-    : fn{ fn }
+    : object{ obj_type, obj_behaviors }
+    , fn{ fn }
     , s{ sequence }
   {
   }
@@ -39,7 +46,7 @@ namespace jank::runtime::obj
 
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
     auto const r(runtime::fresh_seq(s));
-    jank_debug_assert(r != jank_nil());
+    jank_debug_assert(r.is_some());
     return make_box<lazy_sequence>(jank_nil(), r);
   }
 
@@ -165,5 +172,10 @@ namespace jank::runtime::obj
     auto const meta(behavior::detail::validate_meta(m));
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref lazy_sequence::get_meta() const
+  {
+    return meta;
   }
 }

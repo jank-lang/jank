@@ -9,12 +9,13 @@ namespace jank::runtime::obj
   using persistent_array_map_ref = oref<struct persistent_array_map>;
   using symbol_ref = oref<struct symbol>;
 
-  struct symbol
+  struct symbol : object
   {
     static constexpr object_type obj_type{ object_type::symbol };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
-    symbol() = default;
+    symbol();
     symbol(symbol &&) noexcept = default;
     symbol(symbol const &) = default;
     symbol(jtl::immutable_string const &d);
@@ -28,11 +29,11 @@ namespace jank::runtime::obj
     symbol &operator=(symbol &&) = default;
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::object_like extended */
     bool equal(symbol const &) const;
@@ -45,6 +46,7 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     symbol_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /* behavior::nameable */
     jtl::immutable_string const &get_name() const;
@@ -54,10 +56,9 @@ namespace jank::runtime::obj
     bool operator<(symbol const &rhs) const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     jtl::immutable_string ns;
     jtl::immutable_string name;
-    jtl::option<object_ref> meta;
+    object_ref meta;
   };
 }
 

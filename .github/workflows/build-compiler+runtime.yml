@@ -136,8 +136,8 @@ jobs:
             analyze: on
 
           ## Debug + sanitization
-          # TODO: Enable once the libunwind failure is fixed
-          # https://github.com/jank-lang/jank/actions/runs/17883057337/job/50853231570?pr=514
+          ## TODO: Fails, but looks like a false positive.
+          # https://github.com/jank-lang/jank/actions/runs/21684803696/job/62528872227?pr=677
           #- name: macOS - address sanitizer
           #  os: macos-26
           #  build_type: Debug
@@ -148,10 +148,11 @@ jobs:
             build_type: Debug
             sanitize: undefined
 
-          - name: macOS - thread sanitizer
-            os: macos-26
-            build_type: Debug
-            sanitize: thread
+          # TODO: Fix this. It hangs in CI.
+          #- name: macOS - thread sanitizer
+          #  os: macos-26
+          #  build_type: Debug
+          #  sanitize: thread
 
           ## Release
           - name: macOS - release

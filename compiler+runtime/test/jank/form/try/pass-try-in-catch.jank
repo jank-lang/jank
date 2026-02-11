@@ -1,0 +1,11 @@
+
+;; Verifies that a full try block works inside a catch block (recovery logic).
+(assert
+ (= :recovered
+    (try
+      (throw :initial)
+      (catch cpp/jank.runtime.object_ref _
+        (try
+          (throw :secondary)
+          (catch cpp/jank.runtime.object_ref _ :recovered))))))
+:success

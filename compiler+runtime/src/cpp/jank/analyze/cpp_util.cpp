@@ -76,6 +76,16 @@ namespace jank::analyze::cpp_util
 
   jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 const ptr_count)
   {
+    /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception
+     * handling since they are distinct types. We use resolve_literal_type to get the
+     * exact type for "char". */
+    static auto const char_literal_type{ resolve_literal_type("char").expect_ok() };
+
+    if(sym == "char")
+    {
+      return apply_pointers(char_literal_type, ptr_count);
+    }
+
     auto const type{ Cpp::GetType(sym) };
     if(type)
     {

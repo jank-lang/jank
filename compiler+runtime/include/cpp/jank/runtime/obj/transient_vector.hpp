@@ -7,15 +7,17 @@ namespace jank::runtime::obj
 {
   using transient_vector_ref = oref<struct transient_vector>;
 
-  struct transient_vector
+  struct transient_vector : object
   {
     static constexpr object_type obj_type{ object_type::transient_vector };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
+                                                    | object_behavior::find };
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_vector;
     using persistent_type_ref = oref<struct persistent_vector>;
 
-    transient_vector() = default;
+    transient_vector();
     transient_vector(transient_vector &&) noexcept = default;
     transient_vector(transient_vector const &) = default;
     transient_vector(runtime::detail::native_persistent_vector const &d);
@@ -23,13 +25,6 @@ namespace jank::runtime::obj
     transient_vector(value_type &&d);
 
     static transient_vector_ref empty();
-
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
 
     /* behavior::countable */
     usize count() const;
@@ -41,19 +36,22 @@ namespace jank::runtime::obj
     persistent_type_ref to_persistent();
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
+    using object::call;
+    object_ref call(object_ref const) const override;
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const idx) const;
-    object_ref get(object_ref const idx, object_ref const fallback) const;
-    object_ref get_entry(object_ref const idx) const;
-    bool contains(object_ref const elem) const;
+    /* behavior::get */
+    object_ref get(object_ref const idx) const override;
+    object_ref get(object_ref const idx, object_ref const fallback) const override;
+    bool contains(object_ref const elem) const override;
+
+    /* behavior::find */
+    object_ref find(object_ref const idx) const override;
 
     transient_vector_ref pop_in_place();
 
     void assert_active() const;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is not thread-safe, but not shared. ***/
     value_type data;
     bool active{ true };
   };

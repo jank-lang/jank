@@ -16,6 +16,7 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/analyze/pass/optimize.hpp>
@@ -28,6 +29,7 @@
 #include <jank/util/scope_exit.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/codegen/processor.hpp>
+#include <jank/codegen/optimize.hpp>
 #include <jank/aot/processor.hpp>
 #include <jank/error/codegen.hpp>
 #include <jank/error/runtime.hpp>
@@ -35,9 +37,6 @@
 
 namespace jank::runtime
 {
-  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  thread_local decltype(context::thread_binding_frames) context::thread_binding_frames{};
-
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   context *__rt_ctx{};
 
@@ -84,7 +83,7 @@ namespace jank::runtime
 
     auto const command_line_args_sym(make_box<obj::symbol>("*command-line-args*"));
     auto const command_line_args_var{ core->intern_var(command_line_args_sym) };
-    command_line_args_var->bind_root(jank_nil());
+    command_line_args_var->bind_root({});
     command_line_args_var->dynamic.store(true);
 
     /* These are not actually interned. They're extra private. */
@@ -174,7 +173,7 @@ namespace jank::runtime
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     bool no_op{ true };
-    object_ref ret{ jank_nil() };
+    object_ref ret{};
     native_vector<object_ref> forms{};
     for(auto const &form : p_prc)
     {
@@ -240,7 +239,7 @@ namespace jank::runtime
         codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
         //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
         auto const code{ cg_prc.declaration_str() };
-        auto module_name{ runtime::to_string(current_module_var->deref()) };
+        auto const module_name{ runtime::to_string(current_module_var->deref()) };
         //aot::processor const aot_prc;
         //auto const res{ aot_prc.compile_object(module_name, code) };
         //if(res.is_err())
@@ -256,6 +255,7 @@ namespace jank::runtime
           throw error::internal_codegen_failure(res);
         }
         auto &partial_tu{ parse_res.get() };
+        codegen::optimize(partial_tu.TheModule.get(), module_name);
         //auto module_name{ runtime::to_string(current_module_var->deref()) };
         write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
       }
@@ -804,7 +804,7 @@ namespace jank::runtime
     }
 
     auto const res(
-      locked_keywords->emplace(s, make_box<obj::keyword>(detail::must_be_interned{}, s)));
+      locked_keywords->emplace(s, make_box<obj::keyword>(runtime::detail::must_be_interned{}, s)));
     return res.first->second;
   }
 
@@ -828,13 +828,12 @@ namespace jank::runtime
           }
 
           auto const var(find_var(first_sym_obj));
-          /* None means it's not a var, so not a macro. No meta means no :macro set. */
-          if(var.is_nil() || var->meta.is_none())
+          if(var.is_nil())
           {
             return typed_o;
           }
 
-          auto const meta(var->meta.unwrap());
+          auto const meta(var->get_meta());
           auto const found_macro(get(meta, intern_keyword("", "macro", true).expect_ok()));
           if(found_macro.is_nil() || !truthy(found_macro))
           {
@@ -842,7 +841,7 @@ namespace jank::runtime
           }
 
           /* TODO: Provide &env. */
-          auto const args(cons(cons(rest(typed_o), jank_nil()), typed_o));
+          auto const args(cons(cons(rest(typed_o), {}), typed_o));
           return apply_to(var->deref(), args);
         }
       },
@@ -897,10 +896,10 @@ namespace jank::runtime
   jtl::string_result<void> context::push_thread_bindings()
   {
     auto bindings(obj::persistent_hash_map::empty());
-    auto &tbfs(thread_binding_frames);
-    if(!tbfs.empty())
+    auto tbfs(thread_binding_frames.rlock());
+    if(!tbfs->empty())
     {
-      bindings = tbfs.front().bindings;
+      bindings = tbfs->front().bindings;
     }
     /* Nothing to preserve, if there are no current bindings. */
     else
@@ -926,11 +925,11 @@ namespace jank::runtime
   context::push_thread_bindings(obj::persistent_hash_map_ref const bindings)
   {
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
-    auto &tbfs(thread_binding_frames);
+    auto tbfs(thread_binding_frames.wlock());
     auto const thread_id{ std::this_thread::get_id() };
-    if(!tbfs.empty())
+    if(!tbfs->empty())
     {
-      frame.bindings = tbfs.front().bindings;
+      frame.bindings = tbfs->front().bindings;
     }
 
     for(auto it(bindings->fresh_seq()); it.is_some(); it = it->next_in_place())
@@ -962,40 +961,40 @@ namespace jank::runtime
       }
     }
 
-    tbfs.push_front(std::move(frame));
+    tbfs->push_front(std::move(frame));
     return ok();
   }
 
   jtl::string_result<void> context::pop_thread_bindings()
   {
-    auto &tbfs(thread_binding_frames);
-    if(tbfs.empty())
+    auto tbfs(thread_binding_frames.wlock());
+    if(tbfs->empty())
     {
       return err("Mismatched thread binding pop");
     }
 
-    tbfs.pop_front();
+    tbfs->pop_front();
 
     return ok();
   }
 
   obj::persistent_hash_map_ref context::get_thread_bindings() const
   {
-    auto const &tbfs(thread_binding_frames);
-    if(tbfs.empty())
+    auto const tbfs(thread_binding_frames.rlock());
+    if(tbfs->empty())
     {
       return obj::persistent_hash_map::empty();
     }
-    return tbfs.front().bindings;
+    return tbfs->front().bindings;
   }
 
   jtl::option<thread_binding_frame> context::current_thread_binding_frame()
   {
-    auto &tbfs(thread_binding_frames);
-    if(tbfs.empty())
+    auto tbfs(thread_binding_frames.rlock());
+    if(tbfs->empty())
     {
       return none;
     }
-    return tbfs.front();
+    return tbfs->front();
   }
 }

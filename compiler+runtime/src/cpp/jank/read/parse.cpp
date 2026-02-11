@@ -635,20 +635,11 @@ namespace jank::read::parse
         using T = typename jtl::decay_t<decltype(typed_val)>::value_type;
         if constexpr(behavior::metadatable<T>)
         {
-          if(typed_val->meta.is_none())
-          {
-            return object_source_info{ typed_val->with_meta(meta_result.expect_ok().unwrap().ptr),
-                                       start_token,
-                                       latest_token };
-          }
-          else
-          {
-            return object_source_info{ typed_val->with_meta(
-                                         merge(typed_val->meta.unwrap(),
-                                               meta_result.expect_ok().unwrap().ptr)),
-                                       start_token,
-                                       latest_token };
-          }
+          return object_source_info{ typed_val->with_meta(
+                                       merge(typed_val->get_meta(),
+                                             meta_result.expect_ok().unwrap().ptr)),
+                                     start_token,
+                                     latest_token };
         }
         else
         {
@@ -1523,7 +1514,7 @@ namespace jank::read::parse
             return err(
               error::internal_parse_failure(util::format("Unsupported collection: {} [{}]",
                                                          typed_form->to_code_string(),
-                                                         object_type_str(typed_form->base.type))));
+                                                         object_type_str(typed_form->type))));
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
@@ -1541,7 +1532,7 @@ namespace jank::read::parse
     }
 
     auto const meta{ runtime::meta(form) };
-    if(meta != jank_nil())
+    if(meta.is_some())
     {
       /* We quote the meta as well, to ensure it doesn't get evaluated.
        * Note that Clojure removes the source info from the meta here. We're keeping it
@@ -1648,7 +1639,7 @@ namespace jank::read::parse
   processor::object_result processor::parse_nil()
   {
     ++token_current;
-    return object_source_info{ jank_nil(), latest_token, latest_token };
+    return object_source_info{ {}, latest_token, latest_token };
   }
 
   processor::object_result processor::parse_boolean()

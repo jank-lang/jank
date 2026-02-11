@@ -8,53 +8,32 @@
 
 namespace jank::runtime::obj
 {
+  transient_vector::transient_vector()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   transient_vector::transient_vector(runtime::detail::native_persistent_vector &&d)
-    : data{ std::move(d).transient() }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d).transient() }
   {
   }
 
   transient_vector::transient_vector(runtime::detail::native_persistent_vector const &d)
-    : data{ d.transient() }
+    : object{ obj_type, obj_behaviors }
+    , data{ d.transient() }
   {
   }
 
   transient_vector::transient_vector(runtime::detail::native_transient_vector &&d)
-    : data{ std::move(d) }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
   {
   }
 
   transient_vector_ref transient_vector::empty()
   {
     return make_box<transient_vector>();
-  }
-
-  bool transient_vector::equal(object const &o) const
-  {
-    /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
-  }
-
-  jtl::immutable_string transient_vector::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void transient_vector::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string transient_vector::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash transient_vector::to_hash() const
-  {
-    /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   usize transient_vector::count() const
@@ -107,7 +86,7 @@ namespace jank::runtime::obj
       auto const i(expect_object<integer>(idx)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
-        return jank_nil();
+        return {};
       }
 
       return data[i];
@@ -139,21 +118,21 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref transient_vector::get_entry(object_ref const idx) const
+  object_ref transient_vector::find(object_ref const idx) const
   {
     if(idx->type == object_type::integer)
     {
       auto const i(expect_object<integer>(idx)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
-        return jank_nil();
+        return {};
       }
       /* TODO: Map entry type? */
       return make_box<persistent_vector>(std::in_place, idx, data[i]);
     }
     else
     {
-      throw std::runtime_error{ util::format("get_entry on a vector must be an integer; found {}",
+      throw std::runtime_error{ util::format("find on a vector must be an integer; found {}",
                                              runtime::to_string(idx)) };
     }
   }

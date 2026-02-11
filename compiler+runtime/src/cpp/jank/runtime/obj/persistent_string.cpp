@@ -8,13 +8,20 @@
 
 namespace jank::runtime::obj
 {
+  persistent_string::persistent_string()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   persistent_string::persistent_string(jtl::immutable_string const &d)
-    : data{ d }
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
   {
   }
 
   persistent_string::persistent_string(jtl::immutable_string &&d)
-    : data{ std::move(d) }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
   {
   }
 
@@ -29,7 +36,7 @@ namespace jank::runtime::obj
     return data == s->data;
   }
 
-  jtl::immutable_string const &persistent_string::to_string() const
+  jtl::immutable_string persistent_string::to_string() const
   {
     return data;
   }
@@ -62,7 +69,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_string::get(object_ref const key) const
   {
-    return get(key, jank_nil());
+    return get(key, {});
   }
 
   object_ref persistent_string::get(object_ref const key, object_ref const fallback) const
@@ -90,11 +97,6 @@ namespace jank::runtime::obj
       return 0 <= i && static_cast<size_t>(i) < data.size();
     }
     return false;
-  }
-
-  object_ref persistent_string::get_entry(object_ref const) const
-  {
-    throw std::runtime_error{ util::format("get_entry not supported on string") };
   }
 
   object_ref persistent_string::nth(object_ref const index) const

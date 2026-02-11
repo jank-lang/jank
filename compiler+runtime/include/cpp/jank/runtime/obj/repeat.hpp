@@ -9,14 +9,15 @@ namespace jank::runtime::obj
   using cons_ref = oref<struct cons>;
   using repeat_ref = oref<struct repeat>;
 
-  struct repeat
+  struct repeat : object
   {
     static constexpr object_type obj_type{ object_type::repeat };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
     static constexpr i64 infinite{ -1 };
 
-    repeat() = default;
+    repeat();
     repeat(object_ref const value);
     repeat(object_ref const count, object_ref const value);
 
@@ -24,14 +25,14 @@ namespace jank::runtime::obj
     static object_ref create(object_ref const count, object_ref const value);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string();
-    void to_string(jtl::string_builder &buff);
-    jtl::immutable_string to_code_string();
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::seqable */
-    repeat_ref seq();
+    repeat_ref seq() const;
     repeat_ref fresh_seq() const;
 
     /* behavior::sequenceable */
@@ -46,11 +47,11 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     repeat_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     object_ref value{};
     object_ref count{};
-    jtl::option<object_ref> meta{};
+    object_ref meta{};
   };
 }

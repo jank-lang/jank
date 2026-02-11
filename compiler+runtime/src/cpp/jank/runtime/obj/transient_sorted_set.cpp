@@ -6,48 +6,26 @@
 
 namespace jank::runtime::obj
 {
+  transient_sorted_set::transient_sorted_set()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   transient_sorted_set::transient_sorted_set(runtime::detail::native_persistent_sorted_set const &d)
-    : data{ d }
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
   {
   }
 
   transient_sorted_set::transient_sorted_set(runtime::detail::native_persistent_sorted_set &&d)
-    : data{ std::move(d) }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
   {
   }
 
   transient_sorted_set_ref transient_sorted_set::empty()
   {
     return make_box<transient_sorted_set>();
-  }
-
-  bool transient_sorted_set::equal(object const &o) const
-  {
-    /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
-  }
-
-  jtl::immutable_string transient_sorted_set::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void transient_sorted_set::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string transient_sorted_set::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash transient_sorted_set::to_hash() const
-  {
-    /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   usize transient_sorted_set::count() const
@@ -70,7 +48,7 @@ namespace jank::runtime::obj
     return make_box<persistent_sorted_set>(data);
   }
 
-  object_ref transient_sorted_set::call(object_ref const elem)
+  object_ref transient_sorted_set::call(object_ref const elem) const
   {
     assert_active();
     auto const found(data.find(elem));
@@ -78,10 +56,10 @@ namespace jank::runtime::obj
     {
       return *found;
     }
-    return jank_nil();
+    return {};
   }
 
-  object_ref transient_sorted_set::call(object_ref const elem, object_ref const fallback)
+  object_ref transient_sorted_set::call(object_ref const elem, object_ref const fallback) const
   {
     assert_active();
     auto const found(data.find(elem));
@@ -92,25 +70,14 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ref transient_sorted_set::get(object_ref const elem)
+  object_ref transient_sorted_set::get(object_ref const elem) const
   {
     return call(elem);
   }
 
-  object_ref transient_sorted_set::get(object_ref const elem, object_ref const fallback)
+  object_ref transient_sorted_set::get(object_ref const elem, object_ref const fallback) const
   {
     return call(elem, fallback);
-  }
-
-  object_ref transient_sorted_set::get_entry(object_ref const elem)
-  {
-    auto found{ call(elem) };
-    if(found == jank_nil())
-    {
-      return found;
-    }
-
-    return make_box<persistent_vector>(std::in_place, found, found);
   }
 
   bool transient_sorted_set::contains(object_ref const elem) const

@@ -46,7 +46,7 @@ namespace jank::compiler_native
       util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
     }
 
-    return jank_nil();
+    return {};
   }
 }
 
