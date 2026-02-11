@@ -21,9 +21,10 @@
   (let [target-ns        (or (some-> ns symbol find-ns) default-ns)
         ;; do the eval, capturing anything on stdout
         {:keys [ret stdout stderr]}
-        (with-capture (fn [] (binding [*ns* target-ns]
-                               ;; the evaluation may change the namespace
-                               [(safe-eval code) *ns*])))
+        (with-capture (fn []
+                        (binding [*ns* target-ns]
+                          ;; the evaluation may change the namespace
+                          [(safe-eval code) *ns*])))
         [success res-ns] ret]
     (cond
       ;; Eval results in error. For now, just report the exception as a value.

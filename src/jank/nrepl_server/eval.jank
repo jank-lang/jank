@@ -63,6 +63,7 @@ namespace nrepl_server::eval
   (+ 1 "a")
 
   (throw "a")
+  (sleep 10000)
 
   clojure.core/*1
   clojure.core/*2

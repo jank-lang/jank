@@ -67,9 +67,11 @@
   [f]
   (let [stdout-handle (start (cpp/box (cpp/value "&*stdout")))
         stderr-handle (start (cpp/box (cpp/value "&*stderr")))
-        ret           (f)]
-    (end stdout-handle)
-    (end stderr-handle)
+        ret           (try
+                        (f)
+                        (finally
+                          (end stdout-handle)
+                          (end stderr-handle)))]
     {:ret    ret
      :stdout (readback stdout-handle)
      :stderr (readback stderr-handle)}))
