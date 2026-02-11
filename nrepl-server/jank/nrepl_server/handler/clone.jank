@@ -1,0 +1,7 @@
+(ns nrepl-server.handler.clone
+  (:require
+   [nrepl-server.handler :refer [handle-message]]))
+
+(defmethod handle-message :clone [_]
+  {:new-session (str (random-uuid))
+   :status [:done]})

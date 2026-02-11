@@ -1,0 +1,71 @@
+(ns nrepl-server.eval)
+
+(cpp/raw "
+namespace nrepl_server::eval
+{
+  using namespace jank;
+  using namespace jank::runtime;
+
+  inline bool safe_eval(const std::string& code)
+  {
+    auto var_1 = __rt_ctx->find_var(\"clojure.core\", \"*1\");
+    auto var_2 = __rt_ctx->find_var(\"clojure.core\", \"*2\");
+    auto var_3 = __rt_ctx->find_var(\"clojure.core\", \"*3\");
+    auto var_e = __rt_ctx->find_var(\"clojure.core\", \"*e\");
+
+    try
+    {
+      auto value = __rt_ctx->eval_string(code).unwrap();
+
+      if (var_2->is_bound()) { var_3->bind_root(var_2->deref()); }
+      if (var_1->is_bound()) { var_2->bind_root(var_1->deref()); }
+      var_1->bind_root(value);
+
+      return true;
+    }
+    catch (error_ref const e)
+    {
+      var_e->bind_root(make_box(e->message));
+    }
+    catch (object_ref const e)
+    {
+      var_e->bind_root(e);
+    }
+    catch(std::exception const &e)
+    {
+      var_e->bind_root(make_box(e.what()));
+    }
+    catch(...)
+    {
+      var_e->bind_root(make_box(\"uncaught exception\"));
+    }
+
+    return false;
+  }
+}")
+
+(defn safe-eval
+  "Evaluate code similar to `eval`, but catch any errors. Returns whether the
+  eval completed successfully. Results can be read on *1 or *e."
+  [code]
+  ;; TODO(jank): Some jank printing functions bypass std::cout/std::cerr which
+  ;; means we can't as easily intercept them. This is unlike java where
+  ;; everything goes through System.out/System.err.
+
+  ;; TODO(jank): We can't catch cpp exceptions from jank code, so any evaluation
+  ;; error will crash the server. Instead we create a safe evaluation wrapper in
+  ;; C++ and catch the exceptions there.
+
+  (cpp/nrepl_server.eval.safe_eval code))
+
+(comment
+  (+ 1 2)
+  (+ 1 "a")
+
+  (throw "a")
+  (sleep 10000)
+
+  clojure.core/*1
+  clojure.core/*2
+  clojure.core/*3
+  clojure.core/*e)

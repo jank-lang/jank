@@ -1,0 +1,14 @@
+(ns nrepl-server.handler.describe
+  (:require
+   [nrepl-server.handler :refer [handle-message]]))
+
+(defmethod handle-message :describe [_]
+  {:aux      {}
+   :ops      {:clone       {}
+              :describe    {}
+              :eval        {}
+              :load-file   {}
+              :lookup      {}
+              :completions {}}
+   :versions {}
+   :status   [:done]})

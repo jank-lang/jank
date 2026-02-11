@@ -1,0 +1,7 @@
+(ns nrepl-server.handler)
+
+(defmulti handle-message #(some-> (get % "op") keyword))
+
+(defmethod handle-message :default [_]
+  ;; Behavior from: https://github.com/nrepl/nrepl/blob/3cc751a/src/clojure/nrepl/server.clj#L111
+  {:status [:error :unknown-op :done]})

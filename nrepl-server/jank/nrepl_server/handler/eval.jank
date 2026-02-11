@@ -1,0 +1,57 @@
+(ns nrepl-server.handler.eval
+  (:require
+   [nrepl-server.handler :refer [handle-message]]
+   [nrepl-server.eval :refer [safe-eval]]
+   [nrepl-server.capture :refer [with-capture]]
+   [nrepl-server.inspect :refer [inspect-str]]))
+
+(def default-ns
+  "The namespace in which evaluation will occur when an invalid or no ns
+  parameter is specified."
+  (create-ns 'user))
+
+;; The user namespace won't include any clojure.core symbols by default, making
+;; it not very useful. Make sure to bring them in on initialization.
+(binding [*ns* default-ns]
+  (clojure.core/refer-clojure))
+
+(defn- do-eval [ns code inspect?]
+  ;; TODO: Once we have threads, we can spawn a background thread to capture and
+  ;; send interleaved output during a long eval.
+  (let [target-ns        (or (some-> ns symbol find-ns) default-ns)
+        ;; do the eval, capturing anything on stdout
+        {:keys [ret stdout stderr]}
+        (with-capture (fn []
+                        (binding [*ns* target-ns]
+                          ;; the evaluation may change the namespace
+                          [(safe-eval code) *ns*])))
+        [success res-ns] ret]
+    (cond
+      ;; Eval results in error. For now, just report the exception as a value.
+      ;; If we return :exception then CIDER will try to load clojure.stacktrace.
+      (not success)
+      {:value  (str *e)
+       :status [:eval-error]}
+
+      ;; Client requests an inspection of the last result.
+      inspect?
+      {:value  (inspect-str *1)
+       :status [:done]}
+
+      ;; Normal eval result.
+      :else
+      [{:out stdout}
+       {:err stderr}
+       {:value  (pr-str *1)
+        :ns     (str res-ns)
+        :status [:done]}])))
+
+(defmethod handle-message :eval [msg]
+  (do-eval (get msg "ns")
+           (get msg "code" "")
+           (some-> (get msg "inspect") parse-boolean)))
+
+(defmethod handle-message :load-file [msg]
+  (do-eval (get msg "ns")
+           (get msg "file" "")
+           false))

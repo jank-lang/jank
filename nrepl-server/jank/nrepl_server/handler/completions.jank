@@ -1,0 +1,39 @@
+(ns nrepl-server.handler.completions
+  (:require
+   [clojure.string :refer [starts-with?]]
+   [nrepl-server.handler :refer [handle-message]]))
+
+(defn- find-str-ns
+  "Lookup a namespace from its string name, returning the namespace or nil if it
+  does not exist."
+  [name]
+  (some-> name symbol find-ns))
+
+(defn- candidate-type
+  "Deduce the type of candidate from an object's metadata."
+  [o]
+  (let [m (meta o)]
+    (cond (:macro m)    :macro
+          (:arglists m) :function
+          :else         :var)))
+
+(defn- vars-candidates
+  "Return candidates for the public vars of the given namespace which start with
+  the given prefix string."
+  [ns prefix]
+  (->>
+   (ns-publics ns)
+   (filter (fn [[k _]] (starts-with? k prefix)))
+   (mapv (fn [[k v]]
+           {:ns        (str ns)
+            :type      (candidate-type v)
+            :candidate (str k)}))))
+
+(defmethod handle-message :completions [msg]
+  (let [ns     (find-str-ns (get msg "ns"))
+        prefix (get msg "prefix")]
+    (if ns
+      ;; TODO: support namespace candidates, interop candidates, etc.
+      {:completions (vars-candidates ns prefix)
+       :status      [:done]}
+      {:status [:done :namespace-not-found]})))
