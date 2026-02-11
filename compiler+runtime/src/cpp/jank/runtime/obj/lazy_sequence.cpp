@@ -2,7 +2,7 @@
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/cons.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/seq.hpp>
@@ -11,53 +11,66 @@
 
 namespace jank::runtime::obj
 {
+  lazy_sequence::lazy_sequence()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   lazy_sequence::lazy_sequence(object_ref const fn)
-    : fn{ fn }
+    : object{ obj_type, obj_behaviors }
+    , fn{ fn }
   {
     jank_debug_assert(fn.is_some());
   }
 
   lazy_sequence::lazy_sequence(object_ref const fn, object_ref const sequence)
-    : fn{ fn }
+    : object{ obj_type, obj_behaviors }
+    , fn{ fn }
     , s{ sequence }
   {
   }
 
   object_ref lazy_sequence::seq() const
   {
-    realize();
-    return s;
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
+    return realize();
   }
 
   lazy_sequence_ref lazy_sequence::fresh_seq() const
   {
-    realize();
-    if(s.is_nil())
+    auto const ret{ realize() };
+    if(ret.is_nil())
     {
       return {};
     }
+
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     auto const r(runtime::fresh_seq(s));
-    jank_debug_assert(r != jank_nil());
+    jank_debug_assert(r.is_some());
     return make_box<lazy_sequence>(jank_nil(), r);
   }
 
   object_ref lazy_sequence::first() const
   {
-    realize();
-    if(s.is_nil())
+    auto const ret{ realize() };
+    if(ret.is_nil())
     {
-      return s;
+      return ret;
     }
+
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     return runtime::first(s);
   }
 
   object_ref lazy_sequence::next() const
   {
-    realize();
-    if(s.is_nil())
+    auto const ret{ realize() };
+    if(ret.is_nil())
     {
       return {};
     }
+
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     auto const n(runtime::next(s));
     return n;
   }
@@ -97,9 +110,9 @@ namespace jank::runtime::obj
     return make_box<cons>(head, seq());
   }
 
-  void lazy_sequence::realize() const
+  object_ref lazy_sequence::realize() const
   {
-    /* TODO: Lock. */
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     force();
     if(sv.is_some())
     {
@@ -111,8 +124,10 @@ namespace jank::runtime::obj
       }
       s = runtime::seq(ls);
     }
+    return s;
   }
 
+  /* XXX: Must be locked when called. */
   void lazy_sequence::force() const
   {
     if(fn.is_some())
@@ -122,17 +137,12 @@ namespace jank::runtime::obj
     }
   }
 
-  void lazy_sequence::lock_and_force() const
-  {
-    /* TODO: Lock */
-    force();
-  }
-
   object_ref lazy_sequence::sval() const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     if(fn.is_some())
     {
-      lock_and_force();
+      force();
     }
     if(sv.is_some())
     {
@@ -150,11 +160,22 @@ namespace jank::runtime::obj
     return ls;
   }
 
+  bool lazy_sequence::is_realized() const
+  {
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
+    return fn.is_some() || sv.is_some();
+  }
+
   lazy_sequence_ref lazy_sequence::with_meta(object_ref const m) const
   {
     auto const ret(make_box<lazy_sequence>(jank_nil(), seq()));
     auto const meta(behavior::detail::validate_meta(m));
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref lazy_sequence::get_meta() const
+  {
+    return meta;
   }
 }

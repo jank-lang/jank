@@ -1,0 +1,4 @@
+(let* [a #cpp "meow"
+       a #cpp 1]
+  (if (= a 1)
+    :success))

@@ -24,16 +24,10 @@ namespace jank::runtime::obj
     this->meta = meta;
   }
 
-  persistent_sorted_map::persistent_sorted_map(jtl::option<object_ref> const &meta, value_type &&d)
-    : parent_type{ meta }
-    , data{ std::move(d) }
-  {
-  }
-
   persistent_sorted_map_ref persistent_sorted_map::empty()
   {
-    static auto const ret(make_box<persistent_sorted_map>());
-    return ret;
+    static persistent_sorted_map const ret;
+    return &ret;
   }
 
   persistent_sorted_map_ref persistent_sorted_map::create_from_seq(object_ref const seq)
@@ -75,7 +69,7 @@ namespace jank::runtime::obj
     {
       return res->second;
     }
-    return jank_nil();
+    return {};
   }
 
   object_ref persistent_sorted_map::get(object_ref const key, object_ref const fallback) const
@@ -88,14 +82,14 @@ namespace jank::runtime::obj
     return fallback;
   }
 
-  object_ref persistent_sorted_map::get_entry(object_ref const key) const
+  object_ref persistent_sorted_map::find(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res != data.end())
     {
       return make_box<persistent_vector>(std::in_place, key, res->second);
     }
-    return jank_nil();
+    return {};
   }
 
   bool persistent_sorted_map::contains(object_ref const key) const

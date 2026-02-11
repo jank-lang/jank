@@ -7,14 +7,15 @@
 namespace jank::runtime::obj
 {
   /* The correct way to create a keyword for normal use is through interning via the RT context. */
-  struct keyword
+  struct keyword : object
   {
     static constexpr object_type obj_type{ object_type::keyword };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
     static constexpr bool pointer_free{ false };
     /* Clojure uses this. No idea. https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Keyword.java */
     static constexpr usize hash_magic{ 0x9e3779b9 };
 
-    keyword() = default;
+    keyword();
     keyword(keyword &&) noexcept = default;
     keyword(keyword const &) = default;
     keyword(runtime::detail::must_be_interned, jtl::immutable_string_view const &s);
@@ -23,11 +24,9 @@ namespace jank::runtime::obj
             jtl::immutable_string_view const &n);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;
@@ -40,12 +39,13 @@ namespace jank::runtime::obj
     jtl::immutable_string const &get_namespace() const;
 
     /* behavior::callable */
-    object_ref call(object_ref const);
-    object_ref call(object_ref const, object_ref const);
+    using object::call;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
 
     bool operator==(keyword const &rhs) const;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
     symbol_ref sym;
   };
 
@@ -80,7 +80,7 @@ namespace std
     bool operator()(jank::runtime::obj::keyword_ref const lhs,
                     jank::runtime::obj::keyword_ref const rhs) const noexcept
     {
-      return lhs == rhs;
+      return lhs.data == rhs.data;
     }
   };
 }

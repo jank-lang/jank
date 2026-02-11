@@ -1,40 +1,19 @@
 #include <jank/runtime/obj/delay.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
+  delay::delay()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   delay::delay(object_ref const fn)
-    : fn{ fn }
+    : object{ obj_type, obj_behaviors }
+    , fn{ fn }
   {
-  }
-
-  bool delay::equal(object const &o) const
-  {
-    return &o == &base;
-  }
-
-  jtl::immutable_string delay::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void delay::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string delay::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash delay::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   object_ref delay::deref()
@@ -65,5 +44,11 @@ namespace jank::runtime::obj
       throw;
     }
     return val;
+  }
+
+  bool delay::is_realized() const
+  {
+    std::lock_guard<std::mutex> const lock{ mutex };
+    return val.is_some();
   }
 }

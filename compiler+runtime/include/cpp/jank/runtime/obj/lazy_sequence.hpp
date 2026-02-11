@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include <jtl/option.hpp>
 
 #include <jank/runtime/object.hpp>
@@ -11,24 +13,23 @@ namespace jank::runtime::obj
   using lazy_sequence_ref = oref<struct lazy_sequence>;
 
   /* TODO: IPending analog, to implement `realized?`. */
-  struct lazy_sequence
+  struct lazy_sequence : object
   {
     static constexpr object_type obj_type{ object_type::lazy_sequence };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    lazy_sequence() = default;
-    lazy_sequence(lazy_sequence &&) noexcept = default;
-    lazy_sequence(lazy_sequence const &) = default;
+    lazy_sequence();
     lazy_sequence(object_ref const fn);
     lazy_sequence(object_ref const fn, object_ref const sequence);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::seqable */
     object_ref seq() const;
@@ -42,25 +43,31 @@ namespace jank::runtime::obj
     /* behavior::sequenceable_in_place */
     //lazy_sequence_ref next_in_place();
 
+    /* behavior::realizable */
+    bool is_realized() const;
+
     /* behavior::metadatable */
     lazy_sequence_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
   private:
     object_ref resolve_fn() const;
     object_ref resolve_seq() const;
 
-    void realize() const;
+    object_ref realize() const;
     void force() const;
     void lock_and_force() const;
     object_ref sval() const;
     object_ref unwrap(object_ref ls) const;
 
   public:
-    /* TODO: Synchronize. */
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
+    object_ref meta;
+
+    /*** XXX: Everything here is thread-safe. ***/
+    mutable std::recursive_mutex mutex;
     mutable object_ref fn{};
     mutable object_ref sv{};
     mutable object_ref s{};
-    jtl::option<object_ref> meta;
   };
 }

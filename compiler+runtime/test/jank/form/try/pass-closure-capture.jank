@@ -1,0 +1,31 @@
+;; Test closure capture in try-catch blocks
+;; Verifies that try-catch correctly captures variables from parent scopes
+
+;; Test: Closure over both function parameter and local variable
+((fn* [a]
+   (let [b 1]
+     (assert
+      (= true
+         (try
+           (throw (= a b))
+           (catch cpp/jank.runtime.object_ref r
+             (assert (= 1 b) "Should capture local variable b")
+             r)))
+      "Should capture both parameter a and local b correctly")))
+  1)
+
+;; Test: Closure over function parameter in catch block
+(assert
+ (= :success
+    ((fn* [fun]
+       (try
+         (fun true)
+         (catch cpp/jank.runtime.object_ref _
+           (fun false))))
+      (fn* [throw?]
+        (if throw?
+          (throw :success)
+          :success))))
+ "Should call function parameter correctly in catch block")
+
+:success

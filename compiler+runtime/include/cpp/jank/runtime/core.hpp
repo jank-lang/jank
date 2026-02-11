@@ -57,6 +57,7 @@ namespace jank::runtime
 
   object_ref atom(object_ref const o);
   object_ref deref(object_ref const o);
+  bool is_realized(object_ref const o);
   object_ref swap_atom(object_ref const atom, object_ref const fn);
   object_ref swap_atom(object_ref const atom, object_ref const fn, object_ref const a1);
   object_ref
@@ -111,4 +112,8 @@ namespace jank::runtime
 
   object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn);
   object_ref remove_watch(object_ref const reference, object_ref const key);
+
+  object_ref future(object_ref const fn);
+  void cancel_future(object_ref const future);
+  bool is_future_cancelled(object_ref const future);
 }

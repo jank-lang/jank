@@ -10,7 +10,8 @@
 namespace jank::runtime::obj
 {
   inst::inst()
-    : value{ std::chrono::system_clock::now() }
+    : object{ obj_type, obj_behaviors }
+    , value{ std::chrono::system_clock::now() }
   {
   }
 
@@ -57,7 +58,8 @@ namespace jank::runtime::obj
 #endif
 
   inst::inst(jtl::immutable_string const &s)
-    : value{ inst_from_string(s) }
+    : object{ obj_type, obj_behaviors }
+    , value{ inst_from_string(s) }
   {
   }
 
@@ -101,11 +103,6 @@ namespace jank::runtime::obj
 
   uhash inst::to_hash() const
   {
-    if(hash)
-    {
-      return hash;
-    }
-
-    return hash = static_cast<uhash>(value.time_since_epoch().count());
+    return static_cast<uhash>(value.time_since_epoch().count());
   }
 }

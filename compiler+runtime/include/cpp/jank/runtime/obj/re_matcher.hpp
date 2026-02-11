@@ -10,23 +10,17 @@ namespace jank::runtime::obj
 {
   using re_matcher_ref = oref<struct re_matcher>;
 
-  struct re_matcher
+  struct re_matcher : object
   {
     static constexpr object_type obj_type{ object_type::re_matcher };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
     re_matcher(re_pattern_ref const re, jtl::immutable_string const &s);
 
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
-
-    object base{ obj_type };
-
+    /*** XXX: Everything here is immutable after initialization. ***/
     re_pattern_ref re;
+    /* TODO: jtl::immutable_string here. */
     std::string match_input{};
     object_ref groups{};
   };

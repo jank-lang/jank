@@ -1,11 +1,19 @@
+#include <pthread.h>
+#include <cxxabi.h>
+
+#include <gc/gc.h>
+
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/behavior/derefable.hpp>
 #include <jank/runtime/behavior/ref_like.hpp>
+#include <jank/runtime/behavior/realizable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/sequence_range.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
+#include <jank/util/scope_exit.hpp>
 
 namespace jank::runtime
 {
@@ -16,7 +24,7 @@ namespace jank::runtime
 
   bool is_nil(object_ref const o)
   {
-    return o == jank_nil();
+    return o.is_nil();
   }
 
   bool is_true(object_ref const o)
@@ -31,7 +39,7 @@ namespace jank::runtime
 
   bool is_some(object_ref const o)
   {
-    return o != jank_nil();
+    return o.is_some();
   }
 
   bool is_string(object_ref const o)
@@ -119,7 +127,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil();
+    return {};
   }
 
   object_ref println(object_ref const args)
@@ -151,7 +159,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil();
+    return {};
   }
 
   object_ref pr(object_ref const args)
@@ -178,7 +186,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil();
+    return {};
   }
 
   object_ref prn(object_ref const args)
@@ -210,7 +218,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil();
+    return {};
   }
 
   obj::persistent_string_ref subs(object_ref const s, object_ref const start)
@@ -294,7 +302,7 @@ namespace jank::runtime
           auto const ns(typed_o->get_namespace());
           if(ns.empty())
           {
-            return jank_nil();
+            return {};
           }
           return make_box<obj::persistent_string>(ns);
         }
@@ -346,13 +354,7 @@ namespace jank::runtime
 
   bool is_callable(object_ref const o)
   {
-    return visit_object(
-      [=](auto const typed_o) -> bool {
-        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
-
-        return std::is_base_of_v<behavior::callable, T>;
-      },
-      o);
+    return (o->behaviors & object_behavior::call) != object_behavior::none;
   }
 
   uhash to_hash(object_ref const o)
@@ -458,7 +460,27 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not derefable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ util::format("not derefable: {}",
+                                                 object_type_str(typed_o->type)) };
+        }
+      },
+      o);
+  }
+
+  bool is_realized(object_ref const o)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> bool {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
+
+        if constexpr(behavior::realizable<T>)
+        {
+          return typed_o->is_realized();
+        }
+        else
+        {
+          throw std::runtime_error{ util::format("not realizable: {}",
+                                                 object_type_str(typed_o->type)) };
         }
       },
       o);
@@ -542,7 +564,7 @@ namespace jank::runtime
     switch(size)
     {
       case 0:
-        return jank_nil();
+        return {};
       case 1:
         {
           return make_box<obj::persistent_string>(match_results[0].str());
@@ -605,7 +627,7 @@ namespace jank::runtime
 
     if(!match_results.suffix().str().empty())
     {
-      return jank_nil();
+      return {};
     }
 
     return smatch_to_vector(match_results);
@@ -621,7 +643,7 @@ namespace jank::runtime
       }
       catch(...)
       {
-        return jank_nil();
+        return {};
       }
     }
     else
@@ -700,5 +722,148 @@ namespace jank::runtime
       reference);
 
     return reference;
+  }
+
+  object_ref future(object_ref const fn)
+  {
+    auto const bindings{ __rt_ctx->thread_binding_frames };
+    auto const ret{ make_box<obj::future>() };
+    /* NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage): False positive. */
+    ret->thread = std::thread{ [=]() {
+      /* GC threads should be explicitly registered so that the GC is prepared to perform
+       * allocations from this thread. Unregistering is equally important. */
+      GC_stack_base sb{};
+      GC_get_stack_base(&sb);
+      GC_register_my_thread(&sb);
+      util::scope_exit const unregister{ []() { GC_unregister_my_thread(); } };
+
+      __rt_ctx->thread_binding_frames = bindings;
+
+      try
+      {
+        auto const res{ dynamic_call(fn) };
+        {
+          auto const locked_state{ ret->state.wlock() };
+          locked_state->status = obj::future_status::done;
+          locked_state->result = res;
+        }
+      }
+      catch(object_ref const o)
+      {
+        auto const locked_state{ ret->state.wlock() };
+        locked_state->status = obj::future_status::done;
+        locked_state->error = o;
+      }
+      catch(std::exception const &e)
+      {
+        auto const locked_state{ ret->state.wlock() };
+        locked_state->status = obj::future_status::done;
+        locked_state->error = make_box(e.what());
+      }
+      /* When we cancel, pthread will implicitly throw this force unwind. We want to intercept
+       * that so we can mark our thread as cancelled. We then rethrow, since pthread is excepting
+       * this to unwind all the way. */
+#ifdef JANK_LINUX_LIKE
+      catch(abi::__forced_unwind const &fu)
+      {
+        auto const locked_state{ ret->state.wlock() };
+        locked_state->status = obj::future_status::cancelled;
+        locked_state->error = make_box("Thread was cancelled.");
+        throw;
+      }
+#endif
+      /* In this case, we don't know what was thrown, but at least we can preserve
+       * the fact that *something* was thrown. */
+      catch(...)
+      {
+        auto const locked_state{ ret->state.wlock() };
+        locked_state->status = obj::future_status::done;
+        locked_state->error = make_box("Unknown exception.");
+        throw;
+      }
+    } };
+    return ret;
+  }
+
+  void cancel_future(object_ref const future)
+  {
+    auto const fut{ try_object<obj::future>(future) };
+
+    /* We need to hold this lock the whole time we're checking, to ensure the thread
+     * doesn't finish while we're here checking. */
+    auto const locked_state{ fut->state.rlock() };
+    if(locked_state->status == obj::future_status::running)
+    {
+      auto const locked_thread{ fut->thread.wlock() };
+      auto const thread_handle{ locked_thread->native_handle() };
+      pthread_cancel(thread_handle);
+    }
+  }
+
+  bool is_future_cancelled(object_ref const future)
+  {
+    auto const fut{ try_object<obj::future>(future) };
+
+    /* We need to hold this lock the whole time we're checking, to ensure the thread
+     * doesn't finish while we're here checking. */
+    auto locked_state{ fut->state.ulock() };
+    switch(locked_state->status)
+    {
+      case obj::future_status::done:
+        return false;
+      case obj::future_status::cancelled:
+        return true;
+      case obj::future_status::running:
+        break;
+    }
+
+#ifdef JANK_MACOS_LIKE
+    /* macOS doesn't have pthread_tryjoin_np, or any similar function, so we can only
+     * pthread_join, to get the cancellation state, which is blocking. So we just have
+     * to return false here. That means it's not currently possible to know if a thread
+     * was cancelled on macOS. */
+    return false;
+#else
+    void *thread_state{};
+    int code{};
+
+    /* It's undefined behavior to have multiple threads join a single thread object at the
+     * same time, so we need to synchronize here. */
+    {
+      auto const locked_thread{ fut->thread.wlock() };
+      auto const thread_handle{ locked_thread->native_handle() };
+      code = pthread_tryjoin_np(thread_handle, &thread_state);
+    }
+
+    switch(code)
+    {
+      /* We'll get this if two threads are joining each other. Not cancelled. */
+      case EDEADLK:
+      /* We'll get this if the thread is not joinable. Not cancelled. */
+      case EINVAL:
+      /* We'll get this if no matching thread is found. Not cancelled. */
+      case ESRCH:
+      /* We'll get this if the thread has not yet been terminated. Not cancelled. */
+      case EBUSY:
+        return false;
+      /* No error. */
+      default:
+        break;
+    }
+
+    /* Our join succeeded, but we can only join once, so we need to save the result here
+     * so we can short circuit next time. */
+    auto const write_locked_state{ locked_state.moveFromUpgradeToWrite() };
+    if(thread_state == PTHREAD_CANCELED)
+    {
+      write_locked_state->status = obj::future_status::cancelled;
+      return true;
+    }
+    else
+    {
+      write_locked_state->status = obj::future_status::done;
+      return false;
+    }
+#endif
   }
 }

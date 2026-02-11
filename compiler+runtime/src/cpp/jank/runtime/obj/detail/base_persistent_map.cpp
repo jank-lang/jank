@@ -1,5 +1,4 @@
 #include <jank/runtime/obj/detail/base_persistent_map.hpp>
-#include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/make_box.hpp>
@@ -9,15 +8,22 @@
 namespace jank::runtime::obj::detail
 {
   template <typename PT, typename ST, typename V>
-  base_persistent_map<PT, ST, V>::base_persistent_map(jtl::option<object_ref> const &meta)
-    : meta{ meta }
+  base_persistent_map<PT, ST, V>::base_persistent_map()
+    : object{ PT::obj_type, PT::obj_behaviors }
+  {
+  }
+
+  template <typename PT, typename ST, typename V>
+  base_persistent_map<PT, ST, V>::base_persistent_map(object_ref const meta)
+    : object{ PT::obj_type, PT::obj_behaviors }
+    , meta{ meta }
   {
   }
 
   template <typename PT, typename ST, typename V>
   bool base_persistent_map<PT, ST, V>::equal(object const &o) const
   {
-    if(&o == &base)
+    if(&o == static_cast<object const *>(this))
     {
       return true;
     }
@@ -118,13 +124,8 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   uhash base_persistent_map<PT, ST, V>::to_hash() const
   {
-    if(hash)
-    {
-      return hash;
-    }
-
-    return hash = hash::unordered(static_cast<PT const *>(this)->data.begin(),
-                                  static_cast<PT const *>(this)->data.end());
+    return hash::unordered(static_cast<PT const *>(this)->data.begin(),
+                           static_cast<PT const *>(this)->data.end());
   }
 
   template <typename PT, typename ST, typename V>
@@ -194,6 +195,12 @@ namespace jank::runtime::obj::detail
     auto ret(make_box<PT>(static_cast<PT const *>(this)->data));
     ret->meta = meta;
     return ret;
+  }
+
+  template <typename PT, typename ST, typename V>
+  object_ref base_persistent_map<PT, ST, V>::get_meta() const
+  {
+    return meta;
   }
 
   template struct base_persistent_map<persistent_array_map,

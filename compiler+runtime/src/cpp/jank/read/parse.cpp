@@ -20,6 +20,45 @@ namespace jank::read::parse
 {
   using namespace jank::runtime;
 
+  static bool is_utf8_char(jtl::immutable_string const &s)
+  {
+    if(s.size() == 1)
+    {
+      return static_cast<unsigned char>(s[0]) <= 0x7F;
+    }
+    else if(s.size() == 2)
+    {
+      auto const is_char0_utf8{ static_cast<unsigned char>(s[0]) >= 0xC0
+                                && static_cast<unsigned char>(s[0]) <= 0xDF };
+      auto const is_char1_utf8{ static_cast<unsigned char>(s[1]) >= 0x80
+                                && static_cast<unsigned char>(s[1]) <= 0xBF };
+      return is_char0_utf8 && is_char1_utf8;
+    }
+    else if(s.size() == 3)
+    {
+      auto const is_char0_utf8{ static_cast<unsigned char>(s[0]) >= 0xE0
+                                && static_cast<unsigned char>(s[0]) <= 0xEF };
+      auto const is_char1_utf8{ static_cast<unsigned char>(s[1]) >= 0x80
+                                && static_cast<unsigned char>(s[1]) <= 0xBF };
+      auto const is_char2_utf8{ static_cast<unsigned char>(s[2]) >= 0x80
+                                && static_cast<unsigned char>(s[2]) <= 0xBF };
+      return is_char0_utf8 && is_char1_utf8 && is_char2_utf8;
+    }
+    else if(s.size() == 4)
+    {
+      auto const is_char0_utf8{ static_cast<unsigned char>(s[0]) >= 0xF0
+                                && static_cast<unsigned char>(s[0]) <= 0xF7 };
+      auto const is_char1_utf8{ static_cast<unsigned char>(s[1]) >= 0x80
+                                && static_cast<unsigned char>(s[1]) <= 0xBF };
+      auto const is_char2_utf8{ static_cast<unsigned char>(s[2]) >= 0x80
+                                && static_cast<unsigned char>(s[2]) <= 0xBF };
+      auto const is_char3_utf8{ static_cast<unsigned char>(s[3]) >= 0x80
+                                && static_cast<unsigned char>(s[3]) <= 0xBF };
+      return is_char0_utf8 && is_char1_utf8 && is_char2_utf8 && is_char3_utf8;
+    }
+    return false;
+  }
+
   jtl::result<jtl::immutable_string, char_parse_error>
   parse_character_in_base(jtl::immutable_string const &char_literal, int const base)
   {
@@ -493,6 +532,8 @@ namespace jank::read::parse
     ++token_current;
     auto const sv(std::get<jtl::immutable_string_view>(start_token.data));
     auto const character(get_char_from_literal(sv));
+    static constexpr auto const min_unicode_str_length{ 3 };
+    static constexpr auto const max_unicode_str_length{ 5 };
 
     if(character.is_none())
     {
@@ -511,6 +552,19 @@ namespace jank::read::parse
         return object_source_info{ make_box<obj::character>(char_bytes.expect_ok()),
                                    start_token,
                                    start_token };
+      }
+      else if(sv[0] == '\\' && sv.size() >= min_unicode_str_length
+              && sv.size() <= max_unicode_str_length)
+      {
+        auto const str(sv.substr(1));
+
+        if(!is_utf8_char(str))
+        {
+          auto const err("Invalid Unicode character.");
+          return error::parse_invalid_unicode({ start_token.start, latest_token.end }, err);
+        }
+
+        return object_source_info{ make_box<obj::character>(str), start_token, start_token };
       }
 
       return error::parse_invalid_character(start_token);
@@ -581,20 +635,11 @@ namespace jank::read::parse
         using T = typename jtl::decay_t<decltype(typed_val)>::value_type;
         if constexpr(behavior::metadatable<T>)
         {
-          if(typed_val->meta.is_none())
-          {
-            return object_source_info{ typed_val->with_meta(meta_result.expect_ok().unwrap().ptr),
-                                       start_token,
-                                       latest_token };
-          }
-          else
-          {
-            return object_source_info{ typed_val->with_meta(
-                                         merge(typed_val->meta.unwrap(),
-                                               meta_result.expect_ok().unwrap().ptr)),
-                                       start_token,
-                                       latest_token };
-          }
+          return object_source_info{ typed_val->with_meta(
+                                       merge(typed_val->get_meta(),
+                                             meta_result.expect_ok().unwrap().ptr)),
+                                     start_token,
+                                     latest_token };
         }
         else
         {
@@ -1254,7 +1299,7 @@ namespace jank::read::parse
     object_ref ret{};
 
     /* Specials, such as fn*, let*, try, etc. just get left alone. We can't qualify them more. */
-    if(__rt_ctx->an_prc.is_special(form))
+    if(analyze::processor::is_special(form))
     {
       ret = make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("quote"), form);
     }
@@ -1417,7 +1462,7 @@ namespace jank::read::parse
             return err(
               error::internal_parse_failure(util::format("Unsupported collection: {} [{}]",
                                                          typed_form->to_code_string(),
-                                                         object_type_str(typed_form->base.type))));
+                                                         object_type_str(typed_form->type))));
           }
         },
         /* For anything else, do nothing special aside from quoting. Hopefully that works. */
@@ -1435,7 +1480,7 @@ namespace jank::read::parse
     }
 
     auto const meta{ runtime::meta(form) };
-    if(meta != jank_nil())
+    if(meta.is_some())
     {
       /* We quote the meta as well, to ensure it doesn't get evaluated.
        * Note that Clojure removes the source info from the meta here. We're keeping it
@@ -1542,7 +1587,7 @@ namespace jank::read::parse
   processor::object_result processor::parse_nil()
   {
     ++token_current;
-    return object_source_info{ jank_nil(), latest_token, latest_token };
+    return object_source_info{ {}, latest_token, latest_token };
   }
 
   processor::object_result processor::parse_boolean()

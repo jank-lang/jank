@@ -163,6 +163,7 @@ namespace jtl
     constexpr immutable_string(immutable_string const &s, size_type const pos, size_type count)
     {
       auto const s_length(s.size());
+      /* NOLINTNEXTLINE(readability-inconsistent-ifelse-braces): False positive. */
       if(s_length < pos) [[unlikely]]
       {
         throw std::runtime_error{ "position outside of string" };

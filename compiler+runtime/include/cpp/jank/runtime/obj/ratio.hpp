@@ -24,9 +24,10 @@ namespace jank::runtime::obj
   using real_ref = oref<struct real>;
   using ratio_ref = oref<struct ratio>;
 
-  struct ratio
+  struct ratio : object
   {
     static constexpr object_type obj_type{ object_type::ratio };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ true };
 
     ratio(ratio &&) noexcept = default;
@@ -37,11 +38,10 @@ namespace jank::runtime::obj
     static object_ref create(native_big_integer const &, native_big_integer const &);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    using object::to_string;
+    void to_string(jtl::string_builder &buff) const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;
@@ -53,7 +53,7 @@ namespace jank::runtime::obj
     i64 to_integer() const;
     f64 to_real() const;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
     ratio_data data;
   };
 

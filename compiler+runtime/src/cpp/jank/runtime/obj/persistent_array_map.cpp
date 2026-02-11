@@ -21,7 +21,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_array_map::persistent_array_map(jtl::option<object_ref> const &meta, value_type &&d)
+  persistent_array_map::persistent_array_map(object_ref const meta, value_type &&d)
     : parent_type{ meta }
     , data{ std::move(d) }
   {
@@ -37,14 +37,14 @@ namespace jank::runtime::obj
     return data.find(key).unwrap_or(fallback);
   }
 
-  object_ref persistent_array_map::get_entry(object_ref const key) const
+  object_ref persistent_array_map::find(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res.is_some())
     {
       return make_box<persistent_vector>(std::in_place, key, res.unwrap());
     }
-    return jank_nil();
+    return {};
   }
 
   bool persistent_array_map::contains(object_ref const key) const

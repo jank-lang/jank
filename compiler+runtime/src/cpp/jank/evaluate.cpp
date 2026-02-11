@@ -8,7 +8,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/meta.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/jit/processor.hpp>
@@ -73,9 +73,12 @@ namespace jank::evaluate
     else if constexpr(std::same_as<T, expr::try_>)
     {
       walk(expr.body, f);
-      if(expr.catch_body.is_some())
+      if(!expr.catch_bodies.empty())
       {
-        walk(expr.catch_body.unwrap().body, f);
+        for(auto const &catch_body : expr.catch_bodies)
+        {
+          walk(catch_body.body, f);
+        }
       }
       if(expr.finally_body.is_some())
       {
@@ -160,7 +163,7 @@ namespace jank::evaluate
     arity.fn_ctx->param_count = arity.params.size();
     for(auto const &sym : arity.params)
     {
-      arity.frame->locals.emplace(sym, local_binding{ sym, sym->name, none, arity.frame });
+      arity.frame->locals[sym].emplace_back(sym, sym->name, none, arity.frame);
     }
 
     auto const expr_type{ cpp_util::expression_type(expr) };
@@ -187,7 +190,9 @@ namespace jank::evaluate
         auto found_local(expr->frame->find_local_or_capture(form.name));
         if(found_local && !found_local.unwrap().crossed_fns.empty())
         {
-          arity.frame->captures[form.name] = *found_local.unwrap().binding;
+          arity.frame->captures.emplace(
+            form.name,
+            local_capture{ *found_local.unwrap().binding, found_local.unwrap().binding });
         }
       }
     });
@@ -262,12 +267,18 @@ namespace jank::evaluate
     return ret;
   }
 
+  /* If we're directly evaluating the value for a def, this will be set to the var the
+   * def has interned. This is used when creating deferred functions, since they need
+   * to know the var which owns the function they're proxying. */
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  thread_local var_ref current_def_var;
+
   object_ref eval(expr::def_ref const expr)
   {
     auto var(__rt_ctx->intern_var(expr->name).expect_ok());
-    var->meta = expr->name->meta;
+    auto const meta(expr->name->meta);
+    var->set_meta(meta);
 
-    auto const meta(var->meta.unwrap_or(jank_nil()));
     auto const dynamic(get(meta, __rt_ctx->intern_keyword("dynamic").expect_ok()));
     var->set_dynamic(truthy(dynamic));
 
@@ -276,8 +287,19 @@ namespace jank::evaluate
       return var;
     }
 
-    auto const evaluated_value(eval(expr->value.unwrap()));
-    var->bind_root(evaluated_value);
+    auto const value{ expr->value.unwrap() };
+    if(value->kind == analyze::expression_kind::function)
+    {
+      current_def_var = var;
+      auto const evaluated_value(eval(value));
+      var->bind_root(evaluated_value);
+      current_def_var = jank_nil();
+    }
+    else
+    {
+      auto const evaluated_value(eval(value));
+      var->bind_root(evaluated_value);
+    }
 
     return var;
   }
@@ -304,144 +326,98 @@ namespace jank::evaluate
 
     try
     {
-      return visit_object(
-        [&](auto const typed_source) -> object_ref {
-          using T = typename decltype(typed_source)::value_type;
+      native_vector<object_ref> arg_vals;
+      arg_vals.reserve(expr->arg_exprs.size());
+      for(auto const &arg_expr : expr->arg_exprs)
+      {
+        arg_vals.emplace_back(eval(arg_expr));
+      }
 
-          if constexpr(std::is_base_of_v<behavior::callable, T>)
+      switch(arg_vals.size())
+      {
+        case 0:
+          return dynamic_call(source);
+        case 1:
+          return dynamic_call(source, arg_vals[0]);
+        case 2:
+          return dynamic_call(source, arg_vals[0], arg_vals[1]);
+        case 3:
+          return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2]);
+        case 4:
+          return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3]);
+        case 5:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4]);
+        case 6:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4],
+                              arg_vals[5]);
+        case 7:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4],
+                              arg_vals[5],
+                              arg_vals[6]);
+        case 8:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4],
+                              arg_vals[5],
+                              arg_vals[6],
+                              arg_vals[7]);
+        case 9:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4],
+                              arg_vals[5],
+                              arg_vals[6],
+                              arg_vals[7],
+                              arg_vals[8]);
+        case 10:
+          return dynamic_call(source,
+                              arg_vals[0],
+                              arg_vals[1],
+                              arg_vals[2],
+                              arg_vals[3],
+                              arg_vals[4],
+                              arg_vals[5],
+                              arg_vals[6],
+                              arg_vals[7],
+                              arg_vals[8],
+                              arg_vals[9]);
+        default:
           {
-            native_vector<object_ref> arg_vals;
-            arg_vals.reserve(expr->arg_exprs.size());
-            for(auto const &arg_expr : expr->arg_exprs)
-            {
-              arg_vals.emplace_back(eval(arg_expr));
-            }
-
-            switch(arg_vals.size())
-            {
-              case 0:
-                return dynamic_call(source);
-              case 1:
-                return dynamic_call(source, arg_vals[0]);
-              case 2:
-                return dynamic_call(source, arg_vals[0], arg_vals[1]);
-              case 3:
-                return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2]);
-              case 4:
-                return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3]);
-              case 5:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4]);
-              case 6:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4],
-                                    arg_vals[5]);
-              case 7:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4],
-                                    arg_vals[5],
-                                    arg_vals[6]);
-              case 8:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4],
-                                    arg_vals[5],
-                                    arg_vals[6],
-                                    arg_vals[7]);
-              case 9:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4],
-                                    arg_vals[5],
-                                    arg_vals[6],
-                                    arg_vals[7],
-                                    arg_vals[8]);
-              case 10:
-                return dynamic_call(source,
-                                    arg_vals[0],
-                                    arg_vals[1],
-                                    arg_vals[2],
-                                    arg_vals[3],
-                                    arg_vals[4],
-                                    arg_vals[5],
-                                    arg_vals[6],
-                                    arg_vals[7],
-                                    arg_vals[8],
-                                    arg_vals[9]);
-              default:
-                {
-                  return dynamic_call(source,
-                                      arg_vals[0],
-                                      arg_vals[1],
-                                      arg_vals[2],
-                                      arg_vals[3],
-                                      arg_vals[4],
-                                      arg_vals[5],
-                                      arg_vals[6],
-                                      arg_vals[7],
-                                      arg_vals[8],
-                                      arg_vals[9],
-                                      try_object<obj::persistent_list>(arg_vals[10]));
-                }
-            }
+            return dynamic_call(source,
+                                arg_vals[0],
+                                arg_vals[1],
+                                arg_vals[2],
+                                arg_vals[3],
+                                arg_vals[4],
+                                arg_vals[5],
+                                arg_vals[6],
+                                arg_vals[7],
+                                arg_vals[8],
+                                arg_vals[9],
+                                try_object<obj::persistent_list>(arg_vals[10]));
           }
-          else if constexpr(std::same_as<T, obj::persistent_hash_set>
-                            || std::same_as<T, obj::persistent_vector>
-                            || std::same_as<T, obj::transient_vector>)
-          {
-            auto const s(expr->arg_exprs.size());
-            if(s != 1)
-            {
-              throw std::runtime_error{
-                util::format("Invalid call with {} args to: {}", s, typed_source->to_string())
-              };
-            }
-            return typed_source->call(eval(expr->arg_exprs[0]));
-          }
-          else if constexpr(std::same_as<T, obj::keyword>
-                            || std::same_as<T, obj::persistent_hash_map>
-                            || std::same_as<T, obj::persistent_array_map>
-                            || std::same_as<T, obj::transient_hash_set>)
-          {
-            auto const s(expr->arg_exprs.size());
-            switch(s)
-            {
-              case 1:
-                return typed_source->call(eval(expr->arg_exprs[0]));
-              case 2:
-                return typed_source->call(eval(expr->arg_exprs[0]), eval(expr->arg_exprs[1]));
-              default:
-                throw std::runtime_error{
-                  util::format("Invalid call with {} args to: {}", s, typed_source->to_string())
-                };
-            }
-          }
-          else
-          {
-            throw std::runtime_error{ util::format("Invalid call with {} args to: {}",
-                                                   expr->arg_exprs.size(),
-                                                   typed_source->to_string()) };
-          }
-        },
-        source);
+      }
     }
     catch(error_ref const e)
     {
@@ -473,7 +449,7 @@ namespace jank::evaluate
     runtime::detail::native_persistent_list const npl{ ret.rbegin(), ret.rend() };
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_list>(expr->meta.unwrap(), jtl::move(npl));
+      return make_box<obj::persistent_list>(expr->meta, jtl::move(npl));
     }
     else
     {
@@ -490,7 +466,7 @@ namespace jank::evaluate
     }
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_vector>(expr->meta.unwrap(), ret.persistent());
+      return make_box<obj::persistent_vector>(expr->meta, ret.persistent());
     }
     else
     {
@@ -513,7 +489,7 @@ namespace jank::evaluate
 
       if(expr->meta.is_some())
       {
-        return make_box<obj::persistent_array_map>(expr->meta.unwrap(),
+        return make_box<obj::persistent_array_map>(expr->meta,
                                                    runtime::detail::in_place_unique{},
                                                    array_box,
                                                    size * 2);
@@ -535,7 +511,7 @@ namespace jank::evaluate
 
       if(expr->meta.is_some())
       {
-        return make_box<obj::persistent_hash_map>(expr->meta.unwrap(), trans.persistent());
+        return make_box<obj::persistent_hash_map>(expr->meta, trans.persistent());
       }
       else
       {
@@ -553,7 +529,7 @@ namespace jank::evaluate
     }
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_hash_set>(expr->meta.unwrap(), jtl::move(ret).persistent());
+      return make_box<obj::persistent_hash_set>(expr->meta, jtl::move(ret).persistent());
     }
     else
     {
@@ -568,6 +544,11 @@ namespace jank::evaluate
   }
 
   object_ref eval(expr::function_ref const expr)
+  {
+    return eval(expr, "");
+  }
+
+  object_ref eval(expr::function_ref const expr, jtl::immutable_string const &)
   {
     profile::timer const timer{ util::format("eval jit function {}", expr->name) };
     auto const &module(
@@ -603,12 +584,26 @@ namespace jank::evaluate
         util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
       }
 
-      __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
-      auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
-      clang::Value v;
-      __rt_ctx->jit_prc.eval_string({ expr_str.data(), expr_str.size() }, &v);
-      auto ret{ try_object<obj::jit_function>(v.convertTo<runtime::object *>()) };
-      return ret;
+      if(current_def_var.is_some()
+         && util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
+      {
+        auto const ret{ make_box<obj::deferred_cpp_function>(expr->meta,
+                                                             cg_prc.declaration_str(),
+                                                             cg_prc.expression_str()
+                                                               + ".erase().data",
+                                                             current_def_var) };
+        current_def_var = jank_nil();
+        return ret;
+      }
+      else
+      {
+        __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
+        auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
+        clang::Value v;
+        __rt_ctx->jit_prc.eval_string({ expr_str.data(), expr_str.size() }, &v);
+        auto const ret{ try_object<obj::jit_function>(v.convertTo<runtime::object *>()) };
+        return ret;
+      }
     }
   }
 
@@ -632,7 +627,7 @@ namespace jank::evaluate
 
   object_ref eval(expr::do_ref const expr)
   {
-    object_ref ret{ jank_nil() };
+    object_ref ret{};
     for(auto const &form : expr->values)
     {
       ret = eval(form);
@@ -661,7 +656,7 @@ namespace jank::evaluate
     {
       return eval(expr->else_.unwrap());
     }
-    return jank_nil();
+    return {};
   }
 
   object_ref eval(expr::throw_ref const expr)
@@ -675,28 +670,7 @@ namespace jank::evaluate
 
   object_ref eval(expr::try_ref const expr)
   {
-    util::scope_exit const finally{ [=]() {
-      if(expr->finally_body)
-      {
-        eval(expr->finally_body.unwrap());
-      }
-    } };
-
-    if(!expr->catch_body)
-    {
-      return eval(expr->body);
-    }
-    try
-    {
-      return eval(expr->body);
-    }
-    catch(object_ref const e)
-    {
-      return dynamic_call(eval(wrap_expression(expr->catch_body.unwrap().body,
-                                               "catch",
-                                               { expr->catch_body.unwrap().sym })),
-                          e);
-    }
+    return dynamic_call(eval(wrap_expression(expr, "try", {})));
   }
 
   object_ref eval(expr::case_ref const expr)
@@ -707,7 +681,7 @@ namespace jank::evaluate
   object_ref eval(expr::cpp_raw_ref const expr)
   {
     __rt_ctx->jit_prc.eval_string(expr->code);
-    return runtime::jank_nil();
+    return {};
   }
 
   object_ref eval(expr::cpp_type_ref const)

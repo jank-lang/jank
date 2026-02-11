@@ -9,12 +9,13 @@ namespace jank::runtime::obj
   using persistent_string_ref = oref<struct persistent_string>;
   using persistent_string_sequence_ref = oref<struct persistent_string_sequence>;
 
-  struct persistent_string
+  struct persistent_string : object
   {
     static constexpr object_type obj_type{ object_type::persistent_string };
+    static constexpr object_behavior obj_behaviors{ object_behavior::get };
     static constexpr bool pointer_free{ false };
 
-    persistent_string() = default;
+    persistent_string();
     persistent_string(persistent_string &&) noexcept = default;
     persistent_string(persistent_string const &) = default;
     persistent_string(jtl::immutable_string const &d);
@@ -22,16 +23,16 @@ namespace jank::runtime::obj
 
     static persistent_string_ref empty()
     {
-      static auto const ret(make_box<persistent_string>());
-      return ret;
+      static persistent_string const ret;
+      return &ret;
     }
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string const &to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;
@@ -39,11 +40,10 @@ namespace jank::runtime::obj
     /* behavior::comparable extended */
     i64 compare(persistent_string const &) const;
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const key) const;
-    object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref const key) const;
-    bool contains(object_ref const key) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
 
     /* behavior::indexable */
     object_ref nth(object_ref const index) const;
@@ -64,7 +64,7 @@ namespace jank::runtime::obj
     obj::persistent_string_sequence_ref seq() const;
     obj::persistent_string_sequence_ref fresh_seq() const;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
     jtl::immutable_string data;
   };
 }

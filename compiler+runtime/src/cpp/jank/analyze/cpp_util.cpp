@@ -26,12 +26,16 @@ namespace jank::analyze::cpp_util
     static_cast<void>(runtime::__rt_ctx->jit_prc.interpreter->Parse("1"));
   }
 
-  jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> const scope)
+  jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> scope)
   {
     if(!scope)
     {
       return ok();
     }
+
+    /* We might have a type alias, which will not be considered a template, so we want
+     * to get to the bottom of it. */
+    scope = Cpp::GetUnderlyingScope(scope);
 
     /* If we have a template specialization and we want to access one of its members, we
      * need to be sure that it's fully instantiated. If we don't, the member won't
@@ -72,6 +76,16 @@ namespace jank::analyze::cpp_util
 
   jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 const ptr_count)
   {
+    /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception
+     * handling since they are distinct types. We use resolve_literal_type to get the
+     * exact type for "char". */
+    static auto const char_literal_type{ resolve_literal_type("char").expect_ok() };
+
+    if(sym == "char")
+    {
+      return apply_pointers(char_literal_type, ptr_count);
+    }
+
     auto const type{ Cpp::GetType(sym) };
     if(type)
     {

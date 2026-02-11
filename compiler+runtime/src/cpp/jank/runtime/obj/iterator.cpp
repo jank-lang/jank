@@ -1,17 +1,23 @@
 #include <jank/runtime/obj/iterator.hpp>
-#include <jank/runtime/behavior/callable.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/visit.hpp>
 
 namespace jank::runtime::obj
 {
+  iterator::iterator()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   iterator::iterator(object_ref const fn, object_ref const start)
-    : fn{ fn }
+    : object{ obj_type, obj_behaviors }
+    , fn{ fn }
     , current{ start }
   {
   }
 
-  iterator_ref iterator::seq()
+  iterator_ref iterator::seq() const
   {
     return this;
   }
@@ -28,24 +34,26 @@ namespace jank::runtime::obj
 
   iterator_ref iterator::next() const
   {
-    if(cached_next.is_some())
+    iterator_ref const n{ cached_next.load() ?: iterator_ref{} };
+    if(n.is_some())
     {
-      return cached_next;
+      return n;
     }
 
     auto const next(dynamic_call(fn, current));
     auto const ret(make_box<iterator>(fn, next));
-    cached_next = ret;
+    cached_next.store(reinterpret_cast<iterator *>(ret.data));
 
     return ret;
   }
 
   iterator_ref iterator::next_in_place()
   {
-    if(cached_next.is_some())
+    iterator_ref const n{ cached_next.load() ?: iterator_ref{} };
+    if(n.is_some())
     {
-      current = cached_next->first();
-      cached_next = jank_nil();
+      current = n->first();
+      cached_next.store(reinterpret_cast<iterator *>(jank_nil().data));
     }
     else
     {
@@ -61,24 +69,24 @@ namespace jank::runtime::obj
     return runtime::sequence_equal(this, &o);
   }
 
-  void iterator::to_string(jtl::string_builder &buff)
+  void iterator::to_string(jtl::string_builder &buff) const
   {
     runtime::to_string(seq(), buff);
   }
 
-  jtl::immutable_string iterator::to_string()
+  jtl::immutable_string iterator::to_string() const
   {
     return runtime::to_string(seq());
   }
 
-  jtl::immutable_string iterator::to_code_string()
+  jtl::immutable_string iterator::to_code_string() const
   {
     return runtime::to_code_string(seq());
   }
 
   uhash iterator::to_hash() const
   {
-    return hash::ordered(&base);
+    return hash::ordered(this);
   }
 
   cons_ref iterator::conj(object_ref const head) const

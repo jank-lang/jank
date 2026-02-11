@@ -5,8 +5,14 @@
 
 namespace jank::runtime::obj
 {
+  cons::cons()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   cons::cons(object_ref const head, object_ref const tail)
-    : head{ head }
+    : object{ obj_type, obj_behaviors }
+    , head{ head }
     , tail{ tail }
   {
   }
@@ -58,12 +64,15 @@ namespace jank::runtime::obj
 
   uhash cons::to_hash() const
   {
-    if(hash != 0)
+    auto h{ hash.load() };
+    if(h != 0)
     {
-      return hash;
+      return h;
     }
 
-    return hash = hash::ordered(&base);
+    h = hash::ordered(this);
+    hash.store(h);
+    return h;
   }
 
   cons_ref cons::conj(object_ref const head) const
@@ -77,5 +86,10 @@ namespace jank::runtime::obj
     auto ret(fresh_seq());
     ret->meta = meta;
     return ret;
+  }
+
+  object_ref cons::get_meta() const
+  {
+    return meta;
   }
 }

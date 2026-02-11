@@ -4,10 +4,11 @@
 
 #include <jtl/ptr.hpp>
 
-#include <jank/runtime/obj/symbol.hpp>
-#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
+#include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/obj/transient_vector.hpp>
 
 namespace jank::detail
 {
@@ -66,6 +67,17 @@ namespace jank::detail
     return make_box(p.string());
   }
 
+  template <typename T>
+  object_ref to_runtime_data(native_deque<T> const &s)
+  {
+    runtime::detail::native_transient_vector ret;
+    for(auto const &e : s)
+    {
+      ret.push_back(to_runtime_data(e));
+    }
+    return make_box<obj::persistent_vector>(ret.persistent());
+  }
+
   template <typename K, typename V, typename H, typename C>
   object_ref to_runtime_data(native_unordered_map<K, V, H, C> const &m)
   {
@@ -99,5 +111,16 @@ namespace jank::detail
   object_ref to_runtime_data(T const * const m)
   {
     return m;
+  }
+
+  template <typename T>
+  object_ref to_runtime_data(native_vector<T> const &m)
+  {
+    runtime::detail::native_transient_vector ret;
+    for(auto const &e : m)
+    {
+      ret.push_back(to_runtime_data(e));
+    }
+    return make_box<obj::persistent_vector>(ret.persistent());
   }
 }

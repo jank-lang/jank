@@ -8,11 +8,12 @@ namespace jank::runtime::obj
   using nil_ref = oref<struct nil>;
   using persistent_list_ref = oref<struct persistent_list>;
 
-  struct persistent_list
+  struct persistent_list : object
   {
     using value_type = runtime::detail::native_persistent_list;
 
     static constexpr object_type obj_type{ object_type::persistent_list };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -22,42 +23,45 @@ namespace jank::runtime::obj
     static persistent_list_ref create(persistent_list_ref const s);
     static persistent_list_ref create(nil_ref const s);
 
-    persistent_list() = default;
+    persistent_list();
     persistent_list(persistent_list &&) noexcept = default;
     persistent_list(persistent_list const &) = default;
     persistent_list(value_type const &d);
-    persistent_list(jtl::option<object_ref> const &meta, value_type const &d);
+    persistent_list(object_ref const meta, value_type const &d);
 
     /* TODO: This is broken when `args` is a value_type list we're looking to wrap in another list.
      * It just uses the copy ctor. */
     template <typename... Args>
     persistent_list(std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type, obj_behaviors }
+      , data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
     persistent_list(object_ref const meta, std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type, obj_behaviors }
+      , data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
     }
 
     static persistent_list_ref empty()
     {
-      static auto const ret(make_box<persistent_list>());
-      return ret;
+      static persistent_list const ret;
+      return &ret;
     }
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::metadatable */
     persistent_list_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /* behavior::seqable */
     obj::persistent_list_ref seq() const;
@@ -80,8 +84,8 @@ namespace jank::runtime::obj
     object_ref peek() const;
     persistent_list_ref pop() const;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
     value_type data;
-    jtl::option<object_ref> meta;
+    object_ref meta;
   };
 }

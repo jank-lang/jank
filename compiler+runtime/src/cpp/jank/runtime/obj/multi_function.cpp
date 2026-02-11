@@ -5,6 +5,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
@@ -13,63 +14,34 @@ namespace jank::runtime::obj
                                  object_ref const dispatch,
                                  object_ref const default_,
                                  object_ref const hierarchy)
-    : dispatch{ dispatch }
+    : object{ obj_type, obj_behaviors }
+    , dispatch{ dispatch }
     , default_dispatch_value{ default_ }
     , hierarchy{ hierarchy }
-    , method_table{ persistent_hash_map::empty() }
-    , method_cache{ persistent_hash_map::empty() }
-    , prefer_table{ persistent_hash_map::empty() }
     , name{ try_object<symbol>(name) }
+    , method_cache{ persistent_hash_map::empty() }
+    , method_table{ persistent_hash_map::empty() }
+    , prefer_table{ persistent_hash_map::empty() }
   {
   }
 
-  bool multi_function::equal(object const &rhs) const
-  {
-    return &base == &rhs;
-  }
-
-  jtl::immutable_string multi_function::to_string()
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void multi_function::to_string(jtl::string_builder &buff)
-  {
-    util::format_to(buff,
-                    "#object [{} {} {}]",
-                    name->to_string(),
-                    object_type_str(base.type),
-                    &base);
-  }
-
-  jtl::immutable_string multi_function::to_code_string()
-  {
-    return to_string();
-  }
-
-  uhash multi_function::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
-  }
-
-  object_ref multi_function::call()
+  object_ref multi_function::call() const
   {
     return dynamic_call(get_fn(dynamic_call(dispatch)));
   }
 
-  object_ref multi_function::call(object_ref const a1)
+  object_ref multi_function::call(object_ref const a1) const
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1)), a1);
   }
 
-  object_ref multi_function::call(object_ref const a1, object_ref const a2)
+  object_ref multi_function::call(object_ref const a1, object_ref const a2) const
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2)), a1, a2);
   }
 
-  object_ref multi_function::call(object_ref const a1, object_ref const a2, object_ref const a3)
+  object_ref
+  multi_function::call(object_ref const a1, object_ref const a2, object_ref const a3) const
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3)), a1, a2, a3);
   }
@@ -77,7 +49,7 @@ namespace jank::runtime::obj
   object_ref multi_function::call(object_ref const a1,
                                   object_ref const a2,
                                   object_ref const a3,
-                                  object_ref const a4)
+                                  object_ref const a4) const
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4)), a1, a2, a3, a4);
   }
@@ -86,7 +58,7 @@ namespace jank::runtime::obj
                                   object_ref const a2,
                                   object_ref const a3,
                                   object_ref const a4,
-                                  object_ref const a5)
+                                  object_ref const a5) const
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5)), a1, a2, a3, a4, a5);
   }
@@ -96,7 +68,7 @@ namespace jank::runtime::obj
                                   object_ref const a3,
                                   object_ref const a4,
                                   object_ref const a5,
-                                  object_ref const a6)
+                                  object_ref const a6) const
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6)),
                         a1,
@@ -113,7 +85,7 @@ namespace jank::runtime::obj
                                   object_ref const a4,
                                   object_ref const a5,
                                   object_ref const a6,
-                                  object_ref const a7)
+                                  object_ref const a7) const
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7)),
                         a1,
@@ -132,7 +104,7 @@ namespace jank::runtime::obj
                                   object_ref const a5,
                                   object_ref const a6,
                                   object_ref const a7,
-                                  object_ref const a8)
+                                  object_ref const a8) const
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8)),
                         a1,
@@ -153,7 +125,7 @@ namespace jank::runtime::obj
                                   object_ref const a6,
                                   object_ref const a7,
                                   object_ref const a8,
-                                  object_ref const a9)
+                                  object_ref const a9) const
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8, a9)),
                         a1,
@@ -176,7 +148,7 @@ namespace jank::runtime::obj
                                   object_ref const a7,
                                   object_ref const a8,
                                   object_ref const a9,
-                                  object_ref const a10)
+                                  object_ref const a10) const
   {
     return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)),
                         a1,
@@ -191,14 +163,9 @@ namespace jank::runtime::obj
                         a10);
   }
 
-  object_ref multi_function::this_object_ref()
-  {
-    return &this->base;
-  }
-
   multi_function_ref multi_function::reset()
   {
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     cached_hierarchy = jank_nil();
     method_table = prefer_table = method_cache = persistent_hash_map::empty();
     return this;
@@ -206,7 +173,7 @@ namespace jank::runtime::obj
 
   persistent_hash_map_ref multi_function::reset_cache()
   {
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     cached_hierarchy = hierarchy;
     method_cache = method_table;
     return method_cache;
@@ -215,7 +182,7 @@ namespace jank::runtime::obj
   multi_function_ref
   multi_function::add_method(object_ref const dispatch_val, object_ref const method)
   {
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
 
     method_table = method_table->assoc(dispatch_val, method);
     reset_cache();
@@ -224,7 +191,7 @@ namespace jank::runtime::obj
 
   multi_function_ref multi_function::remove_method(object_ref const dispatch_val)
   {
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
     method_table = method_table->dissoc(dispatch_val);
     reset_cache();
     return this;
@@ -232,7 +199,7 @@ namespace jank::runtime::obj
 
   multi_function_ref multi_function::prefer_method(object_ref const x, object_ref const y)
   {
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
 
     if(is_preferred(deref(hierarchy), y, x))
     {
@@ -255,7 +222,7 @@ namespace jank::runtime::obj
                                     object_ref const y) const
   {
     auto const x_prefs(prefer_table->get(x));
-    if(x_prefs != jank_nil() && expect_object<persistent_hash_set>(x_prefs)->contains(y))
+    if(x_prefs.is_some() && expect_object<persistent_hash_set>(x_prefs)->contains(y))
     {
       return true;
     }
@@ -264,7 +231,7 @@ namespace jank::runtime::obj
       __rt_ctx->intern_var("clojure.core", "parents").expect_ok()->deref()
     };
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y))); it != jank_nil();
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y))); it.is_some();
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, x, first(it)))
@@ -273,7 +240,7 @@ namespace jank::runtime::obj
       }
     }
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x))); it != jank_nil();
+    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x))); it.is_some();
         it = next_in_place(it))
     {
       if(is_preferred(hierarchy, first(it), y))
@@ -300,10 +267,10 @@ namespace jank::runtime::obj
     return is_preferred(hierarchy, x, y) || is_a(hierarchy, x, y);
   }
 
-  object_ref multi_function::get_fn(object_ref const dispatch_val)
+  object_ref multi_function::get_fn(object_ref const dispatch_val) const
   {
     auto const target(get_method(dispatch_val));
-    if(target == jank_nil())
+    if(target.is_nil())
     {
       throw std::runtime_error{ util::format("No method in multimethod '{}' for dispatch value: {}",
                                              runtime::to_string(name),
@@ -312,27 +279,27 @@ namespace jank::runtime::obj
     return target;
   }
 
-  object_ref multi_function::get_method(object_ref const dispatch_val)
+  object_ref multi_function::get_method(object_ref const dispatch_val) const
   {
     if(cached_hierarchy != deref(hierarchy))
     {
-      reset_cache();
+      const_cast<multi_function *>(this)->reset_cache();
     }
 
     auto target(method_cache->get(dispatch_val));
-    if(target != jank_nil())
+    if(target.is_some())
     {
       return target;
     }
 
-    return find_and_cache_best_method(dispatch_val);
+    return const_cast<multi_function *>(this)->find_and_cache_best_method(dispatch_val);
   }
 
   object_ref multi_function::find_and_cache_best_method(object_ref const dispatch_val)
   {
     /* TODO: Clojure uses a RW lock here for better parallelism. */
-    std::lock_guard<std::recursive_mutex> const locked{ data_lock };
-    object_ref best_value{ jank_nil() };
+    std::lock_guard<std::recursive_mutex> const lock{ mutex };
+    object_ref best_value{};
     persistent_vector_sequence_ref best_entry{};
 
     for(auto it(method_table->fresh_seq()); it.is_some(); it = it->next_in_place())
@@ -367,7 +334,7 @@ namespace jank::runtime::obj
     else
     {
       best_value = method_table->get(default_dispatch_value);
-      if(best_value == jank_nil())
+      if(best_value.is_nil())
       {
         return best_value;
       }

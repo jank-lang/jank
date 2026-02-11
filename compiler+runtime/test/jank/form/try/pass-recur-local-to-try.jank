@@ -1,0 +1,11 @@
+
+;; Verifies that recur works when the target loop is INSIDE the try block.
+(assert
+ (= :success
+    (try
+      (loop [i 0]
+        (if (< i 3)
+          (recur (inc i))
+          :success))
+      (catch cpp/jank.runtime.object_ref e :fail))))
+:success

@@ -6,22 +6,16 @@ namespace jank::runtime::obj
 {
   using array_chunk_ref = oref<struct array_chunk>;
 
-  struct array_chunk
+  struct array_chunk : object
   {
     static constexpr object_type obj_type{ object_type::array_chunk };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
-    array_chunk() = default;
+    array_chunk();
     array_chunk(native_vector<object_ref> const &buffer);
     array_chunk(native_vector<object_ref> const &buffer, usize offset);
     array_chunk(native_vector<object_ref> &&buffer, usize offset);
-
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
 
     /* behavior::chunk_like */
     array_chunk_ref chunk_next() const;
@@ -30,7 +24,7 @@ namespace jank::runtime::obj
     object_ref nth(object_ref const index) const;
     object_ref nth(object_ref const index, object_ref const fallback) const;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
     native_vector<object_ref> buffer;
     usize offset{};
   };

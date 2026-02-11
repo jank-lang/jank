@@ -1,0 +1,3 @@
+(let* [f :success
+       f (fn* [] f)]
+  (f))

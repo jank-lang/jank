@@ -9,18 +9,26 @@
 
 namespace jank::runtime::obj
 {
+  persistent_vector::persistent_vector()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   persistent_vector::persistent_vector(value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
   {
   }
 
   persistent_vector::persistent_vector(value_type const &d)
-    : data{ d }
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
   {
   }
 
-  persistent_vector::persistent_vector(jtl::option<object_ref> const &meta, value_type &&d)
-    : data{ std::move(d) }
+  persistent_vector::persistent_vector(object_ref const meta, value_type &&d)
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
     , meta{ meta }
   {
   }
@@ -55,13 +63,13 @@ namespace jank::runtime::obj
 
   persistent_vector_ref persistent_vector::empty()
   {
-    static auto const ret(make_box<persistent_vector>());
-    return ret;
+    static persistent_vector const ret;
+    return &ret;
   }
 
   bool persistent_vector::equal(object const &o) const
   {
-    if(&o == &base)
+    if(&o == this)
     {
       return true;
     }
@@ -110,12 +118,7 @@ namespace jank::runtime::obj
 
   uhash persistent_vector::to_hash() const
   {
-    if(hash != 0)
-    {
-      return hash;
-    }
-
-    return hash = hash::ordered(data.begin(), data.end());
+    return hash::ordered(data.begin(), data.end());
   }
 
   i64 persistent_vector::compare(object const &o) const
@@ -194,9 +197,14 @@ namespace jank::runtime::obj
     return ret;
   }
 
+  object_ref persistent_vector::get_meta() const
+  {
+    return meta;
+  }
+
   object_ref persistent_vector::get(object_ref const key) const
   {
-    return get(key, jank_nil());
+    return get(key, {});
   }
 
   object_ref persistent_vector::get(object_ref const key, object_ref const fallback) const
@@ -216,21 +224,21 @@ namespace jank::runtime::obj
     }
   }
 
-  object_ref persistent_vector::get_entry(object_ref const key) const
+  object_ref persistent_vector::find(object_ref const key) const
   {
     if(key->type == object_type::integer)
     {
       auto const i(expect_object<integer>(key)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
-        return jank_nil();
+        return {};
       }
       /* TODO: Map entry type? */
       return make_box<persistent_vector>(std::in_place, key, data[i]);
     }
     else
     {
-      return jank_nil();
+      return {};
     }
   }
 
@@ -281,7 +289,7 @@ namespace jank::runtime::obj
   {
     if(data.empty())
     {
-      return jank_nil();
+      return {};
     }
 
     return data[data.size() - 1];

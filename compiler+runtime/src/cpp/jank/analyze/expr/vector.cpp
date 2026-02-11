@@ -9,7 +9,7 @@ namespace jank::analyze::expr
                  local_frame_ptr const frame,
                  bool const needs_box,
                  native_vector<expression_ref> &&data_exprs,
-                 jtl::option<runtime::object_ref> const &meta)
+                 runtime::object_ref const meta)
     : expression{ expr_kind, position, frame, needs_box }
     , data_exprs{ std::move(data_exprs) }
     , meta{ meta }

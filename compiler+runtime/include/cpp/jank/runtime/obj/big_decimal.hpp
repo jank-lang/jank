@@ -32,12 +32,13 @@ namespace jank::runtime::obj
 
   struct ratio;
 
-  struct big_decimal
+  struct big_decimal : object
   {
     static constexpr object_type obj_type{ object_type::big_decimal };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ true };
 
-    big_decimal() = default;
+    big_decimal();
     big_decimal(big_decimal &&) noexcept = default;
     big_decimal(big_decimal const &) = default;
 
@@ -48,11 +49,11 @@ namespace jank::runtime::obj
     explicit big_decimal(ratio const &);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;
@@ -63,7 +64,7 @@ namespace jank::runtime::obj
 
     static object_ref create(jtl::immutable_string const &);
 
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
     native_big_decimal data{};
   };
 

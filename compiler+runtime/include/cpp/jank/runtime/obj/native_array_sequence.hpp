@@ -7,9 +7,10 @@ namespace jank::runtime::obj
   using native_array_sequence_ref = oref<struct native_array_sequence>;
   using cons_ref = oref<struct cons>;
 
-  struct native_array_sequence
+  struct native_array_sequence : object
   {
     static constexpr object_type obj_type{ object_type::native_array_sequence };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -21,17 +22,18 @@ namespace jank::runtime::obj
 
     template <typename... Args>
     native_array_sequence(object_ref const first, Args const &...rest)
-      : arr{ make_array_box<object_ref>(first, rest...) }
+      : object{ obj_type, obj_behaviors }
+      , arr{ make_array_box<object_ref>(first, rest...) }
       , size{ sizeof...(Args) + 1 }
     {
     }
 
     /* behavior::object_like */
-    bool equal(object const &o) const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_string() const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &o) const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::seqable */
     native_array_sequence_ref seq();
@@ -48,7 +50,7 @@ namespace jank::runtime::obj
     /* behavior::sequenceable_in_place */
     native_array_sequence_ref next_in_place();
 
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
     jtl::ptr<object_ref> arr{};
     usize index{};
     usize size{};

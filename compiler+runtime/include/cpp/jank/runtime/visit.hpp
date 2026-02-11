@@ -40,6 +40,7 @@
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/jit_closure.hpp>
+#include <jank/runtime/obj/deferred_cpp_function.hpp>
 #include <jank/runtime/obj/multi_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/native_pointer_wrapper.hpp>
@@ -52,6 +53,7 @@
 #include <jank/runtime/obj/atom.hpp>
 #include <jank/runtime/obj/volatile.hpp>
 #include <jank/runtime/obj/delay.hpp>
+#include <jank/runtime/obj/future.hpp>
 #include <jank/runtime/obj/reduced.hpp>
 #include <jank/runtime/obj/tagged_literal.hpp>
 #include <jank/runtime/obj/re_pattern.hpp>
@@ -71,7 +73,7 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_object(F const &fn, oref<T const> const not_erased, Args &&...args)
   {
-    return fn(const_cast<T *>(&not_erased->base), std::forward<Args>(args)...);
+    return fn(const_cast<T *>(not_erased.data), std::forward<Args>(args)...);
   }
 
   template <typename F, typename... Args>
@@ -183,6 +185,8 @@ namespace jank::runtime
         return fn(expect_object<obj::jit_function>(erased), std::forward<Args>(args)...);
       case object_type::jit_closure:
         return fn(expect_object<obj::jit_closure>(erased), std::forward<Args>(args)...);
+      case object_type::deferred_cpp_function:
+        return fn(expect_object<obj::deferred_cpp_function>(erased), std::forward<Args>(args)...);
       case object_type::multi_function:
         return fn(expect_object<obj::multi_function>(erased), std::forward<Args>(args)...);
       case object_type::atom:
@@ -193,6 +197,8 @@ namespace jank::runtime
         return fn(expect_object<obj::reduced>(erased), std::forward<Args>(args)...);
       case object_type::delay:
         return fn(expect_object<obj::delay>(erased), std::forward<Args>(args)...);
+      case object_type::future:
+        return fn(expect_object<obj::future>(erased), std::forward<Args>(args)...);
       case object_type::ns:
         return fn(expect_object<ns>(erased), std::forward<Args>(args)...);
       case object_type::var:

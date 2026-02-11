@@ -1,0 +1,20 @@
+;; Test empty bodies in try/catch/finally
+
+;; 1. Empty try body -> nil
+(assert (nil? (try)))
+
+;; 2. Empty try body with catch -> nil
+(assert (nil? (try (catch cpp/jank.runtime.object_ref _))))
+
+;; 3. Empty try body with finally -> nil
+(let [side-effect (atom false)]
+  (assert (nil? (try (finally (reset! side-effect true)))))
+  (assert @side-effect))
+
+;; 4. Empty catch body -> nil
+(assert (nil? (try (throw :ex) (catch cpp/jank.runtime.object_ref _))))
+
+;; 5. Empty finally body
+(assert (= :val (try :val (finally))))
+
+:success

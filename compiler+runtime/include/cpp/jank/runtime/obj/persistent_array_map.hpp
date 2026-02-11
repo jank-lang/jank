@@ -16,6 +16,8 @@ namespace jank::runtime::obj
                                        runtime::detail::native_array_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_array_map };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
+                                                    | object_behavior::find };
     static constexpr u8 max_size{ value_type::max_size };
     using parent_type = obj::detail::base_persistent_map<persistent_array_map,
                                                          persistent_array_map_sequence,
@@ -27,7 +29,7 @@ namespace jank::runtime::obj
     persistent_array_map(persistent_array_map const &) = default;
     persistent_array_map(value_type &&d);
     persistent_array_map(value_type const &d);
-    persistent_array_map(jtl::option<object_ref> const &meta, value_type &&d);
+    persistent_array_map(object_ref const meta, value_type &&d);
 
     template <typename... Args>
     persistent_array_map(runtime::detail::in_place_unique, Args &&...args)
@@ -44,8 +46,8 @@ namespace jank::runtime::obj
 
     static persistent_array_map_ref empty()
     {
-      static auto const ret(make_box<persistent_array_map>());
-      return ret;
+      static persistent_array_map const ret;
+      return &ret;
     }
 
     using base_persistent_map::base_persistent_map;
@@ -67,23 +69,27 @@ namespace jank::runtime::obj
                                             sizeof...(args));
     }
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const key) const;
-    object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref const key) const;
-    bool contains(object_ref const key) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
+
+    /* behavior::find */
+    object_ref find(object_ref const key) const override;
 
     /* behavior::associatively_writable */
     object_ref assoc(object_ref const key, object_ref const val) const;
     persistent_array_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
-    object_ref call(object_ref const, object_ref const) const;
+    using object::call;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
 
     /* behavior::transientable */
     transient_array_map_ref to_transient() const;
 
+    /*** XXX: Everything here is immutable after initialization. ***/
     value_type data{};
   };
 }

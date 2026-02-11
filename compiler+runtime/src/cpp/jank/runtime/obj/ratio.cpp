@@ -77,7 +77,8 @@ namespace jank::runtime::obj
   }
 
   ratio::ratio(ratio_data const &data)
-    : data{ data }
+    : object{ obj_type, obj_behaviors }
+    , data{ data }
   {
   }
 
@@ -125,18 +126,6 @@ namespace jank::runtime::obj
   void ratio::to_string(jtl::string_builder &buff) const
   {
     buff(data.numerator)('/')(data.denominator);
-  }
-
-  jtl::immutable_string ratio::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  jtl::immutable_string ratio::to_code_string() const
-  {
-    return to_string();
   }
 
   uhash ratio::to_hash() const

@@ -11,48 +11,26 @@
 
 namespace jank::runtime::obj
 {
+  transient_array_map::transient_array_map()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   transient_array_map::transient_array_map(runtime::detail::native_array_map &&d)
-    : data{ std::move(d) }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
   {
   }
 
   transient_array_map::transient_array_map(runtime::detail::native_array_map const &d)
-    : data{ d }
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
   {
   }
 
   transient_array_map_ref transient_array_map::empty()
   {
     return make_box<transient_array_map>();
-  }
-
-  bool transient_array_map::equal(object const &o) const
-  {
-    /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
-  }
-
-  void transient_array_map::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string transient_array_map::to_string() const
-  {
-    jtl::string_builder buff{};
-    to_string(buff);
-    return buff.release();
-  }
-
-  jtl::immutable_string transient_array_map::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash transient_array_map::to_hash() const
-  {
-    /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   u8 transient_array_map::count() const
@@ -72,14 +50,14 @@ namespace jank::runtime::obj
     return data.find(key).unwrap_or(fallback);
   }
 
-  object_ref transient_array_map::get_entry(object_ref const key) const
+  object_ref transient_array_map::find(object_ref const key) const
   {
     auto const res(data.find(key));
     if(res.is_some())
     {
       return make_box<persistent_vector>(std::in_place, key, res.unwrap());
     }
-    return jank_nil();
+    return {};
   }
 
   bool transient_array_map::contains(object_ref const key) const

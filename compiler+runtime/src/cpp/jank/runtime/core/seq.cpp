@@ -2,9 +2,8 @@
 #include <random>
 
 #include <jank/runtime/visit.hpp>
-#include <jank/runtime/behavior/associatively_readable.hpp>
 #include <jank/runtime/behavior/associatively_writable.hpp>
-#include <jank/runtime/behavior/callable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/behavior/conjable.hpp>
 #include <jank/runtime/behavior/countable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
@@ -116,7 +115,7 @@ namespace jank::runtime
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
-        return (behavior::associatively_readable<T> && behavior::associatively_writable<T>);
+        return (typed_o->has_behavior(object_behavior::get) && behavior::associatively_writable<T>);
       },
       o);
   }
@@ -568,121 +567,64 @@ namespace jank::runtime
 
   object_ref get(object_ref const m, object_ref const key)
   {
-    return visit_object(
-      [&](auto const typed_m) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
-
-        if constexpr(behavior::associatively_readable<T>)
-        {
-          return typed_m->get(key);
-        }
-        else
-        {
-          return jank_nil();
-        }
-      },
-      m);
+    return m->get(key);
   }
 
   object_ref get(object_ref const m, object_ref const key, object_ref const fallback)
   {
-    return visit_object(
-      [&](auto const typed_m) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
-
-        if constexpr(behavior::associatively_readable<T>)
-        {
-          return typed_m->get(key, fallback);
-        }
-        else
-        {
-          return fallback;
-        }
-      },
-      m);
+    return m->get(key, fallback);
   }
 
   object_ref get_in(object_ref const m, object_ref const keys)
   {
-    return visit_object(
-      [&](auto const typed_m) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
-
-        if constexpr(behavior::associatively_readable<T>)
-        {
-          return visit_seqable(
-            [&](auto const typed_keys) -> object_ref {
-              object_ref ret{ typed_m };
-              for(auto const &e : make_sequence_range(typed_keys))
-              {
-                ret = get(ret, e);
-              }
-              return ret;
-            },
-            keys);
-        }
-        else
-        {
-          return jank_nil();
-        }
-      },
-      m);
+    if(m->has_behavior(object_behavior::get))
+    {
+      return visit_seqable(
+        [&](auto const typed_keys) -> object_ref {
+          object_ref ret{ m };
+          for(auto const &e : make_sequence_range(typed_keys))
+          {
+            ret = get(ret, e);
+          }
+          return ret;
+        },
+        keys);
+    }
+    else
+    {
+      return {};
+    }
   }
 
   object_ref get_in(object_ref const m, object_ref const keys, object_ref const fallback)
   {
-    return visit_object(
-      [&](auto const typed_m) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
+    if(m->has_behavior(object_behavior::get))
+    {
+      return visit_seqable(
+        [&](auto const typed_keys) -> object_ref {
+          object_ref ret{ m };
+          for(auto const &e : make_sequence_range(typed_keys))
+          {
+            ret = get(ret, e);
+          }
 
-        if constexpr(behavior::associatively_readable<T>)
-        {
-          return visit_seqable(
-            [&](auto const typed_keys) -> object_ref {
-              object_ref ret{ typed_m };
-              for(auto const &e : make_sequence_range(typed_keys))
-              {
-                ret = get(ret, e);
-              }
-
-              if(ret == jank_nil())
-              {
-                return fallback;
-              }
-              return ret;
-            },
-            keys);
-        }
-        else
-        {
-          return jank_nil();
-        }
-      },
-      m);
+          if(ret.is_nil())
+          {
+            return fallback;
+          }
+          return ret;
+        },
+        keys);
+    }
+    else
+    {
+      return {};
+    }
   }
 
   object_ref find(object_ref const s, object_ref const key)
   {
-    if(s.is_nil())
-    {
-      return s;
-    }
-
-    return visit_object(
-      [](auto const typed_s, object_ref const key) -> object_ref {
-        using S = typename jtl::decay_t<decltype(typed_s)>::value_type;
-
-        if constexpr(behavior::associatively_readable<S>)
-        {
-          return typed_s->get_entry(key);
-        }
-        else
-        {
-          return jank_nil();
-        }
-      },
-      s,
-      key);
+    return s->find(key);
   }
 
   bool contains(object_ref const s, object_ref const key)
@@ -692,20 +634,14 @@ namespace jank::runtime
       return false;
     }
 
-    return visit_object(
-      [&](auto const typed_s) -> bool {
-        using S = typename jtl::decay_t<decltype(typed_s)>::value_type;
-
-        if constexpr(behavior::associatively_readable<S> || behavior::set_like<S>)
-        {
-          return typed_s->contains(key);
-        }
-        else
-        {
-          return false;
-        }
-      },
-      s);
+    if(s->has_behavior(object_behavior::get))
+    {
+      return s->contains(key);
+    }
+    else
+    {
+      return false;
+    }
   }
 
   object_ref merge(object_ref const m, object_ref const other)
@@ -809,7 +745,7 @@ namespace jank::runtime
     {
       throw std::runtime_error{ util::format("index out of bounds: {}", index) };
     }
-    else if(o == jank_nil())
+    else if(o.is_nil())
     {
       return o;
     }
@@ -846,7 +782,7 @@ namespace jank::runtime
   object_ref nth(object_ref const o, object_ref const idx, object_ref const fallback)
   {
     auto const index(to_int(idx));
-    if(index < 0 || o == jank_nil())
+    if(index < 0 || o.is_nil())
     {
       return fallback;
     }
@@ -882,7 +818,7 @@ namespace jank::runtime
 
   object_ref peek(object_ref const o)
   {
-    if(o == jank_nil())
+    if(o.is_nil())
     {
       return o;
     }
@@ -905,7 +841,7 @@ namespace jank::runtime
 
   object_ref pop(object_ref const o)
   {
-    if(o == jank_nil())
+    if(o.is_nil())
     {
       return o;
     }
@@ -939,7 +875,7 @@ namespace jank::runtime
         }
         else
         {
-          return jank_nil();
+          return {};
         }
       },
       o);
@@ -1107,7 +1043,7 @@ namespace jank::runtime
   {
     auto const &buffer(try_object<obj::chunk_buffer>(buff));
     buffer->append(val);
-    return jank_nil();
+    return {};
   }
 
   object_ref chunk(object_ref const buff)

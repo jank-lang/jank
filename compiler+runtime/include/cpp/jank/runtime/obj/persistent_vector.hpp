@@ -9,31 +9,35 @@ namespace jank::runtime::obj
   using persistent_vector_ref = oref<struct persistent_vector>;
   using persistent_vector_sequence_ref = oref<struct persistent_vector_sequence>;
 
-  struct persistent_vector
+  struct persistent_vector : object
   {
     static constexpr object_type obj_type{ object_type::persistent_vector };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
+                                                    | object_behavior::find };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
     using transient_type = transient_vector;
     using value_type = runtime::detail::native_persistent_vector;
 
-    persistent_vector() = default;
+    persistent_vector();
     persistent_vector(persistent_vector &&) noexcept = default;
     persistent_vector(persistent_vector const &) = default;
     persistent_vector(value_type &&d);
     persistent_vector(value_type const &d);
-    persistent_vector(jtl::option<object_ref> const &meta, value_type &&d);
+    persistent_vector(object_ref const meta, value_type &&d);
 
     template <typename... Args>
     persistent_vector(std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type, obj_behaviors }
+      , data{ std::forward<Args>(args)... }
     {
     }
 
     template <typename... Args>
     persistent_vector(object_ref const meta, std::in_place_t, Args &&...args)
-      : data{ std::forward<Args>(args)... }
+      : object{ obj_type, obj_behaviors }
+      , data{ std::forward<Args>(args)... }
       , meta{ meta }
     {
     }
@@ -43,11 +47,11 @@ namespace jank::runtime::obj
     static persistent_vector_ref empty();
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::comparable */
     i64 compare(object const &) const;
@@ -57,6 +61,7 @@ namespace jank::runtime::obj
 
     /* behavior::metadatable */
     persistent_vector_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /* behavior::seqable */
     persistent_vector_sequence_ref seq() const;
@@ -65,11 +70,13 @@ namespace jank::runtime::obj
     /* behavior::countable */
     usize count() const;
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const key) const;
-    object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref const key) const;
-    bool contains(object_ref const key) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
+
+    /* behavior::find */
+    object_ref find(object_ref const key) const override;
 
     /* behavior::associatively_writable */
     persistent_vector_ref assoc(object_ref const key, object_ref const val) const;
@@ -87,14 +94,14 @@ namespace jank::runtime::obj
     object_ref nth(object_ref const index, object_ref const fallback) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
+    using object::call;
+    object_ref call(object_ref const) const override;
 
     /* behavior::transientable */
     obj::transient_vector_ref to_transient() const;
 
-    object base{ obj_type };
+    /*** XXX: Everything here is immutable after initialization. ***/
     value_type data;
-    jtl::option<object_ref> meta;
-    mutable uhash hash{};
+    object_ref meta;
   };
 }
