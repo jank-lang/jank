@@ -17,8 +17,8 @@ namespace jank::error
   /* TODO: Rename internal failures to have correct prefix. i.e. lex_internal_failure. */
   enum class kind : u8
   {
-    /* Represents errors that, when encountered during parsing, prevent the parser
-     * from gracefully consuming the rest of the syntactic form. */
+    /* These min & max represent insuppressible reeader errors that, when encountered during
+     * parsing, prevent the parser from gracefully consuming the rest of the syntactic form. */
     suppressed_reader_error_min,
     lex_unexpected_eof = suppressed_reader_error_min,
     lex_expecting_whitespace,

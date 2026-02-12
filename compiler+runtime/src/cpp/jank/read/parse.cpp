@@ -14,7 +14,6 @@
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt.hpp>
-#include <jank/util/fmt/print.hpp>
 
 /* TODO: Make common symbol boxes once and reuse those. */
 namespace jank::read::parse
@@ -381,7 +380,7 @@ namespace jank::read::parse
 
     runtime::detail::native_transient_vector items;
 
-    for(auto &it : ret.expect_ok())
+    for(auto const &it : ret.expect_ok())
     {
       items.push_back(it.ptr);
     }
@@ -408,7 +407,7 @@ namespace jank::read::parse
 
     runtime::detail::native_transient_vector items;
 
-    for(auto &it : ret.expect_ok())
+    for(auto const &it : ret.expect_ok())
     {
       items.push_back(it.ptr);
     }
@@ -432,7 +431,7 @@ namespace jank::read::parse
     }
 
     native_unordered_map<runtime::object_ref, object_source_info> parsed_keys{};
-    auto items{ ret.expect_ok() };
+    auto const &items = ret.expect_ok();
     auto const build_map([&](auto &map) -> jtl::result<void, error_ref> {
       using T = std::remove_reference_t<decltype(map)>;
 
@@ -737,7 +736,7 @@ namespace jank::read::parse
     native_unordered_map<runtime::object_ref, object_source_info> parsed_items{};
     runtime::detail::native_transient_hash_set set;
 
-    for(auto &it : ret.expect_ok())
+    for(auto const &it : ret.expect_ok())
     {
       auto const item(it);
 
@@ -1063,8 +1062,8 @@ namespace jank::read::parse
     {
       auto const data_readers{ data_readers_result->deref() };
       auto const data_reader_result{ visit_map_like(
-        [](auto const typed_o, obj::symbol_ref const sym)
-          -> jtl::result<runtime::object_ref, error_ref> { return typed_o->get(sym); },
+        [](auto const typed_data_readers, obj::symbol_ref const sym)
+          -> jtl::result<runtime::object_ref, error_ref> { return typed_data_readers->get(sym); },
         [&]() -> jtl::result<runtime::object_ref, error_ref> {
           return error::parse_invalid_data_reader(
             util::format("The 'clojure.core/*data-readers*' var needs to be a map between the tag "
@@ -1118,7 +1117,7 @@ namespace jank::read::parse
         {
           return error::parse_invalid_reader_symbolic_value(
             util::format(
-              "The 'clojure.core/*default-data-reader-fn*' var must be a function toking 2 "
+              "The 'clojure.core/*default-data-reader-fn*' var must be a function taking 2 "
               "arguments, the tag and the form immediately after the tag. Found a {} instead.",
               object_type_str(default_data_reader_fn->type)),
             { start_token.start, latest_token.end });

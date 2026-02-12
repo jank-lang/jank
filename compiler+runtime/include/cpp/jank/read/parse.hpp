@@ -106,6 +106,9 @@ namespace jank::read::parse
     iterator end();
 
   private:
+    /* Ideally the parser shuold parse the entire form irrespective of whether an error is found
+     * mid-parse or not. Doing so let's us continue parsing in cases where the error is suppressed
+     * (such as in cases of unsupported features in reader conditionals). */
     jtl::result<native_vector<object_source_info>, error_ref>
     gracefully_parse(lex::token_kind const &upto,
                      error_ref (*unterminated_form_error)(read::source const &));

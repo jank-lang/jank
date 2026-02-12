@@ -1393,7 +1393,7 @@ namespace jank::read::parse
           CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_array_map>()));
         }
 
-        SUBCASE("Throw lex errors in unsupported reader conditionals")
+        SUBCASE("Insuppressible errors in unsupported reader conditionals")
         {
           lex::processor lp{ "#?(:cljs #js 123-213 :jank {})" };
           processor p{ lp.begin(), lp.end() };
@@ -1401,7 +1401,7 @@ namespace jank::read::parse
           CHECK(r.is_err());
         }
 
-        SUBCASE("Ignore parse errors in unsupported reader conditionals")
+        SUBCASE("Suppressible errors in unsupported reader conditionals")
         {
           lex::processor lp{ "#?(:cljs #js #{:k :k} :jank {})" };
           processor p{ lp.begin(), lp.end() };
@@ -1482,7 +1482,7 @@ namespace jank::read::parse
                         make_box<obj::persistent_vector>(std::in_place, make_box(42))));
           }
 
-          SUBCASE("Throw lex errors in unsupported reader conditionals")
+          SUBCASE("Insuppressible errors in unsupported reader conditionals")
           {
             lex::processor lp{ "[#?@(:cljs #js [213-213] :jank {})]" };
             processor p{ lp.begin(), lp.end() };
@@ -1490,7 +1490,7 @@ namespace jank::read::parse
             CHECK(r.is_err());
           }
 
-          SUBCASE("Ignore parse errors in unsupported reader conditionals")
+          SUBCASE("Suppressible errors in unsupported reader conditionals")
           {
             lex::processor lp{ "[#?@(:cljs #js #{:k :k} :jank {})]" };
             processor p{ lp.begin(), lp.end() };
