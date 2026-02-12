@@ -317,7 +317,7 @@ namespace jank::read::parse
 
   jtl::result<native_vector<object_source_info>, error_ref>
   processor::gracefully_parse(lex::token_kind const &upto,
-                              error_ref (*unterminated_form_error)(read::source const &))
+                              jtl::ref<error_ref (*)(read::source const &)> unterminated_form_error)
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
@@ -354,7 +354,7 @@ namespace jank::read::parse
 
     if(expected_closer.is_some())
     {
-      return unterminated_form_error({ start_token.start, latest_token.end });
+      return (*unterminated_form_error)({ start_token.start, latest_token.end });
     }
 
     expected_closer = prev_expected_closer;
@@ -370,8 +370,9 @@ namespace jank::read::parse
   processor::object_result processor::parse_list()
   {
     auto const start_token((*token_current).expect_ok());
-    auto const ret{ gracefully_parse(lex::token_kind::close_paren,
-                                     error::parse_unterminated_list) };
+    auto const ret{ gracefully_parse(
+      lex::token_kind::close_paren,
+      jtl::make_ref<error_ref (*)(read::source const &)>(error::parse_unterminated_list)) };
 
     if(ret.is_err())
     {
@@ -397,8 +398,9 @@ namespace jank::read::parse
   processor::object_result processor::parse_vector()
   {
     auto const start_token((*token_current).expect_ok());
-    auto const ret{ gracefully_parse(lex::token_kind::close_square_bracket,
-                                     error::parse_unterminated_vector) };
+    auto const ret{ gracefully_parse(
+      lex::token_kind::close_square_bracket,
+      make_ref<error_ref (*)(read::source const &)>(error::parse_unterminated_vector)) };
 
     if(ret.is_err())
     {
@@ -422,8 +424,9 @@ namespace jank::read::parse
   processor::object_result processor::parse_map()
   {
     auto const start_token((*token_current).expect_ok());
-    auto const ret{ gracefully_parse(lex::token_kind::close_curly_bracket,
-                                     error::parse_unterminated_map) };
+    auto const ret{ gracefully_parse(
+      lex::token_kind::close_curly_bracket,
+      make_ref<error_ref (*)(read::source const &)>(error::parse_unterminated_map)) };
 
     if(ret.is_err())
     {
@@ -725,8 +728,9 @@ namespace jank::read::parse
   processor::object_result processor::parse_reader_macro_set()
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
-    auto const ret{ gracefully_parse(lex::token_kind::close_curly_bracket,
-                                     error::parse_unterminated_set) };
+    auto const ret{ gracefully_parse(
+      lex::token_kind::close_curly_bracket,
+      make_ref<error_ref (*)(read::source const &)>(error::parse_unterminated_set)) };
 
     if(ret.is_err())
     {
