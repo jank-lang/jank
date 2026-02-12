@@ -1,7 +1,7 @@
-(ns nrepl-server.handler.completions
+(ns jank.nrepl.server.handler.completions
   (:require
    [clojure.string :refer [starts-with?]]
-   [nrepl-server.handler :refer [handle-message]]))
+   [jank.nrepl.server.handler :refer [handle-message]]))
 
 (defn- find-str-ns
   "Lookup a namespace from its string name, returning the namespace or nil if it

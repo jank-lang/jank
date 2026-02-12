@@ -1,0 +1,85 @@
+(ns jank.nrepl.server.core
+  (:include "jank/nrepl/server.hpp")
+  (:require [jank.nrepl.server.handler :refer [handle-message]]
+            [jank.nrepl.server.util :refer [abbreviate]]
+            [jank.nrepl.server.bencode :as bencode]
+            ;; handler implementations
+            [jank.nrepl.server.handler.clone]
+            [jank.nrepl.server.handler.close]
+            [jank.nrepl.server.handler.completions]
+            [jank.nrepl.server.handler.describe]
+            [jank.nrepl.server.handler.eval]
+            [jank.nrepl.server.handler.lookup]))
+
+(def *verbose (atom false))
+
+(defn log [& args]
+  (when @*verbose
+    (apply println args)))
+
+(defn response-for
+  "Given a request/response pair, copy the session identification data from the
+  request over to the response."
+  [req resp]
+  (merge resp (select-keys req ["id" "session"])))
+
+(defn responses-for
+  "Like `response-for` but accept one or multiple responses."
+  [req resp-or-resps]
+  (let [resps (if (sequential? resp-or-resps)
+                resp-or-resps
+                [resp-or-resps])]
+    (map #(response-for req %) resps)))
+
+(defn listen [listen-port]
+  (cpp/box (cpp/new cpp/jank.nrepl.server.native_server listen-port)))
+
+(defn accept [server*]
+  (let [server (cpp/unbox cpp/jank.nrepl.server.native_server* server*)]
+    (cpp/box (.accept server))))
+
+(defn connected?
+  "Is the client socket connected and available for reading/writing?"
+  [client*]
+  (let [client (cpp/unbox cpp/jank.nrepl.server.native_client* client*)]
+    (.is_connected client)))
+
+(defn read-message
+  "Read a complete message (TODO) from the client and decode it."
+  [client*]
+  (let [client  (cpp/unbox cpp/jank.nrepl.server.native_client* client*)
+        msg-str (.read_some client)]
+    ;; TODO: There is no guarantee that we read an entire message. We should
+    ;; attempt to parse it, and if we encounter an unexpected EOF then buffer it
+    ;; until more data arrives.
+    (bencode/parse msg-str)))
+
+(defn write-message
+  "Encode the given message and write it to the client socket."
+  [client* msg]
+  (let [client  (cpp/unbox cpp/jank.nrepl.server.native_client* client*)
+        msg-str (bencode/write msg)]
+    (.write_some client (cpp/cast cpp/std.string msg-str))
+    nil))
+
+(defn handle-client
+  "For as long as the client is connected, read requests and write replies."
+  [client*]
+  (while (connected? client*)
+    (when-let [req (read-message client*)]
+      (log "<-" (pr-str (abbreviate req 20)))
+      (let [resps (responses-for req (handle-message req))]
+        (doseq [resp resps]
+          (log "->" (pr-str (abbreviate resp 20)))
+          (write-message client* resp))))))
+
+(defn -main [& args]
+  (when (some #{"-v" "--verbose"} args)
+    (reset! *verbose true))
+
+  (let [listen-port 4200
+        server      (listen listen-port)]
+    (println (str "jank-nrepl listening for connections on port " listen-port "…"))
+    (while true
+      (let [client* (accept server)]
+        (future (handle-client client*))))))

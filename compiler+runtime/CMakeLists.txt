@@ -413,6 +413,15 @@ include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+
+# CMake changed its mechanism for finding Boost. The old behavior uses
+# a CMake-provided FindBoost script. The new behavior relies on locating
+# a BoostConfig.cmake on the system. Without explicitly setting this, we'll
+# get a warning from CMake.
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+find_package(Boost REQUIRED COMPONENTS system)
 # ---- Other dependencies ----
 
 # ---- libjank.a ----
@@ -579,6 +588,7 @@ add_library(
   src/cpp/clojure/string_native.cpp
   src/cpp/jank/compiler_native.cpp
   src/cpp/jank/perf_native.cpp
+  src/cpp/jank/nrepl/server.cpp
 )
 set_target_properties(jank_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
 
@@ -617,6 +627,7 @@ target_link_libraries(
   cpptrace::cpptrace
   ftxui::screen ftxui::dom
   Boost::multiprecision
+  Boost::system
   nanobench_lib
   bdwgc::gc bdwgc::gctba
 )
@@ -957,7 +968,9 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output}
+  COMMAND rm -f ${jank_clojure_core_output}
   COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} clojure.core
+  #COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs jank.nrepl.server.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(

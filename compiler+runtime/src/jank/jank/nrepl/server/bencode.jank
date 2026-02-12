@@ -1,5 +1,5 @@
-(ns nrepl-server.bencode
-  (:require [nrepl-server.parsec :as p]))
+(ns jank.nrepl.server.bencode
+  (:require [jank.nrepl.server.parsec :as p]))
 
 (declare bencode)
 

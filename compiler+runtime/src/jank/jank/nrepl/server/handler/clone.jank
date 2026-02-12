@@ -1,6 +1,6 @@
-(ns nrepl-server.handler.clone
+(ns jank.nrepl.server.handler.clone
   (:require
-   [nrepl-server.handler :refer [handle-message]]))
+   [jank.nrepl.server.handler :refer [handle-message]]))
 
 (defmethod handle-message :clone [_]
   {:new-session (str (random-uuid))

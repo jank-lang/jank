@@ -1,4 +1,4 @@
-(ns nrepl-server.util
+(ns jank.nrepl.server.util
   (:require [clojure.walk :refer [postwalk]]))
 
 (defn abbreviate

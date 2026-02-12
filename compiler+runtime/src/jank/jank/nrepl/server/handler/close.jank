@@ -1,0 +1,6 @@
+(ns jank.nrepl.server.handler.close
+  (:require
+   [jank.nrepl.server.handler :refer [handle-message]]))
+
+(defmethod handle-message :close [_]
+  {:status [:done]})

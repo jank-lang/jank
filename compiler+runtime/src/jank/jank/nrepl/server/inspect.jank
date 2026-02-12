@@ -1,10 +1,10 @@
-(ns nrepl-server.inspect)
+(ns jank.nrepl.server.inspect)
 
 (cpp/raw "
 #include <iomanip>
 #include <sstream>
 
-namespace nrepl_server::inspect
+namespace jank::nrepl::server::inspect
 {
   inline std::string hash_to_hex_string(unsigned int i)
   {
@@ -14,7 +14,7 @@ namespace nrepl_server::inspect
 ")
 
 (defn hash->hex-string [i]
-  (cpp/nrepl_server.inspect.hash_to_hex_string i))
+  (cpp/jank.nrepl.server.inspect.hash_to_hex_string i))
 
 (defn inspect-str
   "Inspect a value to build a display string for CIDER."

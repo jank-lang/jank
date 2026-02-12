@@ -1,9 +1,9 @@
-(ns nrepl-server.handler.eval
+(ns jank.nrepl.server.handler.eval
   (:require
-   [nrepl-server.handler :refer [handle-message]]
-   [nrepl-server.eval :refer [safe-eval]]
-   [nrepl-server.capture :refer [with-capture]]
-   [nrepl-server.inspect :refer [inspect-str]]))
+   [jank.nrepl.server.handler :refer [handle-message]]
+   [jank.nrepl.server.eval :refer [safe-eval]]
+   [jank.nrepl.server.capture :refer [with-capture]]
+   [jank.nrepl.server.inspect :refer [inspect-str]]))
 
 (def default-ns
   "The namespace in which evaluation will occur when an invalid or no ns

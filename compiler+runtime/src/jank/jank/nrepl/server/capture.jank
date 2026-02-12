@@ -1,4 +1,4 @@
-(ns nrepl-server.capture)
+(ns jank.nrepl.server.capture)
 
 (cpp/raw "#include <unistd.h>")
 (cpp/raw "#include <stdio.h>")

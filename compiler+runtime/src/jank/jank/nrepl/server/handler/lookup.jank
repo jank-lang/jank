@@ -1,5 +1,5 @@
-(ns nrepl-server.handler.lookup
-  (:require [nrepl-server.handler :refer [handle-message]]))
+(ns jank.nrepl.server.handler.lookup
+  (:require [jank.nrepl.server.handler :refer [handle-message]]))
 
 (defn lookup
   "Lookup meta for the a symbol defined in a namespace, or return nil if either

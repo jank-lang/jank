@@ -154,6 +154,7 @@
             ## Required libs.
             boehmgc
             openssl
+            boost
 
             ## Dev tools.
             babashka

@@ -1,0 +1,37 @@
+#pragma once
+
+#include <string>
+#include <memory>
+
+namespace jank::nrepl::server
+{
+  struct native_client
+  {
+    struct impl;
+
+    native_client(std::unique_ptr<impl> impl);
+
+    /* Indicates that reading and writing may be performed on this client. */
+    bool is_connected() const;
+
+    /* Block until one or more bytes of data is read from the client. */
+    std::string read_some();
+
+    /* Write some data to the client. */
+    void write_some(std::string const &data);
+
+    std::unique_ptr<impl> impl_;
+  };
+
+  struct native_server
+  {
+    struct impl;
+
+    native_server(short const port);
+
+    /* Block until a client connects. */
+    native_client *accept();
+
+    std::shared_ptr<impl> impl_;
+  };
+}

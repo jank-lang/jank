@@ -1,4 +1,4 @@
-(ns nrepl-server.handler)
+(ns jank.nrepl.server.handler)
 
 (defmulti handle-message #(some-> (get % "op") keyword))
 

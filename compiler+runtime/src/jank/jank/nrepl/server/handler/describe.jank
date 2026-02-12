@@ -1,6 +1,6 @@
-(ns nrepl-server.handler.describe
+(ns jank.nrepl.server.handler.describe
   (:require
-   [nrepl-server.handler :refer [handle-message]]))
+   [jank.nrepl.server.handler :refer [handle-message]]))
 
 (defmethod handle-message :describe [_]
   {:aux      {}
