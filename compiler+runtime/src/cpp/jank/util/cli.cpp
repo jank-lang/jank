@@ -413,6 +413,11 @@ OPTIONS
       {
         opts.eagerness = compilation_eagerness::eager;
       }
+      /* Direct-call relies on eager roots to avoid caching deferred wrappers. */
+      if(opts.direct_call)
+      {
+        opts.eagerness = compilation_eagerness::eager;
+      }
     }
     catch(jtl::immutable_string const &msg)
     {
