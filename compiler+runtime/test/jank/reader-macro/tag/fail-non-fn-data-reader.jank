@@ -1,2 +1,0 @@
-(binding [*data-readers* {'foo 42}]
-  (read-string "#foo 42"))

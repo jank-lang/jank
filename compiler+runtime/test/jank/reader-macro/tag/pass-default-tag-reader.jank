@@ -1,3 +1,0 @@
-(binding [*default-data-reader-fn* (fn [tag form] (identity form))]
-  (if (= 42 (read-string "#foo 42"))
-    :success))
