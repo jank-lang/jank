@@ -87,6 +87,12 @@ namespace jank::runtime
                            object_ref const reader_opts,
                            jank::u64 const nth_form = std::numeric_limits<jank::u64>::max());
     object_ref read_string(jtl::immutable_string const &code);
+    /* jank uses its own `read_string` to parse object metadata.
+     * To prevent users from accidentally disabling `read-string` for jank’s
+     * internal C++ codegen by setting the `*read-eval*` var, we use a
+     * custom wrapper around `read_string` that always enables reading for
+     * jank’s internal codegen paths.
+     */
     object_ref forcefully_read_string(jtl::immutable_string const &code);
     object_ref read_file(jtl::immutable_string const &file_path, object_ref const reader_opts);
     native_vector<analyze::expression_ref>

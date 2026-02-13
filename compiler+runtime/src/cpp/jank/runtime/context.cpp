@@ -301,10 +301,6 @@ namespace jank::runtime
     profile::timer const timer{ "rt read_string" };
     auto const unknown_kw{ __rt_ctx->intern_keyword("unknown").expect_ok() };
     auto const read_eval_var{ __rt_ctx->find_var("clojure.core", "*read-eval*") };
-    if(read_eval_var.is_some())
-    {
-      util::println("{}", runtime::to_code_string(read_eval_var->deref()));
-    }
     auto const read_eval_enabled{ read_eval_var.is_nil() || !equal(read_eval_var, unknown_kw) };
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
@@ -369,7 +365,10 @@ namespace jank::runtime
 
   object_ref context::forcefully_read_string(jtl::immutable_string const &code)
   {
-    auto const read_eval_enabled_var{ __rt_ctx->find_var("clojure.core", "*read-eval*") };
+    auto const read_eval_enabled_var{
+      __rt_ctx->intern_var("clojure.core", "*read-eval*").expect_ok()
+    };
+    read_eval_enabled_var->set_dynamic(true);
     /* TODO: Profile C++ codegen. */
     binding_scope const bindings{ obj::persistent_hash_map::create_unique(
       std::make_pair(read_eval_enabled_var, jank_true)) };
