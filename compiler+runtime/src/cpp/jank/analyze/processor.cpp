@@ -1499,7 +1499,7 @@ namespace jank::analyze
                             jtl::option<expr::function_context_ref> const &fc,
                             bool needs_box)
   {
-    if(sym->ns == "cpp" && sym->name != "raw")
+    if((sym->ns == "cpp" && sym->name != "raw") || (sym->ns.empty() && sym->name.starts_with('.')))
     {
       return analyze_cpp_symbol(sym, current_frame, position, fc, needs_box);
     }
@@ -1590,6 +1590,17 @@ namespace jank::analyze
     auto const var(__rt_ctx->find_var(qualified_sym));
     if(var.is_nil())
     {
+      auto const found_referred_global{ runtime::__rt_ctx->current_ns()->find_referred_global(
+        sym) };
+      if(found_referred_global.is_some())
+      {
+        return analyze_cpp_symbol(try_object<obj::symbol>(found_referred_global),
+                                  current_frame,
+                                  position,
+                                  fc,
+                                  needs_box);
+      }
+
       return error::analyze_unresolved_symbol(
         util::format("Unable to resolve symbol '{}'.", sym->to_string()),
         meta_source(sym->meta),

@@ -1,0 +1,36 @@
+#!/usr/bin/env bb
+
+(ns jank.test.module.refer-global
+  (:require [babashka.process :as b.p]
+            [babashka.fs :as b.f]
+            [clojure.string :as str]))
+
+(def src-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/src"))))
+
+(defn run-test! [test]
+  (println "running test" (b.f/file-name test))
+  (let [expect-failure? (str/starts-with? (b.f/file-name test) "fail-")
+        res @(b.p/process {:out :string
+                           :err :string}
+                          (str "jank run " test))
+        exit-code (:exit res)]
+    (cond
+      (and (zero? exit-code) (not expect-failure?) (= ":success" (str/trim (:out res))))
+      nil
+
+      (and (not (zero? exit-code)) expect-failure?)
+      nil
+
+      (and (zero? exit-code) expect-failure?)
+      (throw (Exception. "Expected failure"))
+
+      (and (not (zero? exit-code)) (not expect-failure?))
+      (throw (Exception. "Expected success"))
+
+      :else
+      (throw (Exception. "Unexpected condition")))))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (let [tests (b.f/glob src-dir "*.jank")]
+    (doseq [test tests]
+      (run-test! test))))
