@@ -311,7 +311,7 @@ namespace jank::runtime
     if(!read_eval_enabled)
     {
       throw std::runtime_error{ util::format(
-        "Reading is disallowed when clojure.core/*read-eval* is bound to ':unknown'.") };
+        "Reading is disallowed when `clojure.core/*read-eval*` is bound to `:unknown`.") };
     }
 
     read::lex::processor l_prc{ code };
@@ -352,7 +352,8 @@ namespace jank::runtime
 
     if(throw_eof)
     {
-      throw std::runtime_error{ "EOF while reading." };
+      throw std::runtime_error{ "EOF reached while reading. To override this behavior, provide a "
+                                "return value for the EOF case via the `:eof` reader option." };
     }
 
     return ret;

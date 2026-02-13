@@ -1083,6 +1083,9 @@ namespace jank::read::parse
 
   processor::object_result processor::parse_reader_macro_conditional(bool const splice)
   {
+    auto const start_token(token_current.latest.unwrap().expect_ok());
+    ++token_current;
+
     auto const reader_opts{ __rt_ctx->reader_opts_var->deref() };
     auto const has_reader_opts{ reader_opts.is_some() };
     // When reading in a form via the Clojure read functions the end user might wish
@@ -1098,8 +1101,11 @@ namespace jank::read::parse
 
       if(read_cond.is_nil())
       {
-        throw std::runtime_error{ "Conditional read is not allowed by default. Set the :read-cond "
-                                  "reader option to either :preserve or :allow." };
+        return error::parse_invalid_reader_conditional(
+          { start_token.start, latest_token.end },
+          util::format("Conditional read is not allowed by default. Set the :read-cond reader "
+                       "option to either :preserve or :allow. Found {} instead.",
+                       runtime::to_code_string(read_cond)));
       }
 
       auto const reader_cond{ try_object<obj::keyword>(read_cond) };
@@ -1113,10 +1119,11 @@ namespace jank::read::parse
       }
       else
       {
-        throw std::runtime_error{ util::format(
-          "Conditional read is not allowed by default. Set the :read-cond reader option to either "
-          ":preserve or :allow, currently it's set to {}.",
-          runtime::to_code_string(read_cond)) };
+        return error::parse_invalid_reader_conditional(
+          { start_token.start, latest_token.end },
+          util::format("Conditional read is not allowed by default. Set the :read-cond reader "
+                       "option to either :preserve or :allow. Found {} instead.",
+                       runtime::to_code_string(read_cond)));
       }
 
       auto const features_kw{ __rt_ctx->intern_keyword("", "features").expect_ok() };
@@ -1127,9 +1134,6 @@ namespace jank::read::parse
         features = feature_set;
       }
     }
-
-    auto const start_token(token_current.latest.unwrap().expect_ok());
-    ++token_current;
 
     auto list_result(next());
     if(list_result.is_err())
