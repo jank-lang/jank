@@ -431,7 +431,7 @@ namespace jank::read::parse
     }
 
     native_unordered_map<runtime::object_ref, object_source_info> parsed_keys{};
-    auto const &items = ret.expect_ok();
+    auto const &items{ ret.expect_ok() };
     auto const build_map([&](auto &map) -> jtl::result<void, error_ref> {
       using T = std::remove_reference_t<decltype(map)>;
 
