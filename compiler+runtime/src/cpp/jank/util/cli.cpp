@@ -423,12 +423,11 @@ OPTIONS
       {
         if(eagerness.is_some() && eagerness.unwrap() == compilation_eagerness::lazy)
         {
-          error::warn(
-            "--eagerness lazy ignored because --direct-call requires eager compilation.");
+          error::warn("--eagerness lazy ignored because --direct-call requires eager compilation.");
         }
         eagerness = compilation_eagerness::eager;
       }
-      
+
       opts.eagerness = eagerness.unwrap_or(opts.eagerness);
     }
     catch(jtl::immutable_string const &msg)
