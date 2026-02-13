@@ -11,6 +11,7 @@
 
 #include <jank/c_api.h>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/error/report.hpp>
@@ -28,6 +29,11 @@ try
     doctest::Context context;
     context.applyCommandLine(argc, argv);
     context.setOption("no-breaks", true);
+
+    jank::runtime::__rt_ctx->intern_var("clojure.core", "*read-eval*")
+      .expect_ok()
+      ->bind_root(jank::runtime::jank_true.erase())
+      ->set_dynamic(true);
 
     jank_load_clojure_core_native();
 

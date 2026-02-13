@@ -366,10 +366,7 @@ namespace jank::runtime
 
   object_ref context::forcefully_read_string(jtl::immutable_string const &code)
   {
-    auto const read_eval_enabled_var{
-      __rt_ctx->intern_var("clojure.core", "*read-eval*").expect_ok()
-    };
-    read_eval_enabled_var->set_dynamic(true);
+    auto const read_eval_enabled_var{ __rt_ctx->find_var("clojure.core", "*read-eval*") };
     /* TODO: Profile C++ codegen. */
     binding_scope const bindings{ obj::persistent_hash_map::create_unique(
       std::make_pair(read_eval_enabled_var, jank_true)) };
