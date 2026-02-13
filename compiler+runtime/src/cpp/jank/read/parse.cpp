@@ -1110,11 +1110,11 @@ namespace jank::read::parse
 
       auto const reader_cond{ try_object<obj::keyword>(read_cond) };
 
-      if(reader_cond == __rt_ctx->intern_keyword("", "preserve"))
+      if(reader_cond == __rt_ctx->intern_keyword("", "preserve").expect_ok())
       {
         in_preserve_mode = true;
       }
-      else if(reader_cond == __rt_ctx->intern_keyword("", "allow"))
+      else if(reader_cond == __rt_ctx->intern_keyword("", "allow").expect_ok())
       {
       }
       else
