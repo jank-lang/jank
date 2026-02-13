@@ -181,6 +181,7 @@ OPTIONS
         /**** These are all of the global flags which can apply to any command. ****/
         if(check_flag(it, end, value, "--", false))
         {
+          ++it;
           /* This implies that everything coming after is meant for the running program. */
           std::copy(it, end, std::back_inserter(opts.extra_opts));
           break;
