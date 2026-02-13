@@ -88,6 +88,50 @@ namespace jtl
   };
 
   template <typename T>
+  requires std::is_function_v<T>
+  struct ref<T>
+  {
+    using value_type = T;
+
+    constexpr ref() = delete;
+    constexpr ref(nullptr_t) = delete;
+    constexpr ref(ref const &) noexcept = default;
+    constexpr ref(ref &&) noexcept = default;
+
+    constexpr ref(value_type * const data) noexcept
+      : data{ data }
+    {
+      jank_debug_assert(this->data);
+    }
+
+    constexpr value_type &operator*() const noexcept
+    {
+      jank_debug_assert(data);
+      return *data;
+    }
+
+    constexpr ref &operator=(ref const &rhs) noexcept = default;
+    constexpr ref &operator=(ref &&rhs) noexcept = default;
+
+    constexpr bool operator==(ref const &rhs) const noexcept
+    {
+      return data == rhs.data;
+    }
+
+    constexpr bool operator!=(ref const &rhs) const noexcept
+    {
+      return data != rhs.data;
+    }
+
+    constexpr bool operator<(ref const &rhs) const noexcept
+    {
+      return data < rhs.data;
+    }
+
+    value_type *data{};
+  };
+
+  template <typename T>
   constexpr ref<T> make_ref(ref<T> const &o)
   {
     static_assert(sizeof(ref<T>) == sizeof(T *));
