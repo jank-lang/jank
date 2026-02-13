@@ -5,8 +5,26 @@
 
 namespace jank::util::cli
 {
+  static options init_opts()
+  {
+    options o{};
+    if(auto const codegen{ getenv("JANK_CODEGEN") }; codegen)
+    {
+      if(jtl::immutable_string_view{ codegen } == "cpp")
+      {
+        o.codegen = codegen_type::cpp;
+      }
+      else if(jtl::immutable_string_view{ codegen } == "llvm-ir")
+      {
+        o.codegen = codegen_type::llvm_ir;
+        o.eagerness = compilation_eagerness::eager;
+      }
+    }
+    return o;
+  }
+
   /* NOLINTNEXTLINE */
-  options opts;
+  options opts{ init_opts() };
 
   using flag_it = native_vector<jtl::immutable_string>::const_iterator;
 

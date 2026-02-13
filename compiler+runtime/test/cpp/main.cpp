@@ -14,6 +14,7 @@
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/error/report.hpp>
+#include <jank/util/cli.hpp>
 #include <clojure/core_native.hpp>
 
 #ifdef JANK_PHASE_2
