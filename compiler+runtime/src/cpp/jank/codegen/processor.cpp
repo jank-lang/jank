@@ -569,9 +569,8 @@ namespace jank::codegen
       expr->name->to_string());
 
     jtl::option<jtl::immutable_string> meta;
-    auto const dynamic{
-      truthy(get(expr->name->meta, __rt_ctx->intern_keyword("dynamic").expect_ok()))
-    };
+    auto const dynamic{ truthy(
+      get(expr->name->meta, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
     jtl::option<jtl::immutable_string> var_native;
     if(expr->name->meta.is_some())
     {
@@ -1180,9 +1179,7 @@ namespace jank::codegen
         /* Use direct-call for non-variadic roots; fall back when variadic or over max arity. */
         if(expr->arg_exprs.size() <= runtime::max_params)
         {
-          auto const arity_flags_tmp{
-            runtime::munge(__rt_ctx->unique_string("arity_flags"))
-          };
+          auto const arity_flags_tmp{ runtime::munge(__rt_ctx->unique_string("arity_flags")) };
           util::format_to(body_buffer,
                           "auto const {}({}->get_arity_flags());",
                           arity_flags_tmp,
