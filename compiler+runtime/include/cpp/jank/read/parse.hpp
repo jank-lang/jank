@@ -111,7 +111,7 @@ namespace jank::read::parse
      * (such as in cases of unsupported features in reader conditionals). */
     jtl::result<native_vector<object_source_info>, error_ref>
     gracefully_parse(lex::token_kind const &upto,
-                     jtl::ref<error_ref (*)(read::source const &)> unterminated_form_error);
+                     error_ref (*unterminated_form_error)(read::source const &));
     jtl::result<runtime::object_ref, error_ref> syntax_quote(runtime::object_ref const form);
     jtl::result<runtime::object_ref, error_ref>
     syntax_quote_expand_seq(runtime::object_ref const seq);
