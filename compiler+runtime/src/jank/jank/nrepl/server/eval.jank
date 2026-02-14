@@ -6,38 +6,38 @@ namespace jank::nrepl::server::eval
   using namespace jank;
   using namespace jank::runtime;
 
-  inline bool safe_eval(const std::string& code)
+  inline bool safe_eval(jtl::immutable_string const &code)
   {
-    auto var_1 = __rt_ctx->find_var(\"clojure.core\", \"*1\");
-    auto var_2 = __rt_ctx->find_var(\"clojure.core\", \"*2\");
-    auto var_3 = __rt_ctx->find_var(\"clojure.core\", \"*3\");
-    auto var_e = __rt_ctx->find_var(\"clojure.core\", \"*e\");
+    static auto var_1{ __rt_ctx->find_var(\"clojure.core\", \"*1\") };
+    static auto var_2{ __rt_ctx->find_var(\"clojure.core\", \"*2\") };
+    static auto var_3{ __rt_ctx->find_var(\"clojure.core\", \"*3\") };
+    static auto var_e{ __rt_ctx->find_var(\"clojure.core\", \"*e\") };
 
     try
     {
-      auto value = __rt_ctx->eval_string(code).unwrap();
+      auto const value{ __rt_ctx->eval_string(code).unwrap() };
 
-      if (var_2->is_bound()) { var_3->bind_root(var_2->deref()); }
-      if (var_1->is_bound()) { var_2->bind_root(var_1->deref()); }
-      var_1->bind_root(value);
+      var_3->set(var_2->deref()).expect_ok();
+      var_2->set(var_1->deref()).expect_ok();
+      var_1->set(value).expect_ok();
 
       return true;
     }
-    catch (error_ref const e)
+    catch(error_ref const e)
     {
-      var_e->bind_root(make_box(e->message));
+      var_e->set(make_box(e->message));
     }
-    catch (object_ref const e)
+    catch(object_ref const e)
     {
-      var_e->bind_root(e);
+      var_e->set(e);
     }
     catch(std::exception const &e)
     {
-      var_e->bind_root(make_box(e.what()));
+      var_e->set(make_box(e.what()));
     }
     catch(...)
     {
-      var_e->bind_root(make_box(\"uncaught exception\"));
+      var_e->set(make_box(\"uncaught exception\"));
     }
 
     return false;

@@ -105,8 +105,8 @@ The jank compiler is used to evaluate and compile jank, Clojure, and C++ sources
 COMMANDS
   run                         Load and run a file.
   compile-module              Compile a module (given its namespace) and its dependencies.
-  repl                        Start up a terminal REPL and optional server.
-  cpp-repl                    Start up a terminal C++ REPL.
+  repl                        Start up a terminal REPL client and server.
+  cpp-repl                    Start up a terminal C++ REPL client.
   run-main                    Load and execute -main.
   compile                     Ahead of time compile project with entrypoint module containing
                               -main.
@@ -130,6 +130,10 @@ OPTIONS
                               The type of code generation to use.
           --eagerness <lazy, eager> [default: lazy]
                               How eagerly to JIT compile functions.
+  -o,     --output <path>
+                              The name of the output file.
+          --output-dir <path>
+                              The prefix to use for object files. [default: target]
   -I,     --include-dir <path>
                               Absolute or relative path to the directory for includes
                               resolution. Can be specified multiple times.
@@ -289,6 +293,10 @@ OPTIONS
         {
           pending_flags["--output"] = value;
         }
+        else if(check_flag(it, end, value, "--output-dir", true))
+        {
+          pending_flags["--output-dir"] = value;
+        }
         else if(check_flag(it, end, value, "--output-target", true))
         {
           pending_flags["--output-target"] = value;
@@ -347,6 +355,10 @@ OPTIONS
           {
             opts.output_filename = value;
           }
+        }
+        if(check_pending_flag("--output-dir", value, pending_flags))
+        {
+          opts.output_dir = value;
         }
         if(check_pending_flag("--output-target", value, pending_flags))
         {

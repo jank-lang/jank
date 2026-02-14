@@ -165,7 +165,8 @@ namespace jank::runtime
 
   object_ref var::call(object_ref const args) const
   {
-    return apply_to(deref(), args);
+    auto const val{ deref() };
+    return apply_to(val, args);
   }
 
   callable_arity_flags var::get_arity_flags() const

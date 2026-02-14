@@ -113,13 +113,12 @@ namespace jank::util::cli
     jtl::immutable_string target_module;
     jtl::immutable_string target_runtime{ "dynamic" };
     jtl::immutable_string output_filename{ "a.out" };
+    /* TODO: Add automatic cleaning when hash changes. */
+    jtl::immutable_string output_dir{ "target" };
 
     /* Compile-module command. */
     jtl::immutable_string output_module_filename;
     compilation_target output_target{ compilation_target::unspecified };
-
-    /* REPL command. */
-    bool repl_server{};
 
     /* Extra flags, which will be passed to main. */
     native_vector<jtl::immutable_string> extra_opts;

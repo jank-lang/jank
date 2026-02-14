@@ -326,7 +326,7 @@ namespace jank::read::parse
       ->push_thread_bindings(
         obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
-    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings(); } };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
@@ -364,7 +364,7 @@ namespace jank::read::parse
       ->push_thread_bindings(
         obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
-    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings(); } };
 
     runtime::detail::native_transient_vector ret;
     for(auto it(begin()); it != end(); ++it)
@@ -399,7 +399,7 @@ namespace jank::read::parse
       ->push_thread_bindings(
         obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
-    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings(); } };
     native_vector<processor::object_result> const items(begin(), end());
 
     if(expected_closer.is_some())
@@ -698,7 +698,7 @@ namespace jank::read::parse
       ->push_thread_bindings(
         obj::persistent_hash_map::create_unique(std::make_pair(splicing_allowed_var, jank_true)))
       .expect_ok();
-    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings().expect_ok(); } };
+    util::scope_exit const finally{ [] { __rt_ctx->pop_thread_bindings(); } };
 
     native_unordered_map<runtime::object_ref, object_source_info> parsed_items{};
     runtime::detail::native_transient_hash_set ret;

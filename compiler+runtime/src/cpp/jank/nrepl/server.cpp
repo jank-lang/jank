@@ -1,6 +1,9 @@
 #include <boost/asio.hpp>
 
+#include <jtl/string_builder.hpp>
+
 #include <jank/nrepl/server.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::nrepl::server
 {
@@ -93,10 +96,17 @@ namespace jank::nrepl::server
     tcp::acceptor acceptor_;
   };
 
-  native_server::native_server(short const port)
-    : impl_{ std::make_shared<native_server::impl>(
-        tcp::endpoint(ip::address_v4::loopback(), port)) }
+  native_server::native_server()
+    : impl_{ std::make_shared<native_server::impl>(tcp::endpoint(ip::address_v4::loopback(), 0)) }
   {
+  }
+
+  jtl::immutable_string native_server::get_endpoint() const
+  {
+    jtl::string_builder sb;
+    auto const &endpoint{ impl_->acceptor_.local_endpoint() };
+    util::format_to(sb, "nrepl://{}:{}", endpoint.address().to_string(), endpoint.port());
+    return sb.release();
   }
 
   native_client *native_server::accept()

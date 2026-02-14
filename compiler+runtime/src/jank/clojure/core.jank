@@ -4222,9 +4222,6 @@
     (cons x coll)
     (concat x coll)))
 
-(defn- root-resource [lib]
-  (str "/" (name lib)))
-
 (defn- throw-if [pred msg]
   (when pred
     (throw (ex-info :assertion-failure {:msg msg}))))
@@ -4334,9 +4331,9 @@
    namespace exists after loading. If `require?`, records the load so any
    duplicate loads can be skipped."
   [lib need-ns? require?]
-  (load (root-resource lib))
+  (load lib)
   (throw-if (and need-ns? (not (find-ns lib)))
-            (str "namespace " lib " not found after loading " (root-resource lib)))
+            (str "namespace " lib " not found after loading " lib))
   (when require?
     (swap! *loaded-libs* conj lib)))
 
@@ -6683,13 +6680,6 @@
     :dynamic true
     :doc "True while a verbose load is pending"}
   *loading-verbosely* false)
-
-(defn- root-directory
-  "Returns the root resource path for a lib"
-  [lib]
-  ;; (let [d (root-resource lib)]
-  ;;   (subs d 0 (.lastIndexOf d "/")))
-  (throw "TODO: port root-resource"))
 
 (defn- serialized-require
   "Like 'require', but serializes loading.

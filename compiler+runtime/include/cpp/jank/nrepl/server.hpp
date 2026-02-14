@@ -3,6 +3,8 @@
 #include <string>
 #include <memory>
 
+#include <jtl/immutable_string.hpp>
+
 namespace jank::nrepl::server
 {
   struct native_client
@@ -27,8 +29,9 @@ namespace jank::nrepl::server
   {
     struct impl;
 
-    native_server(short const port);
+    native_server();
 
+    jtl::immutable_string get_endpoint() const;
     /* Block until a client connects. */
     native_client *accept();
 

@@ -63,27 +63,12 @@ namespace jank::runtime::module
     return util::format("jank_load_{}", ret);
   }
 
-  /* TODO: I don't think this is needed. */
-  jtl::immutable_string
-  nest_module(jtl::immutable_string const &module, jtl::immutable_string const &sub)
-  {
-    jank_debug_assert(!module.empty());
-    jank_debug_assert(!sub.empty());
-    return module + "$" + sub;
-  }
-
   jtl::immutable_string
   nest_native_ns(jtl::immutable_string const &native_ns, jtl::immutable_string const &end)
   {
     jank_debug_assert(!native_ns.empty());
     jank_debug_assert(!end.empty());
     return util::format("::{}::{}", native_ns, end);
-  }
-
-  /* If it has two or more occurences of $, it's nested. */
-  bool is_nested_module(jtl::immutable_string const &module)
-  {
-    return module.find('$') != module.rfind('$');
   }
 
   /* This is a somewhat complicated function. We take in a module (doesn't need to be munged) and
@@ -391,7 +376,7 @@ namespace jank::runtime::module
   {
     std::filesystem::path const jank_path{ jank::util::process_dir().c_str() };
     std::filesystem::path const resource_dir{ jank::util::resource_dir().c_str() };
-    auto const binary_cache_dir{ util::binary_cache_dir(util::binary_version()) };
+    auto const binary_cache_dir{ util::cli::opts.output_dir };
     native_transient_string paths{ util::cli::opts.module_path };
 
     /* These paths are used by an installed jank. */
@@ -403,7 +388,7 @@ namespace jank::runtime::module
     paths += util::format(":{}", (jank_path / binary_cache_dir.c_str()).native());
     paths += util::format(":{}", (jank_path / "../src/jank").native());
 
-    auto const locked_state{ state.wlock() };
+    auto const locked_state{ state.lock() };
     locked_state->paths = paths;
 
     //util::println("module paths: {}", paths);
@@ -720,7 +705,7 @@ namespace jank::runtime::module
 
     jtl::option<loader::entry> found;
     {
-      auto const locked_state{ state.wlock() };
+      auto const locked_state{ state.lock() };
       found = find_module(locked_state->entries, locked_state->paths, patched_module);
     }
 
@@ -914,11 +899,33 @@ namespace jank::runtime::module
         }
         break;
     }
-    util::println("Loading module {} from {}", module, path);
+    util::println("Loading module '{}' from '{}'.", module, path);
+  }
+
+  [[maybe_unused]]
+  static void log_managed_load(jtl::immutable_string const &module)
+  {
+    util::println("Loading module '{}' from a managed load fn.", module);
   }
 
   jtl::result<void, error_ref> loader::load(jtl::immutable_string const &module, origin const ori)
   {
+    {
+      /* If a load fn has been provided for this module already, just skip right to
+       * calling it. */
+      auto const locked_state{ state.lock() };
+      auto const managed_load_fn{ locked_state->managed_load_fns.find(module) };
+      if(managed_load_fn != locked_state->managed_load_fns.end())
+      {
+        //log_managed_load(module);
+        (*managed_load_fn->second)();
+        set_is_loaded(module);
+        return ok();
+      }
+    }
+
+    /* Otherwise, we need to find a corresponding source or binary artifact from which to
+     * load this module. */
     auto const &found_module{ loader::find(module, ori) };
     if(found_module.is_err())
     {
@@ -1093,7 +1100,7 @@ namespace jank::runtime::module
 
   void loader::add_path(jtl::immutable_string const &path)
   {
-    auto const locked_state{ state.wlock() };
+    auto const locked_state{ state.lock() };
     jtl::string_builder sb;
     sb(locked_state->paths);
     sb(module_separator);
@@ -1102,9 +1109,15 @@ namespace jank::runtime::module
     register_path(locked_state->entries, path);
   }
 
+  void loader::add_load_fn(jtl::immutable_string const &module, jtl::ref<void()> const fn)
+  {
+    auto const locked_state{ state.lock() };
+    locked_state->managed_load_fns.emplace(module, fn);
+  }
+
   object_ref loader::to_runtime_data() const
   {
-    auto const locked_state{ state.rlock() };
+    auto const locked_state{ state.lock() };
     runtime::object_ref entry_maps(make_box<runtime::obj::persistent_array_map>());
     for(auto const &e : locked_state->entries)
     {

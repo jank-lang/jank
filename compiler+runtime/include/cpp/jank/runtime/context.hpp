@@ -130,7 +130,7 @@ namespace jank::runtime
     jtl::string_result<void> push_thread_bindings();
     jtl::string_result<void> push_thread_bindings(object_ref const bindings);
     jtl::string_result<void> push_thread_bindings(obj::persistent_hash_map_ref const bindings);
-    jtl::string_result<void> pop_thread_bindings();
+    void pop_thread_bindings();
     obj::persistent_hash_map_ref get_thread_bindings() const;
     jtl::option<thread_binding_frame> current_thread_binding_frame();
 
@@ -140,7 +140,6 @@ namespace jank::runtime
     native_unordered_map<jtl::immutable_string, native_vector<jtl::immutable_string>>
       module_dependencies;
 
-    jtl::immutable_string binary_cache_dir;
     module::loader module_loader;
 
     var_ref current_file_var;

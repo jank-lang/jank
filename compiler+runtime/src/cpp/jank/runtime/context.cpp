@@ -43,7 +43,6 @@ namespace jank::runtime
   context::context()
     /* We want to initialize __rt_ctx ASAP so other code can start using it. */
     : binary_version{ (__rt_ctx = this, util::binary_version()) }
-    , binary_cache_dir{ util::binary_cache_dir(binary_version) }
     , jit_prc{ binary_version }
   {
     intern_ns(make_box<obj::symbol>("cpp"));
@@ -346,16 +345,6 @@ namespace jank::runtime
   {
     auto const ns(current_ns());
 
-    jtl::immutable_string absolute_module;
-    if(module.starts_with('/'))
-    {
-      absolute_module = module.substr(1);
-    }
-    else
-    {
-      absolute_module = module::nest_module(ns->to_string(), module);
-    }
-
     /* When we load a module, the `*ns*` var is still set to the previous module.
      * In the `clojure.core/ns` macro, `in-ns` is called that sets the value of the
      * current ns to the module being loaded. To avoid overwriting the previous `ns` value, `current_ns_var`
@@ -363,11 +352,11 @@ namespace jank::runtime
      * the new binding scope. */
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
       std::make_pair(current_ns_var, ns),
-      std::make_pair(current_module_var, make_box(absolute_module))) };
+      std::make_pair(current_module_var, make_box(module))) };
 
     try
     {
-      return module_loader.load(absolute_module, ori);
+      return module_loader.load(module, ori);
     }
     catch(std::exception const &e)
     {
@@ -388,7 +377,7 @@ namespace jank::runtime
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
       std::make_pair(compile_files_var, jank_true)) };
 
-    return load_module(util::format("/{}", module), module::origin::latest);
+    return load_module(module, module::origin::latest);
   }
 
   object_ref context::eval(object_ref const o)
@@ -422,7 +411,10 @@ namespace jank::runtime
     }
 
     return util::cli::opts.output_module_filename.empty()
-      ? util::format("{}/{}.{}", binary_cache_dir, module::module_to_path(module_name), ext)
+      ? util::format("{}/{}.{}",
+                     util::cli::opts.output_dir,
+                     module::module_to_path(module_name),
+                     ext)
       : jtl::immutable_string{ util::cli::opts.output_module_filename };
   }
 
@@ -641,15 +633,22 @@ namespace jank::runtime
         util::format("Can't intern var. Sym isn't qualified: {}", qualified_name->to_string()));
     }
 
-    auto locked_namespaces(namespaces.wlock());
     obj::symbol_ref const ns_sym{ make_box<obj::symbol>(qualified_name->ns) };
-    auto const found_ns(locked_namespaces->find(ns_sym));
-    if(found_ns == locked_namespaces->end())
+    ns_ref found_ns;
     {
-      return err(util::format("Can't intern var. Namespace doesn't exist: {}", qualified_name->ns));
+      auto locked_namespaces(namespaces.rlock());
+      auto const found{ locked_namespaces->find(ns_sym) };
+      if(found != locked_namespaces->end())
+      {
+        found_ns = found->second;
+      }
+    }
+    if(found_ns.is_nil())
+    {
+      found_ns = intern_ns(ns_sym);
     }
 
-    return ok(found_ns->second->intern_var(qualified_name));
+    return ok(found_ns->intern_var(qualified_name));
   }
 
   jtl::result<var_ref, jtl::immutable_string>
@@ -675,15 +674,22 @@ namespace jank::runtime
         util::format("Can't intern var. Sym isn't qualified: {}", qualified_sym->to_string()));
     }
 
-    auto locked_namespaces(namespaces.wlock());
     obj::symbol_ref const ns_sym{ make_box<obj::symbol>(qualified_sym->ns) };
-    auto const found_ns(locked_namespaces->find(ns_sym));
-    if(found_ns == locked_namespaces->end())
+    ns_ref found_ns;
     {
-      return err(util::format("Can't intern var. Namespace doesn't exist: {}", qualified_sym->ns));
+      auto locked_namespaces(namespaces.rlock());
+      auto const found{ locked_namespaces->find(ns_sym) };
+      if(found != locked_namespaces->end())
+      {
+        found_ns = found->second;
+      }
+    }
+    if(found_ns.is_nil())
+    {
+      found_ns = intern_ns(ns_sym);
     }
 
-    return ok(found_ns->second->intern_owned_var(qualified_sym));
+    return ok(found_ns->intern_owned_var(qualified_sym));
   }
 
   jtl::result<obj::keyword_ref, jtl::immutable_string>
@@ -805,28 +811,23 @@ namespace jank::runtime
 
   context::binding_scope::~binding_scope()
   {
-    try
-    {
-      __rt_ctx->pop_thread_bindings().expect_ok();
-    }
-    catch(...)
-    {
-      util::println("Exception caught while destructing binding_scope");
-    }
+    __rt_ctx->pop_thread_bindings();
   }
 
   jtl::string_result<void> context::push_thread_bindings()
   {
     auto bindings(obj::persistent_hash_map::empty());
-    auto tbfs(thread_binding_frames.rlock());
-    if(!tbfs->empty())
     {
-      bindings = tbfs->front().bindings;
-    }
-    /* Nothing to preserve, if there are no current bindings. */
-    else
-    {
-      return ok();
+      auto tbfs(thread_binding_frames.rlock());
+      if(!tbfs->empty())
+      {
+        bindings = tbfs->front().bindings;
+      }
+      /* Nothing to preserve, if there are no current bindings. */
+      else
+      {
+        return ok();
+      }
     }
 
     return push_thread_bindings(bindings);
@@ -847,8 +848,8 @@ namespace jank::runtime
   context::push_thread_bindings(obj::persistent_hash_map_ref const bindings)
   {
     thread_binding_frame frame{ obj::persistent_hash_map::empty() };
-    auto tbfs(thread_binding_frames.wlock());
     auto const thread_id{ std::this_thread::get_id() };
+    auto tbfs(thread_binding_frames.wlock());
     if(!tbfs->empty())
     {
       frame.bindings = tbfs->front().bindings;
@@ -887,17 +888,17 @@ namespace jank::runtime
     return ok();
   }
 
-  jtl::string_result<void> context::pop_thread_bindings()
+  void context::pop_thread_bindings()
   {
     auto tbfs(thread_binding_frames.wlock());
     if(tbfs->empty())
     {
-      return err("Mismatched thread binding pop");
+      return;
     }
 
     tbfs->pop_front();
 
-    return ok();
+    return;
   }
 
   obj::persistent_hash_map_ref context::get_thread_bindings() const
