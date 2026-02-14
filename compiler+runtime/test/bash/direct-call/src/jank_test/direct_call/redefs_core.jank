@@ -1,0 +1,5 @@
+(ns jank-test.direct-call.redefs-core
+  (:require jank-test.direct-call.redefs-util))
+
+(defn call-val []
+  (jank-test.direct-call.redefs-util/val))
