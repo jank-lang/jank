@@ -105,6 +105,8 @@ namespace jank::error
         return "Invalid ratio.";
       case kind::parse_invalid_keyword:
         return "Invalid keyword.";
+      case kind::parse_invalid_data_reader:
+        return "Invalid data reader.";
       case kind::internal_parse_failure:
         return "Internal parse failure.";
 
