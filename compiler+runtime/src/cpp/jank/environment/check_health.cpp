@@ -393,6 +393,11 @@ namespace jank::environment
                                       [=] { util::cli::opts = saved_opts; }
       };
 
+      runtime::__rt_ctx->intern_var("clojure.core", "*read-eval*")
+        .expect_ok()
+        ->bind_root(runtime::jank_true)
+        ->set_dynamic(true);
+
 #ifdef JANK_PHASE_2
       jank_load_clojure_core();
 #else
@@ -440,7 +445,7 @@ namespace jank::environment
 
     if(error)
     {
-      return util::format("{}─ ❌{} jank cannot jit aot compile working binaries",
+      return util::format("{}─ ❌{} jank cannot aot compile working binaries",
                           terminal_style::red,
                           terminal_style::reset);
     }
