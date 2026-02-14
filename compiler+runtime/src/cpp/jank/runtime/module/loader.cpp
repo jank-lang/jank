@@ -726,94 +726,118 @@ namespace jank::runtime::module
 
     if(found.is_none())
     {
-      /* TODO: If it contains -, suggest using _. Very common issue. */
       return error::runtime_module_not_found(util::format("Unable to find module '{}'.", module));
     }
 
     auto const &entry(found.unwrap());
 
+    jtl::option<file_entry> source_entry;
+    module_type source_type{};
+
+    if(entry.jank.is_some())
+    {
+      source_entry = entry.jank.unwrap();
+      source_type = module_type::jank;
+    }
+    else if(entry.cljc.is_some())
+    {
+      source_entry = entry.cljc.unwrap();
+      source_type = module_type::cljc;
+    }
+
+    if(source_entry.is_none())
+    {
+      return error::internal_runtime_failure(
+        util::format("No sources for registered module '{}'.", module));
+    }
+
     if(ori == origin::source)
     {
-      if(entry.jank.is_some())
+      return find_result{ entry, source_type };
+    }
+
+    jtl::option<file_entry> compiled_entry;
+    module_type compiled_type{};
+
+    auto const get_mod_time = [](file_entry const &e) {
+      return std::filesystem::last_write_time(native_transient_string{ e.path })
+        .time_since_epoch()
+        .count();
+    };
+
+    /* Ignoring object files from the archives here for security and portability reasons.
+     *
+     * Security:
+     * A dependency can include a binary version of a module that doesn't belong
+     * to it.
+     *
+     * Portability:
+     * Unlike class files, object files are tied to the OS, architecture, C++ stdlib etc,
+     * making it hard to share them. */
+    bool const has_o
+      = entry.o.is_some() && entry.o.unwrap().exists() && entry.o.unwrap().archive_path.is_none();
+    bool const has_cpp = entry.cpp.is_some() && entry.cpp.unwrap().exists();
+
+    using target_t = util::cli::compilation_target;
+    auto const target = util::cli::opts.output_target;
+
+    /* During compilation jank will only consider the cache of chosen type.
+     * If user wants output to be .cpp, we'll check only cpp module, otherwise
+     * default will be object file.
+     *
+     * Outside of compilation i.e. run, run-main commands, the cached version
+     * will be chosen based on the freshness of the cached module. */
+    if(truthy(__rt_ctx->compile_files_var->deref()))
+    {
+      if(target == target_t::object && has_o)
       {
-        return find_result{ entry, module_type::jank };
+        compiled_entry = entry.o.unwrap();
+        compiled_type = module_type::o;
       }
-      else if(entry.cljc.is_some())
+      else if(target == target_t::cpp && has_cpp)
       {
-        return find_result{ entry, module_type::cljc };
+        compiled_entry = entry.cpp.unwrap();
+        compiled_type = module_type::cpp;
       }
     }
     else
     {
-      /* Ignoring object files from the archives here for security and portability
-       * reasons.
-       *
-       * Security:
-       * A dependency can include a binary version of a module that doesn't belong
-       * to it.
-       *
-       * Portability:
-       * Unlike class files, object files are tied to the OS, architecture, C++ stdlib etc,
-       * making it hard to share them. */
-      if(entry.o.is_some() && entry.o.unwrap().archive_path.is_none() && entry.o.unwrap().exists()
-         && (entry.jank.is_some() || entry.cljc.is_some() || entry.cpp.is_some()))
+      if(has_o && has_cpp)
       {
-        auto const o_file_path{ native_transient_string{ entry.o.unwrap().path } };
-
-        std::time_t source_modified_time{};
-        module_type module_type{};
-
-        if(entry.cpp.is_some() && entry.cpp.unwrap().exists())
+        if(get_mod_time(entry.o.unwrap()) >= get_mod_time(entry.cpp.unwrap()))
         {
-          source_modified_time = entry.cpp.unwrap().last_modified_at();
-          module_type = module_type::cpp;
-        }
-        else if(entry.jank.is_some() && entry.jank.unwrap().exists())
-        {
-          source_modified_time = entry.jank.unwrap().last_modified_at();
-          module_type = module_type::jank;
-        }
-        else if(entry.cljc.is_some() && entry.cljc.unwrap().exists())
-        {
-          source_modified_time = entry.cljc.unwrap().last_modified_at();
-          module_type = module_type::cljc;
+          compiled_entry = entry.o.unwrap();
+          compiled_type = module_type::o;
         }
         else
         {
-          return error::runtime_module_binary_without_source(
-            util::format("Found a binary '{}' without a source while trying to load module '{}'. "
-                         "This module won't be loaded, since jank will not trust module binaries "
-                         "which are missing a corresponding source.",
-                         entry.o.unwrap().path,
-                         module));
-        }
-
-        if(std::filesystem::last_write_time(o_file_path).time_since_epoch().count()
-           >= source_modified_time)
-        {
-          return find_result{ entry, module_type::o };
-        }
-        else
-        {
-          return find_result{ entry, module_type };
+          compiled_entry = entry.cpp.unwrap();
+          compiled_type = module_type::cpp;
         }
       }
-      else if(entry.cpp.is_some())
+      else if(has_o)
       {
-        return find_result{ entry, module_type::cpp };
+        compiled_entry = entry.o.unwrap();
+        compiled_type = module_type::o;
       }
-      else if(entry.jank.is_some())
+      else if(has_cpp)
       {
-        return find_result{ entry, module_type::jank };
-      }
-      else if(entry.cljc.is_some())
-      {
-        return find_result{ entry, module_type::cljc };
+        compiled_entry = entry.cpp.unwrap();
+        compiled_type = module_type::cpp;
       }
     }
 
-    return error::internal_runtime_failure(
-      util::format("No sources for registered module '{}'.", module));
+    /* Freshness check vs source! */
+    if(compiled_entry.is_some())
+    {
+      auto const &c_entry = compiled_entry.unwrap();
+      if(get_mod_time(c_entry) >= source_entry.unwrap().last_modified_at())
+      {
+        return find_result{ entry, compiled_type };
+      }
+    }
+
+    return find_result{ entry, source_type };
   }
 
   bool loader::is_loaded(jtl::immutable_string const &module)
