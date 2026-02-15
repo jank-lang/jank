@@ -85,10 +85,12 @@ namespace jank::runtime
     jtl::result<void, error_ref> eval_cpp_string(jtl::immutable_string const &code) const;
     object_ref read_string(jtl::immutable_string const &code,
                            object_ref const reader_opts,
-                           u64 const nth_form = std::numeric_limits<jank::u64>::max());
+                           u64 const nth_form);
+    object_ref read_string(jtl::immutable_string const &code, object_ref const reader_opts);
     /* Calls `read-string` on the code, regardless of the value of `*read-eval*`.
      * This is important, since jank uses `read-string` as part of codegen, for reading
      * metadata maps and other non-trivial literals. */
+    object_ref read_string(jtl::immutable_string const &code);
     object_ref forcefully_read_string(jtl::immutable_string const &code);
     object_ref read_file(jtl::immutable_string const &file_path, object_ref const reader_opts);
     native_vector<analyze::expression_ref>

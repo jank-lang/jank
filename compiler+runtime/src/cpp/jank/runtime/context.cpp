@@ -360,13 +360,23 @@ namespace jank::runtime
     return ret;
   }
 
+  object_ref context::read_string(jtl::immutable_string const &code, object_ref const reader_opts)
+  {
+    return read_string(code, reader_opts, std::numeric_limits<u64>::max());
+  }
+
+  object_ref context::read_string(jtl::immutable_string const &code)
+  {
+    return read_string(code, obj::persistent_array_map::empty());
+  }
+
   object_ref context::forcefully_read_string(jtl::immutable_string const &code)
   {
     auto const read_eval_enabled_var{ __rt_ctx->find_var("clojure.core", "*read-eval*") };
     /* TODO: Profile C++ codegen. */
     binding_scope const bindings{ obj::persistent_hash_map::create_unique(
       std::make_pair(read_eval_enabled_var, jank_true)) };
-    return read_string(code, make_box<obj::persistent_array_map>());
+    return read_string(code);
   }
 
   object_ref
