@@ -1172,9 +1172,9 @@ namespace jank::read::parse
 
     auto const reader_opts{ __rt_ctx->reader_opts_var->deref() };
     auto const has_reader_opts{ reader_opts.is_some() };
-    // When reading in a form via the Clojure read functions the end user might wish
-    // to keep even the unsupported reader conditional branches, in such cases they
-    // can opt-in to the preserve mode by setting the :read-cond reader option.
+    /* When reading in a form via the Clojure read functions the end user might wish
+     * to keep even the unsupported reader conditional branches, in such cases they
+     * can opt-in to the preserve mode by setting the :read-cond reader option. */
     bool in_preservation_mode{};
     object_ref features{};
 
@@ -1185,11 +1185,11 @@ namespace jank::read::parse
 
       if(read_cond.is_nil())
       {
+        /* FIXME: Probably notes don't work when there is no source information. */
         return error::parse_invalid_reader_conditional(
           { start_token.start, latest_token.end },
-          util::format("Conditional read is not allowed by default. Set the :read-cond reader "
-                       "option to either :preserve or :allow. Found {} instead.",
-                       runtime::to_code_string(read_cond)));
+          "Conditional read is not allowed by default. Set the :read-cond reader option to either "
+          ":preserve or :allow. Found a `nil` instead.");
       }
 
       auto const reader_cond{ try_object<obj::keyword>(read_cond) };
@@ -1266,7 +1266,7 @@ namespace jank::read::parse
                                                        "Feature must be a keyword.");
       }
 
-      auto const feature_kw(dyn_cast<obj::keyword>(feature.ptr));
+      auto const feature_kw(expect_object<obj::keyword>(feature.ptr));
       auto const form_result{ *(++it) };
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This

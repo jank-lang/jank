@@ -296,12 +296,13 @@ namespace jank::runtime
 
   object_ref context::read_string(jtl::immutable_string const &code,
                                   object_ref const reader_opts,
-                                  jank::u64 const nth_form)
+                                  u64 const nth_form)
   {
     profile::timer const timer{ "rt read_string" };
-    auto const unknown_kw{ __rt_ctx->intern_keyword("unknown").expect_ok() };
-    auto const read_eval_var{ __rt_ctx->find_var("clojure.core", "*read-eval*") };
-    auto const read_eval_enabled{ read_eval_var.is_nil() || !equal(read_eval_var, unknown_kw) };
+    static auto const unknown_kw{ __rt_ctx->intern_keyword("unknown").expect_ok() };
+    static auto const read_eval_var{ __rt_ctx->find_var("clojure.core", "*read-eval*") };
+    auto const read_eval_enabled{ read_eval_var.is_nil()
+                                  || !equal(read_eval_var->deref(), unknown_kw) };
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
@@ -316,21 +317,21 @@ namespace jank::runtime
 
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-    auto count{ nth_form };
-    auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
-    auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };
+    u64 count{};
+    static auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
+    static auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };
     auto const throw_on_eof{ equal(get(reader_opts, eof_kw, eof_throw_kw), eof_throw_kw) };
     auto throw_eof{ throw_on_eof };
     object_ref ret{ get(reader_opts, eof_kw) };
 
     for(auto const &form : p_prc)
     {
-      if(count <= 0)
+      if(nth_form <= count)
       {
         break;
       }
 
-      count -= 1;
+      ++count;
 
       if(form.expect_ok().is_none())
       {
