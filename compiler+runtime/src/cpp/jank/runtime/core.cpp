@@ -878,7 +878,7 @@ namespace jank::runtime
 
     auto const typed_o{ expect_object<obj::persistent_string>(form_string) };
     /* The Clojure `read-string` always returns the first form in a string containing more than
-     * 1 forms. */
+     * one form. */
     return __rt_ctx->read_string(typed_o->data, opts, /* nth_form */ 1);
   }
 

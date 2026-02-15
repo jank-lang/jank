@@ -11,7 +11,6 @@
 
 #include <jank/c_api.h>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/error/report.hpp>

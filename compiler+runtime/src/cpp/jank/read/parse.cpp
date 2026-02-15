@@ -1185,11 +1185,10 @@ namespace jank::read::parse
 
       if(read_cond.is_nil())
       {
-        /* FIXME: Probably notes don't work when there is no source information. */
         return error::parse_invalid_reader_conditional(
           { start_token.start, latest_token.end },
           "Conditional read is not allowed by default. Set the :read-cond reader option to either "
-          ":preserve or :allow. Found a `nil` instead.");
+          ":preserve or :allow. Found a nil instead.");
       }
 
       auto const reader_cond{ try_object<obj::keyword>(read_cond) };
@@ -1206,7 +1205,7 @@ namespace jank::read::parse
         return error::parse_invalid_reader_conditional(
           { start_token.start, latest_token.end },
           util::format("Conditional read is not allowed by default. Set the :read-cond reader "
-                       "option to either :preserve or :allow. Found {} instead.",
+                       "option to either :preserve or :allow. Found a {} instead.",
                        runtime::to_code_string(read_cond)));
       }
 

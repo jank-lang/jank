@@ -11,7 +11,6 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/call.hpp>
 #include <jank/runtime/core/to_string.hpp>
-#include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
