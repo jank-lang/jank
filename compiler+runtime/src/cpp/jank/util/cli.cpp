@@ -124,7 +124,6 @@ OPTIONS
           --gc-incremental    Enable incremental GC collection.
           --debug             Enable debug symbol generation for generated code.
           --direct-call       Elides the dereferencing of vars for improved performance.
-          --disable-read      Disable read at runtime.
   -O,     --optimization <0 - 3>
                               The optimization level to use for AOT compilation.
           --codegen <llvm-ir, cpp> [default: cpp]
@@ -283,10 +282,6 @@ OPTIONS
         else if(check_flag(it, end, value, "-l", "--link", true))
         {
           opts.libs.emplace_back(value);
-        }
-        else if(check_flag(it, end, value, "--disable-read", false))
-        {
-          opts.disable_read = true;
         }
 
         /**** These are command-specific flags which we will store until we know the command. ****/

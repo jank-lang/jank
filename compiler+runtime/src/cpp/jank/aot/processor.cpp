@@ -43,13 +43,10 @@ extern "C" int jank_init_with_pch(int const argc,
                          char const * const pch_data,
                          jank_usize pch_size,
                          int (*fn)(int const, char const ** const));
-extern "C" jank_object_ref jank_const_true();
 extern "C" void jank_load_clojure_core_native();
 extern "C" void jank_load_clojure_core();
 extern "C" void jank_load_jank_compiler_native();
 extern "C" jank_object_ref jank_var_intern_c(char const *, char const *);
-extern "C" jank_object_ref jank_var_bind_root(jank_object_ref var, jank_object_ref val);
-extern "C" jank_object_ref jank_var_set_dynamic(jank_object_ref var, jank_object_ref dynamic);
 extern "C" jank_object_ref jank_deref(jank_object_ref);
 extern "C" jank_object_ref jank_call2(jank_object_ref, jank_object_ref, jank_object_ref);
 extern "C" void jank_module_set_loaded(char const *module);
@@ -81,10 +78,6 @@ namespace
 int main(int argc, const char** argv)
 {
   auto const fn{ [](int const argc, char const **argv) {
-    auto const read_eval_var{ jank_var_intern_c("clojure.core", "*read-eval*") };
-    jank_var_bind_root(read_eval_var, jank_const_true());
-    jank_var_set_dynamic(read_eval_var, jank_const_true());
-
     jank_load_clojure_core_native();
     jank_load_clojure_core();
     jank_load_jank_compiler_native();

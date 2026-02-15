@@ -81,6 +81,11 @@ namespace jank::runtime
     reader_opts_var->bind_root(jank_nil());
     reader_opts_var->dynamic.store(true);
 
+    __rt_ctx->intern_var("clojure.core", "*read-eval*")
+      .expect_ok()
+      ->bind_root(jank_true)
+      ->set_dynamic(true);
+
     auto const command_line_args_sym(make_box<obj::symbol>("*command-line-args*"));
     auto const command_line_args_var{ core->intern_var(command_line_args_sym) };
     command_line_args_var->bind_root({});

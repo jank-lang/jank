@@ -30,11 +30,6 @@ try
     context.applyCommandLine(argc, argv);
     context.setOption("no-breaks", true);
 
-    jank::runtime::__rt_ctx->intern_var("clojure.core", "*read-eval*")
-      .expect_ok()
-      ->bind_root(jank::runtime::jank_true.erase())
-      ->set_dynamic(true);
-
     jank_load_clojure_core_native();
 
 #ifdef JANK_PHASE_2

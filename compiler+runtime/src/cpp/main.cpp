@@ -403,12 +403,6 @@ int main(int const argc, char const **argv)
     jank_load_jank_compiler_native();
     jank_load_jank_perf_native();
 
-    __rt_ctx->intern_var("clojure.core", "*read-eval*")
-      .expect_ok()
-      ->bind_root(opts.disable_read ? __rt_ctx->intern_keyword("unknown").expect_ok().erase()
-                                    : jank_true)
-      ->set_dynamic(true);
-
 #ifdef JANK_PHASE_2
     jank_load_clojure_core();
 #endif
