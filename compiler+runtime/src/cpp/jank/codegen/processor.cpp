@@ -430,7 +430,7 @@ namespace jank::codegen
                 util::format_to(buffer, "jank::runtime::with_meta(");
               }
               util::format_to(buffer,
-                              "jank::runtime::__rt_ctx->read_string(\"{}\")",
+                              "jank::runtime::__rt_ctx->forcefully_read_string(\"{}\")",
                               util::escape(typed_o->to_code_string()));
               if(has_meta)
               {
@@ -2432,10 +2432,11 @@ namespace jank::codegen
       type_str);
 
     auto const meta{ runtime::source_to_meta(expr->source) };
-    util::format_to(body_buffer,
-                    "jank::runtime::reset_meta({}, jank::runtime::__rt_ctx->read_string(\"{}\"));",
-                    ret_tmp,
-                    util::escape(runtime::to_code_string(meta)));
+    util::format_to(
+      body_buffer,
+      "jank::runtime::reset_meta({}, jank::runtime::__rt_ctx->forcefully_read_string(\"{}\"));",
+      ret_tmp,
+      util::escape(runtime::to_code_string(meta)));
 
     if(expr->position == expression_position::tail)
     {

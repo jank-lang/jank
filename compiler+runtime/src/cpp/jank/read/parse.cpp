@@ -1170,6 +1170,54 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
+    auto const reader_opts{ __rt_ctx->reader_opts_var->deref() };
+    auto const has_reader_opts{ reader_opts.is_some() };
+    /* When reading in a form via the Clojure read functions the end user might wish
+     * to keep even the unsupported reader conditional branches, in such cases they
+     * can opt-in to the preserve mode by setting the :read-cond reader option. */
+    bool in_preservation_mode{};
+    object_ref features{};
+
+    if(has_reader_opts)
+    {
+      auto const read_cond_kw{ __rt_ctx->intern_keyword("", "read-cond").expect_ok() };
+      auto const read_cond{ get(reader_opts, read_cond_kw) };
+
+      if(read_cond.is_nil())
+      {
+        return error::parse_invalid_reader_conditional(
+          { start_token.start, latest_token.end },
+          "Conditional read is not allowed by default. Set the :read-cond reader option to either "
+          ":preserve or :allow. Found a nil instead.");
+      }
+
+      auto const reader_cond{ try_object<obj::keyword>(read_cond) };
+
+      if(reader_cond == __rt_ctx->intern_keyword("", "preserve").expect_ok())
+      {
+        in_preservation_mode = true;
+      }
+      else if(reader_cond == __rt_ctx->intern_keyword("", "allow").expect_ok())
+      {
+      }
+      else
+      {
+        return error::parse_invalid_reader_conditional(
+          { start_token.start, latest_token.end },
+          util::format("Conditional read is not allowed by default. Set the :read-cond reader "
+                       "option to either :preserve or :allow. Found a {} instead.",
+                       runtime::to_code_string(read_cond)));
+      }
+
+      auto const features_kw{ __rt_ctx->intern_keyword("", "features").expect_ok() };
+      auto const feature_set{ get(reader_opts, features_kw) };
+
+      if(feature_set.is_some())
+      {
+        features = feature_set;
+      }
+    }
+
     if(token_current->is_err())
     {
       return token_current->expect_err();
@@ -1193,16 +1241,12 @@ namespace jank::read::parse
 
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
-    native_list<runtime::object_ref> spliced_forms{};
+    runtime::detail::native_transient_vector preserved_forms{};
+    native_list<object_ref> spliced_forms{};
     jtl::option<processor::object_result> result{};
 
     for(auto it(begin()); it != end(); ++it)
     {
-      if(result.is_some())
-      {
-        continue;
-      }
-
       if(it->is_err())
       {
         return it->expect_err();
@@ -1216,7 +1260,7 @@ namespace jank::read::parse
                                                        "Feature must be a keyword.");
       }
 
-      auto const feature_kw(dyn_cast<obj::keyword>(feature.ptr));
+      auto const feature_kw(expect_object<obj::keyword>(feature.ptr));
       auto const form_result{ *(++it) };
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This
@@ -1251,12 +1295,24 @@ namespace jank::read::parse
                                                        "#? expects an even number of forms.");
       }
 
-      if(!is_supported_feature)
+      auto const form{ form_result.expect_ok().unwrap().ptr };
+
+      if(in_preservation_mode)
+      {
+        preserved_forms.push_back(feature_kw);
+        preserved_forms.push_back(form);
+        continue;
+      }
+
+      if(result.is_some())
       {
         continue;
       }
 
-      auto const form{ form_result.expect_ok().unwrap().ptr };
+      if(!is_supported_feature)
+      {
+        continue;
+      }
 
       if(splice)
       {
@@ -1313,6 +1369,17 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
+
+    if(in_preservation_mode)
+    {
+      return object_source_info{ make_box<obj::persistent_list>(
+                                   source_to_meta(start_token.start, latest_token.end),
+                                   std::in_place,
+                                   preserved_forms.rbegin(),
+                                   preserved_forms.rend()),
+                                 start_token,
+                                 latest_token };
+    }
 
     if(!spliced_forms.empty())
     {
