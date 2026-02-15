@@ -1247,11 +1247,6 @@ namespace jank::read::parse
 
     for(auto it(begin()); it != end(); ++it)
     {
-      if(result.is_some())
-      {
-        continue;
-      }
-
       if(it->is_err())
       {
         return it->expect_err();
@@ -1306,6 +1301,11 @@ namespace jank::read::parse
       {
         preserved_forms.push_back(feature_kw);
         preserved_forms.push_back(form);
+        continue;
+      }
+
+      if(result.is_some())
+      {
         continue;
       }
 
