@@ -5921,8 +5921,7 @@
 (defn all-ns
   "Returns a sequence of all namespaces."
   []
-  ;; (clojure.lang.Namespace/all)
-  (throw "TODO: port all-ns"))
+  (cpp/jank.runtime.all_ns))
 
 (defn ns-unmap
   "Removes the mappings for the symbol from the namespace."
