@@ -738,7 +738,7 @@ namespace jank::runtime
 
   object_ref future(object_ref const fn)
   {
-    auto const bindings{ *__rt_ctx->thread_binding_frames.rlock() };
+    auto const bindings{ __rt_ctx->get_thread_bindings() };
     auto const ret{ make_box<obj::future>() };
     /* NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage): False positive. */
     ret->thread = std::thread{ [=]() {
@@ -749,7 +749,7 @@ namespace jank::runtime
       GC_register_my_thread(&sb);
       util::scope_exit const unregister{ []() { GC_unregister_my_thread(); } };
 
-      __rt_ctx->push_thread_bindings().expect_ok();
+      __rt_ctx->push_thread_bindings(bindings).expect_ok();
 
       try
       {

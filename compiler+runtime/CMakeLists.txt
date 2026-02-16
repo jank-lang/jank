@@ -473,7 +473,7 @@ find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED)
 # ---- Other dependencies ----
 
 # ---- libjank.a ----
@@ -679,7 +679,7 @@ target_link_libraries(
   cpptrace::cpptrace
   ftxui::screen ftxui::dom
   Boost::multiprecision
-  Boost::system
+  Boost::boost
   nanobench_lib
   bdwgc::gc bdwgc::gctba
 )
