@@ -133,7 +133,6 @@ namespace jank::runtime
     jtl::string_result<void> push_thread_bindings(obj::persistent_hash_map_ref const bindings);
     void pop_thread_bindings();
     obj::persistent_hash_map_ref get_thread_bindings() const;
-    jtl::option<thread_binding_frame> current_thread_binding_frame();
 
     /*** XXX: Everything here is immutable after initialization. ***/
     jtl::immutable_string binary_version;
@@ -156,7 +155,8 @@ namespace jank::runtime
     /*** XXX: Everything here is thread-safe. ***/
     folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;
     folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ref>> keywords;
-    folly::Synchronized<native_list<thread_binding_frame>> thread_binding_frames;
+    folly::Synchronized<native_unordered_map<std::thread::id, native_list<thread_binding_frame>>>
+      thread_binding_frames;
 
     /* This must go last, since it'll try to access other bits in the runtime context during
      * its initialization and we need them to be ready. */
