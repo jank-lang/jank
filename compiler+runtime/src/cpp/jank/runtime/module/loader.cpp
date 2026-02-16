@@ -711,6 +711,13 @@ namespace jank::runtime::module
     return {};
   }
 
+  static long get_mod_time(file_entry const &e)
+  {
+    return static_cast<long>(std::filesystem::last_write_time(native_transient_string{ e.path })
+                               .time_since_epoch()
+                               .count());
+  }
+
   jtl::result<loader::find_result, error_ref>
   loader::find(jtl::immutable_string const &module, origin const ori)
   {
@@ -726,6 +733,7 @@ namespace jank::runtime::module
 
     if(found.is_none())
     {
+      /* TODO: If it contains -, suggest using _. Very common issue. */
       return error::runtime_module_not_found(util::format("Unable to find module '{}'.", module));
     }
 
@@ -759,11 +767,6 @@ namespace jank::runtime::module
     jtl::option<file_entry> compiled_entry;
     module_type compiled_type{};
 
-    auto const get_mod_time = [](file_entry const &e) {
-      return std::filesystem::last_write_time(native_transient_string{ e.path })
-        .time_since_epoch()
-        .count();
-    };
 
     /* Ignoring object files from the archives here for security and portability reasons.
      *
@@ -774,27 +777,26 @@ namespace jank::runtime::module
      * Portability:
      * Unlike class files, object files are tied to the OS, architecture, C++ stdlib etc,
      * making it hard to share them. */
-    bool const has_o
-      = entry.o.is_some() && entry.o.unwrap().exists() && entry.o.unwrap().archive_path.is_none();
-    bool const has_cpp = entry.cpp.is_some() && entry.cpp.unwrap().exists();
+    bool const has_o{ entry.o.is_some() && entry.o.unwrap().exists()
+                      && entry.o.unwrap().archive_path.is_none() };
+    bool const has_cpp{ entry.cpp.is_some() && entry.cpp.unwrap().exists() };
 
-    using target_t = util::cli::compilation_target;
     auto const target = util::cli::opts.output_target;
 
-    /* During compilation jank will only consider the cache of chosen type.
-     * If user wants output to be .cpp, we'll check only cpp module, otherwise
-     * default will be object file.
+    /* When jank is compiling the sources, it will use `cli::opts.output_target`
+     * to check for the compiled cache. If the user wants output to be .cpp,
+     * jank checks only compiled cpp module, otherwise default will be object file.
      *
      * Outside of compilation i.e. run, run-main commands, the cached version
      * will be chosen based on the freshness of the cached module. */
     if(truthy(__rt_ctx->compile_files_var->deref()))
     {
-      if(target == target_t::object && has_o)
+      if(target == util::cli::compilation_target::object && has_o)
       {
         compiled_entry = entry.o.unwrap();
         compiled_type = module_type::o;
       }
-      else if(target == target_t::cpp && has_cpp)
+      else if(target == util::cli::compilation_target::cpp && has_cpp)
       {
         compiled_entry = entry.cpp.unwrap();
         compiled_type = module_type::cpp;
@@ -827,7 +829,8 @@ namespace jank::runtime::module
       }
     }
 
-    /* Freshness check vs source! */
+    /* We now have the latest compiled entry. If it's up to date with
+     * the source, we can use it. Otherwise, we'll use the source. */
     if(compiled_entry.is_some())
     {
       auto const &c_entry = compiled_entry.unwrap();

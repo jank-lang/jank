@@ -116,8 +116,8 @@
           stale-time  (- now 20000)
           fresh-time  (- now 10000)]
 
-      ;; Compile Object with unique output
-      (write-source (str original-source-content "\n(println \"Hello Object\")"))
+      ;; Compile object with unique output
+      (write-source (str original-source-content "\n(println \"Hello object\")"))
       (jank "compile-module" module-a :out (compiled-a-path))
 
       (Thread/sleep 100)
@@ -137,14 +137,14 @@
         (set-file-time (compiled-a-path) fresh-time)
         (set-file-time (compiled-a-path-cpp) stale-time)
 
-        ;; Should load object ("Hello Object") even if we ask for cpp
+        ;; Should load object ("Hello object") even if we ask for cpp
         (let [output (:out (jank "run-main" module-a
                                  :extra-module-path (target-dir)))]
-          (is (string/includes? output "Hello Object"))
+          (is (string/includes? output "Hello object"))
           (is (not (string/includes? output "Hello cpp")))))
 
       ;; SCENARIO B: cpp is fresher than object
-      (testing "Scenario: cpp(fresh) > Object(stale) -> Loads cpp"
+      (testing "Scenario: cpp(fresh) > object(stale) -> loads cpp"
         (set-file-time (compiled-a-path) stale-time)
         (set-file-time (compiled-a-path-cpp) fresh-time)
 
@@ -152,7 +152,7 @@
         (let [output (:out (jank "run-main" module-a
                                  :extra-module-path (target-dir)))]
           (is (string/includes? output "Hello cpp"))
-          (is (not (string/includes? output "Hello Object"))))))))
+          (is (not (string/includes? output "Hello object"))))))))
 
 (deftest fallback-candidate-selection
   (testing "fallback when one compiled candidate is missing"
@@ -161,20 +161,20 @@
     (write-source (str original-source-content "\n(println \"Hello cpp\")"))
     (jank "compile-module" module-a :out (compiled-a-path-cpp) :flags ["--output-target" "cpp"])
 
-    (testing "Fallback to cpp if Object missing"
+    (testing "Fallback to cpp if object missing"
       (let [output (:out (jank "run-main" module-a
                                :extra-module-path (target-dir)))]
         (is (string/includes? output "Hello cpp"))))
 
-    ;; Compile Object only
+    ;; Compile object only
     (fs/delete-if-exists (compiled-a-path-cpp))
-    (write-source (str original-source-content "\n(println \"Hello Object\")"))
+    (write-source (str original-source-content "\n(println \"Hello object\")"))
     (jank "compile-module" module-a :out (compiled-a-path))
 
-    (testing "Fallback to Object if cpp missing"
+    (testing "Fallback to object if cpp missing"
       (let [output (:out (jank "run-main" module-a
                                :extra-module-path (target-dir)))]
-        (is (string/includes? output "Hello Object"))))))
+        (is (string/includes? output "Hello object"))))))
 
 (deftest compiled-module-loadability
   (testing "Doesn't load an object file from archive"
