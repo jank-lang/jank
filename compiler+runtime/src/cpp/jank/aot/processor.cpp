@@ -53,10 +53,12 @@ extern "C" void jank_module_set_loaded(char const *module);
 extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
 )");
 
-    auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
-    for(auto const &it : *modules_rlocked)
+    auto const namespaces{ __rt_ctx->all_ns() };
+    for(auto const n : namespaces)
     {
-      util::format_to(sb, R"(extern "C" void {}();)", module::module_to_load_function(it));
+      util::format_to(sb,
+                      R"(extern "C" void {}();)",
+                      module::module_to_load_function(n->name->name));
       sb("\n");
     }
 
@@ -84,10 +86,13 @@ int main(int argc, const char** argv)
 
     )");
 
-    for(auto const &it : *modules_rlocked)
+    for(auto const n : namespaces)
     {
-      util::format_to(sb, "{}();\n", module::module_to_load_function(it));
-      util::format_to(sb, "jank_module_set_loaded(\"{}\");\n", it);
+      auto const &mod{ n->name->name };
+      util::format_to(sb,
+                      "jank_module_register(\"{}\", &{});\n",
+                      mod,
+                      module::module_to_load_function(mod));
     }
 
     sb(R"(auto const apply{ jank_var_intern_c("clojure.core", "apply") };)");
@@ -234,17 +239,19 @@ int main(int argc, const char** argv)
     }
     std::vector<char const *> compiler_args{ jtl::move(compiler_args_res.expect_ok()) };
 
-    auto const modules_rlocked{ __rt_ctx->loaded_modules_in_order.rlock() };
-    for(auto const &it : *modules_rlocked)
+    auto const namespaces{ __rt_ctx->all_ns() };
+    for(auto const n : namespaces)
     {
+      auto const &mod{ n->name->name };
+
       /* Core modules will be linked as part of libjank-standalone.a. */
-      if(runtime::module::is_core_module(it))
+      if(runtime::module::is_core_module(mod))
       {
         continue;
       }
 
       auto const &module_path{ util::format("{}.o",
-                                            relative_to_cache_dir(module::module_to_path(it))) };
+                                            relative_to_cache_dir(module::module_to_path(mod))) };
 
       if(std::filesystem::exists(module_path.c_str()))
       {
@@ -252,14 +259,14 @@ int main(int argc, const char** argv)
       }
       else
       {
-        auto const find_res{ __rt_ctx->module_loader.find(it, module::origin::latest) };
+        auto const find_res{ __rt_ctx->module_loader.find(mod, module::origin::latest) };
         if(find_res.is_ok() && find_res.expect_ok().sources.o.is_some())
         {
           compiler_args.push_back(strdup(find_res.expect_ok().sources.o.unwrap().path.c_str()));
         }
         else
         {
-          return error::internal_aot_failure(util::format("Compiled module '{}' not found.", it));
+          return error::internal_aot_failure(util::format("Compiled module '{}' not found.", mod));
         }
       }
     }

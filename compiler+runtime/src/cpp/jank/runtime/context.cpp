@@ -611,6 +611,18 @@ namespace jank::runtime
     return expect_object<ns>(current_ns_var->deref());
   }
 
+  native_vector<ns_ref> context::all_ns() const
+  {
+    auto locked_namespaces(namespaces.rlock());
+    native_vector<ns_ref> ret;
+    ret.reserve(locked_namespaces->size());
+    for(auto const p : *locked_namespaces)
+    {
+      ret.emplace_back(p.second);
+    }
+    return ret;
+  }
+
   jtl::result<var_ref, jtl::immutable_string>
   context::intern_var(jtl::immutable_string const &qualified_name)
   {

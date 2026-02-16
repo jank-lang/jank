@@ -1004,6 +1004,11 @@ extern "C"
     aot::register_resource(name, { data, size });
   }
 
+  void jank_module_register(char const *module, void (* const fn)())
+  {
+    __rt_ctx->module_loader.add_load_fn(module, fn);
+  }
+
   void jank_module_set_loaded(char const * const module)
   {
     runtime::__rt_ctx->module_loader.set_is_loaded(module);

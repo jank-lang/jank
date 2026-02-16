@@ -12,6 +12,11 @@
 
 namespace jank::runtime
 {
+  namespace obj
+  {
+    using native_vector_sequence_ref = oref<struct native_vector_sequence>;
+  }
+
   jtl::immutable_string type(object_ref const o);
   bool is_nil(object_ref const o);
   bool is_true(object_ref const o);
@@ -40,6 +45,7 @@ namespace jank::runtime
   bool is_named(object_ref const o);
   jtl::immutable_string name(object_ref const o);
   object_ref namespace_(object_ref const o);
+  obj::native_vector_sequence_ref all_ns();
 
   object_ref keyword(object_ref const ns, object_ref const name);
   bool is_keyword(object_ref const o);

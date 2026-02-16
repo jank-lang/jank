@@ -314,6 +314,18 @@ namespace jank::runtime
       o);
   }
 
+  obj::native_vector_sequence_ref all_ns()
+  {
+    auto const all{ __rt_ctx->all_ns() };
+    native_vector<object_ref> v;
+    v.reserve(all.size());
+    for(auto const n : all)
+    {
+      v.emplace_back(n.erase());
+    }
+    return make_box<obj::native_vector_sequence>(jtl::move(v));
+  }
+
   object_ref keyword(object_ref const ns, object_ref const name)
   {
     if(!ns.is_nil() && ns->type != object_type::persistent_string)

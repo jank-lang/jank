@@ -122,7 +122,24 @@ namespace jank::runtime::module
 
   static native_set<jtl::immutable_string> const &core_modules()
   {
-    static native_set<jtl::immutable_string> const modules{ "clojure.core" };
+    /* TODO: Pass this in from CMake, so it's not duplicated. */
+    static native_set<jtl::immutable_string> const modules{ "clojure.core",
+                                                            "clojure.string",
+                                                            "clojure.walk",
+                                                            "jank.nrepl.server.inspect",
+                                                            "jank.nrepl.server.core",
+                                                            "jank.nrepl.server.handler",
+                                                            "jank.nrepl.server.bencode",
+                                                            "jank.nrepl.server.capture",
+                                                            "jank.nrepl.server.util",
+                                                            "jank.nrepl.server.eval",
+                                                            "jank.nrepl.server.parsec",
+                                                            "jank.nrepl.server.handler.close",
+                                                            "jank.nrepl.server.handler.clone",
+                                                            "jank.nrepl.server.handler.describe",
+                                                            "jank.nrepl.server.handler.completions",
+                                                            "jank.nrepl.server.handler.eval",
+                                                            "jank.nrepl.server.handler.lookup" };
     return modules;
   }
 
@@ -961,11 +978,6 @@ namespace jank::runtime::module
     if(res.is_err())
     {
       return res;
-    }
-
-    {
-      auto const locked_ordered_modules{ __rt_ctx->loaded_modules_in_order.wlock() };
-      locked_ordered_modules->push_back(module);
     }
 
     set_is_loaded(module);
