@@ -32,7 +32,7 @@ namespace jank::nrepl::server
     {
       boost::system::error_code error;
 
-      std::size_t length = socket_.read_some(buffer(rx_buf_, rx_capacity), error);
+      auto const length{ socket_.read_some(buffer(rx_buf_, rx_capacity), error) };
       if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset)
       {
         connected_ = false;
@@ -65,13 +65,12 @@ namespace jank::nrepl::server
     return impl_->is_connected();
   }
 
-  std::string native_client::read_some()
+  std::string native_client::read_some() const
   {
-    auto data = impl_->read_some();
-    return data;
+    return impl_->read_some();
   }
 
-  void native_client::write_some(std::string const &data)
+  void native_client::write_some(std::string const &data) const
   {
     impl_->write_some(data);
   }
@@ -84,7 +83,7 @@ namespace jank::nrepl::server
     {
     }
 
-    std::unique_ptr<native_client::impl> accept()
+    std::unique_ptr<native_client::impl> accept() const
     {
       auto impl{ std::make_unique<native_client::impl>(io_context_) };
       impl->accept(acceptor_);
