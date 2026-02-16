@@ -7397,42 +7397,28 @@ fails, attempts to require sym's namespace and retries."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; data readers ;;;;;;;;;;;;;;;;;;
 
-(def default-data-readers
-  "Default map of data reader functions provided by Clojure. May be
-  overridden by binding *data-readers*."
-  (merge
-    ;; {'uuid #'clojure.uuid/default-uuid-reader}
-    ;; (when-class "java.sql.Timestamp"
-    ;;   {'inst #'clojure.instant/read-instant-date})
-   ))
-
 (def ^:dynamic *data-readers*
-  "Map from reader tag symbols to data reader Vars.
-
-  When Clojure starts, it searches for files named 'data_readers.clj'
-  and 'data_readers.cljc' at the root of the classpath. Each such file
-  must contain a literal map of symbols, like this:
+  "Map from reader tag symbols to data reader Vars, like this:
 
       {foo/bar my.project.foo/bar
        foo/baz my.project/baz}
 
   The first symbol in each pair is a tag that will be recognized by
-  the Clojure reader. The second symbol in the pair is the
+  the jank reader. The second symbol in the pair is the
   fully-qualified name of a Var which will be invoked by the reader to
   parse the form following the tag. For example, given the
-  data_readers.clj file above, the Clojure reader would parse this
+  *data-readers* var value above, the jank reader would parse this
   form:
 
       #foo/bar [1 2 3]
 
   by invoking the Var #'my.project.foo/bar on the vector [1 2 3]. The
   data reader function is invoked on the form AFTER it has been read
-  as a normal Clojure data structure by the reader.
+  as a normal jank data structure by the reader.
 
   Reader tags without namespace qualifiers are reserved for
-  Clojure. Default reader tags are defined in
-  clojure.core/default-data-readers but may be overridden in
-  data_readers.clj, data_readers.cljc, or by rebinding this Var."
+  jank. Default reader tags are baked into the jank parser but may
+  be overridden by rebinding this Var."
   {})
 
 (def ^:dynamic *default-data-reader-fn*
@@ -7441,60 +7427,6 @@ fails, attempts to require sym's namespace and retries."
   the tag and the value.  If *default-data-reader-fn* is nil (the
   default), an exception will be thrown for the unknown tag."
   nil)
-
-(defn- data-reader-urls []
-  ;; (let [cl (.. Thread currentThread getContextClassLoader)]
-  ;;   (concat
-  ;;     (enumeration-seq (.getResources cl "data_readers.clj"))
-  ;;     (enumeration-seq (.getResources cl "data_readers.cljc"))))
-  (throw "TODO: port data-reader-urls"))
-
-(defn- data-reader-var [sym]
-  (intern (create-ns (symbol (namespace sym)))
-          (symbol (name sym))))
-
-(defn- load-data-reader-file [mappings #_java.net.URL url]
-  ;; (with-open [rdr (clojure.lang.LineNumberingPushbackReader.
-  ;;                  (java.io.InputStreamReader.
-  ;;                   (.openStream url) "UTF-8"))]
-  ;;   (binding [*file* (.getFile url)]
-  ;;     (let [read-opts (if (.endsWith (.getPath url) "cljc")
-  ;;                       {:eof nil :read-cond :allow}
-  ;;                       {:eof nil})
-  ;;           new-mappings (read read-opts rdr)]
-  ;;       (when (not (map? new-mappings))
-  ;;         (throw (ex-info (str "Not a valid data-reader map")
-  ;;                         {:url url})))
-  ;;       (reduce
-  ;;        (fn [m [k v]]
-  ;;          (when (not (symbol? k))
-  ;;            (throw (ex-info (str "Invalid form in data-reader file")
-  ;;                            {:url url
-  ;;                             :form k})))
-  ;;          (let [v-var (data-reader-var v)]
-  ;;            (when (and (contains? mappings k)
-  ;;                       (not= (mappings k) v-var))
-  ;;              (throw (ex-info "Conflicting data-reader mapping"
-  ;;                              {:url url
-  ;;                               :conflict k
-  ;;                               :mappings m})))
-  ;;            (assoc m k v-var)))
-  ;;        mappings
-  ;;        new-mappings))))
-  (throw "TODO: port load-data-reader-file"))
-
-(defn- load-data-readers []
-  ;; (alter-var-root #'*data-readers*
-  ;;                 (fn [mappings]
-  ;;                   (reduce load-data-reader-file
-  ;;                           mappings (data-reader-urls))))
-  (throw "TODO: port load-data-readers"))
-
-;; (try
-;;  (load-data-readers)
-;;  (catch #_Throwable t
-;;    (.printStackTrace t)
-;;    (throw t)))
 
 (defonce ^:private tapset (atom #{}))
 

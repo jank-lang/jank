@@ -696,6 +696,14 @@ namespace jank::read::parse
 
     TEST_CASE("List")
     {
+      SUBCASE("With lexer errors")
+      {
+        lex::processor lp{ "(0v)" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_err());
+      }
+
       SUBCASE("Empty")
       {
         lex::processor lp{ "() ( ) (  )" };
@@ -776,10 +784,26 @@ namespace jank::read::parse
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
+
+      SUBCASE("Unterminated in the middle")
+      {
+        lex::processor lp{ "[(]" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r1(p.next());
+        CHECK(r1.is_err());
+      }
     }
 
     TEST_CASE("Vector")
     {
+      SUBCASE("With lexer errors")
+      {
+        lex::processor lp{ "[0v]" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_err());
+      }
+
       SUBCASE("Empty")
       {
         lex::processor lp{ "[] [ ] [  ]" };
@@ -847,10 +871,26 @@ namespace jank::read::parse
         auto const r1(p.next());
         CHECK(r1.is_err());
       }
+
+      SUBCASE("Unterminated in the middle")
+      {
+        lex::processor lp{ "([)" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r1(p.next());
+        CHECK(r1.is_err());
+      }
     }
 
     TEST_CASE("Map")
     {
+      SUBCASE("With lexer errors")
+      {
+        lex::processor lp{ "{0v}" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r(p.next());
+        CHECK(r.is_err());
+      }
+
       SUBCASE("Empty")
       {
         lex::processor lp{ "{} { } {,,}" };
@@ -981,6 +1021,14 @@ namespace jank::read::parse
       SUBCASE("Unterminated")
       {
         lex::processor lp{ "{1" };
+        processor p{ lp.begin(), lp.end() };
+        auto const r1(p.next());
+        CHECK(r1.is_err());
+      }
+
+      SUBCASE("Unterminated in the middle")
+      {
+        lex::processor lp{ "({)" };
         processor p{ lp.begin(), lp.end() };
         auto const r1(p.next());
         CHECK(r1.is_err());
@@ -1159,6 +1207,14 @@ namespace jank::read::parse
 
       SUBCASE("Set")
       {
+        SUBCASE("With lexer errors")
+        {
+          lex::processor lp{ "#{0v}" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_err());
+        }
+
         SUBCASE("Empty")
         {
           lex::processor lp{ "#{}" };
@@ -1191,6 +1247,22 @@ namespace jank::read::parse
         SUBCASE("Duplicate items")
         {
           lex::processor lp{ "#{:k1 1 :k2 :k1 2}" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r1(p.next());
+          CHECK(r1.is_err());
+        }
+
+        SUBCASE("Unterminated")
+        {
+          lex::processor lp{ "#{1" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r1(p.next());
+          CHECK(r1.is_err());
+        }
+
+        SUBCASE("Unterminated in the middle")
+        {
+          lex::processor lp{ "(#{)" };
           processor p{ lp.begin(), lp.end() };
           auto const r1(p.next());
           CHECK(r1.is_err());
@@ -1313,6 +1385,30 @@ namespace jank::read::parse
                       make_box<obj::persistent_hash_set>(std::in_place, make_box(1))));
         }
 
+        SUBCASE("Ignore unmatched conditionals")
+        {
+          lex::processor lp{ "#?(:cljs #js {} :jank {})" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_array_map>()));
+        }
+
+        SUBCASE("Insuppressible errors in unsupported reader conditionals")
+        {
+          lex::processor lp{ "#?(:cljs #js 123-213 :jank {})" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_err());
+        }
+
+        SUBCASE("Suppressible errors in unsupported reader conditionals")
+        {
+          lex::processor lp{ "#?(:cljs #js #{:k :k} :jank {})" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_array_map>()));
+        }
+
         SUBCASE("Splice")
         {
           SUBCASE("Not seqable")
@@ -1375,6 +1471,31 @@ namespace jank::read::parse
                                                            make_box(0),
                                                            make_box(1),
                                                            make_box(2))));
+          }
+
+          SUBCASE("Ignore unmatched conditionals")
+          {
+            lex::processor lp{ "[#?@(:cljs #js {} :jank [42])]" };
+            processor p{ lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(equal(r.expect_ok().unwrap().ptr,
+                        make_box<obj::persistent_vector>(std::in_place, make_box(42))));
+          }
+
+          SUBCASE("Insuppressible errors in unsupported reader conditionals")
+          {
+            lex::processor lp{ "[#?@(:cljs #js [213-213] :jank {})]" };
+            processor p{ lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+
+          SUBCASE("Suppressible errors in unsupported reader conditionals")
+          {
+            lex::processor lp{ "[#?@(:cljs #js #{:k :k} :jank {})]" };
+            processor p{ lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_vector>()));
           }
         }
       }
