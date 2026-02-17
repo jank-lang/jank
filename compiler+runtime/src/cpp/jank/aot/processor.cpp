@@ -95,6 +95,8 @@ int main(int argc, const char** argv)
                       module::module_to_load_function(mod));
     }
 
+    util::format_to(sb, "{}();\n", module::module_to_load_function(module));
+
     sb(R"(auto const apply{ jank_var_intern_c("clojure.core", "apply") };)");
     sb("\n");
     sb(R"(auto const command_line_args{ jank_parse_command_line_args(argc, argv) };)");

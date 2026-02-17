@@ -1,11 +1,10 @@
 #!/usr/bin/env bb
 
 (ns jank.test.ahead-of-time
-  (:require
-   [babashka.fs :as fs]
-   [babashka.process :as proc]
-   [clojure.string :as str]
-   [clojure.test :as t :refer [deftest is testing use-fixtures]]))
+  (:require [babashka.fs :as fs]
+            [babashka.process :as proc]
+            [clojure.string :as str]
+            [clojure.test :as t :refer [deftest is testing use-fixtures]]))
 
 (def this-nsym (ns-name *ns*))
 (def default-output-file "target/cli")

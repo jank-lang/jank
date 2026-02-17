@@ -361,8 +361,12 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-
-#ifndef JANK_PHASE_2
+#ifdef JANK_PHASE_2
+    {
+      profile::timer const timer{ "require clojure.core" };
+      __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
+    }
+#else
     if(opts.target_module != "clojure.core")
     {
       __rt_ctx->compile_module("clojure.core").expect_ok();
@@ -408,13 +412,13 @@ int main(int const argc, char const **argv)
     __rt_ctx = new(GC) runtime::context{};
 
     jank_load_clojure_core_native();
-    jank_load_jank_compiler_native();
-    jank_load_jank_perf_native();
 
 #ifdef JANK_PHASE_2
     __rt_ctx->module_loader.add_load_fn("clojure.core", &jank_load_clojure_core);
     __rt_ctx->module_loader.add_load_fn("clojure.string", &jank_load_clojure_string);
     __rt_ctx->module_loader.add_load_fn("clojure.walk", &jank_load_clojure_walk);
+    __rt_ctx->module_loader.add_load_fn("jank.compiler-native", &jank_load_jank_compiler_native);
+    __rt_ctx->module_loader.add_load_fn("jank.perf-native", &jank_load_jank_perf_native);
     __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.core",
                                         &jank_load_jank_nrepl_server_core);
     __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.inspect",

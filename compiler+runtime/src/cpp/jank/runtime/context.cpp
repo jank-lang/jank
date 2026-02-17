@@ -88,9 +88,6 @@ namespace jank::runtime
     gensym_env_var
       = make_box<runtime::var>(core, make_box<obj::symbol>("*gensym-env*"))->set_dynamic(true);
 
-    /* TODO: Remove this once native/raw is entirely gone. */
-    intern_ns(make_box<obj::symbol>("native"));
-
     /* This won't be set until clojure.core is loaded. */
     auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
     in_ns_var = intern_var(in_ns_sym).expect_ok();

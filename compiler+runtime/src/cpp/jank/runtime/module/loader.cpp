@@ -123,9 +123,14 @@ namespace jank::runtime::module
   static native_set<jtl::immutable_string> const &core_modules()
   {
     /* TODO: Pass this in from CMake, so it's not duplicated. */
-    static native_set<jtl::immutable_string> const modules{ "clojure.core",
+    static native_set<jtl::immutable_string> const modules{ "cpp",
+                                                            "clojure.core",
+                                                            "clojure.core-native",
                                                             "clojure.string",
+                                                            "clojure.string-native",
                                                             "clojure.walk",
+                                                            "jank.perf-native",
+                                                            "jank.compiler-native",
                                                             "jank.nrepl.server.inspect",
                                                             "jank.nrepl.server.core",
                                                             "jank.nrepl.server.handler",
