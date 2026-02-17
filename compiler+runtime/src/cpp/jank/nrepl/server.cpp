@@ -83,7 +83,7 @@ namespace jank::nrepl::server
     {
     }
 
-    std::unique_ptr<native_client::impl> accept() const
+    std::unique_ptr<native_client::impl> accept()
     {
       auto impl{ std::make_unique<native_client::impl>(io_context_) };
       impl->accept(acceptor_);
@@ -108,7 +108,7 @@ namespace jank::nrepl::server
     return sb.release();
   }
 
-  native_client *native_server::accept()
+  native_client *native_server::accept() const
   {
     auto impl{ impl_->accept() };
 
