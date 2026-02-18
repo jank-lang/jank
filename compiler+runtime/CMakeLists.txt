@@ -695,7 +695,6 @@ target_link_libraries(
   ftxui::screen ftxui::dom
   Boost::multiprecision
   Boost::boost
-  ${Boost_LIBRARIES}
   nanobench_lib
   bdwgc::gc bdwgc::gctba
 )
