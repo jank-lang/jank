@@ -427,6 +427,8 @@ namespace jank::runtime
       std::filesystem::create_directories(module_dir);
     }
 
+    //util::println("writing module {} to {}", module_name, module_path.c_str());
+
     switch(util::cli::opts.output_target)
     {
       case util::cli::compilation_target::cpp:
@@ -615,6 +617,12 @@ namespace jank::runtime
     ret.reserve(locked_namespaces->size());
     for(auto const p : *locked_namespaces)
     {
+      /* This isn't a real ns. */
+      if(p.first->name == "cpp")
+      {
+        continue;
+      }
+
       ret.emplace_back(p.second);
     }
     return ret;

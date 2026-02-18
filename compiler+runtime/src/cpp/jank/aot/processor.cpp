@@ -49,6 +49,7 @@ extern "C" void jank_load_jank_compiler_native();
 extern "C" jank_object_ref jank_var_intern_c(char const *, char const *);
 extern "C" jank_object_ref jank_deref(jank_object_ref);
 extern "C" jank_object_ref jank_call2(jank_object_ref, jank_object_ref, jank_object_ref);
+extern "C" void jank_module_register(char const *module, void (*fn)());
 extern "C" void jank_module_set_loaded(char const *module);
 extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
 )");
@@ -82,7 +83,6 @@ int main(int argc, const char** argv)
   auto const fn{ [](int const argc, char const **argv) {
     jank_load_clojure_core_native();
     jank_load_clojure_core();
-    jank_load_jank_compiler_native();
 
     )");
 

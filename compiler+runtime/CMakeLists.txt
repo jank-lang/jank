@@ -195,8 +195,22 @@ set(
   "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/lookup.o"
 )
 
+list(JOIN jank_nrepl_server_outputs " " jank_nrepl_server_outputs_str)
 if(jank_enable_phase_2)
+  set(jank_core_lib_output_target --output-target cpp)
   set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.cpp")
+  set(jank_clojure_core_binary_output "${CMAKE_BINARY_DIR}/CMakeFiles/jank_exe_phase_2.dir/core-libs/clojure/core.cpp.o")
+
+  list(
+    TRANSFORM jank_nrepl_server_outputs
+    REPLACE "\.o$" ".cpp.o"
+    OUTPUT_VARIABLE jank_nrepl_server_binary_outputs
+  )
+  list(
+    TRANSFORM jank_nrepl_server_binary_outputs
+    REPLACE "core-libs" "CMakeFiles/jank_exe_phase_2.dir/core-libs"
+  )
+  list(JOIN jank_nrepl_server_binary_outputs " " jank_nrepl_server_outputs_str)
   list(
     TRANSFORM jank_nrepl_server_outputs
     REPLACE "\.o$" ".cpp"
@@ -1022,8 +1036,8 @@ add_custom_command(
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output} ${jank_nrepl_server_outputs}
   COMMAND rm -f ${jank_clojure_core_output} ${jank_nrepl_server_outputs}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} clojure.core
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs --output-target cpp jank.nrepl.server.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} ${jank_core_lib_output_target} clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(
