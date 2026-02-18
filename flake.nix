@@ -90,6 +90,7 @@
                 zstd
                 libedit
                 libxml2
+                boost
               ]);
 
             checkInputs = with pkgs; [
