@@ -14,19 +14,19 @@
 (defn build-declarative-flag [flag value]
   (case flag
     :output-dir
-    (str "--output-dir " value)
+    ["--output-dir" value]
 
     :direct-call
     (if value
-      "--direct-call"
-      "")
+      ["--direct-call"]
+      [])
 
     :optimization-level
     ; TODO: Validate.
-    (str "-O" value)
+    [(str "-O" value)]
 
     :codegen
-    (str "--codegen " (name value))
+    ["--codegen " (name value)]
 
     :defines
     (map (fn [[k v]] (str "-D" k "=" v)) value)
@@ -148,7 +148,6 @@
 (defn jank
   "Compile, run and repl into jank."
   [project subcmd & args]
-  ;(clojure.pprint/pprint (:jank project))
   (if-some [handler (subtask-kw->var (keyword subcmd))]
     (apply handler project (process-args args))
     (do
@@ -172,21 +171,41 @@
                                 ["jank" "test"]
 
                                 "check-health" ^{:doc "Perform a health check on your jank install."}
-                                ["jank" "check-health"]}
-                      :profiles {:default [:base :system :user :provided :dev :debug]}})
+                                ["jank" "check-health"]}})
+
+(defn deep-merge-metadata
+  "Deep merges metadata from multiple maps. Returns merged metadata or nil."
+  [& maps]
+  (let [metadatas (keep meta maps)]
+    (when (seq metadatas)
+      (apply merge-with
+             (fn [old new]
+               (if (and (map? old) (map? new))
+                 (deep-merge-metadata old new)
+                 new))
+             metadatas))))
 
 (defn deep-merge* [& maps]
   (let [f (fn [old new]
             (if (and (map? old) (map? new))
               (merge-with deep-merge* old new)
-              new))]
-    (if (every? map? maps)
-      (apply merge-with f maps)
-      (last maps))))
+              new))
+        result (if (every? map? maps)
+                 (apply merge-with f maps)
+                 (last maps))]
+    ;; Preserve and merge metadata if result is a map
+    (if (and (map? result) (some meta maps))
+      (with-meta result (apply deep-merge-metadata maps))
+      result)))
 
 (defn deep-merge [& maps]
   (let [maps (filter some? maps)]
-    (apply merge-with deep-merge* maps)))
+    (when (seq maps)
+      (let [result (apply merge-with deep-merge* maps)]
+        ;; Ensure top-level metadata is preserved
+        (if (and (map? result) (some meta maps))
+          (with-meta result (apply deep-merge-metadata maps))
+          result)))))
 
 (defn middleware
   "Inject jank project details into your current project."

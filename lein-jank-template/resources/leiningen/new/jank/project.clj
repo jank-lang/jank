@@ -5,7 +5,7 @@
   :plugins [[org.jank-lang/lein-jank "0.4"]]
   :middleware [leiningen.jank/middleware]
   :main {{namespace}}
-  :profiles {:debug {:output-dir "target/debug"
-                     :jank {:optimization-level 0}}
-             :release {:output-dir "target/release"
-                       :jank {:optimization-level 2}}})
+  :profiles {:base {:jank {:output-dir "target/debug"
+                           :optimization-level 0}}
+             :release {:jank {:output-dir "target/release"
+                              :optimization-level 2}}})
