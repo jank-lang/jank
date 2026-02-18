@@ -685,6 +685,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
   ${OPENSSL_INCLUDE_DIR}
+  ${Boost_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -694,6 +695,7 @@ target_link_libraries(
   ftxui::screen ftxui::dom
   Boost::multiprecision
   Boost::boost
+  ${Boost_LIBRARIES}
   nanobench_lib
   bdwgc::gc bdwgc::gctba
 )
