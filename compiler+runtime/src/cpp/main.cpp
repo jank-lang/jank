@@ -193,6 +193,8 @@ namespace jank
       __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
 
+    jank::runtime::module::verify_binary_version();
+
     __rt_ctx->compile_module(opts.target_module).expect_ok();
   }
 
@@ -372,6 +374,8 @@ namespace jank
       __rt_ctx->compile_module("clojure.core").expect_ok();
     }
 #endif
+
+    jank::runtime::module::verify_binary_version();
 
     __rt_ctx->compile_module(opts.target_module).expect_ok();
 

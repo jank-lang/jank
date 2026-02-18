@@ -3,13 +3,12 @@
 #include <unistd.h>
 
 #include <filesystem>
+#include <fstream>
 #include <regex>
 
 #include <jankzip.h>
 
 #include <jank/type.hpp>
-#include <jank/util/fmt/print.hpp>
-#include <jank/util/path.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/truthy.hpp>
@@ -23,9 +22,12 @@
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/rtti.hpp>
-#include <jank/util/environment.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/runtime.hpp>
+#include <jank/error/report.hpp>
+#include <jank/util/path.hpp>
+#include <jank/util/environment.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime::module
 {
@@ -118,6 +120,82 @@ namespace jank::runtime::module
     }
 
     return ret;
+  }
+
+  static jtl::immutable_string binary_version_path()
+  {
+    auto const path{ util::format("{}/.jank-binary-version", util::cli::opts.output_dir) };
+    return path;
+  }
+
+  enum class binary_version_status : u8
+  {
+    /* A binary version file exists and holds a matching value. */
+    good,
+    /* No binary version file was found. */
+    needs_write,
+    /* A binary version file exists, but the value within it doesn't match. */
+    needs_clean
+  };
+
+  static binary_version_status check_binary_version_status()
+  {
+    if(!std::filesystem::exists(util::cli::opts.output_dir.c_str()))
+    {
+      return binary_version_status::needs_write;
+    }
+
+    auto const &path{ binary_version_path() };
+    if(!std::filesystem::exists(path.c_str()))
+    {
+      return binary_version_status::needs_write;
+    }
+
+    std::ifstream ifs{ path.c_str() };
+    std::string file_binary_version;
+    std::getline(ifs, file_binary_version);
+
+    auto const &binary_version{ util::binary_version() };
+    if(file_binary_version != binary_version)
+    {
+      return binary_version_status::needs_clean;
+    }
+
+    return binary_version_status::good;
+  }
+
+  static void write_binary_version()
+  {
+    std::filesystem::create_directories(util::cli::opts.output_dir.c_str());
+
+    auto const &binary_version{ util::binary_version() };
+    auto const &path{ binary_version_path() };
+    std::ofstream ofs{ path.c_str() };
+    ofs << binary_version.c_str();
+  }
+
+  static void clean_output_directory()
+  {
+    std::filesystem::remove_all(util::cli::opts.output_dir.c_str());
+    write_binary_version();
+  }
+
+  void verify_binary_version()
+  {
+    auto const status{ check_binary_version_status() };
+    switch(status)
+    {
+      case binary_version_status::good:
+        break;
+      case binary_version_status::needs_write:
+        write_binary_version();
+        break;
+      case binary_version_status::needs_clean:
+        error::warn(
+          "Cleaning output directory before compiling, since the configuration has changed.");
+        clean_output_directory();
+        break;
+    }
   }
 
   static native_set<jtl::immutable_string> const &core_modules()

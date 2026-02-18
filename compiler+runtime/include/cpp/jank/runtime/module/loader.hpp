@@ -110,6 +110,8 @@ namespace jank::runtime::module
   nest_native_ns(jtl::immutable_string const &native_ns, jtl::immutable_string const &end);
   jtl::immutable_string module_to_native_ns(jtl::immutable_string const &orig_module);
 
+  void verify_binary_version();
+
   /* A core module is one baked into the jank runtime. For example, clojure.core. */
   bool is_core_module(jtl::immutable_string const &module);
 

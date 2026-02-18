@@ -174,6 +174,7 @@ set(
 )
 
 set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
+set(jank_clojure_core_binary_output "${jank_clojure_core_output}")
 set(
   jank_nrepl_server_outputs
   "${CMAKE_BINARY_DIR}/core-libs/clojure/string.o"
