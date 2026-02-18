@@ -13,6 +13,9 @@
 
 (defn build-declarative-flag [flag value]
   (case flag
+    :output-dir
+    (str "--output-dir " value)
+
     :direct-call
     (if value
       "--direct-call"
@@ -169,7 +172,8 @@
                                 ["jank" "test"]
 
                                 "check-health" ^{:doc "Perform a health check on your jank install."}
-                                ["jank" "check-health"]}})
+                                ["jank" "check-health"]}
+                      :profiles {:default [:base :system :user :provided :dev :debug]}})
 
 (defn deep-merge* [& maps]
   (let [f (fn [old new]
