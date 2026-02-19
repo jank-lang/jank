@@ -5829,21 +5829,10 @@
   ^{:doc "Sets the value at the index/indices. Works on arrays of char. Returns val."}
   aset-char setChar char)
 
-(defn make-array
-  "Creates and returns an array of instances of the specified class of
-  the specified dimension(s).  Note that a class object is required.
-  Class objects can be obtained by using their name.
-  Class objects for the primitive types can be obtained using, e.g., Integer/TYPE."
-  ([#_Class type len]
-  ;;  (. Array (newInstance type (int len)))
-   (throw "TODO: port make-array"))
-  ([#_Class type dim & more-dims]
-  ;;  (let [dims (cons dim more-dims)
-  ;;        ^"[I" dimarray (make-array (. Integer TYPE)  (count dims))]
-  ;;    (dotimes [i (alength dimarray)]
-  ;;      (aset-int dimarray i (nth dims i)))
-  ;;    (. Array (newInstance type dimarray))))
-   (throw "TODO: port make-array")))
+; TODO: Variadic arity.
+(defmacro make-array [type size]
+  `(let [na# (cpp/new ~(symbol (str type "/1")) ~size)]
+     (cpp/jank.runtime.make_array na# ~size)))
 
 (defn to-array-2d
   "Returns a (potentially-ragged) 2-dimensional array of Objects

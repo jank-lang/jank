@@ -3623,7 +3623,28 @@ namespace jank::analyze
       return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
     }
 
+    jtl::option<u8> array_dimension{};
+    if(auto const slash{ name.find('/') }; slash != jtl::immutable_string::npos)
+    {
+      /* TODO: Handle exceptions. */
+      auto const post_slash{ name.substr(slash + 1) };
+      size_t consumed{};
+      auto const dim{ std::stoi(post_slash.c_str(), &consumed) };
+      if(name.begin() + (slash + 1 + consumed) != name.end())
+      {
+        /* TODO: Proper error. */
+        return error::internal_analyze_failure("Invalid array syntax.",
+                                               object_source(sym),
+                                               latest_expansion(macro_expansions));
+      }
+      /* TODO: Verify the dimension is between 1 and 9 inclusive. */
+      array_dimension = static_cast<u8>(dim);
+      /* TODO: Verify ptr_count is zero. No pointers to arrays. */
+      name = name.substr(0, slash);
+    }
+
     auto const global_type{ cpp_util::resolve_type(name, ptr_count) };
+    cpp_util::apply_array_dimensions(global_type, array_dimension);
 
     /* Find a primitive type first. Then we know it's a cpp_type expression. */
     if(global_type && cpp_util::is_primitive(global_type))
@@ -4464,8 +4485,8 @@ namespace jank::analyze
       Cpp::GetScopeFromType(type_expr->type),
       expr::cpp_value::value_kind::constructor) };
 
-    /* We build a normal ctor call, then just wrap that in a new expr. During codegen,
-     * the new expr will allow us to allocate memory from the GC first, then initialize it with
+    /* We build a normal ctor call, then just wrap that in a cpp_new expr. During codegen,
+     * the cpp_new expr will allow us to allocate memory from the GC first, then initialize it with
      * the normal call. */
     auto const value_expr_res(analyze_cpp_call(make_box(l->data.rest()),
                                                cpp_value_expr,

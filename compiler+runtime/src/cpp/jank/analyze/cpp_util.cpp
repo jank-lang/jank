@@ -74,6 +74,22 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
+  jtl::ptr<void> apply_array_dimensions(jtl::ptr<void> type, jtl::option<u8> const &dimensions)
+  {
+    if(dimensions.is_none())
+    {
+      return type;
+    }
+
+    for(u8 count{ dimensions.unwrap() }; count != 0; --count)
+    {
+      util::println("type {}", Cpp::GetTypeAsString(type));
+      type = Cpp::GetArrayType(type);
+      util::println("type after array {}", Cpp::GetTypeAsString(type));
+    }
+    return type;
+  }
+
   jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 const ptr_count)
   {
     /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception

@@ -3,6 +3,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/associatively_writable.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
+#include <jank/runtime/obj/array.hpp>
 
 namespace jank::runtime
 {
@@ -10,6 +11,12 @@ namespace jank::runtime
   {
     using persistent_list_ref = oref<struct persistent_list>;
     using persistent_vector_ref = oref<struct persistent_vector>;
+  }
+
+  template <typename T>
+  oref<obj::array<T>> make_array(T * const data, usize const size)
+  {
+    return make_box<obj::array<T>>(data, size);
   }
 
   template <typename T>

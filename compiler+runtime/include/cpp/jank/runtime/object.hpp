@@ -31,6 +31,8 @@ namespace jank::runtime
     transient_vector,
     persistent_vector_sequence,
 
+    array,
+
     persistent_array_map,
     transient_array_map,
     persistent_array_map_sequence,
@@ -135,6 +137,9 @@ namespace jank::runtime
         return "transient_vector";
       case object_type::persistent_vector_sequence:
         return "persistent_vector_sequence";
+
+      case object_type::array:
+        return "array";
 
       case object_type::persistent_array_map:
         return "persistent_array_map";

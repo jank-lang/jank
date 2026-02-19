@@ -20,6 +20,7 @@ namespace jank::analyze::cpp_util
   jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> const scope);
 
   jtl::ptr<void> apply_pointers(jtl::ptr<void> type, u8 ptr_count);
+  jtl::ptr<void> apply_array_dimensions(jtl::ptr<void> type, jtl::option<u8> const &dimensions);
   jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 ptr_count);
   jtl::string_result<jtl::ptr<void>> resolve_scope(jtl::immutable_string const &sym);
   jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal);
