@@ -64,6 +64,33 @@ namespace jank::jit
           continue;
         }
 
+        /* FILTER LOGIC:
+         * This allows the test driver to pass "file1|file2|file3" and run those files only.
+         */
+        char const * const env_filter{ getenv("JANK_TEST_FILTER") };
+        std::optional<std::regex> filter_re{};
+        if(env_filter && *env_filter != '\0')
+        {
+          try
+          {
+            filter_re.emplace(env_filter);
+          }
+          catch(std::regex_error const &e)
+          {
+            /* If the filter is invalid, we probably shouldn't run anything. */
+            util::print("{}Invalid JANK_TEST_FILTER regex: {}{}\n",
+                        jtl::terminal_style::red,
+                        e.what(),
+                        jtl::terminal_style::reset);
+            return;
+          }
+        }
+        if(auto const path_str{ dir_entry.path().string() };
+           filter_re && !std::regex_search(path_str, *filter_re))
+        {
+          continue;
+        }
+
         auto const filename(dir_entry.path().filename().string());
 
         if(filename.starts_with("."))
