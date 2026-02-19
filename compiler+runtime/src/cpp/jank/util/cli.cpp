@@ -20,7 +20,7 @@ namespace jank::util::cli
   }
 
   /* NOLINTNEXTLINE */
-  options opts{};
+  options opts;
 
   using flag_it = native_vector<jtl::immutable_string>::const_iterator;
 
