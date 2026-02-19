@@ -63,11 +63,12 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-
     {
       profile::timer const timer{ "load clojure.core" };
       __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
+
+    jank::runtime::module::verify_binary_version();
 
     {
       profile::timer const timer{ "eval user code" };
@@ -100,6 +101,8 @@ namespace jank
       profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
+
+    jank::runtime::module::verify_binary_version();
 
     {
       profile::timer const timer{ "eval user code" };
