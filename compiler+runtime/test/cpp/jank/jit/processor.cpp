@@ -1,6 +1,4 @@
 #include <filesystem>
-#include <regex>
-#include <optional>
 
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
@@ -58,7 +56,6 @@ namespace jank::jit
       auto old_client{ diag.takeClient() };
       diag.setClient(new clang::IgnoringDiagConsumer{}, true);
       util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
-
 
       for(auto const &dir_entry : std::filesystem::recursive_directory_iterator("test/jank"))
       {
