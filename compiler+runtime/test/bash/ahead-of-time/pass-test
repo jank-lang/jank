@@ -71,35 +71,22 @@
       (is (= expected-output (-> output-filename (str args)
                                  proc/sh :out))))))
 
-(deftest aot-jank-and-cpp-modules
-    (let [alias-name "jank-and-cpp-modules"
-          module-path (module-path alias-name)
-          module "core"
-          args " foo bar"
-          expected-output (slurp (str "expected-output/" alias-name "/" module))
-          compile-command (compile-command module-path module {:include-headers? true})]
-      (testing (str alias-name " & core")
-        (println "Compile command: " compile-command)
-        (is (= 0 (->> compile-command proc/sh :exit)))
-        (is (= expected-output (-> default-output-file (str args)
-                                   proc/sh :out))))))
-
-(deftest aot-jank-and-cpp-modules-release-build
-    (let [alias-name "jank-and-cpp-modules"
-          module-path (module-path alias-name)
-          module "core"
-          args " foo bar"
-          expected-output (slurp (str "expected-output/" alias-name "/" module))
-          compile-command (compile-command module-path module {:include-headers? true
-                                                               :optimization-flag "-O3"})]
-      (testing (str alias-name " & core")
-        (println "Compile command: " compile-command)
-        (is (= 0 (->> compile-command
-                      (proc/sh {:out *out*
-                                :err *out*})
-                      :exit)))
-        (is (= expected-output (-> default-output-file (str args)
-                                   proc/sh :out))))))
+(deftest aot-multiple-jank-modules-release-build
+  (let [alias-name "only-jank-modules"
+        module-path (module-path alias-name)
+        module "core"
+        args " Admin 3000"
+        output-filename "target/my-cli"
+        expected-output (slurp (str "expected-output/" alias-name "/" module))
+        compile-command (compile-command module-path module {:output-file output-filename
+                                                             :optimization-flag "-O3"})]
+    (testing (str alias-name " & core")
+      (is (= 0 (->> compile-command
+                    (proc/sh {:out *out*
+                              :err *out*})
+                    :exit)))
+      (is (= expected-output (-> output-filename (str args)
+                                 proc/sh :out))))))
 
 (deftest aot-cpp-raw-inline
   (let [alias-name "cpp-raw-inline"
@@ -118,9 +105,9 @@
   (when (empty? (System/getenv "JANK_SKIP_AOT_CHECK"))
     (proc/sh {:out *out* :err *out*} "jank check-health")
     (System/exit
-      (if (t/successful? (t/run-tests this-nsym))
-        0
-        1))))
+     (if (t/successful? (t/run-tests this-nsym))
+       0
+       1))))
 
 (when (= *file* (System/getProperty "babashka.file"))
   (apply -main *command-line-args*))

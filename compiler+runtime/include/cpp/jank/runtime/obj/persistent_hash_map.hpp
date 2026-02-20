@@ -17,6 +17,8 @@ namespace jank::runtime::obj
                                        runtime::detail::native_persistent_hash_map>
   {
     static constexpr object_type obj_type{ object_type::persistent_hash_map };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
+                                                    | object_behavior::find };
     using parent_type
       = obj::detail::base_persistent_map<persistent_hash_map,
                                          persistent_hash_map_sequence,
@@ -27,13 +29,13 @@ namespace jank::runtime::obj
     persistent_hash_map() = default;
     persistent_hash_map(persistent_hash_map &&) noexcept = default;
     persistent_hash_map(persistent_hash_map const &) = default;
-    persistent_hash_map(jtl::option<object_ref> const &meta,
+    persistent_hash_map(object_ref const meta,
                         runtime::detail::native_array_map const &m,
                         object_ref const key,
                         object_ref const val);
     persistent_hash_map(value_type &&d);
     persistent_hash_map(value_type const &d);
-    persistent_hash_map(jtl::option<object_ref> const &meta, value_type &&d);
+    persistent_hash_map(object_ref const meta, value_type &&d);
 
     template <typename... Args>
     persistent_hash_map(runtime::detail::in_place_unique, Args &&...args)
@@ -69,19 +71,22 @@ namespace jank::runtime::obj
 
     static persistent_hash_map_ref create_from_seq(object_ref const seq);
 
-    /* behavior::associatively_readable */
-    object_ref get(object_ref const key) const;
-    object_ref get(object_ref const key, object_ref const fallback) const;
-    object_ref get_entry(object_ref const key) const;
-    bool contains(object_ref const key) const;
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
+
+    /* behavior::find */
+    object_ref find(object_ref const key) const override;
 
     /* behavior::associatively_writable */
     persistent_hash_map_ref assoc(object_ref const key, object_ref const val) const;
     persistent_hash_map_ref dissoc(object_ref const key) const;
 
     /* behavior::callable */
-    object_ref call(object_ref const) const;
-    object_ref call(object_ref const, object_ref const) const;
+    using object::call;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
 
     /* behavior::transientable */
     obj::transient_hash_map_ref to_transient() const;

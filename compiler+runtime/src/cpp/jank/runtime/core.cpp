@@ -1,15 +1,19 @@
 #include <pthread.h>
 #include <cxxabi.h>
 
+#include <gc/gc.h>
+
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/behavior/derefable.hpp>
 #include <jank/runtime/behavior/ref_like.hpp>
 #include <jank/runtime/behavior/realizable.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/scope_exit.hpp>
 
 namespace jank::runtime
 {
@@ -20,7 +24,7 @@ namespace jank::runtime
 
   bool is_nil(object_ref const o)
   {
-    return o == jank_nil();
+    return o.is_nil();
   }
 
   bool is_true(object_ref const o)
@@ -35,7 +39,7 @@ namespace jank::runtime
 
   bool is_some(object_ref const o)
   {
-    return o != jank_nil();
+    return o.is_some();
   }
 
   bool is_string(object_ref const o)
@@ -123,7 +127,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil();
+    return {};
   }
 
   object_ref println(object_ref const args)
@@ -155,7 +159,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil();
+    return {};
   }
 
   object_ref pr(object_ref const args)
@@ -182,7 +186,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil();
+    return {};
   }
 
   object_ref prn(object_ref const args)
@@ -214,7 +218,7 @@ namespace jank::runtime
         }
       },
       args);
-    return jank_nil();
+    return {};
   }
 
   obj::persistent_string_ref subs(object_ref const s, object_ref const start)
@@ -298,7 +302,7 @@ namespace jank::runtime
           auto const ns(typed_o->get_namespace());
           if(ns.empty())
           {
-            return jank_nil();
+            return {};
           }
           return make_box<obj::persistent_string>(ns);
         }
@@ -350,13 +354,7 @@ namespace jank::runtime
 
   bool is_callable(object_ref const o)
   {
-    return visit_object(
-      [=](auto const typed_o) -> bool {
-        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
-
-        return std::is_base_of_v<behavior::callable, T>;
-      },
-      o);
+    return (o->behaviors & object_behavior::call) != object_behavior::none;
   }
 
   uhash to_hash(object_ref const o)
@@ -463,7 +461,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not derefable: {}",
-                                                 object_type_str(typed_o->base.type)) };
+                                                 object_type_str(typed_o->type)) };
         }
       },
       o);
@@ -482,7 +480,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not realizable: {}",
-                                                 object_type_str(typed_o->base.type)) };
+                                                 object_type_str(typed_o->type)) };
         }
       },
       o);
@@ -566,7 +564,7 @@ namespace jank::runtime
     switch(size)
     {
       case 0:
-        return jank_nil();
+        return {};
       case 1:
         {
           return make_box<obj::persistent_string>(match_results[0].str());
@@ -629,7 +627,7 @@ namespace jank::runtime
 
     if(!match_results.suffix().str().empty())
     {
-      return jank_nil();
+      return {};
     }
 
     return smatch_to_vector(match_results);
@@ -645,7 +643,7 @@ namespace jank::runtime
       }
       catch(...)
       {
-        return jank_nil();
+        return {};
       }
     }
     else
@@ -730,7 +728,15 @@ namespace jank::runtime
   {
     auto const bindings{ __rt_ctx->thread_binding_frames };
     auto const ret{ make_box<obj::future>() };
+    /* NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage): False positive. */
     ret->thread = std::thread{ [=]() {
+      /* GC threads should be explicitly registered so that the GC is prepared to perform
+       * allocations from this thread. Unregistering is equally important. */
+      GC_stack_base sb{};
+      GC_get_stack_base(&sb);
+      GC_register_my_thread(&sb);
+      util::scope_exit const unregister{ []() { GC_unregister_my_thread(); } };
+
       __rt_ctx->thread_binding_frames = bindings;
 
       try

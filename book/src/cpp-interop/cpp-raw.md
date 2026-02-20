@@ -1,7 +1,8 @@
 # Embedding raw C++
 jank has a special `cpp/raw` form which accepts a single string containing
 literal C++ code. This can be used for bringing in pretty much anything. For
-example, we can use this to include header files.
+example, we can use this to include header files (though prefer the
+`clojure.core/include` macro for this).
 
 ```clojure
 (cpp/raw "#include <fstream>")

@@ -8,15 +8,6 @@ set(CMAKE_CXX_CLANG_TIDY_OLD ${CMAKE_CXX_CLANG_TIDY})
   set(CMAKE_CXX_CLANG_TIDY "")
   set(GC_BUILD_SHARED_LIBS OFF)
 
-  # Malloc redirection is causing crashes on macOS. However, without it, we get
-  # premature collections. Because of this, collection is disabled on macOS entirely.
-  #
-  # https://github.com/bdwgc/bdwgc/issues/829
-  if(NOT APPLE)
-    set(enable_redirect_malloc ON CACHE BOOL "Redirect malloc and friends to collector routines")
-    set(enable_uncollectable_redirection ON CACHE BOOL "Redirect to uncollectible malloc instead of garbage-collected one")
-  endif()
-
   set(enable_cplusplus ON CACHE BOOL "Enable C++")
   set(build_cord OFF CACHE BOOL "Build cord")
   set(enable_docs OFF CACHE BOOL "Enable docs")
@@ -38,8 +29,6 @@ set(CMAKE_CXX_CLANG_TIDY_OLD ${CMAKE_CXX_CLANG_TIDY})
   add_subdirectory(third-party/bdwgc EXCLUDE_FROM_ALL)
 
   unset(GC_BUILD_SHARED_LIBS)
-  unset(enable_redirect_malloc)
-  unset(enable_uncollectable_redirection)
   unset(enable_cplusplus)
   unset(build_cord)
   unset(enable_docs)

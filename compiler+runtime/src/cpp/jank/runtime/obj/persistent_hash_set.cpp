@@ -5,26 +5,34 @@
 
 namespace jank::runtime::obj
 {
+  persistent_hash_set::persistent_hash_set()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   persistent_hash_set::persistent_hash_set(value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
   {
   }
 
   persistent_hash_set::persistent_hash_set(value_type const &d)
-    : data{ d }
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
   {
   }
 
-  persistent_hash_set::persistent_hash_set(jtl::option<object_ref> const &meta, value_type &&d)
-    : data{ std::move(d) }
+  persistent_hash_set::persistent_hash_set(object_ref const meta, value_type &&d)
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
     , meta{ meta }
   {
   }
 
   persistent_hash_set_ref persistent_hash_set::empty()
   {
-    static auto const ret(make_box<persistent_hash_set>());
-    return ret;
+    static persistent_hash_set const ret;
+    return &ret;
   }
 
   persistent_hash_set_ref persistent_hash_set::create_from_seq(object_ref const seq)
@@ -43,7 +51,7 @@ namespace jank::runtime::obj
 
   bool persistent_hash_set::equal(object const &o) const
   {
-    if(&o == &base)
+    if(&o == static_cast<object const *>(this))
     {
       return true;
     }
@@ -121,6 +129,11 @@ namespace jank::runtime::obj
     return ret;
   }
 
+  object_ref persistent_hash_set::get_meta() const
+  {
+    return meta;
+  }
+
   persistent_hash_set_ref persistent_hash_set::conj(object_ref const head) const
   {
     auto set(data.insert(head));
@@ -133,7 +146,7 @@ namespace jank::runtime::obj
     auto const found(data.find(o));
     if(!found)
     {
-      return jank_nil();
+      return {};
     }
     return *found;
   }
@@ -141,6 +154,21 @@ namespace jank::runtime::obj
   transient_hash_set_ref persistent_hash_set::to_transient() const
   {
     return make_box<transient_hash_set>(data);
+  }
+
+  object_ref persistent_hash_set::get(object_ref const key) const
+  {
+    return call(key);
+  }
+
+  object_ref persistent_hash_set::get(object_ref const key, object_ref const fallback) const
+  {
+    auto const found(data.find(key));
+    if(!found)
+    {
+      return fallback;
+    }
+    return *found;
   }
 
   bool persistent_hash_set::contains(object_ref const o) const

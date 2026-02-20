@@ -6,22 +6,19 @@ namespace jank::runtime::obj
 {
   using native_pointer_wrapper_ref = oref<struct native_pointer_wrapper>;
 
-  struct native_pointer_wrapper
+  struct native_pointer_wrapper : object
   {
     static constexpr object_type obj_type{ object_type::native_pointer_wrapper };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
-    native_pointer_wrapper() = default;
+    native_pointer_wrapper();
     native_pointer_wrapper(native_pointer_wrapper &&) noexcept = default;
     native_pointer_wrapper(native_pointer_wrapper const &) = default;
     native_pointer_wrapper(void * const);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
 
     template <typename T>
     T *as() const
@@ -30,7 +27,6 @@ namespace jank::runtime::obj
     }
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     void *data{};
   };
 }

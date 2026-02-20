@@ -30,7 +30,7 @@ namespace jank::runtime
     {  ']', "_RBRACK_" },
     {  '(', "_LPAREN_" },
     {  ')', "_RPAREN_" },
-    {  '/',        "$" },
+    {  '/',  "_SLASH_" },
     { '\\', "_BSLASH_" },
     {  '?',  "_QMARK_" }
   };
@@ -53,7 +53,7 @@ namespace jank::runtime
     {  "_CIRCA_",  '@' },
     {  "_SHARP_",  '#' },
     {  "_CARET_",  '^' },
-    {        "$",  '/' },
+    {  "_SLASH_",  '/' },
     {   "_PERC_",  '%' },
     {   "_PLUS_",  '+' },
     {   "_BANG_",  '!' },

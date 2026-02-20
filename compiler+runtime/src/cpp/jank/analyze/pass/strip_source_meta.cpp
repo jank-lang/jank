@@ -22,7 +22,7 @@ namespace jank::analyze::pass
           {
             if(typed_e->meta.is_some())
             {
-              typed_e->meta = runtime::strip_source_from_meta_opt(typed_e->meta);
+              typed_e->meta = runtime::strip_source_from_meta(typed_e->meta);
             }
           }
           else if constexpr(jtl::is_same<T, expr::primitive_literal>)
@@ -33,7 +33,8 @@ namespace jank::analyze::pass
 
                 if constexpr(runtime::behavior::metadatable<O>)
                 {
-                  typed_obj->meta = runtime::strip_source_from_meta_opt(typed_obj->meta);
+                  runtime::reset_meta(typed_obj,
+                                      runtime::strip_source_from_meta(typed_obj->get_meta()));
                 }
               },
               typed_e->data);

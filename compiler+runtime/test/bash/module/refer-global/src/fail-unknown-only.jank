@@ -1,0 +1,4 @@
+(ns test
+  (:refer-global :only [there_is_no_way_this_exists]))
+
+(println :success)

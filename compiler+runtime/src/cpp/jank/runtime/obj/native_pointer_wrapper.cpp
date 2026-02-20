@@ -4,8 +4,14 @@
 
 namespace jank::runtime::obj
 {
+  native_pointer_wrapper::native_pointer_wrapper()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   native_pointer_wrapper::native_pointer_wrapper(void * const d)
-    : data{ d }
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
   {
   }
 
@@ -18,27 +24,5 @@ namespace jank::runtime::obj
 
     auto const c(expect_object<native_pointer_wrapper>(&o));
     return data == c->data;
-  }
-
-  void native_pointer_wrapper::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string native_pointer_wrapper::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  jtl::immutable_string native_pointer_wrapper::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash native_pointer_wrapper::to_hash() const
-  {
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(data));
   }
 }

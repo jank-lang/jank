@@ -8,24 +8,25 @@ namespace jank::runtime::obj
   using persistent_string_ref = oref<struct persistent_string>;
   using persistent_string_sequence_ref = oref<struct persistent_string_sequence>;
 
-  struct persistent_string_sequence
+  struct persistent_string_sequence : object
   {
     static constexpr object_type obj_type{ object_type::persistent_string_sequence };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    persistent_string_sequence() = default;
+    persistent_string_sequence();
     persistent_string_sequence(persistent_string_sequence &&) noexcept = default;
     persistent_string_sequence(persistent_string_sequence const &) = default;
     persistent_string_sequence(obj::persistent_string_ref const s);
     persistent_string_sequence(obj::persistent_string_ref const s, usize const i);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_string() const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_string() const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::countable */
     usize count() const;
@@ -43,7 +44,6 @@ namespace jank::runtime::obj
     persistent_string_sequence_ref next_in_place();
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     obj::persistent_string_ref str{};
     usize index{};
   };

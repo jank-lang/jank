@@ -29,12 +29,14 @@ namespace jank::runtime::obj
   }
 
   uuid::uuid()
-    : value{ random() }
+    : object{ obj_type, obj_behaviors }
+    , value{ random() }
   {
   }
 
   uuid::uuid(jtl::immutable_string const &s)
-    : value{ from_string(s) }
+    : object{ obj_type, obj_behaviors }
+    , value{ from_string(s) }
   {
   }
 
@@ -72,11 +74,7 @@ namespace jank::runtime::obj
 
   uhash uuid::to_hash() const
   {
-    if(hash)
-    {
-      return hash;
-    }
     static std::hash<uuids::uuid> const hasher{};
-    return hash = static_cast<uhash>(hasher(*value));
+    return static_cast<uhash>(hasher(*value));
   }
 }

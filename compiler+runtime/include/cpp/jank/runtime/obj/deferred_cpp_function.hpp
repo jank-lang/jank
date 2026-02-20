@@ -3,7 +3,6 @@
 #include <mutex>
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/behavior/callable.hpp>
 
 namespace jank::runtime
 {
@@ -29,9 +28,10 @@ namespace jank::runtime::obj
    * When this function is called, it will JIT compile the C++ code, get a real function
    * object, replace the root of the var with that object, and then continue to proxy
    * calls to that object for anyone who still has a handle to this one. */
-  struct deferred_cpp_function : behavior::callable
+  struct deferred_cpp_function : object
   {
     static constexpr object_type obj_type{ object_type::deferred_cpp_function };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call };
     static constexpr bool pointer_free{ false };
 
     deferred_cpp_function(object_ref const meta,
@@ -40,28 +40,22 @@ namespace jank::runtime::obj
                           var_ref const var);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string();
-    void to_string(jtl::string_builder &buff);
-    jtl::immutable_string to_code_string();
-    uhash to_hash() const;
+    using object::to_string;
+    void to_string(jtl::string_builder &buff) const override;
 
     /* behavior::callable */
-    using behavior::callable::call;
-    object_ref call(object_ref const) override;
-
-    arity_flag_t get_arity_flags() const override;
-    object_ref this_object_ref() override;
+    using object::call;
+    object_ref call(object_ref const) const override;
+    callable_arity_flags get_arity_flags() const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
-    jtl::option<object_ref> meta;
+    object_ref meta;
     var_ref var;
 
     /*** XXX: Everything here is thread-safe. ***/
-    std::recursive_mutex compilation_mutex;
-    jit_function_ref compiled_fn;
-    jtl::immutable_string declaration_code;
-    jtl::immutable_string expression_code;
+    mutable std::recursive_mutex compilation_mutex;
+    mutable jit_function_ref compiled_fn;
+    mutable jtl::immutable_string declaration_code;
+    mutable jtl::immutable_string expression_code;
   };
 }

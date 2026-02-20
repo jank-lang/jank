@@ -8,24 +8,26 @@ namespace jank::runtime::obj
 {
   using cons_ref = oref<struct cons>;
 
-  struct cons
+  struct cons : object
   {
     static constexpr object_type obj_type{ object_type::cons };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    cons() = default;
+    cons();
     cons(object_ref const head, object_ref const tail);
 
     /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
 
     /* behavior::metadatable */
     cons_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
 
     /* behavior::seqable */
     cons_ref seq() const;
@@ -39,10 +41,9 @@ namespace jank::runtime::obj
     cons_ref conj(object_ref const head) const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
     object_ref head{};
     object_ref tail{};
-    jtl::option<object_ref> meta;
+    object_ref meta;
 
     /*** XXX: Everything here is thread-safe. ***/
     mutable std::atomic<uhash> hash{};

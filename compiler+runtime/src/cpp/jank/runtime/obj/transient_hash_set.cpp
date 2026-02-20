@@ -6,53 +6,32 @@
 
 namespace jank::runtime::obj
 {
+  transient_hash_set::transient_hash_set()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   transient_hash_set::transient_hash_set(runtime::detail::native_persistent_hash_set &&d)
-    : data{ std::move(d).transient() }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d).transient() }
   {
   }
 
   transient_hash_set::transient_hash_set(runtime::detail::native_persistent_hash_set const &d)
-    : data{ d.transient() }
+    : object{ obj_type, obj_behaviors }
+    , data{ d.transient() }
   {
   }
 
   transient_hash_set::transient_hash_set(runtime::detail::native_transient_hash_set &&d)
-    : data{ std::move(d) }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
   {
   }
 
   transient_hash_set_ref transient_hash_set::empty()
   {
     return make_box<transient_hash_set>();
-  }
-
-  bool transient_hash_set::equal(object const &o) const
-  {
-    /* Transient equality, in Clojure, is based solely on identity. */
-    return &base == &o;
-  }
-
-  jtl::immutable_string transient_hash_set::to_string() const
-  {
-    jtl::string_builder buff;
-    to_string(buff);
-    return buff.release();
-  }
-
-  void transient_hash_set::to_string(jtl::string_builder &buff) const
-  {
-    util::format_to(buff, "#object [{} {}]", object_type_str(base.type), &base);
-  }
-
-  jtl::immutable_string transient_hash_set::to_code_string() const
-  {
-    return to_string();
-  }
-
-  uhash transient_hash_set::to_hash() const
-  {
-    /* Hash is also based only on identity. Clojure uses default hashCode, which does the same. */
-    return static_cast<uhash>(reinterpret_cast<uintptr_t>(this));
   }
 
   usize transient_hash_set::count() const
@@ -81,7 +60,7 @@ namespace jank::runtime::obj
     auto const found(data.find(elem));
     if(!found)
     {
-      return jank_nil();
+      return {};
     }
     return *found;
   }
@@ -105,18 +84,6 @@ namespace jank::runtime::obj
   object_ref transient_hash_set::get(object_ref const elem, object_ref const fallback) const
   {
     return call(elem, fallback);
-  }
-
-  object_ref transient_hash_set::get_entry(object_ref const elem) const
-  {
-    auto const found = call(elem);
-    auto const nil(jank_nil());
-    if(found == nil)
-    {
-      return nil;
-    }
-
-    return make_box<persistent_vector>(std::in_place, found, found);
   }
 
   bool transient_hash_set::contains(object_ref const elem) const

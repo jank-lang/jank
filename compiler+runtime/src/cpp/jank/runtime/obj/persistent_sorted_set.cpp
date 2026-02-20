@@ -5,33 +5,35 @@
 
 namespace jank::runtime::obj
 {
+  persistent_sorted_set::persistent_sorted_set()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
   persistent_sorted_set::persistent_sorted_set(value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
   {
   }
 
   persistent_sorted_set::persistent_sorted_set(
     runtime::detail::native_persistent_sorted_set const &d)
-    : data{ d }
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
   {
   }
 
   persistent_sorted_set::persistent_sorted_set(object_ref const meta, value_type &&d)
-    : data{ std::move(d) }
-    , meta{ meta }
-  {
-  }
-
-  persistent_sorted_set::persistent_sorted_set(jtl::option<object_ref> const &meta, value_type &&d)
-    : data{ std::move(d) }
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
     , meta{ meta }
   {
   }
 
   persistent_sorted_set_ref persistent_sorted_set::empty()
   {
-    static auto const ret(make_box<persistent_sorted_set>());
-    return ret;
+    static persistent_sorted_set const ret;
+    return &ret;
   }
 
   persistent_sorted_set_ref persistent_sorted_set::create_from_seq(object_ref const seq)
@@ -50,7 +52,7 @@ namespace jank::runtime::obj
 
   bool persistent_sorted_set::equal(object const &o) const
   {
-    if(&o == &base)
+    if(&o == this)
     {
       return true;
     }
@@ -128,6 +130,11 @@ namespace jank::runtime::obj
     return ret;
   }
 
+  object_ref persistent_sorted_set::get_meta() const
+  {
+    return meta;
+  }
+
   persistent_sorted_set_ref persistent_sorted_set::conj(object_ref const head) const
   {
     auto copy(data);
@@ -136,19 +143,39 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  object_ref persistent_sorted_set::call(object_ref const o)
+  object_ref persistent_sorted_set::call(object_ref const o) const
   {
     auto const found(data.find(o));
     if(found != data.end())
     {
       return *found;
     }
-    return jank_nil();
+    return {};
   }
 
   transient_sorted_set_ref persistent_sorted_set::to_transient() const
   {
     return make_box<transient_sorted_set>(data);
+  }
+
+  object_ref persistent_sorted_set::get(object_ref const key) const
+  {
+    auto const found(data.find(key));
+    if(found != data.end())
+    {
+      return *found;
+    }
+    return {};
+  }
+
+  object_ref persistent_sorted_set::get(object_ref const key, object_ref const fallback) const
+  {
+    auto const found(data.find(key));
+    if(found != data.end())
+    {
+      return *found;
+    }
+    return fallback;
   }
 
   bool persistent_sorted_set::contains(object_ref const o) const

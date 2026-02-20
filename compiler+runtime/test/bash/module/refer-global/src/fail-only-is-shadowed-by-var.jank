@@ -1,0 +1,4 @@
+(ns test
+  (:refer-global :only [rand]))
+
+(println :success)

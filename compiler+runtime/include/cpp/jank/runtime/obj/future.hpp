@@ -17,28 +17,19 @@ namespace jank::runtime::obj
     cancelled
   };
 
-  struct future
+  struct future : object
   {
     static constexpr object_type obj_type{ object_type::future };
+    static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
 
-    future() = default;
-
-    /* behavior::object_like */
-    bool equal(object const &) const;
-    jtl::immutable_string to_string() const;
-    void to_string(jtl::string_builder &buff) const;
-    jtl::immutable_string to_code_string() const;
-    uhash to_hash() const;
+    future();
 
     /* behavior::derefable */
     object_ref deref();
 
     /* behavior::realizable */
     bool is_realized() const;
-
-    /*** XXX: Everything here is immutable after initialization. ***/
-    object base{ obj_type };
 
     /*** XXX: Everything here is thread-safe. ***/
 
