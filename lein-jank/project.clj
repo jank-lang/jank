@@ -1,4 +1,4 @@
-(defproject org.jank-lang/lein-jank "0.3"
+(defproject org.jank-lang/lein-jank "0.5"
   :description "Build your jank projects using leiningen."
   :url "https://jank-lang.org/"
   :license {:name "MPL 2.0"

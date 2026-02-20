@@ -90,6 +90,7 @@
                 zstd
                 libedit
                 libxml2
+                boost
               ]);
 
             checkInputs = with pkgs; [
@@ -154,6 +155,7 @@
             ## Required libs.
             boehmgc
             openssl
+            boost
 
             ## Dev tools.
             babashka

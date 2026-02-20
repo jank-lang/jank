@@ -1,0 +1,75 @@
+(ns jank.nrepl.server.bencode
+  (:require [jank.nrepl.server.parsec :as p]))
+
+(declare bencode)
+
+(defn bint
+  "Parser for an integer encoded as `i<base 10 integer>e`."
+  []
+  (p/mapp
+   (fn [[_ n _]] n)
+   (p/sequencep (p/one-char \i)
+                (p/number)
+                (p/one-char \e))))
+
+(defn bstring
+  "Parser for a byte string encoded as `<length>:<contents>`."
+  []
+  (fn [input]
+    (when-let [[[n _] remaining] ((p/sequencep (p/number)
+                                               (p/one-char \:))
+                                  input)]
+      (let [[s remaining] ((p/n-times n (p/any-char)) remaining)]
+        [(apply str s) remaining]))))
+
+(defn blist
+  "Parser for a list encoded as `l<items>e`."
+  []
+  (fn [input]
+    (when-let [[[_ items _] remaining] ((p/sequencep (p/one-char \l)
+                                                     (p/many (bencode))
+                                                     (p/one-char \e))
+                                        input)]
+      [items remaining])))
+
+(defn bdict
+  "Parser for a dictionary encoded as `d<pairs>e`."
+  []
+  (fn [input]
+    (when-let [[[_ items _] remaining] ((p/sequencep (p/one-char \d)
+                                                     (p/many (p/sequencep (bencode) (bencode)))
+                                                     (p/one-char \e))
+                                        input)]
+      [(into {} items) remaining])))
+
+(defn bencode
+  "Parser for a bencode value (one of: int, string, list, dict)."
+  []
+  (p/choice (bint) (bstring) (blist) (bdict)))
+
+(defn parse
+  "Parse a bencode value from a string, returning jank data."
+  [s]
+  (p/parse (bencode) s))
+
+(defn write
+  "Write jank data as a bencode string."
+  [x]
+  (cond
+    (number? x)
+    (str "i" x "e")
+
+    (string? x)
+    (str (count x) ":" x)
+
+    (keyword? x)
+    (write (name x))
+
+    (map? x)
+    (str "d" (reduce-kv (fn [s k v] (str s (write k) (write v))) "" x) "e")
+
+    (coll? x)
+    (str "l" (apply str (map write x)) "e")
+
+    (nil? x)
+    (throw "cannot write nil as bencode")))
