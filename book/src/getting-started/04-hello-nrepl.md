@@ -8,7 +8,7 @@ To start up an nREPL server for your project, you can just run the following.
 ```bash
 $ lein repl
 jank nREPL server is running on nrepl://127.0.0.1:55765
-user=>
+my-project.main=>
 ```
 
 > [!NOTE]
