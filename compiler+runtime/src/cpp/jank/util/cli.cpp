@@ -17,6 +17,10 @@ namespace jank::util::cli
       codegen = codegen_type::llvm_ir;
       eagerness = compilation_eagerness::eager;
     }
+    else if(!codegen_str.empty())
+    {
+      error::warn(util::format("Unknown value for JANK_CODEGEN: '{}'. Ignoring.", codegen_str));
+    }
   }
 
   /* NOLINTNEXTLINE */
