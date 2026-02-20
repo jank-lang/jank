@@ -1,0 +1,7 @@
+(ns jank-test.direct-call.util)
+
+(defn base []
+  40)
+
+(defn inc2 []
+  (+ (base) 2))
