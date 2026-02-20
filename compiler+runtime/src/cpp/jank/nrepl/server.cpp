@@ -108,6 +108,11 @@ namespace jank::nrepl::server
     return sb.release();
   }
 
+  u16 native_server::get_port() const
+  {
+    return impl_->acceptor_.local_endpoint().port();
+  }
+
   native_client *native_server::accept() const
   {
     auto impl{ impl_->accept() };

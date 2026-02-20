@@ -92,8 +92,19 @@ namespace jank::runtime
     auto const in_ns_sym(make_box<obj::symbol>("clojure.core/in-ns"));
     in_ns_var = intern_var(in_ns_sym).expect_ok();
 
+    /* These will be set by any connected REPL, so we want to make sure they have
+     * an active binding. */
+    auto const star1(core->intern_var(make_box<obj::symbol>("*1"))->set_dynamic(true));
+    auto const star2(core->intern_var(make_box<obj::symbol>("*2"))->set_dynamic(true));
+    auto const star3(core->intern_var(make_box<obj::symbol>("*3"))->set_dynamic(true));
+    auto const stare(core->intern_var(make_box<obj::symbol>("*e"))->set_dynamic(true));
+
     push_thread_bindings(obj::persistent_hash_map::create_unique(
-                           std::make_pair(current_ns_var, current_ns_var->deref())))
+                           std::make_pair(current_ns_var, current_ns_var->deref()),
+                           std::make_pair(star1, jank_nil()),
+                           std::make_pair(star2, jank_nil()),
+                           std::make_pair(star3, jank_nil()),
+                           std::make_pair(stare, jank_nil())))
       .expect_ok();
   }
 

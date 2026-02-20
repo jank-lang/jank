@@ -32,6 +32,7 @@ namespace jank::nrepl::server
     native_server();
 
     jtl::immutable_string get_endpoint() const;
+    u16 get_port() const;
     /* Block until a client connects. */
     native_client *accept() const;
 
