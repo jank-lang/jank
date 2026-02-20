@@ -287,6 +287,10 @@ OPTIONS
         {
           opts.libs.emplace_back(value);
         }
+        else if(check_flag(it, end, value, "--output-dir", true))
+        {
+          opts.output_dir = value;
+        }
 
         /**** These are command-specific flags which we will store until we know the command. ****/
         else if(check_flag(it, end, value, "-o", "--output", true))
@@ -355,10 +359,6 @@ OPTIONS
           {
             opts.output_filename = value;
           }
-        }
-        if(check_pending_flag("--output-dir", value, pending_flags))
-        {
-          opts.output_dir = value;
         }
         if(check_pending_flag("--output-target", value, pending_flags))
         {
