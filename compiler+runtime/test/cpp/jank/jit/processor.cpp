@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <regex>
 
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
