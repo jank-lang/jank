@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-e1b82b60.js";
+            window.path_to_searchindex_js = "searchindex-2e7567d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-77800710.js"></script>
+        <script src="toc-10ff9841.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -383,8 +383,10 @@ will look similar to this:</p>
   :plugins [[org.jank-lang/lein-jank "0.2"]]
   :middleware [leiningen.jank/middleware]
   :main hello-lein.main
-  :profiles {:debug {:jank {:optimization-level 0}}
-             :release {:jank {:optimization-level 2}}})
+  :profiles {:debug {:output-dir "target/debug"
+                     :jank {:optimization-level 0}}
+             :release {:output-dir "target/release"
+                       :jank {:optimization-level 2}}})
 </code></pre>
 <p>Your versions may differ, but the overall structure will remain. Our
 <code>project.clj</code> defines some useful aspects to Leiningen.</p>
@@ -438,6 +440,28 @@ that, we see our printed hello world.</p>
 <p>There is not yet a way to change the output name using Leiningen, but this
 will be implemented.</p>
 </blockquote>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="hello-nrepl"><a class="header" href="#hello-nrepl">Hello, nREPL!</a></h1>
+<p>jank has nREPL support both via Leiningen projects and directly from the <code>jank</code>
+command. This has been tested to work with both CIDER and Conjure.</p>
+<h2 id="within-a-leiningen-project"><a class="header" href="#within-a-leiningen-project">Within a Leiningen project</a></h2>
+<p>To start up an nREPL server for your project, you can just run the following.</p>
+<pre><code class="language-bash">$ lein repl
+jank nREPL server is running on nrepl://127.0.0.1:55765
+my-project.main=&gt;
+</code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Generally, you don’t need to copy the address or port yourself, since jank
+writes a <code>.nrepl-port</code> file which is found by most nREPL tooling.</p>
+</blockquote>
+<h2 id="using-jank-directly"><a class="header" href="#using-jank-directly">Using <code>jank</code> directly</a></h2>
+<p>If you’re not within a Leiningen project, you can still quickly spin up an nREPL
+server as part of any jank terminal nREPL client.</p>
+<pre><code class="language-bash">$ jank repl
+jank nREPL server is running on nrepl://127.0.0.1:67563
+user=&gt;
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="reaching-into-c"><a class="header" href="#reaching-into-c">Reaching into C++</a></h1>
 <p>jank is designed to be able to reach right into C++ and access variables, types,
@@ -674,7 +698,7 @@ input size 20 output size 12
 have very poor support for C++20 modules right now. This may come, in the
 future, but it will only happen once the experience is sane.</p>
 </blockquote>
-<h2 id="using-jank-directly"><a class="header" href="#using-jank-directly">Using jank directly</a></h2>
+<h2 id="using-jank-directly-1"><a class="header" href="#using-jank-directly-1">Using jank directly</a></h2>
 <p>jank exposes the same flags as Clang for includes, defines, and linked
 libraries. They work in the same way, too. For all of these, you may add as many
 as you need.</p>
@@ -1180,6 +1204,12 @@ your executable, your <code>-main</code> function will be called.</p>
 <p>There is not yet a way to change the output name using Leiningen, but this
 will be implemented.</p>
 </blockquote>
+<h2 id="building-for-release"><a class="header" href="#building-for-release">Building for release</a></h2>
+<p>By default, <code>lein compile</code> will build you a debug executable with fewer
+optimizations enabled. To get a release executable, you can enable the <code>release</code>
+profile.</p>
+<pre><code class="language-bash">lein with-profile release compile
+</code></pre>
 <h2 id="distributing-your-executables"><a class="header" href="#distributing-your-executables">Distributing your executables</a></h2>
 <p>Currently, AOT compiled executables still depend on jank, Clang, and LLVM. This
 makes distribution more complicated, especially since the Clang/LLVM version

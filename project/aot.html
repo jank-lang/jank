@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-e1b82b60.js";
+            window.path_to_searchindex_js = "../searchindex-2e7567d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-77800710.js"></script>
+        <script src="../toc-10ff9841.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -189,6 +189,12 @@ your executable, your <code>-main</code> function will be called.</p>
 <p>There is not yet a way to change the output name using Leiningen, but this
 will be implemented.</p>
 </blockquote>
+<h2 id="building-for-release"><a class="header" href="#building-for-release">Building for release</a></h2>
+<p>By default, <code>lein compile</code> will build you a debug executable with fewer
+optimizations enabled. To get a release executable, you can enable the <code>release</code>
+profile.</p>
+<pre><code class="language-bash">lein with-profile release compile
+</code></pre>
 <h2 id="distributing-your-executables"><a class="header" href="#distributing-your-executables">Distributing your executables</a></h2>
 <p>Currently, AOT compiled executables still depend on jank, Clang, and LLVM. This
 makes distribution more complicated, especially since the Clang/LLVM version
