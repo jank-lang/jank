@@ -5,6 +5,20 @@
 
 namespace jank::util::cli
 {
+  options::options()
+  {
+    jtl::immutable_string_view const codegen_str{ getenv("JANK_CODEGEN") ?: "" };
+    if(codegen_str == "cpp")
+    {
+      codegen = codegen_type::cpp;
+    }
+    else if(codegen_str == "llvm-ir")
+    {
+      codegen = codegen_type::llvm_ir;
+      eagerness = compilation_eagerness::eager;
+    }
+  }
+
   /* NOLINTNEXTLINE */
   options opts;
 
