@@ -211,7 +211,6 @@ jobs:
             ${{ github.workspace }}/compiler+runtime/.ctcache
           key: ctcache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
       - uses: thejerrybao/setup-swap-space@466d59798fb9263b9c2331c83cf71f9b7bfd0c78
-        if: runner.os == 'Linux'
         with:
           swap-space-path: /swapfile
           swap-size-gb: 8
