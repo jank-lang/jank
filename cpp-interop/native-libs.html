@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-2e7567d0.js";
+            window.path_to_searchindex_js = "../searchindex-eb59cd9f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-10ff9841.js"></script>
@@ -310,7 +310,7 @@ anything with it. Let’s call our actual <code>compress</code> function from ja
 function within <code>main.jank</code> to look like the following.</p>
 <pre><code class="language-clojure">(ns native-lib-tutorial.main
   (:include "compress.hpp")
-  (:require-global :only [native_lib.compress]))
+  (:refer-global :only [native_lib.compress]))
 
 (defn -main [&amp; args]
   (if (empty? args)
