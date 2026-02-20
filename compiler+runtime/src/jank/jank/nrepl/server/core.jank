@@ -79,6 +79,7 @@
 
   (let [server* (listen)
         server (cpp/unbox cpp/jank.nrepl.server.native_server* server*)]
+    (spit ".nrepl-port" (str (.get_port server)))
     (println (str "jank nREPL server is running on " (.get_endpoint server)))
     (while true
       (let [client* (accept server*)]
