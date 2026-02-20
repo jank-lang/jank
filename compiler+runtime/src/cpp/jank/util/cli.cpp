@@ -7,8 +7,8 @@ namespace jank::util::cli
 {
   options::options()
   {
-    if(jtl::immutable_string_view const codegen_str{ getenv("JANK_CODEGEN") ?: "" };
-       codegen_str == "cpp")
+    jtl::immutable_string_view const codegen_str{ getenv("JANK_CODEGEN") ?: "" };
+    if(codegen_str == "cpp")
     {
       codegen = codegen_type::cpp;
     }
