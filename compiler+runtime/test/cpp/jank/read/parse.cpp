@@ -1527,7 +1527,7 @@ namespace jank::read::parse
             lex::processor lp{ "[#?@(:default [] :clj 0)]" };
             processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
-            CHECK(r.is_err());
+            CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_vector>()));
           }
 
           SUBCASE("Insuppressible errors after match")
