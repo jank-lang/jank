@@ -93,20 +93,16 @@ namespace jank::codegen
       return native_name;
     }
 
+    /* Vars from other namespaces may not exist until require runs inside jank_load,
+     * so we defer their initialization until after module load. */
     static bool should_defer_var_init(processor::lifted_var const &v,
-                                      jtl::immutable_string const &qualified_name,
                                       jtl::immutable_string const &module)
     {
       if(v.owned)
       {
         return false;
       }
-      auto const sep{ qualified_name.find('/') };
-      if(sep == jtl::immutable_string::npos)
-      {
-        return false;
-      }
-      auto const var_ns{ qualified_name.substr(0, sep) };
+      auto const var_ns{ v.var->n->name->get_name() };
       return !(var_ns == module || var_ns == "clojure.core");
     }
 
@@ -535,21 +531,24 @@ namespace jank::codegen
   static jtl::immutable_string
   lift_var(native_unordered_map<jtl::immutable_string, processor::lifted_var> &lifted_vars,
            jtl::immutable_string const &qualified_name,
-           bool const owned,
-           bool const dynamic)
+           runtime::var_ref const var,
+           bool const owned)
   {
     auto const existing{ lifted_vars.find(qualified_name) };
     if(existing != lifted_vars.end())
     {
       existing->second.owned = existing->second.owned || owned;
-      existing->second.dynamic = existing->second.dynamic || dynamic;
+      if(existing->second.var.is_nil())
+      {
+        existing->second.var = var;
+      }
       return existing->second.native_name;
     }
 
     static jtl::immutable_string const dot{ "\\." };
     auto const us{ __rt_ctx->unique_string(qualified_name) };
     auto const native_name{ runtime::munge_and_replace(us, dot, "_") };
-    lifted_vars.emplace(qualified_name, processor::lifted_var{ native_name, owned, dynamic });
+    lifted_vars.emplace(qualified_name, processor::lifted_var{ native_name, owned, var });
     return native_name;
   }
 
@@ -611,7 +610,7 @@ namespace jank::codegen
     /* For direct-call, cache the var root after bind_root. */
     if(util::cli::opts.direct_call && !dynamic)
     {
-      var_native = lift_var(lifted_vars, expr->name->to_string(), true, dynamic);
+      var_native = lift_var(lifted_vars, expr->name->to_string(), expr->var, true);
     }
 
     auto const val(gen(expr->value.unwrap(), fn_arity).unwrap());
@@ -636,14 +635,20 @@ namespace jank::codegen
                           val.str(true));
         }
 
-        /* Only update the cached root when we opted into direct-call caching. */
+        /* Direct-call caches are write-once; do not refresh on later defs. */
         if(var_native.is_some())
         {
+          auto const var_root{ util::format("var_root_{}", var_native.unwrap()) };
+          auto const var_root_flags{
+            util::format("var_root_arity_flags_{}", var_native.unwrap())
+          };
           util::format_to(body_buffer,
-                          "if(var_root_{}.is_nil()) {{ var_root_{} = {}->get_root(); }}",
-                          var_native.unwrap(),
-                          var_native.unwrap(),
-                          var_tmp);
+                          "if({}.is_nil()) {{ {} = {}->get_root(); {} = {}->get_arity_flags(); }}",
+                          var_root,
+                          var_root,
+                          var_tmp,
+                          var_root_flags,
+                          var_root);
         }
         return var_tmp;
       case analyze::expression_position::tail:
@@ -662,14 +667,20 @@ namespace jank::codegen
           util::format_to(body_buffer, "{}->bind_root({})->with_meta({});", var_tmp, val.str(true));
         }
 
-        /* Also update the cached root in statement/tail positions. */
+        /* Also update the write-once cache in statement/tail positions. */
         if(var_native.is_some())
         {
+          auto const var_root{ util::format("var_root_{}", var_native.unwrap()) };
+          auto const var_root_flags{
+            util::format("var_root_arity_flags_{}", var_native.unwrap())
+          };
           util::format_to(body_buffer,
-                          "if(var_root_{}.is_nil()) {{ var_root_{} = {}->get_root(); }}",
-                          var_native.unwrap(),
-                          var_native.unwrap(),
-                          var_tmp);
+                          "if({}.is_nil()) {{ {} = {}->get_root(); {} = {}->get_arity_flags(); }}",
+                          var_root,
+                          var_root,
+                          var_tmp,
+                          var_root_flags,
+                          var_root);
         }
 
         if(expr->position == analyze::expression_position::tail)
@@ -687,21 +698,25 @@ namespace jank::codegen
   {
     auto const is_dynamic{ expr->var->dynamic.load() };
     auto const qualified_name{ expr->var->to_qualified_symbol()->to_string() };
-    auto const &var(lift_var(lifted_vars, qualified_name, false, is_dynamic));
+    auto const &var(lift_var(lifted_vars, qualified_name, expr->var, false));
     auto var_root{ util::format("var_root_{}", var) };
 
+    /* Deferred vars may not exist until require runs, so lazily init on first use. */
     if(util::cli::opts.direct_call && !is_dynamic && target == compilation_target::module
-       && detail::should_defer_var_init(lifted_vars.at(qualified_name), qualified_name, module))
+       && detail::should_defer_var_init(lifted_vars.at(qualified_name), module))
     {
+      auto const var_root_flags{ util::format("var_root_arity_flags_{}", var) };
       util::format_to(
         body_buffer,
         "if({}.is_nil()) {{ {} = jank::runtime::__rt_ctx->intern_var(\"{}\").expect_ok(); {} = "
-        "{}->get_root(); }}",
+        "{}->get_root(); {} = {}->get_arity_flags(); }}",
         var,
         var,
         qualified_name,
         var_root,
-        var);
+        var,
+        var_root_flags,
+        var_root);
     }
 
     switch(expr->position)
@@ -733,7 +748,7 @@ namespace jank::codegen
   processor::gen(analyze::expr::var_ref_ref const expr, analyze::expr::function_arity const &)
   {
     auto const &var(
-      lift_var(lifted_vars, expr->qualified_name->to_string(), false, expr->var->dynamic.load()));
+      lift_var(lifted_vars, expr->qualified_name->to_string(), expr->var, false));
     switch(expr->position)
     {
       case analyze::expression_position::statement:
@@ -1150,21 +1165,25 @@ namespace jank::codegen
       {
         auto const qualified_name{ ref->var->to_qualified_symbol()->to_string() };
         auto const &var_native_name(
-          lift_var(lifted_vars, qualified_name, false, ref->var->dynamic.load()));
+          lift_var(lifted_vars, qualified_name, ref->var, false));
         auto const source_tmp_root{ util::format("var_root_{}", var_native_name) };
 
+        /* Deferred vars may not exist until require runs, so lazily init on first use. */
         if(target == compilation_target::module
-           && detail::should_defer_var_init(lifted_vars.at(qualified_name), qualified_name, module))
+           && detail::should_defer_var_init(lifted_vars.at(qualified_name), module))
         {
+          auto const source_tmp_flags{ util::format("var_root_arity_flags_{}", var_native_name) };
           util::format_to(
             body_buffer,
             "if({}.is_nil()) {{ {} = jank::runtime::__rt_ctx->intern_var(\"{}\").expect_ok(); {} = "
-            "{}->get_root(); }}",
+            "{}->get_root(); {} = {}->get_arity_flags(); }}",
             var_native_name,
             var_native_name,
             qualified_name,
             source_tmp_root,
-            var_native_name);
+            var_native_name,
+            source_tmp_flags,
+            source_tmp_root);
         }
 
         native_vector<handle> arg_tmps;
@@ -1179,14 +1198,10 @@ namespace jank::codegen
         /* Use direct-call for non-variadic roots; fall back when variadic or over max arity. */
         if(expr->arg_exprs.size() <= runtime::max_params)
         {
-          auto const arity_flags_tmp{ runtime::munge(__rt_ctx->unique_string("arity_flags")) };
-          util::format_to(body_buffer,
-                          "auto const {}({}->get_arity_flags());",
-                          arity_flags_tmp,
-                          source_tmp_root);
+          auto const source_tmp_flags{ util::format("var_root_arity_flags_{}", var_native_name) };
           util::format_to(body_buffer,
                           "if(({} & jank::runtime::mask_variadic_arity(0)) == 0) {",
-                          arity_flags_tmp);
+                          source_tmp_flags);
           util::format_to(body_buffer, "{} = {}->call(", ret_tmp.str(false), source_tmp_root);
           bool need_comma{};
           for(size_t i{}; i < arg_tmps.size(); ++i)
@@ -1236,17 +1251,14 @@ namespace jank::codegen
           variadic = true;
         }
       }
-      if(!variadic)
+      if(!variadic && expr->arg_exprs.size() <= runtime::max_params)
       {
-        if(expr->arg_exprs.size() <= runtime::max_params)
-        {
-          auto const &source_tmp(gen(expr->source_expr, fn_arity));
-          format_direct_call(source_tmp.unwrap().str(false),
-                             ret_tmp.str(true),
-                             expr->arg_exprs,
-                             fn_arity);
-          elided = true;
-        }
+        auto const &source_tmp(gen(expr->source_expr, fn_arity));
+        format_direct_call(source_tmp.unwrap().str(false),
+                           ret_tmp.str(true),
+                           expr->arg_exprs,
+                           fn_arity);
+        elided = true;
       }
     }
 
@@ -2806,11 +2818,14 @@ namespace jank::codegen
                         "jank::runtime::var_ref {} {};",
                         lifted_const,
                         v.second.native_name);
-        if(util::cli::opts.direct_call && !v.second.dynamic)
+        if(util::cli::opts.direct_call && !v.second.var->dynamic.load())
         {
           util::format_to(lifted_buffer,
                           "jank::runtime::object_ref {} var_root_{};",
                           lifted_root_const,
+                          v.second.native_name);
+          util::format_to(lifted_buffer,
+                          "jank::runtime::callable_arity_flags var_root_arity_flags_{};",
                           v.second.native_name);
         }
       }
@@ -2897,16 +2912,23 @@ namespace jank::codegen
                             v.first);
           }
 
-          if(util::cli::opts.direct_call && !v.second.dynamic)
+          if(util::cli::opts.direct_call && !v.second.var->dynamic.load())
           {
             if(v.second.owned)
             {
               util::format_to(header_buffer, ", var_root_{}{}", v.second.native_name);
+              util::format_to(header_buffer,
+                              ", var_root_arity_flags_{}{}",
+                              v.second.native_name);
             }
             else
             {
               util::format_to(header_buffer,
                               ", var_root_{}{ {}->get_root() }",
+                              v.second.native_name,
+                              v.second.native_name);
+              util::format_to(header_buffer,
+                              ", var_root_arity_flags_{}{ {}->get_root()->get_arity_flags() }",
                               v.second.native_name,
                               v.second.native_name);
             }
@@ -2969,7 +2991,7 @@ namespace jank::codegen
         param_shadows_fn |= param->name == root_fn->name;
       }
 
-      util::format_to(body_buffer, ") const override final {");
+      util::format_to(body_buffer, ") const override {");
 
       //util::format_to(body_buffer, "jank::profile::timer __timer{ \"{}\" };", root_fn->name);
 
@@ -3087,20 +3109,24 @@ namespace jank::codegen
                         last->second.native_name);
       }
 
-      /* For direct-call eager init for local vars and clojure.core; other namespaces may not
-       * exist until jank_load has executed (require runs there), so defer those. */
+      /* For direct-call, eagerly init vars from this module and clojure.core. Other namespaces
+       * may not exist until require runs inside jank_load, so defer their init. */
       for(auto const &v : lifted_vars)
       {
-        if(util::cli::opts.direct_call && detail::should_defer_var_init(v.second, v.first, module))
+        if(util::cli::opts.direct_call && detail::should_defer_var_init(v.second, module))
         {
           util::format_to(footer_buffer,
                           "new (&{}::{}) jank::runtime::var_ref{};",
                           ns,
                           v.second.native_name);
-          if(util::cli::opts.direct_call && !v.second.dynamic)
+          if(util::cli::opts.direct_call && !v.second.var->dynamic.load())
           {
             util::format_to(footer_buffer,
                             "new (&{}::var_root_{}) jank::runtime::object_ref{};",
+                            ns,
+                            v.second.native_name);
+            util::format_to(footer_buffer,
+                            "{}::var_root_arity_flags_{} = 0;",
                             ns,
                             v.second.native_name);
           }
@@ -3128,12 +3154,16 @@ namespace jank::codegen
             v.first);
         }
 
-        if(util::cli::opts.direct_call && !v.second.dynamic)
+        if(util::cli::opts.direct_call && !v.second.var->dynamic.load())
         {
           if(v.second.owned)
           {
             util::format_to(footer_buffer,
                             "new (&{}::var_root_{}) jank::runtime::object_ref{};",
+                            ns,
+                            v.second.native_name);
+            util::format_to(footer_buffer,
+                            "{}::var_root_arity_flags_{} = 0;",
                             ns,
                             v.second.native_name);
           }
@@ -3146,6 +3176,12 @@ namespace jank::codegen
               v.second.native_name,
               ns,
               v.second.native_name);
+            util::format_to(footer_buffer,
+                            "{}::var_root_arity_flags_{} = {}::{}->get_root()->get_arity_flags();",
+                            ns,
+                            v.second.native_name,
+                            ns,
+                            v.second.native_name);
           }
         }
       }
@@ -3183,7 +3219,7 @@ namespace jank::codegen
         /* Now that jank_load has executed (including require), init deferred vars. */
         for(auto const &v : lifted_vars)
         {
-          if(!detail::should_defer_var_init(v.second, v.first, module))
+          if(!detail::should_defer_var_init(v.second, module))
           {
             continue;
           }
@@ -3205,10 +3241,16 @@ namespace jank::codegen
                             v.first);
           }
 
-          if(!v.second.dynamic)
+          if(!v.second.var->dynamic.load())
           {
             util::format_to(footer_buffer,
                             "{}::var_root_{} = {}::{}->get_root();",
+                            ns,
+                            v.second.native_name,
+                            ns,
+                            v.second.native_name);
+            util::format_to(footer_buffer,
+                            "{}::var_root_arity_flags_{} = {}::var_root_{}->get_arity_flags();",
                             ns,
                             v.second.native_name,
                             ns,

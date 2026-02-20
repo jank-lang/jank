@@ -22,10 +22,10 @@ namespace jank::runtime::perf
     config.mWarmup = 10;
 
     /* Smaller things. */
-    //config.mTimeUnitName = "ns";
-    //config.mTimeUnit = std::chrono::nanoseconds{ 1 };
-    //config.mMinEpochIterations = 1000000;
-    //config.mWarmup = 1000;
+    // config.mTimeUnitName = "ns";
+    // config.mTimeUnit = std::chrono::nanoseconds{ 1 };
+    // config.mMinEpochIterations = 1000000;
+    // config.mWarmup = 1000;
 
     ankerl::nanobench::Bench().config(config).run(static_cast<std::string>(label_str), [&] {
       auto const res(f->call());

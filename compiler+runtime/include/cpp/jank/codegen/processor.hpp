@@ -199,7 +199,7 @@ namespace jank::codegen
     {
       jtl::immutable_string native_name;
       bool owned{};
-      bool dynamic{};
+      runtime::var_ref var{};
     };
 
     native_unordered_map<jtl::immutable_string, lifted_var> lifted_vars;
