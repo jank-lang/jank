@@ -162,7 +162,7 @@ function within `main.jank` to look like the following.
 ```clojure
 (ns native-lib-tutorial.main
   (:include "compress.hpp")
-  (:require-global :only [native_lib.compress]))
+  (:refer-global :only [native_lib.compress]))
 
 (defn -main [& args]
   (if (empty? args)
