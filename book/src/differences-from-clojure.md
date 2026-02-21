@@ -18,6 +18,8 @@ Clojure.
   supported tags
 * Only lexer errors and unbalanced forms are rejected in unsupported reader
   conditionals
+* No automatic method to disable read by setting the `clojure.core/*read-eval*`
+  at start-up
 
 ## clojure.core
 * Baked into the `jank` binary, not shipped separately
