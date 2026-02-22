@@ -2680,7 +2680,8 @@ namespace jank::codegen
     /* For static variables that are non-copyable, we can't use MakeAotCallable (which copies).
      * Instead, create a wrapper function that returns a pointer to the variable.
      * Check if the type is copyable by seeing if it can be constructed from itself.  */
-    bool const is_copyable{ Cpp::IsConstructible(expr->type, expr->type) };
+    auto const underlying_type{ Cpp::GetNonReferenceType(expr->type) };
+    bool const is_copyable{ Cpp::IsConstructible(underlying_type, underlying_type) };
     if(expr->val_kind == expr::cpp_value::value_kind::variable && Cpp::IsVariable(expr->scope)
        && !is_copyable)
     {

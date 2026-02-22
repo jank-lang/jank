@@ -3465,7 +3465,10 @@ namespace jank::analyze
     if(Cpp::IsVariable(scope))
     {
       vk = expr::cpp_value::value_kind::variable;
-      if(!Cpp::IsPointerType(type))
+      bool const is_copyable{ Cpp::IsConstructible(type, type) };
+      bool const is_static_datamember{ Cpp::IsStaticDatamember(scope)
+                                       && Cpp::IsClass(Cpp::GetParentScope(scope)) };
+      if(!Cpp::IsPointerType(type) && (!is_static_datamember || !is_copyable))
       {
         type = Cpp::GetLValueReferenceType(type);
       }
@@ -4645,7 +4648,15 @@ namespace jank::analyze
       }
 
       val->val_kind = expr::cpp_value::value_kind::variable;
-      val->type = Cpp::GetLValueReferenceType(Cpp::GetTypeFromScope(member_scope));
+      auto const type{ Cpp::GetTypeFromScope(member_scope) };
+      if(!Cpp::IsPointerType(type) && !Cpp::IsConstructible(type, type))
+      {
+        val->type = Cpp::GetLValueReferenceType(type);
+      }
+      else
+      {
+        val->type = type;
+      }
       val->scope = member_scope;
       return val;
     }
