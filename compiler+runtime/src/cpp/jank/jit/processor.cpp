@@ -251,7 +251,7 @@ namespace jank::jit
     eval_string(cg_prc.declaration_str());
     cg_prc.commit_lifted_globals();
     auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
-    util::println("// eval:\n{}\n", expr_str);
+    //util::println("// eval:\n{}\n", expr_str);
     clang::Value v;
     eval_string({ expr_str.data(), expr_str.size() }, &v);
     auto const ret{ v.convertTo<runtime::object *>() };

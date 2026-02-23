@@ -2649,12 +2649,6 @@ namespace jank::codegen
        * Then every function within that module can share the same globals.
        * This also makes creating functions cheaper. However, it requires
        * some special tracking. */
-      if(target == compilation_target::module)
-      {
-        util::format_to(module_header_buffer,
-                        "namespace {} {",
-                        runtime::module::module_to_native_ns(module));
-      }
 
 
       /* We generate the body first so that we know what we need for the header. This is
@@ -2662,12 +2656,6 @@ namespace jank::codegen
       build_body();
       build_header();
       build_footer();
-
-      if(target == compilation_target::module)
-      {
-        /* Namespace. */
-        util::format_to(module_footer_buffer, "}");
-      }
 
       generated_declaration = true;
     }
@@ -2875,8 +2863,6 @@ namespace jank::codegen
                       "extern \"C\" void {}(){",
                       runtime::module::module_to_load_function(module));
 
-      auto const ns{ runtime::module::module_to_native_ns(module) };
-
       /* First thing we do when loading this module is to intern our ns. Everything else will
        * build on that. */
       util::format_to(footer_buffer, "jank_ns_intern_c(\"{}\");", module);
@@ -2907,10 +2893,8 @@ namespace jank::codegen
         auto last{ lifted_vars.begin() };
         std::advance(last, lifted_vars.size() - 1);
         util::format_to(footer_buffer,
-                        R"(GC_add_roots(&{}::{}, (&{}::{} + 1));)",
-                        ns,
+                        R"(GC_add_roots(&{}, (&{} + 1));)",
                         first.second.native_name,
-                        ns,
                         last->second.native_name);
       }
 
@@ -2923,8 +2907,7 @@ namespace jank::codegen
         {
           util::format_to(
             footer_buffer,
-            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
-            ns,
+            R"(new (&{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
             v.second.native_name,
             v.first);
         }
@@ -2932,8 +2915,7 @@ namespace jank::codegen
         {
           util::format_to(
             footer_buffer,
-            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
-            ns,
+            R"(new (&{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
             v.second.native_name,
             v.first);
         }
@@ -2945,20 +2927,16 @@ namespace jank::codegen
         auto last{ lifted_constants.begin() };
         std::advance(last, lifted_constants.size() - 1);
         util::format_to(footer_buffer,
-                        R"(GC_add_roots(&{}::{}, (&{}::{} + sizeof({}::{}) + 1));)",
-                        ns,
+                        R"(GC_add_roots(&{}, (&{} + sizeof({}) + 1));)",
                         first.second,
-                        ns,
                         last->second,
-                        ns,
                         last->second);
       }
 
       for(auto const &v : lifted_constants)
       {
         util::format_to(footer_buffer,
-                        "new (&{}::{}) {}(",
-                        ns,
+                        "new (&{}) {}(",
                         v.second,
                         detail::gen_constant_type(v.first, true));
         detail::gen_constant(v.first, footer_buffer, true);
@@ -2994,8 +2972,6 @@ namespace jank::codegen
 
   jtl::immutable_string processor::expression_str(jtl::string_builder &buffer)
   {
-    auto const module_ns(runtime::module::module_to_native_ns(module));
-
     analyze::expr::function_arity const *variadic_arity{};
     analyze::expr::function_arity const *highest_fixed_arity{};
     bool is_closure{};
