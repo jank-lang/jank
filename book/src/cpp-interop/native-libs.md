@@ -45,7 +45,7 @@ namespace native_lib
 }
 ```
 
-This is our header file. Now we can create a source file which implements our
+This is our header file. Now we can create a source file, `compress.cpp`, which implements our
 function.
 
 ```cpp
@@ -143,7 +143,7 @@ to fix this issue!
 
   ; Look here!
   :jank {:include-dirs ["native-lib"]}
-  :profiles {:debug {:jank {:optimization-level 0}}
+  :profiles {:base {:jank {:optimization-level 0}}
              :release {:jank {:optimization-level 2}}})
 ```
 
