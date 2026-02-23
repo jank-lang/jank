@@ -872,6 +872,34 @@ namespace jank::codegen
     }
   }
 
+  callable_arity_flags processor::arity_flags() const
+  {
+    analyze::expr::function_arity const *variadic_arity{};
+    analyze::expr::function_arity const *highest_fixed_arity{};
+    for(auto const &arity : root_fn->arities)
+    {
+      if(arity.fn_ctx->is_variadic)
+      {
+        variadic_arity = &arity;
+      }
+      else if(!highest_fixed_arity
+              || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
+      {
+        highest_fixed_arity = &arity;
+      }
+    }
+
+    if(variadic_arity)
+    {
+      bool const variadic_ambiguous{ variadic_arity && highest_fixed_arity
+                                     && highest_fixed_arity->fn_ctx->param_count
+                                       == variadic_arity->fn_ctx->param_count - 1 };
+
+      return build_arity_flags(variadic_arity->fn_ctx->param_count - 1, true, variadic_ambiguous);
+    }
+    return build_arity_flags(highest_fixed_arity->fn_ctx->param_count, false, false);
+  }
+
   jtl::option<handle>
   processor::gen(analyze::expr::call_ref const expr, analyze::expr::function_arity const &fn_arity)
   {
@@ -2780,10 +2808,12 @@ namespace jank::codegen
         param_shadows_fn |= param->name == root_fn->name;
       }
 
-      util::format_to(body_buffer,
-                      "jank::runtime::object_ref {}(jank::runtime::object_ref const {}",
-                      struct_name,
-                      param_shadows_fn ? "" : runtime::munge(root_fn->name));
+      util::format_to(
+        body_buffer,
+        "extern \"C\" jank::runtime::object_ref {}_{}(jank::runtime::object_ref const {}",
+        struct_name,
+        arity.params.size(),
+        param_shadows_fn ? "" : runtime::munge(root_fn->name));
 
       for(auto const &param : arity.params)
       {
@@ -2950,19 +2980,6 @@ namespace jank::codegen
     }
   }
 
-  static jtl::immutable_string
-  build_jit_function_type(usize const param_count, jtl::immutable_string const &param_type)
-  {
-    jtl::string_builder sb;
-    util::format_to(sb, "{} (*)({}", param_type, param_type);
-    for(usize i{}; i < param_count; ++i)
-    {
-      util::format_to(sb, ", {}", param_type);
-    }
-    sb(")");
-    return sb.release();
-  }
-
   jtl::immutable_string processor::expression_str()
   {
     auto ret_tmp{ expression_str(expression_buffer) };
@@ -2972,21 +2989,9 @@ namespace jank::codegen
 
   jtl::immutable_string processor::expression_str(jtl::string_builder &buffer)
   {
-    analyze::expr::function_arity const *variadic_arity{};
-    analyze::expr::function_arity const *highest_fixed_arity{};
     bool is_closure{};
     for(auto const &arity : root_fn->arities)
     {
-      if(arity.fn_ctx->is_variadic)
-      {
-        variadic_arity = &arity;
-      }
-      else if(!highest_fixed_arity
-              || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
-      {
-        highest_fixed_arity = &arity;
-      }
-
       if(!arity.frame->captures.empty())
       {
         is_closure = true;
@@ -3048,70 +3053,36 @@ namespace jank::codegen
       }
 
       util::format_to(buffer, ") };");
-      //util::format_to(buffer, "GC_add_roots({}.data, {}.data + 1);", ret_ctx_tmp, ret_ctx_tmp);
     }
 
     auto const ret_tmp{ runtime::munge(__rt_ctx->unique_string("fnexpr")) };
     util::format_to(buffer, "auto const {}{ ", ret_tmp);
 
-    if(variadic_arity)
+    if(is_closure)
     {
-      bool const variadic_ambiguous{ variadic_arity && highest_fixed_arity
-                                     && highest_fixed_arity->fn_ctx->param_count
-                                       == variadic_arity->fn_ctx->param_count - 1 };
-
-      if(is_closure)
-      {
-        util::format_to(buffer,
-                        "jank::runtime::make_box<jank::runtime::obj::jit_closure>(jank::runtime::"
-                        "build_arity_flags({}, true, {}), {}.data)",
-                        variadic_arity->fn_ctx->param_count - 1,
-                        variadic_ambiguous,
-                        ret_ctx_tmp);
-      }
-      else
-      {
-        util::format_to(buffer,
-                        "jank::runtime::make_box<jank::runtime::obj::jit_function>(jank::runtime::"
-                        "build_arity_flags({}, true, {}))",
-                        variadic_arity->fn_ctx->param_count - 1,
-                        variadic_ambiguous);
-      }
+      util::format_to(buffer,
+                      "jank::runtime::make_box<jank::runtime::obj::jit_closure>({}, {}.data)",
+                      arity_flags(),
+                      ret_ctx_tmp);
     }
     else
     {
-      if(is_closure)
-      {
-        util::format_to(buffer,
-                        "jank::runtime::make_box<jank::runtime::obj::jit_closure>(jank::runtime::"
-                        "build_arity_flags({}, false, false), {}.data)",
-                        highest_fixed_arity->fn_ctx->param_count,
-                        ret_ctx_tmp);
-      }
-      else
-      {
-        util::format_to(buffer,
-                        "jank::runtime::make_box<jank::runtime::obj::jit_function>(jank::runtime::"
-                        "build_arity_flags({}, false, false))",
-                        highest_fixed_arity->fn_ctx->param_count);
-      }
+      util::format_to(buffer,
+                      "jank::runtime::make_box<jank::runtime::obj::jit_function>({})",
+                      arity_flags());
     }
+
     util::format_to(buffer, "};");
-    //util::format_to(
-    //  buffer,
-    //  "GC_add_roots({}.data, static_cast<jank::runtime::obj::jit_function*>({}.data) + 1);",
-    //  ret_tmp,
-    //  ret_tmp);
 
     for(auto const &arity : root_fn->arities)
     {
       auto const param_count{ arity.fn_ctx->param_count };
       util::format_to(buffer,
-                      "{}->arity_{} = static_cast<{}>(&{});",
+                      "{}->arity_{} = &{}_{};",
                       ret_tmp,
                       param_count,
-                      build_jit_function_type(param_count, "jank::runtime::object_ref"),
-                      struct_name);
+                      struct_name,
+                      param_count);
     }
 
     return ret_tmp;

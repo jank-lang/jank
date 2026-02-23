@@ -28,6 +28,7 @@
 #include <jank/codegen/processor.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/system.hpp>
+#include <jank/error/runtime.hpp>
 #include <jank/error/codegen.hpp>
 
 namespace jank::jit
@@ -250,11 +251,64 @@ namespace jank::jit
   {
     eval_string(cg_prc.declaration_str());
     cg_prc.commit_lifted_globals();
-    auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
-    //util::println("// eval:\n{}\n", expr_str);
-    clang::Value v;
-    eval_string({ expr_str.data(), expr_str.size() }, &v);
-    auto const ret{ v.convertTo<runtime::object *>() };
+
+    auto const ret{ jank::runtime::make_box<jank::runtime::obj::jit_function>(
+      cg_prc.arity_flags()) };
+
+    for(auto const &arity : cg_prc.root_fn->arities)
+    {
+      switch(arity.params.size())
+      {
+        case 0:
+          ret->arity_0 = reinterpret_cast<decltype(ret->arity_0)>(
+            find_symbol(util::format("{}_0", cg_prc.struct_name)).expect_ok());
+          break;
+        case 1:
+          ret->arity_1 = reinterpret_cast<decltype(ret->arity_1)>(
+            find_symbol(util::format("{}_1", cg_prc.struct_name)).expect_ok());
+          break;
+        case 2:
+          ret->arity_2 = reinterpret_cast<decltype(ret->arity_2)>(
+            find_symbol(util::format("{}_2", cg_prc.struct_name)).expect_ok());
+          break;
+        case 3:
+          ret->arity_3 = reinterpret_cast<decltype(ret->arity_3)>(
+            find_symbol(util::format("{}_3", cg_prc.struct_name)).expect_ok());
+          break;
+        case 4:
+          ret->arity_4 = reinterpret_cast<decltype(ret->arity_4)>(
+            find_symbol(util::format("{}_4", cg_prc.struct_name)).expect_ok());
+          break;
+        case 5:
+          ret->arity_5 = reinterpret_cast<decltype(ret->arity_5)>(
+            find_symbol(util::format("{}_5", cg_prc.struct_name)).expect_ok());
+          break;
+        case 6:
+          ret->arity_6 = reinterpret_cast<decltype(ret->arity_6)>(
+            find_symbol(util::format("{}_6", cg_prc.struct_name)).expect_ok());
+          break;
+        case 7:
+          ret->arity_7 = reinterpret_cast<decltype(ret->arity_7)>(
+            find_symbol(util::format("{}_7", cg_prc.struct_name)).expect_ok());
+          break;
+        case 8:
+          ret->arity_8 = reinterpret_cast<decltype(ret->arity_8)>(
+            find_symbol(util::format("{}_8", cg_prc.struct_name)).expect_ok());
+          break;
+        case 9:
+          ret->arity_9 = reinterpret_cast<decltype(ret->arity_9)>(
+            find_symbol(util::format("{}_9", cg_prc.struct_name)).expect_ok());
+          break;
+        case 10:
+          ret->arity_10 = reinterpret_cast<decltype(ret->arity_10)>(
+            find_symbol(util::format("{}_10", cg_prc.struct_name)).expect_ok());
+          break;
+        default:
+          throw error::internal_runtime_failure(
+            util::format("Unsupported arity {}.", arity.params.size()));
+      }
+    }
+
     return ret;
   }
 

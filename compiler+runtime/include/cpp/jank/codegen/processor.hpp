@@ -182,6 +182,7 @@ namespace jank::codegen
                             analyze::expr::function_arity const &fn_arity);
 
     void commit_lifted_globals();
+    callable_arity_flags arity_flags() const;
 
     analyze::expr::function_ref root_fn;
     jtl::immutable_string module;
