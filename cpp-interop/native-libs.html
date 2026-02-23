@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-eb59cd9f.js";
+            window.path_to_searchindex_js = "../searchindex-794b9004.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-10ff9841.js"></script>
@@ -215,7 +215,7 @@ namespace native_lib
   std::string compress(std::string const &amp;input);
 }
 </code></pre>
-<p>This is our header file. Now we can create a source file which implements our
+<p>This is our header file. Now we can create a source file, <code>compress.cpp</code>, which implements our
 function.</p>
 <pre><code class="language-cpp">#include &lt;zlib.h&gt;
 
@@ -298,7 +298,7 @@ to fix this issue!</p>
 
   ; Look here!
   :jank {:include-dirs ["native-lib"]}
-  :profiles {:debug {:jank {:optimization-level 0}}
+  :profiles {:base {:jank {:optimization-level 0}}
              :release {:jank {:optimization-level 2}}})
 </code></pre>
 <p>Now we can run the project again.</p>
