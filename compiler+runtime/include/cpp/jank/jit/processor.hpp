@@ -6,6 +6,8 @@
 #include <jtl/result.hpp>
 #include <jtl/string_builder.hpp>
 
+#include <jank/runtime/object.hpp>
+
 namespace llvm
 {
   class Module;
@@ -27,6 +29,11 @@ namespace Cpp
   class Interpreter;
 }
 
+namespace jank::codegen
+{
+  struct processor;
+}
+
 namespace jank::jit
 {
   struct processor
@@ -34,6 +41,7 @@ namespace jank::jit
     processor(jtl::immutable_string const &binary_version);
     ~processor();
 
+    runtime::object_ref eval(codegen::processor &cg_prc) const;
     void eval_string(jtl::immutable_string const &s) const;
     void eval_string(jtl::immutable_string const &s, clang::Value *) const;
     void load_object(jtl::immutable_string_view const &path) const;

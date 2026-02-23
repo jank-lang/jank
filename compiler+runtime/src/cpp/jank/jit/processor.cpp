@@ -23,6 +23,9 @@
 #include <jank/util/clang.hpp>
 #include <jank/util/clang_format.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/rtti.hpp>
+#include <jank/runtime/obj/jit_function.hpp>
+#include <jank/codegen/processor.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/system.hpp>
 #include <jank/error/codegen.hpp>
@@ -243,6 +246,18 @@ namespace jank::jit
     llvm::remove_fatal_error_handler();
   }
 
+  runtime::object_ref processor::eval(codegen::processor &cg_prc) const
+  {
+    eval_string(cg_prc.declaration_str());
+    cg_prc.commit_lifted_globals();
+    auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
+    util::println("// eval:\n{}\n", expr_str);
+    clang::Value v;
+    eval_string({ expr_str.data(), expr_str.size() }, &v);
+    auto const ret{ v.convertTo<runtime::object *>() };
+    return ret;
+  }
+
   void processor::eval_string(jtl::immutable_string const &s) const
   {
     eval_string(s, nullptr);
@@ -252,7 +267,6 @@ namespace jank::jit
   {
     profile::timer const timer{ "jit eval_string" };
     auto const &formatted{ s };
-    /* TODO: There is some sort of immutable_string or result bug here. */
     //auto const &formatted{ util::format_cpp_source(s).expect_ok() };
     //util::println("// eval_string:\n{}\n", formatted);
     auto err(interpreter->ParseAndExecute({ formatted.data(), formatted.size() }, ret));

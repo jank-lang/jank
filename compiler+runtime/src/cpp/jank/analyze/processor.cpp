@@ -2147,7 +2147,8 @@ namespace jank::analyze
     {
       return error::analyze_invalid_let("A bindings vector must be provided to 'let'.",
                                         meta_source(o->meta),
-                                        latest_expansion(macro_expansions));
+                                        latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(o, 1));
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
@@ -2166,7 +2167,8 @@ namespace jank::analyze
       /* TODO: Note the last value (maybe reparse). Check if it's a symbol? */
       return error::analyze_invalid_let("There must be an even number of bindings for a 'let'.",
                                         object_source(bindings_obj),
-                                        latest_expansion(macro_expansions));
+                                        latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(o, 1));
     }
 
     auto frame{ jtl::make_ref<local_frame>(local_frame::frame_type::let, current_frame) };
@@ -2213,7 +2215,7 @@ namespace jank::analyze
         local_binding{ sym,
                        __rt_ctx->unique_string(sym->name),
                        value_expr,
-                       current_frame,
+                       frame,
                        value_expr->needs_box,
                        .type = expr_type }) };
       ret->pairs.emplace_back(&binding, value_expr);

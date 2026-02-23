@@ -68,17 +68,29 @@ namespace jank::codegen
 
   namespace detail
   {
+    /* TODO: This is no longer the case. We could mutate the params. */
     /* Tail recursive fns generate into a while(true) which mutates the params on each loop.
      * But our runtime requires params to be const&, so we can't mutate them; we need to shadow
      * them. So, for tail recursive fns, we name the params with this suffix and then define
      * the actual param names as mutable locals outside of the while loop. */
     constexpr jtl::immutable_string_view const recur_suffix{ "__recur" };
 
+    static folly::Synchronized<native_unordered_map<runtime::object_ref,
+                                                    jtl::immutable_string,
+                                                    std::hash<runtime::object_ref>,
+                                                    runtime::very_equal_to>>
+      /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+      lifted_constants;
+    static folly::Synchronized<native_unordered_map<jtl::immutable_string, processor::lifted_var>>
+      /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+      lifted_vars;
+
     static jtl::immutable_string
     lift_constant(native_unordered_map<runtime::object_ref,
                                        jtl::immutable_string,
                                        std::hash<runtime::object_ref>,
                                        runtime::very_equal_to> &lifted_constants,
+                  compilation_target const target,
                   object_ref const o)
     {
       auto const existing{ lifted_constants.find(o) };
@@ -87,8 +99,47 @@ namespace jank::codegen
         return existing->second;
       }
 
-      auto const &native_name{ runtime::munge(__rt_ctx->unique_string("const")) };
+      if(target == compilation_target::eval)
+      {
+        auto locked_lifted_constants{ detail::lifted_constants.rlock() };
+        auto const existing_global{ locked_lifted_constants->find(o) };
+        if(existing_global != locked_lifted_constants->end())
+        {
+          return existing_global->second;
+        }
+      }
+
+      auto const &native_name{ runtime::munge(__rt_ctx->unique_namespaced_string("const")) };
       lifted_constants.emplace(o, native_name);
+      return native_name;
+    }
+
+    static jtl::immutable_string
+    lift_var(native_unordered_map<jtl::immutable_string, processor::lifted_var> &lifted_vars,
+             compilation_target const target,
+             jtl::immutable_string const &qualified_name,
+             bool const owned)
+    {
+      auto const existing{ lifted_vars.find(qualified_name) };
+      if(existing != lifted_vars.end())
+      {
+        return existing->second.native_name;
+      }
+
+      if(target == compilation_target::eval)
+      {
+        auto locked_lifted_vars{ detail::lifted_vars.rlock() };
+        auto const existing_global{ locked_lifted_vars->find(qualified_name) };
+        if(existing_global != locked_lifted_vars->end())
+        {
+          return existing_global->second.native_name;
+        }
+      }
+
+      static jtl::immutable_string const dot{ "\\." };
+      auto const us{ __rt_ctx->unique_string(qualified_name) };
+      auto const native_name{ runtime::munge_and_replace(us, dot, "_") };
+      lifted_vars.emplace(qualified_name, processor::lifted_var{ native_name, owned });
       return native_name;
     }
 
@@ -177,16 +228,15 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, runtime::obj::integer>)
           {
-            util::format_to(
-              buffer,
-              "jank::runtime::make_box<jank::runtime::obj::integer>(static_cast<jank::"
-              "i64>({}))",
-              typed_o->data);
+            util::format_to(buffer,
+                            "jank::runtime::make_box(static_cast<jank::"
+                            "i64>({}))",
+                            typed_o->data);
           }
           else if constexpr(std::same_as<T, runtime::obj::real>)
           {
             util::format_to(buffer,
-                            "jank::runtime::make_box<jank::runtime::obj::real>(static_cast<jank::"
+                            "jank::runtime::make_box(static_cast<jank::"
                             "f64>(");
 
             if(std::isinf(typed_o->data))
@@ -502,6 +552,7 @@ namespace jank::codegen
     , module{ module }
     , target{ target }
     , struct_name{ runtime::munge(root_fn->unique_name) }
+    , closure_ctx{ runtime::munge(root_fn->unique_name + "_ctx") }
   {
     assert(root_fn->frame.data);
   }
@@ -512,24 +563,6 @@ namespace jank::codegen
     jtl::option<handle> ret;
     visit_expr([&, this](auto const typed_ex) { ret = gen(typed_ex, fn_arity); }, ex);
     return ret;
-  }
-
-  static jtl::immutable_string
-  lift_var(native_unordered_map<jtl::immutable_string, processor::lifted_var> &lifted_vars,
-           jtl::immutable_string const &qualified_name,
-           bool const owned)
-  {
-    auto const existing{ lifted_vars.find(qualified_name) };
-    if(existing != lifted_vars.end())
-    {
-      return existing->second.native_name;
-    }
-
-    static jtl::immutable_string const dot{ "\\." };
-    auto const us{ __rt_ctx->unique_string(qualified_name) };
-    auto const native_name{ runtime::munge_and_replace(us, dot, "_") };
-    lifted_vars.emplace(qualified_name, processor::lifted_var{ native_name, owned });
-    return native_name;
   }
 
   jtl::option<handle>
@@ -550,7 +583,7 @@ namespace jank::codegen
     jtl::option<jtl::immutable_string> meta;
     if(expr->name->meta.is_some())
     {
-      meta = detail::lift_constant(lifted_constants, expr->name->meta);
+      meta = detail::lift_constant(lifted_constants, target, expr->name->meta);
     }
 
     /* Forward declarations just intern the var and evaluate to it. */
@@ -635,7 +668,8 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::var_deref_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const &var(lift_var(lifted_vars, expr->var->to_qualified_symbol()->to_string(), false));
+    auto const &var(
+      detail::lift_var(lifted_vars, target, expr->var->to_qualified_symbol()->to_string(), false));
     switch(expr->position)
     {
       case analyze::expression_position::statement:
@@ -653,7 +687,8 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::var_ref_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const &var(lift_var(lifted_vars, expr->qualified_name->to_string(), false));
+    auto const &var(
+      detail::lift_var(lifted_vars, target, expr->qualified_name->to_string(), false));
     switch(expr->position)
     {
       case analyze::expression_position::statement:
@@ -789,6 +824,52 @@ namespace jank::codegen
       need_comma = true;
     }
     util::format_to(body_buffer, "));");
+  }
+
+  void processor::commit_lifted_globals()
+  {
+    {
+      auto locked_lifted_constants{ detail::lifted_constants.wlock() };
+      for(auto const &v : lifted_constants)
+      {
+        auto const found{ locked_lifted_constants->find(v.first) };
+        if(found != locked_lifted_constants->end())
+        {
+          continue;
+        }
+
+        (*locked_lifted_constants)[v.first] = v.second;
+        auto const sym_res{ __rt_ctx->jit_prc.find_symbol(v.second) };
+        if(sym_res.is_err())
+        {
+          throw error::internal_codegen_failure(
+            util::format("Unable to find lifted global constant '{}'.", v.second));
+        }
+        GC_add_roots(static_cast<object_ref *>(sym_res.expect_ok()),
+                     static_cast<object_ref *>(sym_res.expect_ok()) + 1);
+      }
+    }
+
+    {
+      auto locked_lifted_vars{ detail::lifted_vars.wlock() };
+      for(auto const &v : lifted_vars)
+      {
+        auto const found{ locked_lifted_vars->find(v.first) };
+        if(found != locked_lifted_vars->end())
+        {
+          continue;
+        }
+
+        (*locked_lifted_vars)[v.first] = v.second;
+        auto const sym_res{ __rt_ctx->jit_prc.find_symbol(v.second.native_name) };
+        if(sym_res.is_err())
+        {
+          throw error::internal_codegen_failure(
+            util::format("Unable to find lifted global var '{}'.", v.second.native_name));
+        }
+        /* We don't add a GC root for these, since vars are owned by their respective namespace. */
+      }
+    }
   }
 
   jtl::option<handle>
@@ -1120,7 +1201,7 @@ namespace jank::codegen
     }
     else
     {
-      ret = detail::lift_constant(lifted_constants, expr->data);
+      ret = detail::lift_constant(lifted_constants, target, expr->data);
     }
 
     switch(expr->position)
@@ -1328,8 +1409,7 @@ namespace jank::codegen
   jtl::option<handle> processor::gen(analyze::expr::local_reference_ref const expr,
                                      analyze::expr::function_arity const &)
   {
-    auto ret(runtime::munge(expr->binding->native_name));
-
+    auto const ret(runtime::munge(expr->binding->native_name));
     switch(expr->position)
     {
       case analyze::expression_position::statement:
@@ -1373,10 +1453,16 @@ namespace jank::codegen
       case analyze::expression_position::statement:
       case analyze::expression_position::value:
       case analyze::expression_position::call:
-        return prc.expression_str();
+        {
+          auto ret_tmp{ prc.expression_str(body_buffer) };
+          return ret_tmp;
+        }
       case analyze::expression_position::tail:
-        util::format_to(body_buffer, "return {};", prc.expression_str());
-        return none;
+        {
+          auto ret_tmp{ prc.expression_str(body_buffer) };
+          util::format_to(body_buffer, "return {};", ret_tmp);
+          return none;
+        }
       case analyze::expression_position::type:
         throw error::internal_codegen_failure("Unexpected expression in type position.");
     }
@@ -1430,14 +1516,21 @@ namespace jank::codegen
 
   /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const, due to overload resolution. */
   jtl::option<handle> processor::gen(analyze::expr::recursion_reference_ref const expr,
-                                     analyze::expr::function_arity const &)
+                                     analyze::expr::function_arity const &fn_arity)
   {
+    auto ret_tmp{ munge(expr->fn_ctx->fn->name) };
+
+    if(expr->fn_ctx != fn_arity.fn_ctx)
+    {
+      ret_tmp = util::format("{}->{}", closure_ctx, ret_tmp);
+    }
+
     if(expr->position == analyze::expression_position::tail)
     {
-      util::format_to(body_buffer, "return {};", munge(expr->fn_ctx->fn->name));
+      util::format_to(body_buffer, "return {};", ret_tmp);
       return none;
     }
-    return munge(expr->fn_ctx->fn->name);
+    return ret_tmp;
   }
 
   jtl::option<handle> processor::gen(analyze::expr::named_recursion_ref const expr,
@@ -2452,8 +2545,9 @@ namespace jank::codegen
     auto ret_tmp{ runtime::munge(__rt_ctx->unique_string("cpp_unbox")) };
     auto value_tmp{ gen(expr->value_expr, arity) };
     auto const type_name{ cpp_util::get_qualified_type_name(Cpp::GetCanonicalType(expr->type)) };
-    auto const meta{ detail::lift_constant(lifted_constants,
-                                           runtime::source_to_meta(expr->source)) };
+    auto const meta{
+      detail::lift_constant(lifted_constants, target, runtime::source_to_meta(expr->source))
+    };
 
     util::format_to(body_buffer,
                     "auto {}{ "
@@ -2595,21 +2689,11 @@ namespace jank::codegen
 
   void processor::build_header()
   {
-    if(target != compilation_target::function)
     {
-      util::format_to(header_buffer,
-                      "namespace {} {",
-                      runtime::module::module_to_native_ns(module));
-    }
+      jtl::string_builder closure_context_buffer;
 
-    util::format_to(header_buffer,
-                    R"(
-        struct {} : jank::runtime::obj::jit_function
-        {
-      )",
-                    struct_name);
+      util::format_to(closure_context_buffer, "struct {} {", closure_ctx);
 
-    {
       native_set<uhash> used_captures;
       for(auto const &arity : root_fn->arities)
       {
@@ -2624,118 +2708,64 @@ namespace jank::codegen
           used_captures.emplace(hash);
 
           /* Captures aren't const since they could be late-assigned, in the case of a letfn. */
-          util::format_to(header_buffer,
+          util::format_to(closure_context_buffer,
                           "jank::runtime::object_ref {};",
                           runtime::munge(v.second.binding.native_name));
         }
       }
 
-      auto &lifted_buffer{ (target == compilation_target::module) ? module_header_buffer
-                                                                  : header_buffer };
-      auto const lifted_const{ (target == compilation_target::module) ? "" : "const" };
+      util::format_to(closure_context_buffer, "};");
 
-      for(auto const &v : lifted_vars)
+      if(!used_captures.empty())
       {
-        util::format_to(lifted_buffer,
-                        "jank::runtime::var_ref {} {};",
-                        lifted_const,
-                        v.second.native_name);
+        util::format_to(header_buffer, "{}", closure_context_buffer.release());
       }
+    }
 
-
+    if(target == compilation_target::module)
+    {
       for(auto const &v : lifted_constants)
       {
         /* TODO: Typed lifted constants (in analysis). */
-        util::format_to(lifted_buffer,
-                        "{} {} {};",
+        util::format_to(module_header_buffer,
+                        "{} {};",
                         detail::gen_constant_type(v.first, true),
-                        lifted_const,
                         v.second);
       }
+      for(auto const &v : lifted_vars)
+      {
+        util::format_to(module_header_buffer, "jank::runtime::var_ref {};", v.second.native_name);
+      }
     }
-
+    else
     {
-      native_set<uhash> used_captures;
-      util::format_to(header_buffer, "{}(", struct_name);
-
-      bool need_comma{};
-      for(auto const &arity : root_fn->arities)
+      for(auto const &v : lifted_constants)
       {
-        for(auto const &v : arity.frame->captures)
+        /* TODO: Typed lifted constants (in analysis). */
+        util::format_to(header_buffer, "extern \"C\" auto const {}{ ", v.second);
+        detail::gen_constant(v.first, header_buffer, true);
+        util::format_to(header_buffer, "};");
+      }
+      for(auto const &v : lifted_vars)
+      {
+        if(v.second.owned)
         {
-          auto const hash{ v.first->to_hash() };
-          if(used_captures.contains(hash))
-          {
-            continue;
-          }
-          used_captures.emplace(hash);
-
-          /* TODO: More useful types here. */
-          util::format_to(header_buffer,
-                          "{} jank::runtime::object_ref {}",
-                          (need_comma ? "," : ""),
-                          runtime::munge(v.second.binding.native_name));
-          need_comma = true;
+          util::format_to(
+            header_buffer,
+            R"(extern "C" auto const {}{ jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok() };)",
+            v.second.native_name,
+            v.first);
+        }
+        else
+        {
+          util::format_to(
+            header_buffer,
+            R"(extern "C" auto const {}{ jank::runtime::__rt_ctx->intern_var("{}").expect_ok() };)",
+            v.second.native_name,
+            v.first);
         }
       }
     }
-
-    {
-      native_set<uhash> used_captures;
-      util::format_to(header_buffer, ") : jank::runtime::obj::jit_function{ ");
-      /* TODO: All of the meta in clojure.core alone costs 2s to JIT compile at run-time.
-       * How can this be faster? */
-      detail::gen_constant(root_fn->meta, header_buffer, true);
-      util::format_to(header_buffer, "}");
-
-      for(auto const &arity : root_fn->arities)
-      {
-        for(auto const &v : arity.frame->captures)
-        {
-          auto const hash{ v.first->to_hash() };
-          if(used_captures.contains(hash))
-          {
-            continue;
-          }
-          used_captures.emplace(hash);
-
-          auto const name{ runtime::munge(v.second.binding.native_name) };
-          util::format_to(header_buffer, ", {}{ {} }", name, name);
-        }
-      }
-
-      if(target == compilation_target::eval)
-      {
-        for(auto const &v : lifted_vars)
-        {
-          if(v.second.owned)
-          {
-            util::format_to(
-              header_buffer,
-              R"(, {}{ jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok() })",
-              v.second.native_name,
-              v.first);
-          }
-          else
-          {
-            util::format_to(header_buffer,
-                            R"(, {}{ jank::runtime::__rt_ctx->intern_var("{}").expect_ok() })",
-                            v.second.native_name,
-                            v.first);
-          }
-        }
-
-
-        for(auto const &v : lifted_constants)
-        {
-          util::format_to(header_buffer, ", {}{", v.second);
-          detail::gen_constant(v.first, header_buffer, true);
-          util::format_to(header_buffer, "}");
-        }
-      }
-    }
-
-    util::format_to(header_buffer, "{  }");
   }
 
   void processor::build_body()
@@ -2745,51 +2775,60 @@ namespace jank::codegen
       return;
     }
 
-    util::format_to(body_buffer, "using object::call;\n");
+    auto const all_captures{ root_fn->captures() };
 
-    analyze::expr::function_arity const *variadic_arity{};
-    analyze::expr::function_arity const *highest_fixed_arity{};
     for(auto const &arity : root_fn->arities)
     {
-      if(arity.fn_ctx->is_variadic)
-      {
-        variadic_arity = &arity;
-      }
-      else if(!highest_fixed_arity
-              || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
-      {
-        highest_fixed_arity = &arity;
-      }
-
       jtl::immutable_string recur_suffix;
       if(arity.fn_ctx->is_recur_recursive)
       {
         recur_suffix = detail::recur_suffix;
       }
 
-      util::format_to(body_buffer, "jank::runtime::object_ref call(");
-      bool param_comma{};
+
       bool param_shadows_fn{};
       for(auto const &param : arity.params)
       {
-        util::format_to(body_buffer,
-                        "{} jank::runtime::object_ref const {}{}",
-                        (param_comma ? ", " : ""),
-                        runtime::munge(param->name),
-                        recur_suffix);
-        param_comma = true;
         param_shadows_fn |= param->name == root_fn->name;
       }
 
-      util::format_to(body_buffer, ") const final {");
+      util::format_to(body_buffer,
+                      "jank::runtime::object_ref {}(jank::runtime::object_ref const {}",
+                      struct_name,
+                      param_shadows_fn ? "" : runtime::munge(root_fn->name));
+
+      for(auto const &param : arity.params)
+      {
+        util::format_to(body_buffer,
+                        ", jank::runtime::object_ref const {}{}",
+                        runtime::munge(param->name),
+                        recur_suffix);
+      }
+
+      util::format_to(body_buffer, ") {");
 
       //util::format_to(body_buffer, "jank::profile::timer __timer{ \"{}\" };", root_fn->name);
 
-      if(!param_shadows_fn && arity.fn_ctx->is_named_recursive)
+      if(!all_captures.empty())
       {
-        util::format_to(body_buffer,
-                        "jank::runtime::object_ref const {}{ this };",
-                        runtime::munge(root_fn->name));
+        util::format_to(
+          body_buffer,
+          "auto const * const {}{ "
+          "static_cast<struct {}*>(jank::runtime::expect_object<jank::runtime::obj::jit_"
+          "closure>({})->context) };",
+          closure_ctx,
+          closure_ctx,
+          runtime::munge(root_fn->name));
+
+        for(auto const &capture : all_captures)
+        {
+          auto const &capture_name{ runtime::munge(capture.second->native_name) };
+          util::format_to(body_buffer,
+                          "auto &&{}{ {}->{} };",
+                          capture_name,
+                          closure_ctx,
+                          capture_name);
+        }
       }
 
       if(arity.fn_ctx->is_recur_recursive)
@@ -2826,34 +2865,10 @@ namespace jank::codegen
 
       util::format_to(body_buffer, "}");
     }
-
-    if(variadic_arity)
-    {
-      bool const variadic_ambiguous{ highest_fixed_arity
-                                     && highest_fixed_arity->fn_ctx->param_count
-                                       == variadic_arity->fn_ctx->param_count - 1 };
-
-      util::format_to(body_buffer,
-                      R"(
-          jank::runtime::callable_arity_flags get_arity_flags() const final
-          { return jank::runtime::build_arity_flags({}, true, {}); }
-        )",
-                      variadic_arity->fn_ctx->param_count - 1,
-                      variadic_ambiguous);
-    }
   }
 
   void processor::build_footer()
   {
-    /* Struct. */
-    util::format_to(footer_buffer, "};");
-
-    /* Namespace. */
-    if(target != compilation_target::function)
-    {
-      util::format_to(footer_buffer, "}");
-    }
-
     if(target == compilation_target::module)
     {
       util::format_to(footer_buffer,
@@ -2950,21 +2965,63 @@ namespace jank::codegen
         util::format_to(footer_buffer, ");");
       }
 
-      util::format_to(footer_buffer, "{}::{}{ }.call();", ns, struct_name);
+      auto const fn_tmp{ expression_str(footer_buffer) };
+      util::format_to(footer_buffer, "{}->call();", fn_tmp);
 
       util::format_to(footer_buffer, "}");
     }
   }
 
+  static jtl::immutable_string
+  build_jit_function_type(usize const param_count, jtl::immutable_string const &param_type)
+  {
+    jtl::string_builder sb;
+    util::format_to(sb, "{} (*)({}", param_type, param_type);
+    for(usize i{}; i < param_count; ++i)
+    {
+      util::format_to(sb, ", {}", param_type);
+    }
+    sb(")");
+    return sb.release();
+  }
+
   jtl::immutable_string processor::expression_str()
+  {
+    auto ret_tmp{ expression_str(expression_buffer) };
+    util::format_to(expression_buffer, "{}", ret_tmp);
+    return expression_buffer.release();
+  }
+
+  jtl::immutable_string processor::expression_str(jtl::string_builder &buffer)
   {
     auto const module_ns(runtime::module::module_to_native_ns(module));
 
-    if(!generated_expression)
+    analyze::expr::function_arity const *variadic_arity{};
+    analyze::expr::function_arity const *highest_fixed_arity{};
+    bool is_closure{};
+    for(auto const &arity : root_fn->arities)
     {
-      util::format_to(expression_buffer,
-                      "jank::runtime::make_box<{}>(",
-                      runtime::module::nest_native_ns(module_ns, struct_name));
+      if(arity.fn_ctx->is_variadic)
+      {
+        variadic_arity = &arity;
+      }
+      else if(!highest_fixed_arity
+              || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
+      {
+        highest_fixed_arity = &arity;
+      }
+
+      if(!arity.frame->captures.empty())
+      {
+        is_closure = true;
+      }
+    }
+
+    auto const ret_ctx_tmp{ runtime::munge(__rt_ctx->unique_string("fnexpr_ctx")) };
+
+    if(is_closure)
+    {
+      util::format_to(buffer, "auto const {}{ jtl::make_ref<{}>(", ret_ctx_tmp, closure_ctx);
 
       native_set<uhash> used_captures;
       bool need_comma{};
@@ -2987,10 +3044,8 @@ namespace jank::codegen
           auto const recursion(root_fn->frame->find_named_recursion(v.first));
           if(recursion.is_some())
           {
-            util::format_to(expression_buffer,
-                            "{} {}",
-                            (need_comma ? "," : ""),
-                            munge(recursion.unwrap().fn_frame->fn_ctx->name));
+            auto const tmp{ munge(recursion.unwrap().fn_frame->fn_ctx->name) };
+            util::format_to(buffer, "{} {}", (need_comma ? "," : ""), tmp);
           }
           else
           {
@@ -3000,7 +3055,7 @@ namespace jank::codegen
 
             if(needs_conversion)
             {
-              util::format_to(expression_buffer,
+              util::format_to(buffer,
                               "{} jank::runtime::convert<{}>::{}({})",
                               (need_comma ? "," : ""),
                               cpp_util::get_qualified_type_name(local_type),
@@ -3009,17 +3064,80 @@ namespace jank::codegen
             }
             else
             {
-              util::format_to(expression_buffer, "{} {}", (need_comma ? "," : ""), h.str(true));
+              util::format_to(buffer, "{} {}", (need_comma ? "," : ""), h.str(true));
             }
           }
           need_comma = true;
         }
       }
 
-      util::format_to(expression_buffer, ")");
-
-      generated_expression = true;
+      util::format_to(buffer, ") };");
+      //util::format_to(buffer, "GC_add_roots({}.data, {}.data + 1);", ret_ctx_tmp, ret_ctx_tmp);
     }
-    return { expression_buffer.data(), expression_buffer.size() };
+
+    auto const ret_tmp{ runtime::munge(__rt_ctx->unique_string("fnexpr")) };
+    util::format_to(buffer, "auto const {}{ ", ret_tmp);
+
+    if(variadic_arity)
+    {
+      bool const variadic_ambiguous{ variadic_arity && highest_fixed_arity
+                                     && highest_fixed_arity->fn_ctx->param_count
+                                       == variadic_arity->fn_ctx->param_count - 1 };
+
+      if(is_closure)
+      {
+        util::format_to(buffer,
+                        "jank::runtime::make_box<jank::runtime::obj::jit_closure>(jank::runtime::"
+                        "build_arity_flags({}, true, {}), {}.data)",
+                        variadic_arity->fn_ctx->param_count - 1,
+                        variadic_ambiguous,
+                        ret_ctx_tmp);
+      }
+      else
+      {
+        util::format_to(buffer,
+                        "jank::runtime::make_box<jank::runtime::obj::jit_function>(jank::runtime::"
+                        "build_arity_flags({}, true, {}))",
+                        variadic_arity->fn_ctx->param_count - 1,
+                        variadic_ambiguous);
+      }
+    }
+    else
+    {
+      if(is_closure)
+      {
+        util::format_to(buffer,
+                        "jank::runtime::make_box<jank::runtime::obj::jit_closure>(jank::runtime::"
+                        "build_arity_flags({}, false, false), {}.data)",
+                        highest_fixed_arity->fn_ctx->param_count,
+                        ret_ctx_tmp);
+      }
+      else
+      {
+        util::format_to(buffer,
+                        "jank::runtime::make_box<jank::runtime::obj::jit_function>(jank::runtime::"
+                        "build_arity_flags({}, false, false))",
+                        highest_fixed_arity->fn_ctx->param_count);
+      }
+    }
+    util::format_to(buffer, "};");
+    //util::format_to(
+    //  buffer,
+    //  "GC_add_roots({}.data, static_cast<jank::runtime::obj::jit_function*>({}.data) + 1);",
+    //  ret_tmp,
+    //  ret_tmp);
+
+    for(auto const &arity : root_fn->arities)
+    {
+      auto const param_count{ arity.fn_ctx->param_count };
+      util::format_to(buffer,
+                      "{}->arity_{} = static_cast<{}>(&{});",
+                      ret_tmp,
+                      param_count,
+                      build_jit_function_type(param_count, "jank::runtime::object_ref"),
+                      struct_name);
+    }
+
+    return ret_tmp;
   }
 }
