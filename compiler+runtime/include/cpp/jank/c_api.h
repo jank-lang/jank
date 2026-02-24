@@ -325,6 +325,7 @@ extern "C"
   void jank_profile_report(char const *label);
 
   void jank_resource_register(char const *name, char const *data, jank_usize size);
+  void jank_module_register(char const *module, void (*fn)());
   void jank_module_set_loaded(char const *module);
 
   int jank_init(int const argc,

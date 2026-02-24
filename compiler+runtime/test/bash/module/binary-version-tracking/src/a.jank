@@ -1,0 +1,11 @@
+(ns a)
+
+(defmacro get-foo []
+  (let [foo (cpp/getenv #cpp "FOO")
+        foo (if (cpp/cast cpp/bool foo)
+              foo
+              "NOFOO")]
+    foo))
+
+(defn -main [& args]
+  (println (get-foo)))

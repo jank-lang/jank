@@ -552,8 +552,9 @@ namespace jank::evaluate
   {
     profile::timer const timer{ util::format("eval jit function {}", expr->name) };
     auto const &module(
-      module::nest_module(expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
-                          munge(expr->unique_name)));
+      obj::symbol{ expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
+                   munge(expr->unique_name) }
+        .to_string());
 
     if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
     {

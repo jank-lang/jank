@@ -262,6 +262,12 @@ namespace jank::error
     return make_error(kind::parse_invalid_keyword, message, source);
   }
 
+  error_ref
+  parse_invalid_data_reader(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::parse_invalid_data_reader, message, source);
+  }
+
   error_ref internal_parse_failure(jtl::immutable_string const &message, read::source const &source)
   {
     return make_error(kind::internal_parse_failure, message, source);

@@ -10,26 +10,49 @@
 (def this-nsym (ns-name *ns*))
 
 (def module-a "jank-test.a")
-(def module-a-path "./src/jank_test/a.cljc")
+;; Keep reference to the real source file path just for initial reading
+(def real-source-path "./src/jank_test/a.cljc")
+(def original-source-content (slurp real-source-path))
 
-(def compiled-dir (fs/create-temp-dir))
+;; Dynamic variable to hold the root of the temp test environment
+(def ^:dynamic *test-env* nil)
 
-(def compiled-a-path
-  (fs/path compiled-dir "jank-test/a.o"))
+;; --- Helper functions for isolated paths ---
+
+(defn src-dir []
+  (fs/path *test-env* "src"))
+
+(defn target-dir []
+  (fs/path *test-env* "target"))
+
+(defn module-a-path []
+  (fs/path (src-dir) "jank_test/a.cljc"))
+
+(defn compiled-a-path []
+  (fs/path (target-dir) "jank-test/a.o"))
+
+(defn compiled-a-path-cpp []
+  (fs/path (target-dir) "jank-test/a.cpp"))
+
+;; --- Utilities ---
 
 (defn jank [command module-name & {:keys [extra-module-path
-                                          out]}]
-  (proc/sh (concat
-            ["jank" "--module-path"
-             (str "src" (when-not (empty? extra-module-path)
-                          (str ":" extra-module-path)))]
-            [command module-name]
-            (when out ["-o" out]))))
+                                          out
+                                          flags]}]
+  (let [args (concat
+              ["jank" "--module-path"
+               (str (src-dir) (when-not (empty? extra-module-path)
+                                (str ":" extra-module-path)))]
+              flags
+              [command module-name]
+              (when out ["-o" out]))]
+    (proc/sh args)))
 
 (defn create-jar-with-a []
   (let [jar-name "test.jar"
-        jar-path (fs/path compiled-dir jar-name)]
-    (proc/sh {:dir compiled-dir} "jar" "cf" jar-name compiled-a-path)
+        jar-path (fs/path (target-dir) jar-name)]
+    ;; Must ensure the output dir exists for the jar if not already (it should be target-dir)
+    (proc/sh {:dir (target-dir)} "jar" "cf" jar-name (fs/path "jank-test/a.o"))
     jar-path))
 
 (defmacro with-hidden-file
@@ -44,28 +67,118 @@
        (finally
          (fs/move bak# path#)))))
 
-(use-fixtures
-  :each
-  (fn [f]
-    (jank "compile-module" module-a :out compiled-a-path)
-    (f)
-    (fs/delete-if-exists compiled-a-path)))
+(defn set-file-time [path millis]
+  (let [f (fs/file path)]
+    (when-not (.setLastModified f millis)
+      (throw (ex-info "Failed to set file time" {:path (str path)})))))
+
+(defn write-source [content]
+  (spit (fs/file (module-a-path)) content))
+
+(defn isolation-fixture [f]
+  (fs/with-temp-dir [root]
+    (binding [*test-env* root]
+      ;; Copy real src to temp env to isolate modifications
+      (fs/copy-tree "src" (src-dir))
+      (fs/create-dir (target-dir))
+
+      (f))))
+
+(use-fixtures :each isolation-fixture)
+
+;; --- Tests ---
 
 (deftest compiled-module-gets-loaded
   (testing "loads a compiled module instead of the source"
-    (is (false? (-> (jank "run-main" module-a :extra-module-path compiled-dir)
+    (jank "compile-module" module-a :out (compiled-a-path))
+    (is (false? (-> (jank "run-main" module-a :extra-module-path (target-dir))
                     :out
                     (string/includes? ":only-during-read")))))
 
   (testing "Source fresher than the compiled module, loads from source"
-    (proc/sh ["touch" module-a-path])
+    (jank "compile-module" module-a :out (compiled-a-path))
+    ;; Make source newer
+    (let [now (System/currentTimeMillis)]
+      (set-file-time (compiled-a-path) (- now 10000))
+      (set-file-time (module-a-path) now))
+
     (is (true? (-> (jank "run-main" module-a
-                         :extra-module-path compiled-dir)
+                         :extra-module-path (target-dir))
                    :out
                    (string/includes? ":only-during-read"))))))
 
+(deftest compiled-candidate-selection-by-freshness
+  (testing "Runtime ignores flags and selects the freshest binary"
+    ;; Define times relative to `now` to ensure validity
+    (let [now         (System/currentTimeMillis)
+          base-time   (- now 30000)
+          source-time base-time
+          stale-time  (- now 20000)
+          fresh-time  (- now 10000)]
+
+      ;; Compile object with unique output
+      (write-source (str original-source-content "\n(println \"Hello object\")"))
+      (jank "compile-module" module-a :out (compiled-a-path))
+
+      (Thread/sleep 100)
+
+      ;; Compile cpp with unique output
+      (write-source (str original-source-content "\n(println \"Hello cpp\")"))
+      (jank "compile-module" module-a :out (compiled-a-path-cpp) :flags ["--output-target" "cpp"])
+
+      ;; Reset source content to base
+      (write-source original-source-content)
+
+      ;; Set modified time to source
+      (set-file-time (module-a-path) source-time)
+
+      ;; SCENARIO A: object file is fresher than cpp
+      (testing "Scenario: object(fresh) > cpp(stale) -> loads object"
+        (set-file-time (compiled-a-path) fresh-time)
+        (set-file-time (compiled-a-path-cpp) stale-time)
+
+        ;; Should load object ("Hello object") even if we ask for cpp
+        (let [output (:out (jank "run-main" module-a
+                                 :extra-module-path (target-dir)))]
+          (is (string/includes? output "Hello object"))
+          (is (not (string/includes? output "Hello cpp")))))
+
+      ;; SCENARIO B: cpp is fresher than object
+      (testing "Scenario: cpp(fresh) > object(stale) -> loads cpp"
+        (set-file-time (compiled-a-path) stale-time)
+        (set-file-time (compiled-a-path-cpp) fresh-time)
+
+        ;; Should load cpp ("Hello cpp")
+        (let [output (:out (jank "run-main" module-a
+                                 :extra-module-path (target-dir)))]
+          (is (string/includes? output "Hello cpp"))
+          (is (not (string/includes? output "Hello object"))))))))
+
+(deftest fallback-candidate-selection
+  (testing "fallback when one compiled candidate is missing"
+
+    ;; Compile cpp only
+    (write-source (str original-source-content "\n(println \"Hello cpp\")"))
+    (jank "compile-module" module-a :out (compiled-a-path-cpp) :flags ["--output-target" "cpp"])
+
+    (testing "Fallback to cpp if object missing"
+      (let [output (:out (jank "run-main" module-a
+                               :extra-module-path (target-dir)))]
+        (is (string/includes? output "Hello cpp"))))
+
+    ;; Compile object only
+    (fs/delete-if-exists (compiled-a-path-cpp))
+    (write-source (str original-source-content "\n(println \"Hello object\")"))
+    (jank "compile-module" module-a :out (compiled-a-path))
+
+    (testing "Fallback to object if cpp missing"
+      (let [output (:out (jank "run-main" module-a
+                               :extra-module-path (target-dir)))]
+        (is (string/includes? output "Hello object"))))))
+
 (deftest compiled-module-loadability
-  (testing "Doesn't load a module from archive"
+  (testing "Doesn't load an object file from archive"
+    (jank "compile-module" module-a :out (compiled-a-path))
     (fs/with-temp-dir [tmp-dir]
       (let [jar (-> (create-jar-with-a)
                     (fs/move tmp-dir))]
@@ -74,8 +187,9 @@
                        (string/includes? ":only-during-read")))))))
 
   (testing "Doesn't load module if source not found"
-    (with-hidden-file module-a-path
-      (is (true? (-> (jank "run-main" module-a :extra-module-path compiled-dir)
+    (jank "compile-module" module-a :out (compiled-a-path))
+    (with-hidden-file (module-a-path)
+      (is (true? (-> (jank "run-main" module-a :extra-module-path (target-dir))
                      :out
                      (string/includes? "No sources for registered module")))))))
 

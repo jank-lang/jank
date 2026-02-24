@@ -1,0 +1,51 @@
+#!/usr/bin/env bb
+
+^{:clj-kondo/ignore [:namespace-name-mismatch]}
+(ns jank.test.module.binary-version-tracking
+  (:require [babashka.fs :as fs]
+            [babashka.process :as proc]
+            [clojure.string :as string]
+            [clojure.test :as t :refer [deftest is testing use-fixtures]]))
+
+(def this-nsym (ns-name *ns*))
+
+(defn jank [command module-name & {:keys [extra-module-path
+                                          out
+                                          flags
+                                          env]}]
+  (let [args (concat ["jank" "--module-path" "src"]
+                     flags
+                     [command module-name]
+                     (when out ["-o" out]))]
+    @(apply proc/process
+            {:out :string
+             :err :string
+             :extra-env env}
+            args)))
+
+(defn set-file-time [path millis]
+  (let [f (fs/file path)]
+    (when-not (.setLastModified f millis)
+      (throw (ex-info "Failed to set file time" {:path (str path)})))))
+
+(use-fixtures :each (fn [f]
+                      (fs/delete-tree "target")
+                      (f)))
+
+(deftest binary-version-tracking
+  (testing "Binary caches are invalidated when flags change"
+    (let [unique-foo (str (random-uuid))
+          new-unique-foo (str (random-uuid))]
+      (is (clojure.string/includes? (:out (jank "run-main" "a" :env {"FOO" unique-foo})) unique-foo))
+      (jank "compile-module" "a" :env {"FOO" unique-foo})
+      (is (clojure.string/includes? (:out (jank "run-main" "a" :env {"FOO" new-unique-foo})) unique-foo))
+      (is (clojure.string/includes? (:out (jank "run-main" "a" :flags ["-O3"] :env {"FOO" new-unique-foo})) new-unique-foo)))))
+
+(defn -main [& args]
+  (System/exit
+   (if (t/successful? (t/run-tests this-nsym))
+     0
+     1)))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))

@@ -1,0 +1,87 @@
+(ns jank.nrepl.server.parsec)
+
+(def digits #{\0 \1 \2 \3 \4 \5 \6 \7 \8 \9})
+
+(defn parse [parser input]
+  (first (parser input)))
+
+(defn digit
+  []
+  (fn [input]
+    (when (digits (first input))
+      [(parse-long (str (first input)))
+       (rest input)])))
+
+(defn one-char
+  [ch]
+  (fn [input]
+    (when (= (first input) ch)
+      [ch (rest input)])))
+
+(defn any-char
+  []
+  (fn [input]
+    (when (seq input)
+      [(first input) (rest input)])))
+
+(defn many
+  [parser]
+  (fn [input]
+    (loop [matches []
+           input   input]
+      (if-let [[match remaining] (parser input)]
+        (recur (conj matches match) remaining)
+        [matches input]))))
+
+(defn many1
+  [parser]
+  (fn [input]
+    (let [[xs remaining] ((many parser) input)]
+      (when (> (count xs) 0)
+        [xs remaining]))))
+
+(defn choice
+  [& choices]
+  (fn [input]
+    (->>
+     (map #(% input) choices)
+     (filter some?)
+     (first))))
+
+(defn number
+  []
+  (fn [input]
+    (let [[n remaining] ((many1 (digit)) input)]
+      (when n
+        [(parse-long (apply str n)) remaining]))))
+
+(defn sequencep
+  [& parsers]
+  (fn [input]
+    (loop [matches []
+           input   input
+           parsers parsers]
+      (if-let [parser (first parsers)]
+        (when-let [[match remaining] (parser input)]
+          (recur (conj matches match)
+                 remaining
+                 (rest parsers)))
+        [matches input]))))
+
+(defn n-times
+  [n parser]
+  (fn [input]
+    (loop [matches []
+           input   input
+           i       0]
+      (if (= i n)
+        [matches input]
+        (when-let [[match remaining] (parser input)]
+          (recur (conj matches match)
+                 remaining
+                 (inc i)))))))
+
+(defn mapp [f parser]
+  (fn [input]
+    (when-let [[x remaining] (parser input)]
+      [(f x) remaining])))

@@ -169,6 +169,9 @@ namespace jank::runtime
   {
     auto const source_map{ obj::persistent_array_map::empty()->to_transient() };
 
+    /* Core modules are baked into the compiler, so a distributed version of jank will have
+     * different source paths than where it was built. We get around this by storing the
+     * module instead of the file. */
     if(runtime::module::is_core_module(source.module))
     {
       source_map->assoc_in_place(__rt_ctx->intern_keyword("module").expect_ok(),
