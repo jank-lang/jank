@@ -138,19 +138,17 @@ namespace jtl
     return o;
   }
 
-  /* TODO: Constexpr. */
   template <typename T, typename... Args>
-  ref<T> make_ref(Args &&...args)
+  constexpr ref<T> make_ref(Args &&...args)
   {
     static_assert(sizeof(ref<T>) == sizeof(T *));
-    /* TODO: Figure out cleanup for this. */
     T *ret{ new(GC) T{ jtl::forward<Args>(args)... } };
     jank_debug_assert(ret);
     return ret;
   }
 
   template <typename D, typename B>
-  ref<D> static_ref_cast(ref<B> const r) noexcept
+  constexpr ref<D> static_ref_cast(ref<B> const r) noexcept
   {
     return static_cast<D *>(r.data);
   }

@@ -19,13 +19,12 @@
 #include <jank/error/codegen.hpp>
 
 /* The strategy for codegen to C++ is quite simple. Codegen always happens on a
- * single fn, which generates a single C++ struct. Top-level expressions and
+ * single fn, which generates one C++ function for each arity. Top-level expressions and
  * REPL expressions are all implicitly wrapped in a fn during analysis. If the
  * jank fn has a nested fn, it becomes a nested struct, since this whole
  * generation works recursively.
  *
- * During codegen, we lift constants and vars, so those just become members which
- * are initialized in the ctor.
+ * During codegen, we lift constants and vars, so those just become deduped globals.
  *
  * The most interesting part is the translation of expressions into statements,
  * so that something like `(println (if foo bar spam))` can become sane C++.
@@ -47,8 +46,9 @@
  * println->call(thing_tmp, if_tmp);
  * ```
  *
- * This is optimized by knowing what position every expression in, so trivial expressions used
- * as arguments, for example, don't need to be first stored in temporaries.
+ * This is optimized by knowing what position every expression in, so trivial
+ * expressions used as arguments, for example, don't need to be first stored
+ * in temporaries.
  *
  * Code generation has a target, which is either for eval or for a module.
  * When the target is for eval, each generated function is standalone. This
@@ -75,16 +75,6 @@ namespace jank::codegen
      * the actual param names as mutable locals outside of the while loop. */
     constexpr jtl::immutable_string_view const recur_suffix{ "__recur" };
 
-    static folly::Synchronized<native_unordered_map<runtime::object_ref,
-                                                    jtl::immutable_string,
-                                                    std::hash<runtime::object_ref>,
-                                                    runtime::very_equal_to>>
-      /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-      lifted_constants;
-    static folly::Synchronized<native_unordered_map<jtl::immutable_string, processor::lifted_var>>
-      /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-      lifted_vars;
-
     static jtl::immutable_string
     lift_constant(native_unordered_map<runtime::object_ref,
                                        jtl::immutable_string,
@@ -101,12 +91,8 @@ namespace jank::codegen
 
       if(target == compilation_target::eval)
       {
-        auto locked_lifted_constants{ detail::lifted_constants.rlock() };
-        auto const existing_global{ locked_lifted_constants->find(o) };
-        if(existing_global != locked_lifted_constants->end())
-        {
-          return existing_global->second;
-        }
+        return util::format("reinterpret_cast<jank::runtime::object*>({})",
+                            static_cast<void *>(o.data));
       }
 
       auto const &native_name{ runtime::munge(__rt_ctx->unique_namespaced_string("const")) };
@@ -128,12 +114,9 @@ namespace jank::codegen
 
       if(target == compilation_target::eval)
       {
-        auto locked_lifted_vars{ detail::lifted_vars.rlock() };
-        auto const existing_global{ locked_lifted_vars->find(qualified_name) };
-        if(existing_global != locked_lifted_vars->end())
-        {
-          return existing_global->second.native_name;
-        }
+        auto const var{ __rt_ctx->intern_var(qualified_name).expect_ok() };
+        return util::format("reinterpret_cast<jank::runtime::var*>({})",
+                            static_cast<void *>(var.data));
       }
 
       static jtl::immutable_string const dot{ "\\." };
@@ -826,52 +809,6 @@ namespace jank::codegen
     util::format_to(body_buffer, "));");
   }
 
-  void processor::commit_lifted_globals()
-  {
-    {
-      auto locked_lifted_constants{ detail::lifted_constants.wlock() };
-      for(auto const &v : lifted_constants)
-      {
-        auto const found{ locked_lifted_constants->find(v.first) };
-        if(found != locked_lifted_constants->end())
-        {
-          continue;
-        }
-
-        (*locked_lifted_constants)[v.first] = v.second;
-        auto const sym_res{ __rt_ctx->jit_prc.find_symbol(v.second) };
-        if(sym_res.is_err())
-        {
-          throw error::internal_codegen_failure(
-            util::format("Unable to find lifted global constant '{}'.", v.second));
-        }
-        GC_add_roots(static_cast<object_ref *>(sym_res.expect_ok()),
-                     static_cast<object_ref *>(sym_res.expect_ok()) + 1);
-      }
-    }
-
-    {
-      auto locked_lifted_vars{ detail::lifted_vars.wlock() };
-      for(auto const &v : lifted_vars)
-      {
-        auto const found{ locked_lifted_vars->find(v.first) };
-        if(found != locked_lifted_vars->end())
-        {
-          continue;
-        }
-
-        (*locked_lifted_vars)[v.first] = v.second;
-        auto const sym_res{ __rt_ctx->jit_prc.find_symbol(v.second.native_name) };
-        if(sym_res.is_err())
-        {
-          throw error::internal_codegen_failure(
-            util::format("Unable to find lifted global var '{}'.", v.second.native_name));
-        }
-        /* We don't add a GC root for these, since vars are owned by their respective namespace. */
-      }
-    }
-  }
-
   callable_arity_flags processor::arity_flags() const
   {
     analyze::expr::function_arity const *variadic_arity{};
@@ -1455,12 +1392,13 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::function_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const fn_target((target == compilation_target::eval) ? compilation_target::eval
-                                                              : compilation_target::function);
+    auto const fn_target((target == compilation_target::eval)
+                           ? compilation_target::eval
+                           : compilation_target::module_function);
     /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
     processor prc{ expr, module, fn_target };
 
-    if(fn_target == compilation_target::function)
+    if(fn_target == compilation_target::module_function)
     {
       /* TODO: Share a context instead. */
       prc.lifted_vars = lifted_vars;
@@ -2152,7 +2090,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::cpp_call_ref const expr, analyze::expr::function_arity const &arity)
   {
-    if((target == compilation_target::module || target == compilation_target::function)
+    if((target == compilation_target::module || target == compilation_target::module_function)
        && !expr->function_code.empty())
     {
       util::format_to(cpp_raw_buffer, "\n{}\n", expr->function_code);
@@ -2681,7 +2619,12 @@ namespace jank::codegen
        * Then every function within that module can share the same globals.
        * This also makes creating functions cheaper. However, it requires
        * some special tracking. */
-
+      if(target == compilation_target::module)
+      {
+        util::format_to(module_header_buffer,
+                        "namespace {} {",
+                        runtime::module::module_to_native_ns(module));
+      }
 
       /* We generate the body first so that we know what we need for the header. This is
        * necessary since we end up lifting vars and constants while building the body. */
@@ -2693,13 +2636,11 @@ namespace jank::codegen
     }
 
     native_transient_string ret;
-    ret.reserve(cpp_raw_buffer.size() + module_header_buffer.size() + module_footer_buffer.size()
-                + deps_buffer.size() + header_buffer.size() + body_buffer.size()
-                + footer_buffer.size());
+    ret.reserve(cpp_raw_buffer.size() + module_header_buffer.size() + deps_buffer.size()
+                + header_buffer.size() + body_buffer.size() + footer_buffer.size());
     ret += jtl::immutable_string_view{ cpp_raw_buffer.data(), cpp_raw_buffer.size() };
     ret += jtl::immutable_string_view{ module_header_buffer.data(), module_header_buffer.size() };
     ret += jtl::immutable_string_view{ deps_buffer.data(), deps_buffer.size() };
-    ret += jtl::immutable_string_view{ module_footer_buffer.data(), module_footer_buffer.size() };
     ret += jtl::immutable_string_view{ header_buffer.data(), header_buffer.size() };
     ret += jtl::immutable_string_view{ body_buffer.data(), body_buffer.size() };
     ret += jtl::immutable_string_view{ footer_buffer.data(), footer_buffer.size() };
@@ -2918,6 +2859,8 @@ namespace jank::codegen
                       current_ns->name->get_name(),
                       current_ns->symbol_counter.load());
 
+      auto const native_ns{ runtime::module::module_to_native_ns(module) };
+
       /* BDWGC doesn't pick up globals in JIT compiled code, so we need to register both
        * our lifted vars and lifted constants. Since they're right next to each other,
        * we can just register the range of the first -> last. */
@@ -2927,8 +2870,10 @@ namespace jank::codegen
         auto last{ lifted_vars.begin() };
         std::advance(last, lifted_vars.size() - 1);
         util::format_to(footer_buffer,
-                        R"(GC_add_roots(&{}, (&{} + 1));)",
+                        R"(GC_add_roots(&{}::{}, (&{}::{} + 1));)",
+                        native_ns,
                         first.second.native_name,
+                        native_ns,
                         last->second.native_name);
       }
 
@@ -2941,7 +2886,8 @@ namespace jank::codegen
         {
           util::format_to(
             footer_buffer,
-            R"(new (&{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
+            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
+            native_ns,
             v.second.native_name,
             v.first);
         }
@@ -2949,7 +2895,8 @@ namespace jank::codegen
         {
           util::format_to(
             footer_buffer,
-            R"(new (&{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
+            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
+            native_ns,
             v.second.native_name,
             v.first);
         }
@@ -2961,16 +2908,20 @@ namespace jank::codegen
         auto last{ lifted_constants.begin() };
         std::advance(last, lifted_constants.size() - 1);
         util::format_to(footer_buffer,
-                        R"(GC_add_roots(&{}, (&{} + sizeof({}) + 1));)",
+                        R"(GC_add_roots(&{}::{}, (&{}::{} + sizeof({}::{}) + 1));)",
+                        native_ns,
                         first.second,
+                        native_ns,
                         last->second,
+                        native_ns,
                         last->second);
       }
 
       for(auto const &v : lifted_constants)
       {
         util::format_to(footer_buffer,
-                        "new (&{}) {}(",
+                        "new (&{}::{}) {}(",
+                        native_ns,
                         v.second,
                         detail::gen_constant_type(v.first, true));
         detail::gen_constant(v.first, footer_buffer, true);
@@ -2980,6 +2931,10 @@ namespace jank::codegen
       auto const fn_tmp{ expression_str(footer_buffer) };
       util::format_to(footer_buffer, "{}->call();", fn_tmp);
 
+      /* Load fn. */
+      util::format_to(footer_buffer, "}");
+
+      /* Namespace. */
       util::format_to(footer_buffer, "}");
     }
   }

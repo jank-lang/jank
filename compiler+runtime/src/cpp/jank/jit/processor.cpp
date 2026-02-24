@@ -250,7 +250,6 @@ namespace jank::jit
   runtime::obj::jit_function_ref processor::eval(codegen::processor &cg_prc) const
   {
     eval_string(cg_prc.declaration_str());
-    cg_prc.commit_lifted_globals();
 
     native_vector<u8> arities;
     arities.reserve(cg_prc.root_fn->arities.size());
@@ -267,7 +266,7 @@ namespace jank::jit
                              jtl::immutable_string const &base_name,
                              native_vector<u8> const &arities) const
   {
-    auto const ret{ jank::runtime::make_box<jank::runtime::obj::jit_function>(flags) };
+    auto const ret{ runtime::make_box<jank::runtime::obj::jit_function>(flags) };
     for(auto const arity : arities)
     {
       switch(arity)

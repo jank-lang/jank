@@ -181,7 +181,6 @@ namespace jank::codegen
                             native_vector<analyze::expression_ref> const &arg_exprs,
                             analyze::expr::function_arity const &fn_arity);
 
-    void commit_lifted_globals();
     callable_arity_flags arity_flags() const;
 
     analyze::expr::function_ref root_fn;
@@ -191,7 +190,6 @@ namespace jank::codegen
     jtl::immutable_string struct_name;
     jtl::string_builder cpp_raw_buffer;
     jtl::string_builder module_header_buffer;
-    jtl::string_builder module_footer_buffer;
     jtl::string_builder deps_buffer;
     jtl::string_builder header_buffer;
     jtl::string_builder body_buffer;
