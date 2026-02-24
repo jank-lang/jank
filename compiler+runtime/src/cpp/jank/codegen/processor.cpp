@@ -95,8 +95,8 @@ namespace jank::codegen
 
     /* Vars from other namespaces may not exist until require runs inside jank_load,
      * so we defer their initialization until after module load. */
-    static bool should_defer_var_init(processor::lifted_var const &v,
-                                      jtl::immutable_string const &module)
+    static bool
+    should_defer_var_init(processor::lifted_var const &v, jtl::immutable_string const &module)
     {
       if(v.owned)
       {
@@ -639,9 +639,7 @@ namespace jank::codegen
         if(var_native.is_some())
         {
           auto const var_root{ util::format("var_root_{}", var_native.unwrap()) };
-          auto const var_root_flags{
-            util::format("var_root_arity_flags_{}", var_native.unwrap())
-          };
+          auto const var_root_flags{ util::format("var_root_arity_flags_{}", var_native.unwrap()) };
           util::format_to(body_buffer,
                           "if({}.is_nil()) {{ {} = {}->get_root(); {} = {}->get_arity_flags(); }}",
                           var_root,
@@ -671,9 +669,7 @@ namespace jank::codegen
         if(var_native.is_some())
         {
           auto const var_root{ util::format("var_root_{}", var_native.unwrap()) };
-          auto const var_root_flags{
-            util::format("var_root_arity_flags_{}", var_native.unwrap())
-          };
+          auto const var_root_flags{ util::format("var_root_arity_flags_{}", var_native.unwrap()) };
           util::format_to(body_buffer,
                           "if({}.is_nil()) {{ {} = {}->get_root(); {} = {}->get_arity_flags(); }}",
                           var_root,
@@ -747,8 +743,7 @@ namespace jank::codegen
   jtl::option<handle>
   processor::gen(analyze::expr::var_ref_ref const expr, analyze::expr::function_arity const &)
   {
-    auto const &var(
-      lift_var(lifted_vars, expr->qualified_name->to_string(), expr->var, false));
+    auto const &var(lift_var(lifted_vars, expr->qualified_name->to_string(), expr->var, false));
     switch(expr->position)
     {
       case analyze::expression_position::statement:
@@ -1164,13 +1159,15 @@ namespace jank::codegen
       if(!elided && util::cli::opts.direct_call && !ref->var->dynamic.load())
       {
         auto const qualified_name{ ref->var->to_qualified_symbol()->to_string() };
-        auto const &var_native_name(
-          lift_var(lifted_vars, qualified_name, ref->var, false));
+        auto const &var_native_name(lift_var(lifted_vars, qualified_name, ref->var, false));
         auto const source_tmp_root{ util::format("var_root_{}", var_native_name) };
 
+        auto const defer_var_init{ target == compilation_target::module
+                                   && detail::should_defer_var_init(lifted_vars.at(qualified_name),
+                                                                    module) };
+
         /* Deferred vars may not exist until require runs, so lazily init on first use. */
-        if(target == compilation_target::module
-           && detail::should_defer_var_init(lifted_vars.at(qualified_name), module))
+        if(defer_var_init)
         {
           auto const source_tmp_flags{ util::format("var_root_arity_flags_{}", var_native_name) };
           util::format_to(
@@ -1195,8 +1192,43 @@ namespace jank::codegen
 
         util::format_to(body_buffer, "jank::runtime::object_ref {}{ };", ret_tmp.str(false));
 
-        /* Use direct-call for non-variadic roots; fall back when variadic or over max arity. */
-        if(expr->arg_exprs.size() <= runtime::max_params)
+        bool const can_direct_call{ expr->arg_exprs.size() <= runtime::max_params };
+
+        if(!defer_var_init)
+        {
+          auto const root{ ref->var->get_root() };
+          auto const arity_flags{ root->get_arity_flags() };
+          bool const is_variadic{ (arity_flags & jank::runtime::mask_variadic_arity(0)) != 0 };
+
+          if(can_direct_call && !is_variadic)
+          {
+            util::format_to(body_buffer, "{} = {}->call(", ret_tmp.str(false), source_tmp_root);
+            bool need_comma{};
+            for(size_t i{}; i < arg_tmps.size(); ++i)
+            {
+              if(need_comma)
+              {
+                util::format_to(body_buffer, ", ");
+              }
+              util::format_to(body_buffer, "{}", arg_tmps[i].str(true));
+              need_comma = true;
+            }
+            util::format_to(body_buffer, ");");
+          }
+          else
+          {
+            util::format_to(body_buffer,
+                            "{} = jank::runtime::dynamic_call({}",
+                            ret_tmp.str(false),
+                            source_tmp_root);
+            for(size_t i{}; i < arg_tmps.size(); ++i)
+            {
+              util::format_to(body_buffer, ", {}", arg_tmps[i].str(true));
+            }
+            util::format_to(body_buffer, ");");
+          }
+        }
+        else if(can_direct_call)
         {
           auto const source_tmp_flags{ util::format("var_root_arity_flags_{}", var_native_name) };
           util::format_to(body_buffer,
@@ -2917,9 +2949,7 @@ namespace jank::codegen
             if(v.second.owned)
             {
               util::format_to(header_buffer, ", var_root_{}{}", v.second.native_name);
-              util::format_to(header_buffer,
-                              ", var_root_arity_flags_{}{}",
-                              v.second.native_name);
+              util::format_to(header_buffer, ", var_root_arity_flags_{}{}", v.second.native_name);
             }
             else
             {
