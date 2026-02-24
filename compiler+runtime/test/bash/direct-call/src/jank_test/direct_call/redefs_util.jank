@@ -1,0 +1,3 @@
+(ns jank-test.direct-call.redefs-util)
+
+(defn val [] 1)

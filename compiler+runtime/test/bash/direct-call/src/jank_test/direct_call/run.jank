@@ -1,0 +1,4 @@
+(ns jank-test.direct-call.run
+  (:require jank-test.direct-call.core))
+
+(println (jank-test.direct-call.core/answer))

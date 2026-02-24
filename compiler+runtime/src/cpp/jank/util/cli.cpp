@@ -181,6 +181,8 @@ OPTIONS
       {   "check-health",   command::check_health }
     };
 
+    jtl::option<compilation_eagerness> eagerness{};
+
     /* The flow of this is broken into the following steps.
      *
      * 1. Parse known flags into changes to the `opts` global
@@ -278,11 +280,11 @@ OPTIONS
         {
           if(value == "lazy")
           {
-            opts.eagerness = compilation_eagerness::lazy;
+            eagerness = compilation_eagerness::lazy;
           }
           else if(value == "eager")
           {
-            opts.eagerness = compilation_eagerness::eager;
+            eagerness = compilation_eagerness::eager;
           }
           else
           {
@@ -439,8 +441,24 @@ OPTIONS
        * us very much for IR gen, since we don't have the cost of C++ compilation to pay. */
       if(opts.codegen == codegen_type::llvm_ir)
       {
-        opts.eagerness = compilation_eagerness::eager;
+        if(eagerness.is_some() && eagerness.unwrap() == compilation_eagerness::lazy)
+        {
+          error::warn(
+            "--eagerness lazy ignored because --codegen llvm-ir forces eager compilation.");
+        }
+        eagerness = compilation_eagerness::eager;
       }
+      /* Direct-call relies on eager roots to avoid caching deferred wrappers. */
+      if(opts.direct_call)
+      {
+        if(eagerness.is_some() && eagerness.unwrap() == compilation_eagerness::lazy)
+        {
+          error::warn("--eagerness lazy ignored because --direct-call requires eager compilation.");
+        }
+        eagerness = compilation_eagerness::eager;
+      }
+
+      opts.eagerness = eagerness.unwrap_or(opts.eagerness);
     }
     catch(jtl::immutable_string const &msg)
     {

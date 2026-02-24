@@ -9,6 +9,11 @@ namespace jank::runtime::obj
   using symbol_ref = oref<struct symbol>;
 }
 
+namespace jank::runtime
+{
+  using var_ref = oref<struct var>;
+}
+
 namespace jank::analyze::expr
 {
   using def_ref = jtl::ref<struct def>;
@@ -21,12 +26,14 @@ namespace jank::analyze::expr
         local_frame_ptr frame,
         bool needs_box,
         runtime::obj::symbol_ref const name,
+        runtime::var_ref const var,
         jtl::option<expression_ref> const &value);
 
     runtime::object_ref to_runtime_data() const override;
     void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     runtime::obj::symbol_ref name{};
+    runtime::var_ref var{};
     /* TODO: Rename to value_expr. */
     jtl::option<expression_ref> value;
   };

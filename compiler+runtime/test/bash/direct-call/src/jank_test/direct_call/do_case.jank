@@ -1,0 +1,8 @@
+(ns jank-test.direct-call.do-case)
+
+(do
+  (defn foo []
+    (println "Foo"))
+  (defn bar []
+    (foo))
+  (bar))
