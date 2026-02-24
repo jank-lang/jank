@@ -22,7 +22,11 @@
     out))
 
 (defn object-paths [module]
-  (fs/glob "." (str "target/**/jank_test/direct_call/" module ".o")))
+  (let [suffix (str "jank_test/direct_call/" module ".o")]
+    (concat (fs/glob "." (str "target/" suffix))
+            (fs/glob "." (str "target/**/" suffix))
+            (fs/glob "." (str "build/target/" suffix))
+            (fs/glob "." (str "build/target/**/" suffix)))))
 
 (use-fixtures
   :each
