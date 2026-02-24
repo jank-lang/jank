@@ -21,7 +21,7 @@
 /* The strategy for codegen to C++ is quite simple. Codegen always happens on a
  * single fn, which generates one C++ function for each arity. Top-level expressions and
  * REPL expressions are all implicitly wrapped in a fn during analysis. If the
- * jank fn has a nested fn, it becomes a nested struct, since this whole
+ * jank fn has a nested fn, it becomes separate top-level C++ functions, since this whole
  * generation works recursively.
  *
  * During codegen, we lift constants and vars, so those just become deduped globals.
@@ -1401,7 +1401,7 @@ namespace jank::codegen
     auto const fn_target((target == compilation_target::eval)
                            ? compilation_target::eval
                            : compilation_target::module_function);
-    /* Since each codegen proc handles one callable struct, we create a new one for this fn. */
+    /* Since each codegen proc handles one callable object, we create a new one for this fn. */
     processor prc{ expr, module, fn_target };
 
     if(fn_target == compilation_target::module_function)
@@ -2657,6 +2657,12 @@ namespace jank::codegen
   void processor::build_header()
   {
     {
+      /* We're not sure if we'll need a closure context until we try to build it.
+       * If we don't need one, we'll toss this buffer.
+       *
+       * However, if we do need one, we'll build a struct which contains all
+       * captured fields. This will be GC allocated and stored in the jit_closure
+       * object. */
       jtl::string_builder closure_context_buffer;
 
       util::format_to(closure_context_buffer, "struct {} {", closure_ctx);
