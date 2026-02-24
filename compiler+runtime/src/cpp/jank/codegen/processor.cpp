@@ -91,11 +91,14 @@ namespace jank::codegen
 
       if(target == compilation_target::eval)
       {
+        /* During eval, we can just refer to this object by its address, since it already
+         * exists in memory. We mark it as a root to keep it alive. */
+        GC_add_roots(o.data, o.data + 1);
         return util::format("reinterpret_cast<jank::runtime::object*>({})",
                             static_cast<void *>(o.data));
       }
 
-      auto const &native_name{ runtime::munge(__rt_ctx->unique_namespaced_string("const")) };
+      auto const &native_name{ runtime::munge(__rt_ctx->unique_string("const")) };
       lifted_constants.emplace(o, native_name);
       return native_name;
     }
@@ -114,7 +117,10 @@ namespace jank::codegen
 
       if(target == compilation_target::eval)
       {
+        /* During eval, we can just refer to this object by its address, since it already
+         * exists in memory. We mark it as a root to keep it alive. */
         auto const var{ __rt_ctx->intern_var(qualified_name).expect_ok() };
+        GC_add_roots(var.data, static_cast<runtime::object_ref *>(var.data) + 1);
         return util::format("reinterpret_cast<jank::runtime::var*>({})",
                             static_cast<void *>(var.data));
       }
