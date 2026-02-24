@@ -1037,8 +1037,8 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${jank_clojure_core_sources} ${jank_other_core_sources} ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output} ${jank_nrepl_server_outputs}
-  #COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} ${jank_core_lib_output_target} clojure.core
-  #COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} ${jank_core_lib_output_target} clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(

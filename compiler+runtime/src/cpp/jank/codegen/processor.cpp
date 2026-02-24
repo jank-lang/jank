@@ -1756,7 +1756,9 @@ namespace jank::codegen
       auto const type_name{ (
         has_shadowed_bindings
           ? "jank::runtime::object_ref"
-          : util::format("jank::runtime::oref<{}>", runtime::munge(val_expr->unique_name))) };
+          : util::format("jank::runtime::oref<{}>",
+                         (val_expr->captures().empty() ? "jank::runtime::obj::jit_function"
+                                                       : "jank::runtime::obj::jit_closure"))) };
       util::format_to(body_buffer, "{ {} {};", type_name, munged_name);
     }
 
@@ -1771,13 +1773,15 @@ namespace jank::codegen
 
     for(auto const &pair : expr->pairs)
     {
-      auto const local(pair.first);
-      auto const &munged_name(runtime::munge(local->native_name));
       auto const val_expr(llvm::cast<analyze::expr::function>(pair.second.data));
       for(auto const &capture_pair : val_expr->captures())
       {
         auto const &capture_name(runtime::munge(capture_pair.second->native_name));
-        util::format_to(body_buffer, "{}->{} = {}; ", munged_name, capture_name, capture_name);
+        util::format_to(body_buffer,
+                        "{}_ctx->{} = {}; ",
+                        runtime::munge(val_expr->unique_name),
+                        capture_name,
+                        capture_name);
       }
     }
 
@@ -2998,11 +3002,11 @@ namespace jank::codegen
       }
     }
 
-    auto const ret_ctx_tmp{ runtime::munge(__rt_ctx->unique_string("fnexpr_ctx")) };
+    auto const ret_ctx_tmp{ closure_ctx };
 
     if(is_closure)
     {
-      util::format_to(buffer, "auto const {}{ jtl::make_ref<{}>(", ret_ctx_tmp, closure_ctx);
+      util::format_to(buffer, "auto const {}{ jtl::make_ref<struct {}>(", ret_ctx_tmp, closure_ctx);
 
       native_set<uhash> used_captures;
       bool need_comma{};

@@ -14,14 +14,18 @@
 namespace jank::runtime::obj
 {
   deferred_cpp_function::deferred_cpp_function(object_ref const meta,
+                                               var_ref const var,
                                                jtl::immutable_string const &declaration_code,
-                                               jtl::immutable_string const &expression_code,
-                                               var_ref const var)
+                                               callable_arity_flags const arity_flags,
+                                               jtl::immutable_string const &base_name,
+                                               native_vector<u8> const &arities)
     : object{ obj_type, obj_behaviors }
     , meta{ meta }
     , var{ var }
     , declaration_code{ declaration_code }
-    , expression_code{ expression_code }
+    , arity_flags{ arity_flags }
+    , base_name{ base_name }
+    , arities{ arities }
   {
   }
 
@@ -55,15 +59,12 @@ namespace jank::runtime::obj
     /* On the first invocation, we don't have a compiled_fn. We compile our C++ code, get a fn,
      * rebind the root of the var, and then apply our args to the new fn.*/
     __rt_ctx->jit_prc.eval_string(declaration_code);
-    clang::Value v;
-    __rt_ctx->jit_prc.eval_string({ expression_code.data(), expression_code.size() }, &v);
-    compiled_fn = try_object<obj::jit_function>(v.convertTo<runtime::object *>());
+    compiled_fn = __rt_ctx->jit_prc.create_function(arity_flags, base_name, arities);
     compiled_fn->meta = meta;
     var->bind_root(compiled_fn);
 
     /* Clear these just to free up some memory. */
     declaration_code = "";
-    expression_code = "";
 
     return apply_to(compiled_fn, args);
   }
