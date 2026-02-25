@@ -53,6 +53,7 @@ namespace jank::runtime
      * in the current ns. Does not intern. */
     ns_ref resolve_ns(obj::symbol_ref const);
     ns_ref current_ns() const;
+    native_vector<ns_ref> all_ns() const;
 
     /* Adds the current ns to unqualified symbols and resolves the ns of qualified symbols.
      * Does not intern. */
@@ -130,9 +131,8 @@ namespace jank::runtime
     jtl::string_result<void> push_thread_bindings();
     jtl::string_result<void> push_thread_bindings(object_ref const bindings);
     jtl::string_result<void> push_thread_bindings(obj::persistent_hash_map_ref const bindings);
-    jtl::string_result<void> pop_thread_bindings();
+    void pop_thread_bindings();
     obj::persistent_hash_map_ref get_thread_bindings() const;
-    jtl::option<thread_binding_frame> current_thread_binding_frame();
 
     /*** XXX: Everything here is immutable after initialization. ***/
     jtl::immutable_string binary_version;
@@ -140,7 +140,6 @@ namespace jank::runtime
     native_unordered_map<jtl::immutable_string, native_vector<jtl::immutable_string>>
       module_dependencies;
 
-    jtl::immutable_string binary_cache_dir;
     module::loader module_loader;
 
     var_ref current_file_var;
@@ -156,13 +155,8 @@ namespace jank::runtime
     /*** XXX: Everything here is thread-safe. ***/
     folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;
     folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ref>> keywords;
-
-    /* TODO: Remove this in favor of calling module's `jank_load` functions
-     * on demand. At the moment it is being used to load all the compiled modules
-     * in ahead of time compiled binaries at startup (which is not an ideal way to
-     * achieve that). */
-    folly::Synchronized<native_deque<jtl::immutable_string>> loaded_modules_in_order;
-    folly::Synchronized<native_list<thread_binding_frame>> thread_binding_frames;
+    folly::Synchronized<native_unordered_map<std::thread::id, native_list<thread_binding_frame>>>
+      thread_binding_frames;
 
     /* This must go last, since it'll try to access other bits in the runtime context during
      * its initialization and we need them to be ready. */

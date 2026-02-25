@@ -314,6 +314,18 @@ namespace jank::runtime
       o);
   }
 
+  obj::native_vector_sequence_ref all_ns()
+  {
+    auto const all{ __rt_ctx->all_ns() };
+    native_vector<object_ref> v;
+    v.reserve(all.size());
+    for(auto const n : all)
+    {
+      v.emplace_back(n.erase());
+    }
+    return make_box<obj::native_vector_sequence>(jtl::move(v));
+  }
+
   object_ref keyword(object_ref const ns, object_ref const name)
   {
     if(!ns.is_nil() && ns->type != object_type::persistent_string)
@@ -520,7 +532,7 @@ namespace jank::runtime
 
   void pop_thread_bindings()
   {
-    __rt_ctx->pop_thread_bindings().expect_ok();
+    __rt_ctx->pop_thread_bindings();
   }
 
   object_ref get_thread_bindings()
@@ -726,7 +738,7 @@ namespace jank::runtime
 
   object_ref future(object_ref const fn)
   {
-    auto const bindings{ __rt_ctx->thread_binding_frames };
+    auto const bindings{ __rt_ctx->get_thread_bindings() };
     auto const ret{ make_box<obj::future>() };
     /* NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage): False positive. */
     ret->thread = std::thread{ [=]() {
@@ -737,7 +749,7 @@ namespace jank::runtime
       GC_register_my_thread(&sb);
       util::scope_exit const unregister{ []() { GC_unregister_my_thread(); } };
 
-      __rt_ctx->thread_binding_frames = bindings;
+      __rt_ctx->push_thread_bindings(bindings).expect_ok();
 
       try
       {

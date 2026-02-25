@@ -36,6 +36,22 @@
 
 #ifdef JANK_PHASE_2
 extern "C" void jank_load_clojure_core();
+extern "C" void jank_load_clojure_string();
+extern "C" void jank_load_clojure_walk();
+extern "C" void jank_load_jank_nrepl_server_core();
+extern "C" void jank_load_jank_nrepl_server_inspect();
+extern "C" void jank_load_jank_nrepl_server_handler();
+extern "C" void jank_load_jank_nrepl_server_bencode();
+extern "C" void jank_load_jank_nrepl_server_capture();
+extern "C" void jank_load_jank_nrepl_server_util();
+extern "C" void jank_load_jank_nrepl_server_eval();
+extern "C" void jank_load_jank_nrepl_server_parsec();
+extern "C" void jank_load_jank_nrepl_server_handler_close();
+extern "C" void jank_load_jank_nrepl_server_handler_clone();
+extern "C" void jank_load_jank_nrepl_server_handler_describe();
+extern "C" void jank_load_jank_nrepl_server_handler_completions();
+extern "C" void jank_load_jank_nrepl_server_handler_eval();
+extern "C" void jank_load_jank_nrepl_server_handler_lookup();
 #endif
 
 namespace jank
@@ -47,13 +63,12 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-
-#ifndef JANK_PHASE_2
     {
       profile::timer const timer{ "load clojure.core" };
-      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
+      __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
-#endif
+
+    jank::runtime::module::verify_binary_version();
 
     {
       profile::timer const timer{ "eval user code" };
@@ -82,16 +97,16 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-#ifndef JANK_PHASE_2
     {
       profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
+      __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
-#endif
+
+    jank::runtime::module::verify_binary_version();
 
     {
       profile::timer const timer{ "eval user code" };
-      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
+      __rt_ctx->load_module(opts.target_module, module::origin::latest).expect_ok();
 
       auto const main_var(__rt_ctx->find_var(opts.target_module, "-main"));
       if(main_var.is_some())
@@ -176,12 +191,12 @@ namespace jank
     }
 
 
-#ifndef JANK_PHASE_2
     if(opts.target_module != "clojure.core")
     {
-      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
+      __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
-#endif
+
+    jank::runtime::module::verify_binary_version();
 
     __rt_ctx->compile_module(opts.target_module).expect_ok();
   }
@@ -191,19 +206,20 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-    /* TODO: REPL server. */
-    if(opts.repl_server)
-    {
-      throw std::runtime_error{ "Not yet implemented: REPL server" };
-    }
-
-
-#ifndef JANK_PHASE_2
     {
       profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
+      __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
-#endif
+
+    {
+      profile::timer const timer{ "require jank.nrepl.server.core" };
+      __rt_ctx->load_module("jank.nrepl.server.core", module::origin::latest).expect_ok();
+    }
+
+    auto const repl_main{
+      __rt_ctx->intern_var("jank.nrepl.server.core", "background-main").expect_ok()
+    };
+    dynamic_call(repl_main);
 
     dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>("user"));
     dynamic_call(__rt_ctx->intern_var("clojure.core", "refer").expect_ok(),
@@ -212,7 +228,7 @@ namespace jank
     if(!opts.target_module.empty())
     {
       profile::timer const timer{ "load main" };
-      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
+      __rt_ctx->load_module(opts.target_module, module::origin::latest).expect_ok();
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
@@ -299,17 +315,15 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-#ifndef JANK_PHASE_2
     {
       profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("/clojure.core", module::origin::latest).expect_ok();
+      __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
-#endif
 
     if(!opts.target_module.empty())
     {
       profile::timer const timer{ "load main" };
-      __rt_ctx->load_module("/" + opts.target_module, module::origin::latest).expect_ok();
+      __rt_ctx->load_module(opts.target_module, module::origin::latest).expect_ok();
       dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
     }
 
@@ -352,13 +366,19 @@ namespace jank
     using namespace jank;
     using namespace jank::runtime;
 
-
-#ifndef JANK_PHASE_2
+#ifdef JANK_PHASE_2
+    {
+      profile::timer const timer{ "require clojure.core" };
+      __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
+    }
+#else
     if(opts.target_module != "clojure.core")
     {
       __rt_ctx->compile_module("clojure.core").expect_ok();
     }
 #endif
+
+    jank::runtime::module::verify_binary_version();
 
     __rt_ctx->compile_module(opts.target_module).expect_ok();
 
@@ -399,11 +419,41 @@ int main(int const argc, char const **argv)
     __rt_ctx = new(GC) runtime::context{};
 
     jank_load_clojure_core_native();
-    jank_load_jank_compiler_native();
-    jank_load_jank_perf_native();
 
 #ifdef JANK_PHASE_2
-    jank_load_clojure_core();
+    __rt_ctx->module_loader.add_load_fn("clojure.core", &jank_load_clojure_core);
+    __rt_ctx->module_loader.add_load_fn("clojure.string", &jank_load_clojure_string);
+    __rt_ctx->module_loader.add_load_fn("clojure.walk", &jank_load_clojure_walk);
+    __rt_ctx->module_loader.add_load_fn("jank.compiler-native", &jank_load_jank_compiler_native);
+    __rt_ctx->module_loader.add_load_fn("jank.perf-native", &jank_load_jank_perf_native);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.core",
+                                        &jank_load_jank_nrepl_server_core);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.inspect",
+                                        &jank_load_jank_nrepl_server_inspect);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler",
+                                        &jank_load_jank_nrepl_server_handler);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.bencode",
+                                        &jank_load_jank_nrepl_server_bencode);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.capture",
+                                        &jank_load_jank_nrepl_server_capture);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.util",
+                                        &jank_load_jank_nrepl_server_util);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.eval",
+                                        &jank_load_jank_nrepl_server_eval);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.parsec",
+                                        &jank_load_jank_nrepl_server_parsec);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.close",
+                                        &jank_load_jank_nrepl_server_handler_close);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.clone",
+                                        &jank_load_jank_nrepl_server_handler_clone);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.describe",
+                                        &jank_load_jank_nrepl_server_handler_describe);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.completions",
+                                        &jank_load_jank_nrepl_server_handler_completions);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.eval",
+                                        &jank_load_jank_nrepl_server_handler_eval);
+    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.lookup",
+                                        &jank_load_jank_nrepl_server_handler_lookup);
 #endif
 
     Cpp::EnableDebugOutput(false);

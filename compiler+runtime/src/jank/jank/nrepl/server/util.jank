@@ -1,0 +1,11 @@
+(ns jank.nrepl.server.util
+  (:require [clojure.walk :refer [postwalk]]))
+
+(defn abbreviate
+  "Traverse through `form` shortening any strings which exceed the length `n`."
+  [form n]
+  (letfn [(inner [x]
+            (if (and (string? x) (>= (count x) n))
+              (str (subs x 0 n) "…")
+              x))]
+    (postwalk inner form)))

@@ -72,17 +72,6 @@ namespace jank::util
     return res;
   }
 
-  jtl::immutable_string const &binary_cache_dir(jtl::immutable_string const &binary_version)
-  {
-    static jtl::immutable_string res;
-    if(!res.empty())
-    {
-      return res;
-    }
-
-    return res = util::format("target/{}", binary_version);
-  }
-
   /* The binary version is composed of two things:
    *
    * 1. The LLVM target triplet

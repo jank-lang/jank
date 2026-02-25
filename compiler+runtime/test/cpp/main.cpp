@@ -34,7 +34,7 @@ try
 #ifdef JANK_PHASE_2
     jank_load_clojure_core();
 #else
-    jank::runtime::__rt_ctx->load_module("/clojure.core", jank::runtime::module::origin::latest)
+    jank::runtime::__rt_ctx->load_module("clojure.core", jank::runtime::module::origin::latest)
       .expect_ok();
 #endif
 

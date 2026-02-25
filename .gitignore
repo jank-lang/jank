@@ -45,6 +45,18 @@ prefix/
 CMakeLists.txt.user
 CMakeUserPresets.json
 
+# Profiling outputs
+heaptrack.*.zst
+heaptrack.*line.zst
+heaptrack.*176.zst
+jank.profile
+perf-jit.data
+perf-jit.data.old
+perf.data
+perf.data.folded
+perf.data.old
+perf.svg
+
 # Rust
 rust/jank
 

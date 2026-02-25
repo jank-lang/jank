@@ -64,8 +64,10 @@ will look similar to this:
   :plugins [[org.jank-lang/lein-jank "0.2"]]
   :middleware [leiningen.jank/middleware]
   :main hello-lein.main
-  :profiles {:debug {:jank {:optimization-level 0}}
-             :release {:jank {:optimization-level 2}}})
+  :profiles {:debug {:output-dir "target/debug"
+                     :jank {:optimization-level 0}}
+             :release {:output-dir "target/release"
+                       :jank {:optimization-level 2}}})
 ```
 
 Your versions may differ, but the overall structure will remain. Our

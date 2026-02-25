@@ -1,3 +1,4 @@
-(ns jank.compiler)
+(ns jank.compiler
+  (:require [jank.compiler-native]))
 
 (def native-source jank.compiler-native/native-source)
