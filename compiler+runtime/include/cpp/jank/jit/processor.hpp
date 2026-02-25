@@ -6,6 +6,8 @@
 #include <jtl/result.hpp>
 #include <jtl/string_builder.hpp>
 
+#include <jank/runtime/object.hpp>
+
 namespace llvm
 {
   class Module;
@@ -27,12 +29,27 @@ namespace Cpp
   class Interpreter;
 }
 
+namespace jank::codegen
+{
+  struct processor;
+}
+
+namespace jank::runtime::obj
+{
+  using jit_function_ref = oref<struct jit_function>;
+}
+
 namespace jank::jit
 {
   struct processor
   {
     processor(jtl::immutable_string const &binary_version);
     ~processor();
+
+    runtime::obj::jit_function_ref eval(codegen::processor &cg_prc) const;
+    runtime::obj::jit_function_ref create_function(runtime::callable_arity_flags flags,
+                                                   jtl::immutable_string const &base_name,
+                                                   native_vector<u8> const &arities) const;
 
     void eval_string(jtl::immutable_string const &s) const;
     void eval_string(jtl::immutable_string const &s, clang::Value *) const;

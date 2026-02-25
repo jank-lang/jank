@@ -33,19 +33,19 @@ struct make_function_arity;
 template <usize I>
 struct make_function_arity_arg
 {
-  using type = object *;
+  using type = object_ref;
 };
 
 template <size_t... Is>
 struct make_function_arity<std::index_sequence<Is...>>
 {
-  using type = object *(*)(object *, typename make_function_arity_arg<Is>::type...);
+  using type = object_ref (*)(object_ref, typename make_function_arity_arg<Is>::type...);
 };
 
 template <>
 struct make_function_arity<std::index_sequence<>>
 {
-  using type = object *(*)(object *);
+  using type = object_ref (*)(object_ref);
 };
 
 template <usize N>

@@ -650,7 +650,7 @@ namespace jank::codegen
   }
 
   llvm_processor::impl::impl(expr::function_ref const expr, jtl::ref<reusable_context> ctx)
-    : target{ compilation_target::function }
+    : target{ compilation_target::module_function }
     , root_fn{ expr }
     , ctx{ std::move(ctx) }
     , llvm_ctx{ extract_context(this->ctx->module) }
@@ -803,7 +803,7 @@ namespace jank::codegen
   jtl::string_result<void> llvm_processor::impl::gen()
   {
     profile::timer const timer{ util::format("ir gen {}", root_fn->name) };
-    if(target != compilation_target::function)
+    if(target != compilation_target::module_function)
     {
       create_global_ctor();
     }
@@ -832,7 +832,7 @@ namespace jank::codegen
       gen_ret(gen_global(jank_nil()));
     }
 
-    if(target != compilation_target::function)
+    if(target != compilation_target::module_function)
     {
       llvm::IRBuilder<>::InsertPointGuard const guard{ *ctx->builder };
       ctx->builder->SetInsertPoint(ctx->global_ctor_block);

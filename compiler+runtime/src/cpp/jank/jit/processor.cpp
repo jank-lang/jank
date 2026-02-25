@@ -23,8 +23,12 @@
 #include <jank/util/clang.hpp>
 #include <jank/util/clang_format.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/rtti.hpp>
+#include <jank/runtime/obj/jit_function.hpp>
+#include <jank/codegen/processor.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/system.hpp>
+#include <jank/error/runtime.hpp>
 #include <jank/error/codegen.hpp>
 
 namespace jank::jit
@@ -243,6 +247,82 @@ namespace jank::jit
     llvm::remove_fatal_error_handler();
   }
 
+  runtime::obj::jit_function_ref processor::eval(codegen::processor &cg_prc) const
+  {
+    eval_string(cg_prc.declaration_str());
+
+    native_vector<u8> arities;
+    arities.reserve(cg_prc.root_fn->arities.size());
+    for(auto const &arity : cg_prc.root_fn->arities)
+    {
+      arities.emplace_back(arity.params.size());
+    }
+
+    return create_function(cg_prc.arity_flags(), cg_prc.struct_name, arities);
+  }
+
+  runtime::obj::jit_function_ref
+  processor::create_function(runtime::callable_arity_flags const flags,
+                             jtl::immutable_string const &base_name,
+                             native_vector<u8> const &arities) const
+  {
+    auto const ret{ runtime::make_box<jank::runtime::obj::jit_function>(flags) };
+    for(auto const arity : arities)
+    {
+      switch(arity)
+      {
+        case 0:
+          ret->arity_0 = reinterpret_cast<decltype(ret->arity_0)>(
+            find_symbol(util::format("{}_0", base_name)).expect_ok());
+          break;
+        case 1:
+          ret->arity_1 = reinterpret_cast<decltype(ret->arity_1)>(
+            find_symbol(util::format("{}_1", base_name)).expect_ok());
+          break;
+        case 2:
+          ret->arity_2 = reinterpret_cast<decltype(ret->arity_2)>(
+            find_symbol(util::format("{}_2", base_name)).expect_ok());
+          break;
+        case 3:
+          ret->arity_3 = reinterpret_cast<decltype(ret->arity_3)>(
+            find_symbol(util::format("{}_3", base_name)).expect_ok());
+          break;
+        case 4:
+          ret->arity_4 = reinterpret_cast<decltype(ret->arity_4)>(
+            find_symbol(util::format("{}_4", base_name)).expect_ok());
+          break;
+        case 5:
+          ret->arity_5 = reinterpret_cast<decltype(ret->arity_5)>(
+            find_symbol(util::format("{}_5", base_name)).expect_ok());
+          break;
+        case 6:
+          ret->arity_6 = reinterpret_cast<decltype(ret->arity_6)>(
+            find_symbol(util::format("{}_6", base_name)).expect_ok());
+          break;
+        case 7:
+          ret->arity_7 = reinterpret_cast<decltype(ret->arity_7)>(
+            find_symbol(util::format("{}_7", base_name)).expect_ok());
+          break;
+        case 8:
+          ret->arity_8 = reinterpret_cast<decltype(ret->arity_8)>(
+            find_symbol(util::format("{}_8", base_name)).expect_ok());
+          break;
+        case 9:
+          ret->arity_9 = reinterpret_cast<decltype(ret->arity_9)>(
+            find_symbol(util::format("{}_9", base_name)).expect_ok());
+          break;
+        case 10:
+          ret->arity_10 = reinterpret_cast<decltype(ret->arity_10)>(
+            find_symbol(util::format("{}_10", base_name)).expect_ok());
+          break;
+        default:
+          throw error::internal_runtime_failure(util::format("Unsupported arity {}.", arity));
+      }
+    }
+
+    return ret;
+  }
+
   void processor::eval_string(jtl::immutable_string const &s) const
   {
     eval_string(s, nullptr);
@@ -252,7 +332,6 @@ namespace jank::jit
   {
     profile::timer const timer{ "jit eval_string" };
     auto const &formatted{ s };
-    /* TODO: There is some sort of immutable_string or result bug here. */
     //auto const &formatted{ util::format_cpp_source(s).expect_ok() };
     //util::println("// eval_string:\n{}\n", formatted);
     auto err(interpreter->ParseAndExecute({ formatted.data(), formatted.size() }, ret));
