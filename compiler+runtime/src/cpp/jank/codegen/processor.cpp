@@ -111,9 +111,8 @@ namespace jank::codegen
         /* We want to use this global directly, since it's already in memory. We need the
          * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
          * our object. */
-        auto * const root{ static_cast<runtime::object **>(
-          GC_malloc_uncollectable(sizeof(runtime::object *))) };
-        *root = o.data;
+        [[maybe_unused]]
+        auto * const root{ new(NoGC) runtime::object *{ o.data } };
         /* TODO: Not a fan of this. Move into global? Init with uncollectable ptr. */
         auto const fmt_str{ util::format("jank::runtime::object_ref{ (jank::runtime::object*){} }",
                                          static_cast<void *>(o.data)) };
@@ -147,13 +146,13 @@ namespace jank::codegen
           return found->second;
         }
 
+        auto const var{ __rt_ctx->intern_var(qualified_name).expect_ok() };
+
         /* We want to use this global directly, since it's already in memory. We need the
          * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
          * our object. */
-        auto const var{ __rt_ctx->intern_var(qualified_name).expect_ok() };
-        auto * const root{ static_cast<runtime::var **>(
-          GC_malloc_uncollectable(sizeof(runtime::var *))) };
-        *root = reinterpret_cast<runtime::var *>(var.data);
+        [[maybe_unused]]
+        auto const root{ new(NoGC) runtime::var *{ reinterpret_cast<runtime::var *>(var.data) } };
         auto const fmt_str{ util::format("reinterpret_cast<jank::runtime::var*>({})",
                                          static_cast<void *>(var.data)) };
         locked_global_vars->emplace(qualified_name, fmt_str);
