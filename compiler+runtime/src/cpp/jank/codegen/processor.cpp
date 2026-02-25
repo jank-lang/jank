@@ -156,6 +156,7 @@ namespace jank::codegen
         auto const fmt_str{ util::format("reinterpret_cast<jank::runtime::var*>({})",
                                          static_cast<void *>(var.data)) };
         locked_global_vars->emplace(qualified_name, fmt_str);
+        return fmt_str;
       }
 
       static jtl::immutable_string const dot{ "\\." };
