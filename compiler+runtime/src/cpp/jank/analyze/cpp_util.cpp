@@ -228,11 +228,14 @@ namespace jank::analyze::cpp_util
     auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
 
-    auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
+    auto const alias{ runtime::munge(runtime::__rt_ctx->unique_namespaced_string()) };
     /* We add a new line so that a trailing // comment won't interfere with our code. */
     auto const code{ util::format(
-      "[[gnu::always_inline]] inline decltype(auto) {}(){ return ({}\n); }",
-      runtime::munge(alias),
+      "\n#ifndef JANK_DEFINED_{}\n#define JANK_DEFINED_{}\n[[gnu::always_inline]] inline "
+      "decltype(auto) {}(){ return ({}\n); }\n#endif\n",
+      alias,
+      alias,
+      alias,
       literal) };
     //util::println("cpp/value code: {}", code);
     auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
