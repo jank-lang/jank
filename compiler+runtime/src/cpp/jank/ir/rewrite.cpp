@@ -309,7 +309,10 @@ namespace jank::ir
       case instruction_kind::cpp_new:
         {
           auto &i{ static_cast<inst::cpp_new &>(*inst.data) };
-          rewritten |= rewrite(i.value, old_name, new_name);
+          for(auto &arg : i.args)
+          {
+            rewritten |= rewrite(arg, old_name, new_name);
+          }
         }
         break;
       case instruction_kind::cpp_delete:
