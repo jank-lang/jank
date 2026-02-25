@@ -114,7 +114,8 @@ namespace jank::codegen
         auto * const root{ static_cast<runtime::object **>(
           GC_malloc_uncollectable(sizeof(runtime::object *))) };
         *root = o.data;
-        auto const fmt_str{ util::format("reinterpret_cast<jank::runtime::object*>({})",
+        /* TODO: Not a fan of this. Move into global? Init with uncollectable ptr. */
+        auto const fmt_str{ util::format("jank::runtime::object_ref{ (jank::runtime::object*){} }",
                                          static_cast<void *>(o.data)) };
         locked_global_constants->emplace(o, fmt_str);
         return fmt_str;
@@ -851,14 +852,16 @@ namespace jank::codegen
   callable_arity_flags processor::arity_flags() const
   {
     analyze::expr::function_arity const *variadic_arity{};
-    analyze::expr::function_arity const *highest_fixed_arity{ root_fn->arities.data() };
+    analyze::expr::function_arity const *highest_fixed_arity{};
+    jank_assert(!root_fn->arities.empty());
     for(auto const &arity : root_fn->arities)
     {
       if(arity.fn_ctx->is_variadic)
       {
         variadic_arity = &arity;
       }
-      else if(highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
+      else if(!highest_fixed_arity
+              || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
       {
         highest_fixed_arity = &arity;
       }
@@ -2829,7 +2832,15 @@ namespace jank::codegen
 
         for(auto const &capture : all_captures)
         {
-          auto const &capture_name{ runtime::munge(capture.second->native_name) };
+          /* We have an analysis bug which causes letfn named recursion references to
+           * end up being captures, since they're found as locals. This works around issue
+           * for now. */
+          if(capture.second->native_name == root_fn->name)
+          {
+            continue;
+          }
+
+          auto const capture_name{ runtime::munge(capture.second->native_name) };
           util::format_to(body_buffer,
                           "auto &&{}{ {}->{} };",
                           capture_name,

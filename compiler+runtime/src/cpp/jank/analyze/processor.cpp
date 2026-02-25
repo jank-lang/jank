@@ -2808,22 +2808,11 @@ namespace jank::analyze
             auto const catch_type_ref(static_ref_cast<expr::cpp_type>(catch_type.expect_ok()));
 
             /* If we're catching a C++ class/struct by value, we want to promote it to a reference
-             * to avoid object slicing and to enable polymorphism.
-             * However, we must NOT promote types in the jank::runtime namespace (like object_ref),
-             * as these are smart pointers expected to be passed by value in the runtime. */
+             * to avoid object slicing and to enable polymorphism. */
             if(!Cpp::IsPointerType(catch_type_ref->type))
             {
-              /* Check if this type is in the jank::runtime namespace */
-              auto const type_scope{ Cpp::GetScopeFromType(catch_type_ref->type) };
-              auto const type_name{ cpp_util::get_qualified_name(type_scope) };
-
-              if(bool const is_jank_runtime_type{ type_name.starts_with("jank::runtime::") };
-                 !is_jank_runtime_type)
-              {
-                catch_type_ref->type = Cpp::GetLValueReferenceType(catch_type_ref->type);
-              }
+              catch_type_ref->type = Cpp::GetLValueReferenceType(catch_type_ref->type);
             }
-
 
             /* Check for duplicate catch types. */
             for(auto const &existing_catch : ret->catch_bodies)
@@ -2839,6 +2828,7 @@ namespace jank::analyze
                                                   latest_expansion(macro_expansions));
               }
             }
+
             bool const is_object{ cpp_util::is_any_object(catch_type_ref->type) };
             auto catch_frame(
               jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
@@ -2847,6 +2837,7 @@ namespace jank::analyze
                                                         none,
                                                         catch_frame,
                                                         is_object,
+                                                        false,
                                                         false,
                                                         false,
                                                         catch_type_ref->type);

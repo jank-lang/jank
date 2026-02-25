@@ -1044,7 +1044,7 @@ namespace jank::runtime::module
       auto const managed_load_fn{ locked_state->managed_load_fns.find(module) };
       if(managed_load_fn != locked_state->managed_load_fns.end())
       {
-        log_managed_load(module);
+        //log_managed_load(module);
         (*managed_load_fn->second)();
         set_is_loaded(module);
         return ok();
@@ -1064,7 +1064,7 @@ namespace jank::runtime::module
     auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
     auto const &module_sources{ found_module.expect_ok().sources };
 
-    log_load(module, module_type_to_load, module_sources);
+    //log_load(module, module_type_to_load, module_sources);
 
     switch(module_type_to_load)
     {
