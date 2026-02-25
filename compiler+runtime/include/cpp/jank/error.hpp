@@ -17,10 +17,7 @@ namespace jank::error
   /* TODO: Rename internal failures to have correct prefix. i.e. lex_internal_failure. */
   enum class kind : u8
   {
-    /* These min & max represent insuppressible reeader errors that, when encountered during
-     * parsing, prevent the parser from gracefully consuming the rest of the syntactic form. */
-    suppressed_reader_error_min,
-    lex_unexpected_eof = suppressed_reader_error_min,
+    lex_unexpected_eof,
     lex_expecting_whitespace,
     lex_invalid_unicode,
     lex_incomplete_character,
@@ -41,7 +38,6 @@ namespace jank::error
     parse_invalid_reader_conditional,
     parse_invalid_reader_splice,
     parse_unsupported_reader_macro,
-    suppressed_reader_error_max = parse_unsupported_reader_macro,
     parse_odd_entries_in_map,
     parse_duplicate_keys_in_map,
     parse_duplicate_items_in_set,
@@ -368,11 +364,6 @@ namespace jank::error
         return "internal/failure";
     }
     return "unknown";
-  }
-
-  constexpr bool is_insuppressible(kind const k)
-  {
-    return kind::suppressed_reader_error_min <= k && k <= kind::suppressed_reader_error_max;
   }
 
   /* This is a clang-tidy bug. https://github.com/llvm/llvm-project/issues/61687
