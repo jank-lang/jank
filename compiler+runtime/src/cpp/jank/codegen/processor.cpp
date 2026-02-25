@@ -75,6 +75,17 @@ namespace jank::codegen
      * the actual param names as mutable locals outside of the while loop. */
     constexpr jtl::immutable_string_view const recur_suffix{ "__recur" };
 
+    static folly::Synchronized<
+      native_unordered_map<runtime::object_ref,
+                           jtl::immutable_string,
+                           std::hash<runtime::object_ref>,
+                           /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+                           runtime::very_equal_to>>
+      global_constants;
+    static folly::Synchronized<native_unordered_map<jtl::immutable_string, jtl::immutable_string>>
+      /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+      global_vars;
+
     static jtl::immutable_string
     lift_constant(native_unordered_map<runtime::object_ref,
                                        jtl::immutable_string,
@@ -91,11 +102,23 @@ namespace jank::codegen
 
       if(target == compilation_target::eval)
       {
-        /* During eval, we can just refer to this object by its address, since it already
-         * exists in memory. We mark it as a root to keep it alive. */
-        GC_add_roots(o.data, o.data + 1);
-        return util::format("reinterpret_cast<jank::runtime::object*>({})",
-                            static_cast<void *>(o.data));
+        auto locked_global_constants{ global_constants.wlock() };
+        auto const found{ locked_global_constants->find(o) };
+        if(found != locked_global_constants->end())
+        {
+          return found->second;
+        }
+
+        /* We want to use this global directly, since it's already in memory. We need the
+         * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
+         * our object. */
+        auto * const root{ static_cast<runtime::object **>(
+          GC_malloc_uncollectable(sizeof(runtime::object *))) };
+        *root = o.data;
+        auto const fmt_str{ util::format("reinterpret_cast<jank::runtime::object*>({})",
+                                         static_cast<void *>(o.data)) };
+        locked_global_constants->emplace(o, fmt_str);
+        return fmt_str;
       }
 
       auto const &native_name{ runtime::munge(__rt_ctx->unique_string("const")) };
@@ -117,12 +140,23 @@ namespace jank::codegen
 
       if(target == compilation_target::eval)
       {
-        /* During eval, we can just refer to this object by its address, since it already
-         * exists in memory. We mark it as a root to keep it alive. */
+        auto locked_global_vars{ global_vars.wlock() };
+        auto const found{ locked_global_vars->find(qualified_name) };
+        if(found != locked_global_vars->end())
+        {
+          return found->second;
+        }
+
+        /* We want to use this global directly, since it's already in memory. We need the
+         * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
+         * our object. */
         auto const var{ __rt_ctx->intern_var(qualified_name).expect_ok() };
-        GC_add_roots(var.data, static_cast<runtime::object_ref *>(var.data) + 1);
-        return util::format("reinterpret_cast<jank::runtime::var*>({})",
-                            static_cast<void *>(var.data));
+        auto * const root{ static_cast<runtime::var **>(
+          GC_malloc_uncollectable(sizeof(runtime::var *))) };
+        *root = reinterpret_cast<runtime::var *>(var.data);
+        auto const fmt_str{ util::format("reinterpret_cast<jank::runtime::var*>({})",
+                                         static_cast<void *>(var.data)) };
+        locked_global_vars->emplace(qualified_name, fmt_str);
       }
 
       static jtl::immutable_string const dot{ "\\." };
