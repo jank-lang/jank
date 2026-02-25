@@ -92,10 +92,17 @@ namespace jank::codegen
       if(target == compilation_target::eval)
       {
         /* During eval, we can just refer to this object by its address, since it already
-         * exists in memory. We mark it as a root to keep it alive. */
-        GC_add_roots(o.data, o.data + 1);
-        return util::format("reinterpret_cast<jank::runtime::object*>({})",
-                            static_cast<void *>(o.data));
+         * exists in memory. We store the pointer in GC-uncollectable memory so the GC
+         * can scan it and keep the object alive. Note that GC_add_roots(o.data, ...) would
+         * be wrong here, since that scans the object's own memory, not the location that
+         * holds the pointer to the object. */
+        auto *const root{ static_cast<runtime::object **>(
+          GC_malloc_uncollectable(sizeof(runtime::object *))) };
+        *root = o.data;
+        auto const fmt_str{ util::format("reinterpret_cast<jank::runtime::object*>({})",
+                                         static_cast<void *>(o.data)) };
+        lifted_constants.emplace(o, fmt_str);
+        return fmt_str;
       }
 
       auto const &native_name{ runtime::munge(__rt_ctx->unique_string("const")) };
@@ -117,12 +124,19 @@ namespace jank::codegen
 
       if(target == compilation_target::eval)
       {
-        /* During eval, we can just refer to this object by its address, since it already
-         * exists in memory. We mark it as a root to keep it alive. */
+        /* During eval, we can just refer to this var by its address, since it already
+         * exists in memory. We store the pointer in GC-uncollectable memory so the GC
+         * can scan it and keep the var alive. Note that GC_add_roots(var.data, ...) would
+         * be wrong here, since that scans the var's own memory, not the location that
+         * holds the pointer to the var. */
         auto const var{ __rt_ctx->intern_var(qualified_name).expect_ok() };
-        GC_add_roots(var.data, static_cast<runtime::object_ref *>(var.data) + 1);
-        return util::format("reinterpret_cast<jank::runtime::var*>({})",
-                            static_cast<void *>(var.data));
+        auto *const root{ static_cast<runtime::var **>(
+          GC_malloc_uncollectable(sizeof(runtime::var *))) };
+        *root = var.data;
+        auto const fmt_str{ util::format("reinterpret_cast<jank::runtime::var*>({})",
+                                         static_cast<void *>(var.data)) };
+        lifted_vars.emplace(qualified_name, processor::lifted_var{ fmt_str, owned });
+        return fmt_str;
       }
 
       static jtl::immutable_string const dot{ "\\." };
