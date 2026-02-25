@@ -75,12 +75,11 @@ namespace jank::codegen
      * the actual param names as mutable locals outside of the while loop. */
     constexpr jtl::immutable_string_view const recur_suffix{ "__recur" };
 
-    static folly::Synchronized<
-      native_unordered_map<runtime::object_ref,
-                           jtl::immutable_string,
-                           std::hash<runtime::object_ref>,
-                           /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-                           runtime::very_equal_to>>
+    static folly::Synchronized<native_unordered_map<runtime::object_ref,
+                                                    jtl::immutable_string,
+                                                    std::hash<runtime::object_ref>,
+                                                    runtime::very_equal_to>>
+      /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
       global_constants;
     static folly::Synchronized<native_unordered_map<jtl::immutable_string, jtl::immutable_string>>
       /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
@@ -852,15 +851,14 @@ namespace jank::codegen
   callable_arity_flags processor::arity_flags() const
   {
     analyze::expr::function_arity const *variadic_arity{};
-    analyze::expr::function_arity const *highest_fixed_arity{};
+    analyze::expr::function_arity const *highest_fixed_arity{ root_fn->arities.data() };
     for(auto const &arity : root_fn->arities)
     {
       if(arity.fn_ctx->is_variadic)
       {
         variadic_arity = &arity;
       }
-      else if(!highest_fixed_arity
-              || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
+      else if(highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
       {
         highest_fixed_arity = &arity;
       }
@@ -1414,7 +1412,7 @@ namespace jank::codegen
   jtl::option<handle> processor::gen(analyze::expr::local_reference_ref const expr,
                                      analyze::expr::function_arity const &)
   {
-    auto const ret(runtime::munge(expr->binding->native_name));
+    auto ret(runtime::munge(expr->binding->native_name));
     switch(expr->position)
     {
       case analyze::expression_position::statement:
