@@ -317,7 +317,7 @@ namespace jank::read::parse
 
   jtl::result<native_vector<object_source_info>, error_ref>
   processor::parse_upto(lex::token_kind const &upto,
-                        error_ref (*unterminated_form_error)(read::source const &))
+                        jtl::ref<error_ref(read::source const &)> const unterminated_form_error)
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
@@ -340,7 +340,7 @@ namespace jank::read::parse
 
     if(expected_closer.is_some())
     {
-      return unterminated_form_error({ start_token.start, latest_token.end });
+      return (*unterminated_form_error)({ start_token.start, latest_token.end });
     }
 
     expected_closer = prev_expected_closer;

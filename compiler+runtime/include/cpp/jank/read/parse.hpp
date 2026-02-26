@@ -106,10 +106,9 @@ namespace jank::read::parse
     iterator end();
 
   private:
-    /* TODO: Switch to `jtl::ref` for the function pointer. */
     jtl::result<native_vector<object_source_info>, error_ref>
     parse_upto(lex::token_kind const &upto,
-               error_ref (*unterminated_form_error)(read::source const &));
+               jtl::ref<error_ref(read::source const &)> const unterminated_form_error);
     jtl::result<runtime::object_ref, error_ref> syntax_quote(runtime::object_ref const form);
     jtl::result<runtime::object_ref, error_ref>
     syntax_quote_expand_seq(runtime::object_ref const seq);
