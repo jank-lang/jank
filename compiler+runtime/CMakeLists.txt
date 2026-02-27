@@ -137,18 +137,85 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
   list(APPEND jank_common_compiler_flags -Og -g -DNDEBUG)
 endif()
 
+# Enabling phase 2 builds means that we will compile all of our core jank
+# libraries to .cpp files and then compile those into our final jank binary.
+# We do this for release builds, for performance, or whenever it's forced
+# on during configuration.
+#
+# Normally, non-release builds, we compile the core jank libraries to object
+# files and then JIT load them on startup. This provides faster iteration, but
+# at the cost of a slower startup time.
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug" OR jank_force_phase_2)
   set(jank_enable_phase_2 ON)
 else()
   set(jank_enable_phase_2 OFF)
 endif()
 
+set(jank_clojure_core_sources "${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank")
+set(
+  jank_other_core_sources
+  "${CMAKE_SOURCE_DIR}/src/jank/clojure/string.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/clojure/walk.jank"
+
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/inspect.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/core.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/handler.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/bencode.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/capture.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/util.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/eval.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/parsec.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/handler/close.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/handler/clone.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/handler/describe.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/handler/completions.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/handler/eval.jank"
+  "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/handler/lookup.jank"
+)
+
+set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
+set(jank_clojure_core_binary_output "${jank_clojure_core_output}")
+set(
+  jank_nrepl_server_outputs
+  "${CMAKE_BINARY_DIR}/core-libs/clojure/string.o"
+  "${CMAKE_BINARY_DIR}/core-libs/clojure/walk.o"
+
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/inspect.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/core.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/bencode.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/capture.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/util.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/eval.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/parsec.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/close.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/clone.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/describe.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/completions.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/eval.o"
+  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/lookup.o"
+)
+
+list(JOIN jank_nrepl_server_outputs " " jank_nrepl_server_outputs_str)
 if(jank_enable_phase_2)
+  set(jank_core_lib_output_target --output-target cpp)
   set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.cpp")
-  set(jank_clojure_core_output_artifact "${CMAKE_BINARY_DIR}/CMakeFiles/jank_exe_phase_2.dir/core-libs/clojure/core.cpp.o")
-else()
-  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
-  set(jank_clojure_core_output_artifact "${jank_clojure_core_output}")
+  set(jank_clojure_core_binary_output "${CMAKE_BINARY_DIR}/CMakeFiles/jank_exe_phase_2.dir/core-libs/clojure/core.cpp.o")
+
+  list(
+    TRANSFORM jank_nrepl_server_outputs
+    REPLACE "\.o$" ".cpp.o"
+    OUTPUT_VARIABLE jank_nrepl_server_binary_outputs
+  )
+  list(
+    TRANSFORM jank_nrepl_server_binary_outputs
+    REPLACE "core-libs" "CMakeFiles/jank_exe_phase_2.dir/core-libs"
+  )
+  list(JOIN jank_nrepl_server_binary_outputs " " jank_nrepl_server_outputs_str)
+  list(
+    TRANSFORM jank_nrepl_server_outputs
+    REPLACE "\.o$" ".cpp"
+  )
 endif()
 
 if(jank_test)
@@ -413,6 +480,15 @@ include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+
+# CMake changed its mechanism for finding Boost. The old behavior uses
+# a CMake-provided FindBoost script. The new behavior relies on locating
+# a BoostConfig.cmake on the system. Without explicitly setting this, we'll
+# get a warning from CMake.
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 NEW)
+endif()
+find_package(Boost REQUIRED)
 # ---- Other dependencies ----
 
 # ---- libjank.a ----
@@ -580,6 +656,7 @@ add_library(
   src/cpp/clojure/string_native.cpp
   src/cpp/jank/compiler_native.cpp
   src/cpp/jank/perf_native.cpp
+  src/cpp/jank/nrepl/server.cpp
 )
 set_target_properties(jank_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
 
@@ -610,6 +687,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
   ${OPENSSL_INCLUDE_DIR}
+  ${Boost_INCLUDE_DIRS}
 )
 
 target_link_libraries(
@@ -618,6 +696,7 @@ target_link_libraries(
   cpptrace::cpptrace
   ftxui::screen ftxui::dom
   Boost::multiprecision
+  Boost::boost
   nanobench_lib
   bdwgc::gc bdwgc::gctba
 )
@@ -783,14 +862,15 @@ if(jank_enable_phase_2)
     jank_exe_phase_2
     "$<TARGET_PROPERTY:jank_exe_phase_1,SOURCES>"
     ${jank_clojure_core_output}
+    ${jank_nrepl_server_outputs}
   )
   add_executable(jank::exe ALIAS jank_exe_phase_2)
   set_property(TARGET jank_exe_phase_2 PROPERTY OUTPUT_NAME jank)
 
   # Our generated code is not as precisely written as hand-written C++, so we ignore various
   # warnings and skip linting.
-  set_source_files_properties(${jank_clojure_core_output} PROPERTIES COMPILE_FLAGS "-w -Wno-c++11-narrowing")
-  set_source_files_properties(${jank_clojure_core_output} PROPERTIES SKIP_LINTING ON)
+  set_source_files_properties(${jank_clojure_core_output} ${jank_nrepl_server_outputs} PROPERTIES COMPILE_FLAGS "-w -Wno-c++11-narrowing")
+  set_source_files_properties(${jank_clojure_core_output} ${jank_nrepl_server_outputs} PROPERTIES SKIP_LINTING ON)
 
   # Symbol exporting for JIT.
   set_target_properties(jank_exe_phase_2 PROPERTIES ENABLE_EXPORTS 1)
@@ -813,7 +893,7 @@ if(jank_enable_phase_2)
   #set_target_properties(jank_exe_phase_2 PROPERTIES LINK_FLAGS_RELEASE "-s")
 else()
   add_custom_command(
-    DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${jank_clojure_core_output} ${jank_incremental_pch_flag}
+    DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${jank_clojure_core_output} ${jank_nrepl_server_outputs} ${jank_incremental_pch_flag}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT ${CMAKE_BINARY_DIR}/jank
     COMMAND ln -sf jank-phase-1 jank
@@ -955,10 +1035,11 @@ add_custom_target(
 # change, or whenever the jank binary changes.
 set(jank_core_libraries_flag "${CMAKE_BINARY_DIR}/classes/core-libraries")
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank ${jank_incremental_pch_flag}
+  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${jank_clojure_core_sources} ${jank_other_core_sources} ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
-  BYPRODUCTS ${jank_clojure_core_output}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} clojure.core
+  BYPRODUCTS ${jank_clojure_core_output} ${jank_nrepl_server_outputs}
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} ${jank_core_lib_output_target} clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(

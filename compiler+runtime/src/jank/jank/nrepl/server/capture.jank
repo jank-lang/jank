@@ -1,0 +1,80 @@
+(ns jank.nrepl.server.capture)
+
+(cpp/raw "#include <unistd.h>")
+(cpp/raw "#include <stdio.h>")
+(cpp/raw "#include <fcntl.h>")
+(cpp/raw "#include <filesystem>")
+
+(def temp-file-template "/tmp/jank-nrepl-XXXXXX")
+
+(defn- make-temp-file []
+  (let [name (cpp/std.string (cpp/cast cpp/std.string temp-file-template))
+        fd   (cpp/mkstemp (cpp/.data name))]
+    (assert (not= fd -1) "temp file could not be created")
+    [name fd]))
+
+(defn- file-size [path]
+  (cpp/std.filesystem.file_size (cpp/cast cpp/std.string path)))
+
+(defn- start
+  "Redirect the given file stream to a capture sink, available by `readback`.
+  Returns a capture handle."
+  [fp*]
+  (let [fp                  (cpp/unbox cpp/FILE* fp*)
+        fd                  (cpp/fileno fp)
+        bak-fd              (cpp/dup fd)
+        [temp-name temp-fd] (make-temp-file)]
+    ;; First flush the stream to ensure any data from before we start capturing
+    ;; is written.
+    (cpp/fflush fp)
+
+    ;; Redirect the stream to a temporary file which we can later read back.
+    (cpp/dup2 temp-fd fd)
+    (cpp/close temp-fd)
+
+    ;; Return a handle of what we've changed so that we can revert it later.
+    {:fp*       fp*
+     :bak-fd    bak-fd
+     :temp-name temp-name
+     :temp-fd   temp-fd}))
+
+(defn- end
+  "End the capture. Make sure to pair this with every `start` call or else the
+  stream will remain permanently redirected."
+  [{:keys [fp* bak-fd temp-fd]}]
+  (let [fp (cpp/unbox cpp/FILE* fp*)
+        fd (cpp/fileno fp)]
+    ;; Flush any remaining data that we want to be included in the capture.
+    (cpp/fflush fp)
+
+    ;; Bring it all back to its original state.
+    (cpp/dup2 bak-fd fd)
+    (cpp/close bak-fd)
+    (cpp/close temp-fd)))
+
+(defn- readback
+  "Read back the data which was captured by the handle. The data is deleted, so
+  this can only be called once."
+  [{:keys [temp-name]}]
+  (let [s (slurp temp-name)]
+    (cpp/unlink temp-name)
+    s))
+
+(defn with-capture
+  "Execute `f` and return a map of :ret, the returned value from f, and
+  :stderr/:stdout, the string data which was captured from the respective
+  streams."
+  [f]
+  (let [stdout-handle (start (cpp/box (cpp/value "&*stdout")))
+        stderr-handle (start (cpp/box (cpp/value "&*stderr")))
+        ret           (try
+                        (f)
+                        (finally
+                          (end stdout-handle)
+                          (end stderr-handle)))]
+    {:ret    ret
+     :stdout (readback stdout-handle)
+     :stderr (readback stderr-handle)}))
+
+(comment
+  (with-capture #(do (println "Hello") :a-ret-value)))

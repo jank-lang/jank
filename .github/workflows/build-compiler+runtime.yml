@@ -183,9 +183,15 @@ jobs:
         if: runner.os == 'Linux'
         uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
         with:
-          packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev doctest-dev gcc g++ libgc-dev
+          packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev doctest-dev gcc g++ libgc-dev libboost-all-dev
           # Increment this when the package list changes.
-          version: 9
+          version: 12
+      # Boost doesn't get cached properly with the above action.
+      # https://github.com/awalsh128/cache-apt-pkgs-action/issues/151
+      - name: Install boost
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt install -y libboost-all-dev
       - name: Install Homebrew packages
         if: runner.os == 'macOS'
         run: |

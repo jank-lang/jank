@@ -13,6 +13,15 @@ your executable, your `-main` function will be called.
 > There is not yet a way to change the output name using Leiningen, but this
 > will be implemented.
 
+## Building for release
+By default, `lein compile` will build you a debug executable with fewer
+optimizations enabled. To get a release executable, you can enable the `release`
+profile.
+
+```bash
+lein with-profile release compile
+```
+
 ## Distributing your executables
 Currently, AOT compiled executables still depend on jank, Clang, and LLVM. This
 makes distribution more complicated, especially since the Clang/LLVM version

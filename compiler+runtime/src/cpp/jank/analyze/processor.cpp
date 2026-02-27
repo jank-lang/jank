@@ -1808,7 +1808,7 @@ namespace jank::analyze
     {
       auto const s(runtime::expect_object<runtime::obj::symbol>(first_elem));
       name = s->name;
-      unique_name = __rt_ctx->unique_string(name);
+      unique_name = __rt_ctx->unique_namespaced_string(name);
       if(length < 3)
       {
         return error::analyze_invalid_fn("This function is missing its parameter vector.",
@@ -1820,7 +1820,7 @@ namespace jank::analyze
     }
     else
     {
-      name = __rt_ctx->unique_string("fn");
+      name = __rt_ctx->unique_namespaced_string("fn");
       unique_name = name;
     }
 
@@ -2147,7 +2147,8 @@ namespace jank::analyze
     {
       return error::analyze_invalid_let("A bindings vector must be provided to 'let'.",
                                         meta_source(o->meta),
-                                        latest_expansion(macro_expansions));
+                                        latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(o, 1));
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
@@ -2166,7 +2167,8 @@ namespace jank::analyze
       /* TODO: Note the last value (maybe reparse). Check if it's a symbol? */
       return error::analyze_invalid_let("There must be an even number of bindings for a 'let'.",
                                         object_source(bindings_obj),
-                                        latest_expansion(macro_expansions));
+                                        latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(o, 1));
     }
 
     auto frame{ jtl::make_ref<local_frame>(local_frame::frame_type::let, current_frame) };
@@ -2213,7 +2215,7 @@ namespace jank::analyze
         local_binding{ sym,
                        __rt_ctx->unique_string(sym->name),
                        value_expr,
-                       current_frame,
+                       frame,
                        value_expr->needs_box,
                        .type = expr_type }) };
       ret->pairs.emplace_back(&binding, value_expr);
@@ -2806,22 +2808,11 @@ namespace jank::analyze
             auto const catch_type_ref(static_ref_cast<expr::cpp_type>(catch_type.expect_ok()));
 
             /* If we're catching a C++ class/struct by value, we want to promote it to a reference
-             * to avoid object slicing and to enable polymorphism.
-             * However, we must NOT promote types in the jank::runtime namespace (like object_ref),
-             * as these are smart pointers expected to be passed by value in the runtime. */
+             * to avoid object slicing and to enable polymorphism. */
             if(!Cpp::IsPointerType(catch_type_ref->type))
             {
-              /* Check if this type is in the jank::runtime namespace */
-              auto const type_scope{ Cpp::GetScopeFromType(catch_type_ref->type) };
-              auto const type_name{ cpp_util::get_qualified_name(type_scope) };
-
-              if(bool const is_jank_runtime_type{ type_name.starts_with("jank::runtime::") };
-                 !is_jank_runtime_type)
-              {
-                catch_type_ref->type = Cpp::GetLValueReferenceType(catch_type_ref->type);
-              }
+              catch_type_ref->type = Cpp::GetLValueReferenceType(catch_type_ref->type);
             }
-
 
             /* Check for duplicate catch types. */
             for(auto const &existing_catch : ret->catch_bodies)
@@ -2837,6 +2828,7 @@ namespace jank::analyze
                                                   latest_expansion(macro_expansions));
               }
             }
+
             bool const is_object{ cpp_util::is_any_object(catch_type_ref->type) };
             auto catch_frame(
               jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
@@ -2845,6 +2837,7 @@ namespace jank::analyze
                                                         none,
                                                         catch_frame,
                                                         is_object,
+                                                        false,
                                                         false,
                                                         false,
                                                         catch_type_ref->type);

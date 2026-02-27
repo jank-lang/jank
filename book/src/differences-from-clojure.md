@@ -16,8 +16,7 @@ Clojure.
 ## Parser
 * No load operation for `data_readers.(cljc|jank)` at start-up to extend
   supported tags
-* Only lexer errors and unbalanced forms are rejected in unsupported reader
-  conditionals
+* jank allows using reader conditionals in `.jank` files as well
 * No automatic method to disable read by setting the `clojure.core/*read-eval*`
   at start-up
 

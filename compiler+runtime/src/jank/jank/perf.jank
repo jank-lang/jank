@@ -1,4 +1,5 @@
-(ns jank.perf)
+(ns jank.perf
+  (:require [jank.perf-native]))
 
 ; TODO: Options, following what criterium offers.
 (defmacro benchmark [opts & body]

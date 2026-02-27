@@ -3,13 +3,12 @@
 #include <unistd.h>
 
 #include <filesystem>
+#include <fstream>
 #include <regex>
 
 #include <jankzip.h>
 
 #include <jank/type.hpp>
-#include <jank/util/fmt/print.hpp>
-#include <jank/util/path.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/truthy.hpp>
@@ -23,9 +22,12 @@
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/rtti.hpp>
-#include <jank/util/environment.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/runtime.hpp>
+#include <jank/error/report.hpp>
+#include <jank/util/path.hpp>
+#include <jank/util/environment.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime::module
 {
@@ -63,27 +65,12 @@ namespace jank::runtime::module
     return util::format("jank_load_{}", ret);
   }
 
-  /* TODO: I don't think this is needed. */
-  jtl::immutable_string
-  nest_module(jtl::immutable_string const &module, jtl::immutable_string const &sub)
-  {
-    jank_debug_assert(!module.empty());
-    jank_debug_assert(!sub.empty());
-    return module + "$" + sub;
-  }
-
   jtl::immutable_string
   nest_native_ns(jtl::immutable_string const &native_ns, jtl::immutable_string const &end)
   {
     jank_debug_assert(!native_ns.empty());
     jank_debug_assert(!end.empty());
     return util::format("::{}::{}", native_ns, end);
-  }
-
-  /* If it has two or more occurences of $, it's nested. */
-  bool is_nested_module(jtl::immutable_string const &module)
-  {
-    return module.find('$') != module.rfind('$');
   }
 
   /* This is a somewhat complicated function. We take in a module (doesn't need to be munged) and
@@ -135,9 +122,107 @@ namespace jank::runtime::module
     return ret;
   }
 
+  static jtl::immutable_string binary_version_path()
+  {
+    auto const path{ util::format("{}/.jank-binary-version", util::cli::opts.output_dir) };
+    return path;
+  }
+
+  enum class binary_version_status : u8
+  {
+    /* A binary version file exists and holds a matching value. */
+    good,
+    /* No binary version file was found. */
+    needs_write,
+    /* A binary version file exists, but the value within it doesn't match. */
+    needs_clean
+  };
+
+  static binary_version_status check_binary_version_status()
+  {
+    if(!std::filesystem::exists(util::cli::opts.output_dir.c_str()))
+    {
+      return binary_version_status::needs_write;
+    }
+
+    auto const &path{ binary_version_path() };
+    if(!std::filesystem::exists(path.c_str()))
+    {
+      return binary_version_status::needs_write;
+    }
+
+    std::ifstream ifs{ path.c_str() };
+    std::string file_binary_version;
+    std::getline(ifs, file_binary_version);
+
+    auto const &binary_version{ util::binary_version() };
+    if(file_binary_version != binary_version)
+    {
+      return binary_version_status::needs_clean;
+    }
+
+    return binary_version_status::good;
+  }
+
+  static void write_binary_version()
+  {
+    std::filesystem::create_directories(util::cli::opts.output_dir.c_str());
+
+    auto const &binary_version{ util::binary_version() };
+    auto const &path{ binary_version_path() };
+    std::ofstream ofs{ path.c_str() };
+    ofs << binary_version.c_str();
+  }
+
+  static void clean_output_directory()
+  {
+    std::filesystem::remove_all(util::cli::opts.output_dir.c_str());
+    write_binary_version();
+  }
+
+  void verify_binary_version()
+  {
+    auto const status{ check_binary_version_status() };
+    switch(status)
+    {
+      case binary_version_status::good:
+        break;
+      case binary_version_status::needs_write:
+        write_binary_version();
+        break;
+      case binary_version_status::needs_clean:
+        error::warn(
+          "Cleaning output directory before compiling, since the configuration has changed.");
+        clean_output_directory();
+        break;
+    }
+  }
+
   static native_set<jtl::immutable_string> const &core_modules()
   {
-    static native_set<jtl::immutable_string> const modules{ "clojure.core" };
+    /* TODO: Pass this in from CMake, so it's not duplicated. */
+    static native_set<jtl::immutable_string> const modules{ "cpp",
+                                                            "clojure.core",
+                                                            "clojure.core-native",
+                                                            "clojure.string",
+                                                            "clojure.string-native",
+                                                            "clojure.walk",
+                                                            "jank.perf-native",
+                                                            "jank.compiler-native",
+                                                            "jank.nrepl.server.inspect",
+                                                            "jank.nrepl.server.core",
+                                                            "jank.nrepl.server.handler",
+                                                            "jank.nrepl.server.bencode",
+                                                            "jank.nrepl.server.capture",
+                                                            "jank.nrepl.server.util",
+                                                            "jank.nrepl.server.eval",
+                                                            "jank.nrepl.server.parsec",
+                                                            "jank.nrepl.server.handler.close",
+                                                            "jank.nrepl.server.handler.clone",
+                                                            "jank.nrepl.server.handler.describe",
+                                                            "jank.nrepl.server.handler.completions",
+                                                            "jank.nrepl.server.handler.eval",
+                                                            "jank.nrepl.server.handler.lookup" };
     return modules;
   }
 
@@ -391,7 +476,7 @@ namespace jank::runtime::module
   {
     std::filesystem::path const jank_path{ jank::util::process_dir().c_str() };
     std::filesystem::path const resource_dir{ jank::util::resource_dir().c_str() };
-    auto const binary_cache_dir{ util::binary_cache_dir(util::binary_version()) };
+    auto const binary_cache_dir{ util::cli::opts.output_dir };
     native_transient_string paths{ util::cli::opts.module_path };
 
     /* These paths are used by an installed jank. */
@@ -403,7 +488,7 @@ namespace jank::runtime::module
     paths += util::format(":{}", (jank_path / binary_cache_dir.c_str()).native());
     paths += util::format(":{}", (jank_path / "../src/jank").native());
 
-    auto const locked_state{ state.wlock() };
+    auto const locked_state{ state.lock() };
     locked_state->paths = paths;
 
     //util::println("module paths: {}", paths);
@@ -711,6 +796,13 @@ namespace jank::runtime::module
     return {};
   }
 
+  static long get_mod_time(file_entry const &e)
+  {
+    return static_cast<long>(std::filesystem::last_write_time(native_transient_string{ e.path })
+                               .time_since_epoch()
+                               .count());
+  }
+
   jtl::result<loader::find_result, error_ref>
   loader::find(jtl::immutable_string const &module, origin const ori)
   {
@@ -720,7 +812,7 @@ namespace jank::runtime::module
 
     jtl::option<loader::entry> found;
     {
-      auto const locked_state{ state.wlock() };
+      auto const locked_state{ state.lock() };
       found = find_module(locked_state->entries, locked_state->paths, patched_module);
     }
 
@@ -732,88 +824,108 @@ namespace jank::runtime::module
 
     auto const &entry(found.unwrap());
 
+    jtl::option<file_entry> source_entry;
+    module_type source_type{};
+
+    if(entry.jank.is_some())
+    {
+      source_entry = entry.jank.unwrap();
+      source_type = module_type::jank;
+    }
+    else if(entry.cljc.is_some())
+    {
+      source_entry = entry.cljc.unwrap();
+      source_type = module_type::cljc;
+    }
+
+    if(source_entry.is_none())
+    {
+      return error::internal_runtime_failure(
+        util::format("No sources for registered module '{}'.", module));
+    }
+
     if(ori == origin::source)
     {
-      if(entry.jank.is_some())
+      return find_result{ entry, source_type };
+    }
+
+    jtl::option<file_entry> compiled_entry;
+    module_type compiled_type{};
+
+
+    /* Ignoring object files from the archives here for security and portability reasons.
+     *
+     * Security:
+     * A dependency can include a binary version of a module that doesn't belong
+     * to it.
+     *
+     * Portability:
+     * Unlike class files, object files are tied to the OS, architecture, C++ stdlib etc,
+     * making it hard to share them. */
+    bool const has_o{ entry.o.is_some() && entry.o.unwrap().exists()
+                      && entry.o.unwrap().archive_path.is_none() };
+    bool const has_cpp{ entry.cpp.is_some() && entry.cpp.unwrap().exists() };
+
+    auto const target = util::cli::opts.output_target;
+
+    /* When jank is compiling the sources, it will use `cli::opts.output_target`
+     * to check for the compiled cache. If the user wants output to be .cpp,
+     * jank checks only compiled cpp module, otherwise default will be object file.
+     *
+     * Outside of compilation i.e. run, run-main commands, the cached version
+     * will be chosen based on the freshness of the cached module. */
+    if(truthy(__rt_ctx->compile_files_var->deref()))
+    {
+      if(target == util::cli::compilation_target::object && has_o)
       {
-        return find_result{ entry, module_type::jank };
+        compiled_entry = entry.o.unwrap();
+        compiled_type = module_type::o;
       }
-      else if(entry.cljc.is_some())
+      else if(target == util::cli::compilation_target::cpp && has_cpp)
       {
-        return find_result{ entry, module_type::cljc };
+        compiled_entry = entry.cpp.unwrap();
+        compiled_type = module_type::cpp;
       }
     }
     else
     {
-      /* Ignoring object files from the archives here for security and portability
-       * reasons.
-       *
-       * Security:
-       * A dependency can include a binary version of a module that doesn't belong
-       * to it.
-       *
-       * Portability:
-       * Unlike class files, object files are tied to the OS, architecture, C++ stdlib etc,
-       * making it hard to share them. */
-      if(entry.o.is_some() && entry.o.unwrap().archive_path.is_none() && entry.o.unwrap().exists()
-         && (entry.jank.is_some() || entry.cljc.is_some() || entry.cpp.is_some()))
+      if(has_o && has_cpp)
       {
-        auto const o_file_path{ native_transient_string{ entry.o.unwrap().path } };
-
-        std::time_t source_modified_time{};
-        module_type module_type{};
-
-        if(entry.cpp.is_some() && entry.cpp.unwrap().exists())
+        if(get_mod_time(entry.o.unwrap()) >= get_mod_time(entry.cpp.unwrap()))
         {
-          source_modified_time = entry.cpp.unwrap().last_modified_at();
-          module_type = module_type::cpp;
-        }
-        else if(entry.jank.is_some() && entry.jank.unwrap().exists())
-        {
-          source_modified_time = entry.jank.unwrap().last_modified_at();
-          module_type = module_type::jank;
-        }
-        else if(entry.cljc.is_some() && entry.cljc.unwrap().exists())
-        {
-          source_modified_time = entry.cljc.unwrap().last_modified_at();
-          module_type = module_type::cljc;
+          compiled_entry = entry.o.unwrap();
+          compiled_type = module_type::o;
         }
         else
         {
-          return error::runtime_module_binary_without_source(
-            util::format("Found a binary '{}' without a source while trying to load module '{}'. "
-                         "This module won't be loaded, since jank will not trust module binaries "
-                         "which are missing a corresponding source.",
-                         entry.o.unwrap().path,
-                         module));
-        }
-
-        if(std::filesystem::last_write_time(o_file_path).time_since_epoch().count()
-           >= source_modified_time)
-        {
-          return find_result{ entry, module_type::o };
-        }
-        else
-        {
-          return find_result{ entry, module_type };
+          compiled_entry = entry.cpp.unwrap();
+          compiled_type = module_type::cpp;
         }
       }
-      else if(entry.cpp.is_some())
+      else if(has_o)
       {
-        return find_result{ entry, module_type::cpp };
+        compiled_entry = entry.o.unwrap();
+        compiled_type = module_type::o;
       }
-      else if(entry.jank.is_some())
+      else if(has_cpp)
       {
-        return find_result{ entry, module_type::jank };
-      }
-      else if(entry.cljc.is_some())
-      {
-        return find_result{ entry, module_type::cljc };
+        compiled_entry = entry.cpp.unwrap();
+        compiled_type = module_type::cpp;
       }
     }
 
-    return error::internal_runtime_failure(
-      util::format("No sources for registered module '{}'.", module));
+    /* We now have the latest compiled entry. If it's up to date with
+     * the source, we can use it. Otherwise, we'll use the source. */
+    if(compiled_entry.is_some())
+    {
+      auto const &c_entry = compiled_entry.unwrap();
+      if(get_mod_time(c_entry) >= source_entry.unwrap().last_modified_at())
+      {
+        return find_result{ entry, compiled_type };
+      }
+    }
+
+    return find_result{ entry, source_type };
   }
 
   bool loader::is_loaded(jtl::immutable_string const &module)
@@ -914,11 +1026,33 @@ namespace jank::runtime::module
         }
         break;
     }
-    util::println("Loading module {} from {}", module, path);
+    util::println("Loading module '{}' from '{}'.", module, path);
+  }
+
+  [[maybe_unused]]
+  static void log_managed_load(jtl::immutable_string const &module)
+  {
+    util::println("Loading module '{}' from a managed load fn.", module);
   }
 
   jtl::result<void, error_ref> loader::load(jtl::immutable_string const &module, origin const ori)
   {
+    {
+      /* If a load fn has been provided for this module already, just skip right to
+       * calling it. */
+      auto const locked_state{ state.lock() };
+      auto const managed_load_fn{ locked_state->managed_load_fns.find(module) };
+      if(managed_load_fn != locked_state->managed_load_fns.end())
+      {
+        //log_managed_load(module);
+        (*managed_load_fn->second)();
+        set_is_loaded(module);
+        return ok();
+      }
+    }
+
+    /* Otherwise, we need to find a corresponding source or binary artifact from which to
+     * load this module. */
     auto const &found_module{ loader::find(module, ori) };
     if(found_module.is_err())
     {
@@ -954,11 +1088,6 @@ namespace jank::runtime::module
     if(res.is_err())
     {
       return res;
-    }
-
-    {
-      auto const locked_ordered_modules{ __rt_ctx->loaded_modules_in_order.wlock() };
-      locked_ordered_modules->push_back(module);
     }
 
     set_is_loaded(module);
@@ -1093,7 +1222,7 @@ namespace jank::runtime::module
 
   void loader::add_path(jtl::immutable_string const &path)
   {
-    auto const locked_state{ state.wlock() };
+    auto const locked_state{ state.lock() };
     jtl::string_builder sb;
     sb(locked_state->paths);
     sb(module_separator);
@@ -1102,9 +1231,15 @@ namespace jank::runtime::module
     register_path(locked_state->entries, path);
   }
 
+  void loader::add_load_fn(jtl::immutable_string const &module, jtl::ref<void()> const fn)
+  {
+    auto const locked_state{ state.lock() };
+    locked_state->managed_load_fns.emplace(module, fn);
+  }
+
   object_ref loader::to_runtime_data() const
   {
-    auto const locked_state{ state.rlock() };
+    auto const locked_state{ state.lock() };
     runtime::object_ref entry_maps(make_box<runtime::obj::persistent_array_map>());
     for(auto const &e : locked_state->entries)
     {

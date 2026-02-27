@@ -8,6 +8,7 @@
   * [Installation](getting-started/01-installation.md)
   * [Hello, world!](getting-started/02-hello-world.md)
   * [Hello, Leiningen!](getting-started/03-hello-leiningen.md)
+  * [Hello, nREPL!](getting-started/04-hello-nrepl.md)
 
 <!--
 TODO:

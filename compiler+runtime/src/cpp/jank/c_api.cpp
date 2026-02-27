@@ -33,19 +33,19 @@ struct make_function_arity;
 template <usize I>
 struct make_function_arity_arg
 {
-  using type = object *;
+  using type = object_ref;
 };
 
 template <size_t... Is>
 struct make_function_arity<std::index_sequence<Is...>>
 {
-  using type = object *(*)(object *, typename make_function_arity_arg<Is>::type...);
+  using type = object_ref (*)(object_ref, typename make_function_arity_arg<Is>::type...);
 };
 
 template <>
 struct make_function_arity<std::index_sequence<>>
 {
-  using type = object *(*)(object *);
+  using type = object_ref (*)(object_ref);
 };
 
 template <usize N>
@@ -1002,6 +1002,11 @@ extern "C"
   jank_resource_register(char const * const name, char const * const data, jank_usize const size)
   {
     aot::register_resource(name, { data, size });
+  }
+
+  void jank_module_register(char const *module, void (* const fn)())
+  {
+    __rt_ctx->module_loader.add_load_fn(module, fn);
   }
 
   void jank_module_set_loaded(char const * const module)

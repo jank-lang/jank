@@ -16,7 +16,7 @@ namespace jank::codegen
   enum class compilation_target : u8
   {
     module,
-    function,
+    module_function,
     eval
   };
 
@@ -26,8 +26,8 @@ namespace jank::codegen
     {
       case compilation_target::module:
         return "module";
-      case compilation_target::function:
-        return "function";
+      case compilation_target::module_function:
+        return "module_function";
       case compilation_target::eval:
         return "eval";
       default:
