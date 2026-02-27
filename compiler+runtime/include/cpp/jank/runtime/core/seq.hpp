@@ -72,7 +72,7 @@ namespace jank::runtime
   requires behavior::sequenceable<T>
   auto second(oref<T> const &s)
   {
-    return next(s)->first();
+    return first(next(s));
   }
 
   object_ref second(object_ref const s);

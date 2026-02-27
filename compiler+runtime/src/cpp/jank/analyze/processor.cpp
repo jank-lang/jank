@@ -2757,23 +2757,10 @@ namespace jank::analyze
             auto const catch_type_form(catch_it.first().unwrap());
             catch_it = catch_it.rest();
             auto const catch_sym_form(catch_it.first().unwrap());
-            auto const catch_type(
-              analyze(catch_type_form, current_frame, expression_position::type, fn_ctx, true));
-            if(catch_type.is_err())
+            auto const catch_type_res(analyze_type(catch_type_form, current_frame, fn_ctx));
+            if(catch_type_res.is_err())
             {
-              return error::analyze_invalid_try(catch_type.expect_err()->message,
-                                                object_source(item),
-                                                error::note{
-                                                  "An exception type is required before this form.",
-                                                  object_source(catch_sym_form),
-                                                },
-                                                latest_expansion(macro_expansions))
-                ->add_usage(read::parse::reparse_nth(item, 1));
-            }
-
-            if(catch_type.expect_ok()->kind != expression_kind::cpp_type)
-            {
-              return error::analyze_invalid_try("Exception is not a type.",
+              return error::analyze_invalid_try(catch_type_res.expect_err()->message,
                                                 object_source(item),
                                                 error::note{
                                                   "An exception type is required before this form.",
@@ -2805,19 +2792,20 @@ namespace jank::analyze
                        latest_expansion(macro_expansions))
                 ->add_usage(read::parse::reparse_nth(item, 2));
             }
-            auto const catch_type_ref(static_ref_cast<expr::cpp_type>(catch_type.expect_ok()));
+
+            auto catch_type{ catch_type_res.expect_ok() };
 
             /* If we're catching a C++ class/struct by value, we want to promote it to a reference
              * to avoid object slicing and to enable polymorphism. */
-            if(!Cpp::IsPointerType(catch_type_ref->type))
+            if(!Cpp::IsPointerType(catch_type))
             {
-              catch_type_ref->type = Cpp::GetLValueReferenceType(catch_type_ref->type);
+              catch_type = Cpp::GetLValueReferenceType(catch_type);
             }
 
             /* Check for duplicate catch types. */
             for(auto const &existing_catch : ret->catch_bodies)
             {
-              if(existing_catch.type.data == catch_type_ref->type.data)
+              if(existing_catch.type == catch_type)
               {
                 return error::analyze_invalid_try("Each catch form must specify a unique type.",
                                                   object_source(item),
@@ -2829,7 +2817,7 @@ namespace jank::analyze
               }
             }
 
-            bool const is_object{ cpp_util::is_any_object(catch_type_ref->type) };
+            bool const is_object{ cpp_util::is_any_object(catch_type) };
             auto catch_frame(
               jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
             catch_frame->locals[catch_sym].emplace_back(catch_sym,
@@ -2840,7 +2828,7 @@ namespace jank::analyze
                                                         false,
                                                         false,
                                                         false,
-                                                        catch_type_ref->type);
+                                                        catch_type);
 
             /* Now we just turn the body into a do block and have the do analyzer handle the rest. */
             auto const do_list(catch_it.rest().conj(make_box<runtime::obj::symbol>("do")));
@@ -2851,7 +2839,7 @@ namespace jank::analyze
             }
             do_res.expect_ok()->frame = catch_frame;
             ret->catch_bodies.emplace_back(catch_sym,
-                                           catch_type_ref->type,
+                                           catch_type,
                                            static_ref_cast<expr::do_>(do_res.expect_ok()));
           }
           break;
@@ -4067,22 +4055,13 @@ namespace jank::analyze
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
-    auto const type_expr_res(
-      analyze(type_obj, current_frame, expression_position::type, fn_ctx, false));
+    auto const type_expr_res(analyze_type(type_obj, current_frame, fn_ctx));
     if(type_expr_res.is_err())
     {
-      return type_expr_res.expect_err();
+      return type_expr_res.expect_err()->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    if(type_expr_res.expect_ok()->kind != expression_kind::cpp_type)
-    {
-      return error::analyze_invalid_cpp_cast("The first argument to 'cpp/cast' must be a C++ type.",
-                                             object_source(type_obj),
-                                             latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 1));
-    }
-
-    auto const type_expr{ llvm::cast<expr::cpp_type>(type_expr_res.expect_ok().data) };
+    auto const type{ type_expr_res.expect_ok() };
     auto const value_obj(l->data.rest().rest().first().unwrap());
     auto const value_expr_res(
       analyze(value_obj, current_frame, expression_position::value, fn_ctx, false));
@@ -4093,21 +4072,21 @@ namespace jank::analyze
 
     auto const value_expr{ value_expr_res.expect_ok() };
     auto const value_type{ cpp_util::expression_type(value_expr) };
-    if(Cpp::GetCanonicalType(type_expr->type) == Cpp::GetCanonicalType(value_type))
+    if(Cpp::GetCanonicalType(type) == Cpp::GetCanonicalType(value_type))
     {
       return value_expr;
     }
-    else if(Cpp::IsConstructible(type_expr->type, value_type)
-            || Cpp::IsImplicitlyConvertible(value_type, type_expr->type)
-            || cpp_util::is_pointer_to_void_conversion(value_type, type_expr->type))
+    else if(Cpp::IsConstructible(type, value_type) || Cpp::IsImplicitlyConvertible(value_type, type)
+            || cpp_util::is_pointer_to_void_conversion(value_type, type))
     {
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
         position,
         current_frame,
         needs_box,
-        type_expr->sym,
-        type_expr->type,
-        Cpp::GetScopeFromType(type_expr->type),
+        /* TODO: We don't want to be limited to symbols. */
+        runtime::try_object<obj::symbol>(l->first()),
+        type,
+        Cpp::GetScopeFromType(type),
         expr::cpp_value::value_kind::constructor) };
       /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
        * want to remove the cpp/cast and the type and then add back in a new head. Since
@@ -4115,23 +4094,23 @@ namespace jank::analyze
       auto const call_l{ make_box(l->data.rest().rest().conj({})) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
-    if(cpp_util::is_any_object(type_expr->type) && cpp_util::is_trait_convertible(value_type))
+    if(cpp_util::is_any_object(type) && cpp_util::is_trait_convertible(value_type))
     {
       return jtl::make_ref<expr::cpp_cast>(position,
                                            current_frame,
                                            needs_box,
-                                           type_expr->type,
+                                           type,
                                            value_type,
                                            conversion_policy::into_object,
                                            value_expr);
     }
-    if(cpp_util::is_any_object(value_type) && cpp_util::is_trait_convertible(type_expr->type))
+    if(cpp_util::is_any_object(value_type) && cpp_util::is_trait_convertible(type))
     {
       return jtl::make_ref<expr::cpp_cast>(position,
                                            current_frame,
                                            needs_box,
-                                           type_expr->type,
-                                           type_expr->type,
+                                           type,
+                                           type,
                                            conversion_policy::from_object,
                                            value_expr);
     }
@@ -4141,7 +4120,7 @@ namespace jank::analyze
                "Invalid cast from '{}' to '{}'. This is impossible considering both constructors "
                "and any specializations of 'jank::runtime::convert'.",
                Cpp::GetTypeAsString(value_type),
-               Cpp::GetTypeAsString(type_expr->type)),
+               Cpp::GetTypeAsString(type)),
              object_source(l->next()->next()->first()),
              latest_expansion(macro_expansions))
       ->add_usage(read::parse::reparse_nth(l, 2));
@@ -4187,23 +4166,13 @@ namespace jank::analyze
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
-    auto const type_expr_res(
-      analyze(type_obj, current_frame, expression_position::type, fn_ctx, false));
+    auto const type_expr_res(analyze_type(type_obj, current_frame, fn_ctx));
     if(type_expr_res.is_err())
     {
-      return type_expr_res.expect_err();
+      return type_expr_res.expect_err()->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    if(type_expr_res.expect_ok()->kind != expression_kind::cpp_type)
-    {
-      return error::analyze_invalid_cpp_unsafe_cast(
-               "The first argument to 'cpp/unafe-cast' must be a C++ type.",
-               object_source(type_obj),
-               latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 1));
-    }
-
-    auto const type_expr{ llvm::cast<expr::cpp_type>(type_expr_res.expect_ok().data) };
+    auto const type{ type_expr_res.expect_ok() };
     auto const value_obj(l->data.rest().rest().first().unwrap());
     auto const value_expr_res(
       analyze(value_obj, current_frame, expression_position::value, fn_ctx, false));
@@ -4214,20 +4183,20 @@ namespace jank::analyze
 
     auto const value_expr{ value_expr_res.expect_ok() };
     auto const value_type{ cpp_util::expression_type(value_expr) };
-    if(Cpp::GetCanonicalType(type_expr->type) == Cpp::GetCanonicalType(value_type))
+    if(Cpp::GetCanonicalType(type) == Cpp::GetCanonicalType(value_type))
     {
       return value_expr;
     }
     /* TODO: Share this with cpp/cast more cleanly? */
-    else if(Cpp::IsConstructible(type_expr->type, value_type))
+    else if(Cpp::IsConstructible(type, value_type))
     {
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
         position,
         current_frame,
         needs_box,
-        type_expr->sym,
-        type_expr->type,
-        Cpp::GetScopeFromType(type_expr->type),
+        runtime::try_object<obj::symbol>(l->first()),
+        type,
+        Cpp::GetScopeFromType(type),
         expr::cpp_value::value_kind::constructor) };
 
       /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
@@ -4236,19 +4205,19 @@ namespace jank::analyze
       auto const call_l{ make_box(l->data.rest().rest().conj({})) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
-    else if(Cpp::IsCStyleConvertible(value_type, type_expr->type))
+    else if(Cpp::IsCStyleConvertible(value_type, type))
     {
       return jtl::make_ref<expr::cpp_unsafe_cast>(position,
                                                   current_frame,
                                                   needs_box,
-                                                  type_expr->type,
+                                                  type,
                                                   value_expr);
     }
 
     return error::analyze_invalid_cpp_unsafe_cast(
              util::format("Invalid unsafe-cast from '{}' to '{}'.",
                           Cpp::GetTypeAsString(value_type),
-                          Cpp::GetTypeAsString(type_expr->type)),
+                          Cpp::GetTypeAsString(type)),
              object_source(l->next()->next()->first()),
              latest_expansion(macro_expansions))
       ->add_usage(read::parse::reparse_nth(l, 2));
@@ -4356,23 +4325,13 @@ namespace jank::analyze
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
-    auto const type_expr_res(
-      analyze(type_obj, current_frame, expression_position::type, fn_ctx, false));
+    auto const type_expr_res(analyze_type(type_obj, current_frame, fn_ctx));
     if(type_expr_res.is_err())
     {
-      return type_expr_res.expect_err();
+      return type_expr_res.expect_err()->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    if(type_expr_res.expect_ok()->kind != expression_kind::cpp_type)
-    {
-      return error::analyze_invalid_cpp_unbox(
-               "The first argument to 'cpp/unbox' must be a C++ type.",
-               object_source(type_obj),
-               latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 1));
-    }
-
-    auto const type_expr{ llvm::cast<expr::cpp_type>(type_expr_res.expect_ok().data) };
+    auto const type{ type_expr_res.expect_ok() };
     auto const value_obj(l->data.rest().rest().first().unwrap());
     auto const value_expr_res(
       analyze(value_obj, current_frame, expression_position::value, fn_ctx, false));
@@ -4382,14 +4341,14 @@ namespace jank::analyze
     }
 
     auto const value_expr{ value_expr_res.expect_ok() };
-    if(!Cpp::IsPointerType(type_expr->type))
+    if(!Cpp::IsPointerType(type))
     {
       return error::analyze_invalid_cpp_unbox(
                util::format(
                  "Unable to unbox to '{}', since it's not a raw pointer type."
                  " The type specified here should be the exact type of the value originally "
                  "passed to 'cpp/box'.",
-                 Cpp::GetTypeAsString(type_expr->type)),
+                 Cpp::GetTypeAsString(type)),
                object_source(type_obj),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 1));
@@ -4410,7 +4369,7 @@ namespace jank::analyze
     return jtl::make_ref<expr::cpp_unbox>(position,
                                           current_frame,
                                           needs_box,
-                                          type_expr->type,
+                                          type,
                                           value_expr,
                                           object_source(l->first()));
   }
@@ -4432,29 +4391,20 @@ namespace jank::analyze
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
-    auto const type_expr_res(
-      analyze(type_obj, current_frame, expression_position::type, fn_ctx, false));
+    auto const type_expr_res(analyze_type(type_obj, current_frame, fn_ctx));
     if(type_expr_res.is_err())
     {
-      return type_expr_res.expect_err();
+      return type_expr_res.expect_err()->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    if(type_expr_res.expect_ok()->kind != expression_kind::cpp_type)
-    {
-      return error::analyze_invalid_cpp_new("The first argument to 'cpp/new' must be a C++ type.",
-                                            object_source(type_obj),
-                                            latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 1));
-    }
-
-    auto const type_expr{ llvm::cast<expr::cpp_type>(type_expr_res.expect_ok().data) };
+    auto const type{ type_expr_res.expect_ok() };
     auto const cpp_value_expr{ jtl::make_ref<expr::cpp_value>(
       position,
       current_frame,
       needs_box,
       try_object<obj::symbol>(l->data.first().unwrap()),
-      type_expr->type,
-      Cpp::GetScopeFromType(type_expr->type),
+      type,
+      Cpp::GetScopeFromType(type),
       expr::cpp_value::value_kind::constructor) };
 
     /* We build a normal ctor call, then just wrap that in a new expr. During codegen,
@@ -4474,7 +4424,7 @@ namespace jank::analyze
     return jtl::make_ref<expr::cpp_new>(position,
                                         current_frame,
                                         needs_box,
-                                        type_expr->type,
+                                        type,
                                         value_expr_res.expect_ok());
   }
 
@@ -4713,6 +4663,71 @@ namespace jank::analyze
         }
       },
       o);
+  }
+
+  jtl::result<jtl::ptr<void>, error_ref>
+  processor::analyze_type(object_ref const o,
+                          local_frame_ptr const current_frame,
+                          jtl::option<expr::function_context_ref> const &fn_ctx)
+  {
+    if(o->type == object_type::symbol)
+    {
+      auto const res{ analyze_cpp_symbol(expect_object<obj::symbol>(o),
+                                         current_frame,
+                                         expression_position::type,
+                                         fn_ctx,
+                                         false) };
+      if(res.is_err())
+      {
+        return res.expect_err();
+      }
+
+      if(res.expect_ok()->kind != expression_kind::cpp_type)
+      {
+        return error::analyze_invalid_cpp_type("A type was expected here.",
+                                               object_source(o),
+                                               latest_expansion(macro_expansions));
+      }
+
+
+      auto const type(runtime::static_box_cast<expr::cpp_type>(res.expect_ok()));
+      return type->type;
+    }
+
+    auto const res(runtime::visit_seqable(
+      [&](auto const typed_o) -> jtl::result<jtl::ptr<void>, error_ref> {
+        //using T = jtl::decay_t<decltype(typed_o)>::value_type;
+
+        auto const seq{ typed_o->seq() };
+        auto const first{ runtime::first(seq) };
+
+        if(first->type == object_type::keyword)
+        {
+          throw std::runtime_error{ "NYI" };
+        }
+        else if(first->type == object_type::symbol)
+        {
+          static obj::symbol const cpp_type{ "cpp", "type" };
+          if(expect_object<obj::symbol>(first)->equal(cpp_type))
+          {
+            return analyze_type(runtime::second(seq), current_frame, fn_ctx);
+          }
+
+          throw std::runtime_error{ "NYI" };
+        }
+        else
+        {
+          throw std::runtime_error{ "NYI" };
+        }
+      },
+      [&]() -> jtl::result<jtl::ptr<void>, error_ref> {
+        return error::analyze_invalid_cpp_type("Invalid C++ type.",
+                                               object_source(o),
+                                               latest_expansion(macro_expansions));
+      },
+      o));
+
+    return res;
   }
 
   bool processor::is_special(runtime::object_ref const form)
