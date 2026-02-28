@@ -5711,7 +5711,7 @@
   ([s]
    (read-string {} s))
   ([opts s]
-   (cpp/clojure.core_native.read_string opts s)))
+   (cpp/jank.runtime.read_string s opts)))
 
 (defmacro with-open
   "bindings => [name init ...]

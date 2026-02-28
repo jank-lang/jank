@@ -17,6 +17,8 @@ Clojure.
 * No load operation for `data_readers.(cljc|jank)` at start-up to extend
   supported tags
 * jank allows using reader conditionals in `.jank` files as well
+* No automatic method to disable read by setting the `clojure.core/*read-eval*`
+  at start-up
 
 ## clojure.core
 * Baked into the `jank` binary, not shipped separately

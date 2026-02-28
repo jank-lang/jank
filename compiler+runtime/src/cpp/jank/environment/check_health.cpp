@@ -440,7 +440,7 @@ namespace jank::environment
 
     if(error)
     {
-      return util::format("{}─ ❌{} jank cannot jit aot compile working binaries",
+      return util::format("{}─ ❌{} jank cannot aot compile working binaries",
                           terminal_style::red,
                           terminal_style::reset);
     }

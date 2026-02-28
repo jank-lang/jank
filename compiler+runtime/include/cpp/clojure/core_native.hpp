@@ -63,7 +63,6 @@ namespace clojure::core_native
   object_ref current_time();
 
   object_ref eval(object_ref const expr);
-  object_ref read_string(object_ref const /* opts */, object_ref const str);
 
   object_ref lazy_seq(object_ref const o);
 

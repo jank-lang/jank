@@ -61,6 +61,7 @@
 #include <jank/runtime/obj/uuid.hpp>
 #include <jank/runtime/obj/inst.hpp>
 #include <jank/runtime/obj/opaque_box.hpp>
+#include <jank/runtime/obj/reader_conditional.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/rtti.hpp>
@@ -219,6 +220,8 @@ namespace jank::runtime
         return fn(expect_object<obj::inst>(erased), std::forward<Args>(args)...);
       case object_type::opaque_box:
         return fn(expect_object<obj::opaque_box>(erased), std::forward<Args>(args)...);
+      case object_type::reader_conditional:
+        return fn(expect_object<obj::reader_conditional>(erased), std::forward<Args>(args)...);
       default:
         jtl::panic("invalid object type: {}, raw value {}",
                    object_type_str(erased->type),

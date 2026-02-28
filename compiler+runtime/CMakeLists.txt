@@ -598,6 +598,7 @@ add_library(
   src/cpp/jank/runtime/obj/delay.cpp
   src/cpp/jank/runtime/obj/future.cpp
   src/cpp/jank/runtime/obj/reduced.cpp
+  src/cpp/jank/runtime/obj/reader_conditional.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/expression.cpp

@@ -996,9 +996,10 @@ namespace jank::read::parse
     auto const form_end(form_result.expect_ok().unwrap().end);
     auto const form(form_result.expect_ok().unwrap().ptr);
 
-    if(is_reader_suppressed)
+    if(is_reader_suppressed || in_preservation_mode)
     {
-      return object_source_info{ form, form_token, form_end };
+      auto const tag{ make_box<obj::tagged_literal>(sym, form) };
+      return object_source_info{ tag, form_token, form_end };
     }
 
     auto const data_readers_result{ __rt_ctx->find_var("clojure.core", "*data-readers*") };
@@ -1115,6 +1116,14 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
+    if(!allow_reader_conditional)
+    {
+      return error::parse_invalid_reader_conditional(
+        { start_token.start, latest_token.end },
+        "Conditional read is not allowed by default. Set the :read-cond reader option to either "
+        ":preserve or :allow. Found a nil instead.");
+    }
+
     if(token_current->is_err())
     {
       return token_current->expect_err();
@@ -1138,7 +1147,8 @@ namespace jank::read::parse
 
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
-    native_list<runtime::object_ref> spliced_forms{};
+    runtime::detail::native_transient_vector preserved_forms{};
+    native_list<object_ref> spliced_forms{};
     jtl::option<processor::object_result> result{};
 
     for(auto it(begin()); it != end(); ++it)
@@ -1156,13 +1166,14 @@ namespace jank::read::parse
                                                        "Feature must be a keyword.");
       }
 
-      auto const feature_kw(dyn_cast<obj::keyword>(feature.ptr));
+      auto const feature_kw(expect_object<obj::keyword>(feature.ptr));
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This
        * matches Clojure's behavior. */
-      auto const is_supported_feature{
-        (equal(feature_kw, jank_keyword) || equal(feature_kw, default_keyword)) && result.is_none()
-      };
+      auto const is_supported_feature{ (equal(feature_kw, jank_keyword)
+                                        || equal(feature_kw, default_keyword)
+                                        || contains(extended_features, feature_kw))
+                                       && result.is_none() };
 
       is_reader_suppressed = !is_supported_feature;
       auto const form_result{ *(++it) };
@@ -1178,12 +1189,24 @@ namespace jank::read::parse
                                                        "#? expects an even number of forms.");
       }
 
-      if(!is_supported_feature)
+      auto const form{ form_result.expect_ok().unwrap().ptr };
+
+      if(in_preservation_mode)
+      {
+        preserved_forms.push_back(feature_kw);
+        preserved_forms.push_back(form);
+        continue;
+      }
+
+      if(result.is_some())
       {
         continue;
       }
 
-      auto const form{ form_result.expect_ok().unwrap().ptr };
+      if(!is_supported_feature)
+      {
+        continue;
+      }
 
       if(splice)
       {
@@ -1237,6 +1260,19 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
+
+    if(in_preservation_mode)
+    {
+      auto const form{ make_box<obj::persistent_list>(
+        source_to_meta(start_token.start, latest_token.end),
+        std::in_place,
+        preserved_forms.rbegin(),
+        preserved_forms.rend()) };
+      return object_source_info{ make_box<obj::reader_conditional>(form,
+                                                                   splice ? jank_true : jank_false),
+                                 start_token,
+                                 latest_token };
+    }
 
     if(!spliced_forms.empty())
     {

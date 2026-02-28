@@ -130,6 +130,9 @@ namespace jank::read::parse
      * This is needed because parse iteration works one form at a time and splicing potentially
      * turns one form into many. */
     native_list<runtime::object_ref> pending_forms;
+    /* The Clojure reader allows extending the supported reader conditional features
+     * via reader options.*/
+    runtime::object_ref extended_features{};
     lex::token latest_token;
     jtl::option<shorthand_function_details> shorthand;
     /* The Clojure reader relaxes tagged literal syntax rules when dealing with
@@ -145,6 +148,11 @@ namespace jank::read::parse
      * jank will suppress the reader for the `:default` feature as well. This
      * behaviour is consistent with the Clojure reader. */
     bool is_reader_suppressed{};
+    /* When reading in a form via the Clojure read functions the end user might wish
+     * to keep even the unsupported reader conditional branches, in such cases they
+     * can opt-in to the preserve mode by setting the :read-cond reader option. */
+    bool in_preservation_mode{};
+    bool allow_reader_conditional{ true };
     /* Whether or not the next form is considered quoted. */
     bool quoted{};
     /* Whether or not the next form is considered syntax-quoted. */
