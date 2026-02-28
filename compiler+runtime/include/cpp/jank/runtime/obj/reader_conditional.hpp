@@ -12,7 +12,7 @@ namespace jank::runtime::obj
   struct reader_conditional : object
   {
     static constexpr object_type obj_type{ object_type::reader_conditional };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::get };
     static constexpr bool pointer_free{ false };
 
     reader_conditional();
