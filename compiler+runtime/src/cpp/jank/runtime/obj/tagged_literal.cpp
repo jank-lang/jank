@@ -52,6 +52,7 @@ namespace jank::runtime::obj
     return to_string();
   }
 
+  /* TODO: Cache this. */
   uhash tagged_literal::to_hash() const
   {
     return hash::combine(hash::visit(tag.get()), hash::visit(form.get()));
@@ -59,8 +60,8 @@ namespace jank::runtime::obj
 
   object_ref tagged_literal::get(object_ref const key, object_ref const fallback) const
   {
-    auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
-    auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
+    static auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
+    static auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
 
     if(tag_kw == key)
     {
@@ -82,8 +83,8 @@ namespace jank::runtime::obj
 
   bool tagged_literal::contains(object_ref const key) const
   {
-    auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
-    auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
+    static auto const tag_kw{ __rt_ctx->intern_keyword("tag").expect_ok() };
+    static auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
 
     return tag_kw == key || form_kw == key;
   }

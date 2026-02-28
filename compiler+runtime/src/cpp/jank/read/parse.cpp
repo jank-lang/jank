@@ -996,9 +996,10 @@ namespace jank::read::parse
     auto const form_end(form_result.expect_ok().unwrap().end);
     auto const form(form_result.expect_ok().unwrap().ptr);
 
-    if(is_reader_suppressed)
+    if(is_reader_suppressed || in_preservation_mode)
     {
-      return object_source_info{ form, form_token, form_end };
+      auto const tag{ make_box<obj::tagged_literal>(sym, form) };
+      return object_source_info{ tag, form_token, form_end };
     }
 
     auto const data_readers_result{ __rt_ctx->find_var("clojure.core", "*data-readers*") };
@@ -1117,10 +1118,6 @@ namespace jank::read::parse
 
     auto const reader_opts{ __rt_ctx->reader_opts_var->deref() };
     auto const has_reader_opts{ reader_opts.is_some() };
-    /* When reading in a form via the Clojure read functions the end user might wish
-     * to keep even the unsupported reader conditional branches, in such cases they
-     * can opt-in to the preserve mode by setting the :read-cond reader option. */
-    bool in_preservation_mode{};
     object_ref features{};
 
     if(has_reader_opts)
@@ -1301,6 +1298,7 @@ namespace jank::read::parse
 
     if(in_preservation_mode)
     {
+      in_preservation_mode = false;
       auto const form{ make_box<obj::persistent_list>(
         source_to_meta(start_token.start, latest_token.end),
         std::in_place,

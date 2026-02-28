@@ -145,6 +145,10 @@ namespace jank::read::parse
      * jank will suppress the reader for the `:default` feature as well. This
      * behaviour is consistent with the Clojure reader. */
     bool is_reader_suppressed{};
+    /* When reading in a form via the Clojure read functions the end user might wish
+     * to keep even the unsupported reader conditional branches, in such cases they
+     * can opt-in to the preserve mode by setting the :read-cond reader option. */
+    bool in_preservation_mode{};
     /* Whether or not the next form is considered quoted. */
     bool quoted{};
     /* Whether or not the next form is considered syntax-quoted. */
