@@ -75,11 +75,6 @@ namespace jank::runtime
     assert_var->bind_root(jank_true);
     assert_var->dynamic.store(true);
 
-    auto const reader_opt_sym(make_box<obj::symbol>("*reader-opts*"));
-    reader_opts_var = core->intern_var(reader_opt_sym);
-    reader_opts_var->bind_root(jank_nil());
-    reader_opts_var->dynamic.store(true);
-
     __rt_ctx->intern_var("clojure.core", "*read-eval*")
       .expect_ok()
       ->bind_root(jank_true)
@@ -315,11 +310,6 @@ namespace jank::runtime
     static auto const read_eval_var{ __rt_ctx->find_var("clojure.core", "*read-eval*") };
     auto const read_eval_enabled{ read_eval_var.is_nil()
                                   || !equal(read_eval_var->deref(), unknown_kw) };
-    /* When reading an arbitrary string, we don't want the last *current-file* to
-     * be set as source file, so we need to bind it to nil. */
-    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
-      std::make_pair(current_file_var, jank_nil()),
-      std::make_pair(reader_opts_var, reader_opts)) };
 
     if(!read_eval_enabled)
     {
@@ -327,8 +317,70 @@ namespace jank::runtime
         "Reading is disallowed when `clojure.core/*read-eval*` is bound to `:unknown`.") };
     }
 
+
+    object_ref extended_features{};
+    bool in_preservation_mode{};
+    bool allow_reader_conditional{ false };
+
+    visit_map_like(
+      [&](auto const typed_reader_opts) {
+        auto const read_cond_kw{ __rt_ctx->intern_keyword("", "read-cond").expect_ok() };
+        auto const read_cond{ get(typed_reader_opts, read_cond_kw) };
+
+        if(read_cond.is_some())
+        {
+          auto const reader_cond{ try_object<obj::keyword>(read_cond) };
+
+          if(reader_cond == __rt_ctx->intern_keyword("", "preserve").expect_ok())
+          {
+            in_preservation_mode = true;
+            allow_reader_conditional = true;
+          }
+          else if(reader_cond == __rt_ctx->intern_keyword("", "allow").expect_ok())
+          {
+            allow_reader_conditional = true;
+          }
+          else
+          {
+            throw std::runtime_error{ util::format(
+              "Only :preserve or :allow modes are supported for :read-cond reader option. Found {} "
+              "instead.",
+              runtime::to_code_string(read_cond)) };
+          }
+        }
+
+        auto const features_kw{ __rt_ctx->intern_keyword("", "features").expect_ok() };
+        auto const features{ get(typed_reader_opts, features_kw) };
+
+        if(features.is_some())
+        {
+          visit_set_like([](auto const _) {},
+                         [&]() {
+                           throw std::runtime_error{ util::format(
+                             "The :features reader option needs to be a set. Found a {} instead.",
+                             runtime::object_type_str(features->type)) };
+                         },
+                         features);
+
+          extended_features = features;
+        }
+      },
+      [&]() {
+        throw std::runtime_error{ util::format(
+          "The reader options need to be a map. Found a {} instead.",
+          runtime::object_type_str(reader_opts->type)) };
+      },
+      reader_opts);
+
+    /* When reading an arbitrary string, we don't want the last *current-file* to
+     * be set as source file, so we need to bind it to nil. */
+    binding_scope const preserve{ obj::persistent_hash_map::create_unique(
+      std::make_pair(current_file_var, jank_nil())) };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
+    p_prc.extended_features = extended_features;
+    p_prc.in_preservation_mode = in_preservation_mode;
+    p_prc.allow_reader_conditional = allow_reader_conditional;
     u64 count{};
     static auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
     static auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };

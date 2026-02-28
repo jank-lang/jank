@@ -1116,48 +1116,12 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
-    auto const reader_opts{ __rt_ctx->reader_opts_var->deref() };
-    auto const has_reader_opts{ reader_opts.is_some() };
-    object_ref features{};
-
-    if(has_reader_opts)
+    if(!allow_reader_conditional)
     {
-      auto const read_cond_kw{ __rt_ctx->intern_keyword("", "read-cond").expect_ok() };
-      auto const read_cond{ get(reader_opts, read_cond_kw) };
-
-      if(read_cond.is_nil())
-      {
-        return error::parse_invalid_reader_conditional(
-          { start_token.start, latest_token.end },
-          "Conditional read is not allowed by default. Set the :read-cond reader option to either "
-          ":preserve or :allow. Found a nil instead.");
-      }
-
-      auto const reader_cond{ try_object<obj::keyword>(read_cond) };
-
-      if(reader_cond == __rt_ctx->intern_keyword("", "preserve").expect_ok())
-      {
-        in_preservation_mode = true;
-      }
-      else if(reader_cond == __rt_ctx->intern_keyword("", "allow").expect_ok())
-      {
-      }
-      else
-      {
-        return error::parse_invalid_reader_conditional(
-          { start_token.start, latest_token.end },
-          util::format("Conditional read is not allowed by default. Set the :read-cond reader "
-                       "option to either :preserve or :allow. Found a {} instead.",
-                       runtime::to_code_string(read_cond)));
-      }
-
-      auto const features_kw{ __rt_ctx->intern_keyword("", "features").expect_ok() };
-      auto const feature_set{ get(reader_opts, features_kw) };
-
-      if(feature_set.is_some())
-      {
-        features = feature_set;
-      }
+      return error::parse_invalid_reader_conditional(
+        { start_token.start, latest_token.end },
+        "Conditional read is not allowed by default. Set the :read-cond reader option to either "
+        ":preserve or :allow. Found a nil instead.");
     }
 
     if(token_current->is_err())
@@ -1208,7 +1172,7 @@ namespace jank::read::parse
        * matches Clojure's behavior. */
       auto const is_supported_feature{ (equal(feature_kw, jank_keyword)
                                         || equal(feature_kw, default_keyword)
-                                        || contains(features, feature_kw))
+                                        || contains(extended_features, feature_kw))
                                        && result.is_none() };
 
       is_reader_suppressed = !is_supported_feature;
@@ -1299,7 +1263,6 @@ namespace jank::read::parse
 
     if(in_preservation_mode)
     {
-      in_preservation_mode = false;
       auto const form{ make_box<obj::persistent_list>(
         source_to_meta(start_token.start, latest_token.end),
         std::in_place,
