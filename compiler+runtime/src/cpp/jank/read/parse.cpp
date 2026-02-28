@@ -1301,7 +1301,13 @@ namespace jank::read::parse
 
     if(in_preservation_mode)
     {
-      return object_source_info{ make_box<obj::reader_conditional>(preserved_forms.persistent()),
+      auto const form{ make_box<obj::persistent_list>(
+        source_to_meta(start_token.start, latest_token.end),
+        std::in_place,
+        preserved_forms.rbegin(),
+        preserved_forms.rend()) };
+      return object_source_info{ make_box<obj::reader_conditional>(form,
+                                                                   splice ? jank_true : jank_false),
                                  start_token,
                                  latest_token };
     }

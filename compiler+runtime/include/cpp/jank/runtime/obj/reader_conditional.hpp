@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jank/runtime/obj/persistent_list.hpp>
+#include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
 
@@ -9,8 +11,6 @@ namespace jank::runtime::obj
 
   struct reader_conditional : object
   {
-    using value_type = runtime::detail::native_persistent_vector;
-
     static constexpr object_type obj_type{ object_type::reader_conditional };
     static constexpr object_behavior obj_behaviors{ object_behavior::none };
     static constexpr bool pointer_free{ false };
@@ -18,8 +18,7 @@ namespace jank::runtime::obj
     reader_conditional();
     reader_conditional(reader_conditional &&) noexcept = default;
     reader_conditional(reader_conditional const &) = default;
-    reader_conditional(value_type &&d);
-    reader_conditional(value_type const &d);
+    reader_conditional(persistent_list_ref f, boolean_ref s);
 
     /* behavior::object_like */
     bool equal(object const &) const override;
@@ -28,7 +27,13 @@ namespace jank::runtime::obj
     jtl::immutable_string to_code_string() const override;
     uhash to_hash() const override;
 
+    /* behavior::get */
+    object_ref get(object_ref const key) const override;
+    object_ref get(object_ref const key, object_ref const fallback) const override;
+    bool contains(object_ref const key) const override;
+
     /*** XXX: Everything here is immutable after initialization. ***/
-    value_type data;
+    persistent_list_ref form{};
+    boolean_ref splicing{};
   };
 }
