@@ -88,10 +88,10 @@ namespace jank::runtime
                            object_ref const reader_opts,
                            u64 const nth_form);
     object_ref read_string(jtl::immutable_string const &code, object_ref const reader_opts);
+    object_ref read_string(jtl::immutable_string const &code);
     /* Calls `read-string` on the code, regardless of the value of `*read-eval*`.
      * This is important, since jank uses `read-string` as part of codegen, for reading
      * metadata maps and other non-trivial literals. */
-    object_ref read_string(jtl::immutable_string const &code);
     object_ref forcefully_read_string(jtl::immutable_string const &code);
     object_ref read_file(jtl::immutable_string const &file_path, object_ref const reader_opts);
     native_vector<analyze::expression_ref>

@@ -1206,9 +1206,10 @@ namespace jank::read::parse
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This
        * matches Clojure's behavior. */
-      auto const is_supported_feature{
-        (equal(feature_kw, jank_keyword) || equal(feature_kw, default_keyword)) && result.is_none()
-      };
+      auto const is_supported_feature{ (equal(feature_kw, jank_keyword)
+                                        || equal(feature_kw, default_keyword)
+                                        || contains(features, feature_kw))
+                                       && result.is_none() };
 
       is_reader_suppressed = !is_supported_feature;
       auto const form_result{ *(++it) };
