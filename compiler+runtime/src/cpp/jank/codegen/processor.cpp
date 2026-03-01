@@ -2317,7 +2317,17 @@ namespace jank::codegen
     }
     jank_debug_assert(expr->arg_exprs.size() <= param_types.size());
 
-    util::format_to(body_buffer, "{} {} ", cpp_util::get_qualified_type_name(expr->type), ret_tmp);
+    if(Cpp::IsArrayType(Cpp::GetNonReferenceType(expr->type)))
+    {
+      util::format_to(body_buffer, "auto {} ", ret_tmp);
+    }
+    else
+    {
+      util::format_to(body_buffer,
+                      "{} {} ",
+                      cpp_util::get_qualified_type_name(expr->type),
+                      ret_tmp);
+    }
 
     /* For aggregate initialization, we want to use the uniform initialization syntax. However,
      * for any other initialization, we're expecting to call a ctor, so we use parens. This
