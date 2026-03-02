@@ -2137,6 +2137,8 @@ namespace jank::codegen
       util::format_to(cpp_raw_buffer, "\n{}\n", expr->function_code);
     }
 
+    auto const source_type{ cpp_util::expression_type(expr->source_expr) };
+
     if(expr->source_expr->kind == expression_kind::cpp_value)
     {
       auto const source{ static_cast<expr::cpp_value *>(expr->source_expr.data) };
@@ -2193,6 +2195,116 @@ namespace jank::codegen
       }
 
       util::format_to(body_buffer, ")");
+
+      if(!is_void)
+      {
+        util::format_to(body_buffer, "};");
+      }
+      else
+      {
+        util::format_to(body_buffer, ";");
+      }
+
+      if(expr->position == expression_position::tail)
+      {
+        util::format_to(body_buffer, "return {};", ret_tmp);
+        return none;
+      }
+
+      return ret_tmp;
+    }
+    else if(Cpp::IsPointerToMemberVariableType(source_type))
+    {
+      auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_call")));
+      auto const source_tmp{ gen(expr->source_expr, arity).unwrap() };
+      auto const is_void{ Cpp::IsVoid(expr->type) };
+
+      if(is_void)
+      {
+        util::format_to(body_buffer, "jank::runtime::object_ref const {};", ret_tmp);
+      }
+      else
+      {
+        util::format_to(body_buffer, "auto &&{}{ ", ret_tmp);
+      }
+
+      auto const obj_type{ Cpp::GetNonReferenceType(
+        cpp_util::expression_type(expr->arg_exprs[0])) };
+      auto const obj_tmp{ gen(expr->arg_exprs[0], arity).unwrap() };
+      if(Cpp::IsPointerType(obj_type))
+      {
+        util::format_to(body_buffer, "{}->*{}", obj_tmp.str(true), source_tmp.str(true));
+      }
+      else
+      {
+        util::format_to(body_buffer, "{}.*{}", obj_tmp.str(true), source_tmp.str(true));
+      }
+
+      if(!is_void)
+      {
+        util::format_to(body_buffer, "};");
+      }
+      else
+      {
+        util::format_to(body_buffer, ";");
+      }
+
+      if(expr->position == expression_position::tail)
+      {
+        util::format_to(body_buffer, "return {};", ret_tmp);
+        return none;
+      }
+
+      return ret_tmp;
+    }
+    else if(Cpp::IsPointerToMemberFunctionType(source_type))
+    {
+      auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_call")));
+      auto const source_tmp{ gen(expr->source_expr, arity).unwrap() };
+
+      native_vector<handle> arg_tmps;
+      arg_tmps.reserve(expr->arg_exprs.size());
+      for(auto const &arg_expr : expr->arg_exprs)
+      {
+        arg_tmps.emplace_back(gen(arg_expr, arity).unwrap());
+      }
+
+      auto const is_void{ Cpp::IsVoid(expr->type) };
+
+      if(is_void)
+      {
+        util::format_to(body_buffer, "jank::runtime::object_ref const {};", ret_tmp);
+      }
+      else
+      {
+        util::format_to(body_buffer, "auto &&{}{ ", ret_tmp);
+      }
+
+      auto const obj_type{ Cpp::GetNonReferenceType(
+        cpp_util::expression_type(expr->arg_exprs[0])) };
+      auto const &obj_tmp{ arg_tmps[0] };
+      if(Cpp::IsPointerType(obj_type))
+      {
+        util::format_to(body_buffer, "({}->*{})(", obj_tmp.str(true), source_tmp.str(true));
+      }
+      else
+      {
+        util::format_to(body_buffer, "({}.*{})(", obj_tmp.str(true), source_tmp.str(true));
+      }
+
+      bool need_comma{};
+      for(auto it{ arg_tmps.begin() + 1 }; it != arg_tmps.end(); ++it)
+      {
+        if(need_comma)
+        {
+          util::format_to(body_buffer, ", ");
+        }
+        util::format_to(body_buffer, "{}", it->str(true));
+        need_comma = true;
+      }
+
+      util::format_to(body_buffer, ")");
+
 
       if(!is_void)
       {

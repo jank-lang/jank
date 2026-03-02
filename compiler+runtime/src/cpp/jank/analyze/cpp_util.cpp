@@ -434,6 +434,16 @@ namespace jank::analyze::cpp_util
     return can_type == untyped_object_ptr_type() || can_type == untyped_object_ref_type();
   }
 
+  jtl::ptr<void> base_type(jtl::ptr<void> type)
+  {
+    type = Cpp::GetNonReferenceType(type);
+    while(Cpp::IsPointerType(type))
+    {
+      type = Cpp::GetPointeeType(type);
+    }
+    return type;
+  }
+
   static jtl::ptr<void> oref_template()
   {
     static jtl::ptr<void> const ret{ Cpp::GetUnderlyingScope(

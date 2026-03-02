@@ -993,8 +993,59 @@ namespace jank::analyze
                           bool const needs_box,
                           native_vector<runtime::object_ref> const &macro_expansions)
   {
-    auto const source_type{ cpp_util::expression_type(source) };
-    if(!Cpp::IsFunctionPointerType(source_type))
+    auto source_type{ cpp_util::expression_type(source) };
+
+    if(Cpp::IsPointerToMemberType(source_type))
+    {
+      auto const parent_type{ Cpp::GetParentTypeFromPointerToMember(source_type) };
+      util::println("parent_type {}, {}",
+                    parent_type,
+                    cpp_util::get_qualified_type_name(parent_type));
+
+
+      if(arg_exprs.empty())
+      {
+        return error::analyze_invalid_cpp_call(
+          util::format(
+            "Invalid pointer to member invocation. An argument of type '{}' is required.",
+            cpp_util::get_qualified_type_name(parent_type)),
+          object_source(o),
+          latest_expansion(macro_expansions));
+      }
+
+      auto const arg_type{ cpp_util::expression_type(arg_exprs[0]) };
+      auto const obj_type{ Cpp::GetCanonicalType(
+        Cpp::GetTypeWithoutCv(cpp_util::base_type(arg_type))) };
+      if(Cpp::GetCanonicalType(parent_type) != obj_type)
+      {
+        return error::analyze_invalid_cpp_call(
+                 util::format(
+                   "Invalid pointer to member invocation. The pointer to member is for type "
+                   "'{}', but the object supplied is of type '{}'.",
+                   cpp_util::get_qualified_type_name(parent_type),
+                   cpp_util::get_qualified_type_name(arg_type)),
+                 object_source(second(o)),
+                 latest_expansion(macro_expansions))
+          ->add_usage(read::parse::reparse_nth(o, 1));
+      }
+      else if(Cpp::IsPointerToMemberFunctionType(source_type)
+              && Cpp::IsConstType(cpp_util::base_type(arg_type))
+              && !Cpp::IsFunctionTypeConst(source_type))
+      {
+        return error::analyze_invalid_cpp_call(
+                 util::format(
+                   "Invalid pointer to member invocation. The object supplied has the type "
+                   "'{}', which is const, but the member function to call is non-const.",
+                   cpp_util::get_qualified_type_name(arg_type)),
+                 object_source(second(o)),
+                 latest_expansion(macro_expansions))
+          ->add_usage(read::parse::reparse_nth(o, 1));
+      }
+
+      source_type = Cpp::GetFunctionTypeFromPointerToMember(source_type, arg_type);
+      util::println("pointer to member fn type {}", cpp_util::get_qualified_type_name(source_type));
+    }
+    else if(!Cpp::IsFunctionPointerType(source_type))
     {
       /* If we get to this function but we don't have a function pointer, we assume
        * that we must have some callable object type. This could be a custom functor, a
@@ -1054,7 +1105,7 @@ namespace jank::analyze
       {
         return error::analyze_invalid_cpp_call(
           util::format(
-            "Unable to call function since argument {} is not convertible from {} to {}.",
+            "Unable to call function since argument {} is not convertible from '{}' to '{}'.",
             i,
             cpp_util::get_qualified_type_name(arg_types[i].m_Type),
             cpp_util::get_qualified_type_name(param_type)),
