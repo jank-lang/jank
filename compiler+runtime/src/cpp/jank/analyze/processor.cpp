@@ -5144,9 +5144,69 @@ namespace jank::analyze
             return analyze_type(runtime::second(seq), current_frame, fn_ctx);
           }
 
+          auto const sym{ expect_object<obj::symbol>(first) };
+          auto const type{ Cpp::GetType(sym->name) };
+          if(type)
+          {
+            return error::analyze_invalid_cpp_type(
+              util::format("Unable to use '{}' as a template. If you just want the type, remove "
+                           "the surrounding parens.",
+                           cpp_util::get_qualified_type_name(type)),
+              object_source(first),
+              latest_expansion(macro_expansions));
+          }
+
+          auto const scope{ cpp_util::resolve_scope(sym->name) };
+          if(scope.is_err())
+          {
+            return error::analyze_invalid_cpp_type(scope.expect_err(),
+                                                   object_source(first),
+                                                   latest_expansion(macro_expansions));
+          }
+          else if(!Cpp::IsTemplate(scope.expect_ok()))
+          {
+            return error::analyze_invalid_cpp_type(
+              util::format("Unable to use '{}' as a template. If you just want the type, remove "
+                           "the surrounding parens.",
+                           cpp_util::get_qualified_name(scope.expect_ok())),
+              object_source(first),
+              latest_expansion(macro_expansions));
+          }
+
+          native_vector<Cpp::TemplateArgInfo> args;
+          for(auto const arg : make_sequence_range(rest(typed_o)))
+          {
+            if(auto const int_arg{ dyn_cast<obj::integer>(arg) }; int_arg.is_some())
+            {
+              static auto const int_type{ cpp_util::resolve_literal_type("long long").expect_ok() };
+              jtl::string_builder sb;
+              sb(int_arg->data);
+              /* XXX: Safe, due to the GC. */
+              args.emplace_back(int_type.data, sb.release().c_str());
+              continue;
+            }
+
+            auto const arg_type{ analyze_type(arg, current_frame, fn_ctx) };
+            if(arg_type.is_err())
+            {
+              return arg_type;
+            }
+            args.emplace_back(arg_type.expect_ok().data);
+          }
+          auto const instantiated_scope{
+            Cpp::InstantiateTemplate(scope.expect_ok(), args.data(), args.size())
+          };
+          if(!instantiated_scope)
+          {
+            return error::analyze_invalid_cpp_type(
+              "Unable to instantiate this template with these arguments.",
+              object_source(first),
+              latest_expansion(macro_expansions));
+          }
+
           /* TODO: Allow for macro expansion. */
 
-          throw std::runtime_error{ "NYI" };
+          return Cpp::GetTypeFromScope(instantiated_scope);
         }
         else
         {

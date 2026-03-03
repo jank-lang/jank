@@ -163,7 +163,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::seqable<T>
-  auto make_sequence_range(oref<T> const &s)
+  auto make_sequence_range(oref<T> const s)
   {
     using S = typename decltype(s->seq())::value_type;
 
@@ -176,4 +176,6 @@ namespace jank::runtime
       return sequence_range<S>{ s.is_some() ? s->seq() : s };
     }
   }
+
+  sequence_range<object_ref> make_sequence_range(object_ref const s);
 }
