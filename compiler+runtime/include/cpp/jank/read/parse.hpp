@@ -106,12 +106,9 @@ namespace jank::read::parse
     iterator end();
 
   private:
-    /* Ideally the parser shuold parse the entire form irrespective of whether an error is found
-     * mid-parse or not. Doing so let's us continue parsing in cases where the error is suppressed
-     * (such as in cases of unsupported features in reader conditionals). */
     jtl::result<native_vector<object_source_info>, error_ref>
-    gracefully_parse(lex::token_kind const &upto,
-                     error_ref (*unterminated_form_error)(read::source const &));
+    parse_upto(lex::token_kind const &upto,
+               jtl::ref<error_ref(read::source const &)> const unterminated_form_error);
     jtl::result<runtime::object_ref, error_ref> syntax_quote(runtime::object_ref const form);
     jtl::result<runtime::object_ref, error_ref>
     syntax_quote_expand_seq(runtime::object_ref const seq);
@@ -135,6 +132,19 @@ namespace jank::read::parse
     native_list<runtime::object_ref> pending_forms;
     lex::token latest_token;
     jtl::option<shorthand_function_details> shorthand;
+    /* The Clojure reader relaxes tagged literal syntax rules when dealing with
+     * a form in an unsupported reader conditional. This is done because an
+     * implementation of Clojure on a specific platform can't make any assumptions
+     * on what tagged literals other platform implementations will support.
+     *
+     * We also suppress the reader for any reader conditional feature that comes
+     * after the first feature match. For ex.
+     *
+     * #?(:jank 42 :default #js 42)
+     *
+     * jank will suppress the reader for the `:default` feature as well. This
+     * behaviour is consistent with the Clojure reader. */
+    bool is_reader_suppressed{};
     /* Whether or not the next form is considered quoted. */
     bool quoted{};
     /* Whether or not the next form is considered syntax-quoted. */
