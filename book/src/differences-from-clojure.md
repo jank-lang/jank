@@ -18,7 +18,7 @@ Clojure.
   supported tags
 * jank allows using reader conditionals in `.jank` files as well
 * No automatic method to disable read by setting the `clojure.core/*read-eval*`
-  at start-up
+  at start-up. The value can be overriden via a `binding` operation
 
 ## clojure.core
 * Baked into the `jank` binary, not shipped separately

@@ -49,22 +49,17 @@ namespace jank::runtime::obj
     return buff.release();
   }
 
-  jtl::immutable_string reader_conditional::to_code_string() const
-  {
-    return to_string();
-  }
-
   object_ref reader_conditional::get(object_ref const key, object_ref const fallback) const
   {
     static auto const form_kw{ __rt_ctx->intern_keyword("form").expect_ok() };
     static auto const splicing_qmark_kw{ __rt_ctx->intern_keyword("splicing?").expect_ok() };
 
-    if(runtime::equal(key, form_kw))
+    if(key == form_kw)
     {
       return form;
     }
 
-    if(runtime::equal(key, splicing_qmark_kw))
+    if(key == splicing_qmark_kw)
     {
       return splicing;
     }
@@ -85,7 +80,6 @@ namespace jank::runtime::obj
     return form_kw == key || splicing_qmark_kw == key;
   }
 
-  /* TODO: Cache this. */
   uhash reader_conditional::to_hash() const
   {
     return hash::combine(splicing->to_hash(), form->to_hash());

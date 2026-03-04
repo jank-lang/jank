@@ -24,7 +24,6 @@ namespace jank::runtime::obj
     bool equal(object const &) const override;
     jtl::immutable_string to_string() const override;
     void to_string(jtl::string_builder &buff) const override;
-    jtl::immutable_string to_code_string() const override;
     uhash to_hash() const override;
 
     /* behavior::get */

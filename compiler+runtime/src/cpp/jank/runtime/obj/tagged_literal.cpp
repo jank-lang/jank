@@ -52,7 +52,6 @@ namespace jank::runtime::obj
     return to_string();
   }
 
-  /* TODO: Cache this. */
   uhash tagged_literal::to_hash() const
   {
     return hash::combine(hash::visit(tag.get()), hash::visit(form.get()));

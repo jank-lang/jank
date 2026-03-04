@@ -182,6 +182,24 @@ namespace jank::read::parse
   {
   }
 
+  processor::processor(lex::processor::iterator const &b,
+                       lex::processor::iterator const &e,
+                       object_ref const &extended_features,
+                       bool const &allow_reader_conditional,
+                       bool const &in_preservation_mode)
+    : token_current{ b }
+    , token_end{ e }
+    , splicing_allowed_var{ make_box<var>(
+                              __rt_ctx->intern_ns(make_box<obj::symbol>("clojure.core")),
+                              make_box<obj::symbol>("*splicing-allowed?*"),
+                              jank_false)
+                              ->set_dynamic(true) }
+    , extended_features{ extended_features }
+    , allow_reader_conditional{ allow_reader_conditional }
+    , in_preservation_mode{ in_preservation_mode }
+  {
+  }
+
   processor::object_result processor::next()
   {
     if(token_current == token_end)
@@ -1121,7 +1139,7 @@ namespace jank::read::parse
       return error::parse_invalid_reader_conditional(
         { start_token.start, latest_token.end },
         "Conditional read is not allowed by default. Set the :read-cond reader option to either "
-        ":preserve or :allow. Found a nil instead.");
+        ":preserve or :allow.");
     }
 
     if(token_current->is_err())
@@ -1170,8 +1188,7 @@ namespace jank::read::parse
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This
        * matches Clojure's behavior. */
-      auto const is_supported_feature{ (equal(feature_kw, jank_keyword)
-                                        || equal(feature_kw, default_keyword)
+      auto const is_supported_feature{ (feature_kw == jank_keyword || feature_kw == default_keyword
                                         || contains(extended_features, feature_kw))
                                        && result.is_none() };
 
