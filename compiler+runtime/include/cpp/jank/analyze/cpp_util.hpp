@@ -18,6 +18,8 @@ namespace jank::analyze::cpp_util
   };
 
   jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> const scope);
+  jtl::string_result<jtl::ptr<void>>
+  instantiate(jtl::ptr<void> const scope, native_vector<Cpp::TemplateArgInfo> const &args);
 
   jtl::ptr<void> apply_pointers(jtl::ptr<void> type, u8 ptr_count);
   jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 ptr_count);

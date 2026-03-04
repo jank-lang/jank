@@ -5193,10 +5193,8 @@ namespace jank::analyze
             }
             args.emplace_back(arg_type.expect_ok().data);
           }
-          auto const instantiated_scope{
-            Cpp::InstantiateTemplate(scope.expect_ok(), args.data(), args.size())
-          };
-          if(!instantiated_scope)
+          auto const instantiated_scope{ cpp_util::instantiate(scope.expect_ok(), args) };
+          if(instantiated_scope.is_err())
           {
             return error::analyze_invalid_cpp_type(
               "Unable to instantiate this template with these arguments.",
@@ -5206,7 +5204,7 @@ namespace jank::analyze
 
           /* TODO: Allow for macro expansion. */
 
-          return Cpp::GetTypeFromScope(instantiated_scope);
+          return Cpp::GetTypeFromScope(instantiated_scope.expect_ok());
         }
         else
         {

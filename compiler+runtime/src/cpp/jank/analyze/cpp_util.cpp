@@ -64,6 +64,21 @@ namespace jank::analyze::cpp_util
     return ok();
   }
 
+  jtl::string_result<jtl::ptr<void>>
+  instantiate(jtl::ptr<void> const scope, native_vector<Cpp::TemplateArgInfo> const &args)
+  {
+    clang::Sema::SFINAETrap const sfinae_trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(),
+                                               true };
+
+    auto const res{ Cpp::InstantiateTemplate(scope, args.data(), args.size()) };
+    if(sfinae_trap.hasErrorOccurred())
+    {
+      reset_sfinae_state();
+      return err("Unable to instantiate template.");
+    }
+    return res;
+  }
+
   jtl::ptr<void> apply_pointers(jtl::ptr<void> type, u8 ptr_count)
   {
     while(ptr_count != 0)
