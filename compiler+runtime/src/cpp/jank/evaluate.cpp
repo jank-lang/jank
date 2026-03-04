@@ -1,7 +1,8 @@
-#include <Interpreter/Compatibility.h>
-#include <Interpreter/CppInterOpInterpreter.h>
-#include <clang/Interpreter/CppInterOp.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
+
+#include <CppInterOp/Compatibility.h>
+#include <CppInterOp/CppInterOpInterpreter.h>
+#include <CppInterOp/CppInterOp.h>
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>

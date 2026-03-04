@@ -1,6 +1,6 @@
 #pragma once
 
-#include <clang/Interpreter/CppInterOp.h>
+#include <CppInterOp/CppInterOp.h>
 
 #include <jtl/ptr.hpp>
 #include <jtl/result.hpp>

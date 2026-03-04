@@ -1,13 +1,14 @@
 #include <fstream>
 
-#include <Interpreter/Compatibility.h>
-#include <clang/Interpreter/CppInterOp.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/Bitcode/BitcodeWriter.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/MC/TargetRegistry.h>
 #include <llvm/TargetParser/Host.h>
+
+#include <CppInterOp/CppInterOp.h>
+#include <CppInterOp/Compatibility.h>
 
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>

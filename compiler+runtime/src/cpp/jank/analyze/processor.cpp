@@ -1,6 +1,6 @@
 #include <ranges>
 
-#include <Interpreter/Compatibility.h>
+#include <CppInterOp/Compatibility.h>
 
 #include <cpptrace/from_current.hpp>
 

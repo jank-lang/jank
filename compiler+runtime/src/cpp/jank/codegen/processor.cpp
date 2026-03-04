@@ -1,5 +1,5 @@
-#include <Interpreter/Compatibility.h>
-#include <clang/Interpreter/CppInterOp.h>
+#include <CppInterOp/Compatibility.h>
+#include <CppInterOp/CppInterOp.h>
 
 #include <jank/codegen/processor.hpp>
 #include <jank/runtime/context.hpp>
