@@ -75,6 +75,11 @@ namespace jank::runtime
     assert_var->bind_root(jank_true);
     assert_var->dynamic.store(true);
 
+    __rt_ctx->intern_var("clojure.core", "*read-eval*")
+      .expect_ok()
+      ->bind_root(jank_true)
+      ->set_dynamic(true);
+
     auto const command_line_args_sym(make_box<obj::symbol>("*command-line-args*"));
     auto const command_line_args_var{ core->intern_var(command_line_args_sym) };
     command_line_args_var->bind_root({});
@@ -296,25 +301,175 @@ namespace jank::runtime
     return ok();
   }
 
-  object_ref context::read_string(jtl::immutable_string const &code)
+  object_ref context::read_string(jtl::immutable_string const &code,
+                                  object_ref const reader_opts,
+                                  u64 const nth_form)
   {
     profile::timer const timer{ "rt read_string" };
+    static auto const unknown_kw{ __rt_ctx->intern_keyword("unknown").expect_ok() };
+    auto const read_eval_var{ __rt_ctx->find_var("clojure.core", "*read-eval*") };
+    auto const read_eval_enabled{ read_eval_var.is_some()
+                                  && !equal(read_eval_var->deref(), unknown_kw) };
+
+    if(!read_eval_enabled)
+    {
+      throw std::runtime_error{
+        read_eval_var.is_nil()
+          ? "Reading is disallowed when `clojure.core/*read-eval*` is unbound."
+          : "Reading is disallowed when `clojure.core/*read-eval*` is bound to `:unknown`."
+      };
+    }
+
+    /* The `read` & similar `clojure.core` functions in Clojure, don't read in reader
+     * conditionals by default. This behavior can be configured using the `:read-cond`
+     * reader option using the following values:
+     *   - :allow - Reader conditionals are read in and processed by the parser.
+     *   - :preserve - Reader conditionals are read in but the exact form is preserved,
+     *                 along with the unsupported reader conditional features. */
+    bool allow_reader_conditional{ false };
+    bool in_preservation_mode{};
+    /* The supported reader conditional features can be extended using the `:features`
+     * reader option. */
+    object_ref extended_features{};
+
+    if(!is_map(reader_opts))
+    {
+      throw std::runtime_error{ util::format(
+        "The reader options need to be a map. Found a {} instead.",
+        runtime::object_type_str(reader_opts->type)) };
+    }
+
+    static auto const read_cond_kw{ __rt_ctx->intern_keyword("", "read-cond").expect_ok() };
+    auto const read_cond{ get(reader_opts, read_cond_kw) };
+
+    if(read_cond.is_some())
+    {
+      auto const reader_cond{ try_object<obj::keyword>(read_cond) };
+      static auto const preserve_kw{ __rt_ctx->intern_keyword("", "preserve").expect_ok() };
+      static auto const allow_kw{ __rt_ctx->intern_keyword("", "allow").expect_ok() };
+
+      if(reader_cond == preserve_kw)
+      {
+        in_preservation_mode = true;
+        allow_reader_conditional = true;
+      }
+      else if(reader_cond == allow_kw)
+      {
+        allow_reader_conditional = true;
+      }
+      else
+      {
+        throw std::runtime_error{ util::format(
+          "Only :preserve or :allow modes are supported for :read-cond reader option. Found {} "
+          "instead.",
+          runtime::to_code_string(read_cond)) };
+      }
+    }
+
+    static auto const features_kw{ __rt_ctx->intern_keyword("", "features").expect_ok() };
+    auto const features{ get(reader_opts, features_kw) };
+
+    if(features.is_some())
+    {
+      if(!is_set(features))
+      {
+        throw std::runtime_error{ util::format(
+          "The :features reader option needs to be a set. Found a {} instead.",
+          runtime::object_type_str(features->type)) };
+      }
+
+      extended_features = features;
+    }
 
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
       std::make_pair(current_file_var, jank_nil())) };
-
     read::lex::processor l_prc{ code };
-    read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
-
+    read::parse::processor p_prc{ l_prc.begin(),
+                                  l_prc.end(),
+                                  extended_features,
+                                  allow_reader_conditional,
+                                  in_preservation_mode };
+    auto const read_entire_stream{ nth_form == std::numeric_limits<u64>::max() };
+    u64 count{};
+    static auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
+    static auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };
+    auto const eof_value{ get(reader_opts, eof_kw) };
+    auto const throw_on_eof{ equal(eof_value, eof_throw_kw) };
+    bool eof_found{ throw_on_eof };
     object_ref ret{};
+
     for(auto const &form : p_prc)
     {
-      ret = form.expect_ok().unwrap().ptr;
+      if(nth_form <= count)
+      {
+        break;
+      }
+
+      if(form.expect_ok().is_none())
+      {
+        eof_found = true;
+        ret = eof_value;
+      }
+      else
+      {
+        /* In Clojure, the reader doesn't count comments, etc. as forms. */
+        ++count;
+        eof_found = false;
+        ret = form.expect_ok().unwrap().ptr;
+      }
+    }
+
+    if(!read_entire_stream && count < nth_form)
+    {
+      eof_found = true;
+      ret = eof_value;
+    }
+
+    if(throw_on_eof && eof_found)
+    {
+      throw std::runtime_error{ "EOF reached while reading. To override this behavior, provide a "
+                                "return value for the EOF case via the `:eof` reader option." };
     }
 
     return ret;
+  }
+
+  object_ref context::read_string(jtl::immutable_string const &code, object_ref const reader_opts)
+  {
+    /* The Clojure `read` & similar functions always read the first form in a string
+     * containing more than one form. */
+    return read_string(code, reader_opts, /* nth_form */ 1);
+  }
+
+  object_ref context::read_string(jtl::immutable_string const &code)
+  {
+    static auto const eof_kw{ __rt_ctx->intern_keyword("", "eof").expect_ok() };
+    static auto const eof_throw_kw{ __rt_ctx->intern_keyword("", "eofthrow").expect_ok() };
+    static auto const default_reader_opts{ obj::persistent_array_map::create_unique(eof_kw,
+                                                                                    eof_throw_kw) };
+    return read_string(code, default_reader_opts);
+  }
+
+  object_ref context::forcefully_read_string(jtl::immutable_string const &code)
+  {
+    static auto const read_eval_enabled_var{ __rt_ctx->find_var("clojure.core", "*read-eval*") };
+    binding_scope const bindings{ obj::persistent_hash_map::create_unique(
+      std::make_pair(read_eval_enabled_var, jank_true)) };
+    return read_string(code);
+  }
+
+  object_ref
+  context::read_file(jtl::immutable_string const &file_path, object_ref const reader_opts)
+  {
+    auto const file(module::loader::read_file(file_path));
+    if(file.is_err())
+    {
+      throw file.expect_err();
+    }
+
+    return read_string(file.expect_ok().data(), reader_opts, std::numeric_limits<u64>::max());
   }
 
   native_vector<analyze::expression_ref>
