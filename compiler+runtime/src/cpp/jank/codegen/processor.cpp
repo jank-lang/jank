@@ -2943,14 +2943,13 @@ namespace jank::codegen
 
       if(!all_captures.empty())
       {
-        util::format_to(
-          body_buffer,
-          "auto const * const {}{ "
-          "static_cast<struct {}*>(jank::runtime::expect_object<jank::runtime::obj::jit_"
-          "closure>({})->context) };",
-          closure_ctx,
-          closure_ctx,
-          runtime::munge(root_fn->name));
+        util::format_to(body_buffer,
+                        "auto const * const {}{ "
+                        "static_cast<struct {}*>(static_cast<jank::runtime::obj::jit_"
+                        "closure*>({}.data)->context) };",
+                        closure_ctx,
+                        closure_ctx,
+                        runtime::munge(root_fn->name));
 
         for(auto const &capture : all_captures)
         {
