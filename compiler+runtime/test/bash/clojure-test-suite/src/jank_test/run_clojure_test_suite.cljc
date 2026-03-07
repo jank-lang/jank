@@ -118,7 +118,7 @@
     ; clojure.core-test.nfirst ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.nil-qmark
     ; clojure.core-test.nnext ; Uncaught exception: {:error :not-an-ns-or-sym, :data {:value clojure.core-test.not_eq}}
-    ; clojure.core-test.not ; parse_invalid_reader_symbolic-value error: This reader tag (#js) is not supported. '#uuid', '#inst' and '#cpp' are the only tags currently supported.
+    clojure.core-test.not
     ; clojure.core-test.not_empty ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.not-eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
     ; clojure.core-test.nth ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
@@ -184,7 +184,7 @@
     ; clojure.core-test.slash ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.some ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.some-fn ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
-    ; clojure.core-test.some-qmark ; parse_invalid_reader_symbolic-value error: This reader tag (#js) is not supported. '#uuid', '#inst' and '#cpp' are the only tags currently supported.
+    clojure.core-test.some-qmark
     ; clojure.core-test.sort ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.sort-by ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
