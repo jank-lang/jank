@@ -768,7 +768,8 @@ namespace jank::analyze
                                                         latest_expansion(macro_expansions));
       }
 
-      //util::println("match found\n\t{}", cpp_util::get_qualified_type_name(Cpp::GetTypeFromScope(match)));
+      //util::println("match found\n\t{}",
+      //              cpp_util::get_qualified_type_name(Cpp::GetTypeFromScope(match)));
       //util::println("new args");
       //for(auto const arg : arg_types)
       //{
@@ -949,7 +950,7 @@ namespace jank::analyze
                                         arg_types,
                                         runtime::munge(__rt_ctx->unique_namespaced_string())))
     {
-      //util::println("using aggregate initializaation");
+      //util::println("using aggregate initialization");
       return jtl::make_ref<expr::cpp_constructor_call>(position,
                                                        current_frame,
                                                        needs_box,

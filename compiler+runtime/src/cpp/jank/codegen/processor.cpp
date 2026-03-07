@@ -2420,12 +2420,8 @@ namespace jank::codegen
       jank_debug_assert(expr->is_aggregate);
       auto const scope{ Cpp::GetScopeFromType(expr->type) };
       jank_debug_assert(scope);
-      std::vector<void *> member_scopes;
-      Cpp::GetDatamembers(scope, member_scopes);
-      for(auto const member_scope : member_scopes)
-      {
-        param_types.emplace_back(Cpp::GetTypeFromScope(member_scope));
-      }
+      auto const member_types{ cpp_util::aggregate_initialization_types(scope) };
+      std::ranges::copy(member_types, std::back_inserter(param_types));
     }
     jank_debug_assert(expr->arg_exprs.size() <= param_types.size());
 

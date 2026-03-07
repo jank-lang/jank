@@ -853,6 +853,34 @@ namespace jank::analyze::cpp_util
     return ok();
   }
 
+  void aggregate_initialization_types_impl(jtl::ptr<void> const scope,
+                                           native_vector<jtl::ptr<void>> &member_types)
+  {
+    auto const num_bases{ Cpp::GetNumBases(scope) };
+    for(usize i{}; i != num_bases; ++i)
+    {
+      auto const base{ Cpp::GetBaseClass(scope, i) };
+      aggregate_initialization_types_impl(base, member_types);
+    }
+
+    std::vector<void *> members;
+    Cpp::GetDatamembers(scope, members);
+    for(auto const member : members)
+    {
+      auto const member_type{ Cpp::GetTypeFromScope(member) };
+      member_types.emplace_back(member_type);
+    }
+  }
+
+  /* When we're aggregate initializing a type, we need to recursively know all of its base types,
+   * and their base types, to build the correct order of members and their types. */
+  native_vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> const scope)
+  {
+    native_vector<jtl::ptr<void>> member_types;
+    aggregate_initialization_types_impl(scope, member_types);
+    return member_types;
+  }
+
   /* By the time we get here, we know that the types are compatible in *some* fashion. This
    * is because we only apply this after using Clang to match types in the first place.
    * However, Clang doesn't tell us what needs to happen, so we then need to figure that

@@ -69,6 +69,8 @@ namespace jank::analyze::cpp_util
 
   jtl::result<void, error_ref> ensure_convertible(expression_ref const expr);
 
+  native_vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> scope);
+
   enum class implicit_conversion_action : u8
   {
     unknown,
