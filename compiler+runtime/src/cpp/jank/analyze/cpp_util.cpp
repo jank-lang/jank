@@ -79,17 +79,7 @@ namespace jank::analyze::cpp_util
     return res;
   }
 
-  jtl::ptr<void> apply_pointers(jtl::ptr<void> type, u8 ptr_count)
-  {
-    while(ptr_count != 0)
-    {
-      type = Cpp::GetPointerType(type);
-      --ptr_count;
-    }
-    return type;
-  }
-
-  jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 const ptr_count)
+  jtl::ptr<void> resolve_type(jtl::immutable_string const &sym)
   {
     /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception
      * handling since they are distinct types. We use resolve_literal_type to get the
@@ -98,14 +88,10 @@ namespace jank::analyze::cpp_util
 
     if(sym == "char")
     {
-      return apply_pointers(char_literal_type, ptr_count);
+      return char_literal_type;
     }
 
     auto const type{ Cpp::GetType(sym) };
-    if(type)
-    {
-      return apply_pointers(type, ptr_count);
-    }
     return type;
   }
 

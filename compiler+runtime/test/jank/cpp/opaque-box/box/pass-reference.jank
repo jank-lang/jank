@@ -4,5 +4,5 @@
             int* b{ &a };
           }")
 (let [b (cpp/box (cpp/value "jank::cpp::opaque_box::box::b"))]
-  (if (= 55 (cpp/* (cpp/unbox cpp/int* b)))
+  (if (= 55 (cpp/* (cpp/unbox (:* int) b)))
     :success))

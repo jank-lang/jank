@@ -3384,7 +3384,6 @@ namespace jank::analyze
   build_cpp_value(runtime::obj::symbol_ref const sym,
                   jtl::ptr<void> const scope,
                   bool const is_ctor,
-                  u8 const ptr_count,
                   local_frame_ptr const current_frame,
                   expression_position const position,
                   bool const needs_box,
@@ -3399,16 +3398,6 @@ namespace jank::analyze
 
     if(Cpp::IsTemplatedFunction(scope))
     {
-      if(ptr_count)
-      {
-        return error::analyze_invalid_cpp_symbol(
-          util::format("A '*' suffix may only be used on types. Here, it was provided on the "
-                       "function template '{}'.",
-                       Cpp::GetQualifiedName(scope)),
-          object_source(sym),
-          latest_expansion(macro_expansions));
-      }
-
       if(is_ctor)
       {
         return jtl::make_ref<expr::cpp_value>(position,
@@ -3429,7 +3418,7 @@ namespace jank::analyze
                                             expr::cpp_value::value_kind::function);
     }
 
-    auto type{ cpp_util::apply_pointers(Cpp::GetTypeFromScope(scope), ptr_count) };
+    auto type{ Cpp::GetTypeFromScope(scope) };
 
     /* Primitive types through an alias use a scope which needs to be resolved before
      * we can figure out that we're working with a primitive type. */
@@ -3460,15 +3449,6 @@ namespace jank::analyze
       }
 
       return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
-    }
-
-    /* We're not a type, but we have a * suffix, so this is an error. */
-    if(ptr_count)
-    {
-      return error::analyze_invalid_cpp_symbol(
-        "The '*' suffix for pointers may only be used on types.",
-        object_source(sym),
-        latest_expansion(macro_expansions));
     }
 
     if(Cpp::IsClassTemplate(scope) && is_ctor)
@@ -3645,20 +3625,13 @@ namespace jank::analyze
                                             expr::cpp_value::value_kind::member_call);
     }
 
-    u8 ptr_count{};
-    while(name.ends_with('*'))
-    {
-      name = name.substr(0, name.size() - 1);
-      ++ptr_count;
-    }
-
     if(name == "void")
     {
-      auto const type{ cpp_util::apply_pointers(Cpp::GetVoidType(), ptr_count) };
+      auto const type{ Cpp::GetVoidType() };
       return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
     }
 
-    auto const global_type{ cpp_util::resolve_type(name, ptr_count) };
+    auto const global_type{ cpp_util::resolve_type(name) };
 
     /* Find a primitive type first. Then we know it's a cpp_type expression. */
     if(global_type && cpp_util::is_primitive(global_type))
@@ -3727,7 +3700,6 @@ namespace jank::analyze
     return build_cpp_value(sym,
                            scope,
                            is_ctor,
-                           ptr_count,
                            current_frame,
                            position,
                            needs_box,
@@ -3987,13 +3959,7 @@ namespace jank::analyze
           ->add_usage(read::parse::reparse_nth(l, 0));
       }
 
-      u8 ptr_count{};
-      while(str.ends_with('*'))
-      {
-        str = str.substr(0, str.size() - 1);
-        ++ptr_count;
-      }
-      auto type{ cpp_util::resolve_type(str, ptr_count) };
+      auto type{ cpp_util::resolve_type(str) };
       if(type)
       {
         return jtl::make_ref<expr::cpp_type>(position,
@@ -4012,7 +3978,7 @@ namespace jank::analyze
           ->add_usage(read::parse::reparse_nth(l, 1));
       }
 
-      type = cpp_util::apply_pointers(literal_type.expect_ok(), ptr_count);
+      type = literal_type.expect_ok();
 
       return jtl::make_ref<expr::cpp_type>(position,
                                            current_frame,

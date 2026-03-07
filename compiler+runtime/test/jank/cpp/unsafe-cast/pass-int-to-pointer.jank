@@ -1,5 +1,5 @@
 (let* [i #cpp 0xdeadbeef
-       a (cpp/unsafe-cast cpp/intptr_t* i)
-       i2 (cpp/unsafe-cast cpp/size_t a)]
+       a (cpp/unsafe-cast (:* intptr_t) i)
+       i2 (cpp/unsafe-cast size_t a)]
   (if (cpp/== i i2)
     :success))
