@@ -18,7 +18,7 @@ namespace jank::runtime::obj
     reader_conditional();
     reader_conditional(reader_conditional &&) noexcept = default;
     reader_conditional(reader_conditional const &) = default;
-    reader_conditional(persistent_list_ref f, boolean_ref s);
+    reader_conditional(persistent_list_ref const f, boolean_ref const s);
 
     /* behavior::object_like */
     bool equal(object const &) const override;
