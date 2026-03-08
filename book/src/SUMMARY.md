@@ -16,10 +16,13 @@ TODO:
   Reading error messages
   .jank, .cljc, .cpp files
     All modules need to intern the ns
-  nREPL support
   AOT compiling programs (and distributing them)
   Printing codegen
   Known issues
+  FAQ
+    Is jank compatible with Clojure?
+    Why does jank have its own file type?
+    How is jank memory managed?
   Reference
    Special forms
    Error pages
