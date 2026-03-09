@@ -185,8 +185,8 @@ namespace jank::read::parse
   processor::processor(lex::processor::iterator const &b,
                        lex::processor::iterator const &e,
                        object_ref const &extended_features,
-                       bool &allow_reader_conditional,
-                       bool &in_preservation_mode)
+                       bool const allow_reader_conditional,
+                       bool const in_preservation_mode)
     : token_current{ b }
     , token_end{ e }
     , splicing_allowed_var{ make_box<var>(
