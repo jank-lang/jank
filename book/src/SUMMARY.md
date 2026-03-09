@@ -19,10 +19,6 @@ TODO:
   AOT compiling programs (and distributing them)
   Printing codegen
   Known issues
-  FAQ
-    Is jank compatible with Clojure?
-    Why does jank have its own file type?
-    How is jank memory managed?
   Reference
    Special forms
    Error pages
@@ -48,3 +44,4 @@ TODO:
   * [Checking jank's health](troubleshooting/health-check.md)
   * [How to get a stack trace](troubleshooting/stack-trace.md)
   * [Where to get help](troubleshooting/getting-help.md)
+  * [FAQ](troubleshooting/faq.md)
