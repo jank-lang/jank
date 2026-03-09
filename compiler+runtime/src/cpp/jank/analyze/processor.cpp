@@ -4780,6 +4780,7 @@ namespace jank::analyze
           static auto const volatile_{ runtime::__rt_ctx->intern_keyword("volatile").expect_ok() };
           static auto const signed_{ runtime::__rt_ctx->intern_keyword("signed").expect_ok() };
           static auto const unsigned_{ runtime::__rt_ctx->intern_keyword("unsigned").expect_ok() };
+          /* TODO: short and long. */
           static auto const array{ runtime::__rt_ctx->intern_keyword("array").expect_ok() };
           static auto const fn{ runtime::__rt_ctx->intern_keyword("fn").expect_ok() };
           static auto const member{ runtime::__rt_ctx->intern_keyword("member").expect_ok() };

@@ -19,9 +19,9 @@ following DSL:
 * `(:signed t)` and `(:unsigned t)` add the corresponding C++ qualification
 * `(:array t s?)` turns a type into a sized (or unsized) array
 * `(:fn ret [a1 a2...])` builds a function type
+* `(t a1 a2...)` build a template instantiation
 * `(:member t name)` nests into a type
 * `(:member* t mt)` builds a pointer to member
-* `(t a1 a2...)` build a template instantiation
 
 Let's take a look at some examples, comparing the C++ representation and the
 jank representation.
