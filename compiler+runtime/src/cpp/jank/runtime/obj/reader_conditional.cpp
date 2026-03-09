@@ -11,7 +11,7 @@ namespace jank::runtime::obj
   {
   }
 
-  reader_conditional::reader_conditional(persistent_list_ref f, boolean_ref s)
+  reader_conditional::reader_conditional(persistent_list_ref const f, boolean_ref const s)
     : object{ obj_type, obj_behaviors }
     , form{ f }
     , splicing{ s }

@@ -64,8 +64,8 @@ namespace jank::read::parse
     processor(lex::processor::iterator const &b,
               lex::processor::iterator const &e,
               runtime::object_ref const &extended_features,
-              bool const &allow_reader_conditional,
-              bool const &in_preservation_mode);
+              bool const allow_reader_conditional,
+              bool const in_preservation_mode);
 
     object_result next();
     object_result parse_list();
