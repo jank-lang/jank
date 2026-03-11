@@ -115,16 +115,29 @@
   (let [cp-str (build-module-path project)]
     (shell-out! project cp-str "check-health" [] args)))
 
+(def test-runner-template
+  "
+(def namespaces (quote %s))
+
+(doseq [namespace namespaces]
+  (require namespace))
+
+(require 'clojure.test)
+
+(let [failures (->> namespaces
+                    (map clojure.test/run-tests)
+                    (map #(select-keys %% [:fail :error]))
+                    (map vals)
+                    (flatten)
+                    (apply +))]
+  (when (> failures 0)
+    (cpp/exit 1)))")
+
 (defn generate-test-runner! [namespaces]
-  (let [test-runner-file (b.f/create-temp-file {:prefix "jank_test_runner" :suffix ".jank"})
-        test-nss (map name namespaces)
-        require-exprs (map (partial format "(require '%s)") test-nss)
-        run-test-exprs (map (partial format "(clojure.test/run-tests '%s)") test-nss)]
-    (->> (concat require-exprs
-                 ["(require 'clojure.test)"]
-                 run-test-exprs)
-         (string/join "\n")
-         (spit (b.f/file test-runner-file)))
+  (let [test-runner-file (b.f/create-temp-file {:prefix "jank_test_runner"
+                                                :suffix ".jank"})]
+    (spit (b.f/file test-runner-file)
+          (format test-runner-template (pr-str namespaces)))
     test-runner-file))
 
 (defn test!
