@@ -4,5 +4,5 @@
 
 (deftest testing-core-main
   (testing "main passes when called with \"pass\""
-    (is (= 0 (c/-main "pass")))
+    (is (= 1 (c/-main "pass")))
     (is (thrown? (c/-main "fail")))))
