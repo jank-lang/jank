@@ -2395,10 +2395,35 @@ namespace jank::codegen
 
     if(expr->arg_exprs.empty())
     {
-      util::format_to(body_buffer,
-                      "{} {}{ };",
-                      cpp_util::get_qualified_type_name(expr->type),
-                      ret_tmp);
+      if(Cpp::IsFunctionPointerType(expr->type))
+      {
+        util::format_to(
+          body_buffer,
+          "{} ",
+          cpp_util::get_qualified_type_name(Cpp::GetFunctionReturnTypeFromType(expr->type)));
+        util::format_to(body_buffer,
+                        "(* {} {} {})(",
+                        Cpp::IsConstType(expr->type) ? "const" : "",
+                        Cpp::HasTypeQualifier(expr->type, Cpp::Volatile) ? "volatile" : "",
+                        ret_tmp);
+        auto const param_count{ Cpp::GetFunctionNumArgsFromType(expr->type) };
+        for(usize i{}; i < param_count; ++i)
+        {
+          auto const param_type{ Cpp::GetFunctionArgTypeFromType(expr->type, i) };
+          util::format_to(body_buffer,
+                          "{} {}",
+                          (i != 0) ? ", " : "",
+                          cpp_util::get_qualified_type_name(param_type));
+        }
+        util::format_to(body_buffer, "){ };");
+      }
+      else
+      {
+        util::format_to(body_buffer,
+                        "{} {}{ };",
+                        cpp_util::get_qualified_type_name(expr->type),
+                        ret_tmp);
+      }
       return ret_tmp;
     }
 
@@ -2411,7 +2436,7 @@ namespace jank::codegen
         param_types.emplace_back(Cpp::GetFunctionArgType(expr->fn, i));
       }
     }
-    else if(cpp_util::is_primitive(expr->type))
+    else if(cpp_util::is_primitive(Cpp::GetNonReferenceType(expr->type)))
     {
       param_types.emplace_back(expr->type);
     }

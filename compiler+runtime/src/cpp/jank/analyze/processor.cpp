@@ -557,7 +557,7 @@ namespace jank::analyze
     std::vector<void *> fns;
 
     auto const is_ctor{ val->val_kind == expr::cpp_value::value_kind::constructor };
-    if(is_ctor && cpp_util::is_primitive(val->type))
+    if(is_ctor && cpp_util::is_primitive(Cpp::GetNonReferenceType(val->type)))
     {
       if(arg_types.size() > 1)
       {
@@ -567,14 +567,22 @@ namespace jank::analyze
           object_source(val->form),
           latest_expansion(macro_expansions));
       }
-      if(arg_types.size() == 1 && !Cpp::IsConstructible(val->type, arg_types[0].m_Type)
-         && !cpp_util::is_trait_convertible(val->type)
+      if(arg_types.size() == 1 && !cpp_util::is_constructible(val->type, arg_types[0].m_Type)
+         && !(cpp_util::is_trait_convertible(val->type)
+              && cpp_util::is_any_object(arg_types[0].m_Type))
          && !cpp_util::is_pointer_to_void_conversion(val->type, arg_types[0].m_Type))
       {
         return error::analyze_invalid_cpp_constructor_call(
           util::format("'{}' cannot be constructed from a '{}'.",
                        cpp_util::get_qualified_type_name(val->type),
                        cpp_util::get_qualified_type_name(arg_types[0].m_Type)),
+          object_source(val->form),
+          latest_expansion(macro_expansions));
+      }
+      if(Cpp::IsVoid(val->type))
+      {
+        return error::analyze_invalid_cpp_constructor_call(
+          "Unable to construct an instance of 'void'.",
           object_source(val->form),
           latest_expansion(macro_expansions));
       }
@@ -3854,6 +3862,21 @@ namespace jank::analyze
                                  bool const needs_box,
                                  literal_kind const kind)
   {
+    if(kind == literal_kind::type)
+    {
+      auto const type_res{ analyze_type(l, current_frame, fn_ctx) };
+      if(type_res.is_err())
+      {
+        return type_res.expect_err();
+      }
+
+      return jtl::make_ref<expr::cpp_type>(position,
+                                           current_frame,
+                                           needs_box,
+                                           try_object<obj::symbol>(l->first()),
+                                           type_res.expect_ok());
+    }
+
     auto const count(l->count());
     if(count < 2)
     {
@@ -4096,7 +4119,8 @@ namespace jank::analyze
     {
       return value_expr;
     }
-    else if(Cpp::IsConstructible(type, value_type) || Cpp::IsImplicitlyConvertible(value_type, type)
+    else if(cpp_util::is_constructible(type, value_type)
+            || Cpp::IsImplicitlyConvertible(value_type, type)
             || cpp_util::is_pointer_to_void_conversion(value_type, type))
     {
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
@@ -4208,7 +4232,7 @@ namespace jank::analyze
       return value_expr;
     }
     /* TODO: Share this with cpp/cast more cleanly? */
-    else if(Cpp::IsConstructible(type, value_type))
+    else if(cpp_util::is_constructible(type, value_type))
     {
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
         position,
@@ -4738,10 +4762,6 @@ namespace jank::analyze
         -> jtl::result<void, error_ref> { return require_args(seq, 1, macro_expansions); }
     };
 
-    static auto const no_type_validations{ [](jtl::ptr<void>) -> jtl::result<void, error_ref> {
-      return ok();
-    } };
-
     auto const transform_type{ [&](
                                  runtime::object_ref const seq,
                                  auto const &validate_seq,
@@ -4780,7 +4800,8 @@ namespace jank::analyze
           static auto const volatile_{ runtime::__rt_ctx->intern_keyword("volatile").expect_ok() };
           static auto const signed_{ runtime::__rt_ctx->intern_keyword("signed").expect_ok() };
           static auto const unsigned_{ runtime::__rt_ctx->intern_keyword("unsigned").expect_ok() };
-          /* TODO: short and long. */
+          static auto const short_{ runtime::__rt_ctx->intern_keyword("short").expect_ok() };
+          static auto const long_{ runtime::__rt_ctx->intern_keyword("long").expect_ok() };
           static auto const array{ runtime::__rt_ctx->intern_keyword("array").expect_ok() };
           static auto const fn{ runtime::__rt_ctx->intern_keyword("fn").expect_ok() };
           static auto const member{ runtime::__rt_ctx->intern_keyword("member").expect_ok() };
@@ -4803,16 +4824,6 @@ namespace jank::analyze
                     object_source(o),
                     latest_expansion(macro_expansions));
                 }
-                else if(Cpp::IsArrayType(type))
-                {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
-                    util::format(
-                      "C++ does not allow pointers to arrays. The full type here is '{}'.",
-                      cpp_util::get_qualified_type_name(type)),
-                    object_source(o),
-                    latest_expansion(macro_expansions));
-                }
                 return ok();
               },
               [](jtl::ptr<void> const type) { return Cpp::GetPointerType(type); });
@@ -4826,12 +4837,9 @@ namespace jank::analyze
                 if(Cpp::IsVoid(type))
                 {
                   /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
-                    util::format(
-                      "C++ does not allow references to void. The full type here is '{}'.",
-                      cpp_util::get_qualified_type_name(type)),
-                    object_source(o),
-                    latest_expansion(macro_expansions));
+                  return error::analyze_invalid_cpp_type("C++ does not allow references to void.",
+                                                         object_source(o),
+                                                         latest_expansion(macro_expansions));
                 }
                 return ok();
               },
@@ -4862,7 +4870,20 @@ namespace jank::analyze
             return transform_type(
               seq,
               require_one_arg,
-              no_type_validations,
+              [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
+                if(Cpp::IsReferenceType(type))
+                {
+                  /* TODO: Error for DSL. */
+                  return error::analyze_invalid_cpp_type(
+                    util::format("C++ does not allow const references. Note that there's a "
+                                 "difference between a const reference and a reference to const. "
+                                 "You likely want the latter. The full type here is '{}'.",
+                                 cpp_util::get_qualified_type_name(type)),
+                    object_source(o),
+                    latest_expansion(macro_expansions));
+                }
+                return ok();
+              },
               [&](jtl::ptr<void> const type) { return Cpp::GetTypeWithConst(type); });
           }
           else if(kw == volatile_)
@@ -4870,7 +4891,21 @@ namespace jank::analyze
             return transform_type(
               seq,
               require_one_arg,
-              no_type_validations,
+              [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
+                if(Cpp::IsReferenceType(type))
+                {
+                  /* TODO: Error for DSL. */
+                  return error::analyze_invalid_cpp_type(
+                    util::format(
+                      "C++ does not allow volatile references. Note that there's a "
+                      "difference between a volatile reference and a reference to volatile. "
+                      "You likely want the latter. The full type here is '{}'.",
+                      cpp_util::get_qualified_type_name(type)),
+                    object_source(o),
+                    latest_expansion(macro_expansions));
+                }
+                return ok();
+              },
               [&](jtl::ptr<void> const type) { return Cpp::GetTypeWithVolatile(type); });
           }
           else if(kw == signed_)
@@ -4878,7 +4913,19 @@ namespace jank::analyze
             return transform_type(
               seq,
               require_one_arg,
-              no_type_validations,
+              [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
+                if(!Cpp::IsIntegral(type))
+                {
+                  /* TODO: Error for DSL. */
+                  return error::analyze_invalid_cpp_type(
+                    util::format("Only integral types can be signed. "
+                                 "The full type here is '{}'.",
+                                 cpp_util::get_qualified_type_name(type)),
+                    object_source(o),
+                    latest_expansion(macro_expansions));
+                }
+                return ok();
+              },
               [&](jtl::ptr<void> const type) { return Cpp::GetSignedType(type); });
           }
           else if(kw == unsigned_)
@@ -4886,8 +4933,84 @@ namespace jank::analyze
             return transform_type(
               seq,
               require_one_arg,
-              no_type_validations,
+              [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
+                if(!Cpp::IsIntegral(type))
+                {
+                  /* TODO: Error for DSL. */
+                  return error::analyze_invalid_cpp_type(
+                    util::format("Only integral types can be unsigned. "
+                                 "The full type here is '{}'.",
+                                 cpp_util::get_qualified_type_name(type)),
+                    object_source(o),
+                    latest_expansion(macro_expansions));
+                }
+                return ok();
+              },
               [&](jtl::ptr<void> const type) { return Cpp::GetUnsignedType(type); });
+          }
+          else if(kw == short_)
+          {
+            return transform_type(
+              seq,
+              require_one_arg,
+              [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
+                static auto const char_type{ cpp_util::char_type() };
+                if(!Cpp::IsIntegral(type) || Cpp::GetTypeWithoutCv(type) == char_type)
+                {
+                  /* TODO: Error for DSL. */
+                  return error::analyze_invalid_cpp_type(
+                    util::format("Only integer types can be short. "
+                                 "The full type here is '{}'.",
+                                 cpp_util::get_qualified_type_name(type)),
+                    object_source(o),
+                    latest_expansion(macro_expansions));
+                }
+                if(Cpp::IsShortType(type))
+                {
+                  /* TODO: Error for DSL. */
+                  return error::analyze_invalid_cpp_type(
+                    util::format("This type is already short. "
+                                 "The full type here is '{}'.",
+                                 cpp_util::get_qualified_type_name(type)),
+                    object_source(o),
+                    latest_expansion(macro_expansions));
+                }
+                return ok();
+              },
+              [&](jtl::ptr<void> const type) { return Cpp::GetShortType(type); });
+          }
+          else if(kw == long_)
+          {
+            return transform_type(
+              seq,
+              require_one_arg,
+              [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
+                static auto const char_type{ cpp_util::char_type() };
+                static auto const double_type{ Cpp::GetType("double") };
+                if((!Cpp::IsIntegral(type) || Cpp::GetTypeWithoutCv(type) == char_type)
+                   && Cpp::GetTypeWithoutCv(type) != double_type)
+                {
+                  /* TODO: Error for DSL. */
+                  return error::analyze_invalid_cpp_type(
+                    util::format("Only integer types and double can be long. "
+                                 "The full type here is '{}'.",
+                                 cpp_util::get_qualified_type_name(type)),
+                    object_source(o),
+                    latest_expansion(macro_expansions));
+                }
+                if(Cpp::IsShortType(type))
+                {
+                  /* TODO: Error for DSL. */
+                  return error::analyze_invalid_cpp_type(
+                    util::format("This type is already short, so it cannot be made long. "
+                                 "The full type here is '{}'.",
+                                 cpp_util::get_qualified_type_name(type)),
+                    object_source(o),
+                    latest_expansion(macro_expansions));
+                }
+                return ok();
+              },
+              [&](jtl::ptr<void> const type) { return Cpp::GetLongType(type); });
           }
           else if(kw == array)
           {

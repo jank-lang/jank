@@ -17,6 +17,7 @@ following DSL:
 * `(:&& t)` adds an rvalue reference
 * `(:const t)` and `(:volatile t)` add the corresponding C++ qualification
 * `(:signed t)` and `(:unsigned t)` add the corresponding C++ qualification
+* `(:long t)` and `(:short t)` add the corresponding C++ qualification
 * `(:array t s?)` turns a type into a sized (or unsized) array
 * `(:fn ret [a1 a2...])` builds a function type
 * `(t a1 a2...)` build a template instantiation

@@ -19,7 +19,7 @@ Now this is the question. Let's survey the landscape of Clojure dialects.
 * [Clojure Dart](https://github.com/Tensegritics/ClojureDart/blob/main/doc/differences.md)
   * Lazily initializes `def`, to aid in tree shaking
   * Doesn't have multi-methods
-  * Extends `catch` syntax to suppor stack traces
+  * Extends `catch` syntax to support stack traces
   * Runs macros in a different compilation stage (in Clojure JVM)
   * Doesn't have array maps
   * Supports named parameters
@@ -41,7 +41,8 @@ its host runtime. By that I mean that Clojure JVM leans into the JVM.
 ClojureScript leans into JavaScript. Clojure Dart leans into the Dart world. In
 each of these, attributes and behaviors of the host runtime show transparently
 through the Clojure dialect. They're not hidden. This, on the surface, makes
-Clojure dialects different, but it's for this reason that they're all more Clojure-like.
+Clojure dialects different, but actually it's for this reason that they're all
+more Clojure-like.
 
 So what's common across all of these? That's not currently defined by the
 Clojure core team. But the common space across all of these is where jank aims

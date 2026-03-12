@@ -81,14 +81,9 @@ namespace jank::analyze::cpp_util
 
   jtl::ptr<void> resolve_type(jtl::immutable_string const &sym)
   {
-    /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception
-     * handling since they are distinct types. We use resolve_literal_type to get the
-     * exact type for "char". */
-    static auto const char_literal_type{ resolve_literal_type("char").expect_ok() };
-
     if(sym == "char")
     {
-      return char_literal_type;
+      return char_type();
     }
 
     auto const type{ Cpp::GetType(sym) };
@@ -397,6 +392,15 @@ namespace jank::analyze::cpp_util
     return ret;
   }
 
+  jtl::ptr<void> char_type()
+  {
+    /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception
+     * handling since they are distinct types. We use resolve_literal_type to get the
+     * exact type for "char". */
+    static auto const char_literal_type{ resolve_literal_type("char").expect_ok() };
+    return char_literal_type;
+  }
+
   bool is_member_function(jtl::ptr<void> const scope)
   {
     return Cpp::IsMethod(scope) && !Cpp::IsConstructor(scope) && !Cpp::IsDestructor(scope);
@@ -479,6 +483,25 @@ namespace jank::analyze::cpp_util
   {
     return Cpp::IsBuiltin(type) || Cpp::IsPointerType(type) || Cpp::IsArrayType(type)
       || Cpp::IsEnumType(type);
+  }
+
+  /* The C++ is_constructible trait doesn't include reference construction from values
+   * of the same type, so we do that here. */
+  bool is_constructible(jtl::ptr<void> const to_type, jtl::ptr<void> const from_type)
+  {
+    auto const res{ Cpp::IsConstructible(to_type, from_type) };
+    if(res)
+    {
+      return res;
+    }
+
+    if(Cpp::IsReferenceType(to_type) && !Cpp::IsReferenceType(from_type))
+    {
+      return Cpp::GetCanonicalType(Cpp::GetNonReferenceType(to_type))
+        == Cpp::GetCanonicalType(from_type);
+    }
+
+    return false;
   }
 
   /* TODO: Just put a type member function in expression_base and read it from there. */
