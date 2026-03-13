@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-b900bc48.js";
+            window.path_to_searchindex_js = "../searchindex-fa208c51.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-24331613.js"></script>
@@ -268,12 +268,13 @@ written in the <code>test/</code> directory. The jank template provided us with 
 test which will fail.</p>
 <pre><code class="language-bash">$ lein test
 </code></pre>
-<p>If tests exist in directories other than <code>test/</code>, use <code>:test</code> profile to point
-Leiningen to them.</p>
+<p>If tests exist in directories other than <code>test/</code>, you can use the <code>:test</code>
+profile to point Leiningen to them. Leiningen will find all jank source files
+within those directories, recursively, and ensure their tests run.</p>
 <pre><code class="language-clojure">(defproject hello_lein "0.1-SNAPSHOT"
   ;; ...
   :profiles {;; ...
-             :test {:test-paths ["tests"]}})
+             :test {:test-paths ["src/test" "other/test"]}})
 
 </code></pre>
 <h2 id="compiling-a-leiningen-project"><a class="header" href="#compiling-a-leiningen-project">Compiling a Leiningen project</a></h2>
