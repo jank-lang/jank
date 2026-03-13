@@ -1393,7 +1393,15 @@ namespace jank::read::parse
           CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_array_map>()));
         }
 
-        SUBCASE("Insuppressible errors in unsupported reader conditionals")
+        SUBCASE("Suppress reader for 2nd reader conditional feature match")
+        {
+          lex::processor lp{ "#?(:default {} :jank #js {})" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_array_map>()));
+        }
+
+        SUBCASE("Lexer errors in unsupported reader conditionals")
         {
           lex::processor lp{ "#?(:cljs #js 123-213 :jank {})" };
           processor p{ lp.begin(), lp.end() };
@@ -1401,12 +1409,36 @@ namespace jank::read::parse
           CHECK(r.is_err());
         }
 
-        SUBCASE("Suppressible errors in unsupported reader conditionals")
+        SUBCASE("Parser errors in unsupported reader conditionals")
         {
           lex::processor lp{ "#?(:cljs #js #{:k :k} :jank {})" };
           processor p{ lp.begin(), lp.end() };
           auto const r(p.next());
-          CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_array_map>()));
+          CHECK(r.is_err());
+        }
+
+        SUBCASE("Lexer errors after match")
+        {
+          lex::processor lp{ "#?(:default 0 :clj 0v)" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_err());
+        }
+
+        SUBCASE("Parser errors with multiple supported reader conditionals")
+        {
+          lex::processor lp{ "#?(:default 0 :jank #{:k :k} :clj #{:k :k})" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_err());
+        }
+
+        SUBCASE("Parser errors after match")
+        {
+          lex::processor lp{ "#?(:default 0 :clj #{:k :k})" };
+          processor p{ lp.begin(), lp.end() };
+          auto const r(p.next());
+          CHECK(r.is_err());
         }
 
         SUBCASE("Splice")
@@ -1482,7 +1514,15 @@ namespace jank::read::parse
                         make_box<obj::persistent_vector>(std::in_place, make_box(42))));
           }
 
-          SUBCASE("Insuppressible errors in unsupported reader conditionals")
+          SUBCASE("Suppress reader for 2nd reader conditional feature match")
+          {
+            lex::processor lp{ "[#?@(:default [] :jank #js [])]" };
+            processor p{ lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_array_map>()));
+          }
+
+          SUBCASE("Lexer errors in unsupported reader conditionals")
           {
             lex::processor lp{ "[#?@(:cljs #js [213-213] :jank {})]" };
             processor p{ lp.begin(), lp.end() };
@@ -1490,12 +1530,44 @@ namespace jank::read::parse
             CHECK(r.is_err());
           }
 
-          SUBCASE("Suppressible errors in unsupported reader conditionals")
+          SUBCASE("Parser errors in unsupported reader conditionals")
           {
             lex::processor lp{ "[#?@(:cljs #js #{:k :k} :jank {})]" };
             processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
+            CHECK(r.is_err());
+          }
+
+          SUBCASE("Non-sequencable values in unsupported reader conditional")
+          {
+            lex::processor lp{ "[#?@(:default [] :clj 0)]" };
+            processor p{ lp.begin(), lp.end() };
+            auto const r(p.next());
             CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_vector>()));
+          }
+
+          SUBCASE("Lexer errors after match")
+          {
+            lex::processor lp{ "[#?@(:default [] :clj 0v)]" };
+            processor p{ lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+
+          SUBCASE("Parser errors with multiple supported reader conditionals")
+          {
+            lex::processor lp{ "[#?@(:default [] :jank #{:k :k})]" };
+            processor p{ lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(r.is_err());
+          }
+
+          SUBCASE("Parser errors after match")
+          {
+            lex::processor lp{ "[#?@(:default [] :clj #{:k :k})]" };
+            processor p{ lp.begin(), lp.end() };
+            auto const r(p.next());
+            CHECK(r.is_err());
           }
         }
       }

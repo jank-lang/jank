@@ -56,7 +56,7 @@
     ; clojure.core-test.disj-bang ; analyze/unresolved-symbol error: Unable to resolve symbol 'Error'.
     ; clojure.core-test.dissoc ; analyze/unresolved-symbol error: Unable to resolve symbol 'defrecord'.
     ; clojure.core-test.dissoc-bang ; analyze/unresolved-symbol error: Unable to resolve symbol 'Error'.
-    ; clojure.core-test.doseq ; analyze/unresolved-symbol error: Unable to resolve symbol 'y'.
+    clojure.core-test.doseq
     ; clojure.core-test.double ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.double-qmark
     ; clojure.core-test.drop ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'., https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
@@ -107,6 +107,7 @@
     ; clojure.core-test.max ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.merge ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.min ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    ; clojure.core-test.min-key ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.minus ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.mod ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.name ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
@@ -118,7 +119,7 @@
     ; clojure.core-test.nfirst ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.nil-qmark
     ; clojure.core-test.nnext ; Uncaught exception: {:error :not-an-ns-or-sym, :data {:value clojure.core-test.not_eq}}
-    ; clojure.core-test.not ; parse_invalid_reader_symbolic-value error: This reader tag (#js) is not supported. '#uuid', '#inst' and '#cpp' are the only tags currently supported.
+    clojure.core-test.not
     ; clojure.core-test.not_empty ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.not-eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
     ; clojure.core-test.nth ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
@@ -184,7 +185,7 @@
     ; clojure.core-test.slash ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.some ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.some-fn ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
-    ; clojure.core-test.some-qmark ; parse_invalid_reader_symbolic-value error: This reader tag (#js) is not supported. '#uuid', '#inst' and '#cpp' are the only tags currently supported.
+    clojure.core-test.some-qmark
     ; clojure.core-test.sort ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.sort-by ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
@@ -211,10 +212,12 @@
     ; clojure.core-test.vals ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
     clojure.core-test.var-qmark
     ; clojure.core-test.vec ; analyze/invalid-cpp-operator-call error: Binary operator aget is not supported for 'jank::runtime::object *' and 'jank::runtime::object *'.
+    clojure.core-test.vector
     ; clojure.core-test.vector-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.when
     clojure.core-test.when-first
     ; clojure.core-test.when-let ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
+    clojure.core-test.when-not
     ; clojure.core-test.with-out-str ; TODO: port with-out-str
     ; clojure.core-test.with-precision ; TODO: port with-precision, INFO: SKIP - defprotocol
     ; clojure.core-test.zero-qmark ; analyze/unresolved-symbol error: Unable to resolve symbol 'Exception'.
