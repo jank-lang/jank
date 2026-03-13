@@ -4756,12 +4756,12 @@ namespace jank::analyze
         -> jtl::result<void, error_ref> { return require_args(seq, 1, macro_expansions); }
     };
 
-    auto const transform_type{ [&](
+    auto const transform_type{ [this, current_frame, fn_ctx](
                                  runtime::object_ref const seq,
                                  auto const &validate_seq,
                                  auto const &validate_type,
                                  auto const &transform) -> jtl::result<jtl::ptr<void>, error_ref> {
-      if(auto const err{ validate_seq(next(seq), macro_expansions) }; err.is_err())
+      if(auto const err{ validate_seq(next(seq), this->macro_expansions) }; err.is_err())
       {
         return err.expect_err();
       }

@@ -875,6 +875,7 @@ namespace jank::codegen
 
       return build_arity_flags(variadic_arity->fn_ctx->param_count - 1, true, variadic_ambiguous);
     }
+    jank_assert(highest_fixed_arity != nullptr);
     return build_arity_flags(highest_fixed_arity->fn_ctx->param_count, false, false);
   }
 
