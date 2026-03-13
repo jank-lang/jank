@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-12732bc7.js";
+            window.path_to_searchindex_js = "../searchindex-969055b9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-24331613.js"></script>
@@ -268,11 +268,14 @@ written in the <code>test/</code> directory. The jank template provided us with 
 test which will fail.</p>
 <pre><code class="language-bash">$ lein test
 </code></pre>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>This is not yet supported in jank. Accomplishing this requires finding
-all test namespaces and running them using <code>clojure.test</code>.</p>
-</blockquote>
+<p>If tests exist in directories other than <code>test/</code>, use <code>:test</code> profile to point leiningen
+to them.</p>
+<pre><code class="language-clojure">(defproject hello_lein "0.1-SNAPSHOT"
+  ;; ...
+  :profiles {;; ...
+             :test {:test-paths ["tests"]}})
+
+</code></pre>
 <h2 id="compiling-a-leiningen-project"><a class="header" href="#compiling-a-leiningen-project">Compiling a Leiningen project</a></h2>
 <p>It’s possible to AOT (ahead of time) compile our whole Leiningen project to an
 executable. This involves compiling every one of our source files and
