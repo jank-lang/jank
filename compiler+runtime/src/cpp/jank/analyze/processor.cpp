@@ -4741,7 +4741,6 @@ namespace jank::analyze
       auto const count{ runtime::sequence_length(seq) };
       if(count != expected)
       {
-        /* TODO: Error for DSL. */
         return error::analyze_invalid_cpp_type(
           util::format("Invalid C++ type form. There were {} args expected, but {} were provided.",
                        expected,
@@ -4811,8 +4810,7 @@ namespace jank::analyze
               [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
                 if(Cpp::IsReferenceType(type))
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format(
                       "C++ does not allow pointers to references. The full type here is '{}'.",
                       cpp_util::get_qualified_type_name(type)),
@@ -4831,10 +4829,10 @@ namespace jank::analyze
               [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
                 if(Cpp::IsVoid(type))
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type("C++ does not allow references to void.",
-                                                         object_source(o),
-                                                         latest_expansion(macro_expansions));
+                  return error::analyze_invalid_cpp_type_dsl(
+                    "C++ does not allow references to void.",
+                    object_source(o),
+                    latest_expansion(macro_expansions));
                 }
                 return ok();
               },
@@ -4848,8 +4846,7 @@ namespace jank::analyze
               [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
                 if(Cpp::IsVoid(type))
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format(
                       "C++ does not allow references to void. The full type here is '{}'.",
                       cpp_util::get_qualified_type_name(type)),
@@ -4868,8 +4865,7 @@ namespace jank::analyze
               [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
                 if(Cpp::IsReferenceType(type))
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("C++ does not allow const references. Note that there's a "
                                  "difference between a const reference and a reference to const. "
                                  "You likely want the latter. The full type here is '{}'.",
@@ -4889,8 +4885,7 @@ namespace jank::analyze
               [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
                 if(Cpp::IsReferenceType(type))
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format(
                       "C++ does not allow volatile references. Note that there's a "
                       "difference between a volatile reference and a reference to volatile. "
@@ -4911,8 +4906,7 @@ namespace jank::analyze
               [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
                 if(!Cpp::IsIntegral(type))
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("Only integral types can be signed. "
                                  "The full type here is '{}'.",
                                  cpp_util::get_qualified_type_name(type)),
@@ -4931,8 +4925,7 @@ namespace jank::analyze
               [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
                 if(!Cpp::IsIntegral(type))
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("Only integral types can be unsigned. "
                                  "The full type here is '{}'.",
                                  cpp_util::get_qualified_type_name(type)),
@@ -4952,8 +4945,7 @@ namespace jank::analyze
                 static auto const char_type{ cpp_util::char_type() };
                 if(!Cpp::IsIntegral(type) || Cpp::GetTypeWithoutCv(type) == char_type)
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("Only integer types can be short. "
                                  "The full type here is '{}'.",
                                  cpp_util::get_qualified_type_name(type)),
@@ -4962,8 +4954,7 @@ namespace jank::analyze
                 }
                 if(Cpp::IsShortType(type))
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("This type is already short. "
                                  "The full type here is '{}'.",
                                  cpp_util::get_qualified_type_name(type)),
@@ -4985,8 +4976,7 @@ namespace jank::analyze
                 if((!Cpp::IsIntegral(type) || Cpp::GetTypeWithoutCv(type) == char_type)
                    && Cpp::GetTypeWithoutCv(type) != double_type)
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("Only integer types and double can be long. "
                                  "The full type here is '{}'.",
                                  cpp_util::get_qualified_type_name(type)),
@@ -4995,8 +4985,7 @@ namespace jank::analyze
                 }
                 if(Cpp::IsShortType(type))
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("This type is already short, so it cannot be made long. "
                                  "The full type here is '{}'.",
                                  cpp_util::get_qualified_type_name(type)),
@@ -5017,8 +5006,7 @@ namespace jank::analyze
                 -> jtl::result<void, error_ref> {
                 if(arg_count != 1 && arg_count != 2)
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("Invalid C++ array form. Either 1 or 2 args were expected, but {} "
                                  "were provided.",
                                  arg_count),
@@ -5030,8 +5018,7 @@ namespace jank::analyze
               [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
                 if(Cpp::IsReferenceType(type))
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format(
                       "C++ does not allow arrays of references. The full type here is '{}'.",
                       cpp_util::get_qualified_type_name(type)),
@@ -5040,8 +5027,7 @@ namespace jank::analyze
                 }
                 else if(Cpp::IsVoid(type))
                 {
-                  /* TODO: Error for DSL. */
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("C++ does not allow arrays of void. The full type here is '{}'.",
                                  cpp_util::get_qualified_type_name(type)),
                     object_source(o),
@@ -5060,8 +5046,7 @@ namespace jank::analyze
                 {
                   if(size->data < 0)
                   {
-                    /* TODO: Error for DSL. */
-                    return error::analyze_invalid_cpp_type(
+                    return error::analyze_invalid_cpp_type_dsl(
                       "Array sizes must be either zero or positive integers.",
                       object_source(o),
                       latest_expansion(macro_expansions));
@@ -5069,7 +5054,7 @@ namespace jank::analyze
                   return Cpp::GetArrayType(type, size->data);
                 }
 
-                return error::analyze_invalid_cpp_type(
+                return error::analyze_invalid_cpp_type_dsl(
                   util::format("Invalid array size. An integer was expected, but a {} was found.",
                                object_type_str(size_obj->type)),
                   object_source(o),
@@ -5100,8 +5085,7 @@ namespace jank::analyze
                       }
                       if(Cpp::IsVoid(param_res.expect_ok()))
                       {
-                        /* TODO: Error for DSL. */
-                        return error::analyze_invalid_cpp_type(
+                        return error::analyze_invalid_cpp_type_dsl(
                           "Function parameter types may not be void.",
                           object_source(o),
                           latest_expansion(macro_expansions));
@@ -5114,7 +5098,7 @@ namespace jank::analyze
                     ;
                   },
                   [&] -> jtl::result<jtl::ptr<void>, error_ref> {
-                    return error::analyze_invalid_cpp_type(
+                    return error::analyze_invalid_cpp_type_dsl(
                       util::format(
                         "A sequence of parameter types was expected, but a {} was found instead.",
                         object_type_str(params->type)),
@@ -5136,15 +5120,15 @@ namespace jank::analyze
                 auto const member_arg{ runtime::second(runtime::next(seq)) };
                 if(member_arg->type != object_type::symbol)
                 {
-                  return error::analyze_invalid_cpp_type("Member names need to be symbols.",
-                                                         object_source(member_arg),
-                                                         latest_expansion(macro_expansions));
+                  return error::analyze_invalid_cpp_type_dsl("Member names need to be symbols.",
+                                                             object_source(member_arg),
+                                                             latest_expansion(macro_expansions));
                 }
 
                 auto const parent_scope{ Cpp::GetScopeFromType(type) };
                 if(!parent_scope)
                 {
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("There is no '{}' member within '{}'.",
                                  member_arg->to_string(),
                                  cpp_util::get_qualified_type_name(type)),
@@ -5157,7 +5141,7 @@ namespace jank::analyze
                   Cpp::GetNamed(member_name->name.c_str(), parent_scope)) };
                 if(!member_scope)
                 {
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("There is no '{}' member within '{}'.",
                                  member_arg->to_string(),
                                  cpp_util::get_qualified_type_name(type)),
@@ -5167,7 +5151,7 @@ namespace jank::analyze
                 else if(!Cpp::IsClass(member_scope) && !Cpp::IsEnumScope(member_scope)
                         && !Cpp::IsTypedefed(member_scope) && !cpp_util::is_primitive(type))
                 {
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("A type was expected here, but '{}::{}' was found.",
                                  cpp_util::get_qualified_type_name(type),
                                  member_arg->to_string()),
@@ -5177,7 +5161,7 @@ namespace jank::analyze
                 else if(Cpp::IsPrivateVariable(member_scope)
                         || Cpp::IsProtectedVariable(member_scope))
                 {
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("This member is declared {}, so it cannot be accessed.",
                                  Cpp::IsPrivateVariable(member_scope) ? "private" : "protected"),
                     object_source(member_arg),
@@ -5198,15 +5182,15 @@ namespace jank::analyze
                 auto const member_arg{ runtime::second(runtime::next(seq)) };
                 if(member_arg->type != object_type::symbol)
                 {
-                  return error::analyze_invalid_cpp_type("Member names need to be symbols.",
-                                                         object_source(member_arg),
-                                                         latest_expansion(macro_expansions));
+                  return error::analyze_invalid_cpp_type_dsl("Member names need to be symbols.",
+                                                             object_source(member_arg),
+                                                             latest_expansion(macro_expansions));
                 }
 
                 auto const parent_scope{ Cpp::GetScopeFromType(type) };
                 if(!parent_scope)
                 {
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("There is no '{}' member within '{}'.",
                                  member_arg->to_string(),
                                  cpp_util::get_qualified_type_name(type)),
@@ -5219,7 +5203,7 @@ namespace jank::analyze
                   Cpp::GetNamed(member_name->name.c_str(), parent_scope)) };
                 if(!member_scope)
                 {
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("There is no '{}' member within '{}'.",
                                  member_arg->to_string(),
                                  cpp_util::get_qualified_type_name(type)),
@@ -5228,7 +5212,7 @@ namespace jank::analyze
                 }
                 else if(!Cpp::IsNonStaticVariable(member_scope))
                 {
-                  return error::analyze_invalid_cpp_type(
+                  return error::analyze_invalid_cpp_type_dsl(
                     util::format("A member variable was expected here, but '{}::{}' was found.",
                                  cpp_util::get_qualified_type_name(type),
                                  member_arg->to_string()),
@@ -5240,8 +5224,7 @@ namespace jank::analyze
               });
           }
 
-          /* TODO: Error for DSL. */
-          return error::analyze_invalid_cpp_type(
+          return error::analyze_invalid_cpp_type_dsl(
             util::format("Invalid C++ type modifier '{}'.", kw->to_code_string()),
             object_source(o),
             latest_expansion(macro_expansions));
@@ -5258,7 +5241,7 @@ namespace jank::analyze
           auto const type{ Cpp::GetType(sym->name) };
           if(type)
           {
-            return error::analyze_invalid_cpp_type(
+            return error::analyze_invalid_cpp_type_dsl(
               util::format("Unable to use '{}' as a template. If you just want the type, remove "
                            "the surrounding parens.",
                            cpp_util::get_qualified_type_name(type)),
@@ -5269,13 +5252,13 @@ namespace jank::analyze
           auto const scope{ cpp_util::resolve_scope(sym->name) };
           if(scope.is_err())
           {
-            return error::analyze_invalid_cpp_type(scope.expect_err(),
-                                                   object_source(first),
-                                                   latest_expansion(macro_expansions));
+            return error::analyze_invalid_cpp_type_dsl(scope.expect_err(),
+                                                       object_source(first),
+                                                       latest_expansion(macro_expansions));
           }
           else if(!Cpp::IsTemplate(scope.expect_ok()))
           {
-            return error::analyze_invalid_cpp_type(
+            return error::analyze_invalid_cpp_type_dsl(
               util::format("Unable to use '{}' as a template. If you just want the type, remove "
                            "the surrounding parens.",
                            cpp_util::get_qualified_name(scope.expect_ok())),
@@ -5306,7 +5289,7 @@ namespace jank::analyze
           auto const instantiated_scope{ cpp_util::instantiate(scope.expect_ok(), args) };
           if(instantiated_scope.is_err())
           {
-            return error::analyze_invalid_cpp_type(
+            return error::analyze_invalid_cpp_type_dsl(
               "Unable to instantiate this template with these arguments.",
               object_source(first),
               latest_expansion(macro_expansions));
@@ -5318,15 +5301,15 @@ namespace jank::analyze
         }
         else
         {
-          return error::analyze_invalid_cpp_type("Expected a type form here.",
-                                                 object_source(first),
-                                                 latest_expansion(macro_expansions));
+          return error::analyze_invalid_cpp_type_dsl("Expected a type form here.",
+                                                     object_source(first),
+                                                     latest_expansion(macro_expansions));
         }
       },
       [&]() -> jtl::result<jtl::ptr<void>, error_ref> {
-        return error::analyze_invalid_cpp_type("Invalid C++ type.",
-                                               object_source(o),
-                                               latest_expansion(macro_expansions));
+        return error::analyze_invalid_cpp_type_dsl("Invalid C++ type.",
+                                                   object_source(o),
+                                                   latest_expansion(macro_expansions));
       },
       o);
   }
