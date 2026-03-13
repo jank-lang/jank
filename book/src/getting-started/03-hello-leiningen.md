@@ -111,14 +111,15 @@ test which will fail.
 $ lein test
 ```
 
-If tests exist in directories other than `test/`, use `:test` profile to point
-Leiningen to them.
+If tests exist in directories other than `test/`, you can use the `:test`
+profile to point Leiningen to them. Leiningen will find all jank source files
+within those directories, recursively, and ensure their tests run.
 
 ```clojure
 (defproject hello_lein "0.1-SNAPSHOT"
   ;; ...
   :profiles {;; ...
-             :test {:test-paths ["tests"]}})
+             :test {:test-paths ["src/test" "other/test"]}})
 
 ```
 
