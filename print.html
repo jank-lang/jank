@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-3b16f305.js";
+            window.path_to_searchindex_js = "searchindex-12732bc7.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-10ff9841.js"></script>
+        <script src="toc-24331613.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -926,6 +926,10 @@ complete value using an inline C++ string. For example, here’s how we grab the
 <p>No implicit boxing will happen here, unless you use this value in a way which
 requires it. jank will give you a reference to the value you specified. If you
 need a copy, you will need to manually do that.</p>
+<ul>
+<li><code>(t a1 a2...)</code> build a template instantiation</li>
+<li><code>(:member t name)</code> nests into a type</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="working-with-native-types"><a class="header" href="#working-with-native-types">Working with native types</a></h1>
 <h2 id="accessing-c-types"><a class="header" href="#accessing-c-types">Accessing C++ types</a></h2>
@@ -933,20 +937,127 @@ need a copy, you will need to manually do that.</p>
 <code>.</code>. For example, <code>std::string</code> becomes <code>cpp/std.string</code>. This also works for
 type aliases.</p>
 <h2 id="complex-literal-types"><a class="header" href="#complex-literal-types">Complex literal types</a></h2>
-<p>If your C++ type is not representable using jank’s interop syntax, due to
-template arguments or other shenanigans, you can use <code>cpp/type</code> to provide the
-complete type using an inline C++ string. For example, here’s how we both grab
-the type and construct it (call the type), to get a value. In this example, we
-build a C++ ordered map from <code>std::string</code> to pointers to functions which take
-in an <code>int</code> and return an <code>int</code>.</p>
-<pre><code class="language-clojure">(let [m ((cpp/type "std::map&lt;std::string, int (*)(int)&gt;"))]
-  )
+<p>jank supports a C++ type
+domain-specific language (DSL) which can express any C++ type. This is available
+implicitly when in type position, but it can be explicitly requested by using
+the special <code>cpp/type</code> form. The <code>cpp/type</code> form resolves a type using the
+following DSL:</p>
+<ul>
+<li><code>(:* t)</code> adds a pointer</li>
+<li><code>(:&amp; t)</code> adds an lvalue reference</li>
+<li><code>(:&amp;&amp; t)</code> adds an rvalue reference</li>
+<li><code>(:const t)</code> and <code>(:volatile t)</code> add the corresponding C++ qualification</li>
+<li><code>(:signed t)</code> and <code>(:unsigned t)</code> add the corresponding C++ qualification</li>
+<li><code>(:long t)</code> and <code>(:short t)</code> add the corresponding C++ qualification</li>
+<li><code>(:array t s?)</code> turns a type into a sized (or unsized) array</li>
+<li><code>(:fn ret [a1 a2...])</code> builds a function type</li>
+<li><code>(t a1 a2...)</code> build a template instantiation</li>
+<li><code>(:member t name)</code> nests into a type</li>
+<li><code>(:member* t mt)</code> builds a pointer to member</li>
+</ul>
+<p>Let’s take a look at some examples, comparing the C++ representation and the
+jank representation.</p>
+<table>
+<tr>
+<td> C++ </td> <td> jank </td>
+</tr>
+
+<tr>
+<td>
+<p>A normal C++ map template instantiation.</p>
+<pre><code class="language-cpp">std::map&lt;std::string, int*&gt;
 </code></pre>
+</td>
+<td>
+<pre><code class="language-clojure">(std.map std.string (:* int))
+</code></pre>
+</td>
+</tr>
+
+<tr>
+<td>
+<p>A normal C++ array template instantiation.</p>
+<pre><code class="language-cpp">std::array&lt;char, 64&gt;::value_type
+</code></pre>
+</td>
+<td>
+<pre><code class="language-clojure">(:member (std.array char 64) value_type)
+</code></pre>
+</td>
+</tr>
+
+<tr>
+<td>
+<p>A sized C-style array.</p>
+<pre><code class="language-cpp">unsigned char[1024]
+</code></pre>
+</td>
+<td>
+<pre><code class="language-clojure">(:array (:unsigned char) 1024)
+</code></pre>
+</td>
+</tr>
+
+<tr>
+<td>
+<p>A reference to an unsized C-style array.</p>
+<pre><code class="language-cpp">unsigned char(&amp;)[]
+</code></pre>
+</td>
+<td>
+<pre><code class="language-clojure">(:&amp; (:array (:unsigned char)))
+</code></pre>
+</td>
+</tr>
+
+<tr>
+<td>
+<p>A pointer to a C++ function.</p>
+<pre><code class="language-cpp">int (*)(std::string const &amp;)
+</code></pre>
+</td>
+<td>
+<pre><code class="language-clojure">(:* (:fn int [(:&amp; (:const std.string))]))
+</code></pre>
+</td>
+</tr>
+
+<tr>
+<td>
+<p>A pointer to a C++ member function.</p>
+<pre><code class="language-cpp">int (Foo::*)(std::string const &amp;)
+</code></pre>
+</td>
+<td>
+<pre><code class="language-clojure">(:member* Foo (:fn int [(:&amp; (:const std.string))]))
+</code></pre>
+</td>
+</tr>
+
+<tr>
+<td>
+<p>A pointer to a C++ member which is itself a pointer to a function.</p>
+<pre><code class="language-cpp">void (*Foo::*)()
+</code></pre>
+</td>
+<td>
+<pre><code class="language-clojure">(:member* Foo (:* (:fn void [])))
+</code></pre>
+</td>
+</tr>
+
+</table>
+
 <h2 id="defining-new-types"><a class="header" href="#defining-new-types">Defining new types</a></h2>
 <p>There isn’t yet a way to define new types using jank’s syntax, but you can
 always drop to <code>cpp/raw</code> to either include headers or define some C++ types
 inline. Improved support for extending jank’s object model with JIT (just in
 time) compiled types will be coming in 2026.</p>
+<pre><code class="language-clojure">(cpp/raw "struct person
+          {
+            std::string name;
+          };")
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="working-with-native-functions"><a class="header" href="#working-with-native-functions">Working with native functions</a></h1>
 <h2 id="global-functions"><a class="header" href="#global-functions">Global functions</a></h2>
@@ -1313,6 +1424,7 @@ leaks, or other issues. In this chapter, we’ll learn the following:</p>
 <li>How to check the health of your jank install</li>
 <li>How to get a stack trace for a jank crash</li>
 <li>Where to ask for help and report issues</li>
+<li>Other frequently asked questions</li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="checking-janks-health"><a class="header" href="#checking-janks-health">Checking jank’s health</a></h1>
@@ -1400,6 +1512,10 @@ However, you can get newer versions from Homebrew as part of the <code>llvm</cod
 </blockquote>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="where-to-get-help"><a class="header" href="#where-to-get-help">Where to get help</a></h1>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Before reaching out with questions, check the <a href="#frequently-asked-questions-faq">FAQ</a>.</p>
+</blockquote>
 <p>The jank community, which is the Clojure community, is known to be welcoming.
 You are encouraged to reach out if you have any issues. Firstly, drop into
 <a href="https://clojurians.slack.com/archives/C03SRH97FDK">Slack</a>
@@ -1410,6 +1526,88 @@ please create a Discussion first, on <a href="https://github.com/jank-lang/jank/
 any issues with the smallest amount of code possible. Most of the time, a jank
 bug can be reproduced in fewer than 5 lines of code, but it can take some effort
 to get there.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="frequently-asked-questions-faq"><a class="header" href="#frequently-asked-questions-faq">Frequently asked questions (FAQ)</a></h1>
+<h2 id="is-jank-compatible-with-clojure"><a class="header" href="#is-jank-compatible-with-clojure">Is jank compatible with Clojure?</a></h2>
+<p>Yes! jank is a Clojure dialect. Furthermore, I am working directly with the Clojure
+core team and jank is sponsored both by Nubank and Clojurists Together. That’s
+leads us to the next question, though.</p>
+<h2 id="what-is-a-clojure-dialect"><a class="header" href="#what-is-a-clojure-dialect">What is a Clojure dialect?</a></h2>
+<p>Now this is the question. Let’s survey the landscape of Clojure dialects.</p>
+<ul>
+<li><a href="https://www.clojurescript.org/about/differences">ClojureScript</a>
+<ul>
+<li>Doesn’t have reified vars and <code>def</code> just create JS globals</li>
+<li>Doesn’t have refs or software transactional memory (STM)</li>
+<li>Doesn’t have a character type</li>
+<li>Doesn’t have a ratio, big decimal, or big integer type</li>
+<li>Runs macros in a different compilation stage (in Clojure JVM)</li>
+<li>Supports a custom <code>#js</code> reader tag</li>
+<li>And so on</li>
+</ul>
+</li>
+<li><a href="https://github.com/Tensegritics/ClojureDart/blob/main/doc/differences.md">Clojure Dart</a>
+<ul>
+<li>Lazily initializes <code>def</code>, to aid in tree shaking</li>
+<li>Doesn’t have multi-methods</li>
+<li>Extends <code>catch</code> syntax to support stack traces</li>
+<li>Runs macros in a different compilation stage (in Clojure JVM)</li>
+<li>Doesn’t have array maps</li>
+<li>Supports named parameters</li>
+<li>Supports a custom <code>#dart</code> reader tag</li>
+<li>And so on</li>
+</ul>
+</li>
+<li><a href="https://docs.basilisp.org/en/latest/differencesfromclojure.html">Basilisp</a>
+<ul>
+<li>All numbers are unlimited precision</li>
+<li>Doesn’t have refs or software transactional memory (STM)</li>
+<li>Doesn’t have a character type</li>
+<li>Supports a custom <code>#py</code> reader tag</li>
+<li>Python builtins are available under the special <code>python/</code> namespace</li>
+<li>And so on</li>
+</ul>
+</li>
+<li>jank
+<ul>
+<li>You can read the differences <a href="#differences-from-clojure">here</a></li>
+</ul>
+</li>
+</ul>
+<p>The same sorts of differences can be found for most Clojure dialects. A crucial reason
+that each Clojure dialect is different is that Clojure is designed to embrace
+its host runtime. By that I mean that Clojure JVM leans into the JVM.
+ClojureScript leans into JavaScript. Clojure Dart leans into the Dart world. In
+each of these, attributes and behaviors of the host runtime show transparently
+through the Clojure dialect. They’re not hidden. This, on the surface, makes
+Clojure dialects different, but actually it’s for this reason that they’re all
+more Clojure-like.</p>
+<p>So what’s common across all of these? That’s not currently defined by the
+Clojure core team. But the common space across all of these is where jank aims
+to meet. A good mantra for this is “If it works in Clojure JVM and
+ClojureScript, it should work in jank.”</p>
+<p>For more info on the differences between dialects and how they’re tracked, take
+a look at the <a href="https://github.com/jank-lang/clojure-test-suite">clojure test suite</a>,
+which is a jank-lead initiative to find unexpected discrepancies across
+dialects.</p>
+<h2 id="why-does-jank-have-its-own-file-type"><a class="header" href="#why-does-jank-have-its-own-file-type">Why does jank have its own file type?</a></h2>
+<p>That’s what all Clojure dialects do. If you want code which can run on multiple
+dialects, use a <code>.cljc</code> (Clojure Common) file with reader conditionals.</p>
+<ul>
+<li>Clojure JVM: <code>.clj</code></li>
+<li>ClojureScript: <code>.cljs</code></li>
+<li>Clojure CLR: <code>.cljr</code></li>
+<li>Clojure Dart: <code>.cljd</code></li>
+<li>Babashka: <code>.bb</code></li>
+<li>Basilisp: <code>.lpy</code></li>
+<li>jank: <code>.jank</code></li>
+</ul>
+<h2 id="how-is-janks-memory-managed"><a class="header" href="#how-is-janks-memory-managed">How is jank’s memory managed?</a></h2>
+<p>The Clojure side of jank is garbage collected, using the Boehm GC (BDWGC).
+However, any C++ interop uses normal C++ idioms, including RAII. For example, if
+you stack allocate a C++ value which has a destructor, jank will ensure that
+destructor runs at the end of the object’s scope. Also, you can use <code>cpp/new</code>
+and <code>cpp/delete</code> or <code>cpp/malloc</code> and <code>cpp/free</code>, if you so desire.</p>
 
                     </main>
 
