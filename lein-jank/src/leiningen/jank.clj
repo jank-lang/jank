@@ -6,7 +6,8 @@
             [clojure.string :as string]
             [leiningen.core.project :as p]
             [leiningen.core.classpath :as lcp]
-            [leiningen.core.main :as lmain])
+            [leiningen.core.main :as lmain]
+            [leiningen.jank.discovery :as d])
   (:import [java.io File]))
 
 (defonce verbose? (atom false))
@@ -114,6 +115,41 @@
   (let [cp-str (build-module-path project)]
     (shell-out! project cp-str "check-health" [] args)))
 
+(def test-runner-template
+  "
+(def namespaces (quote %s))
+
+(doseq [namespace namespaces]
+  (require namespace))
+
+(require 'clojure.test)
+
+(let [failures (->> namespaces
+                    (map clojure.test/run-tests)
+                    (map #(select-keys %% [:fail :error]))
+                    (map vals)
+                    (flatten)
+                    (apply +))]
+  (when (> failures 0)
+    (cpp/exit 1)))")
+
+(defn generate-test-runner! [namespaces]
+  (let [test-runner-file (b.f/create-temp-file {:prefix "jank_test_runner"
+                                                :suffix ".jank"})]
+    (spit (b.f/file test-runner-file)
+          (format test-runner-template (pr-str namespaces)))
+    test-runner-file))
+
+(defn test!
+  "Run tests in your jank project."
+  [project & args]
+  (let [test-project (p/merge-profiles project [:test])
+        test-paths (:test-paths test-project)
+        test-namespaces (d/jank-namespaces test-paths)
+        cp-str (build-module-path test-project)
+        test-runner-file (generate-test-runner! test-namespaces)]
+    (shell-out! test-project cp-str "run" [(str test-runner-file)] [])))
+
 (declare print-help!)
 
 (def subtask-kw->var {:run #'run!
@@ -121,16 +157,17 @@
                       :compile #'compile!
                       :compile-module #'compile-module!
                       :check-health #'check-health!
+                      :test #'test!
                       :help #'print-help!})
 
 (defn print-help!
   "Show this help message."
   [& _args]
   (pp/print-table
-    (map (fn [[sub fn-ref]]
-           {:sub-command (name sub)
-            :help (-> fn-ref meta :doc)})
-         subtask-kw->var)))
+   (map (fn [[sub fn-ref]]
+          {:sub-command (name sub)
+           :help (-> fn-ref meta :doc)})
+        subtask-kw->var)))
 
 (defn process-args [args]
   (loop [args args
@@ -146,7 +183,7 @@
         (recur (rest args) ret)))))
 
 (defn jank
-  "Compile, run and repl into jank."
+  "Compile, run, test and repl into jank."
   [project subcmd & args]
   (if-some [handler (subtask-kw->var (keyword subcmd))]
     (apply handler project (process-args args))
