@@ -1,5 +1,5 @@
-#include <Interpreter/Compatibility.h>
-#include <clang/Interpreter/CppInterOp.h>
+#include <CppInterOp/Compatibility.h>
+#include <CppInterOp/CppInterOp.h>
 
 #include <jank/codegen/processor.hpp>
 #include <jank/runtime/context.hpp>
@@ -875,6 +875,7 @@ namespace jank::codegen
 
       return build_arity_flags(variadic_arity->fn_ctx->param_count - 1, true, variadic_ambiguous);
     }
+    jank_assert(highest_fixed_arity != nullptr);
     return build_arity_flags(highest_fixed_arity->fn_ctx->param_count, false, false);
   }
 
@@ -2137,6 +2138,8 @@ namespace jank::codegen
       util::format_to(cpp_raw_buffer, "\n{}\n", expr->function_code);
     }
 
+    auto const source_type{ cpp_util::expression_type(expr->source_expr) };
+
     if(expr->source_expr->kind == expression_kind::cpp_value)
     {
       auto const source{ static_cast<expr::cpp_value *>(expr->source_expr.data) };
@@ -2193,6 +2196,116 @@ namespace jank::codegen
       }
 
       util::format_to(body_buffer, ")");
+
+      if(!is_void)
+      {
+        util::format_to(body_buffer, "};");
+      }
+      else
+      {
+        util::format_to(body_buffer, ";");
+      }
+
+      if(expr->position == expression_position::tail)
+      {
+        util::format_to(body_buffer, "return {};", ret_tmp);
+        return none;
+      }
+
+      return ret_tmp;
+    }
+    else if(Cpp::IsPointerToMemberVariableType(source_type))
+    {
+      auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_call")));
+      auto const source_tmp{ gen(expr->source_expr, arity).unwrap() };
+      auto const is_void{ Cpp::IsVoid(expr->type) };
+
+      if(is_void)
+      {
+        util::format_to(body_buffer, "jank::runtime::object_ref const {};", ret_tmp);
+      }
+      else
+      {
+        util::format_to(body_buffer, "auto &&{}{ ", ret_tmp);
+      }
+
+      auto const obj_type{ Cpp::GetNonReferenceType(
+        cpp_util::expression_type(expr->arg_exprs[0])) };
+      auto const obj_tmp{ gen(expr->arg_exprs[0], arity).unwrap() };
+      if(Cpp::IsPointerType(obj_type))
+      {
+        util::format_to(body_buffer, "{}->*{}", obj_tmp.str(true), source_tmp.str(true));
+      }
+      else
+      {
+        util::format_to(body_buffer, "{}.*{}", obj_tmp.str(true), source_tmp.str(true));
+      }
+
+      if(!is_void)
+      {
+        util::format_to(body_buffer, "};");
+      }
+      else
+      {
+        util::format_to(body_buffer, ";");
+      }
+
+      if(expr->position == expression_position::tail)
+      {
+        util::format_to(body_buffer, "return {};", ret_tmp);
+        return none;
+      }
+
+      return ret_tmp;
+    }
+    else if(Cpp::IsPointerToMemberFunctionType(source_type))
+    {
+      auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_call")));
+      auto const source_tmp{ gen(expr->source_expr, arity).unwrap() };
+
+      native_vector<handle> arg_tmps;
+      arg_tmps.reserve(expr->arg_exprs.size());
+      for(auto const &arg_expr : expr->arg_exprs)
+      {
+        arg_tmps.emplace_back(gen(arg_expr, arity).unwrap());
+      }
+
+      auto const is_void{ Cpp::IsVoid(expr->type) };
+
+      if(is_void)
+      {
+        util::format_to(body_buffer, "jank::runtime::object_ref const {};", ret_tmp);
+      }
+      else
+      {
+        util::format_to(body_buffer, "auto &&{}{ ", ret_tmp);
+      }
+
+      auto const obj_type{ Cpp::GetNonReferenceType(
+        cpp_util::expression_type(expr->arg_exprs[0])) };
+      auto const &obj_tmp{ arg_tmps[0] };
+      if(Cpp::IsPointerType(obj_type))
+      {
+        util::format_to(body_buffer, "({}->*{})(", obj_tmp.str(true), source_tmp.str(true));
+      }
+      else
+      {
+        util::format_to(body_buffer, "({}.*{})(", obj_tmp.str(true), source_tmp.str(true));
+      }
+
+      bool need_comma{};
+      for(auto it{ arg_tmps.begin() + 1 }; it != arg_tmps.end(); ++it)
+      {
+        if(need_comma)
+        {
+          util::format_to(body_buffer, ", ");
+        }
+        util::format_to(body_buffer, "{}", it->str(true));
+        need_comma = true;
+      }
+
+      util::format_to(body_buffer, ")");
+
 
       if(!is_void)
       {
@@ -2281,12 +2394,55 @@ namespace jank::codegen
       arg_tmps.emplace_back(gen(arg_expr, arity).unwrap());
     }
 
+    auto const non_ref_type{ Cpp::GetNonReferenceType(expr->type) };
+
     if(expr->arg_exprs.empty())
     {
-      util::format_to(body_buffer,
-                      "{} {}{ };",
-                      cpp_util::get_qualified_type_name(expr->type),
-                      ret_tmp);
+      if(Cpp::IsFunctionPointerType(expr->type))
+      {
+        util::format_to(
+          body_buffer,
+          "{} ",
+          cpp_util::get_qualified_type_name(Cpp::GetFunctionReturnTypeFromType(expr->type)));
+        util::format_to(body_buffer,
+                        "(* {} {} {})(",
+                        Cpp::IsConstType(expr->type) ? "const" : "",
+                        Cpp::HasTypeQualifier(expr->type, Cpp::Volatile) ? "volatile" : "",
+                        ret_tmp);
+        auto const param_count{ Cpp::GetFunctionNumArgsFromType(expr->type) };
+        for(usize i{}; i < param_count; ++i)
+        {
+          auto const param_type{ Cpp::GetFunctionArgTypeFromType(expr->type, i) };
+          util::format_to(body_buffer,
+                          "{} {}",
+                          (i != 0) ? ", " : "",
+                          cpp_util::get_qualified_type_name(param_type));
+        }
+        util::format_to(body_buffer, "){ };");
+      }
+      else if(Cpp::IsArrayType(non_ref_type)
+              || (Cpp::IsPointerType(non_ref_type)
+                  && Cpp::IsArrayType(Cpp::GetUnderlyingType(non_ref_type))))
+      {
+        auto const array_type{ Cpp::IsPointerType(non_ref_type)
+                                 ? Cpp::GetUnderlyingType(non_ref_type)
+                                 : non_ref_type };
+        util::format_to(
+          body_buffer,
+          "{} ({}{})[{}]{ };",
+          cpp_util::get_qualified_type_name(Cpp::GetArrayElementType(array_type)),
+          /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
+          (Cpp::IsPointerType(expr->type) ? "*" : (Cpp::IsReferenceType(expr->type) ? "&" : "")),
+          ret_tmp,
+          Cpp::IsSizedArrayType(array_type) ? std::to_string(Cpp::GetArraySize(array_type)) : "");
+      }
+      else
+      {
+        util::format_to(body_buffer,
+                        "{} {}{ };",
+                        cpp_util::get_qualified_type_name(expr->type),
+                        ret_tmp);
+      }
       return ret_tmp;
     }
 
@@ -2299,7 +2455,7 @@ namespace jank::codegen
         param_types.emplace_back(Cpp::GetFunctionArgType(expr->fn, i));
       }
     }
-    else if(cpp_util::is_primitive(expr->type))
+    else if(cpp_util::is_primitive(Cpp::GetNonReferenceType(expr->type)))
     {
       param_types.emplace_back(expr->type);
     }
@@ -2308,16 +2464,22 @@ namespace jank::codegen
       jank_debug_assert(expr->is_aggregate);
       auto const scope{ Cpp::GetScopeFromType(expr->type) };
       jank_debug_assert(scope);
-      std::vector<void *> member_scopes;
-      Cpp::GetDatamembers(scope, member_scopes);
-      for(auto const member_scope : member_scopes)
-      {
-        param_types.emplace_back(Cpp::GetTypeFromScope(member_scope));
-      }
+      auto const member_types{ cpp_util::aggregate_initialization_types(scope) };
+      std::ranges::copy(member_types, std::back_inserter(param_types));
     }
     jank_debug_assert(expr->arg_exprs.size() <= param_types.size());
 
-    util::format_to(body_buffer, "{} {} ", cpp_util::get_qualified_type_name(expr->type), ret_tmp);
+    if(Cpp::IsArrayType(Cpp::GetNonReferenceType(expr->type)))
+    {
+      util::format_to(body_buffer, "auto {} ", ret_tmp);
+    }
+    else
+    {
+      util::format_to(body_buffer,
+                      "{} {} ",
+                      cpp_util::get_qualified_type_name(expr->type),
+                      ret_tmp);
+    }
 
     /* For aggregate initialization, we want to use the uniform initialization syntax. However,
      * for any other initialization, we're expecting to call a ctor, so we use parens. This
@@ -2822,14 +2984,13 @@ namespace jank::codegen
 
       if(!all_captures.empty())
       {
-        util::format_to(
-          body_buffer,
-          "auto const * const {}{ "
-          "static_cast<struct {}*>(jank::runtime::expect_object<jank::runtime::obj::jit_"
-          "closure>({})->context) };",
-          closure_ctx,
-          closure_ctx,
-          runtime::munge(root_fn->name));
+        util::format_to(body_buffer,
+                        "auto const * const {}{ "
+                        "static_cast<struct {}*>(static_cast<jank::runtime::obj::jit_"
+                        "closure*>({}.data)->context) };",
+                        closure_ctx,
+                        closure_ctx,
+                        runtime::munge(root_fn->name));
 
         for(auto const &capture : all_captures)
         {

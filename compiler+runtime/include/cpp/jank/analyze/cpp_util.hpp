@@ -1,6 +1,6 @@
 #pragma once
 
-#include <clang/Interpreter/CppInterOp.h>
+#include <CppInterOp/CppInterOp.h>
 
 #include <jtl/ptr.hpp>
 #include <jtl/result.hpp>
@@ -18,9 +18,10 @@ namespace jank::analyze::cpp_util
   };
 
   jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> const scope);
+  jtl::string_result<jtl::ptr<void>>
+  instantiate(jtl::ptr<void> const scope, native_vector<Cpp::TemplateArgInfo> const &args);
 
-  jtl::ptr<void> apply_pointers(jtl::ptr<void> type, u8 ptr_count);
-  jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 ptr_count);
+  jtl::ptr<void> resolve_type(jtl::immutable_string const &sym);
   jtl::string_result<jtl::ptr<void>> resolve_scope(jtl::immutable_string const &sym);
   jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal);
   jtl::string_result<literal_value_result>
@@ -49,14 +50,18 @@ namespace jank::analyze::cpp_util
   bool is_typed_object(jtl::ptr<void> type);
   bool is_any_object(jtl::ptr<void> type);
   bool is_primitive(jtl::ptr<void> type);
+  bool is_constructible(jtl::ptr<void> to_type, jtl::ptr<void> from_type);
   bool is_member_function(jtl::ptr<void> scope);
   bool is_non_static_member_function(jtl::ptr<void> scope);
   bool is_nullptr(jtl::ptr<void> type);
   bool is_implicitly_convertible(jtl::ptr<void> from, jtl::ptr<void> to);
   bool is_pointer_to_void_conversion(jtl::ptr<void> from, jtl::ptr<void> to);
 
+  jtl::ptr<void> base_type(jtl::ptr<void> type);
+
   jtl::ptr<void> untyped_object_ptr_type();
   jtl::ptr<void> untyped_object_ref_type();
+  jtl::ptr<void> char_type();
 
   usize offset_to_typed_object_base(jtl::ptr<void> type);
 
@@ -64,6 +69,8 @@ namespace jank::analyze::cpp_util
   jtl::option<jtl::immutable_string> operator_name(Cpp::Operator const op);
 
   jtl::result<void, error_ref> ensure_convertible(expression_ref const expr);
+
+  native_vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> scope);
 
   enum class implicit_conversion_action : u8
   {

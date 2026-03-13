@@ -1,0 +1,3 @@
+(let* [i #cpp "meow"
+       _ ((cpp/type (:&& int)) (cpp/std.move i))]
+  :success)

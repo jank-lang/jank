@@ -1,7 +1,6 @@
 #include <filesystem>
 #include <fstream>
 
-#include <Interpreter/Compatibility.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Basic/DiagnosticIDs.h>
 #include <clang/Basic/DiagnosticOptions.h>
@@ -9,6 +8,8 @@
 #include <clang/Driver/Driver.h>
 #include <clang/Driver/ToolChain.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
+
+#include <CppInterOp/Compatibility.h>
 
 #include <llvm/TargetParser/Host.h>
 #include <llvm/Support/Program.h>
@@ -22,7 +23,7 @@
 #include <jank/aot/resource.hpp>
 #include <jank/error/system.hpp>
 
-namespace Cpp
+namespace CppImpl
 {
   std::string DetectResourceDir(char const *ClangBinaryName = "clang");
 }
@@ -149,7 +150,7 @@ namespace jank::util
       return JANK_CLANG_RESOURCE_DIR;
     }
 
-    auto resource_dir{ Cpp::DetectResourceDir(clang_path.unwrap().c_str()) };
+    auto resource_dir{ CppImpl::DetectResourceDir(clang_path.unwrap().c_str()) };
 
     if(resource_dir.empty())
     {

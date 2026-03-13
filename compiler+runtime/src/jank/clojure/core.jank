@@ -7032,7 +7032,7 @@ fails, attempts to require sym's namespace and retries."
 (defn slurp
   "Reads the file at the specified path into a string."
   [f]
-  (let [fname (cpp/cast (cpp/type "char const*") f)
+  (let [fname (cpp/cast (:* (:const char)) f)
         file (cpp/std.ifstream. fname)
         size (cpp/std.filesystem.file_size fname)]
     (if-not (cpp/.is_open file)
@@ -7048,8 +7048,8 @@ fails, attempts to require sym's namespace and retries."
   closes f. Options passed to clojure.java.io/writer."
   [f content & options]
   (let [file (cpp/std.ofstream.)]
-    (cpp/.open file (cpp/cast (cpp/type "char const*") f))
-    (cpp/<< file (cpp/cast (cpp/type "char const*") content))
+    (cpp/.open file (cpp/cast (:* (:const char)) f))
+    (cpp/<< file (cpp/cast (:* (:const char)) content))
     (cpp/.close file)
     nil))
 

@@ -1,7 +1,7 @@
 #include <list>
 
-#include <Interpreter/Compatibility.h>
-#include <clang/Interpreter/CppInterOp.h>
+#include <CppInterOp/Compatibility.h>
+#include <CppInterOp/CppInterOp.h>
 
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/ExecutionEngine/Orc/ThreadSafeModule.h>

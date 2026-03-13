@@ -1,0 +1,23 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::pass_shadowed_using
+          {
+            struct base
+            {
+              base(jtl::i64 i)
+                : data { i }
+              { }
+
+              int data{};
+            };
+            struct foo : base
+            {
+              using base::base;
+              foo(char const *s)
+                : base{ strlen(s) }
+              { }
+            };
+          }")
+(let* [f1 (cpp/jank.cpp.constructor.complex.pass_shadowed_using.foo. #cpp 7)
+       f2 (cpp/jank.cpp.constructor.complex.pass_shadowed_using.foo. #cpp "meow")]
+  (if (and (= 7 (.-data f1))
+           (= 4 (.-data f2)))
+    :success))

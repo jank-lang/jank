@@ -16,7 +16,6 @@ TODO:
   Reading error messages
   .jank, .cljc, .cpp files
     All modules need to intern the ns
-  nREPL support
   AOT compiling programs (and distributing them)
   Printing codegen
   Known issues
@@ -45,3 +44,4 @@ TODO:
   * [Checking jank's health](troubleshooting/health-check.md)
   * [How to get a stack trace](troubleshooting/stack-trace.md)
   * [Where to get help](troubleshooting/getting-help.md)
+  * [FAQ](troubleshooting/faq.md)

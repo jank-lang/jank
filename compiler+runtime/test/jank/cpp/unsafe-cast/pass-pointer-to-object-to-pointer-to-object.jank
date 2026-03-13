@@ -1,5 +1,5 @@
 (let* [s (cpp/std.string)
-       p (cpp/unsafe-cast cpp/int* (cpp/& s))
-       s* (cpp/unsafe-cast cpp/std.string* p)]
+       p (cpp/unsafe-cast (:* int) (cpp/& s))
+       s* (cpp/unsafe-cast (:* std.string) p)]
   (if (= s (cpp/* s*))
     :success))

@@ -1,0 +1,37 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::pass_aggregate_with_bases
+          {
+            struct base0
+            {
+                char const *s{};
+            };
+
+            struct base1 : base0
+            {
+                i64 a{};
+                i64 *p{};
+            };
+
+            struct base2
+            {
+                f64 f{};
+            };
+
+            struct foo : base1, base2
+            {
+                char const *name{};
+            };
+          }")
+(let* [a #cpp 5
+       f #cpp 3.14
+       foo (cpp/jank.cpp.constructor.complex.pass_aggregate_with_bases.foo.
+             #cpp "s"
+             a
+             (cpp/& a)
+             f
+             #cpp "name")]
+  (if (and (= "s" (.-s foo))
+           (= 5 (.-a foo))
+           (= 5 (cpp/* (.-p foo)))
+           (= 3.14 (.-f foo))
+           (= "name" (.-name foo)))
+    :success))

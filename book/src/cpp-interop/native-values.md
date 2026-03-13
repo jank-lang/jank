@@ -251,3 +251,6 @@ complete value using an inline C++ string. For example, here's how we grab the
 No implicit boxing will happen here, unless you use this value in a way which
 requires it. jank will give you a reference to the value you specified. If you
 need a copy, you will need to manually do that.
+
+* `(t a1 a2...)` build a template instantiation
+* `(:member t name)` nests into a type

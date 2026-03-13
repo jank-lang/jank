@@ -49,7 +49,9 @@ namespace jank::runtime
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr oref<T> expect_object(object_ref const o)
+  /* TODO: Making this constexpr slows down jank's startup by FIVE SECONDS. Don't
+   * make it constexpr until LLVM 23. */
+  oref<T> expect_object(object_ref const o)
   {
     if constexpr(T::obj_type != object_type::nil)
     {
