@@ -111,8 +111,8 @@ test which will fail.
 $ lein test
 ```
 
-If tests exist in directories other than `test/`, use `:test` profile to point leiningen
-to them.
+If tests exist in directories other than `test/`, use `:test` profile to point
+Leiningen to them.
 
 ```clojure
 (defproject hello_lein "0.1-SNAPSHOT"
