@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::literal_type::member::fail_protected_member
+          {
+            struct foo
+            {
+              protected:
+                using bar = int;
+            };
+          }")
+(let* [_ ((cpp/type (:member jank.cpp.literal_type.member.fail_protected_member.foo bar)))]
+  :success)

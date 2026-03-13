@@ -2393,6 +2393,8 @@ namespace jank::codegen
       arg_tmps.emplace_back(gen(arg_expr, arity).unwrap());
     }
 
+    auto const non_ref_type{ Cpp::GetNonReferenceType(expr->type) };
+
     if(expr->arg_exprs.empty())
     {
       if(Cpp::IsFunctionPointerType(expr->type))
@@ -2416,6 +2418,22 @@ namespace jank::codegen
                           cpp_util::get_qualified_type_name(param_type));
         }
         util::format_to(body_buffer, "){ };");
+      }
+      else if(Cpp::IsArrayType(non_ref_type)
+              || (Cpp::IsPointerType(non_ref_type)
+                  && Cpp::IsArrayType(Cpp::GetUnderlyingType(non_ref_type))))
+      {
+        auto const array_type{ Cpp::IsPointerType(non_ref_type)
+                                 ? Cpp::GetUnderlyingType(non_ref_type)
+                                 : non_ref_type };
+        util::format_to(
+          body_buffer,
+          "{} ({}{})[{}]{ };",
+          cpp_util::get_qualified_type_name(Cpp::GetArrayElementType(array_type)),
+          /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
+          (Cpp::IsPointerType(expr->type) ? "*" : (Cpp::IsReferenceType(expr->type) ? "&" : "")),
+          ret_tmp,
+          Cpp::IsSizedArrayType(array_type) ? std::to_string(Cpp::GetArraySize(array_type)) : "");
       }
       else
       {

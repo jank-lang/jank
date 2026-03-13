@@ -422,7 +422,8 @@ namespace jank::analyze::cpp_util
   {
     auto const from_no_ref{ Cpp::GetCanonicalType(Cpp::GetNonReferenceType(from)) };
     auto const to_no_ref{ Cpp::GetCanonicalType(Cpp::GetNonReferenceType(to)) };
-    if(from_no_ref == to_no_ref || from_no_ref == Cpp::GetTypeWithoutCv(to_no_ref))
+    if(from_no_ref == to_no_ref || from_no_ref == Cpp::GetTypeWithoutCv(to_no_ref)
+       || Cpp::IsTypeDerivedFrom(from_no_ref, to_no_ref))
     {
       return true;
     }

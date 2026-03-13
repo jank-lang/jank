@@ -1,0 +1,15 @@
+(cpp/raw "namespace jank::cpp::literal_type::member_ptr::pass_valid_base
+          {
+            struct base
+            {
+              i64 b{};
+            };
+            struct foo : base
+            {
+              i64 a{};
+            };
+          }")
+(let* [foo (cpp/jank.cpp.literal_type.member_ptr.pass_valid_base.foo #cpp 7 #cpp 10)
+       p (cpp/cast (cpp/type (:member* jank.cpp.literal_type.member_ptr.pass_valid_base.foo b)) (cpp/value "&jank::cpp::literal_type::member_ptr::pass_valid_base::foo::b"))]
+  (if (= 7 (p foo))
+    :success))

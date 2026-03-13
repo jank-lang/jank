@@ -1,0 +1,2 @@
+(let* [_ ((cpp/type (:signed (:unsigned int))))]
+  :success)

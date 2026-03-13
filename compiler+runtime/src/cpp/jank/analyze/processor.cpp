@@ -1007,11 +1007,6 @@ namespace jank::analyze
     if(Cpp::IsPointerToMemberType(source_type))
     {
       auto const parent_type{ Cpp::GetParentTypeFromPointerToMember(source_type) };
-      util::println("parent_type {}, {}",
-                    parent_type,
-                    cpp_util::get_qualified_type_name(parent_type));
-
-
       if(arg_exprs.empty())
       {
         return error::analyze_invalid_cpp_call(
@@ -1025,7 +1020,8 @@ namespace jank::analyze
       auto const arg_type{ cpp_util::expression_type(arg_exprs[0]) };
       auto const obj_type{ Cpp::GetCanonicalType(
         Cpp::GetTypeWithoutCv(cpp_util::base_type(arg_type))) };
-      if(Cpp::GetCanonicalType(parent_type) != obj_type)
+      if(Cpp::GetCanonicalType(parent_type) != obj_type
+         && !Cpp::IsTypeDerivedFrom(obj_type, parent_type))
       {
         return error::analyze_invalid_cpp_call(
                  util::format(
@@ -4714,7 +4710,6 @@ namespace jank::analyze
                           local_frame_ptr const current_frame,
                           jtl::option<expr::function_context_ref> const &fn_ctx)
   {
-    util::println("analyze_type {}", o->to_code_string());
     if(o->type == object_type::symbol)
     {
       auto const res{ analyze_cpp_symbol(expect_object<obj::symbol>(o),
@@ -5063,6 +5058,14 @@ namespace jank::analyze
                 auto const size_obj{ runtime::second(next(seq)) };
                 if(auto const size{ runtime::dyn_cast<obj::integer>(size_obj) }; size.is_some())
                 {
+                  if(size->data < 0)
+                  {
+                    /* TODO: Error for DSL. */
+                    return error::analyze_invalid_cpp_type(
+                      "Array sizes must be either zero or positive integers.",
+                      object_source(o),
+                      latest_expansion(macro_expansions));
+                  }
                   return Cpp::GetArrayType(type, size->data);
                 }
 
@@ -5094,6 +5097,14 @@ namespace jank::analyze
                       if(param_res.is_err())
                       {
                         return param_res;
+                      }
+                      if(Cpp::IsVoid(param_res.expect_ok()))
+                      {
+                        /* TODO: Error for DSL. */
+                        return error::analyze_invalid_cpp_type(
+                          "Function parameter types may not be void.",
+                          object_source(o),
+                          latest_expansion(macro_expansions));
                       }
 
                       param_types.emplace_back(param_res.expect_ok());
@@ -5163,6 +5174,15 @@ namespace jank::analyze
                     object_source(member_arg),
                     latest_expansion(macro_expansions));
                 }
+                else if(Cpp::IsPrivateVariable(member_scope)
+                        || Cpp::IsProtectedVariable(member_scope))
+                {
+                  return error::analyze_invalid_cpp_type(
+                    util::format("This member is declared {}, so it cannot be accessed.",
+                                 Cpp::IsPrivateVariable(member_scope) ? "private" : "protected"),
+                    object_source(member_arg),
+                    latest_expansion(macro_expansions));
+                }
                 return Cpp::GetTypeFromScope(member_scope);
               });
           }
@@ -5216,7 +5236,6 @@ namespace jank::analyze
                     latest_expansion(macro_expansions));
                 }
                 auto ret = Cpp::GetPointerToMemberType(member_scope);
-                util::println("type = {}", cpp_util::get_qualified_type_name(ret));
                 return ret;
               });
           }
@@ -5299,7 +5318,9 @@ namespace jank::analyze
         }
         else
         {
-          throw std::runtime_error{ "NYI" };
+          return error::analyze_invalid_cpp_type("Expected a type form here.",
+                                                 object_source(first),
+                                                 latest_expansion(macro_expansions));
         }
       },
       [&]() -> jtl::result<jtl::ptr<void>, error_ref> {
