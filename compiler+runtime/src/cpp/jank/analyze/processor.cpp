@@ -1048,7 +1048,6 @@ namespace jank::analyze
       }
 
       source_type = Cpp::GetFunctionTypeFromPointerToMember(source_type, arg_type);
-      util::println("pointer to member fn type {}", cpp_util::get_qualified_type_name(source_type));
     }
     else if(!Cpp::IsFunctionPointerType(source_type))
     {
@@ -4741,7 +4740,7 @@ namespace jank::analyze
       auto const count{ runtime::sequence_length(seq) };
       if(count != expected)
       {
-        return error::analyze_invalid_cpp_type(
+        return error::analyze_invalid_cpp_type_dsl(
           util::format("Invalid C++ type form. There were {} args expected, but {} were provided.",
                        expected,
                        count),
@@ -5095,7 +5094,6 @@ namespace jank::analyze
                     }
 
                     return Cpp::GetFunctionType(type, param_types);
-                    ;
                   },
                   [&] -> jtl::result<jtl::ptr<void>, error_ref> {
                     return error::analyze_invalid_cpp_type_dsl(
