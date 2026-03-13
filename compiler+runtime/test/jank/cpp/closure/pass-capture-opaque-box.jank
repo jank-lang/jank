@@ -1,4 +1,4 @@
 (let* [v* (cpp/box (cpp/& (cpp/int 55)))]
   ((fn* foo []
-     (if (= 55 (cpp/* (cpp/unbox cpp/int* v*)))
+     (if (= 55 (cpp/* (cpp/unbox (:* int) v*)))
        :success))))

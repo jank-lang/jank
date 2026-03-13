@@ -1,0 +1,3 @@
+(let* [a ((cpp/type (std.array char 10)))]
+  (if (= 10 (.size a))
+    :success))

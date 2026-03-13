@@ -1,0 +1,2 @@
+(let* [v ((cpp/type (std.variant char int float)))]
+  :success)

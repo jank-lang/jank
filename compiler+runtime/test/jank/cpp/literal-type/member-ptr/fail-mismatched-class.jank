@@ -1,0 +1,15 @@
+(cpp/raw "namespace jank::cpp::literal_type::member_ptr::fail_mismatched_class
+          {
+            struct foo
+            {
+              i64 a{};
+            };
+            struct bar
+            {
+              i64 a{};
+            };
+          }")
+(let* [foo (cpp/jank.cpp.literal_type.member_ptr.fail_mismatched_class.foo #cpp 7)
+       p (cpp/cast (cpp/type (:member* jank.cpp.literal_type.member_ptr.fail_mismatched_class.bar a)) (cpp/value "&jank::cpp::literal_type::member_ptr::fail_mismatched_class::bar::a"))]
+  (if (= 7 (p foo))
+    :success))

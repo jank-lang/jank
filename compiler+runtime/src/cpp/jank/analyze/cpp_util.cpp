@@ -1,8 +1,8 @@
 #include <algorithm>
 
-#include <clang/Interpreter/CppInterOp.h>
 #include <clang/Sema/Sema.h>
-#include <Interpreter/Compatibility.h>
+#include <CppInterOp/Compatibility.h>
+#include <CppInterOp/CppInterOp.h>
 
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
@@ -64,33 +64,29 @@ namespace jank::analyze::cpp_util
     return ok();
   }
 
-  jtl::ptr<void> apply_pointers(jtl::ptr<void> type, u8 ptr_count)
+  jtl::string_result<jtl::ptr<void>>
+  instantiate(jtl::ptr<void> const scope, native_vector<Cpp::TemplateArgInfo> const &args)
   {
-    while(ptr_count != 0)
+    clang::Sema::SFINAETrap const sfinae_trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(),
+                                               true };
+
+    auto const res{ Cpp::InstantiateTemplate(scope, args.data(), args.size()) };
+    if(sfinae_trap.hasErrorOccurred())
     {
-      type = Cpp::GetPointerType(type);
-      --ptr_count;
+      reset_sfinae_state();
+      return err("Unable to instantiate template.");
     }
-    return type;
+    return res;
   }
 
-  jtl::ptr<void> resolve_type(jtl::immutable_string const &sym, u8 const ptr_count)
+  jtl::ptr<void> resolve_type(jtl::immutable_string const &sym)
   {
-    /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception
-     * handling since they are distinct types. We use resolve_literal_type to get the
-     * exact type for "char". */
-    static auto const char_literal_type{ resolve_literal_type("char").expect_ok() };
-
     if(sym == "char")
     {
-      return apply_pointers(char_literal_type, ptr_count);
+      return char_type();
     }
 
     auto const type{ Cpp::GetType(sym) };
-    if(type)
-    {
-      return apply_pointers(type, ptr_count);
-    }
     return type;
   }
 
@@ -320,6 +316,10 @@ namespace jank::analyze::cpp_util
 
     /* TODO: We probably want a recursive approach to this, for types and scopes. */
     auto const qual_type{ clang::QualType::getFromOpaquePtr(type) };
+    if(qual_type.isNull())
+    {
+      return "<null>";
+    }
     if(qual_type->isNullPtrType())
     {
       return "std::nullptr_t";
@@ -392,6 +392,15 @@ namespace jank::analyze::cpp_util
     return ret;
   }
 
+  jtl::ptr<void> char_type()
+  {
+    /* Clang canonicalizes "char" to "signed char" on some platforms, which breaks exception
+     * handling since they are distinct types. We use resolve_literal_type to get the
+     * exact type for "char". */
+    static auto const char_literal_type{ resolve_literal_type("char").expect_ok() };
+    return char_literal_type;
+  }
+
   bool is_member_function(jtl::ptr<void> const scope)
   {
     return Cpp::IsMethod(scope) && !Cpp::IsConstructor(scope) && !Cpp::IsDestructor(scope);
@@ -413,7 +422,8 @@ namespace jank::analyze::cpp_util
   {
     auto const from_no_ref{ Cpp::GetCanonicalType(Cpp::GetNonReferenceType(from)) };
     auto const to_no_ref{ Cpp::GetCanonicalType(Cpp::GetNonReferenceType(to)) };
-    if(from_no_ref == to_no_ref || from_no_ref == Cpp::GetTypeWithoutCv(to_no_ref))
+    if(from_no_ref == to_no_ref || from_no_ref == Cpp::GetTypeWithoutCv(to_no_ref)
+       || Cpp::IsTypeDerivedFrom(from_no_ref, to_no_ref))
     {
       return true;
     }
@@ -432,6 +442,16 @@ namespace jank::analyze::cpp_util
     auto const can_type{ Cpp::GetCanonicalType(
       Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
     return can_type == untyped_object_ptr_type() || can_type == untyped_object_ref_type();
+  }
+
+  jtl::ptr<void> base_type(jtl::ptr<void> type)
+  {
+    type = Cpp::GetNonReferenceType(type);
+    while(Cpp::IsPointerType(type))
+    {
+      type = Cpp::GetPointeeType(type);
+    }
+    return type;
   }
 
   static jtl::ptr<void> oref_template()
@@ -464,6 +484,25 @@ namespace jank::analyze::cpp_util
   {
     return Cpp::IsBuiltin(type) || Cpp::IsPointerType(type) || Cpp::IsArrayType(type)
       || Cpp::IsEnumType(type);
+  }
+
+  /* The C++ is_constructible trait doesn't include reference construction from values
+   * of the same type, so we do that here. */
+  bool is_constructible(jtl::ptr<void> const to_type, jtl::ptr<void> const from_type)
+  {
+    auto const res{ Cpp::IsConstructible(to_type, from_type) };
+    if(res)
+    {
+      return res;
+    }
+
+    if(Cpp::IsReferenceType(to_type) && !Cpp::IsReferenceType(from_type))
+    {
+      return Cpp::GetCanonicalType(Cpp::GetNonReferenceType(to_type))
+        == Cpp::GetCanonicalType(from_type);
+    }
+
+    return false;
   }
 
   /* TODO: Just put a type member function in expression_base and read it from there. */
@@ -822,6 +861,34 @@ namespace jank::analyze::cpp_util
                      Cpp::GetTypeAsString(type)));
     }
     return ok();
+  }
+
+  void aggregate_initialization_types_impl(jtl::ptr<void> const scope,
+                                           native_vector<jtl::ptr<void>> &member_types)
+  {
+    auto const num_bases{ Cpp::GetNumBases(scope) };
+    for(usize i{}; i != num_bases; ++i)
+    {
+      auto const base{ Cpp::GetBaseClass(scope, i) };
+      aggregate_initialization_types_impl(base, member_types);
+    }
+
+    std::vector<void *> members;
+    Cpp::GetDatamembers(scope, members);
+    for(auto const member : members)
+    {
+      auto const member_type{ Cpp::GetTypeFromScope(member) };
+      member_types.emplace_back(member_type);
+    }
+  }
+
+  /* When we're aggregate initializing a type, we need to recursively know all of its base types,
+   * and their base types, to build the correct order of members and their types. */
+  native_vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> const scope)
+  {
+    native_vector<jtl::ptr<void>> member_types;
+    aggregate_initialization_types_impl(scope, member_types);
+    return member_types;
   }
 
   /* By the time we get here, we know that the types are compatible in *some* fashion. This

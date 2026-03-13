@@ -3,10 +3,10 @@
             struct foo
             {
               std::string name;
-              u8 age{};
+              char const *meow{};
             };
           }")
-(let* [f (cpp/jank.cpp.constructor.complex.pass_aggregate_multiple_conversions.foo. #cpp "meow" #cpp 66)]
-  (if (and (= "meow" (cpp/.-name f))
-           (= 66 (cpp/.-age f)))
+(let* [f (cpp/jank.cpp.constructor.complex.pass_aggregate_multiple_conversions.foo. #cpp "name" #cpp "meow")]
+  (if (and (= "name" (cpp/.-name f))
+           (= "meow" (cpp/.-meow f)))
     :success))

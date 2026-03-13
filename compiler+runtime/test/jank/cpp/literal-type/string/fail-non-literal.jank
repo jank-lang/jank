@@ -1,3 +1,0 @@
-(let* [s "int"
-       _ (cpp/type s)]
-  :success)

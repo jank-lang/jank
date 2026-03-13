@@ -2,8 +2,6 @@
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
-#include <Interpreter/Compatibility.h>
-#include <clang/Interpreter/CppInterOp.h>
 #include <llvm/ExecutionEngine/Orc/Core.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/Signals.h>
@@ -13,6 +11,9 @@
 #include <llvm/ExecutionEngine/Orc/TargetProcess/JITLoaderPerf.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/IRReader/IRReader.h>
+
+#include <CppInterOp/Compatibility.h>
+#include <CppInterOp/CppInterOp.h>
 
 #include <cpptrace/gdb_jit.hpp>
 
@@ -195,7 +196,7 @@ namespace jank::jit
 
     //util::println("jit flags {}", args);
 
-    interpreter.reset(static_cast<Cpp::Interpreter *>(
+    interpreter.reset(static_cast<CppInternal::Interpreter *>(
       Cpp::CreateInterpreter(args, {}, vfs, static_cast<int>(llvm::CodeModel::Large))));
 
     /* Enabling perf support requires registering a couple of plugins with LLVM. These

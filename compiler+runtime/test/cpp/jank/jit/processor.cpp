@@ -2,7 +2,8 @@
 
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
-#include <Interpreter/Compatibility.h>
+
+#include <CppInterOp/Compatibility.h>
 
 #include <jtl/format/style.hpp>
 
