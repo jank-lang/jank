@@ -3879,43 +3879,52 @@ namespace jank::analyze
   {
     /* TODO: Check for form count. */
     auto const arg{ l->next()->first() };
+    jtl::option<jtl::string_result<cpp_util::literal_value_result>> literal_res;
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
     switch(arg->type)
 #pragma clang diagnostic pop
     {
       case object_type::integer:
+        literal_res = cpp_util::resolve_literal_value(
+          util::format("static_cast<jtl::i64>({})",
+                       expect_object<runtime::obj::integer>(arg)->data));
+        break;
       case object_type::real:
+        literal_res = cpp_util::resolve_literal_value(
+          util::format("static_cast<jtl::f64>({})", expect_object<runtime::obj::real>(arg)->data));
+        break;
       case object_type::boolean:
+        literal_res = cpp_util::resolve_literal_value(
+          util::format("{}", expect_object<runtime::obj::boolean>(arg)->data));
+        break;
       case object_type::persistent_string:
-        {
-          auto str{ expect_object<runtime::obj::persistent_string>(arg)->data };
-          auto const literal_value{ cpp_util::resolve_literal_value(str) };
-          if(literal_value.is_ok())
-          {
-            auto const &result{ literal_value.expect_ok() };
-            auto const source{ jtl::make_ref<expr::cpp_value>(
-              position,
-              current_frame,
-              false,
-              /* TODO: Is symbol needed? */
-              try_object<obj::symbol>(l->first()),
-              Cpp::GetTypeFromScope(result.fn_scope),
-              result.fn_scope,
-              expr::cpp_value::value_kind::function) };
-            auto const res{
-              build_cpp_call(source, {}, {}, {}, current_frame, position, false, macro_expansions)
-            };
-            if(res.is_ok())
-            {
-              llvm::cast<expr::cpp_call>(res.expect_ok().data)->function_code
-                = result.function_code;
-            }
-            return res;
-          }
-        }
+        literal_res = cpp_util::resolve_literal_value(
+          expect_object<runtime::obj::persistent_string>(arg)->data);
+        break;
       default:
         break;
+    }
+
+    if(literal_res.is_some() && literal_res.unwrap().is_ok())
+    {
+      auto const &result{ literal_res.unwrap().expect_ok() };
+      auto const source{ jtl::make_ref<expr::cpp_value>(position,
+                                                        current_frame,
+                                                        false,
+                                                        /* TODO: Is symbol needed? */
+                                                        try_object<obj::symbol>(l->first()),
+                                                        Cpp::GetTypeFromScope(result.fn_scope),
+                                                        result.fn_scope,
+                                                        expr::cpp_value::value_kind::function) };
+      auto const res{
+        build_cpp_call(source, {}, {}, {}, current_frame, position, false, macro_expansions)
+      };
+      if(res.is_ok())
+      {
+        llvm::cast<expr::cpp_call>(res.expect_ok().data)->function_code = result.function_code;
+      }
+      return res;
     }
 
     auto const res{
