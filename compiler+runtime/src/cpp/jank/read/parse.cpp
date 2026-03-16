@@ -968,13 +968,13 @@ namespace jank::read::parse
       case lex::token_kind::integer:
         {
           auto const integer{ expect_object<obj::integer>(form) };
-          str = util::format("static_cast<jank::i64>({})", integer->data);
+          str = util::format("{}", integer->data);
           break;
         }
       case lex::token_kind::real:
         {
           auto const real{ expect_object<obj::real>(form) };
-          str = util::format("static_cast<jank::f64>({})", real->data);
+          str = util::format("{}", real->data);
           break;
         }
       default:
