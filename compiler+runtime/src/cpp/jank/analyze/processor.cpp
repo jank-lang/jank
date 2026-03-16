@@ -5069,15 +5069,6 @@ namespace jank::analyze
 
             auto const is_type{ Cpp::IsClass(member_scope) || Cpp::IsEnumScope(member_scope)
                                 || Cpp::IsTypedefed(member_scope) || cpp_util::is_primitive(type) };
-            //else if()
-            //{
-            //  return error::analyze_invalid_cpp_type_dsl(
-            //    util::format("A type was expected here, but '{}::{}' was found.",
-            //                 cpp_util::get_qualified_type_name(type),
-            //                 member_arg->to_string()),
-            //    object_source(member_arg),
-            //    latest_expansion(macro_expansions));
-            //}
             if(Cpp::IsPrivateVariable(member_scope) || Cpp::IsProtectedVariable(member_scope))
             {
               return error::analyze_invalid_cpp_type_dsl(
@@ -5152,56 +5143,89 @@ namespace jank::analyze
           }
           else if(kw == member_ptr)
           {
-            return transform_type(
-              seq,
-              [&](runtime::object_ref const seq,
-                  native_vector<runtime::object_ref> const &macro_expansions)
-                -> jtl::result<void, error_ref> { return require_args(seq, 2, macro_expansions); },
-              [&](jtl::ptr<void> const) -> jtl::result<void, error_ref> { return ok(); },
-              [&](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
-                auto const member_arg{ runtime::second(runtime::next(seq)) };
-                if(member_arg->type != object_type::symbol)
-                {
-                  return error::analyze_invalid_cpp_type_dsl("Member names need to be symbols.",
-                                                             object_source(member_arg),
-                                                             latest_expansion(macro_expansions));
-                }
+            if(auto const err{ require_args(runtime::next(seq), 2, macro_expansions) };
+               err.is_err())
+            {
+              return err.expect_err();
+            }
 
-                auto const parent_scope{ Cpp::GetScopeFromType(type) };
-                if(!parent_scope)
-                {
-                  return error::analyze_invalid_cpp_type_dsl(
-                    util::format("There is no '{}' member within '{}'.",
-                                 member_arg->to_string(),
-                                 cpp_util::get_qualified_type_name(type)),
-                    object_source(member_arg),
-                    latest_expansion(macro_expansions));
-                }
+            auto const member_arg{ runtime::second(runtime::next(seq)) };
+            if(member_arg->type != object_type::symbol)
+            {
+              return error::analyze_invalid_cpp_type_dsl("Member names need to be symbols.",
+                                                         object_source(member_arg),
+                                                         latest_expansion(macro_expansions));
+            }
 
-                auto const member_name{ runtime::expect_object<obj::symbol>(member_arg) };
-                auto const member_scope{ Cpp::GetUnderlyingScope(
-                  Cpp::GetNamed(member_name->name.c_str(), parent_scope)) };
-                if(!member_scope)
-                {
-                  return error::analyze_invalid_cpp_type_dsl(
-                    util::format("There is no '{}' member within '{}'.",
-                                 member_arg->to_string(),
-                                 cpp_util::get_qualified_type_name(type)),
-                    object_source(member_arg),
-                    latest_expansion(macro_expansions));
-                }
-                else if(!Cpp::IsNonStaticVariable(member_scope))
-                {
-                  return error::analyze_invalid_cpp_type_dsl(
-                    util::format("A member variable was expected here, but '{}::{}' was found.",
-                                 cpp_util::get_qualified_type_name(type),
-                                 member_arg->to_string()),
-                    object_source(member_arg),
-                    latest_expansion(macro_expansions));
-                }
-                auto ret = Cpp::GetPointerToMemberType(member_scope);
-                return ret;
-              });
+            auto const type_res{ analyze_type(runtime::second(seq), current_frame, fn_ctx) };
+            if(type_res.is_err())
+            {
+              return type_res.expect_err();
+            }
+
+            auto const type{ type_res.expect_ok() };
+
+            auto const parent_scope{ Cpp::GetScopeFromType(type) };
+            if(!parent_scope)
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                util::format("There is no '{}' member within '{}'.",
+                             member_arg->to_string(),
+                             cpp_util::get_qualified_type_name(type)),
+                object_source(member_arg),
+                latest_expansion(macro_expansions));
+            }
+
+            auto const member_name{ runtime::expect_object<obj::symbol>(member_arg) };
+            auto const member_scope{ Cpp::GetUnderlyingScope(
+              Cpp::GetNamed(member_name->name.c_str(), parent_scope)) };
+            if(!member_scope)
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                util::format("There is no '{}' member within '{}'.",
+                             member_arg->to_string(),
+                             cpp_util::get_qualified_type_name(type)),
+                object_source(member_arg),
+                latest_expansion(macro_expansions));
+            }
+            else if(!Cpp::IsNonStaticVariable(member_scope) && !Cpp::IsMethod(member_scope))
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                util::format(
+                  "A member variable or function was expected here, but '{}::{}' was found.",
+                  cpp_util::get_qualified_type_name(type),
+                  member_arg->to_string()),
+                object_source(member_arg),
+                latest_expansion(macro_expansions));
+            }
+            if(Cpp::IsStaticMethod(member_scope))
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                util::format("A non-static member was expected here, but '{}::{}' is static.",
+                             cpp_util::get_qualified_type_name(type),
+                             member_arg->to_string()),
+                object_source(member_arg),
+                latest_expansion(macro_expansions));
+            }
+
+            if(position == expression_position::type)
+            {
+              return jtl::make_ref<expr::cpp_type>(
+                expression_position::type,
+                current_frame,
+                false,
+                try_object<obj::symbol>(runtime::second(runtime::next(seq))),
+                Cpp::GetPointerToMemberType(member_scope));
+            }
+
+            return jtl::make_ref<expr::cpp_value>(
+              position,
+              current_frame,
+              false,
+              try_object<obj::symbol>(runtime::second(runtime::next(seq))),
+              Cpp::GetPointerToMemberType(member_scope),
+              member_scope,
+              expr::cpp_value::value_kind::function);
           }
 
           return error::analyze_invalid_cpp_type_dsl(

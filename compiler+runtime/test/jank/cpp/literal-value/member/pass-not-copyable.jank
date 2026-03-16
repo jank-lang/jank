@@ -1,0 +1,22 @@
+(cpp/raw "namespace jank::cpp::literal_value::member::pass_not_copyable
+          {
+            struct stubborn
+            {
+              stubborn() = delete;
+              stubborn(stubborn const&) = delete;
+              stubborn(stubborn &&) noexcept = delete;
+              stubborn(std::string const &name)
+                : name{ name }
+              { }
+
+              std::string name;
+            };
+            struct foo
+            {
+              static stubborn bar;
+            };
+            stubborn foo::bar{ \"meow\" };
+          }")
+(let* [s (cpp/value (:member jank.cpp.literal_value.member.pass_not_copyable.foo bar))]
+  (if (= (.-name s) "meow")
+    :success))
