@@ -1,0 +1,25 @@
+From 9498118b65fa150f074efb52b4507b53434a90ad Mon Sep 17 00:00:00 2001
+From: Mateusz Mikula <mati865@gmail.com>
+Date: Thu, 2 Feb 2017 12:33:51 +0100
+Subject: [PATCH 4/6] link pthread with mingw
+
+---
+ lib/Driver/ToolChains/MinGW.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/Driver/ToolChains/MinGW.cpp b/lib/Driver/ToolChains/MinGW.cpp
+index 632b76d92b..23da2d6376 100644
+--- a/lib/Driver/ToolChains/MinGW.cpp
++++ b/lib/Driver/ToolChains/MinGW.cpp
+@@ -265,7 +265,7 @@
+       if (Args.hasArg(options::OPT_pg))
+         CmdArgs.push_back("-lgmon");
+ 
+-      if (Args.hasArg(options::OPT_pthread))
++      if (!Args.hasArg(options::OPT_no_pthread))
+         CmdArgs.push_back("-lpthread");
+ 
+       if (Sanitize.needsAsanRt()) {
+-- 
+2.14.1
+
