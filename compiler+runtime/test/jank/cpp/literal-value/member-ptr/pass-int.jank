@@ -7,5 +7,5 @@
           }")
 (let* [p (cpp/value (:member* jank.cpp.literal_value.member_ptr.pass_normal.foo a))
        f (cpp/jank.cpp.literal_value.member_ptr.pass_normal.foo #cpp 77)]
-  (println (if (= (p f) 77)
-    :success)))
+  (if (= (p f) 77)
+    :success))

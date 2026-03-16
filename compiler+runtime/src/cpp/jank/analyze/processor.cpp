@@ -26,6 +26,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
 #include <jank/util/string.hpp>
+#include <jank/util/escape.hpp>
 #include <jank/error/analyze.hpp>
 #include <jank/analyze/expr/def.hpp>
 #include <jank/analyze/expr/var_deref.hpp>
@@ -3856,7 +3857,15 @@ namespace jank::analyze
                               jtl::option<expr::function_context_ref> const &fn_ctx,
                               bool const needs_box)
   {
-    /* TODO: Check for form count. */
+    if(l->count() != 2)
+    {
+      return error::analyze_invalid_cpp_type(
+        util::format("Exactly 1 argument is expected for 'cpp/type', but {} were provided.",
+                     l->count() - 1),
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+
     auto const type_res{ analyze_type(l, current_frame, fn_ctx) };
     if(type_res.is_err())
     {
@@ -3877,7 +3886,16 @@ namespace jank::analyze
                                jtl::option<expr::function_context_ref> const &fn_ctx,
                                bool const)
   {
-    /* TODO: Check for form count. */
+    util::println("analyze_cpp_value {}", l->to_code_string());
+    if(l->count() != 2)
+    {
+      return error::analyze_invalid_cpp_type(
+        util::format("Exactly 1 argument is expected for 'cpp/value', but {} were provided.",
+                     l->count() - 1),
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+
     auto const arg{ l->next()->first() };
     jtl::option<jtl::string_result<cpp_util::literal_value_result>> literal_res;
 #pragma clang diagnostic push
@@ -3900,7 +3918,8 @@ namespace jank::analyze
         break;
       case object_type::persistent_string:
         literal_res = cpp_util::resolve_literal_value(
-          expect_object<runtime::obj::persistent_string>(arg)->data);
+          util::format("\"{}\"",
+                       util::escape(expect_object<runtime::obj::persistent_string>(arg)->data)));
         break;
       default:
         break;

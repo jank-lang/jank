@@ -7,6 +7,6 @@
             };
           }")
 (let* [p (cpp/value (:member* jank.cpp.literal_value.member_ptr.pass_function.foo get_42))
-       f (cpp/jank.cpp.literal_value.member_ptr.pass_normal.foo)]
+       f (cpp/jank.cpp.literal_value.member_ptr.pass_function.foo)]
   (if (= (p f) 42)
     :success))

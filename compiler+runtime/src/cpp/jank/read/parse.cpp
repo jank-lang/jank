@@ -952,11 +952,6 @@ namespace jank::read::parse
     {
       case lex::token_kind::string:
       case lex::token_kind::escaped_string:
-        {
-          auto const string{ expect_object<obj::persistent_string>(form) };
-          form = make_box(util::format("\"{}\"", util::escape(string->data)));
-          break;
-        }
       case lex::token_kind::boolean:
       case lex::token_kind::integer:
       case lex::token_kind::real:
