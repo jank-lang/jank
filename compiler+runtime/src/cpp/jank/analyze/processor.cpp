@@ -26,6 +26,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
 #include <jank/util/string.hpp>
+#include <jank/util/escape.hpp>
 #include <jank/error/analyze.hpp>
 #include <jank/analyze/expr/def.hpp>
 #include <jank/analyze/expr/var_deref.hpp>
@@ -3524,7 +3525,7 @@ namespace jank::analyze
   processor::analyze_cpp_symbol(obj::symbol_ref const sym,
                                 local_frame_ptr const current_frame,
                                 expression_position const position,
-                                jtl::option<expr::function_context_ref> const &fn_ctx,
+                                jtl::option<expr::function_context_ref> const &,
                                 bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, sym) };
@@ -3675,19 +3676,25 @@ namespace jank::analyze
       diag.setClient(new clang::IgnoringDiagConsumer{}, true);
       util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
 
-      /* So just wrap our cpp/foo into a (cpp/value "foo") and analyze that. */
-      runtime::detail::native_persistent_list const cpp_value_form{
-        with_source_meta(make_box<obj::symbol>("cpp", "value"), object_source(sym)),
-        make_box(name)
-      };
-      auto const literal_res{ analyze_cpp_value(make_box<obj::persistent_list>(cpp_value_form),
-                                                current_frame,
-                                                position,
-                                                fn_ctx,
-                                                needs_box) };
-      if(literal_res.is_ok())
+      auto const literal_value{ cpp_util::resolve_literal_value(name) };
+      if(literal_value.is_ok())
       {
-        return literal_res;
+        auto const &result{ literal_value.expect_ok() };
+        auto const source{ jtl::make_ref<expr::cpp_value>(position,
+                                                          current_frame,
+                                                          needs_box,
+                                                          sym,
+                                                          Cpp::GetTypeFromScope(result.fn_scope),
+                                                          result.fn_scope,
+                                                          expr::cpp_value::value_kind::function) };
+        auto const res{
+          build_cpp_call(source, {}, {}, {}, current_frame, position, needs_box, macro_expansions)
+        };
+        if(res.is_ok())
+        {
+          llvm::cast<expr::cpp_call>(res.expect_ok().data)->function_code = result.function_code;
+        }
+        return res;
       }
 
       return error::analyze_unresolved_cpp_symbol(scope_res.expect_err(),
@@ -3843,206 +3850,33 @@ namespace jank::analyze
     return jtl::make_ref<expr::cpp_raw>(position, current_frame, needs_box, guarded_code);
   }
 
-  enum class literal_kind : u8
-  {
-    type,
-    value
-  };
-
-  processor::expression_result
-  processor::analyze_cpp_literal(obj::persistent_list_ref const l,
-                                 local_frame_ptr const current_frame,
-                                 expression_position const position,
-                                 jtl::option<expr::function_context_ref> const &fn_ctx,
-                                 bool const needs_box,
-                                 literal_kind const kind)
-  {
-    if(kind == literal_kind::type)
-    {
-      auto const type_res{ analyze_type(l, current_frame, fn_ctx) };
-      if(type_res.is_err())
-      {
-        return type_res.expect_err();
-      }
-
-      return jtl::make_ref<expr::cpp_type>(position,
-                                           current_frame,
-                                           needs_box,
-                                           try_object<obj::symbol>(l->first()),
-                                           type_res.expect_ok());
-    }
-
-    auto const count(l->count());
-    if(count < 2)
-    {
-      if(kind == literal_kind::type)
-      {
-        return error::analyze_invalid_cpp_type(
-                 "This call to 'cpp/type' is missing the string literal containing a C++ type.",
-                 object_source(l->first()),
-                 latest_expansion(macro_expansions))
-          ->add_usage(read::parse::reparse_nth(l, 0));
-      }
-      return error::analyze_invalid_cpp_value("This call to 'cpp/value' is missing the string "
-                                              "literal containing a C++ value expression.",
-                                              object_source(l->first()),
-                                              latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 0));
-    }
-    else if(2 < count)
-    {
-      if(kind == literal_kind::type)
-      {
-        return error::analyze_invalid_cpp_type("A call to 'cpp/type' must take a string literal "
-                                               "containing a C++ type and nothing else.",
-                                               object_source(l->next()->next()->first()),
-                                               latest_expansion(macro_expansions))
-          ->add_usage(read::parse::reparse_nth(l, 2));
-      }
-      return error::analyze_invalid_cpp_value("A call to 'cpp/value' must take a string literal "
-                                              "containing a C++ value expression and nothing else.",
-                                              object_source(l->next()->next()->first()),
-                                              latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 2));
-    }
-
-    auto const string_obj(l->data.rest().first().unwrap());
-    auto const string_expr_res(
-      analyze(string_obj, current_frame, expression_position::value, fn_ctx, false));
-    if(string_expr_res.is_err())
-    {
-      return string_expr_res.expect_err();
-    }
-    auto const string_expr{ string_expr_res.expect_ok() };
-
-    if(string_expr->kind != expression_kind::primitive_literal)
-    {
-      if(kind == literal_kind::type)
-      {
-        return error::analyze_invalid_cpp_type("The first and only argument to 'cpp/type' must be "
-                                               "a string containing a C++ type.",
-                                               object_source(string_obj),
-                                               latest_expansion(macro_expansions))
-          ->add_usage(read::parse::reparse_nth(l, 1));
-      }
-      return error::analyze_invalid_cpp_value(
-               "The first and only argument to 'cpp/value' must be a string containing a C++ type.",
-               object_source(string_obj),
-               latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 1));
-    }
-    auto const obj{ llvm::cast<expr::primitive_literal>(string_expr.data)->data };
-    if(obj->type != runtime::object_type::persistent_string)
-    {
-      if(kind == literal_kind::type)
-      {
-        return error::analyze_invalid_cpp_type("The first and only argument to 'cpp/type' must be "
-                                               "a string containing a C++ type.",
-                                               object_source(string_obj),
-                                               latest_expansion(macro_expansions))
-          ->add_usage(read::parse::reparse_nth(l, 1));
-      }
-      return error::analyze_invalid_cpp_value(
-               "The first and only argument to 'cpp/value' must be a string containing a C++ type.",
-               object_source(string_obj),
-               latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 1));
-    }
-
-    auto str{ expect_object<runtime::obj::persistent_string>(obj)->data };
-    str = util::trim(str);
-    if(str.empty())
-    {
-      if(kind == literal_kind::type)
-      {
-        return error::analyze_invalid_cpp_type("The string argument to 'cpp/type' must contain "
-                                               "a valid C++ type.",
-                                               object_source(string_obj),
-                                               latest_expansion(macro_expansions))
-          ->add_usage(read::parse::reparse_nth(l, 1));
-      }
-      return error::analyze_invalid_cpp_value("The string argument to 'cpp/value' must contain "
-                                              "a valid C++ expression.",
-                                              object_source(string_obj),
-                                              latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 1));
-    }
-
-    if(kind == literal_kind::type)
-    {
-      if(position != expression_position::type && position != expression_position::call)
-      {
-        return error::analyze_invalid_cpp_type_position(object_source(l->first()),
-                                                        latest_expansion(macro_expansions))
-          ->add_usage(read::parse::reparse_nth(l, 0));
-      }
-
-      auto type{ cpp_util::resolve_type(str) };
-      if(type)
-      {
-        return jtl::make_ref<expr::cpp_type>(position,
-                                             current_frame,
-                                             needs_box,
-                                             try_object<obj::symbol>(l->first()),
-                                             type);
-      }
-
-      auto const literal_type{ cpp_util::resolve_literal_type(str) };
-      if(literal_type.is_err())
-      {
-        return error::analyze_invalid_cpp_type(literal_type.expect_err(),
-                                               object_source(string_obj),
-                                               latest_expansion(macro_expansions))
-          ->add_usage(read::parse::reparse_nth(l, 1));
-      }
-
-      type = literal_type.expect_ok();
-
-      return jtl::make_ref<expr::cpp_type>(position,
-                                           current_frame,
-                                           needs_box,
-                                           try_object<obj::symbol>(l->first()),
-                                           type);
-    }
-    else
-    {
-      auto const literal_value{ cpp_util::resolve_literal_value(str) };
-      if(literal_value.is_ok())
-      {
-        auto const &result{ literal_value.expect_ok() };
-        auto const source{ jtl::make_ref<expr::cpp_value>(position,
-                                                          current_frame,
-                                                          needs_box,
-                                                          /* TODO: Is symbol needed? */
-                                                          try_object<obj::symbol>(l->first()),
-                                                          Cpp::GetTypeFromScope(result.fn_scope),
-                                                          result.fn_scope,
-                                                          expr::cpp_value::value_kind::function) };
-        auto const res{
-          build_cpp_call(source, {}, {}, {}, current_frame, position, needs_box, macro_expansions)
-        };
-        if(res.is_ok())
-        {
-          llvm::cast<expr::cpp_call>(res.expect_ok().data)->function_code = result.function_code;
-        }
-        return res;
-      }
-
-      return error::analyze_invalid_cpp_value(literal_value.expect_err(),
-                                              object_source(string_obj),
-                                              latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 1));
-    }
-  }
-
   processor::expression_result
   processor::analyze_cpp_type(obj::persistent_list_ref const l,
                               local_frame_ptr const current_frame,
-                              expression_position const position,
+                              expression_position const,
                               jtl::option<expr::function_context_ref> const &fn_ctx,
                               bool const needs_box)
   {
-    return analyze_cpp_literal(l, current_frame, position, fn_ctx, needs_box, literal_kind::type);
+    if(l->count() != 2)
+    {
+      return error::analyze_invalid_cpp_type(
+        util::format("Exactly 1 argument is expected for 'cpp/type', but {} were provided.",
+                     l->count() - 1),
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+
+    auto const type_res{ analyze_type(l, current_frame, fn_ctx) };
+    if(type_res.is_err())
+    {
+      return type_res.expect_err();
+    }
+
+    return jtl::make_ref<expr::cpp_type>(expression_position::type,
+                                         current_frame,
+                                         needs_box,
+                                         try_object<obj::symbol>(l->first()),
+                                         type_res.expect_ok());
   }
 
   processor::expression_result
@@ -4050,9 +3884,85 @@ namespace jank::analyze
                                local_frame_ptr const current_frame,
                                expression_position const position,
                                jtl::option<expr::function_context_ref> const &fn_ctx,
-                               bool const needs_box)
+                               bool const)
   {
-    return analyze_cpp_literal(l, current_frame, position, fn_ctx, needs_box, literal_kind::value);
+    if(l->count() != 2)
+    {
+      return error::analyze_invalid_cpp_type(
+        util::format("Exactly 1 argument is expected for 'cpp/value', but {} were provided.",
+                     l->count() - 1),
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+
+    auto const arg{ l->next()->first() };
+    jtl::option<jtl::string_result<cpp_util::literal_value_result>> literal_res;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(arg->type)
+#pragma clang diagnostic pop
+    {
+      case object_type::integer:
+        literal_res = cpp_util::resolve_literal_value(
+          util::format("static_cast<jtl::i64>({})",
+                       expect_object<runtime::obj::integer>(arg)->data));
+        break;
+      case object_type::real:
+        literal_res = cpp_util::resolve_literal_value(
+          util::format("static_cast<jtl::f64>({})", expect_object<runtime::obj::real>(arg)->data));
+        break;
+      case object_type::boolean:
+        literal_res = cpp_util::resolve_literal_value(
+          util::format("{}", expect_object<runtime::obj::boolean>(arg)->data));
+        break;
+      case object_type::persistent_string:
+        literal_res = cpp_util::resolve_literal_value(
+          util::format("\"{}\"",
+                       util::escape(expect_object<runtime::obj::persistent_string>(arg)->data)));
+        break;
+      default:
+        break;
+    }
+
+    if(literal_res.is_some() && literal_res.unwrap().is_ok())
+    {
+      auto const &result{ literal_res.unwrap().expect_ok() };
+      auto const source{ jtl::make_ref<expr::cpp_value>(position,
+                                                        current_frame,
+                                                        false,
+                                                        /* TODO: Is symbol needed? */
+                                                        try_object<obj::symbol>(l->first()),
+                                                        Cpp::GetTypeFromScope(result.fn_scope),
+                                                        result.fn_scope,
+                                                        expr::cpp_value::value_kind::function) };
+      auto const res{
+        build_cpp_call(source, {}, {}, {}, current_frame, position, false, macro_expansions)
+      };
+      if(res.is_ok())
+      {
+        llvm::cast<expr::cpp_call>(res.expect_ok().data)->function_code = result.function_code;
+      }
+      return res;
+    }
+
+    auto const res{
+      analyze_cpp_dsl(l->next()->first(), expression_position::value, current_frame, fn_ctx)
+    };
+    if(res.is_err())
+    {
+      return res.expect_err();
+    }
+    if(res.expect_ok()->kind == expression_kind::cpp_type)
+    {
+      return error::analyze_invalid_cpp_type(
+        util::format("A value was expected here, not a type. The type found is '{}'.",
+                     cpp_util::get_qualified_type_name(
+                       static_box_cast<expr::cpp_type>(res.expect_ok())->type)),
+        object_source(l),
+        latest_expansion(macro_expansions));
+    }
+
+    return res;
   }
 
   processor::expression_result
@@ -4704,10 +4614,11 @@ namespace jank::analyze
       o);
   }
 
-  jtl::result<jtl::ptr<void>, error_ref>
-  processor::analyze_type(object_ref const o,
-                          local_frame_ptr const current_frame,
-                          jtl::option<expr::function_context_ref> const &fn_ctx)
+  processor::expression_result
+  processor::analyze_cpp_dsl(object_ref const o,
+                             expression_position const position,
+                             local_frame_ptr const current_frame,
+                             jtl::option<expr::function_context_ref> const &fn_ctx)
   {
     if(o->type == object_type::symbol)
     {
@@ -4721,16 +4632,7 @@ namespace jank::analyze
         return res.expect_err();
       }
 
-      if(res.expect_ok()->kind != expression_kind::cpp_type)
-      {
-        return error::analyze_invalid_cpp_type("A type was expected here.",
-                                               object_source(o),
-                                               latest_expansion(macro_expansions));
-      }
-
-
-      auto const type(runtime::static_box_cast<expr::cpp_type>(res.expect_ok()));
-      return type->type;
+      return res;
     }
 
     static auto const require_args{ [](runtime::object_ref const seq,
@@ -4759,7 +4661,7 @@ namespace jank::analyze
                                  runtime::object_ref const seq,
                                  auto const &validate_seq,
                                  auto const &validate_type,
-                                 auto const &transform) -> jtl::result<jtl::ptr<void>, error_ref> {
+                                 auto const &transform) -> processor::expression_result {
       if(auto const err{ validate_seq(next(seq), this->macro_expansions) }; err.is_err())
       {
         return err.expect_err();
@@ -4768,7 +4670,7 @@ namespace jank::analyze
       auto const arg_res{ analyze_type(runtime::second(seq), current_frame, fn_ctx) };
       if(arg_res.is_err())
       {
-        return arg_res;
+        return arg_res.expect_err();
       }
 
       if(auto const err{ validate_type(arg_res.expect_ok()) }; err.is_err())
@@ -4776,17 +4678,28 @@ namespace jank::analyze
         return err.expect_err();
       }
 
-      return transform(arg_res.expect_ok());
+      auto const res{ transform(arg_res.expect_ok()) };
+      if(res.is_err())
+      {
+        return res.expect_err();
+      }
+
+      return jtl::make_ref<expr::cpp_type>(expression_position::type,
+                                           current_frame,
+                                           false,
+                                           /* TODO: Use something better. */
+                                           make_box<obj::symbol>("cpp/type"),
+                                           res.expect_ok());
     } };
 
     return runtime::visit_seqable(
-      [&](auto const typed_o) -> jtl::result<jtl::ptr<void>, error_ref> {
+      [&](auto const typed_o) -> processor::expression_result {
         auto const seq{ typed_o->seq() };
         auto const first{ runtime::first(seq) };
 
         if(first->type == object_type::keyword)
         {
-          static auto const ptr{ runtime::__rt_ctx->intern_keyword("", "*").expect_ok() };
+          static auto const ptr{ runtime::__rt_ctx->intern_keyword("*").expect_ok() };
           static auto const lref{ runtime::__rt_ctx->intern_keyword("&").expect_ok() };
           static auto const rref{ runtime::__rt_ctx->intern_keyword("&&").expect_ok() };
           static auto const const_{ runtime::__rt_ctx->intern_keyword("const").expect_ok() };
@@ -4818,7 +4731,9 @@ namespace jank::analyze
                 }
                 return ok();
               },
-              [](jtl::ptr<void> const type) { return Cpp::GetPointerType(type); });
+              [](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
+                return Cpp::GetPointerType(type);
+              });
           }
           else if(kw == lref)
           {
@@ -4835,7 +4750,9 @@ namespace jank::analyze
                 }
                 return ok();
               },
-              [&](jtl::ptr<void> const type) { return Cpp::GetLValueReferenceType(type); });
+              [&](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
+                return Cpp::GetLValueReferenceType(type);
+              });
           }
           else if(kw == rref)
           {
@@ -4854,7 +4771,9 @@ namespace jank::analyze
                 }
                 return ok();
               },
-              [&](jtl::ptr<void> const type) { return Cpp::GetRValueReferenceType(type); });
+              [&](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
+                return Cpp::GetRValueReferenceType(type);
+              });
           }
           else if(kw == const_)
           {
@@ -4874,7 +4793,9 @@ namespace jank::analyze
                 }
                 return ok();
               },
-              [&](jtl::ptr<void> const type) { return Cpp::GetTypeWithConst(type); });
+              [&](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
+                return Cpp::GetTypeWithConst(type);
+              });
           }
           else if(kw == volatile_)
           {
@@ -4895,7 +4816,9 @@ namespace jank::analyze
                 }
                 return ok();
               },
-              [&](jtl::ptr<void> const type) { return Cpp::GetTypeWithVolatile(type); });
+              [&](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
+                return Cpp::GetTypeWithVolatile(type);
+              });
           }
           else if(kw == signed_)
           {
@@ -4914,7 +4837,9 @@ namespace jank::analyze
                 }
                 return ok();
               },
-              [&](jtl::ptr<void> const type) { return Cpp::GetSignedType(type); });
+              [&](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
+                return Cpp::GetSignedType(type);
+              });
           }
           else if(kw == unsigned_)
           {
@@ -4933,7 +4858,9 @@ namespace jank::analyze
                 }
                 return ok();
               },
-              [&](jtl::ptr<void> const type) { return Cpp::GetUnsignedType(type); });
+              [&](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
+                return Cpp::GetUnsignedType(type);
+              });
           }
           else if(kw == short_)
           {
@@ -4962,7 +4889,9 @@ namespace jank::analyze
                 }
                 return ok();
               },
-              [&](jtl::ptr<void> const type) { return Cpp::GetShortType(type); });
+              [&](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
+                return Cpp::GetShortType(type);
+              });
           }
           else if(kw == long_)
           {
@@ -4993,7 +4922,9 @@ namespace jank::analyze
                 }
                 return ok();
               },
-              [&](jtl::ptr<void> const type) { return Cpp::GetLongType(type); });
+              [&](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
+                return Cpp::GetLongType(type);
+              });
           }
           else if(kw == array)
           {
@@ -5108,118 +5039,211 @@ namespace jank::analyze
           }
           else if(kw == member)
           {
-            return transform_type(
-              seq,
-              [&](runtime::object_ref const seq,
-                  native_vector<runtime::object_ref> const &macro_expansions)
-                -> jtl::result<void, error_ref> { return require_args(seq, 2, macro_expansions); },
-              [&](jtl::ptr<void> const) -> jtl::result<void, error_ref> { return ok(); },
-              [&](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
-                auto const member_arg{ runtime::second(runtime::next(seq)) };
-                if(member_arg->type != object_type::symbol)
-                {
-                  return error::analyze_invalid_cpp_type_dsl("Member names need to be symbols.",
-                                                             object_source(member_arg),
-                                                             latest_expansion(macro_expansions));
-                }
+            if(auto const err{ require_args(runtime::next(seq), 2, macro_expansions) };
+               err.is_err())
+            {
+              return err.expect_err();
+            }
 
-                auto const parent_scope{ Cpp::GetScopeFromType(type) };
-                if(!parent_scope)
-                {
-                  return error::analyze_invalid_cpp_type_dsl(
-                    util::format("There is no '{}' member within '{}'.",
-                                 member_arg->to_string(),
-                                 cpp_util::get_qualified_type_name(type)),
-                    object_source(member_arg),
-                    latest_expansion(macro_expansions));
-                }
+            auto const member_arg{ runtime::second(runtime::next(seq)) };
+            if(member_arg->type != object_type::symbol)
+            {
+              return error::analyze_invalid_cpp_type_dsl("Member names need to be symbols.",
+                                                         object_source(member_arg),
+                                                         latest_expansion(macro_expansions));
+            }
 
-                auto const member_name{ runtime::expect_object<obj::symbol>(member_arg) };
-                auto const member_scope{ Cpp::GetUnderlyingScope(
-                  Cpp::GetNamed(member_name->name.c_str(), parent_scope)) };
-                if(!member_scope)
-                {
-                  return error::analyze_invalid_cpp_type_dsl(
-                    util::format("There is no '{}' member within '{}'.",
-                                 member_arg->to_string(),
-                                 cpp_util::get_qualified_type_name(type)),
-                    object_source(member_arg),
-                    latest_expansion(macro_expansions));
-                }
-                else if(!Cpp::IsClass(member_scope) && !Cpp::IsEnumScope(member_scope)
-                        && !Cpp::IsTypedefed(member_scope) && !cpp_util::is_primitive(type))
-                {
-                  return error::analyze_invalid_cpp_type_dsl(
-                    util::format("A type was expected here, but '{}::{}' was found.",
-                                 cpp_util::get_qualified_type_name(type),
-                                 member_arg->to_string()),
-                    object_source(member_arg),
-                    latest_expansion(macro_expansions));
-                }
-                else if(Cpp::IsPrivateVariable(member_scope)
-                        || Cpp::IsProtectedVariable(member_scope))
-                {
-                  return error::analyze_invalid_cpp_type_dsl(
-                    util::format("This member is declared {}, so it cannot be accessed.",
-                                 Cpp::IsPrivateVariable(member_scope) ? "private" : "protected"),
-                    object_source(member_arg),
-                    latest_expansion(macro_expansions));
-                }
-                return Cpp::GetTypeFromScope(member_scope);
-              });
+            auto const type_res{ analyze_type(runtime::second(seq), current_frame, fn_ctx) };
+            if(type_res.is_err())
+            {
+              return type_res.expect_err();
+            }
+
+            auto const type{ type_res.expect_ok() };
+
+            auto const parent_scope{ Cpp::GetScopeFromType(type) };
+            if(!parent_scope)
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                util::format("There is no '{}' member within '{}'.",
+                             member_arg->to_string(),
+                             cpp_util::get_qualified_type_name(type)),
+                object_source(member_arg),
+                latest_expansion(macro_expansions));
+            }
+
+            auto const member_name{ runtime::expect_object<obj::symbol>(member_arg) };
+            auto const member_scope{ Cpp::GetUnderlyingScope(
+              Cpp::GetNamed(member_name->name.c_str(), parent_scope)) };
+            if(!member_scope)
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                util::format("There is no '{}' member within '{}'.",
+                             member_arg->to_string(),
+                             cpp_util::get_qualified_type_name(type)),
+                object_source(member_arg),
+                latest_expansion(macro_expansions));
+            }
+
+            auto const is_type{ Cpp::IsClass(member_scope) || Cpp::IsEnumScope(member_scope)
+                                || Cpp::IsTypedefed(member_scope) || cpp_util::is_primitive(type) };
+            if(Cpp::IsPrivateVariable(member_scope) || Cpp::IsProtectedVariable(member_scope))
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                util::format("This member is declared {}, so it cannot be accessed.",
+                             Cpp::IsPrivateVariable(member_scope) ? "private" : "protected"),
+                object_source(member_arg),
+                latest_expansion(macro_expansions));
+            }
+
+            if(position == expression_position::type)
+            {
+              if(!is_type)
+              {
+                return error::analyze_invalid_cpp_type_dsl(
+                  "A type was expected here.",
+                  object_source(runtime::second(runtime::next(seq))),
+                  latest_expansion(macro_expansions));
+              }
+              return jtl::make_ref<expr::cpp_type>(
+                expression_position::type,
+                current_frame,
+                false,
+                try_object<obj::symbol>(runtime::second(runtime::next(seq))),
+                Cpp::GetTypeFromScope(member_scope));
+            }
+
+            if(is_type)
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                "A C++ value was expected here.",
+                object_source(runtime::second(runtime::next(seq))),
+                latest_expansion(macro_expansions));
+            }
+
+            auto member_type{ Cpp::GetTypeFromScope(member_scope) };
+
+            jtl::option<expr::cpp_value::value_kind> vk;
+            if(Cpp::IsVariable(member_scope))
+            {
+              vk = expr::cpp_value::value_kind::variable;
+              if(!Cpp::IsPointerType(member_type))
+              {
+                member_type = Cpp::GetLValueReferenceType(member_type);
+              }
+            }
+            else if(Cpp::IsEnumConstant(member_scope))
+            {
+              vk = expr::cpp_value::value_kind::enum_constant;
+              member_type = Cpp::GetNonReferenceType(member_type);
+            }
+            else if(Cpp::IsFunction(member_scope))
+            {
+              vk = expr::cpp_value::value_kind::function;
+            }
+
+            if(vk.is_some())
+            {
+              return jtl::make_ref<expr::cpp_value>(
+                position,
+                current_frame,
+                false,
+                try_object<obj::symbol>(runtime::second(runtime::next(seq))),
+                member_type,
+                member_scope,
+                vk.unwrap());
+            }
+
+            return error::analyze_invalid_cpp_type_dsl(
+              "A C++ value was expected here.",
+              object_source(runtime::second(runtime::next(seq))),
+              latest_expansion(macro_expansions));
           }
           else if(kw == member_ptr)
           {
-            return transform_type(
-              seq,
-              [&](runtime::object_ref const seq,
-                  native_vector<runtime::object_ref> const &macro_expansions)
-                -> jtl::result<void, error_ref> { return require_args(seq, 2, macro_expansions); },
-              [&](jtl::ptr<void> const) -> jtl::result<void, error_ref> { return ok(); },
-              [&](jtl::ptr<void> const type) -> jtl::result<jtl::ptr<void>, error_ref> {
-                auto const member_arg{ runtime::second(runtime::next(seq)) };
-                if(member_arg->type != object_type::symbol)
-                {
-                  return error::analyze_invalid_cpp_type_dsl("Member names need to be symbols.",
-                                                             object_source(member_arg),
-                                                             latest_expansion(macro_expansions));
-                }
+            if(auto const err{ require_args(runtime::next(seq), 2, macro_expansions) };
+               err.is_err())
+            {
+              return err.expect_err();
+            }
 
-                auto const parent_scope{ Cpp::GetScopeFromType(type) };
-                if(!parent_scope)
-                {
-                  return error::analyze_invalid_cpp_type_dsl(
-                    util::format("There is no '{}' member within '{}'.",
-                                 member_arg->to_string(),
-                                 cpp_util::get_qualified_type_name(type)),
-                    object_source(member_arg),
-                    latest_expansion(macro_expansions));
-                }
+            auto const member_arg{ runtime::second(runtime::next(seq)) };
+            if(member_arg->type != object_type::symbol)
+            {
+              return error::analyze_invalid_cpp_type_dsl("Member names need to be symbols.",
+                                                         object_source(member_arg),
+                                                         latest_expansion(macro_expansions));
+            }
 
-                auto const member_name{ runtime::expect_object<obj::symbol>(member_arg) };
-                auto const member_scope{ Cpp::GetUnderlyingScope(
-                  Cpp::GetNamed(member_name->name.c_str(), parent_scope)) };
-                if(!member_scope)
-                {
-                  return error::analyze_invalid_cpp_type_dsl(
-                    util::format("There is no '{}' member within '{}'.",
-                                 member_arg->to_string(),
-                                 cpp_util::get_qualified_type_name(type)),
-                    object_source(member_arg),
-                    latest_expansion(macro_expansions));
-                }
-                else if(!Cpp::IsNonStaticVariable(member_scope))
-                {
-                  return error::analyze_invalid_cpp_type_dsl(
-                    util::format("A member variable was expected here, but '{}::{}' was found.",
-                                 cpp_util::get_qualified_type_name(type),
-                                 member_arg->to_string()),
-                    object_source(member_arg),
-                    latest_expansion(macro_expansions));
-                }
-                auto ret = Cpp::GetPointerToMemberType(member_scope);
-                return ret;
-              });
+            auto const type_res{ analyze_type(runtime::second(seq), current_frame, fn_ctx) };
+            if(type_res.is_err())
+            {
+              return type_res.expect_err();
+            }
+
+            auto const type{ type_res.expect_ok() };
+
+            auto const parent_scope{ Cpp::GetScopeFromType(type) };
+            if(!parent_scope)
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                util::format("There is no '{}' member within '{}'.",
+                             member_arg->to_string(),
+                             cpp_util::get_qualified_type_name(type)),
+                object_source(member_arg),
+                latest_expansion(macro_expansions));
+            }
+
+            auto const member_name{ runtime::expect_object<obj::symbol>(member_arg) };
+            auto const member_scope{ Cpp::GetUnderlyingScope(
+              Cpp::GetNamed(member_name->name.c_str(), parent_scope)) };
+            if(!member_scope)
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                util::format("There is no '{}' member within '{}'.",
+                             member_arg->to_string(),
+                             cpp_util::get_qualified_type_name(type)),
+                object_source(member_arg),
+                latest_expansion(macro_expansions));
+            }
+            else if(!Cpp::IsNonStaticVariable(member_scope) && !Cpp::IsMethod(member_scope))
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                util::format(
+                  "A member variable or function was expected here, but '{}::{}' was found.",
+                  cpp_util::get_qualified_type_name(type),
+                  member_arg->to_string()),
+                object_source(member_arg),
+                latest_expansion(macro_expansions));
+            }
+            if(Cpp::IsStaticMethod(member_scope))
+            {
+              return error::analyze_invalid_cpp_type_dsl(
+                util::format("A non-static member was expected here, but '{}::{}' is static.",
+                             cpp_util::get_qualified_type_name(type),
+                             member_arg->to_string()),
+                object_source(member_arg),
+                latest_expansion(macro_expansions));
+            }
+
+            if(position == expression_position::type)
+            {
+              return jtl::make_ref<expr::cpp_type>(
+                expression_position::type,
+                current_frame,
+                false,
+                try_object<obj::symbol>(runtime::second(runtime::next(seq))),
+                Cpp::GetPointerToMemberType(member_scope));
+            }
+
+            return jtl::make_ref<expr::cpp_value>(
+              position,
+              current_frame,
+              false,
+              try_object<obj::symbol>(runtime::second(runtime::next(seq))),
+              Cpp::GetPointerToMemberType(member_scope),
+              member_scope,
+              expr::cpp_value::value_kind::function);
           }
 
           return error::analyze_invalid_cpp_type_dsl(
@@ -5232,7 +5256,8 @@ namespace jank::analyze
           static obj::symbol const cpp_type{ "cpp", "type" };
           if(expect_object<obj::symbol>(first)->equal(cpp_type))
           {
-            return analyze_type(runtime::second(seq), current_frame, fn_ctx);
+            /* TODO: Require type. */
+            return analyze_cpp_dsl(runtime::second(seq), position, current_frame, fn_ctx);
           }
 
           auto const sym{ expect_object<obj::symbol>(first) };
@@ -5280,7 +5305,7 @@ namespace jank::analyze
             auto const arg_type{ analyze_type(arg, current_frame, fn_ctx) };
             if(arg_type.is_err())
             {
-              return arg_type;
+              return arg_type.expect_err();
             }
             args.emplace_back(arg_type.expect_ok().data);
           }
@@ -5295,21 +5320,88 @@ namespace jank::analyze
 
           /* TODO: Allow for macro expansion. */
 
-          return Cpp::GetTypeFromScope(instantiated_scope.expect_ok());
+          auto const inst_scope{ instantiated_scope.expect_ok() };
+
+          if(position == expression_position::type)
+          {
+            return jtl::make_ref<expr::cpp_type>(expression_position::type,
+                                                 current_frame,
+                                                 false,
+                                                 sym,
+                                                 Cpp::GetTypeFromScope(inst_scope));
+          }
+
+
+          expr::cpp_value::value_kind vk{};
+          jtl::ptr<void> inst_type{ Cpp::GetTypeFromScope(inst_scope) };
+          if(Cpp::IsVariable(inst_scope))
+          {
+            vk = expr::cpp_value::value_kind::variable;
+            if(!Cpp::IsPointerType(inst_type))
+            {
+              inst_type = Cpp::GetLValueReferenceType(inst_type);
+            }
+          }
+          else if(Cpp::IsEnumConstant(inst_scope))
+          {
+            vk = expr::cpp_value::value_kind::enum_constant;
+            inst_type = Cpp::GetNonReferenceType(inst_type);
+          }
+          else if(Cpp::IsFunction(inst_scope))
+          {
+            vk = expr::cpp_value::value_kind::function;
+          }
+          else
+          {
+            return error::analyze_invalid_cpp_type_dsl("Expected a C++ value form here.",
+                                                       object_source(first),
+                                                       latest_expansion(macro_expansions))
+              ->add_usage(read::parse::reparse_nth(seq.erase(), 0));
+          }
+
+          return jtl::make_ref<expr::cpp_value>(position,
+                                                current_frame,
+                                                false,
+                                                sym,
+                                                inst_type,
+                                                instantiated_scope.expect_ok(),
+                                                vk);
         }
         else
         {
           return error::analyze_invalid_cpp_type_dsl("Expected a type form here.",
                                                      object_source(first),
-                                                     latest_expansion(macro_expansions));
+                                                     latest_expansion(macro_expansions))
+            ->add_usage(read::parse::reparse_nth(seq.erase(), 0));
         }
       },
-      [&]() -> jtl::result<jtl::ptr<void>, error_ref> {
+      [&]() -> processor::expression_result {
         return error::analyze_invalid_cpp_type_dsl("Invalid C++ type.",
                                                    object_source(o),
                                                    latest_expansion(macro_expansions));
       },
       o);
+  }
+
+  jtl::result<jtl::ptr<void>, error_ref>
+  processor::analyze_type(runtime::object_ref const o,
+                          local_frame_ptr const current_frame,
+                          jtl::option<expr::function_context_ref> const &fn_ctx)
+  {
+    auto const res{ analyze_cpp_dsl(o, expression_position::type, current_frame, fn_ctx) };
+    if(res.is_err())
+    {
+      return res.expect_err();
+    }
+    if(res.expect_ok()->kind != expression_kind::cpp_type)
+    {
+      return error::analyze_invalid_cpp_type("A type was expected here.",
+                                             object_source(o),
+                                             latest_expansion(macro_expansions));
+    }
+
+    auto const type(runtime::static_box_cast<expr::cpp_type>(res.expect_ok()));
+    return type->type;
   }
 
   bool processor::is_special(runtime::object_ref const form)

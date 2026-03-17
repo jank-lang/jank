@@ -6,6 +6,6 @@
             };
           }")
 (let* [foo (cpp/jank.cpp.literal_type.member_ptr.pass_valid.foo #cpp 7)
-       p (cpp/cast (cpp/type (:member* jank.cpp.literal_type.member_ptr.pass_valid.foo a)) (cpp/value "&jank::cpp::literal_type::member_ptr::pass_valid::foo::a"))]
+       p (cpp/cast (cpp/type (:member* jank.cpp.literal_type.member_ptr.pass_valid.foo a)) (cpp/value (:member* jank.cpp.literal_type.member_ptr.pass_valid.foo a)))]
   (if (= 7 (p foo))
     :success))

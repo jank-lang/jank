@@ -76,6 +76,17 @@ namespace jank::analyze::cpp_util
       reset_sfinae_state();
       return err("Unable to instantiate template.");
     }
+
+    if(Cpp::IsTemplatedFunction(scope))
+    {
+      auto const ret_res{ instantiate_if_needed(
+        Cpp::GetScopeFromType(Cpp::GetFunctionReturnType(res))) };
+      if(ret_res.is_err())
+      {
+        return err("Unable to instantiate template.");
+      }
+    }
+
     return res;
   }
 

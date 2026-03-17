@@ -1,0 +1,2 @@
+(let* [i (cpp/value (:member std.string value_type))]
+  :success)

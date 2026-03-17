@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::literal_value::member_ptr::fail_static_function
+          {
+            struct foo
+            {
+              static i64 get_42()
+              { return 42; }
+            };
+          }")
+(let* [p (cpp/value (:member* jank.cpp.literal_value.member_ptr.fail_static_function.foo get_42))]
+  :success)

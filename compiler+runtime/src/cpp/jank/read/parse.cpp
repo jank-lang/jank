@@ -942,41 +942,20 @@ namespace jank::read::parse
     }
   }
 
-  processor::object_result processor::parse_tagged_cpp(object_ref const form,
+  processor::object_result processor::parse_tagged_cpp(object_ref form,
                                                        lex::token const &start_token,
                                                        lex::token const &str_end) const
   {
-    jtl::immutable_string str{};
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
     switch(str_end.kind)
     {
       case lex::token_kind::string:
       case lex::token_kind::escaped_string:
-        {
-          auto const string{ expect_object<obj::persistent_string>(form) };
-          str = util::format("\"{}\"", util::escape(string->data));
-          break;
-        }
       case lex::token_kind::boolean:
-        {
-          auto const boolean{ expect_object<obj::boolean>(form) };
-          str = util::format("{}", boolean->data);
-          break;
-        }
       case lex::token_kind::integer:
-        {
-          auto const integer{ expect_object<obj::integer>(form) };
-          str = util::format("static_cast<jank::i64>({})", integer->data);
-          break;
-        }
       case lex::token_kind::real:
-        {
-          auto const real{ expect_object<obj::real>(form) };
-          str = util::format("static_cast<jank::f64>({})", real->data);
-          break;
-        }
+        break;
       default:
         return error::parse_invalid_reader_tag_value(
           "The form after '#cpp' must either be a string, boolean, integer or real literal.",
@@ -984,9 +963,8 @@ namespace jank::read::parse
     }
 #pragma clang diagnostic pop
 
-    auto const wrapped(make_box<obj::persistent_list>(std::in_place,
-                                                      make_box<obj::symbol>("cpp/value"),
-                                                      make_box(util::format("{}", str)).erase()));
+    auto const wrapped(
+      make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("cpp/value"), form));
 
     return object_source_info{ wrapped, start_token, str_end };
   }
