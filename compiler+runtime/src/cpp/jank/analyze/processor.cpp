@@ -5332,7 +5332,7 @@ namespace jank::analyze
           }
 
 
-          jtl::option<expr::cpp_value::value_kind> vk;
+          expr::cpp_value::value_kind vk;
           jtl::ptr<void> inst_type{ Cpp::GetTypeFromScope(inst_scope) };
           if(Cpp::IsVariable(inst_scope))
           {
@@ -5351,6 +5351,13 @@ namespace jank::analyze
           {
             vk = expr::cpp_value::value_kind::function;
           }
+          else
+          {
+            return error::analyze_invalid_cpp_type_dsl("Expected a C++ value form here.",
+                                                       object_source(first),
+                                                       latest_expansion(macro_expansions))
+              ->add_usage(read::parse::reparse_nth(seq.erase(), 0));
+          }
 
           return jtl::make_ref<expr::cpp_value>(position,
                                                 current_frame,
@@ -5358,7 +5365,7 @@ namespace jank::analyze
                                                 sym,
                                                 inst_type,
                                                 instantiated_scope.expect_ok(),
-                                                vk.unwrap());
+                                                vk);
         }
         else
         {
