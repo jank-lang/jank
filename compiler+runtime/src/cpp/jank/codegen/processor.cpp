@@ -2050,7 +2050,7 @@ namespace jank::codegen
 
     auto tmp{ util::format("{}{}",
                            (Cpp::IsPointerToMemberType(expr->type) ? "&" : ""),
-                           Cpp::GetQualifiedCompleteName(expr->scope)) };
+                           Cpp::GetQualifiedCompleteNameWithTemplateArgs(expr->scope)) };
 
     if(expr->position == expression_position::tail)
     {

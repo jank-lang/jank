@@ -3886,7 +3886,6 @@ namespace jank::analyze
                                jtl::option<expr::function_context_ref> const &fn_ctx,
                                bool const)
   {
-    util::println("analyze_cpp_value {}", l->to_code_string());
     if(l->count() != 2)
     {
       return error::analyze_invalid_cpp_type(
@@ -5156,7 +5155,7 @@ namespace jank::analyze
             }
 
             return error::analyze_invalid_cpp_type_dsl(
-              "A type was expected here.",
+              "A C++ value was expected here.",
               object_source(runtime::second(runtime::next(seq))),
               latest_expansion(macro_expansions));
           }
@@ -5321,12 +5320,45 @@ namespace jank::analyze
 
           /* TODO: Allow for macro expansion. */
 
-          return jtl::make_ref<expr::cpp_type>(
-            expression_position::type,
-            current_frame,
-            false,
-            sym,
-            Cpp::GetTypeFromScope(instantiated_scope.expect_ok()));
+          auto const inst_scope{ instantiated_scope.expect_ok() };
+
+          if(position == expression_position::type)
+          {
+            return jtl::make_ref<expr::cpp_type>(expression_position::type,
+                                                 current_frame,
+                                                 false,
+                                                 sym,
+                                                 Cpp::GetTypeFromScope(inst_scope));
+          }
+
+
+          jtl::option<expr::cpp_value::value_kind> vk;
+          jtl::ptr<void> inst_type{ Cpp::GetTypeFromScope(inst_scope) };
+          if(Cpp::IsVariable(inst_scope))
+          {
+            vk = expr::cpp_value::value_kind::variable;
+            if(!Cpp::IsPointerType(inst_type))
+            {
+              inst_type = Cpp::GetLValueReferenceType(inst_type);
+            }
+          }
+          else if(Cpp::IsEnumConstant(inst_scope))
+          {
+            vk = expr::cpp_value::value_kind::enum_constant;
+            inst_type = Cpp::GetNonReferenceType(inst_type);
+          }
+          else if(Cpp::IsFunction(inst_scope))
+          {
+            vk = expr::cpp_value::value_kind::function;
+          }
+
+          return jtl::make_ref<expr::cpp_value>(position,
+                                                current_frame,
+                                                false,
+                                                sym,
+                                                inst_type,
+                                                instantiated_scope.expect_ok(),
+                                                vk.unwrap());
         }
         else
         {

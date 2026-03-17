@@ -16,9 +16,9 @@
             bar<T> meow()
             { return {}; }
           }")
-(let* [meow (cpp/& (cpp/value (jank.cpp.member.pass_access_base_template.meow int)))
+(let* [meow (cpp/value (jank.cpp.member.pass_access_base_template.meow int))
        bar (meow)
-       a (cpp/.-a bar)
-       b (cpp/.-b bar)]
+       a (.-a bar)
+       b (.-b bar)]
   (if (and (= 7 a) (= -5 b))
     :success))
