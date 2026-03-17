@@ -5332,7 +5332,7 @@ namespace jank::analyze
           }
 
 
-          expr::cpp_value::value_kind vk;
+          expr::cpp_value::value_kind vk{};
           jtl::ptr<void> inst_type{ Cpp::GetTypeFromScope(inst_scope) };
           if(Cpp::IsVariable(inst_scope))
           {
