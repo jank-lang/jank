@@ -238,19 +238,16 @@ error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
 ```
 
 ## Complex literal values
-If your C++ value is not representable using jank's interop syntax, due to
+If your C++ value is not representable using just a symbol, due to
 template arguments or other shenanigans, you can use `cpp/value` to provide the
-complete value using an inline C++ string. For example, here's how we grab the
-`npos` from a template instantiation:
+complete value using the same domain specific language (DSL) as with `cpp/type`.
+For example, here's how we grab the `npos` from a template instantiation:
 
 ```clojure
-(let [m (cpp/value "std::basic_string<char>::npos")]
+(let [m (cpp/value (:member (std.basic_string char) npos))]
   )
 ```
 
 No implicit boxing will happen here, unless you use this value in a way which
 requires it. jank will give you a reference to the value you specified. If you
 need a copy, you will need to manually do that.
-
-* `(t a1 a2...)` build a template instantiation
-* `(:member t name)` nests into a type
