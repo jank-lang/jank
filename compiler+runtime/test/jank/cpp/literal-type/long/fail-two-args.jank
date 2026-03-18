@@ -1,2 +1,2 @@
-(let* [_ ((cpp/type (:long int int)))]
+(let* [_ (#cpp (:long int int))]
   :success)

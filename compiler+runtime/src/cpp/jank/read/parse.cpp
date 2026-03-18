@@ -955,18 +955,27 @@ namespace jank::read::parse
       case lex::token_kind::boolean:
       case lex::token_kind::integer:
       case lex::token_kind::real:
-        break;
+        {
+          auto const wrapped(make_box<obj::persistent_list>(std::in_place,
+                                                            make_box<obj::symbol>("cpp/value"),
+                                                            form));
+
+          return object_source_info{ wrapped, start_token, str_end };
+        }
+      case lex::token_kind::symbol:
+      case lex::token_kind::close_paren:
+        {
+          auto const wrapped(
+            make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("cpp/dsl"), form));
+
+          return object_source_info{ wrapped, start_token, str_end };
+        }
       default:
         return error::parse_invalid_reader_tag_value(
-          "The form after '#cpp' must either be a string, boolean, integer or real literal.",
+          "This type of form doesn't support the '#cpp' tag.",
           { start_token.start, latest_token.end });
     }
 #pragma clang diagnostic pop
-
-    auto const wrapped(
-      make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("cpp/value"), form));
-
-    return object_source_info{ wrapped, start_token, str_end };
   }
 
   processor::object_result processor::parse_reader_macro_tagged()

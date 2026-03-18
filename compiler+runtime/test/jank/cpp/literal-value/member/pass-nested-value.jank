@@ -8,6 +8,6 @@
               };
             };
           }")
-(let* [i (cpp/value (:member (:member jank.cpp.literal_value.member.pass_nested_value.foo bar) meow))]
+(let* [i #cpp (:member (:member jank.cpp.literal_value.member.pass_nested_value.foo bar) meow)]
   (if (= i 100)
     :success))

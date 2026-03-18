@@ -1,2 +1,2 @@
-(let* [_ ((cpp/type (:member std.string npos)))]
+(let* [_ (#cpp (:member std.string npos))]
   :success)

@@ -1,2 +1,2 @@
-(let* [_ ((cpp/type (:const 0)))]
+(let* [_ (#cpp (:const 0))]
   :success)

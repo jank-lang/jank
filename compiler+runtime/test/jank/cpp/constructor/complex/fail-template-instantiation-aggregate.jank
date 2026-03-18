@@ -7,5 +7,5 @@
             };
           }")
 (let* [arg (cpp/int 5)
-       _ ((cpp/type "jank::cpp::constructor::complex::fail_template_instantiation_aggregate::foo<int>") arg)]
+       _ (#cpp (jank.cpp.constructor.complex.fail_template_instantiation_aggregate.foo int) arg)]
   :success)

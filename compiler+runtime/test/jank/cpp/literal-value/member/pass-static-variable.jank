@@ -5,6 +5,6 @@
               static constexpr int bar = 100;
             };
           }")
-(let* [i (cpp/value (:member jank.cpp.literal_value.member.pass_static_variable.foo bar))]
+(let* [i #cpp (:member jank.cpp.literal_value.member.pass_static_variable.foo bar)]
   (if (= i 100)
     :success))

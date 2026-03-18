@@ -1,2 +1,2 @@
-(let* [_ ((cpp/type (:volatile int int)))]
+(let* [_ (#cpp (:volatile int int))]
   :success)

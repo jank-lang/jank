@@ -53,10 +53,15 @@ namespace jank::analyze
                               expression_position,
                               jtl::option<expr::function_context_ref> const &,
                               bool needs_box);
-    expression_result analyze_cpp_dsl(runtime::object_ref const,
-                                      expression_position const,
+    expression_result analyze_cpp_dsl(runtime::obj::persistent_list_ref const,
                                       local_frame_ptr,
-                                      jtl::option<expr::function_context_ref> const &);
+                                      expression_position,
+                                      jtl::option<expr::function_context_ref> const &,
+                                      bool needs_box);
+    expression_result analyze_cpp_dsl_impl(runtime::object_ref const,
+                                           local_frame_ptr,
+                                           expression_position const,
+                                           jtl::option<expr::function_context_ref> const &);
     jtl::result<jtl::ptr<void>, error_ref>
     analyze_type(runtime::object_ref const,
                  local_frame_ptr,

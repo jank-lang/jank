@@ -6,5 +6,5 @@
                 using bar = int;
             };
           }")
-(let* [_ ((cpp/type (:member jank.cpp.literal_type.member.fail_private_member.foo bar)))]
+(let* [_ (#cpp (:member jank.cpp.literal_type.member.fail_private_member.foo bar))]
   :success)
