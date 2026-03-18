@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-a22b88fb.js";
+            window.path_to_searchindex_js = "../searchindex-120c99b1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-24331613.js"></script>
+        <script src="../toc-bdec8b3d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -204,7 +204,7 @@ pointer types, <code>cpp/cast</code> will not work, but <code>cpp/unsafe-cast</c
 note that <code>cpp/unsafe-cast</code> does not support trait conversions. It is solely
 dedicated to native type construction and reinterpretation.</p>
 <pre><code class="language-clojure">(let [s #cpp "meow"
-      us (cpp/cast (cpp/type "unsigned char*") s)])
+      us (cpp/cast (:* (:unsigned char)) s)])
 </code></pre>
 
                     </main>

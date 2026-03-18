@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-a22b88fb.js";
+            window.path_to_searchindex_js = "../searchindex-120c99b1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-24331613.js"></script>
+        <script src="../toc-bdec8b3d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -179,126 +179,20 @@
                     <main>
                         <h1 id="working-with-native-types"><a class="header" href="#working-with-native-types">Working with native types</a></h1>
 <h2 id="accessing-c-types"><a class="header" href="#accessing-c-types">Accessing C++ types</a></h2>
-<p>C++ types are available within the <code>cpp</code> namespace, if you replace <code>::</code> with
+<p>C++ types are available within the <code>cpp</code> namespace, but you must replace <code>::</code> with
 <code>.</code>. For example, <code>std::string</code> becomes <code>cpp/std.string</code>. This also works for
 type aliases.</p>
 <h2 id="complex-literal-types"><a class="header" href="#complex-literal-types">Complex literal types</a></h2>
-<p>jank supports a C++ type
-domain-specific language (DSL) which can express any C++ type. This is available
-implicitly when in type position, but it can be explicitly requested by using
-the special <code>cpp/type</code> form. The <code>cpp/type</code> form resolves a type using the
-following DSL:</p>
-<ul>
-<li><code>(:* t)</code> adds a pointer</li>
-<li><code>(:&amp; t)</code> adds an lvalue reference</li>
-<li><code>(:&amp;&amp; t)</code> adds an rvalue reference</li>
-<li><code>(:const t)</code> and <code>(:volatile t)</code> add the corresponding C++ qualification</li>
-<li><code>(:signed t)</code> and <code>(:unsigned t)</code> add the corresponding C++ qualification</li>
-<li><code>(:long t)</code> and <code>(:short t)</code> add the corresponding C++ qualification</li>
-<li><code>(:array t s?)</code> turns a type into a sized (or unsized) array</li>
-<li><code>(:fn ret [a1 a2...])</code> builds a function type</li>
-<li><code>(t a1 a2...)</code> build a template instantiation</li>
-<li><code>(:member t name)</code> nests into a type</li>
-<li><code>(:member* t mt)</code> builds a pointer to member</li>
-</ul>
-<p>Let’s take a look at some examples, comparing the C++ representation and the
-jank representation.</p>
-<table>
-<tr>
-<td> C++ </td> <td> jank </td>
-</tr>
-
-<tr>
-<td>
-<p>A normal C++ map template instantiation.</p>
-<pre><code class="language-cpp">std::map&lt;std::string, int*&gt;
-</code></pre>
-</td>
-<td>
-<pre><code class="language-clojure">(std.map std.string (:* int))
-</code></pre>
-</td>
-</tr>
-
-<tr>
-<td>
-<p>A normal C++ array template instantiation.</p>
-<pre><code class="language-cpp">std::array&lt;char, 64&gt;::value_type
-</code></pre>
-</td>
-<td>
-<pre><code class="language-clojure">(:member (std.array char 64) value_type)
-</code></pre>
-</td>
-</tr>
-
-<tr>
-<td>
-<p>A sized C-style array.</p>
-<pre><code class="language-cpp">unsigned char[1024]
-</code></pre>
-</td>
-<td>
-<pre><code class="language-clojure">(:array (:unsigned char) 1024)
-</code></pre>
-</td>
-</tr>
-
-<tr>
-<td>
-<p>A reference to an unsized C-style array.</p>
-<pre><code class="language-cpp">unsigned char(&amp;)[]
-</code></pre>
-</td>
-<td>
-<pre><code class="language-clojure">(:&amp; (:array (:unsigned char)))
-</code></pre>
-</td>
-</tr>
-
-<tr>
-<td>
-<p>A pointer to a C++ function.</p>
-<pre><code class="language-cpp">int (*)(std::string const &amp;)
-</code></pre>
-</td>
-<td>
-<pre><code class="language-clojure">(:* (:fn int [(:&amp; (:const std.string))]))
-</code></pre>
-</td>
-</tr>
-
-<tr>
-<td>
-<p>A pointer to a C++ member function.</p>
-<pre><code class="language-cpp">int (Foo::*)(std::string const &amp;)
-</code></pre>
-</td>
-<td>
-<pre><code class="language-clojure">(:member* Foo (:fn int [(:&amp; (:const std.string))]))
-</code></pre>
-</td>
-</tr>
-
-<tr>
-<td>
-<p>A pointer to a C++ member which is itself a pointer to a function.</p>
-<pre><code class="language-cpp">void (*Foo::*)()
-</code></pre>
-</td>
-<td>
-<pre><code class="language-clojure">(:member* Foo (:* (:fn void [])))
-</code></pre>
-</td>
-</tr>
-
-</table>
-
+<p>For complex types like template instantiations, pointers to members, and so on,
+jank supports a C++ domain-specific language (DSL).
+This is available implicitly when in type position, but it can be
+explicitly requested by using the special <code>#cpp</code> tag. The documentation for this
+DSL is <a href="./dsl.html">here</a>.</p>
 <h2 id="defining-new-types"><a class="header" href="#defining-new-types">Defining new types</a></h2>
 <p>There isn’t yet a way to define new types using jank’s syntax, but you can
 always drop to <code>cpp/raw</code> to either include headers or define some C++ types
 inline. Improved support for extending jank’s object model with JIT (just in
-time) compiled types will be coming in 2026.</p>
+time) compiled types will be coming soon.</p>
 <pre><code class="language-clojure">(cpp/raw "struct person
           {
             std::string name;

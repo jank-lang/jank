@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-a22b88fb.js";
+            window.path_to_searchindex_js = "../searchindex-120c99b1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-24331613.js"></script>
+        <script src="../toc-bdec8b3d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -327,7 +327,8 @@ into a jank hash map.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>Although this works, consider moving this C++ into a header file and including
-it instead. Writing large amounts of C++ in <code>cpp/raw</code> strings doesn’t scale very well.</p>
+it instead. Writing large amounts of C++ in <code>cpp/raw</code> strings doesn’t scale
+very well, in terms of maintainability.</p>
 </blockquote>
 <h2 id="opaque-boxes"><a class="header" href="#opaque-boxes">Opaque boxes</a></h2>
 <p>There is a performance cost to the convenience of implicit conversions. For pure
@@ -346,12 +347,12 @@ Given a hypothetical <code>my_db</code> C++ database library, boxing is done lik
 <pre><code class="language-clojure">(defn query! [db-box q]
   (let [; db-box is an object_ref
         ; db is a my_db.connection*
-        db (cpp/unbox cpp/my_db.connection* db-box)]
+        db (cpp/unbox (:* my_db.connection) db-box)]
     (.query db q)))
 
 (defn -main [&amp; args]
   (let [; db is a my_db.connection*
-        db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+        db (cpp/new my_db.connection #cpp "localhost:5758")
         ; db-box is a opaque_box_ref
         db-box (cpp/box db)]
     ))
@@ -370,10 +371,10 @@ error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
 ─────┼─────────────────────────────────────────────────────────────────────────
  21  │   (let [; db-box is an object_ref
  22  │         ; db is a my_db.connection*
- 23  │         db (cpp/unbox cpp/my_db.secure_connection* db-box)]
+ 23  │         db (cpp/unbox (:* my_db.secure_connection) db-box)]
      │             ^^^^^^^^^ Unboxed here.
      │ …
- 28  │         db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+ 28  │         db (cpp/new my_db.connection #cpp "localhost:5758")
  29  │         ; db-box is a opaque_box_ref
  30  │         db-box (cpp/box db)]
      │                 ^^^^^^^ Boxed here.
@@ -385,10 +386,10 @@ error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
 </code></pre>
 <h2 id="complex-literal-values"><a class="header" href="#complex-literal-values">Complex literal values</a></h2>
 <p>If your C++ value is not representable using just a symbol, due to
-template arguments or other shenanigans, you can use <code>cpp/value</code> to provide the
-complete value using the same domain specific language (DSL) as with <code>cpp/type</code>.
-For example, here’s how we grab the <code>npos</code> from a template instantiation:</p>
-<pre><code class="language-clojure">(let [m (cpp/value (:member (std.basic_string char) npos))]
+template arguments or other shenanigans, you can use jank’s C++ domain specific language (DSL).
+Documentation on that is <a href="./dsl.html">here</a>. For example, here’s how we grab
+<code>std::basic_string&lt;char&gt;::npos</code>:</p>
+<pre><code class="language-clojure">(let [m #cpp (:member (std.basic_string char) npos)]
   )
 </code></pre>
 <p>No implicit boxing will happen here, unless you use this value in a way which

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-a22b88fb.js";
+            window.path_to_searchindex_js = "../searchindex-120c99b1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-24331613.js"></script>
+        <script src="../toc-bdec8b3d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -179,17 +179,13 @@
                     <main>
                         <h1 id="embedding-raw-c"><a class="header" href="#embedding-raw-c">Embedding raw C++</a></h1>
 <p>jank has a special <code>cpp/raw</code> form which accepts a single string containing
-literal C++ code. This can be used for bringing in pretty much anything. For
-example, we can use this to include header files (though prefer the
-<code>clojure.core/include</code> macro for this).</p>
-<pre><code class="language-clojure">(cpp/raw "#include &lt;fstream&gt;")
-</code></pre>
+literal C++ code. This can be used for bringing in pretty much anything.</p>
 <p>jank will always compile the included C++ source in a global scope, even if you
 put the <code>cpp/raw</code> form within a nested scope, such as within a function or a
 <code>let</code>. For example, this code will have the same effect, even if this function
 is never called.</p>
 <pre><code class="language-clojure">(defn foo []
-  (cpp/raw "#include &lt;fstream&gt;"))
+  (cpp/raw "struct bar{ };"))
 </code></pre>
 <p>The <code>cpp/raw</code> form always evaluates to <code>nil</code>. At runtime, <code>foo</code> will do nothing
 but return <code>nil</code>, since the JIT compilation is where the effect of <code>cpp/raw</code>
@@ -210,7 +206,7 @@ which will do the trick. For example, let’s say we have the following code.</p
 <pre><code class="language-clojure">(let [s (cpp/std.string)
       ; Let's say that this interop call isn't compiling correctly, due to a
       ; jank bug.
-      size (cpp/.size s)]
+      size (.size s)]
   (println "The size is" size))
 </code></pre>
 <p>You can work around this issue by defining a helper function which does the C++
@@ -222,8 +218,8 @@ work for you. In this case, we could do the following.</p>
       size (cpp/get_string_size s)]
   (println "The size is" size))
 </code></pre>
-<p>Of course, if you need to use this, please also report a bug on jank’s Github
-which describes what you tried to do and why it didn’t work.</p>
+<p>Of course, if you need to use this, please also <a href="/troubleshooting/getting-help.html">report a bug</a>
+on jank’s Github which describes what you tried to do and why it didn’t work.</p>
 
                     </main>
 

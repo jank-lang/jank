@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-a22b88fb.js";
+            window.path_to_searchindex_js = "searchindex-120c99b1.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-24331613.js"></script>
+        <script src="toc-bdec8b3d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -863,7 +863,8 @@ into a jank hash map.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>Although this works, consider moving this C++ into a header file and including
-it instead. Writing large amounts of C++ in <code>cpp/raw</code> strings doesn’t scale very well.</p>
+it instead. Writing large amounts of C++ in <code>cpp/raw</code> strings doesn’t scale
+very well, in terms of maintainability.</p>
 </blockquote>
 <h2 id="opaque-boxes"><a class="header" href="#opaque-boxes">Opaque boxes</a></h2>
 <p>There is a performance cost to the convenience of implicit conversions. For pure
@@ -882,12 +883,12 @@ Given a hypothetical <code>my_db</code> C++ database library, boxing is done lik
 <pre><code class="language-clojure">(defn query! [db-box q]
   (let [; db-box is an object_ref
         ; db is a my_db.connection*
-        db (cpp/unbox cpp/my_db.connection* db-box)]
+        db (cpp/unbox (:* my_db.connection) db-box)]
     (.query db q)))
 
 (defn -main [&amp; args]
   (let [; db is a my_db.connection*
-        db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+        db (cpp/new my_db.connection #cpp "localhost:5758")
         ; db-box is a opaque_box_ref
         db-box (cpp/box db)]
     ))
@@ -906,10 +907,10 @@ error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
 ─────┼─────────────────────────────────────────────────────────────────────────
  21  │   (let [; db-box is an object_ref
  22  │         ; db is a my_db.connection*
- 23  │         db (cpp/unbox cpp/my_db.secure_connection* db-box)]
+ 23  │         db (cpp/unbox (:* my_db.secure_connection) db-box)]
      │             ^^^^^^^^^ Unboxed here.
      │ …
- 28  │         db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+ 28  │         db (cpp/new my_db.connection #cpp "localhost:5758")
  29  │         ; db-box is a opaque_box_ref
  30  │         db-box (cpp/box db)]
      │                 ^^^^^^^ Boxed here.
@@ -921,10 +922,10 @@ error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
 </code></pre>
 <h2 id="complex-literal-values"><a class="header" href="#complex-literal-values">Complex literal values</a></h2>
 <p>If your C++ value is not representable using just a symbol, due to
-template arguments or other shenanigans, you can use <code>cpp/value</code> to provide the
-complete value using the same domain specific language (DSL) as with <code>cpp/type</code>.
-For example, here’s how we grab the <code>npos</code> from a template instantiation:</p>
-<pre><code class="language-clojure">(let [m (cpp/value (:member (std.basic_string char) npos))]
+template arguments or other shenanigans, you can use jank’s C++ domain specific language (DSL).
+Documentation on that is <a href="#the-c-dsl">here</a>. For example, here’s how we grab
+<code>std::basic_string&lt;char&gt;::npos</code>:</p>
+<pre><code class="language-clojure">(let [m #cpp (:member (std.basic_string char) npos)]
   )
 </code></pre>
 <p>No implicit boxing will happen here, unless you use this value in a way which
@@ -933,15 +934,141 @@ need a copy, you will need to manually do that.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="working-with-native-types"><a class="header" href="#working-with-native-types">Working with native types</a></h1>
 <h2 id="accessing-c-types"><a class="header" href="#accessing-c-types">Accessing C++ types</a></h2>
-<p>C++ types are available within the <code>cpp</code> namespace, if you replace <code>::</code> with
+<p>C++ types are available within the <code>cpp</code> namespace, but you must replace <code>::</code> with
 <code>.</code>. For example, <code>std::string</code> becomes <code>cpp/std.string</code>. This also works for
 type aliases.</p>
 <h2 id="complex-literal-types"><a class="header" href="#complex-literal-types">Complex literal types</a></h2>
-<p>jank supports a C++ type
-domain-specific language (DSL) which can express any C++ type. This is available
-implicitly when in type position, but it can be explicitly requested by using
-the special <code>cpp/type</code> form. The <code>cpp/type</code> form resolves a type using the
-following DSL:</p>
+<p>For complex types like template instantiations, pointers to members, and so on,
+jank supports a C++ domain-specific language (DSL).
+This is available implicitly when in type position, but it can be
+explicitly requested by using the special <code>#cpp</code> tag. The documentation for this
+DSL is <a href="#the-c-dsl">here</a>.</p>
+<h2 id="defining-new-types"><a class="header" href="#defining-new-types">Defining new types</a></h2>
+<p>There isn’t yet a way to define new types using jank’s syntax, but you can
+always drop to <code>cpp/raw</code> to either include headers or define some C++ types
+inline. Improved support for extending jank’s object model with JIT (just in
+time) compiled types will be coming soon.</p>
+<pre><code class="language-clojure">(cpp/raw "struct person
+          {
+            std::string name;
+          };")
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="working-with-native-functions"><a class="header" href="#working-with-native-functions">Working with native functions</a></h1>
+<h2 id="global-functions"><a class="header" href="#global-functions">Global functions</a></h2>
+<p>C++ has a huge range of function scenarios and jank tries to capture them all.
+The simplest case is global functions, as well as static member functions. This
+applies to both C and C++ functions. In order to call these, just take the fully
+qualified name of the function and replace <code>::</code> with <code>.</code>. For example:</p>
+<ul>
+<li><code>std::rand</code> becomes <code>cpp/rand</code></li>
+<li><code>std::this_thread::get_id</code> becomes <code>cpp/std.this_thread.get_id</code></li>
+</ul>
+<p>For example, we can use the C functions <code>srand</code>, <code>time</code>, and <code>rand</code> to seed the
+pseudo-random number generator with the current time and then get a number.</p>
+<pre><code class="language-clojure">(defn -main [&amp; args]
+  (cpp/srand (cpp/time cpp/nullptr))
+  (println "rand:" (cpp/rand)))
+</code></pre>
+<p>If you need to access a function within a more complex type, such as a template
+instantiation, you can use the C++ domain specific language (DSL). It’s
+documented <a href="#the-c-dsl">here</a>.</p>
+<h2 id="overload-resolution"><a class="header" href="#overload-resolution">Overload resolution</a></h2>
+<p>Once we get out of C land and into C++ territory, the function name alone
+doesn’t necessarily make it unique. C++ functions can be overloaded with
+different arities and different parameter types. jank will resolve each function
+call at compile-time. There is no runtime reflection. If a call can’t be
+resolved to a known overload, or is ambiguous between multiple overloads, jank
+will raise a compiler error.</p>
+<p>For example, the
+<a href="https://en.cppreference.com/w/cpp/string/basic_string/to_string">std::to_string</a>
+function has many different overloads. Here, we specifically create <code>i</code> to be a
+<code>jank::i64</code>, so overload resolution can happen.</p>
+<pre><code class="language-clojure">(defn -main [&amp; args]
+  (let [i #cpp 42
+        s (cpp/std.to_string i)]
+    s))
+</code></pre>
+<p>However, if we try to rely on implicit trait conversions, or we pass an unsupported
+type, we’ll get a compiler error.</p>
+<pre><code class="language-clojure">(defn -main [&amp; args]
+  (let [i 42
+        s (cpp/std.to_string i)]
+    s))
+</code></pre>
+<pre><code class="language-bash">$ jank run test.jank
+─ analyze/invalid-cpp-function-call ───────────────────────────────────────────
+error: No normal overload match was found. When considering automatic trait
+       conversions, this call is ambiguous.
+
+─────┬─────────────────────────────────────────────────────────────────────────
+     │ test.jank
+─────┼─────────────────────────────────────────────────────────────────────────
+  1  │ (defn -main [&amp; args]
+  2  │   (let [i 42
+     │   ^ Expanded from this macro.
+  3  │         s (cpp/std.to_string i)]
+     │            ^^^^^^^^^^^^^^^^^ Found here.
+─────┴─────────────────────────────────────────────────────────────────────────
+</code></pre>
+<p>We could opt into a specific conversion, and thus a specific overload, by using <code>cpp/cast</code>.</p>
+<pre><code class="language-clojure">(defn -main [&amp; args]
+  (let [i 42
+        s (cpp/std.to_string (cpp/cast cpp/int i))]
+    s))
+</code></pre>
+<h2 id="member-functions"><a class="header" href="#member-functions">Member functions</a></h2>
+<p>Member functions can be accessed using the <code>.foo</code> syntax. The <code>cpp/</code> prefix for
+members is optional. For example, let’s convert a jank object to a <code>std::string</code>
+and then see if it’s empty.</p>
+<pre><code class="language-clojure">(defn empty? [o]
+  (let [s (str o)
+        native-s (cpp/cast cpp/std.string s)]
+    (.empty native-s)))
+</code></pre>
+<p>Also note that member functions can be called through a pointer to the native
+object, without the need for an explicit dereference.</p>
+<h2 id="arbitrary-callables"><a class="header" href="#arbitrary-callables">Arbitrary callables</a></h2>
+<p>In C++, we also deal with pointers to functions and custom types which implement
+the call operator. jank supports both of these scenarios using the normal call
+syntax. For example, we can implement our own callable which captures some data
+and then returns it when called.</p>
+<pre><code class="language-clojure">(cpp/raw "struct call_me
+          {
+            jank::runtime::object_ref data;
+
+            jank::runtime::object_ref operator()()
+            { return data; }
+          };")
+
+(defn -main [&amp; args]
+  (let [f (cpp/call_me. "meow")]
+    (f)))
+</code></pre>
+<h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
+<p>C++ operators are special language features for primitives, but they can also be
+overloaded for custom types. Their semantics are much more complicated than
+Clojure’s function calls, but basically all of them are available under the
+<code>cpp/</code> namespace within jank.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>C++20 does operator rewriting for comparison operators, to use the <code>&lt;=&gt;</code>
+spaceship operator, or perhaps others. jank doesn’t currently support this.
+If you’re porting C++ code to jank which fails to find the appropriate
+operator, chances are that operator never existed and Clang used rewriting to
+use a different operator instead. You can mitigate this by ensuring you use
+operators that actually exist.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="the-c-dsl"><a class="header" href="#the-c-dsl">The C++ DSL</a></h1>
+<p>jank has a domain specific language (DSL) for acessing arbitrary C++ types and
+values. This DSL is automatically enabled when the jank compiler is expecting a
+type, such as the first argument to <code>cpp/new</code>, <code>cpp/unbox</code>, or <code>cpp/cast</code>. The
+DSL can also be explicitly enabled using the <code>#cpp</code> tag.</p>
+<h2 id="dsl-overview"><a class="header" href="#dsl-overview">DSL overview</a></h2>
+<p>The C++ DSL can be used to look up both types and values. The jank compiler will
+ensure that you use a type when you need a type and a value when you need a
+value.</p>
 <ul>
 <li><code>(:* t)</code> adds a pointer</li>
 <li><code>(:&amp; t)</code> adds an lvalue reference</li>
@@ -951,12 +1078,14 @@ following DSL:</p>
 <li><code>(:long t)</code> and <code>(:short t)</code> add the corresponding C++ qualification</li>
 <li><code>(:array t s?)</code> turns a type into a sized (or unsized) array</li>
 <li><code>(:fn ret [a1 a2...])</code> builds a function type</li>
-<li><code>(t a1 a2...)</code> build a template instantiation</li>
+<li><code>(t a1 a2...)</code> builds a template instantiation</li>
 <li><code>(:member t name)</code> nests into a type</li>
-<li><code>(:member* t mt)</code> builds a pointer to member</li>
+<li><code>(:member* t mt)</code> builds a pointer to member type</li>
+<li><code>(:&amp;member t mt)</code> builds a pointer to member value</li>
 </ul>
 <p>Let’s take a look at some examples, comparing the C++ representation and the
 jank representation.</p>
+<h3 id="type-examples"><a class="header" href="#type-examples">Type examples</a></h3>
 <table>
 <tr>
 <td> C++ </td> <td> jank </td>
@@ -1048,118 +1177,50 @@ jank representation.</p>
 
 </table>
 
-<h2 id="defining-new-types"><a class="header" href="#defining-new-types">Defining new types</a></h2>
-<p>There isn’t yet a way to define new types using jank’s syntax, but you can
-always drop to <code>cpp/raw</code> to either include headers or define some C++ types
-inline. Improved support for extending jank’s object model with JIT (just in
-time) compiled types will be coming in 2026.</p>
-<pre><code class="language-clojure">(cpp/raw "struct person
-          {
-            std::string name;
-          };")
-</code></pre>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="working-with-native-functions"><a class="header" href="#working-with-native-functions">Working with native functions</a></h1>
-<h2 id="global-functions"><a class="header" href="#global-functions">Global functions</a></h2>
-<p>C++ has a huge range of function scenarios and jank tries to capture them all.
-The simplest case is global functions, as well as static member functions. This
-applies to both C and C++ functions. In order to call these, just take the fully
-qualified name of the function and replace <code>::</code> with <code>.</code>. For example:</p>
-<ul>
-<li><code>std::rand</code> becomes <code>cpp/rand</code></li>
-<li><code>std::this_thread::get_id</code> becomes <code>cpp/std.this_thread.get_id</code></li>
-</ul>
-<p>For example, we can use the C functions <code>srand</code>, <code>time</code>, and <code>rand</code> to seed the
-pseudo-random number generator with the current time and then get a number.</p>
-<pre><code class="language-clojure">(defn -main [&amp; args]
-  (cpp/srand (cpp/time cpp/nullptr))
-  (println "rand:" (cpp/rand)))
-</code></pre>
-<h2 id="overload-resolution"><a class="header" href="#overload-resolution">Overload resolution</a></h2>
-<p>Once we get out of C land and into C++ territory, the function name alone
-doesn’t necessarily make it unique. C++ functions can be overloaded with
-different arities and different parameter types. jank will resolve each function
-call at compile-time. There is no runtime reflection. If a call can’t be
-resolved to a known overload, or is ambiguous between multiple overloads, jank
-will raise a compiler error.</p>
-<p>For example, the
-<a href="https://en.cppreference.com/w/cpp/string/basic_string/to_string">std::to_string</a>
-function has many different overloads. Here, we specifically create <code>i</code> to be an
-<code>int</code>, so overload resolution can happen.</p>
-<pre><code class="language-clojure">(defn -main [&amp; args]
-  (let [i #cpp 42
-        s (cpp/std.to_string i)]
-    s))
-</code></pre>
-<p>However, if we try to rely on implicit trait conversions, or we pass an unsupported
-type, we’ll get a compiler error.</p>
-<pre><code class="language-clojure">(defn -main [&amp; args]
-  (let [i 42
-        s (cpp/std.to_string i)]
-    s))
-</code></pre>
-<pre><code class="language-bash">$ jank run test.jank
-─ analyze/invalid-cpp-function-call ───────────────────────────────────────────
-error: No normal overload match was found. When considering automatic trait
-       conversions, this call is ambiguous.
+<h3 id="value-examples"><a class="header" href="#value-examples">Value examples</a></h3>
+<p>jank will never implicitly analyze the C++ DSL for values, like it does for
+types. You must always tag your DSL form with <code>#cpp</code> to separate it from normal
+jank code.</p>
+<table>
+<tr>
+<td> C++ </td> <td> jank </td>
+</tr>
 
-─────┬─────────────────────────────────────────────────────────────────────────
-     │ test.jank
-─────┼─────────────────────────────────────────────────────────────────────────
-  1  │ (defn -main [&amp; args]
-  2  │   (let [i 42
-     │   ^ Expanded from this macro.
-  3  │         s (cpp/std.to_string i)]
-     │            ^^^^^^^^^^^^^^^^^ Found here.
-─────┴─────────────────────────────────────────────────────────────────────────
+<tr>
+<td>
+<pre><code class="language-cpp">std::basic_string&lt;char&gt;::npos
 </code></pre>
-<p>We could opt into a specific conversion, and thus a specific overload, by using <code>cpp/cast</code>.</p>
-<pre><code class="language-clojure">(defn -main [&amp; args]
-  (let [i 42
-        s (cpp/std.to_string (cpp/cast cpp/int i))]
-    s))
+</td>
+<td>
+<pre><code class="language-clojure">#cpp (:member (std.basic_string char) npos)
 </code></pre>
-<h2 id="member-functions"><a class="header" href="#member-functions">Member functions</a></h2>
-<p>Member functions can be accessed using the <code>.foo</code> syntax. The <code>cpp/</code> prefix for
-members is optional. For example, let’s convert a jank object to a <code>std::string</code>
-and then see if it’s empty.</p>
-<pre><code class="language-clojure">(defn empty? [o]
-  (let [s (str o)
-        native-s (cpp/cast cpp/std.string s)]
-    (.empty native-s)))
-</code></pre>
-<p>Also note that member functions can be called through a pointer to the native
-object, without the need for an explicit dereference.</p>
-<h2 id="arbitrary-callables"><a class="header" href="#arbitrary-callables">Arbitrary callables</a></h2>
-<p>In C++, we also deal with pointers to functions and custom types which implement
-the call operator. jank supports both of these scenarios using the normal call
-syntax. For example, we can implement our own callable which captures some data
-and then returns it when called.</p>
-<pre><code class="language-clojure">(cpp/raw "struct call_me
-          {
-            jank::runtime::object_ref data;
+</td>
+</tr>
 
-            jank::runtime::object_ref operator()()
-            { return data; }
-          };")
-
-(defn -main [&amp; args]
-  (let [f (cpp/call_me. "meow")]
-    (f)))
+<tr>
+<td>
+<pre><code class="language-cpp">std::numeric_limits&lt;long long&gt;::max()
 </code></pre>
-<h2 id="operators"><a class="header" href="#operators">Operators</a></h2>
-<p>C++ operators are special language features for primitives, but they can also be
-overloaded for custom types. Their semantics are much more complicated than
-Clojure’s function calls, but basically all of them are available under the
-<code>cpp/</code> namespace within jank.</p>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>C++20 does operator rewriting for comparison operators, to use the <code>&lt;=&gt;</code>
-spaceship operator, or perhaps others. jank doesn’t currently support this.
-If you’re porting C++ code to jank which fails to find the appropriate
-operator, chances are that operator never existed and Clang used rewriting to
-use a different operator instead.</p>
-</blockquote>
+</td>
+<td>
+<pre><code class="language-clojure">(#cpp (:member (std.numeric_limits (:long (:long int))) max))
+</code></pre>
+</td>
+</tr>
+
+<tr>
+<td>
+<pre><code class="language-cpp">&amp;std::pair&lt;int, bool&gt;::first
+</code></pre>
+</td>
+<td>
+<pre><code class="language-clojure">#cpp (:&amp;member (std.pair int bool) first)
+</code></pre>
+</td>
+</tr>
+
+</table>
+
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="throwing-and-catching-exceptions"><a class="header" href="#throwing-and-catching-exceptions">Throwing and catching exceptions</a></h1>
 <p>jank integrates tightly into C++’s exception model. C++ allows values of any
@@ -1185,7 +1246,7 @@ throw a <code>std::out_of_range</code> exception, which derives from <code>std::
 can catch the exception by the base type and then rely on the virtual <code>.what</code>
 member function to get the exception message.</p>
 <pre><code class="language-clojure">
-(let [v ((cpp/type "std::vector&lt;int&gt;"))]
+(let [v (#cpp (std::vector int))]
   (try
     ; This will throw.
     (.at v #cpp 0)
@@ -1228,22 +1289,18 @@ pointer types, <code>cpp/cast</code> will not work, but <code>cpp/unsafe-cast</c
 note that <code>cpp/unsafe-cast</code> does not support trait conversions. It is solely
 dedicated to native type construction and reinterpretation.</p>
 <pre><code class="language-clojure">(let [s #cpp "meow"
-      us (cpp/cast (cpp/type "unsigned char*") s)])
+      us (cpp/cast (:* (:unsigned char)) s)])
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="embedding-raw-c"><a class="header" href="#embedding-raw-c">Embedding raw C++</a></h1>
 <p>jank has a special <code>cpp/raw</code> form which accepts a single string containing
-literal C++ code. This can be used for bringing in pretty much anything. For
-example, we can use this to include header files (though prefer the
-<code>clojure.core/include</code> macro for this).</p>
-<pre><code class="language-clojure">(cpp/raw "#include &lt;fstream&gt;")
-</code></pre>
+literal C++ code. This can be used for bringing in pretty much anything.</p>
 <p>jank will always compile the included C++ source in a global scope, even if you
 put the <code>cpp/raw</code> form within a nested scope, such as within a function or a
 <code>let</code>. For example, this code will have the same effect, even if this function
 is never called.</p>
 <pre><code class="language-clojure">(defn foo []
-  (cpp/raw "#include &lt;fstream&gt;"))
+  (cpp/raw "struct bar{ };"))
 </code></pre>
 <p>The <code>cpp/raw</code> form always evaluates to <code>nil</code>. At runtime, <code>foo</code> will do nothing
 but return <code>nil</code>, since the JIT compilation is where the effect of <code>cpp/raw</code>
@@ -1264,7 +1321,7 @@ which will do the trick. For example, let’s say we have the following code.</p
 <pre><code class="language-clojure">(let [s (cpp/std.string)
       ; Let's say that this interop call isn't compiling correctly, due to a
       ; jank bug.
-      size (cpp/.size s)]
+      size (.size s)]
   (println "The size is" size))
 </code></pre>
 <p>You can work around this issue by defining a helper function which does the C++
@@ -1276,13 +1333,13 @@ work for you. In this case, we could do the following.</p>
       size (cpp/get_string_size s)]
   (println "The size is" size))
 </code></pre>
-<p>Of course, if you need to use this, please also report a bug on jank’s Github
-which describes what you tried to do and why it didn’t work.</p>
+<p>Of course, if you need to use this, please also <a href="/troubleshooting/getting-help.html">report a bug</a>
+on jank’s Github which describes what you tried to do and why it didn’t work.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="the-cpp-namespace"><a class="header" href="#the-cpp-namespace">The <code>cpp</code> namespace</a></h1>
 <p>The special <code>cpp/</code> namespace has two purposes, in jank.</p>
 <ol>
-<li>To contain all special C++ forms like <code>cpp/type</code>, <code>cpp/cast</code>, <code>cpp/&amp;</code>, etc.</li>
+<li>To contain all special C++ forms like <code>cpp/new</code>, <code>cpp/cast</code>, <code>cpp/&amp;</code>, etc.</li>
 <li>To provide access to all C and C++ symbols.</li>
 </ol>
 <p>If you want to access a C or C++ symbol without the <code>cpp</code> prefix, you can refer
