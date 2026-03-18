@@ -3880,6 +3880,7 @@ namespace jank::analyze
   }
 
   processor::expression_result
+  /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const. */
   processor::analyze_cpp_value(obj::persistent_list_ref const l,
                                local_frame_ptr const current_frame,
                                expression_position const position,
