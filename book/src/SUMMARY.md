@@ -29,6 +29,7 @@ TODO:
   * [Working with native values](cpp-interop/native-values.md)
   * [Working with native types](cpp-interop/native-types.md)
   * [Working with native functions](cpp-interop/native-functions.md)
+  * [The C++ DSL](cpp-interop/dsl.md)
   * [Throwing and catching exceptions](cpp-interop/native-exceptions.md)
   * [Casting between native types](cpp-interop/cast.md)
   * [Embedding raw C++](cpp-interop/cpp-raw.md)

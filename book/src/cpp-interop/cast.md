@@ -31,5 +31,5 @@ dedicated to native type construction and reinterpretation.
 
 ```clojure
 (let [s #cpp "meow"
-      us (cpp/cast (cpp/type "unsigned char*") s)])
+      us (cpp/cast (:* (:unsigned char)) s)])
 ```
