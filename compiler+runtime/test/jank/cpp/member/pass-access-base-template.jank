@@ -16,7 +16,7 @@
             bar<T> meow()
             { return {}; }
           }")
-(let* [meow (cpp/value (jank.cpp.member.pass_access_base_template.meow int))
+(let* [meow #cpp (jank.cpp.member.pass_access_base_template.meow int)
        bar (meow)
        a (.-a bar)
        b (.-b bar)]

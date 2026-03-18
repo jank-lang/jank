@@ -17,6 +17,6 @@
             };
             stubborn foo::bar{ \"meow\" };
           }")
-(let* [s (cpp/value (:member jank.cpp.literal_value.member.pass_not_copyable.foo bar))]
+(let* [s #cpp (:member jank.cpp.literal_value.member.pass_not_copyable.foo bar)]
   (if (= (.-name s) "meow")
     :success))

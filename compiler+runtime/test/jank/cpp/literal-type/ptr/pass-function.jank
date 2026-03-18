@@ -1,2 +1,2 @@
-(let* [_ ((cpp/type (:* (:fn void []))))]
+(let* [_ (#cpp (:* (:fn void [])))]
   :success)

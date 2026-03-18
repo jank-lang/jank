@@ -176,7 +176,7 @@ namespace jank::error
         return "Invalid C++ type.";
       case kind::analyze_invalid_cpp_type_position:
         return "Invalid position for a C++ type.";
-      case kind::analyze_invalid_cpp_type_dsl:
+      case kind::analyze_invalid_cpp_dsl:
         return "Invalid C++ type form.";
       case kind::analyze_invalid_cpp_value:
         return "Invalid C++ value.";

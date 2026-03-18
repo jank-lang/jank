@@ -1,2 +1,2 @@
-(let* [_ ((cpp/type (:signed int int)))]
+(let* [_ (#cpp (:signed int int))]
   :success)

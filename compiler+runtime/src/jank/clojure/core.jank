@@ -3819,13 +3819,13 @@
 
 (defn- i64? [n]
   (and (integer? n)
-       (>= n ((cpp/value (:member (std.numeric_limits jtl.i64) min))))
-       (<= n ((cpp/value (:member (std.numeric_limits jtl.i64) max))))))
+       (>= n ((cpp/dsl (:member (std.numeric_limits jtl.i64) min))))
+       (<= n ((cpp/dsl (:member (std.numeric_limits jtl.i64) max))))))
 
 (defn- i32? [n]
   (and (integer? n)
-       (>= n ((cpp/value (:member (std.numeric_limits jtl.i32) min))))
-       (<= n ((cpp/value (:member (std.numeric_limits jtl.i32) max))))))
+       (>= n ((cpp/dsl (:member (std.numeric_limits jtl.i32) min))))
+       (<= n ((cpp/dsl (:member (std.numeric_limits jtl.i32) max))))))
 
 (defn- shift-mask [shift mask x]
   (-> x (bit-shift-right shift) (bit-and mask)))

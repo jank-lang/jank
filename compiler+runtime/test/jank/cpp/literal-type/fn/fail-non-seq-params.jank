@@ -1,2 +1,2 @@
-(let* [_ ((cpp/type (:fn void int)))]
+(let* [_ (#cpp (:fn void int))]
   :success)

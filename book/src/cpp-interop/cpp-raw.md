@@ -1,12 +1,6 @@
 # Embedding raw C++
 jank has a special `cpp/raw` form which accepts a single string containing
-literal C++ code. This can be used for bringing in pretty much anything. For
-example, we can use this to include header files (though prefer the
-`clojure.core/include` macro for this).
-
-```clojure
-(cpp/raw "#include <fstream>")
-```
+literal C++ code. This can be used for bringing in pretty much anything.
 
 jank will always compile the included C++ source in a global scope, even if you
 put the `cpp/raw` form within a nested scope, such as within a function or a
@@ -15,7 +9,7 @@ is never called.
 
 ```clojure
 (defn foo []
-  (cpp/raw "#include <fstream>"))
+  (cpp/raw "struct bar{ };"))
 ```
 
 The `cpp/raw` form always evaluates to `nil`. At runtime, `foo` will do nothing
@@ -39,7 +33,7 @@ which will do the trick. For example, let's say we have the following code.
 (let [s (cpp/std.string)
       ; Let's say that this interop call isn't compiling correctly, due to a
       ; jank bug.
-      size (cpp/.size s)]
+      size (.size s)]
   (println "The size is" size))
 ```
 
@@ -56,5 +50,5 @@ work for you. In this case, we could do the following.
 ```
 
 
-Of course, if you need to use this, please also report a bug on jank's Github
-which describes what you tried to do and why it didn't work.
+Of course, if you need to use this, please also [report a bug](/troubleshooting/getting-help.md)
+on jank's Github which describes what you tried to do and why it didn't work.

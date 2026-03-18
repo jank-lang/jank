@@ -5,7 +5,7 @@
               i64 a{};
             };
           }")
-(let* [p (cpp/value (:member* jank.cpp.literal_value.member_ptr.pass_normal.foo a))
+(let* [p #cpp (:&member jank.cpp.literal_value.member_ptr.pass_normal.foo a)
        f (cpp/jank.cpp.literal_value.member_ptr.pass_normal.foo #cpp 77)]
   (if (= (p f) 77)
     :success))

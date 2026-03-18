@@ -6,5 +6,5 @@
               { return 42; }
             };
           }")
-(let* [p (cpp/value (:member* jank.cpp.literal_value.member_ptr.fail_static_function.foo get_42))]
+(let* [p #cpp (:&member jank.cpp.literal_value.member_ptr.fail_static_function.foo get_42)]
   :success)
