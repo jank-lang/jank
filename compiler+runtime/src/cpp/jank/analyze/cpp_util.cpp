@@ -398,8 +398,8 @@ namespace jank::analyze::cpp_util
 
   jtl::ptr<void> untyped_object_ref_type()
   {
-    static jtl::ptr<void> const ret{ Cpp::GetCanonicalType(
-      Cpp::GetTypeFromScope(Cpp::GetScopeFromCompleteName("jank::runtime::object_ref"))) };
+    static jtl::ptr<void> const ret{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.object_ref").expect_ok()) };
     return ret;
   }
 
@@ -410,6 +410,102 @@ namespace jank::analyze::cpp_util
      * exact type for "char". */
     static auto const char_literal_type{ resolve_literal_type("char").expect_ok() };
     return char_literal_type;
+  }
+
+  jtl::ptr<void> var_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.var_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> literal_type(runtime::object_ref const o)
+  {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(o->type)
+    {
+      case jank::runtime::object_type::nil:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.nil_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::boolean:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.boolean_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::integer:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.integer_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::character:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.character_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::real:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.real_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::symbol:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.symbol_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::keyword:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.keyword_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_string:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_string_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_list:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_list_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_vector:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_vector_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_hash_set:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_hash_set_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_array_map:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_array_map_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::var:
+        return var_type();
+      default:
+        {
+          static auto const type{ untyped_object_ref_type() };
+          return type;
+        }
+    }
+#pragma clang diagnostic pop
   }
 
   bool is_member_function(jtl::ptr<void> const scope)

@@ -1,9 +1,12 @@
 #include <jank/ir/print.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/analyze/cpp_util.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::ir
 {
+  using namespace analyze::cpp_util;
+
   usize determine_indent(jtl::string_builder const &sb)
   {
     if(sb.empty())
@@ -30,7 +33,11 @@ namespace jank::ir
 
   void inst::literal::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb, "{:name {} :op :literal :value {}}", name, runtime::to_code_string(value));
+    util::format_to(sb,
+                    "{:name {} :op :literal :value {} :type \"{}\"}",
+                    name,
+                    runtime::to_code_string(value),
+                    get_qualified_type_name(type));
   }
 
   void inst::def::print(jtl::string_builder &sb, usize const) const
@@ -40,17 +47,25 @@ namespace jank::ir
     {
       util::format_to(sb, " :value {}", value.unwrap());
     }
-    util::format_to(sb, " :meta {}}", meta);
+    util::format_to(sb, " :meta {} :type \"{}\"}", meta, get_qualified_type_name(type));
   }
 
   void inst::var_deref::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb, "{:name {} :op :var-deref :var {}}", name, qualified_var);
+    util::format_to(sb,
+                    "{:name {} :op :var-deref :var {} :type \"{}\"}",
+                    name,
+                    qualified_var,
+                    get_qualified_type_name(type));
   }
 
   void inst::var_ref::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb, "{:name {} :op :var-ref :var {}}", name, qualified_var);
+    util::format_to(sb,
+                    "{:name {} :op :var-ref :var {} :type \"{}\"}",
+                    name,
+                    qualified_var,
+                    get_qualified_type_name(type));
   }
 
   void inst::dynamic_call::print(jtl::string_builder &sb, usize const) const
@@ -66,12 +81,16 @@ namespace jank::ir
       needs_space = true;
       sb(arg);
     }
-    util::format_to(sb, "]}");
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
   }
 
   void inst::ret::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb, "{:op :ret :value {}}", value);
+    util::format_to(sb,
+                    "{:name {} :op :ret :value {} :type \"{}\"}",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
   }
 
   void print(block const &b, jtl::string_builder &sb, usize indent)

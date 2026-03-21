@@ -1,6 +1,7 @@
 #include <jank/ir/processor.hpp>
 #include <jank/ir/print.hpp>
 #include <jank/analyze/expr/function.hpp>
+#include <jank/analyze/cpp_util.hpp>
 #include <jank/codegen/llvm_processor.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/ns.hpp>
@@ -9,6 +10,8 @@
 
 namespace jank::ir
 {
+  using namespace analyze::cpp_util;
+
   struct builder
   {
     identifier next_ident()
@@ -16,63 +19,11 @@ namespace jank::ir
       return util::format("v{}", ident_count++);
     }
 
-    jtl::option<identifier>
-    literal(analyze::expression_position const pos, runtime::object_ref const value)
-    {
-      auto name{ next_ident() };
-      block->instructions.emplace_back(jtl::make_ref<inst::literal>(name, value));
-      if(pos == analyze::expression_position::tail)
-      {
-        return ret(name);
-      }
-      return name;
-    }
-
-    jtl::option<identifier> def(analyze::expression_position const pos,
-                                jtl::immutable_string const &qualified_var,
-                                jtl::option<identifier> const &value,
-                                identifier const &meta)
-    {
-      auto name{ next_ident() };
-      block->instructions.emplace_back(jtl::make_ref<inst::def>(name, qualified_var, value, meta));
-      if(pos == analyze::expression_position::tail)
-      {
-        return ret(name);
-      }
-      return name;
-    }
-
-    jtl::option<identifier>
-    var_deref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var)
-    {
-      auto name{ next_ident() };
-      block->instructions.emplace_back(jtl::make_ref<inst::var_deref>(name, qualified_var));
-      if(pos == analyze::expression_position::tail)
-      {
-        return ret(name);
-      }
-      return name;
-    }
-
-    jtl::option<identifier>
-    var_ref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var)
-    {
-      auto name{ next_ident() };
-      block->instructions.emplace_back(jtl::make_ref<inst::var_ref>(name, qualified_var));
-      if(pos == analyze::expression_position::tail)
-      {
-        return ret(name);
-      }
-      return name;
-    }
-
-    jtl::option<identifier> dynamic_call(analyze::expression_position const pos,
-                                         identifier const &fn,
-                                         native_vector<identifier> &&args)
+    identifier literal(analyze::expression_position const pos, runtime::object_ref const value)
     {
       auto name{ next_ident() };
       block->instructions.emplace_back(
-        jtl::make_ref<inst::dynamic_call>(name, fn, jtl::move(args)));
+        jtl::make_ref<inst::literal>(name, literal_type(value), value));
       if(pos == analyze::expression_position::tail)
       {
         return ret(name);
@@ -80,10 +31,66 @@ namespace jank::ir
       return name;
     }
 
-    jtl::option<identifier> ret(identifier const &name) const
+    identifier def(analyze::expression_position const pos,
+                   jtl::immutable_string const &qualified_var,
+                   jtl::option<identifier> const &value,
+                   identifier const &meta)
     {
-      block->instructions.emplace_back(jtl::make_ref<inst::ret>(name));
-      return none;
+      auto name{ next_ident() };
+      block->instructions.emplace_back(
+        jtl::make_ref<inst::def>(name, var_type(), qualified_var, value, meta));
+      if(pos == analyze::expression_position::tail)
+      {
+        return ret(name);
+      }
+      return name;
+    }
+
+    identifier
+    var_deref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var)
+    {
+      auto name{ next_ident() };
+      block->instructions.emplace_back(
+        jtl::make_ref<inst::var_deref>(name, untyped_object_ref_type(), qualified_var));
+      if(pos == analyze::expression_position::tail)
+      {
+        return ret(name);
+      }
+      return name;
+    }
+
+    identifier
+    var_ref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var)
+    {
+      auto name{ next_ident() };
+      block->instructions.emplace_back(
+        jtl::make_ref<inst::var_ref>(name, var_type(), qualified_var));
+      if(pos == analyze::expression_position::tail)
+      {
+        return ret(name);
+      }
+      return name;
+    }
+
+    identifier dynamic_call(analyze::expression_position const pos,
+                            identifier const &fn,
+                            native_vector<identifier> &&args)
+    {
+      auto name{ next_ident() };
+      block->instructions.emplace_back(
+        jtl::make_ref<inst::dynamic_call>(name, untyped_object_ref_type(), fn, jtl::move(args)));
+      if(pos == analyze::expression_position::tail)
+      {
+        return ret(name);
+      }
+      return name;
+    }
+
+    identifier ret(identifier const &value)
+    {
+      auto name{ next_ident() };
+      block->instructions.emplace_back(jtl::make_ref<inst::ret>(name, Cpp::GetVoidType(), value));
+      return name;
     }
 
     jtl::ref<block> block;
@@ -143,7 +150,7 @@ namespace jank::ir
     return b.def(expr->position,
                  expr->name->to_code_string(),
                  value_ident,
-                 b.literal(analyze::expression_position::value, expr->name->meta).unwrap());
+                 b.literal(analyze::expression_position::value, expr->name->meta));
   }
 
   jtl::option<identifier> gen(analyze::expr::var_deref_ref const expr, builder &b)
@@ -369,6 +376,11 @@ namespace jank::ir
       for(auto const expr : arity.body->values)
       {
         gen(expr, b);
+      }
+
+      if(arity.body->values.empty())
+      {
+        b.literal(analyze::expression_position::tail, runtime::jank_nil());
       }
 
       util::println("{}", print(fn));
