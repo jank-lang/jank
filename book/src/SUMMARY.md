@@ -46,3 +46,6 @@ TODO:
   * [How to get a stack trace](troubleshooting/stack-trace.md)
   * [Where to get help](troubleshooting/getting-help.md)
   * [FAQ](troubleshooting/faq.md)
+
+* [Developing jank](dev/index.md)
+  * [IR reference](dev/ir.md)

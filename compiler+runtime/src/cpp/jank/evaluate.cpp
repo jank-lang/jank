@@ -21,6 +21,7 @@
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/error/analyze.hpp>
+#include <jank/ir/processor.hpp>
 
 namespace jank::evaluate
 {
@@ -551,6 +552,8 @@ namespace jank::evaluate
 
   object_ref eval(expr::function_ref const expr, jtl::immutable_string const &)
   {
+    ir::create(expr, "", codegen::compilation_target::eval);
+
     profile::timer const timer{ util::format("eval jit function {}", expr->name) };
     auto const &module(
       obj::symbol{ expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),

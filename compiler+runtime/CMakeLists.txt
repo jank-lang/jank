@@ -644,6 +644,9 @@ add_library(
   src/cpp/jank/analyze/pass/walk.cpp
   src/cpp/jank/analyze/pass/optimize.cpp
   src/cpp/jank/analyze/pass/strip_source_meta.cpp
+  src/cpp/jank/ir/processor.cpp
+  src/cpp/jank/ir/instruction.cpp
+  src/cpp/jank/ir/print.cpp
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/processor.cpp
   src/cpp/jank/codegen/llvm_processor.cpp
