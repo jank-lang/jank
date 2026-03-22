@@ -548,7 +548,8 @@ namespace jank::analyze::cpp_util
   {
     auto const can_type{ Cpp::GetCanonicalType(
       Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
-    return can_type == untyped_object_ptr_type() || can_type == untyped_object_ref_type();
+    return can_type == untyped_object_ptr_type()
+      || can_type == Cpp::GetCanonicalType(untyped_object_ref_type());
   }
 
   jtl::ptr<void> base_type(jtl::ptr<void> type)
