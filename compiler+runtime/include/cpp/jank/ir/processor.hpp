@@ -36,6 +36,7 @@ namespace jank::ir
   struct function
   {
     usize add_block(identifier const &name);
+    void remove_block(usize const index);
 
     identifier name;
     native_vector<block> blocks;

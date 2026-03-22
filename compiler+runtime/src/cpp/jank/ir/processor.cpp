@@ -22,6 +22,15 @@ namespace jank::ir
     return index;
   }
 
+  void function::remove_block(usize const index)
+  {
+    blocks.erase(blocks.begin() + index);
+    for(auto i{ index }; i != blocks.size(); ++i)
+    {
+      --blocks[i].index;
+    }
+  }
+
   struct builder
   {
     identifier next_ident()
@@ -42,6 +51,11 @@ namespace jank::ir
     usize block(identifier const &name) const
     {
       return fn->add_block(name);
+    }
+
+    void remove_block(usize const block_index) const
+    {
+      return fn->remove_block(block_index);
     }
 
     void enter_block(usize const blk_index)
@@ -336,8 +350,12 @@ namespace jank::ir
     b.branch(condition_name, b.fn->blocks[then_blk].name, b.fn->blocks[else_blk].name);
 
     b.enter_block(then_blk);
-    b.branch_set(shadow, gen(expr->then, b).unwrap());
-    b.jump(b.fn->blocks[merge_blk].name);
+    auto const then_name{ gen(expr->then, b).unwrap() };
+    if(expr->position != analyze::expression_position::tail)
+    {
+      b.branch_set(shadow, then_name);
+      b.jump(b.fn->blocks[merge_blk].name);
+    }
 
     b.enter_block(else_blk);
     identifier else_name;
@@ -349,11 +367,21 @@ namespace jank::ir
     {
       else_name = b.literal(expr->position, runtime::jank_nil());
     }
-    b.branch_set(shadow, else_name);
-    b.jump(b.fn->blocks[merge_blk].name);
+    if(expr->position != analyze::expression_position::tail)
+    {
+      b.branch_set(shadow, else_name);
+      b.jump(b.fn->blocks[merge_blk].name);
+    }
 
-    b.enter_block(merge_blk);
-    return b.branch_get(shadow, expression_type(expr));
+    if(expr->position != analyze::expression_position::tail)
+    {
+      b.enter_block(merge_blk);
+      return b.branch_get(shadow, expression_type(expr));
+    }
+
+    b.remove_block(merge_blk);
+
+    return none;
   }
 
   jtl::option<identifier> gen(analyze::expr::throw_ref const, builder &)
