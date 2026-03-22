@@ -1,3 +1,5 @@
+#include <CppInterOp/CppInterOp.h>
+
 #include <jank/ir/instruction.hpp>
 
 namespace jank::ir
@@ -63,8 +65,47 @@ namespace jank::ir::inst
   {
   }
 
-  ret::ret(identifier const &name, jtl::ptr<void> const type, identifier const &value)
+  jump::jump(identifier const &name, identifier const &block)
+    : instruction{ name, Cpp::GetVoidType() }
+    , block{ block }
+  {
+  }
+
+  bool jump::is_terminator() const
+  {
+    return true;
+  }
+
+  branch_set::branch_set(identifier const &name, identifier const &shadow, identifier const &value)
+    : instruction{ name, Cpp::GetVoidType() }
+    , shadow{ shadow }
+    , value{ value }
+  {
+  }
+
+  branch_get::branch_get(identifier const &name, jtl::ptr<void> const type)
     : instruction{ name, type }
+  {
+  }
+
+  branch::branch(identifier const &name,
+                 identifier const &condition,
+                 identifier const &then_block,
+                 identifier const &else_block)
+    : instruction{ name, Cpp::GetVoidType() }
+    , condition{ condition }
+    , then_block{ then_block }
+    , else_block{ else_block }
+  {
+  }
+
+  bool branch::is_terminator() const
+  {
+    return true;
+  }
+
+  ret::ret(identifier const &name, identifier const &value)
+    : instruction{ name, Cpp::GetVoidType() }
     , value{ value }
   {
   }

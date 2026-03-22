@@ -1,4 +1,6 @@
 #include <ftxui/dom/elements.hpp>
+#include <ftxui/screen/screen.hpp>
+#include <ftxui/screen/string.hpp>
 
 #include <jank/ui/highlight.hpp>
 #include <jank/read/lex.hpp>
@@ -162,5 +164,32 @@ namespace jank::ui
     lines.emplace(last_line, flexbox(std::move(current_line), config));
 
     return lines;
+  }
+
+  jtl::immutable_string highlight_str(runtime::module::file_view const &code)
+  {
+    auto const lines{ std::count(code.data(), code.data() + code.size(), '\n') };
+    return highlight_str(code, 0, lines + 1);
+  }
+
+  jtl::immutable_string highlight_str(runtime::module::file_view const &code,
+                                      usize const line_start,
+                                      usize const line_end)
+  {
+    auto const line_to_elem{ highlight(code, line_start, line_end) };
+    std::vector<Element> lines;
+    lines.reserve(line_to_elem.size());
+    for(usize i{ line_start }; i <= line_end; ++i)
+    {
+      auto const found{ line_to_elem.find(i + 1) };
+      if(found != line_to_elem.end())
+      {
+        lines.emplace_back(found->second);
+      }
+    }
+    auto document{ vbox(lines) };
+    auto screen{ Screen::Create(Dimension::Fit(document), Dimension::Fit(document)) };
+    Render(screen, document);
+    return screen.ToString();
   }
 }

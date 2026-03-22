@@ -84,6 +84,44 @@ namespace jank::ir
     util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
   }
 
+  void inst::jump::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :jump :block {} :type \"{}\"}",
+                    name,
+                    block,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::branch_set::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :branch-set :shadow {} :value {} :type \"{}\"}",
+                    name,
+                    shadow,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::branch_get::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :branch-get :type \"{}\"}",
+                    name,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::branch::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :branch :condition {} :then {} :else {} :type \"{}\"}",
+                    name,
+                    condition,
+                    then_block,
+                    else_block,
+                    get_qualified_type_name(type));
+  }
+
   void inst::ret::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,

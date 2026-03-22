@@ -82,9 +82,51 @@ namespace jank::ir
       native_vector<identifier> args;
     };
 
+    struct jump : instruction
+    {
+      jump(identifier const &name, identifier const &block);
+
+      bool is_terminator() const override;
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier block;
+    };
+
+    struct branch_set : instruction
+    {
+      branch_set(identifier const &name, identifier const &shadow, identifier const &value);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier shadow;
+      identifier value;
+    };
+
+    struct branch_get : instruction
+    {
+      branch_get(identifier const &name, jtl::ptr<void> const type);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+    };
+
+    struct branch : instruction
+    {
+      branch(identifier const &name,
+             identifier const &condition,
+             identifier const &then_block,
+             identifier const &else_block);
+
+      bool is_terminator() const override;
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier condition;
+      identifier then_block;
+      identifier else_block;
+    };
+
     struct ret : instruction
     {
-      ret(identifier const &name, jtl::ptr<void> const type, identifier const &value);
+      ret(identifier const &name, identifier const &value);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;

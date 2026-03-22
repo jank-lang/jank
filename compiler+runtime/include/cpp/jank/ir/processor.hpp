@@ -28,12 +28,15 @@ namespace jank::ir
   {
     bool has_terminator() const;
 
+    usize index{};
     identifier name;
     native_vector<jtl::ref<instruction>> instructions;
   };
 
   struct function
   {
+    usize add_block(identifier const &name);
+
     identifier name;
     native_vector<block> blocks;
   };
