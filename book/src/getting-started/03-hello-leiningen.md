@@ -123,6 +123,8 @@ within those directories, recursively, and ensure their tests run.
 
 ```
 
+You can read more about testing projects [here](../project/test.md).
+
 ## Compiling a Leiningen project
 It's possible to AOT (ahead of time) compile our whole Leiningen project to an
 executable. This involves compiling every one of our source files and
@@ -136,6 +138,8 @@ Hello, world!
 
 As with GCC, Clang, etc, the default output name is `a.out`. When we invoke
 that, we see our printed hello world.
+
+You can read more about AOT compiling projects [here](../project/aot.md).
 
 > [!NOTE]
 > There is not yet a way to change the output name using Leiningen, but this

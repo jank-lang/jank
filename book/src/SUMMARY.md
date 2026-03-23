@@ -36,7 +36,8 @@ TODO:
   * [The cpp namespace](cpp-interop/cpp-ns.md)
 
 * [Working with projects](project/index.md)
-  * [AOT compiling projects](project/aot.md)
+  * [Testing](project/test.md)
+  * [AOT compiling](project/aot.md)
 
 * [Differences from Clojure](differences-from-clojure.md)
 * [For C++ Developers](for-cpp-developers.md)
