@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-120c99b1.js";
+            window.path_to_searchindex_js = "searchindex-2bc80c85.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-bdec8b3d.js"></script>
+        <script src="toc-15aabc7d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -429,6 +429,7 @@ within those directories, recursively, and ensure their tests run.</p>
              :test {:test-paths ["src/test" "other/test"]}})
 
 </code></pre>
+<p>You can read more about testing projects <a href="#testing">here</a>.</p>
 <h2 id="compiling-a-leiningen-project"><a class="header" href="#compiling-a-leiningen-project">Compiling a Leiningen project</a></h2>
 <p>It’s possible to AOT (ahead of time) compile our whole Leiningen project to an
 executable. This involves compiling every one of our source files and
@@ -439,6 +440,7 @@ Hello, world!
 </code></pre>
 <p>As with GCC, Clang, etc, the default output name is <code>a.out</code>. When we invoke
 that, we see our printed hello world.</p>
+<p>You can read more about AOT compiling projects <a href="#aot-compiling">here</a>.</p>
 <blockquote class="blockquote-tag blockquote-tag-note">
 <p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
 <p>There is not yet a way to change the output name using Leiningen, but this
@@ -1360,7 +1362,53 @@ as Clojure CLI, but Leiningen currently provides a much better user experience.<
 <p>Leiningen projects in jank manage your dependencies, compilation settings,
 runtime settings, distribution settings, and more.</p>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="aot-compiling-projects"><a class="header" href="#aot-compiling-projects">AOT compiling projects</a></h1>
+<h1 id="testing"><a href="#testing" class="header">Testing</a></h1>
+<h2 id="testing-a-leiningen-project-1"><a class="header" href="#testing-a-leiningen-project-1">Testing a Leiningen project</a></h2>
+<p>Leiningen has support for easily running all tests for a project. Tests are
+written in the <code>test/</code> directory. The jank template provided us with an example
+test which will fail.</p>
+<pre><code class="language-bash">$ lein test
+</code></pre>
+<p>If tests exist in directories other than <code>test/</code>, you can use the <code>:test</code>
+profile to point Leiningen to them. Leiningen will find all jank source files
+within those directories, recursively, and ensure their tests run.</p>
+<pre><code class="language-clojure">(defproject hello_lein "0.1-SNAPSHOT"
+  ;; ...
+  :profiles {;; ...
+             :test {:test-paths ["src/test" "other/test"]}})
+
+</code></pre>
+<h3 id="running-specific-tests"><a class="header" href="#running-specific-tests">Running specific tests</a></h3>
+<p>You can run tests in specific namespaces by specifying them as command-line
+arguments.</p>
+<pre><code class="language-bash">$ lein test project.ns1 project.ns2
+</code></pre>
+<p>You can also run just specific tests.</p>
+<pre><code class="language-bash">$ lein test :only project.ns1/my-test
+</code></pre>
+<h4 id="test-selectors"><a class="header" href="#test-selectors">Test selectors</a></h4>
+<p>Test selectors allow you to define filters for which tests to run.
+When you execute <code>lein test</code>, Leiningen uses the <code>:default</code> selector
+to select the tests, by default. However, you can add new selectors in
+<code>project.clj</code> and specify them when running <code>lein test</code>.</p>
+<p>For example, let’s say our integration tests are slow and we want to separate
+them from our other tests. First we add a new <code>:integration</code> test selector to
+our project.</p>
+<pre><code class="language-clojure">(defproject hello_lein "0.1-SNAPSHOT"
+  ;; ...
+  :profiles {;; ...
+             :test {:test-selectors {:default (complement :integration)
+                                     :integration :integration}}})
+</code></pre>
+<p>Then we tag our integration tests with the <code>:integration</code> metadata.</p>
+<pre><code class="language-clojure">(deftest ^:integration network-heavy-test
+  (is (= [1 2 3] (:numbers (network-operation)))))
+</code></pre>
+<p>Finally, we can run only the integration tests.</p>
+<pre><code class="language-bash">$ lein test :integration
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="aot-compiling"><a class="header" href="#aot-compiling">AOT compiling</a></h1>
 <p>Given a jank Leiningen project, you can ahead of time (AOT) compile all of your
 code and dependencies to an executable using this command.</p>
 <pre><code class="language-bash">lein compile
