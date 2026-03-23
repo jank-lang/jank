@@ -84,6 +84,15 @@ namespace jank::ir
     util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
   }
 
+  void inst::truthy::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :truthy :value {} :type \"{}\"}",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
   void inst::jump::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,

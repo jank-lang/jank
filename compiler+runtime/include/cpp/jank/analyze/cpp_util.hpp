@@ -62,6 +62,7 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> untyped_object_ptr_type();
   jtl::ptr<void> untyped_object_ref_type();
   jtl::ptr<void> char_type();
+  jtl::ptr<void> bool_type();
   jtl::ptr<void> var_type();
   jtl::ptr<void> literal_type(runtime::object_ref const o);
 

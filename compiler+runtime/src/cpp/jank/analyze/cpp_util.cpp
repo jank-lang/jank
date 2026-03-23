@@ -412,6 +412,12 @@ namespace jank::analyze::cpp_util
     return char_literal_type;
   }
 
+  jtl::ptr<void> bool_type()
+  {
+    static auto const type{ Cpp::GetType("bool") };
+    return type;
+  }
+
   jtl::ptr<void> var_type()
   {
     static auto const type{ Cpp::GetTypeFromScope(

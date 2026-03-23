@@ -82,6 +82,15 @@ namespace jank::ir
       native_vector<identifier> args;
     };
 
+    struct truthy : instruction
+    {
+      truthy(identifier const &name, identifier const &value);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier value;
+    };
+
     struct jump : instruction
     {
       jump(identifier const &name, identifier const &block);
@@ -126,7 +135,7 @@ namespace jank::ir
 
     struct ret : instruction
     {
-      ret(identifier const &name, identifier const &value);
+      ret(identifier const &name, jtl::ptr<void> const type, identifier const &value);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;

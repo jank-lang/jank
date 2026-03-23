@@ -55,7 +55,7 @@ namespace jank::ir
 
     void remove_block(usize const block_index) const
     {
-      return fn->remove_block(block_index);
+      fn->remove_block(block_index);
     }
 
     void enter_block(usize const blk_index)
@@ -66,11 +66,12 @@ namespace jank::ir
     identifier literal(analyze::expression_position const pos, runtime::object_ref const value)
     {
       auto name{ next_ident() };
+      auto const type{ literal_type(value) };
       fn->blocks[block_index].instructions.emplace_back(
-        jtl::make_ref<inst::literal>(name, literal_type(value), value));
+        jtl::make_ref<inst::literal>(name, type, value));
       if(pos == analyze::expression_position::tail)
       {
-        return ret(name);
+        return ret(name, type);
       }
       return name;
     }
@@ -81,11 +82,12 @@ namespace jank::ir
                    identifier const &meta)
     {
       auto name{ next_ident() };
+      auto const type{ var_type() };
       fn->blocks[block_index].instructions.emplace_back(
-        jtl::make_ref<inst::def>(name, var_type(), qualified_var, value, meta));
+        jtl::make_ref<inst::def>(name, type, qualified_var, value, meta));
       if(pos == analyze::expression_position::tail)
       {
-        return ret(name);
+        return ret(name, type);
       }
       return name;
     }
@@ -94,11 +96,12 @@ namespace jank::ir
     var_deref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var)
     {
       auto name{ next_ident() };
+      auto const type{ untyped_object_ref_type() };
       fn->blocks[block_index].instructions.emplace_back(
-        jtl::make_ref<inst::var_deref>(name, untyped_object_ref_type(), qualified_var));
+        jtl::make_ref<inst::var_deref>(name, type, qualified_var));
       if(pos == analyze::expression_position::tail)
       {
-        return ret(name);
+        return ret(name, type);
       }
       return name;
     }
@@ -107,11 +110,12 @@ namespace jank::ir
     var_ref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var)
     {
       auto name{ next_ident() };
+      auto const type{ var_type() };
       fn->blocks[block_index].instructions.emplace_back(
-        jtl::make_ref<inst::var_ref>(name, var_type(), qualified_var));
+        jtl::make_ref<inst::var_ref>(name, type, qualified_var));
       if(pos == analyze::expression_position::tail)
       {
-        return ret(name);
+        return ret(name, type);
       }
       return name;
     }
@@ -121,12 +125,21 @@ namespace jank::ir
                             native_vector<identifier> &&args)
     {
       auto name{ next_ident() };
+      auto const type{ untyped_object_ref_type() };
       this->fn->blocks[block_index].instructions.emplace_back(
-        jtl::make_ref<inst::dynamic_call>(name, untyped_object_ref_type(), fn, jtl::move(args)));
+        jtl::make_ref<inst::dynamic_call>(name, type, fn, jtl::move(args)));
       if(pos == analyze::expression_position::tail)
       {
-        return ret(name);
+        return ret(name, type);
       }
+      return name;
+    }
+
+    identifier truthy(identifier const &value)
+    {
+      auto name{ next_ident() };
+      this->fn->blocks[block_index].instructions.emplace_back(
+        jtl::make_ref<inst::truthy>(name, value));
       return name;
     }
 
@@ -161,10 +174,11 @@ namespace jank::ir
       return name;
     }
 
-    identifier ret(identifier const &value)
+    identifier ret(identifier const &value, jtl::ptr<void> const type)
     {
       auto name{ next_ident() };
-      fn->blocks[block_index].instructions.emplace_back(jtl::make_ref<inst::ret>(name, value));
+      fn->blocks[block_index].instructions.emplace_back(
+        jtl::make_ref<inst::ret>(name, type, value));
       return name;
     }
 
@@ -347,7 +361,12 @@ namespace jank::ir
     auto const condition_name{ gen(expr->condition, b).unwrap() };
     auto const shadow{ b.next_ident("shadow") };
 
-    b.branch(condition_name, b.fn->blocks[then_blk].name, b.fn->blocks[else_blk].name);
+    identifier bool_condition{ condition_name };
+    if(is_any_object(expression_type(expr->condition)))
+    {
+      bool_condition = b.truthy(bool_condition);
+    }
+    b.branch(bool_condition, b.fn->blocks[then_blk].name, b.fn->blocks[else_blk].name);
 
     b.enter_block(then_blk);
     auto const then_name{ gen(expr->then, b).unwrap() };

@@ -1,6 +1,7 @@
 #include <CppInterOp/CppInterOp.h>
 
 #include <jank/ir/instruction.hpp>
+#include <jank/analyze/cpp_util.hpp>
 
 namespace jank::ir
 {
@@ -19,6 +20,8 @@ namespace jank::ir
 
 namespace jank::ir::inst
 {
+  using namespace analyze::cpp_util;
+
   literal::literal(identifier const &name,
                    jtl::ptr<void> const type,
                    runtime::object_ref const value)
@@ -65,6 +68,12 @@ namespace jank::ir::inst
   {
   }
 
+  truthy::truthy(identifier const &name, identifier const &value)
+    : instruction{ name, bool_type() }
+    , value{ value }
+  {
+  }
+
   jump::jump(identifier const &name, identifier const &block)
     : instruction{ name, Cpp::GetVoidType() }
     , block{ block }
@@ -104,8 +113,8 @@ namespace jank::ir::inst
     return true;
   }
 
-  ret::ret(identifier const &name, identifier const &value)
-    : instruction{ name, Cpp::GetVoidType() }
+  ret::ret(identifier const &name, jtl::ptr<void> const type, identifier const &value)
+    : instruction{ name, type }
     , value{ value }
   {
   }
