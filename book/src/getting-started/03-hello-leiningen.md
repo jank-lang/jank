@@ -123,43 +123,7 @@ within those directories, recursively, and ensure their tests run.
 
 ```
 
-### Running specific tests
-If you want to run tests in specific namespaces
-```bash
-lein test project.ns1 project.ns2
-```
-
-If you want to run only a specific test
-```bash
-lein test :only project.ns1/my-test
-```
-
-#### Test selectors
-Test selectors allow you to define criteria of filtering tests
-during `lein test`. `:only` and `:all` are the default selectors.
-When you execute `lein test`, `lein-jank` uses `:default` selector (if it is available) 
-to select the tests, otherwise it will run all the tests.
-
-You can write the selectors in `project.clj`
-```clojure
-(defproject hello_lein "0.1-SNAPSHOT"
-  ;; ...
-  :profiles {;; ...
-             :test {:test-selectors {:default (complement :integration)
-                                     :integration :integration}}})
-```
-
-Now if you define your test as:
-```clojure
-(deftest ^:integration network-heavy-test
-  (is (= [1 2 3] (:numbers (network-operation)))))
-```
-
-and if you run `lein test :integration`, only tests that evaluate to truthy values
-for `(:integratio (meta #'my-test))` in their meta will be executed. If no selector
-is mentioned in `lein test`, `:default` selector will be used to filter
-the tests.
-
+You can read more about testing projects [here](../project/test.md).
 
 ## Compiling a Leiningen project
 It's possible to AOT (ahead of time) compile our whole Leiningen project to an
@@ -174,6 +138,8 @@ Hello, world!
 
 As with GCC, Clang, etc, the default output name is `a.out`. When we invoke
 that, we see our printed hello world.
+
+You can read more about AOT compiling projects [here](../project/aot.md).
 
 > [!NOTE]
 > There is not yet a way to change the output name using Leiningen, but this
