@@ -9,7 +9,6 @@
 namespace jtl
 {
   struct immutable_string;
-  struct string_builder;
 }
 
 namespace jank::analyze::expr

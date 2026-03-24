@@ -82,6 +82,11 @@ namespace jank::ir::inst
   {
   }
 
+  recursion_reference::recursion_reference(identifier const &name, jtl::ptr<void> const type)
+    : instruction{ name, type }
+  {
+  }
+
   truthy::truthy(identifier const &name, identifier const &value)
     : instruction{ name, bool_type() }
     , value{ value }

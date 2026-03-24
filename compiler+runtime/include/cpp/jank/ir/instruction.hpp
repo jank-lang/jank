@@ -102,6 +102,13 @@ namespace jank::ir
       native_vector<identifier> args;
     };
 
+    struct recursion_reference : instruction
+    {
+      recursion_reference(identifier const &name, jtl::ptr<void> const type);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+    };
+
     struct truthy : instruction
     {
       truthy(identifier const &name, identifier const &value);

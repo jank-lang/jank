@@ -109,6 +109,14 @@ namespace jank::ir
     util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
   }
 
+  void inst::recursion_reference::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :recursion-reference :type \"{}\"}",
+                    name,
+                    get_qualified_type_name(type));
+  }
+
   void inst::truthy::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,

@@ -646,6 +646,7 @@ add_library(
   src/cpp/jank/analyze/pass/strip_source_meta.cpp
   src/cpp/jank/ir/processor.cpp
   src/cpp/jank/ir/instruction.cpp
+  src/cpp/jank/ir/builder.cpp
   src/cpp/jank/ir/print.cpp
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/processor.cpp
