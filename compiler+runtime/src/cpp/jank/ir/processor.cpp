@@ -82,7 +82,7 @@ namespace jank::ir
       value_ident = gen(expr->value.unwrap(), b);
     }
     return b.def(expr->position,
-                 expr->name->to_code_string(),
+                 expr->name->get_name(),
                  value_ident,
                  b.literal(analyze::expression_position::value, expr->name->meta));
   }
@@ -139,7 +139,7 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::local_reference_ref const expr, builder &b)
   {
-    auto const local_name{ expr->name->to_code_string() };
+    auto const &local_name{ expr->name->get_name() };
     auto const local{ b.locals.find(local_name) };
     if(local != b.locals.end())
     {
@@ -182,7 +182,7 @@ namespace jank::ir
       auto const loop{ expr->loop_target.unwrap() };
       for(usize i{}; i < loop->pairs.size(); ++i)
       {
-        auto const name{ loop->pairs[i].first->name->to_code_string() };
+        auto const &name{ loop->pairs[i].first->name->get_name() };
         b.branch_set(b.local_to_loop_shadow[name], arg_idents[i]);
       }
       return b.jump(b.loop_recur_target.unwrap());
@@ -220,7 +220,7 @@ namespace jank::ir
   {
     for(auto const &pair : expr->pairs)
     {
-      b.locals[pair.first->name->to_code_string()] = gen(pair.second, b).unwrap();
+      b.locals[pair.first->name->get_name()] = gen(pair.second, b).unwrap();
     }
 
     if(expr->is_loop)
@@ -228,7 +228,7 @@ namespace jank::ir
       for(auto const &pair : expr->pairs)
       {
         auto const shadow{ b.next_shadow() };
-        auto const name{ pair.first->name->to_code_string() };
+        auto const &name{ pair.first->name->get_name() };
         b.local_to_loop_shadow[name] = shadow;
         b.branch_set(shadow, b.locals[name]);
       }
@@ -242,7 +242,7 @@ namespace jank::ir
 
       for(auto const &pair : expr->pairs)
       {
-        auto const name{ pair.first->name->to_code_string() };
+        auto const &name{ pair.first->name->get_name() };
         b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], expression_type(pair.second));
       }
 
@@ -445,7 +445,7 @@ namespace jank::ir
           b.branch_set(shadow, b.locals[name]);
         }
 
-        auto const recur_blk{ b.block("recur") };
+        auto const recur_blk{ b.block(b.next_ident("recur")) };
         b.fn_recur_target = recur_blk;
         b.jump(recur_blk);
         b.enter_block(recur_blk);
