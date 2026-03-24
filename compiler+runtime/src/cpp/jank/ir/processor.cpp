@@ -322,7 +322,8 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::local_reference_ref const expr, builder &b)
   {
-    auto const local{ b.locals.find(expr->name->to_code_string()) };
+    auto const local_name{ expr->name->to_code_string() };
+    auto const local{ b.locals.find(local_name) };
     if(local != b.locals.end())
     {
       if(expr->position == analyze::expression_position::tail)
@@ -338,7 +339,7 @@ namespace jank::ir
     {
       if(params[i]->name == expr->name->name)
       {
-        return b.parameter(expr->position, i);
+        return b.locals[local_name] = b.parameter(expr->position, i);
       }
     }
 
