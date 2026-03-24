@@ -194,6 +194,13 @@ namespace jank::ir
     return name;
   }
 
+  identifier builder::throw_(identifier const &value)
+  {
+    auto name{ next_ident() };
+    fn->blocks[block_index].instructions.emplace_back(jtl::make_ref<inst::throw_>(name, value));
+    return name;
+  }
+
   identifier builder::ret(identifier const &value, jtl::ptr<void> const type)
   {
     auto name{ next_ident() };

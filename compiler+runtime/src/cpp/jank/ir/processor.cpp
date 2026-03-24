@@ -329,9 +329,9 @@ namespace jank::ir
     return none;
   }
 
-  jtl::option<identifier> gen(analyze::expr::throw_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::throw_ref const expr, builder &b)
   {
-    return none;
+    return b.throw_(gen(expr->value, b).unwrap());
   }
 
   jtl::option<identifier> gen(analyze::expr::try_ref const, builder &)

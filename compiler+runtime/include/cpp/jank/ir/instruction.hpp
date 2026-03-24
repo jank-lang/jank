@@ -160,6 +160,16 @@ namespace jank::ir
       identifier else_block;
     };
 
+    struct throw_ : instruction
+    {
+      throw_(identifier const &name, identifier const &value);
+
+      bool is_terminator() const override;
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier value;
+    };
+
     struct ret : instruction
     {
       ret(identifier const &name, jtl::ptr<void> const type, identifier const &value);

@@ -132,6 +132,17 @@ namespace jank::ir::inst
     return true;
   }
 
+  throw_::throw_(identifier const &name, identifier const &value)
+    : instruction{ name, Cpp::GetVoidType() }
+    , value{ value }
+  {
+  }
+
+  bool throw_::is_terminator() const
+  {
+    return true;
+  }
+
   ret::ret(identifier const &name, jtl::ptr<void> const type, identifier const &value)
     : instruction{ name, type }
     , value{ value }

@@ -48,6 +48,7 @@ namespace jank::ir
     identifier branch_get(identifier const &name, jtl::ptr<void> const type) const;
     identifier
     branch(identifier const &condition, identifier const &then_blk, identifier const &else_blk);
+    identifier throw_(identifier const &value);
     identifier ret(identifier const &value, jtl::ptr<void> const type);
 
     jtl::ref<function> fn;

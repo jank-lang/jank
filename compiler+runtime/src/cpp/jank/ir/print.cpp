@@ -164,6 +164,15 @@ namespace jank::ir
                     get_qualified_type_name(type));
   }
 
+  void inst::throw_::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :throw :value {} :type \"{}\"}",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
   void inst::ret::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,
