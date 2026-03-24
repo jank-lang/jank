@@ -19,6 +19,7 @@ namespace jank::ir
   {
     identifier next_ident();
     identifier next_ident(jtl::immutable_string const &prefix);
+    identifier next_shadow();
 
     jtl::ref<block> current_block() const;
     usize block(identifier const &name) const;
@@ -38,7 +39,6 @@ namespace jank::ir
     identifier dynamic_call(analyze::expression_position const pos,
                             identifier const &fn,
                             native_vector<identifier> &&args);
-    identifier recur(native_vector<identifier> &&args);
     identifier
     named_recursion(analyze::expression_position const pos, native_vector<identifier> &&args);
     identifier recursion_reference(analyze::expression_position const pos);
@@ -55,6 +55,7 @@ namespace jank::ir
     usize ident_count{};
     native_unordered_map<jtl::immutable_string, identifier> locals{};
     native_unordered_map<jtl::immutable_string, identifier> local_to_loop_shadow{};
-    jtl::option<usize> current_loop{};
+    jtl::option<usize> loop_recur_target{};
+    jtl::option<usize> fn_recur_target{};
   };
 }

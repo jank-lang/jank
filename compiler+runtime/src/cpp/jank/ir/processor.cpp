@@ -185,11 +185,17 @@ namespace jank::ir
         auto const name{ loop->pairs[i].first->name->to_code_string() };
         b.branch_set(b.local_to_loop_shadow[name], arg_idents[i]);
       }
-      return b.jump(b.current_loop);
+      return b.jump(b.loop_recur_target.unwrap());
     }
     else
     {
-      return b.recur(jtl::move(arg_idents));
+      for(usize i{}; i < b.fn->arity->params.size(); ++i)
+      {
+        auto const shadow{ b.next_shadow() };
+        auto const &name{ b.fn->arity->params[i]->get_name() };
+        b.branch_set(b.local_to_loop_shadow[name], arg_idents[i]);
+      }
+      return b.jump(b.fn_recur_target.unwrap());
     }
   }
 
@@ -221,16 +227,16 @@ namespace jank::ir
     {
       for(auto const &pair : expr->pairs)
       {
-        auto const shadow{ b.next_ident("s") };
+        auto const shadow{ b.next_shadow() };
         auto const name{ pair.first->name->to_code_string() };
         b.local_to_loop_shadow[name] = shadow;
         b.branch_set(shadow, b.locals[name]);
       }
 
       auto const loop_blk{ b.block(b.next_ident("loop")) };
-      auto const old_current_loop{ b.current_loop };
-      util::scope_exit const finally{ [&] { b.current_loop = old_current_loop; } };
-      b.current_loop = loop_blk;
+      auto const old_current_loop{ b.loop_recur_target };
+      util::scope_exit const finally{ [&] { b.loop_recur_target = old_current_loop; } };
+      b.loop_recur_target = loop_blk;
       b.jump(loop_blk);
       b.enter_block(loop_blk);
 
@@ -279,7 +285,7 @@ namespace jank::ir
     auto const else_blk{ b.block(b.next_ident("else")) };
     auto const merge_blk{ b.block(b.next_ident("merge")) };
     auto const condition_name{ gen(expr->condition, b).unwrap() };
-    auto const shadow{ b.next_ident("s") };
+    auto const shadow{ b.next_shadow() };
 
     identifier bool_condition{ condition_name };
     if(is_any_object(expression_type(expr->condition)))
@@ -427,6 +433,30 @@ namespace jank::ir
       fn.name = fn_expr->unique_name;
       fn.add_block("entry");
       builder b{ &fn };
+
+      if(arity.fn_ctx->is_recur_recursive)
+      {
+        for(usize i{}; i < arity.params.size(); ++i)
+        {
+          auto const shadow{ b.next_shadow() };
+          auto const &name{ arity.params[i]->get_name() };
+          b.locals[name] = b.parameter(analyze::expression_position::value, i);
+          b.local_to_loop_shadow[name] = shadow;
+          b.branch_set(shadow, b.locals[name]);
+        }
+
+        auto const recur_blk{ b.block("recur") };
+        b.fn_recur_target = recur_blk;
+        b.jump(recur_blk);
+        b.enter_block(recur_blk);
+
+        for(auto const param : arity.params)
+        {
+          auto const &name{ param->get_name() };
+          b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
+        }
+      }
+
       for(auto const expr : arity.body->values)
       {
         gen(expr, b);

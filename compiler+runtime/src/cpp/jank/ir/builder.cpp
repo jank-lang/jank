@@ -16,6 +16,11 @@ namespace jank::ir
     return util::format("{}{}", prefix, ident_count++);
   }
 
+  identifier builder::next_shadow()
+  {
+    return next_ident("s");
+  }
+
   jtl::ref<block> builder::current_block() const
   {
     return &fn->blocks[block_index];
