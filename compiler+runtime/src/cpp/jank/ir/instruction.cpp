@@ -22,6 +22,12 @@ namespace jank::ir::inst
 {
   using namespace analyze::cpp_util;
 
+  parameter::parameter(identifier const &name, jtl::ptr<void> const type, u8 const index)
+    : instruction{ name, type }
+    , index{ index }
+  {
+  }
+
   literal::literal(identifier const &name,
                    jtl::ptr<void> const type,
                    runtime::object_ref const value)
@@ -64,6 +70,14 @@ namespace jank::ir::inst
                              native_vector<identifier> &&args)
     : instruction{ name, type }
     , fn{ fn }
+    , args{ jtl::move(args) }
+  {
+  }
+
+  named_recursion::named_recursion(identifier const &name,
+                                   jtl::ptr<void> const type,
+                                   native_vector<identifier> &&args)
+    : instruction{ name, type }
     , args{ jtl::move(args) }
   {
   }

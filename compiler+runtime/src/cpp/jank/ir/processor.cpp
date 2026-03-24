@@ -63,6 +63,19 @@ namespace jank::ir
       block_index = blk_index;
     }
 
+    identifier parameter(analyze::expression_position const pos, u8 const index)
+    {
+      auto name{ next_ident() };
+      auto const type{ untyped_object_ref_type() };
+      fn->blocks[block_index].instructions.emplace_back(
+        jtl::make_ref<inst::parameter>(name, type, index));
+      if(pos == analyze::expression_position::tail)
+      {
+        return ret(name, type);
+      }
+      return name;
+    }
+
     identifier literal(analyze::expression_position const pos, runtime::object_ref const value)
     {
       auto name{ next_ident() };
@@ -128,6 +141,20 @@ namespace jank::ir
       auto const type{ untyped_object_ref_type() };
       this->fn->blocks[block_index].instructions.emplace_back(
         jtl::make_ref<inst::dynamic_call>(name, type, fn, jtl::move(args)));
+      if(pos == analyze::expression_position::tail)
+      {
+        return ret(name, type);
+      }
+      return name;
+    }
+
+    identifier
+    named_recursion(analyze::expression_position const pos, native_vector<identifier> &&args)
+    {
+      auto name{ next_ident() };
+      auto const type{ untyped_object_ref_type() };
+      this->fn->blocks[block_index].instructions.emplace_back(
+        jtl::make_ref<inst::named_recursion>(name, type, jtl::move(args)));
       if(pos == analyze::expression_position::tail)
       {
         return ret(name, type);
@@ -295,7 +322,27 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::local_reference_ref const expr, builder &b)
   {
-    return b.locals[expr->name->to_code_string()];
+    auto const local{ b.locals.find(expr->name->to_code_string()) };
+    if(local != b.locals.end())
+    {
+      if(expr->position == analyze::expression_position::tail)
+      {
+        return b.ret(local->second, expression_type(expr));
+      }
+      return local->second;
+    }
+
+    auto const &params{ b.fn->arity->params };
+    /* NOLINTNEXTLINE(bugprone-too-small-loop-variable) */
+    for(u8 i{}; i < params.size(); ++i)
+    {
+      if(params[i]->name == expr->name->name)
+      {
+        return b.parameter(expr->position, i);
+      }
+    }
+
+    return none;
   }
 
   jtl::option<identifier> gen(analyze::expr::function_ref const, builder &)
@@ -313,9 +360,16 @@ namespace jank::ir
     return none;
   }
 
-  jtl::option<identifier> gen(analyze::expr::named_recursion_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::named_recursion_ref const expr, builder &b)
   {
-    return none;
+    native_vector<identifier> arg_idents;
+    arg_idents.reserve(expr->arg_exprs.size());
+    for(auto const arg_expr : expr->arg_exprs)
+    {
+      arg_idents.emplace_back(gen(arg_expr, b).unwrap());
+    }
+
+    return b.named_recursion(expr->position, jtl::move(arg_idents));
   }
 
   jtl::option<identifier> gen(analyze::expr::let_ref const expr, builder &b)
@@ -503,7 +557,7 @@ namespace jank::ir
 
     for(auto const &arity : fn_expr->arities)
     {
-      function fn;
+      function fn{ &arity };
       fn.name = fn_expr->unique_name;
       fn.add_block("entry");
       builder b{ &fn };

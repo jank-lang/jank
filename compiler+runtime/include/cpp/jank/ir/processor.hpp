@@ -15,6 +15,7 @@ namespace jtl
 namespace jank::analyze::expr
 {
   using function_ref = jtl::ref<struct function>;
+  struct function_arity;
 }
 
 namespace jank::codegen
@@ -38,8 +39,9 @@ namespace jank::ir
     usize add_block(identifier const &name);
     void remove_block(usize const index);
 
-    identifier name;
-    native_vector<block> blocks;
+    jtl::ref<analyze::expr::function_arity> arity;
+    identifier name{};
+    native_vector<block> blocks{};
   };
 
   native_vector<function> create(analyze::expr::function_ref,

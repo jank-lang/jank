@@ -23,6 +23,15 @@ namespace jank::ir
 
   namespace inst
   {
+    struct parameter : instruction
+    {
+      parameter(identifier const &name, jtl::ptr<void> const type, u8 const index);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      u8 index{};
+    };
+
     struct literal : instruction
     {
       literal(identifier const &name, jtl::ptr<void> const type, runtime::object_ref const value);
@@ -79,6 +88,17 @@ namespace jank::ir
       void print(jtl::string_builder &sb, usize indent) const override;
 
       identifier fn;
+      native_vector<identifier> args;
+    };
+
+    struct named_recursion : instruction
+    {
+      named_recursion(identifier const &name,
+                      jtl::ptr<void> const type,
+                      native_vector<identifier> &&args);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
       native_vector<identifier> args;
     };
 

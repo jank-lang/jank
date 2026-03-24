@@ -31,6 +31,15 @@ namespace jank::ir
     }
   }
 
+  void inst::parameter::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :parameter :index {} :type \"{}\"}",
+                    name,
+                    index,
+                    get_qualified_type_name(type));
+  }
+
   void inst::literal::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,
@@ -71,6 +80,22 @@ namespace jank::ir
   void inst::dynamic_call::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb, "{:name {} :op :dynamic-call :fn {} :args [", name, fn);
+    bool needs_space{};
+    for(auto const &arg : args)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      sb(arg);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
+  void inst::named_recursion::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :named-recursion :args [", name);
     bool needs_space{};
     for(auto const &arg : args)
     {
