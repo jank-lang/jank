@@ -1,10 +1,10 @@
 #include <filesystem>
 #include <fstream>
 
-#include <Interpreter/Compatibility.h>
-
 #include <llvm/TargetParser/Host.h>
 #include <llvm/Support/Program.h>
+
+#include <CppInterOp/Compatibility.h>
 
 #include <ftxui/screen/screen.hpp>
 
@@ -440,7 +440,7 @@ namespace jank::environment
 
     if(error)
     {
-      return util::format("{}─ ❌{} jank cannot jit aot compile working binaries",
+      return util::format("{}─ ❌{} jank cannot aot compile working binaries",
                           terminal_style::red,
                           terminal_style::reset);
     }

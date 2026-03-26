@@ -182,6 +182,24 @@ namespace jank::read::parse
   {
   }
 
+  processor::processor(lex::processor::iterator const &b,
+                       lex::processor::iterator const &e,
+                       object_ref const &extended_features,
+                       bool const allow_reader_conditional,
+                       bool const in_preservation_mode)
+    : token_current{ b }
+    , token_end{ e }
+    , splicing_allowed_var{ make_box<var>(
+                              __rt_ctx->intern_ns(make_box<obj::symbol>("clojure.core")),
+                              make_box<obj::symbol>("*splicing-allowed?*"),
+                              jank_false)
+                              ->set_dynamic(true) }
+    , extended_features{ extended_features }
+    , allow_reader_conditional{ allow_reader_conditional }
+    , in_preservation_mode{ in_preservation_mode }
+  {
+  }
+
   processor::object_result processor::next()
   {
     if(token_current == token_end)
@@ -316,8 +334,8 @@ namespace jank::read::parse
   }
 
   jtl::result<native_vector<object_source_info>, error_ref>
-  processor::gracefully_parse(lex::token_kind const &upto,
-                              error_ref (*unterminated_form_error)(read::source const &))
+  processor::parse_upto(lex::token_kind const &upto,
+                        jtl::ref<error_ref(read::source const &)> const unterminated_form_error)
   {
     auto const start_token((*token_current).expect_ok());
     ++token_current;
@@ -327,26 +345,12 @@ namespace jank::read::parse
     context::binding_scope const bindings{ obj::persistent_hash_map::create_unique(
       std::make_pair(splicing_allowed_var, jank_true)) };
     native_vector<object_source_info> ret;
-    jtl::option<error_ref> error{};
 
     for(auto it(begin()); it != end(); ++it)
     {
-      if(error.is_some())
-      {
-        continue;
-      }
-
       if(it->is_err())
       {
-        auto const e{ it->expect_err() };
-
-        if(error::is_insuppressible(e->kind))
-        {
-          return e;
-        }
-
-        error = e;
-        continue;
+        return it->expect_err();
       }
 
       ret.push_back(it->expect_ok().unwrap());
@@ -354,15 +358,10 @@ namespace jank::read::parse
 
     if(expected_closer.is_some())
     {
-      return unterminated_form_error({ start_token.start, latest_token.end });
+      return (*unterminated_form_error)({ start_token.start, latest_token.end });
     }
 
     expected_closer = prev_expected_closer;
-
-    if(error.is_some())
-    {
-      return error.unwrap();
-    }
 
     return ret;
   }
@@ -370,8 +369,7 @@ namespace jank::read::parse
   processor::object_result processor::parse_list()
   {
     auto const start_token((*token_current).expect_ok());
-    auto const ret{ gracefully_parse(lex::token_kind::close_paren,
-                                     error::parse_unterminated_list) };
+    auto const ret{ parse_upto(lex::token_kind::close_paren, error::parse_unterminated_list) };
 
     if(ret.is_err())
     {
@@ -397,8 +395,8 @@ namespace jank::read::parse
   processor::object_result processor::parse_vector()
   {
     auto const start_token((*token_current).expect_ok());
-    auto const ret{ gracefully_parse(lex::token_kind::close_square_bracket,
-                                     error::parse_unterminated_vector) };
+    auto const ret{ parse_upto(lex::token_kind::close_square_bracket,
+                               error::parse_unterminated_vector) };
 
     if(ret.is_err())
     {
@@ -422,8 +420,8 @@ namespace jank::read::parse
   processor::object_result processor::parse_map()
   {
     auto const start_token((*token_current).expect_ok());
-    auto const ret{ gracefully_parse(lex::token_kind::close_curly_bracket,
-                                     error::parse_unterminated_map) };
+    auto const ret{ parse_upto(lex::token_kind::close_curly_bracket,
+                               error::parse_unterminated_map) };
 
     if(ret.is_err())
     {
@@ -628,36 +626,15 @@ namespace jank::read::parse
       },
       meta_val_result.expect_ok().unwrap().ptr));
 
-    jtl::option<error_ref> error{};
-
     if(meta_result.is_err())
     {
-      auto const e{ meta_result.expect_err() };
-
-      if(error::is_insuppressible(e->kind))
-      {
-        return e;
-      }
-
-      error = e;
+      return meta_result;
     }
 
     auto target_val_result(next());
 
-    if(error.is_some())
-    {
-      return error.unwrap();
-    }
-
     if(target_val_result.is_err())
     {
-      auto const e{ target_val_result.expect_err() };
-
-      if(error::is_insuppressible(e->kind))
-      {
-        return e;
-      }
-
       return target_val_result;
     }
     else if(target_val_result.expect_ok().is_none())
@@ -725,8 +702,8 @@ namespace jank::read::parse
   processor::object_result processor::parse_reader_macro_set()
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
-    auto const ret{ gracefully_parse(lex::token_kind::close_curly_bracket,
-                                     error::parse_unterminated_set) };
+    auto const ret{ parse_upto(lex::token_kind::close_curly_bracket,
+                               error::parse_unterminated_set) };
 
     if(ret.is_err())
     {
@@ -766,20 +743,12 @@ namespace jank::read::parse
   processor::object_result processor::parse_reader_macro_fn()
   {
     auto const start_token(token_current.latest.unwrap().expect_ok());
-    jtl::option<error_ref> error{};
 
     if(shorthand.is_some())
     {
-      auto const e{ error::parse_nested_shorthand_function(
+      return error::parse_nested_shorthand_function(
         start_token.start,
-        { "Outer #() form starts here.", shorthand.unwrap().source, error::note::kind::info }) };
-
-      if(error::is_insuppressible(e->kind))
-      {
-        return e;
-      }
-
-      error = error.unwrap_or(e);
+        { "Outer #() form starts here.", shorthand.unwrap().source, error::note::kind::info });
     }
 
     shorthand = shorthand_function_details{ {}, {}, start_token.start };
@@ -792,20 +761,8 @@ namespace jank::read::parse
     else if(list_result.expect_ok().is_none()
             || list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
     {
-      auto const e{ error::internal_parse_failure("Value after #( must be present.",
-                                                  { start_token.start, latest_token.end }) };
-
-      if(error::is_insuppressible(e->kind))
-      {
-        return e;
-      }
-
-      error = error.unwrap_or(e);
-    }
-
-    if(error.is_some())
-    {
-      return error.unwrap();
+      return error::internal_parse_failure("Value after #( must be present.",
+                                           { start_token.start, latest_token.end });
     }
 
     auto const call(expect_object<obj::persistent_list>(list_result.expect_ok().unwrap().ptr));
@@ -985,53 +942,40 @@ namespace jank::read::parse
     }
   }
 
-  processor::object_result processor::parse_tagged_cpp(object_ref const form,
+  processor::object_result processor::parse_tagged_cpp(object_ref form,
                                                        lex::token const &start_token,
                                                        lex::token const &str_end) const
   {
-    jtl::immutable_string str{};
-
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
     switch(str_end.kind)
     {
       case lex::token_kind::string:
       case lex::token_kind::escaped_string:
-        {
-          auto const string{ expect_object<obj::persistent_string>(form) };
-          str = util::format("\"{}\"", util::escape(string->data));
-          break;
-        }
       case lex::token_kind::boolean:
-        {
-          auto const boolean{ expect_object<obj::boolean>(form) };
-          str = util::format("{}", boolean->data);
-          break;
-        }
       case lex::token_kind::integer:
-        {
-          auto const integer{ expect_object<obj::integer>(form) };
-          str = util::format("static_cast<jank::i64>({})", integer->data);
-          break;
-        }
       case lex::token_kind::real:
         {
-          auto const real{ expect_object<obj::real>(form) };
-          str = util::format("static_cast<jank::f64>({})", real->data);
-          break;
+          auto const wrapped(make_box<obj::persistent_list>(std::in_place,
+                                                            make_box<obj::symbol>("cpp/value"),
+                                                            form));
+
+          return object_source_info{ wrapped, start_token, str_end };
+        }
+      case lex::token_kind::symbol:
+      case lex::token_kind::close_paren:
+        {
+          auto const wrapped(
+            make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("cpp/dsl"), form));
+
+          return object_source_info{ wrapped, start_token, str_end };
         }
       default:
         return error::parse_invalid_reader_tag_value(
-          "The form after '#cpp' must either be a string, boolean, integer or real literal.",
+          "This type of form doesn't support the '#cpp' tag.",
           { start_token.start, latest_token.end });
     }
 #pragma clang diagnostic pop
-
-    auto const wrapped(make_box<obj::persistent_list>(std::in_place,
-                                                      make_box<obj::symbol>("cpp/value"),
-                                                      make_box(util::format("{}", str)).erase()));
-
-    return object_source_info{ wrapped, start_token, str_end };
   }
 
   processor::object_result processor::parse_reader_macro_tagged()
@@ -1056,6 +1000,13 @@ namespace jank::read::parse
 
     auto const form_end(form_result.expect_ok().unwrap().end);
     auto const form(form_result.expect_ok().unwrap().ptr);
+
+    if(is_reader_suppressed || in_preservation_mode)
+    {
+      auto const tag{ make_box<obj::tagged_literal>(sym, form) };
+      return object_source_info{ tag, form_token, form_end };
+    }
+
     auto const data_readers_result{ __rt_ctx->find_var("clojure.core", "*data-readers*") };
 
     if(data_readers_result.is_some())
@@ -1170,6 +1121,14 @@ namespace jank::read::parse
     auto const start_token(token_current.latest.unwrap().expect_ok());
     ++token_current;
 
+    if(!allow_reader_conditional)
+    {
+      return error::parse_invalid_reader_conditional(
+        { start_token.start, latest_token.end },
+        "Conditional read is not allowed by default. Set the :read-cond reader option to either "
+        ":preserve or :allow.");
+    }
+
     if(token_current->is_err())
     {
       return token_current->expect_err();
@@ -1193,16 +1152,12 @@ namespace jank::read::parse
 
     auto const jank_keyword(__rt_ctx->intern_keyword("", "jank").expect_ok());
     auto const default_keyword(__rt_ctx->intern_keyword("", "default").expect_ok());
-    native_list<runtime::object_ref> spliced_forms{};
+    runtime::detail::native_transient_vector preserved_forms{};
+    native_list<object_ref> spliced_forms{};
     jtl::option<processor::object_result> result{};
 
     for(auto it(begin()); it != end(); ++it)
     {
-      if(result.is_some())
-      {
-        continue;
-      }
-
       if(it->is_err())
       {
         return it->expect_err();
@@ -1216,47 +1171,46 @@ namespace jank::read::parse
                                                        "Feature must be a keyword.");
       }
 
-      auto const feature_kw(dyn_cast<obj::keyword>(feature.ptr));
-      auto const form_result{ *(++it) };
+      auto const feature_kw(expect_object<obj::keyword>(feature.ptr));
       /* We take the first match, checking for :jank first. If there are duplicates, it doesn't
        * matter. If :default comes first, we'll always take it. In short, order is important. This
        * matches Clojure's behavior. */
-      auto const is_supported_feature{ equal(feature_kw, jank_keyword)
-                                       || equal(feature_kw, default_keyword) };
+      auto const is_supported_feature{ (feature_kw == jank_keyword || feature_kw == default_keyword
+                                        || contains(extended_features, feature_kw))
+                                       && result.is_none() };
+
+      is_reader_suppressed = !is_supported_feature;
+      auto const form_result{ *(++it) };
+      is_reader_suppressed = false;
 
       if(form_result.is_err())
       {
-        auto const e{ form_result.expect_err() };
-
-        if(error::is_insuppressible(e->kind))
-        {
-          return e;
-        }
-
-        /* The Clojure reader relaxes tagged literal syntax rules when dealing with
-         * a form in an unsupported reader conditional. This is done because an
-         * implementation of Clojure on a specific platform can't make any assumptions
-         * on what tagged literals other platform implementations will support. */
-        if(!is_supported_feature)
-        {
-          continue;
-        }
-
-        result = e;
+        return form_result.expect_err();
       }
-
-      if(form_result.expect_ok().is_none())
+      else if(form_result.expect_ok().is_none())
       {
         return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
                                                        "#? expects an even number of forms.");
+      }
+
+      auto const form{ form_result.expect_ok().unwrap().ptr };
+
+      if(in_preservation_mode)
+      {
+        preserved_forms.push_back(feature_kw);
+        preserved_forms.push_back(form);
+        continue;
+      }
+
+      if(result.is_some())
+      {
+        continue;
       }
 
       if(!is_supported_feature)
       {
         continue;
       }
-
-      auto const form{ form_result.expect_ok().unwrap().ptr };
 
       if(splice)
       {
@@ -1266,7 +1220,7 @@ namespace jank::read::parse
                                                     "Top-level #?@ usage is not allowed.");
         }
 
-        result = visit_seqable(
+        auto const res{ visit_seqable(
           [&](auto const typed_s) -> processor::object_result {
             auto const r{ make_sequence_range(typed_s) };
 
@@ -1289,17 +1243,14 @@ namespace jank::read::parse
             return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
                                                       "#?@ must be used on a sequence.");
           },
-          form);
+          form) };
 
-        if(result.unwrap().is_err())
+        if(res.is_err())
         {
-          auto const e{ result.unwrap().expect_err() };
-
-          if(error::is_insuppressible(e->kind))
-          {
-            return e;
-          }
+          return res;
         }
+
+        result = res.expect_ok();
       }
       else
       {
@@ -1313,6 +1264,19 @@ namespace jank::read::parse
     }
 
     expected_closer = prev_expected_closer;
+
+    if(in_preservation_mode)
+    {
+      auto const form{ make_box<obj::persistent_list>(
+        source_to_meta(start_token.start, latest_token.end),
+        std::in_place,
+        preserved_forms.rbegin(),
+        preserved_forms.rend()) };
+      return object_source_info{ make_box<obj::reader_conditional>(form,
+                                                                   splice ? jank_true : jank_false),
+                                 start_token,
+                                 latest_token };
+    }
 
     if(!spliced_forms.empty())
     {

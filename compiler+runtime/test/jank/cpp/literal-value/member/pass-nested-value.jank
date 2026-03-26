@@ -1,0 +1,13 @@
+(cpp/raw "namespace jank::cpp::literal_value::member::pass_nested_value
+          {
+            struct foo
+            {
+              struct bar
+              {
+                static constexpr int meow = 100;
+              };
+            };
+          }")
+(let* [i #cpp (:member (:member jank.cpp.literal_value.member.pass_nested_value.foo bar) meow)]
+  (if (= i 100)
+    :success))

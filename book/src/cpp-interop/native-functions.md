@@ -18,6 +18,10 @@ pseudo-random number generator with the current time and then get a number.
   (println "rand:" (cpp/rand)))
 ```
 
+If you need to access a function within a more complex type, such as a template
+instantiation, you can use the C++ domain specific language (DSL). It's
+documented [here](./dsl.md).
+
 ## Overload resolution
 Once we get out of C land and into C++ territory, the function name alone
 doesn't necessarily make it unique. C++ functions can be overloaded with
@@ -28,8 +32,8 @@ will raise a compiler error.
 
 For example, the
 [std::to_string](https://en.cppreference.com/w/cpp/string/basic_string/to_string)
-function has many different overloads. Here, we specifically create `i` to be an
-`int`, so overload resolution can happen.
+function has many different overloads. Here, we specifically create `i` to be a
+`jank::i64`, so overload resolution can happen.
 
 ```clojure
 (defn -main [& args]
@@ -120,4 +124,5 @@ Clojure's function calls, but basically all of them are available under the
 > spaceship operator, or perhaps others. jank doesn't currently support this.
 > If you're porting C++ code to jank which fails to find the appropriate
 > operator, chances are that operator never existed and Clang used rewriting to
-> use a different operator instead.
+> use a different operator instead. You can mitigate this by ensuring you use
+> operators that actually exist.

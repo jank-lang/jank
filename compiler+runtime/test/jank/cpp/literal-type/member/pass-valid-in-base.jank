@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::literal_type::member::pass_valid_in_base
+          {
+            struct base
+            {
+              using bar = int;
+            };
+            struct foo : base
+            {
+            };
+          }")
+(let* [_ (#cpp (:member jank.cpp.literal_type.member.pass_valid_in_base.foo bar))]
+  :success)

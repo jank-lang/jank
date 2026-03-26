@@ -1,8 +1,8 @@
-(cpp/raw "namespace jank::cpp::operator_::star
+(cpp/raw "namespace jank::cpp::operator_::star::pass_unary_reference
           {
             int a{ 55 };
             int* b{ &a };
           }")
-(let [b (cpp/value "jank::cpp::operator_::star::b")]
+(let [b cpp/jank.cpp.operator_.star.pass_unary_reference.b]
   (if (= 55 (cpp/* b))
     :success))

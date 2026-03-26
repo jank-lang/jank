@@ -1,0 +1,4 @@
+(let* [i #cpp 0
+       &i (cpp/& i)
+       _ (#cpp (:& (:* jtl.i64)) &i)]
+  :success)

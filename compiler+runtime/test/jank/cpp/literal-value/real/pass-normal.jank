@@ -1,0 +1,5 @@
+(let* [z (cpp/value 0.0)
+       p (cpp/value 3.14)]
+  (if (and (= 0.0 z)
+           (= 3.14 p))
+    :success))

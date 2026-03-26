@@ -1,0 +1,4 @@
+(let* [i #cpp 2
+       r (#cpp (:&& int) (cpp/std.move i))]
+  (if (= r 2)
+    :success))

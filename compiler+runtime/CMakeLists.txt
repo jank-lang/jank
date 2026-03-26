@@ -536,6 +536,7 @@ add_library(
   src/cpp/jank/runtime/core/math.cpp
   src/cpp/jank/runtime/core/meta.cpp
   src/cpp/jank/runtime/core/call.cpp
+  src/cpp/jank/runtime/sequence_range.cpp
   src/cpp/jank/runtime/perf.cpp
   src/cpp/jank/runtime/module/loader.cpp
   src/cpp/jank/runtime/object.cpp
@@ -598,6 +599,7 @@ add_library(
   src/cpp/jank/runtime/obj/delay.cpp
   src/cpp/jank/runtime/obj/future.cpp
   src/cpp/jank/runtime/obj/reduced.cpp
+  src/cpp/jank/runtime/obj/reader_conditional.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/expression.cpp

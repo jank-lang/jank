@@ -3819,13 +3819,13 @@
 
 (defn- i64? [n]
   (and (integer? n)
-       (>= n (cpp/value "std::numeric_limits<jtl::i64>::min()"))
-       (<= n (cpp/value "std::numeric_limits<jtl::i64>::max()"))))
+       (>= n ((cpp/dsl (:member (std.numeric_limits jtl.i64) min))))
+       (<= n ((cpp/dsl (:member (std.numeric_limits jtl.i64) max))))))
 
 (defn- i32? [n]
   (and (integer? n)
-       (>= n (cpp/value "std::numeric_limits<jtl::i32>::min()"))
-       (<= n (cpp/value "std::numeric_limits<jtl::i32>::max()"))))
+       (>= n ((cpp/dsl (:member (std.numeric_limits jtl.i32) min))))
+       (<= n ((cpp/dsl (:member (std.numeric_limits jtl.i32) max))))))
 
 (defn- shift-mask [shift mask x]
   (-> x (bit-shift-right shift) (bit-and mask)))
@@ -5711,7 +5711,7 @@
   ([s]
    (read-string {} s))
   ([opts s]
-   (cpp/clojure.core_native.read_string opts s)))
+   (cpp/jank.runtime.read_string s opts)))
 
 (defmacro with-open
   "bindings => [name init ...]
@@ -7032,7 +7032,7 @@ fails, attempts to require sym's namespace and retries."
 (defn slurp
   "Reads the file at the specified path into a string."
   [f]
-  (let [fname (cpp/cast (cpp/type "char const*") f)
+  (let [fname (cpp/cast (:* (:const char)) f)
         file (cpp/std.ifstream. fname)
         size (cpp/std.filesystem.file_size fname)]
     (if-not (cpp/.is_open file)
@@ -7048,8 +7048,8 @@ fails, attempts to require sym's namespace and retries."
   closes f. Options passed to clojure.java.io/writer."
   [f content & options]
   (let [file (cpp/std.ofstream.)]
-    (cpp/.open file (cpp/cast (cpp/type "char const*") f))
-    (cpp/<< file (cpp/cast (cpp/type "char const*") content))
+    (cpp/.open file (cpp/cast (:* (:const char)) f))
+    (cpp/<< file (cpp/cast (:* (:const char)) content))
     (cpp/.close file)
     nil))
 

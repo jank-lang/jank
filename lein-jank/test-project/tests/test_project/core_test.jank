@@ -1,0 +1,8 @@
+(ns test-project.core-test
+  (:require [clojure.test :refer [deftest testing is]]
+            [test-project.core :as c]))
+
+(deftest testing-core-main
+  (testing "main passes when called with \"pass\""
+    (is (= 1 (c/-main "pass")))
+    (is (thrown? (c/-main "fail")))))

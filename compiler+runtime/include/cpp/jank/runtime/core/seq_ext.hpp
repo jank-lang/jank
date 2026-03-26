@@ -45,7 +45,7 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  auto rest(oref<T> const &seq)
+  object_ref rest(oref<T> const &seq)
   {
     if(seq.is_nil())
     {

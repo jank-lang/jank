@@ -1,7 +1,8 @@
-#include <Interpreter/Compatibility.h>
-#include <Interpreter/CppInterOpInterpreter.h>
-#include <clang/Interpreter/CppInterOp.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
+
+#include <CppInterOp/Compatibility.h>
+#include <CppInterOp/CppInterOpInterpreter.h>
+#include <CppInterOp/CppInterOp.h>
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>
@@ -588,22 +589,25 @@ namespace jank::evaluate
       if(current_def_var.is_some()
          && util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
       {
+        native_vector<u8> arities;
+        arities.reserve(cg_prc.root_fn->arities.size());
+        for(auto const &arity : cg_prc.root_fn->arities)
+        {
+          arities.emplace_back(arity.params.size());
+        }
+
         auto const ret{ make_box<obj::deferred_cpp_function>(expr->meta,
+                                                             current_def_var,
                                                              cg_prc.declaration_str(),
-                                                             cg_prc.expression_str()
-                                                               + ".erase().data",
-                                                             current_def_var) };
+                                                             cg_prc.arity_flags(),
+                                                             cg_prc.struct_name,
+                                                             arities) };
         current_def_var = jank_nil();
         return ret;
       }
       else
       {
-        __rt_ctx->jit_prc.eval_string(cg_prc.declaration_str());
-        auto const expr_str{ cg_prc.expression_str() + ".erase().data" };
-        clang::Value v;
-        __rt_ctx->jit_prc.eval_string({ expr_str.data(), expr_str.size() }, &v);
-        auto const ret{ try_object<obj::jit_function>(v.convertTo<runtime::object *>()) };
-        return ret;
+        return __rt_ctx->jit_prc.eval(cg_prc);
       }
     }
   }

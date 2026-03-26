@@ -1,2 +1,0 @@
-(if (= -1 (cpp/value "std::string::npos"))
-  :success)

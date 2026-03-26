@@ -111,9 +111,19 @@ test which will fail.
 $ lein test
 ```
 
-> [!NOTE]
-> This is not yet supported in jank. Accomplishing this requires finding
-> all test namespaces and running them using `clojure.test`.
+If tests exist in directories other than `test/`, you can use the `:test`
+profile to point Leiningen to them. Leiningen will find all jank source files
+within those directories, recursively, and ensure their tests run.
+
+```clojure
+(defproject hello_lein "0.1-SNAPSHOT"
+  ;; ...
+  :profiles {;; ...
+             :test {:test-paths ["src/test" "other/test"]}})
+
+```
+
+You can read more about testing projects [here](../project/test.md).
 
 ## Compiling a Leiningen project
 It's possible to AOT (ahead of time) compile our whole Leiningen project to an
@@ -128,6 +138,8 @@ Hello, world!
 
 As with GCC, Clang, etc, the default output name is `a.out`. When we invoke
 that, we see our printed hello world.
+
+You can read more about AOT compiling projects [here](../project/aot.md).
 
 > [!NOTE]
 > There is not yet a way to change the output name using Leiningen, but this

@@ -1,6 +1,6 @@
 (let* [i #cpp 2
        i* (cpp/& i)
-       v* (cpp/cast cpp/void* i*)
-       i*2 (cpp/cast cpp/int* v*)]
+       v* (cpp/cast (:* void) i*)
+       i*2 (cpp/cast (:* int) v*)]
   (if (= 2 (cpp/* i*2))
     :success))

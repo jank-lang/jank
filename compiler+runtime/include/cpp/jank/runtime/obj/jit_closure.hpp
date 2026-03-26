@@ -83,45 +83,57 @@ namespace jank::runtime::obj
 
     /*** XXX: Everything here is immutable after initialization. ***/
     void *context{};
-    object *(*arity_0)(object *){};
-    object *(*arity_1)(object *, object *){};
-    object *(*arity_2)(object *, object *, object *){};
-    object *(*arity_3)(object *, object *, object *, object *){};
-    object *(*arity_4)(object *, object *, object *, object *, object *){};
-    object *(*arity_5)(object *, object *, object *, object *, object *, object *){};
-    object *(*arity_6)(object *, object *, object *, object *, object *, object *, object *){};
-    object *(
-      *arity_7)(object *, object *, object *, object *, object *, object *, object *, object *){};
-    object *(*arity_8)(object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *){};
-    object *(*arity_9)(object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *,
-                       object *){};
-    object *(*arity_10)(object *,
-                        object *,
-                        object *,
-                        object *,
-                        object *,
-                        object *,
-                        object *,
-                        object *,
-                        object *,
-                        object *,
-                        object *){};
+    object_ref (*arity_0)(object_ref){};
+    object_ref (*arity_1)(object_ref, object_ref){};
+    object_ref (*arity_2)(object_ref, object_ref, object_ref){};
+    object_ref (*arity_3)(object_ref, object_ref, object_ref, object_ref){};
+    object_ref (*arity_4)(object_ref, object_ref, object_ref, object_ref, object_ref){};
+    object_ref (*arity_5)(object_ref, object_ref, object_ref, object_ref, object_ref, object_ref){};
+    object_ref (*arity_6)(object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref){};
+    object_ref (*arity_7)(object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref){};
+    object_ref (*arity_8)(object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref){};
+    object_ref (*arity_9)(object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref,
+                          object_ref){};
+    object_ref (*arity_10)(object_ref,
+                           object_ref,
+                           object_ref,
+                           object_ref,
+                           object_ref,
+                           object_ref,
+                           object_ref,
+                           object_ref,
+                           object_ref,
+                           object_ref,
+                           object_ref){};
     object_ref meta;
     callable_arity_flags arity_flags{};
   };

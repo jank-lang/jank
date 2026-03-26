@@ -1,4 +1,4 @@
-# AOT compiling projects
+# AOT compiling
 Given a jank Leiningen project, you can ahead of time (AOT) compile all of your
 code and dependencies to an executable using this command.
 

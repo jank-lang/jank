@@ -118,7 +118,7 @@ namespace clojure::core_native
   object_ref is_fn(object_ref const o)
   {
     return make_box(o->type == object_type::native_function_wrapper
-                    || o->type == object_type::jit_function
+                    || o->type == object_type::jit_function || o->type == object_type::jit_closure
                     || o->type == object_type::deferred_cpp_function);
   }
 
@@ -315,12 +315,6 @@ namespace clojure::core_native
   object_ref hash_unordered(object_ref const coll)
   {
     return make_box(hash::unordered(coll.data)).erase();
-  }
-
-  /* TODO: implement opts for `read-string` */
-  object_ref read_string(object_ref const /* opts */, object_ref const str)
-  {
-    return __rt_ctx->read_string(runtime::to_string(str));
   }
 
   object_ref jank_version()
@@ -541,7 +535,6 @@ extern "C" void jank_load_clojure_core_native()
   intern_fn("compile", &core_native::compile);
   intern_fn("eval", &core_native::eval);
   intern_fn("hash-unordered-coll", &core_native::hash_unordered);
-  intern_fn("read-string", &core_native::read_string);
   intern_fn("jank-version", &core_native::jank_version);
   intern_fn("parse-long", &parse_long);
   intern_fn("parse-double", &parse_double);

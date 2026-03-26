@@ -1,4 +1,7 @@
 # Where to get help
+> [!NOTE]
+> Before reaching out with questions, check the [FAQ](./faq.md).
+
 The jank community, which is the Clojure community, is known to be welcoming.
 You are encouraged to reach out if you have any issues. Firstly, drop into
 [Slack](https://clojurians.slack.com/archives/C03SRH97FDK)

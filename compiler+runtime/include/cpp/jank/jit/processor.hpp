@@ -6,6 +6,8 @@
 #include <jtl/result.hpp>
 #include <jtl/string_builder.hpp>
 
+#include <jank/runtime/object.hpp>
+
 namespace llvm
 {
   class Module;
@@ -22,9 +24,19 @@ namespace clang
   class Value;
 }
 
-namespace Cpp
+namespace CppInternal
 {
   class Interpreter;
+}
+
+namespace jank::codegen
+{
+  struct processor;
+}
+
+namespace jank::runtime::obj
+{
+  using jit_function_ref = oref<struct jit_function>;
 }
 
 namespace jank::jit
@@ -33,6 +45,11 @@ namespace jank::jit
   {
     processor(jtl::immutable_string const &binary_version);
     ~processor();
+
+    runtime::obj::jit_function_ref eval(codegen::processor &cg_prc) const;
+    runtime::obj::jit_function_ref create_function(runtime::callable_arity_flags flags,
+                                                   jtl::immutable_string const &base_name,
+                                                   native_vector<u8> const &arities) const;
 
     void eval_string(jtl::immutable_string const &s) const;
     void eval_string(jtl::immutable_string const &s, clang::Value *) const;
@@ -51,7 +68,7 @@ namespace jank::jit
 
     /*** XXX: Everything here is immutable after initialization. ***/
     /*** XXX: Calls through the interpreter and LLVM JIT runtime are thread-safe. ***/
-    std::unique_ptr<Cpp::Interpreter> interpreter;
+    std::unique_ptr<CppInternal::Interpreter> interpreter;
     native_vector<std::filesystem::path> library_dirs;
 
     /* The files within this map will get added into Clang's VFS prior to the creation of

@@ -35,9 +35,11 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     deferred_cpp_function(object_ref const meta,
+                          var_ref const var,
                           jtl::immutable_string const &declaration_code,
-                          jtl::immutable_string const &expression_code,
-                          var_ref const var);
+                          callable_arity_flags const arity_flags,
+                          jtl::immutable_string const &base_name,
+                          native_vector<u8> const &arities);
 
     /* behavior::object_like */
     using object::to_string;
@@ -56,6 +58,8 @@ namespace jank::runtime::obj
     mutable std::recursive_mutex compilation_mutex;
     mutable jit_function_ref compiled_fn;
     mutable jtl::immutable_string declaration_code;
-    mutable jtl::immutable_string expression_code;
+    mutable callable_arity_flags arity_flags{};
+    mutable jtl::immutable_string base_name;
+    mutable native_vector<u8> arities;
   };
 }

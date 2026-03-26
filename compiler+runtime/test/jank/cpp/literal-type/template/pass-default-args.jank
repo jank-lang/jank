@@ -1,0 +1,3 @@
+(let* [s (#cpp (std.basic_string char) #cpp "foo")]
+  (if (= "foo" s)
+    :success))

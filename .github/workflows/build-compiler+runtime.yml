@@ -185,7 +185,13 @@ jobs:
         with:
           packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev doctest-dev gcc g++ libgc-dev libboost-all-dev
           # Increment this when the package list changes.
-          version: 11
+          version: 12
+      # Boost doesn't get cached properly with the above action.
+      # https://github.com/awalsh128/cache-apt-pkgs-action/issues/151
+      - name: Install boost
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt install -y libboost-all-dev
       - name: Install Homebrew packages
         if: runner.os == 'macOS'
         run: |

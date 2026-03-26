@@ -3,8 +3,8 @@
 
 #include <llvm/LineEditor/LineEditor.h>
 
-#include <Interpreter/Compatibility.h>
-#include <clang/Interpreter/CppInterOp.h>
+#include <CppInterOp/Compatibility.h>
+#include <CppInterOp/CppInterOp.h>
 
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>

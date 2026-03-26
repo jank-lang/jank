@@ -3,7 +3,7 @@
             using fn_ptr = void (*)();
           }")
 (let* [s (cpp/std.string)
-       p (cpp/unsafe-cast cpp/jank.cpp.unsafe_cast.pass_pointer_to_object_to_pointer_to_function.fn_ptr (cpp/& s))
-       s* (cpp/unsafe-cast cpp/std.string* p)]
+       p (cpp/unsafe-cast jank.cpp.unsafe_cast.pass_pointer_to_object_to_pointer_to_function.fn_ptr (cpp/& s))
+       s* (cpp/unsafe-cast (:* std.string) p)]
   (if (= s (cpp/* s*))
     :success))

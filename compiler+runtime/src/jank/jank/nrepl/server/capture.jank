@@ -8,8 +8,8 @@
 (def temp-file-template "/tmp/jank-nrepl-XXXXXX")
 
 (defn- make-temp-file []
-  (let [name (cpp/std.string (cpp/cast cpp/std.string temp-file-template))
-        fd   (cpp/mkstemp (cpp/.data name))]
+  (let [name (cpp/std.string (cpp/cast std.string temp-file-template))
+        fd   (cpp/mkstemp (.data name))]
     (assert (not= fd -1) "temp file could not be created")
     [name fd]))
 
@@ -20,7 +20,7 @@
   "Redirect the given file stream to a capture sink, available by `readback`.
   Returns a capture handle."
   [fp*]
-  (let [fp                  (cpp/unbox cpp/FILE* fp*)
+  (let [fp                  (cpp/unbox (:* FILE) fp*)
         fd                  (cpp/fileno fp)
         bak-fd              (cpp/dup fd)
         [temp-name temp-fd] (make-temp-file)]
@@ -42,7 +42,7 @@
   "End the capture. Make sure to pair this with every `start` call or else the
   stream will remain permanently redirected."
   [{:keys [fp* bak-fd temp-fd]}]
-  (let [fp (cpp/unbox cpp/FILE* fp*)
+  (let [fp (cpp/unbox (:* FILE) fp*)
         fd (cpp/fileno fp)]
     ;; Flush any remaining data that we want to be included in the capture.
     (cpp/fflush fp)
@@ -65,8 +65,8 @@
   :stderr/:stdout, the string data which was captured from the respective
   streams."
   [f]
-  (let [stdout-handle (start (cpp/box (cpp/value "&*stdout")))
-        stderr-handle (start (cpp/box (cpp/value "&*stderr")))
+  (let [stdout-handle (start (cpp/box #cpp stdout))
+        stderr-handle (start (cpp/box #cpp stderr))
         ret           (try
                         (f)
                         (finally
