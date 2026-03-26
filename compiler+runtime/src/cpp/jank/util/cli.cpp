@@ -199,6 +199,7 @@ OPTIONS
       auto const end{ flags.end() };
       jtl::immutable_string command;
       jtl::immutable_string value;
+      jtl::option<compilation_eagerness> eagerness;
 
       for(auto it{ flags.begin() }; it != end; ++it)
       {
@@ -443,8 +444,7 @@ OPTIONS
       {
         if(eagerness.is_some() && eagerness.unwrap() == compilation_eagerness::lazy)
         {
-          error::warn(
-            "--eagerness lazy ignored because --codegen llvm-ir forces eager compilation.");
+          error::warn("--eagerness lazy ignored because --codegen llvm-ir forces eager compilation.");
         }
         eagerness = compilation_eagerness::eager;
       }

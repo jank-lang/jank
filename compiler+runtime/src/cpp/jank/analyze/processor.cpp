@@ -1402,12 +1402,15 @@ namespace jank::analyze
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
     }
 
-    return jtl::make_ref<expr::def>(position,
-                                    current_frame,
-                                    true,
-                                    qualified_sym,
-                                    var_res.expect_ok(),
-                                    value_expr);
+    auto const var{ var_res.expect_ok() };
+
+    auto const dynamic_kw{ __rt_ctx->intern_keyword("dynamic").expect_ok() };
+    if(runtime::truthy(runtime::get(qualified_sym->meta, dynamic_kw)))
+    {
+      var->dynamic.store(true);
+    }
+
+    return jtl::make_ref<expr::def>(position, current_frame, true, qualified_sym, var, value_expr);
   }
 
   processor::expression_result

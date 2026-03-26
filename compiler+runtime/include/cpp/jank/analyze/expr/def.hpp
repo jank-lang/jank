@@ -4,6 +4,11 @@
 
 #include <jank/analyze/expression.hpp>
 
+namespace jank::runtime
+{
+  using var_ref = oref<struct var>;
+}
+
 namespace jank::runtime::obj
 {
   using symbol_ref = oref<struct symbol>;
