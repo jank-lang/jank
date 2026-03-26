@@ -43,7 +43,13 @@ namespace jank::ir
     native_vector<block> blocks{};
   };
 
-  native_vector<function> create(analyze::expr::function_ref,
-                                 jtl::immutable_string const &module,
-                                 codegen::compilation_target target);
+  struct module
+  {
+    jtl::immutable_string name{};
+    native_vector<function> functions{};
+  };
+
+  module create(analyze::expr::function_ref,
+                jtl::immutable_string const &module_name,
+                codegen::compilation_target target);
 }

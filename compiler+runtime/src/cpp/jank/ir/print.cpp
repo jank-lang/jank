@@ -34,9 +34,18 @@ namespace jank::ir
   void inst::parameter::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,
-                    "{:name {} :op :parameter :index {} :type \"{}\"}",
+                    "{:name {} :op :parameter :value {} :type \"{}\"}",
                     name,
-                    index,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::capture::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :capture :value {} :type \"{}\"}",
+                    name,
+                    value,
                     get_qualified_type_name(type));
   }
 
@@ -329,7 +338,7 @@ namespace jank::ir
   {
     util::format_to(sb, "{:name {}\n", f.name);
     print_indent(sb, ++indent);
-    util::format_to(sb, ":blocks [", f.name);
+    util::format_to(sb, ":blocks [");
     indent = determine_indent(sb);
     bool needs_indent{};
     for(auto const &b : f.blocks)
@@ -345,10 +354,37 @@ namespace jank::ir
     util::format_to(sb, "]}");
   }
 
+  void print(module const &mod, jtl::string_builder &sb, usize indent)
+  {
+    util::format_to(sb, "{:name {}\n", mod.name);
+    print_indent(sb, ++indent);
+    util::format_to(sb, ":functions [");
+    indent = determine_indent(sb);
+    bool needs_indent{};
+    for(auto const &f : mod.functions)
+    {
+      if(needs_indent)
+      {
+        sb('\n');
+        print_indent(sb, indent);
+      }
+      needs_indent = true;
+      print(f, sb, indent);
+    }
+    util::format_to(sb, "]}");
+  }
+
   jtl::immutable_string print(function const &fn)
   {
     jtl::string_builder sb;
     print(fn, sb, 0);
+    return sb.release();
+  }
+
+  jtl::immutable_string print(module const &mod)
+  {
+    jtl::string_builder sb;
+    print(mod, sb, 0);
     return sb.release();
   }
 }

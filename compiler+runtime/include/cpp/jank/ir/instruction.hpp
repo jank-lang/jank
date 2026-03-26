@@ -25,11 +25,24 @@ namespace jank::ir
   {
     struct parameter : instruction
     {
-      parameter(identifier const &name, jtl::ptr<void> const type, u8 const index);
+      parameter(identifier const &name,
+                jtl::ptr<void> const type,
+                jtl::immutable_string const &value);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
-      u8 index{};
+      jtl::immutable_string value;
+    };
+
+    struct capture : instruction
+    {
+      capture(identifier const &name,
+              jtl::ptr<void> const type,
+              jtl::immutable_string const &value);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      jtl::immutable_string const &value;
     };
 
     struct literal : instruction

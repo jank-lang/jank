@@ -5,4 +5,5 @@
 namespace jank::ir
 {
   jtl::immutable_string print(function const &fn);
+  jtl::immutable_string print(module const &mod);
 }

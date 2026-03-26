@@ -21,24 +21,29 @@ namespace jank::ir
     return next_ident("s");
   }
 
+  jtl::ref<function> builder::current_function() const
+  {
+    return &mod->functions[fn_index];
+  }
+
   jtl::ref<block> builder::current_block() const
   {
-    return &fn->blocks[block_index];
+    return &current_function()->blocks[block_index];
   }
 
   usize builder::block(identifier const &name) const
   {
-    return fn->add_block(name);
+    return current_function()->add_block(name);
   }
 
   identifier builder::block_name(usize const block_index) const
   {
-    return fn->blocks[block_index].name;
+    return current_function()->blocks[block_index].name;
   }
 
   void builder::remove_block(usize const block_index) const
   {
-    fn->remove_block(block_index);
+    current_function()->remove_block(block_index);
   }
 
   void builder::enter_block(usize const blk_index)
@@ -46,12 +51,27 @@ namespace jank::ir
     block_index = blk_index;
   }
 
-  identifier builder::parameter(analyze::expression_position const pos, u8 const index)
+  identifier
+  builder::parameter(analyze::expression_position const pos, jtl::immutable_string const &value)
   {
     auto name{ next_ident() };
     auto const type{ untyped_object_ref_type() };
-    fn->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::parameter>(name, type, index));
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::parameter>(name, type, value));
+    if(pos == analyze::expression_position::tail)
+    {
+      return ret(name, type);
+    }
+    return name;
+  }
+
+  identifier builder::capture(analyze::expression_position const pos,
+                              jtl::ptr<void> const type,
+                              jtl::immutable_string const &value)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::capture>(name, type, value));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
@@ -64,7 +84,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     auto const type{ literal_type(value) };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::literal>(name, type, value));
     if(pos == analyze::expression_position::tail)
     {
@@ -77,11 +97,11 @@ namespace jank::ir
                                       native_vector<identifier> &&values)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::persistent_list>(name, jtl::move(values)));
     if(pos == analyze::expression_position::tail)
     {
-      return ret(name, fn->blocks[block_index].instructions.back()->type);
+      return ret(name, current_function()->blocks[block_index].instructions.back()->type);
     }
     return name;
   }
@@ -90,11 +110,11 @@ namespace jank::ir
                                         native_vector<identifier> &&values)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::persistent_vector>(name, jtl::move(values)));
     if(pos == analyze::expression_position::tail)
     {
-      return ret(name, fn->blocks[block_index].instructions.back()->type);
+      return ret(name, current_function()->blocks[block_index].instructions.back()->type);
     }
     return name;
   }
@@ -104,11 +124,11 @@ namespace jank::ir
                                 native_vector<std::pair<identifier, identifier>> &&values)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::persistent_array_map>(name, jtl::move(values)));
     if(pos == analyze::expression_position::tail)
     {
-      return ret(name, fn->blocks[block_index].instructions.back()->type);
+      return ret(name, current_function()->blocks[block_index].instructions.back()->type);
     }
     return name;
   }
@@ -117,11 +137,11 @@ namespace jank::ir
                                           native_vector<std::pair<identifier, identifier>> &&values)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::persistent_hash_map>(name, jtl::move(values)));
     if(pos == analyze::expression_position::tail)
     {
-      return ret(name, fn->blocks[block_index].instructions.back()->type);
+      return ret(name, current_function()->blocks[block_index].instructions.back()->type);
     }
     return name;
   }
@@ -130,11 +150,11 @@ namespace jank::ir
                                           native_vector<identifier> &&values)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::persistent_hash_set>(name, jtl::move(values)));
     if(pos == analyze::expression_position::tail)
     {
-      return ret(name, fn->blocks[block_index].instructions.back()->type);
+      return ret(name, current_function()->blocks[block_index].instructions.back()->type);
     }
     return name;
   }
@@ -146,7 +166,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     auto const type{ var_type() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::def>(name, type, qualified_var, value, meta));
     if(pos == analyze::expression_position::tail)
     {
@@ -160,7 +180,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     auto const type{ untyped_object_ref_type() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::var_deref>(name, type, qualified_var));
     if(pos == analyze::expression_position::tail)
     {
@@ -174,7 +194,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     auto const type{ var_type() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::var_ref>(name, type, qualified_var));
     if(pos == analyze::expression_position::tail)
     {
@@ -189,7 +209,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     auto const type{ untyped_object_ref_type() };
-    this->fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::dynamic_call>(name, type, fn, jtl::move(args)));
     if(pos == analyze::expression_position::tail)
     {
@@ -203,7 +223,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     auto const type{ untyped_object_ref_type() };
-    this->fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::named_recursion>(name, type, jtl::move(args)));
     if(pos == analyze::expression_position::tail)
     {
@@ -216,7 +236,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     auto const type{ untyped_object_ref_type() };
-    this->fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::recursion_reference>(name, type));
     if(pos == analyze::expression_position::tail)
     {
@@ -228,7 +248,7 @@ namespace jank::ir
   identifier builder::truthy(identifier const &value)
   {
     auto name{ next_ident() };
-    this->fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::truthy>(name, value));
     return name;
   }
@@ -236,22 +256,24 @@ namespace jank::ir
   identifier builder::jump(usize const index)
   {
     auto name{ next_ident() };
-    auto const &block{ fn->blocks[index].name };
-    fn->blocks[block_index].instructions.emplace_back(jtl::make_ref<inst::jump>(name, block));
+    auto const &block{ current_function()->blocks[index].name };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::jump>(name, block));
     return name;
   }
 
   identifier builder::branch_set(identifier const &shadow, identifier const &value)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::branch_set>(name, shadow, value));
     return name;
   }
 
   identifier builder::branch_get(identifier const &name, jtl::ptr<void> const type) const
   {
-    fn->blocks[block_index].instructions.emplace_back(jtl::make_ref<inst::branch_get>(name, type));
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::branch_get>(name, type));
     return name;
   }
 
@@ -260,7 +282,7 @@ namespace jank::ir
                              identifier const &else_blk)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::branch>(name, condition, then_blk, else_blk));
     return name;
   }
@@ -270,7 +292,7 @@ namespace jank::ir
                             identifier const &default_block)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::case_>(name, value, jtl::move(cases), default_block));
     return name;
   }
@@ -278,7 +300,7 @@ namespace jank::ir
   identifier builder::try_(native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(
+    current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::try_>(name, jtl::move(catches)));
     return name;
   }
@@ -286,21 +308,24 @@ namespace jank::ir
   identifier builder::catch_(jtl::ptr<void> const type)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(jtl::make_ref<inst::catch_>(name, type));
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::catch_>(name, type));
     return name;
   }
 
   identifier builder::throw_(identifier const &value)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(jtl::make_ref<inst::throw_>(name, value));
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::throw_>(name, value));
     return name;
   }
 
   identifier builder::ret(identifier const &value, jtl::ptr<void> const type)
   {
     auto name{ next_ident() };
-    fn->blocks[block_index].instructions.emplace_back(jtl::make_ref<inst::ret>(name, type, value));
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::ret>(name, type, value));
     return name;
   }
 }

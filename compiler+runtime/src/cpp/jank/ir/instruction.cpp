@@ -22,9 +22,19 @@ namespace jank::ir::inst
 {
   using namespace analyze::cpp_util;
 
-  parameter::parameter(identifier const &name, jtl::ptr<void> const type, u8 const index)
+  parameter::parameter(identifier const &name,
+                       jtl::ptr<void> const type,
+                       jtl::immutable_string const &value)
     : instruction{ name, type }
-    , index{ index }
+    , value{ value }
+  {
+  }
+
+  capture::capture(identifier const &name,
+                   jtl::ptr<void> const type,
+                   jtl::immutable_string const &value)
+    : instruction{ name, type }
+    , value{ value }
   {
   }
 

@@ -179,22 +179,66 @@ namespace jank::ir
       return local->second;
     }
 
-    auto const &params{ b.fn->arity->params };
-    /* NOLINTNEXTLINE(bugprone-too-small-loop-variable) */
-    for(u8 i{}; i < params.size(); ++i)
+    return b.locals[local_name] = b.parameter(expr->position, local_name);
+  }
+
+  void gen_arity(module &mod,
+                 analyze::expr::function_ref const fn_expr,
+                 analyze::expr::function_arity const &arity)
+  {
+    auto &fn{ mod.functions.emplace_back(&arity) };
+    fn.name = util::format("{}_{}", fn_expr->unique_name, arity.params.size());
+    fn.add_block("entry");
+    builder b{ &mod, mod.functions.size() - 1 };
+
+    for(auto const &capture : arity.frame->captures)
     {
-      if(params[i]->name == expr->name->name)
+      auto const &name{ capture.first->get_name() };
+      b.locals[name]
+        = b.capture(analyze::expression_position::value, capture.second.binding.type, name);
+    }
+
+    if(arity.fn_ctx->is_recur_recursive)
+    {
+      for(auto const param : arity.params)
       {
-        return b.locals[local_name] = b.parameter(expr->position, i);
+        auto const shadow{ b.next_shadow() };
+        auto const &name{ param->get_name() };
+        b.locals[name] = b.parameter(analyze::expression_position::value, name);
+        b.local_to_loop_shadow[name] = shadow;
+        b.branch_set(shadow, b.locals[name]);
+      }
+
+      auto const recur_blk{ b.block(b.next_ident("recur")) };
+      b.fn_recur_target = recur_blk;
+      b.jump(recur_blk);
+      b.enter_block(recur_blk);
+
+      for(auto const param : arity.params)
+      {
+        auto const &name{ param->get_name() };
+        b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
       }
     }
 
-    return none;
+    for(auto const expr : arity.body->values)
+    {
+      gen(expr, b);
+    }
+
+    if(arity.body->values.empty())
+    {
+      b.literal(analyze::expression_position::tail, runtime::jank_nil());
+    }
   }
 
-  jtl::option<identifier> gen(analyze::expr::function_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::function_ref const expr, builder &b)
   {
-    return none;
+    for(auto const &arity : expr->arities)
+    {
+      gen_arity(*b.mod, expr, arity);
+    }
+    return b.literal(expr->position, runtime::jank_nil());
   }
 
   jtl::option<identifier> gen(analyze::expr::recur_ref const expr, builder &b)
@@ -218,10 +262,10 @@ namespace jank::ir
     }
     else
     {
-      for(usize i{}; i < b.fn->arity->params.size(); ++i)
+      for(usize i{}; i < b.current_function()->arity->params.size(); ++i)
       {
         auto const shadow{ b.next_shadow() };
-        auto const &name{ b.fn->arity->params[i]->get_name() };
+        auto const &name{ b.current_function()->arity->params[i]->get_name() };
         b.branch_set(b.local_to_loop_shadow[name], arg_idents[i]);
       }
       return b.jump(b.fn_recur_target.unwrap());
@@ -263,8 +307,8 @@ namespace jank::ir
       }
 
       auto const loop_blk{ b.block(b.next_ident("loop")) };
-      auto const old_current_loop{ b.loop_recur_target };
-      util::scope_exit const finally{ [&] { b.loop_recur_target = old_current_loop; } };
+      auto old_current_loop{ b.loop_recur_target };
+      util::scope_exit const finally{ [&] { b.loop_recur_target = jtl::move(old_current_loop); } };
       b.loop_recur_target = loop_blk;
       b.jump(loop_blk);
       b.enter_block(loop_blk);
@@ -377,7 +421,8 @@ namespace jank::ir
     {
       auto const catch_blk{ b.block(b.next_ident("catch")) };
       b.enter_block(catch_blk);
-      auto const old_locals{ b.locals };
+      auto old_locals{ b.locals };
+      util::scope_exit const finally{ [&] { b.locals = jtl::move(old_locals); } };
       b.locals[catch_.sym->get_name()] = b.catch_(catch_.type);
 
       auto const catch_res{ gen(catch_.body, b) };
@@ -534,57 +579,20 @@ namespace jank::ir
     return name;
   }
 
-  native_vector<function> create(analyze::expr::function_ref const fn_expr,
-                                 [[maybe_unused]] jtl::immutable_string const &module,
-                                 [[maybe_unused]] codegen::compilation_target const target)
+  module create(analyze::expr::function_ref const fn_expr,
+                jtl::immutable_string const &module_name,
+                [[maybe_unused]] codegen::compilation_target const target)
   {
-    native_vector<function> fns;
+    module mod{ module_name };
 
     for(auto const &arity : fn_expr->arities)
     {
-      function fn{ &arity };
-      fn.name = fn_expr->unique_name;
-      fn.add_block("entry");
-      builder b{ &fn };
-
-      if(arity.fn_ctx->is_recur_recursive)
-      {
-        for(usize i{}; i < arity.params.size(); ++i)
-        {
-          auto const shadow{ b.next_shadow() };
-          auto const &name{ arity.params[i]->get_name() };
-          b.locals[name] = b.parameter(analyze::expression_position::value, i);
-          b.local_to_loop_shadow[name] = shadow;
-          b.branch_set(shadow, b.locals[name]);
-        }
-
-        auto const recur_blk{ b.block(b.next_ident("recur")) };
-        b.fn_recur_target = recur_blk;
-        b.jump(recur_blk);
-        b.enter_block(recur_blk);
-
-        for(auto const param : arity.params)
-        {
-          auto const &name{ param->get_name() };
-          b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
-        }
-      }
-
-      for(auto const expr : arity.body->values)
-      {
-        gen(expr, b);
-      }
-
-      if(arity.body->values.empty())
-      {
-        b.literal(analyze::expression_position::tail, runtime::jank_nil());
-      }
-
-      //util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(fn) }));
-      util::println("{}", print(fn));
-      fns.emplace_back(jtl::move(fn));
+      gen_arity(mod, fn_expr, arity);
     }
 
-    return fns;
+    //util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
+    util::println("{}", print(mod));
+
+    return mod;
   }
 }
