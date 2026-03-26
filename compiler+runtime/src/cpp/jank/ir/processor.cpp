@@ -2,6 +2,7 @@
 #include <jank/ir/print.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/analyze/cpp_util.hpp>
@@ -117,24 +118,52 @@ namespace jank::ir
     return b.literal(expr->position, expr->data);
   }
 
-  jtl::option<identifier> gen(analyze::expr::list_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::list_ref const expr, builder &b)
   {
-    return none;
+    native_vector<identifier> values;
+    values.reserve(expr->data_exprs.size());
+    for(auto const value_expr : expr->data_exprs)
+    {
+      values.emplace_back(gen(value_expr, b).unwrap());
+    }
+    return b.persistent_list(expr->position, jtl::move(values));
   }
 
-  jtl::option<identifier> gen(analyze::expr::vector_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::vector_ref const expr, builder &b)
   {
-    return none;
+    native_vector<identifier> values;
+    values.reserve(expr->data_exprs.size());
+    for(auto const value_expr : expr->data_exprs)
+    {
+      values.emplace_back(gen(value_expr, b).unwrap());
+    }
+    return b.persistent_vector(expr->position, jtl::move(values));
   }
 
-  jtl::option<identifier> gen(analyze::expr::map_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::map_ref const expr, builder &b)
   {
-    return none;
+    native_vector<std::pair<identifier, identifier>> values;
+    values.reserve(expr->data_exprs.size());
+    for(auto const value_expr : expr->data_exprs)
+    {
+      values.emplace_back(gen(value_expr.first, b).unwrap(), gen(value_expr.second, b).unwrap());
+    }
+    if(expr->data_exprs.size() <= runtime::obj::persistent_array_map::max_size)
+    {
+      return b.persistent_array_map(expr->position, jtl::move(values));
+    }
+    return b.persistent_hash_map(expr->position, jtl::move(values));
   }
 
-  jtl::option<identifier> gen(analyze::expr::set_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::set_ref const expr, builder &b)
   {
-    return none;
+    native_vector<identifier> values;
+    values.reserve(expr->data_exprs.size());
+    for(auto const value_expr : expr->data_exprs)
+    {
+      values.emplace_back(gen(value_expr, b).unwrap());
+    }
+    return b.persistent_hash_set(expr->position, jtl::move(values));
   }
 
   jtl::option<identifier> gen(analyze::expr::local_reference_ref const expr, builder &b)
@@ -292,11 +321,11 @@ namespace jank::ir
     {
       bool_condition = b.truthy(bool_condition);
     }
-    b.branch(bool_condition, b.fn->blocks[then_blk].name, b.fn->blocks[else_blk].name);
+    b.branch(bool_condition, b.block_name(then_blk), b.block_name(else_blk));
 
     b.enter_block(then_blk);
     auto const then_name{ gen(expr->then, b).unwrap() };
-    if(expr->position != analyze::expression_position::tail)
+    if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
     {
       b.branch_set(shadow, then_name);
       b.jump(merge_blk);
@@ -312,7 +341,7 @@ namespace jank::ir
     {
       else_name = b.literal(expr->position, runtime::jank_nil());
     }
-    if(expr->position != analyze::expression_position::tail)
+    if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
     {
       b.branch_set(shadow, else_name);
       b.jump(merge_blk);
@@ -325,22 +354,106 @@ namespace jank::ir
     }
 
     b.remove_block(merge_blk);
-
     return none;
   }
 
   jtl::option<identifier> gen(analyze::expr::throw_ref const expr, builder &b)
   {
+    /* TODO: Any code after this shouldn't be added to the block. */
     return b.throw_(gen(expr->value, b).unwrap());
   }
 
-  jtl::option<identifier> gen(analyze::expr::try_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::try_ref const expr, builder &b)
   {
+    auto const try_blk{ b.block(b.next_ident("try")) };
+    b.jump(try_blk);
+
+    auto const merge_blk{ b.block(b.next_ident("merge")) };
+    auto const shadow{ b.next_shadow() };
+
+    native_vector<std::pair<jtl::ptr<void>, identifier>> catch_blocks;
+    catch_blocks.reserve(expr->catch_bodies.size());
+    for(auto const catch_ : expr->catch_bodies)
+    {
+      auto const catch_blk{ b.block(b.next_ident("catch")) };
+      b.enter_block(catch_blk);
+      auto const old_locals{ b.locals };
+      b.locals[catch_.sym->get_name()] = b.catch_(catch_.type);
+
+      auto const catch_res{ gen(catch_.body, b) };
+      catch_blocks.emplace_back(catch_.type, b.block_name(catch_blk));
+
+      if(expr->position != analyze::expression_position::tail)
+      {
+        b.branch_set(shadow, catch_res.unwrap());
+        b.jump(merge_blk);
+      }
+    }
+
+    b.enter_block(try_blk);
+    b.try_(jtl::move(catch_blocks));
+
+    auto try_res{ gen(expr->body, b) };
+
+    if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
+    {
+      b.branch_set(shadow, try_res.unwrap());
+      b.jump(merge_blk);
+    }
+
+    if(expr->position != analyze::expression_position::tail)
+    {
+      b.enter_block(merge_blk);
+      return b.branch_get(shadow, untyped_object_ref_type());
+    }
+
+    b.remove_block(merge_blk);
     return none;
   }
 
-  jtl::option<identifier> gen(analyze::expr::case_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::case_ref const expr, builder &b)
   {
+    auto const value_ident{ gen(expr->value_expr, b).unwrap() };
+    auto const starting_block{ b.current_block()->index };
+    auto const shadow{ b.next_shadow() };
+    auto const merge_blk{ b.block(b.next_ident("merge")) };
+
+    native_unordered_map<i64, identifier> cases;
+    for(usize i{}; i < expr->keys.size(); ++i)
+    {
+      auto const block{ b.block(b.next_ident("case")) };
+      cases[expr->keys[i]] = b.block_name(block);
+      b.enter_block(block);
+      auto const case_res{ gen(expr->exprs[i], b) };
+
+      if(expr->position != analyze::expression_position::tail
+         && !b.current_block()->has_terminator())
+      {
+        b.branch_set(shadow, case_res.unwrap());
+        b.jump(merge_blk);
+      }
+    }
+
+    auto const default_block{ b.block(b.next_ident("default")) };
+    b.enter_block(default_block);
+    auto const default_res{ gen(expr->default_expr, b) };
+
+    if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
+    {
+      b.branch_set(shadow, default_res.unwrap());
+      b.jump(merge_blk);
+    }
+
+    b.enter_block(starting_block);
+    b.case_(value_ident, jtl::move(cases), b.block_name(default_block));
+
+    if(expr->position != analyze::expression_position::tail)
+    {
+      b.enter_block(merge_blk);
+      return b.branch_get(shadow, untyped_object_ref_type());
+    }
+
+    b.remove_block(merge_blk);
     return none;
   }
 
@@ -467,7 +580,8 @@ namespace jank::ir
         b.literal(analyze::expression_position::tail, runtime::jank_nil());
       }
 
-      util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(fn) }));
+      //util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(fn) }));
+      util::println("{}", print(fn));
       fns.emplace_back(jtl::move(fn));
     }
 

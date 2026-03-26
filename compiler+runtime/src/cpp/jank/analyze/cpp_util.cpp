@@ -425,6 +425,41 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
+  jtl::ptr<void> persistent_list_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.persistent_list_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> persistent_vector_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.persistent_vector_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> persistent_array_map_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.persistent_array_map_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> persistent_hash_map_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.persistent_hash_map_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> persistent_hash_set_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.persistent_hash_set_ref").expect_ok()) };
+    return type;
+  }
+
   jtl::ptr<void> literal_type(runtime::object_ref const o)
   {
 #pragma clang diagnostic push

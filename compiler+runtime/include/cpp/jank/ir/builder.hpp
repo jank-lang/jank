@@ -23,11 +23,22 @@ namespace jank::ir
 
     jtl::ref<block> current_block() const;
     usize block(identifier const &name) const;
+    identifier block_name(usize const block_index) const;
     void remove_block(usize const block_index) const;
     void enter_block(usize const blk_index);
 
     identifier parameter(analyze::expression_position const pos, u8 const index);
     identifier literal(analyze::expression_position const pos, runtime::object_ref const value);
+    identifier
+    persistent_list(analyze::expression_position const pos, native_vector<identifier> &&values);
+    identifier
+    persistent_vector(analyze::expression_position const pos, native_vector<identifier> &&values);
+    identifier persistent_array_map(analyze::expression_position const pos,
+                                    native_vector<std::pair<identifier, identifier>> &&values);
+    identifier persistent_hash_map(analyze::expression_position const pos,
+                                   native_vector<std::pair<identifier, identifier>> &&values);
+    identifier
+    persistent_hash_set(analyze::expression_position const pos, native_vector<identifier> &&values);
     identifier def(analyze::expression_position const pos,
                    jtl::immutable_string const &qualified_var,
                    jtl::option<identifier> const &value,
@@ -48,6 +59,11 @@ namespace jank::ir
     identifier branch_get(identifier const &name, jtl::ptr<void> const type) const;
     identifier
     branch(identifier const &condition, identifier const &then_blk, identifier const &else_blk);
+    identifier case_(identifier const &value,
+                     native_unordered_map<i64, identifier> &&cases,
+                     identifier const &default_block);
+    identifier try_(native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches);
+    identifier catch_(jtl::ptr<void> const type);
     identifier throw_(identifier const &value);
     identifier ret(identifier const &value, jtl::ptr<void> const type);
 

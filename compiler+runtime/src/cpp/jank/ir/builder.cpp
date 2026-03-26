@@ -31,6 +31,11 @@ namespace jank::ir
     return fn->add_block(name);
   }
 
+  identifier builder::block_name(usize const block_index) const
+  {
+    return fn->blocks[block_index].name;
+  }
+
   void builder::remove_block(usize const block_index) const
   {
     fn->remove_block(block_index);
@@ -64,6 +69,72 @@ namespace jank::ir
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
+    }
+    return name;
+  }
+
+  identifier builder::persistent_list(analyze::expression_position const pos,
+                                      native_vector<identifier> &&values)
+  {
+    auto name{ next_ident() };
+    fn->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::persistent_list>(name, jtl::move(values)));
+    if(pos == analyze::expression_position::tail)
+    {
+      return ret(name, fn->blocks[block_index].instructions.back()->type);
+    }
+    return name;
+  }
+
+  identifier builder::persistent_vector(analyze::expression_position const pos,
+                                        native_vector<identifier> &&values)
+  {
+    auto name{ next_ident() };
+    fn->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::persistent_vector>(name, jtl::move(values)));
+    if(pos == analyze::expression_position::tail)
+    {
+      return ret(name, fn->blocks[block_index].instructions.back()->type);
+    }
+    return name;
+  }
+
+  identifier
+  builder::persistent_array_map(analyze::expression_position const pos,
+                                native_vector<std::pair<identifier, identifier>> &&values)
+  {
+    auto name{ next_ident() };
+    fn->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::persistent_array_map>(name, jtl::move(values)));
+    if(pos == analyze::expression_position::tail)
+    {
+      return ret(name, fn->blocks[block_index].instructions.back()->type);
+    }
+    return name;
+  }
+
+  identifier builder::persistent_hash_map(analyze::expression_position const pos,
+                                          native_vector<std::pair<identifier, identifier>> &&values)
+  {
+    auto name{ next_ident() };
+    fn->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::persistent_hash_map>(name, jtl::move(values)));
+    if(pos == analyze::expression_position::tail)
+    {
+      return ret(name, fn->blocks[block_index].instructions.back()->type);
+    }
+    return name;
+  }
+
+  identifier builder::persistent_hash_set(analyze::expression_position const pos,
+                                          native_vector<identifier> &&values)
+  {
+    auto name{ next_ident() };
+    fn->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::persistent_hash_set>(name, jtl::move(values)));
+    if(pos == analyze::expression_position::tail)
+    {
+      return ret(name, fn->blocks[block_index].instructions.back()->type);
     }
     return name;
   }
@@ -191,6 +262,31 @@ namespace jank::ir
     auto name{ next_ident() };
     fn->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::branch>(name, condition, then_blk, else_blk));
+    return name;
+  }
+
+  identifier builder::case_(identifier const &value,
+                            native_unordered_map<i64, identifier> &&cases,
+                            identifier const &default_block)
+  {
+    auto name{ next_ident() };
+    fn->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::case_>(name, value, jtl::move(cases), default_block));
+    return name;
+  }
+
+  identifier builder::try_(native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches)
+  {
+    auto name{ next_ident() };
+    fn->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::try_>(name, jtl::move(catches)));
+    return name;
+  }
+
+  identifier builder::catch_(jtl::ptr<void> const type)
+  {
+    auto name{ next_ident() };
+    fn->blocks[block_index].instructions.emplace_back(jtl::make_ref<inst::catch_>(name, type));
     return name;
   }
 

@@ -49,6 +49,86 @@ namespace jank::ir
                     get_qualified_type_name(type));
   }
 
+  void inst::persistent_list::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :persistent-list :values [", name);
+    bool needs_space{};
+    for(auto const &value : values)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      sb(value);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
+  void inst::persistent_vector::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :persistent-vector :values [", name);
+    bool needs_space{};
+    for(auto const &value : values)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      sb(value);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
+  void inst::persistent_array_map::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :persistent-array-map :values [", name);
+    bool needs_space{};
+    for(auto const &value : values)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      util::format_to(sb, "[{} {}]", value.first, value.second);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
+  void inst::persistent_hash_map::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :persistent-hash-map :values [", name);
+    bool needs_space{};
+    for(auto const &value : values)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      util::format_to(sb, "[{} {}]", value.first, value.second);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
+  void inst::persistent_hash_set::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :persistent-hash-set :values [", name);
+    bool needs_space{};
+    for(auto const &value : values)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      sb(value);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
   void inst::def::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb, "{:name {} :op :def :var {}", name, qualified_var);
@@ -164,6 +244,49 @@ namespace jank::ir
                     get_qualified_type_name(type));
   }
 
+  void inst::case_::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :case :value {} :case-blocks [", name, value);
+    bool needs_space{};
+    for(auto const &c : case_blocks)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      util::format_to(sb, "{:value {} :block {}}", c.first, c.second);
+    }
+    util::format_to(sb,
+                    "] :default-block {} :type \"{}\"}",
+                    default_block,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::try_::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :try :catches [", name);
+    bool needs_space{};
+    for(auto const &catch_ : catches)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      util::format_to(sb,
+                      "{:type \"{}\" :block {}}",
+                      get_qualified_type_name(catch_.first),
+                      catch_.second);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
+  void inst::catch_::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :catch :type \"{}\"}", name, get_qualified_type_name(type));
+  }
+
   void inst::throw_::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,
@@ -199,7 +322,7 @@ namespace jank::ir
       needs_indent = true;
       i->print(sb, indent);
     }
-    util::format_to(sb, "]");
+    util::format_to(sb, "]}");
   }
 
   void print(function const &f, jtl::string_builder &sb, usize indent)

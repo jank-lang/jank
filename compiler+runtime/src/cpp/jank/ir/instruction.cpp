@@ -36,6 +36,41 @@ namespace jank::ir::inst
   {
   }
 
+  persistent_list::persistent_list(identifier const &name, native_vector<identifier> &&values)
+    : instruction{ name, persistent_list_ref_type() }
+    , values{ jtl::move(values) }
+  {
+  }
+
+  persistent_vector::persistent_vector(identifier const &name, native_vector<identifier> &&values)
+    : instruction{ name, persistent_vector_ref_type() }
+    , values{ jtl::move(values) }
+  {
+  }
+
+  persistent_array_map::persistent_array_map(
+    identifier const &name,
+    native_vector<std::pair<identifier, identifier>> &&values)
+    : instruction{ name, persistent_array_map_ref_type() }
+    , values{ jtl::move(values) }
+  {
+  }
+
+  persistent_hash_map::persistent_hash_map(
+    identifier const &name,
+    native_vector<std::pair<identifier, identifier>> &&values)
+    : instruction{ name, persistent_hash_map_ref_type() }
+    , values{ jtl::move(values) }
+  {
+  }
+
+  persistent_hash_set::persistent_hash_set(identifier const &name,
+                                           native_vector<identifier> &&values)
+    : instruction{ name, persistent_hash_set_ref_type() }
+    , values{ jtl::move(values) }
+  {
+  }
+
   def::def(identifier const &name,
            jtl::ptr<void> const type,
            jtl::immutable_string const &qualified_var,
@@ -130,6 +165,33 @@ namespace jank::ir::inst
   bool branch::is_terminator() const
   {
     return true;
+  }
+
+  case_::case_(identifier const &name,
+               identifier const &value,
+               native_unordered_map<i64, identifier> &&case_blocks,
+               identifier const &default_block)
+    : instruction{ name, Cpp::GetVoidType() }
+    , value{ value }
+    , case_blocks{ jtl::move(case_blocks) }
+    , default_block{ default_block }
+  {
+  }
+
+  bool case_::is_terminator() const
+  {
+    return true;
+  }
+
+  try_::try_(identifier const &name, native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches)
+    : instruction{ name, Cpp::GetVoidType() }
+    , catches{ jtl::move(catches) }
+  {
+  }
+
+  catch_::catch_(identifier const &name, jtl::ptr<void> const type)
+    : instruction{ name, type }
+  {
   }
 
   throw_::throw_(identifier const &name, identifier const &value)

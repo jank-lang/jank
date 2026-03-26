@@ -41,6 +41,53 @@ namespace jank::ir
       runtime::object_ref value;
     };
 
+    struct persistent_list : instruction
+    {
+      persistent_list(identifier const &name, native_vector<identifier> &&values);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      native_vector<identifier> values;
+    };
+
+    struct persistent_vector : instruction
+    {
+      persistent_vector(identifier const &name, native_vector<identifier> &&values);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      native_vector<identifier> values;
+    };
+
+    struct persistent_array_map : instruction
+    {
+      persistent_array_map(identifier const &name,
+                           native_vector<std::pair<identifier, identifier>> &&values);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      native_vector<std::pair<identifier, identifier>> values;
+    };
+
+    struct persistent_hash_map : instruction
+    {
+      persistent_hash_map(identifier const &name,
+                          native_vector<std::pair<identifier, identifier>> &&values);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      native_vector<std::pair<identifier, identifier>> values;
+    };
+
+    struct persistent_hash_set : instruction
+    {
+      persistent_hash_set(identifier const &name, native_vector<identifier> &&values);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      native_vector<identifier> values;
+    };
+
     struct def : instruction
     {
       def(identifier const &name,
@@ -158,6 +205,37 @@ namespace jank::ir
       identifier condition;
       identifier then_block;
       identifier else_block;
+    };
+
+    struct case_ : instruction
+    {
+      case_(identifier const &name,
+            identifier const &value,
+            native_unordered_map<i64, identifier> &&case_blocks,
+            identifier const &default_block);
+
+      bool is_terminator() const override;
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier value;
+      native_unordered_map<i64, identifier> case_blocks;
+      identifier default_block;
+    };
+
+    struct try_ : instruction
+    {
+      try_(identifier const &name, native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      native_vector<std::pair<jtl::ptr<void>, identifier>> catches;
+    };
+
+    struct catch_ : instruction
+    {
+      catch_(identifier const &name, jtl::ptr<void> const type);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
     };
 
     struct throw_ : instruction

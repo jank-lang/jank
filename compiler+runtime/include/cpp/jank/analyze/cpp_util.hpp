@@ -64,6 +64,11 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> char_type();
   jtl::ptr<void> bool_type();
   jtl::ptr<void> var_type();
+  jtl::ptr<void> persistent_list_ref_type();
+  jtl::ptr<void> persistent_vector_ref_type();
+  jtl::ptr<void> persistent_array_map_ref_type();
+  jtl::ptr<void> persistent_hash_map_ref_type();
+  jtl::ptr<void> persistent_hash_set_ref_type();
   jtl::ptr<void> literal_type(runtime::object_ref const o);
 
   usize offset_to_typed_object_base(jtl::ptr<void> type);
