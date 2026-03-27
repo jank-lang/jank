@@ -1,6 +1,6 @@
 [submodule "compiler+runtime/third-party/folly"]
 	path = compiler+runtime/third-party/folly
-	url = https://github.com/ikappaki/jank-folly.git
+	url = https://github.com/jank-lang/folly.git
 [submodule "compiler+runtime/third-party/immer"]
 	path = compiler+runtime/third-party/immer
 	url = https://github.com/jank-lang/immer.git
@@ -18,7 +18,7 @@
 	url = https://github.com/jank-lang/cpptrace
 [submodule "compiler+runtime/third-party/cppinterop"]
 	path = compiler+runtime/third-party/cppinterop
-	url = https://github.com/ikappaki/jank-CppInterOp.git
+	url = https://github.com/jank-lang/CppInterOp.git
 [submodule "compiler+runtime/third-party/boost-multiprecision"]
 	path = compiler+runtime/third-party/boost-multiprecision
 	url = https://github.com/jank-lang/boost-multiprecision.git
@@ -30,4 +30,4 @@
 	url = https://github.com/jank-lang/stduuid.git
 [submodule "compiler+runtime/third-party/zip"]
 	path = compiler+runtime/third-party/zip
-	url = https://github.com/ikappaki/jank-zip.git
+	url = https://github.com/jank-lang/zip.git

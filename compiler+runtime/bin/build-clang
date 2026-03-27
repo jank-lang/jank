@@ -66,9 +66,9 @@ if [[ -n "${MSYSTEM:-}" ]]; then
     # patched version of MINGW-packages/mingw-w64-llvm is used, which
     # is maintain separately.
     llvm_mingw_pkg_gen=1  # Increment this whenever the LLVM version is updated
-    llvm_mingw_pkg_url="https://github.com/ikappaki/MINGW-packages.git"
-    llvm_mingw_pkg_branch="master-jank-win"
-    llvm_mingw_pkg_commit="15506e70d02aea54d249ba2086dccec845bbf2fe"
+    llvm_mingw_pkg_url="https://github.com/jank-lang/MINGW-packages"
+    llvm_mingw_pkg_branch="master"
+    llvm_mingw_pkg_commit="70ffe41c3d45164a497b7cac65448057dcebf4ae"
     llvm_mingw_pkg_repo_dir="${build_dir}/MINGW-packages"
     # The package definition  copied into ${llvm_build_dir} and
     # expects the LLVM source tree to be available at
