@@ -3423,7 +3423,7 @@ namespace jank::codegen
             /* Owned vars: init root to nil, will be set during gen(def)/bind_root.
              * Deferred vars: init to nil, will be lazily initialized on first use. */
             util::format_to(footer_buffer,
-                            "new (&{}::var_root_{}) jank::runtime::object_ref{{}};",
+                            "new (&{}::var_root_{}) jank::runtime::object_ref();",
                             native_ns,
                             v.second.native_name);
           }
