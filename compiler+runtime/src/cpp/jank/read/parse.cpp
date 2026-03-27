@@ -1467,6 +1467,10 @@ namespace jank::read::parse
           sym = make_box<obj::symbol>(var->n->name->name, sym->name);
         }
       }
+      else if(!sym->ns.empty())
+      {
+        sym = __rt_ctx->qualify_symbol(sym);
+      }
 
       ret = make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("quote"), sym);
     }
@@ -1745,24 +1749,8 @@ namespace jank::read::parse
       else
       {
         auto const ns_portion(sv.substr(0, slash));
-        /* Quoted symbols can have any ns and it doesn't need to exist. */
-        if(quoted)
-        {
-          ns = ns_portion;
-        }
-        /* Normal symbols will have the ns resolved immediately if resolvable. */
-        else
-        {
-          auto const resolved_ns(__rt_ctx->resolve_ns(make_box<obj::symbol>(ns_portion)));
-          if(resolved_ns.is_nil())
-          {
-            ns = ns_portion;
-          }
-          else
-          {
-            ns = resolved_ns->name->name;
-          }
-        }
+        /* Namespaces are resolved only within a syntax quote or analysis. */
+        ns = ns_portion;
         name = sv.substr(slash + 1);
       }
     }
