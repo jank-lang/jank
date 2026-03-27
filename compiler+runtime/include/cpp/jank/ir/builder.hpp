@@ -45,6 +45,11 @@ namespace jank::ir
                                    native_vector<std::pair<identifier, identifier>> &&values);
     identifier
     persistent_hash_set(analyze::expression_position const pos, native_vector<identifier> &&values);
+    identifier function(analyze::expression_position const pos,
+                        native_unordered_map<u8, jtl::immutable_string> &&arities);
+    identifier closure(analyze::expression_position const pos,
+                       native_unordered_map<u8, jtl::immutable_string> &&arities,
+                       native_unordered_map<jtl::immutable_string, identifier> &&captures);
     identifier def(analyze::expression_position const pos,
                    jtl::immutable_string const &qualified_var,
                    jtl::option<identifier> const &value,

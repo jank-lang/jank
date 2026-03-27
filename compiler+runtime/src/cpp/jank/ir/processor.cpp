@@ -182,9 +182,9 @@ namespace jank::ir
     return b.locals[local_name] = b.parameter(expr->position, local_name);
   }
 
-  void gen_arity(module &mod,
-                 analyze::expr::function_ref const fn_expr,
-                 analyze::expr::function_arity const &arity)
+  jtl::immutable_string gen_arity(module &mod,
+                                  analyze::expr::function_ref const fn_expr,
+                                  analyze::expr::function_arity const &arity)
   {
     auto &fn{ mod.functions.emplace_back(&arity) };
     fn.name = util::format("{}_{}", fn_expr->unique_name, arity.params.size());
@@ -230,15 +230,37 @@ namespace jank::ir
     {
       b.literal(analyze::expression_position::tail, runtime::jank_nil());
     }
+
+    return fn.name;
   }
 
   jtl::option<identifier> gen(analyze::expr::function_ref const expr, builder &b)
   {
+    native_unordered_map<u8, jtl::immutable_string> arities;
     for(auto const &arity : expr->arities)
     {
-      gen_arity(*b.mod, expr, arity);
+      arities[arity.params.size()] = gen_arity(*b.mod, expr, arity);
     }
-    return b.literal(expr->position, runtime::jank_nil());
+
+    auto const captures{ expr->captures() };
+    auto const is_closure{ !captures.empty() };
+    if(is_closure)
+    {
+      native_unordered_map<jtl::immutable_string, identifier> captured_idents;
+      for(auto const &capture : captures)
+      {
+        auto const &name{ capture.first->get_name() };
+        analyze::expr::local_reference const local_ref{ analyze::expression_position::value,
+                                                        expr->frame,
+                                                        expr->needs_box,
+                                                        capture.first,
+                                                        capture.second };
+        captured_idents[name] = gen(analyze::expr::local_reference_ref{ &local_ref }, b).unwrap();
+      }
+      return b.closure(expr->position, jtl::move(arities), jtl::move(captured_idents));
+    }
+
+    return b.function(expr->position, jtl::move(arities));
   }
 
   jtl::option<identifier> gen(analyze::expr::recur_ref const expr, builder &b)

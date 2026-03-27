@@ -460,6 +460,20 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
+  jtl::ptr<void> jit_function_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.jit_function_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> jit_closure_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.jit_closure_ref").expect_ok()) };
+    return type;
+  }
+
   jtl::ptr<void> literal_type(runtime::object_ref const o)
   {
 #pragma clang diagnostic push

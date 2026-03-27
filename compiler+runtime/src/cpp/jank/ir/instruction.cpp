@@ -81,6 +81,22 @@ namespace jank::ir::inst
   {
   }
 
+  function::function(identifier const &name,
+                     native_unordered_map<u8, jtl::immutable_string> &&arities)
+    : instruction{ name, jit_function_ref_type() }
+    , arities{ jtl::move(arities) }
+  {
+  }
+
+  closure::closure(identifier const &name,
+                   native_unordered_map<u8, jtl::immutable_string> &&arities,
+                   native_unordered_map<jtl::immutable_string, identifier> &&captures)
+    : instruction{ name, jit_function_ref_type() }
+    , arities{ jtl::move(arities) }
+    , captures{ jtl::move(captures) }
+  {
+  }
+
   def::def(identifier const &name,
            jtl::ptr<void> const type,
            jtl::immutable_string const &qualified_var,

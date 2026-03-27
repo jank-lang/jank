@@ -138,6 +138,50 @@ namespace jank::ir
     util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
   }
 
+  void inst::function::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :function :arities {", name);
+    bool needs_space{};
+    for(auto const &arity : arities)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      util::format_to(sb, "{} {}", arity.first, arity.second);
+    }
+    util::format_to(sb, "} :type \"{}\"}", get_qualified_type_name(type));
+  }
+
+  void inst::closure::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :closure :arities {", name);
+    bool needs_space{};
+    for(auto const &arity : arities)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      util::format_to(sb, "{} {}", arity.first, arity.second);
+    }
+    util::format_to(sb, "} :captures {");
+
+    needs_space = false;
+    for(auto const &capture : captures)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      util::format_to(sb, "{} {}", capture.first, capture.second);
+    }
+    util::format_to(sb, "} :type \"{}\"}", get_qualified_type_name(type));
+  }
+
   void inst::def::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb, "{:name {} :op :def :var {}", name, qualified_var);

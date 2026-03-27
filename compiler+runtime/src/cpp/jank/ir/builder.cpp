@@ -159,6 +159,33 @@ namespace jank::ir
     return name;
   }
 
+  identifier builder::function(analyze::expression_position const pos,
+                               native_unordered_map<u8, jtl::immutable_string> &&arities)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::function>(name, jtl::move(arities)));
+    if(pos == analyze::expression_position::tail)
+    {
+      return ret(name, current_function()->blocks[block_index].instructions.back()->type);
+    }
+    return name;
+  }
+
+  identifier builder::closure(analyze::expression_position const pos,
+                              native_unordered_map<u8, jtl::immutable_string> &&arities,
+                              native_unordered_map<jtl::immutable_string, identifier> &&captures)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::closure>(name, jtl::move(arities), jtl::move(captures)));
+    if(pos == analyze::expression_position::tail)
+    {
+      return ret(name, current_function()->blocks[block_index].instructions.back()->type);
+    }
+    return name;
+  }
+
   identifier builder::def(analyze::expression_position const pos,
                           jtl::immutable_string const &qualified_var,
                           jtl::option<identifier> const &value,

@@ -101,6 +101,27 @@ namespace jank::ir
       native_vector<identifier> values;
     };
 
+    struct function : instruction
+    {
+      function(identifier const &name, native_unordered_map<u8, jtl::immutable_string> &&arities);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      native_unordered_map<u8, jtl::immutable_string> arities;
+    };
+
+    struct closure : instruction
+    {
+      closure(identifier const &name,
+              native_unordered_map<u8, jtl::immutable_string> &&arities,
+              native_unordered_map<jtl::immutable_string, identifier> &&captures);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      native_unordered_map<u8, jtl::immutable_string> arities;
+      native_unordered_map<jtl::immutable_string, identifier> captures;
+    };
+
     struct def : instruction
     {
       def(identifier const &name,
