@@ -186,6 +186,14 @@ namespace jank::ir
     return name;
   }
 
+  identifier builder::letfn(native_vector<jtl::immutable_string> &&bindings)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::letfn>(name, jtl::move(bindings)));
+    return name;
+  }
+
   identifier builder::def(analyze::expression_position const pos,
                           jtl::immutable_string const &qualified_var,
                           jtl::option<identifier> const &value,

@@ -50,6 +50,7 @@ namespace jank::ir
     identifier closure(analyze::expression_position const pos,
                        native_unordered_map<u8, jtl::immutable_string> &&arities,
                        native_unordered_map<jtl::immutable_string, identifier> &&captures);
+    identifier letfn(native_vector<jtl::immutable_string> &&bindings);
     identifier def(analyze::expression_position const pos,
                    jtl::immutable_string const &qualified_var,
                    jtl::option<identifier> const &value,
@@ -84,6 +85,7 @@ namespace jank::ir
     usize ident_count{};
     native_unordered_map<jtl::immutable_string, identifier> locals{};
     native_unordered_map<jtl::immutable_string, identifier> local_to_loop_shadow{};
+    native_set<jtl::immutable_string> allowed_defers{};
     jtl::option<usize> loop_recur_target{};
     jtl::option<usize> fn_recur_target{};
   };

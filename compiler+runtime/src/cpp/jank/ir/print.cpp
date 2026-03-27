@@ -182,6 +182,22 @@ namespace jank::ir
     util::format_to(sb, "} :type \"{}\"}", get_qualified_type_name(type));
   }
 
+  void inst::letfn::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :letfn :bindings [", name);
+    bool needs_space{};
+    for(auto const &binding : bindings)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      sb(binding);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
   void inst::def::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb, "{:name {} :op :def :var {}", name, qualified_var);

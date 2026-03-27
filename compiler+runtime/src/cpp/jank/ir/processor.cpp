@@ -179,6 +179,11 @@ namespace jank::ir
       return local->second;
     }
 
+    if(b.allowed_defers.contains(local_name))
+    {
+      return ":defer";
+    }
+
     return b.locals[local_name] = b.parameter(expr->position, local_name);
   }
 
@@ -349,9 +354,34 @@ namespace jank::ir
     }
   }
 
-  jtl::option<identifier> gen(analyze::expr::letfn_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::letfn_ref const expr, builder &b)
   {
-    return none;
+    auto old_allowed_defers{ b.allowed_defers };
+    b.allowed_defers.clear();
+    auto old_locals{ b.locals };
+    util::scope_exit const finally{ [&] {
+      b.allowed_defers = jtl::move(old_allowed_defers);
+      b.locals = jtl::move(old_locals);
+    } };
+
+    native_vector<jtl::immutable_string> bindings;
+    bindings.reserve(expr->pairs.size());
+    for(auto const &pair : expr->pairs)
+    {
+      auto const &name{ pair.first->name->get_name() };
+      bindings.emplace_back(name);
+      b.allowed_defers.insert(name);
+    }
+
+    b.letfn(jtl::move(bindings));
+
+    for(auto const &pair : expr->pairs)
+    {
+      auto const &name{ pair.first->name->get_name() };
+      b.locals[name] = gen(pair.second, b).unwrap();
+    }
+
+    return gen(expr->body, b);
   }
 
   jtl::option<identifier> gen(analyze::expr::do_ref const expr, builder &b)

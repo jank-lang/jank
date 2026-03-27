@@ -91,9 +91,15 @@ namespace jank::ir::inst
   closure::closure(identifier const &name,
                    native_unordered_map<u8, jtl::immutable_string> &&arities,
                    native_unordered_map<jtl::immutable_string, identifier> &&captures)
-    : instruction{ name, jit_function_ref_type() }
+    : instruction{ name, jit_closure_ref_type() }
     , arities{ jtl::move(arities) }
     , captures{ jtl::move(captures) }
+  {
+  }
+
+  letfn::letfn(identifier const &name, native_vector<jtl::immutable_string> &&bindings)
+    : instruction{ name, Cpp::GetVoidType() }
+    , bindings{ jtl::move(bindings) }
   {
   }
 

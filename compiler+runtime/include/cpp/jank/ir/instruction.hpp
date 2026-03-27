@@ -122,6 +122,15 @@ namespace jank::ir
       native_unordered_map<jtl::immutable_string, identifier> captures;
     };
 
+    struct letfn : instruction
+    {
+      letfn(identifier const &name, native_vector<jtl::immutable_string> &&bindings);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      native_vector<jtl::immutable_string> bindings;
+    };
+
     struct def : instruction
     {
       def(identifier const &name,
