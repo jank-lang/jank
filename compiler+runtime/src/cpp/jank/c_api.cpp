@@ -1055,7 +1055,7 @@ extern "C"
       }
       if(init_default_ctx)
       {
-        runtime::__rt_ctx = new(GC) runtime::context{};
+        runtime::__rt_ctx = new(UseGC) runtime::context{};
       }
 
       return fn(argc, argv);

@@ -23,28 +23,28 @@ namespace jank::runtime::detail
     {
       case 0:
         {
-          auto const ret(new(GC) object_ref[2]{ key, value });
+          auto const ret(new(UseGC) object_ref[2]{ key, value });
           return ret;
         }
       case 2:
         {
-          auto const ret(new(GC) object_ref[4]{ prev[0], prev[1], key, value });
+          auto const ret(new(UseGC) object_ref[4]{ prev[0], prev[1], key, value });
           return ret;
         }
       case 4:
         {
-          auto const ret(new(GC) object_ref[6]{ prev[0], prev[1], prev[2], prev[3], key, value });
+          auto const ret(new(UseGC) object_ref[6]{ prev[0], prev[1], prev[2], prev[3], key, value });
           return ret;
         }
       case 6:
         {
           auto const ret(new(
-            GC) object_ref[8]{ prev[0], prev[1], prev[2], prev[3], prev[4], prev[5], key, value });
+            UseGC) object_ref[8]{ prev[0], prev[1], prev[2], prev[3], prev[4], prev[5], key, value });
           return ret;
         }
       case 8:
         {
-          auto const ret(new(GC) object_ref[10]{ prev[0],
+          auto const ret(new(UseGC) object_ref[10]{ prev[0],
                                                  prev[1],
                                                  prev[2],
                                                  prev[3],
@@ -58,7 +58,7 @@ namespace jank::runtime::detail
         }
       case 10:
         {
-          auto const ret(new(GC) object_ref[12]{ prev[0],
+          auto const ret(new(UseGC) object_ref[12]{ prev[0],
                                                  prev[1],
                                                  prev[2],
                                                  prev[3],
@@ -74,7 +74,7 @@ namespace jank::runtime::detail
         }
       case 12:
         {
-          auto const ret(new(GC) object_ref[14]{ prev[0],
+          auto const ret(new(UseGC) object_ref[14]{ prev[0],
                                                  prev[1],
                                                  prev[2],
                                                  prev[3],
@@ -92,7 +92,7 @@ namespace jank::runtime::detail
         }
       case 14:
         {
-          auto const ret(new(GC) object_ref[16]{ prev[0],
+          auto const ret(new(UseGC) object_ref[16]{ prev[0],
                                                  prev[1],
                                                  prev[2],
                                                  prev[3],
@@ -305,7 +305,7 @@ namespace jank::runtime::detail
       return;
     }
 
-    auto const new_data{ new(GC) object_ref[new_capacity]{} };
+    auto const new_data{ new(UseGC) object_ref[new_capacity]{} };
 
     for(u8 i{}; i < length; i += 2)
     {
@@ -337,7 +337,7 @@ namespace jank::runtime::detail
   native_array_map native_array_map::clone() const
   {
     native_array_map ret{ *this };
-    ret.data = new(GC) object_ref[cap];
+    ret.data = new(UseGC) object_ref[cap];
     for(u8 i{}; i < length; ++i)
     {
       ret.data[i] = data[i];
