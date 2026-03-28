@@ -7,6 +7,8 @@
 #include <deque>
 #include <list>
 
+#define GC_NAME_CONFLICT 1
+// https://github.com/jank-lang/jank/discussions/719
 #include <gc/gc_cpp.h>
 #include <gc/gc_allocator.h>
 

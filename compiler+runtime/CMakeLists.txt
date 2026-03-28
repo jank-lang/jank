@@ -104,7 +104,7 @@ set(
   # https://groups.google.com/g/llvm-dev/c/W-OweiAjDcU?pli=1
   -femulated-tls
   -DGC_THREADS
-  -DGC_NAME_CONFLICT
+  -DGC_NAME_CONFLICT=1 # https://github.com/jank-lang/jank/discussions/719
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
   -DCPPINTEROP_USE_REPL
   -DFOLLY_HAVE_JEMALLOC=0 -DFOLLY_HAVE_TCMALLOC=0 -DFOLLY_ASSUME_NO_JEMALLOC=1 -DFOLLY_ASSUME_NO_TCMALLOC=1
