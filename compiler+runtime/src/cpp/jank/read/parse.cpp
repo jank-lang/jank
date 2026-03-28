@@ -1467,7 +1467,7 @@ namespace jank::read::parse
           sym = make_box<obj::symbol>(var->n->name->name, sym->name);
         }
       }
-      else if(!sym->ns.empty())
+      else if(!sym->ns.empty() && sym->name != "&")
       {
         sym = __rt_ctx->qualify_symbol(sym);
       }
