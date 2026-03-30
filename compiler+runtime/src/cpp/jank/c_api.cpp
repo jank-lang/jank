@@ -10,9 +10,8 @@
 
 #include <CppInterOp/Compatibility.h>
 
-#include <gc/gc.h>
-
 #include <jank/c_api.h>
+#include <jank/gc.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core.hpp>
