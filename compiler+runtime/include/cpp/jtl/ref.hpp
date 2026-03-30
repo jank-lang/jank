@@ -142,7 +142,7 @@ namespace jtl
   constexpr ref<T> make_ref(Args &&...args)
   {
     static_assert(sizeof(ref<T>) == sizeof(T *));
-    T *ret{ new(GC) T{ jtl::forward<Args>(args)... } };
+    T *ret{ new(UseGC) T{ jtl::forward<Args>(args)... } };
     jank_debug_assert(ret);
     return ret;
   }

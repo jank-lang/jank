@@ -7,8 +7,7 @@
 #include <deque>
 #include <list>
 
-#include <gc/gc_cpp.h>
-#include <gc/gc_allocator.h>
+#include <jank/gc.hpp>
 
 #include <immer/heap/gc_heap.hpp>
 #include <immer/heap/heap_policy.hpp>
