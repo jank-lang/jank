@@ -841,7 +841,7 @@ namespace jank::analyze
       else
       {
         auto const return_type{ Cpp::GetFunctionReturnType(match) };
-        auto const source{ jtl::make_ref<expr::cpp_value>(position,
+        auto const source{ jtl::make_ref<expr::cpp_value>(expression_position::value,
                                                           current_frame,
                                                           needs_box,
                                                           /* TODO: Is symbol needed? */
@@ -929,7 +929,7 @@ namespace jank::analyze
       else
       {
         auto const return_type{ Cpp::GetFunctionReturnType(match) };
-        auto const source{ jtl::make_ref<expr::cpp_value>(position,
+        auto const source{ jtl::make_ref<expr::cpp_value>(expression_position::value,
                                                           current_frame,
                                                           needs_box,
                                                           /* TODO: Is symbol needed? */
@@ -3680,7 +3680,7 @@ namespace jank::analyze
       if(literal_value.is_ok())
       {
         auto const &result{ literal_value.expect_ok() };
-        auto const source{ jtl::make_ref<expr::cpp_value>(position,
+        auto const source{ jtl::make_ref<expr::cpp_value>(expression_position::value,
                                                           current_frame,
                                                           needs_box,
                                                           sym,
@@ -3939,7 +3939,7 @@ namespace jank::analyze
     }
 
     auto const &result{ literal_res.expect_ok() };
-    auto const source{ jtl::make_ref<expr::cpp_value>(position,
+    auto const source{ jtl::make_ref<expr::cpp_value>(expression_position::value,
                                                       current_frame,
                                                       false,
                                                       /* TODO: Is symbol needed? */
