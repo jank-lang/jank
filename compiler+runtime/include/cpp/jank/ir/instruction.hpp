@@ -13,7 +13,7 @@ namespace jank::analyze
   {
     using cpp_raw_ref = jtl::ref<struct cpp_raw>;
     using cpp_value_ref = jtl::ref<struct cpp_value>;
-    using cpp_cast_ref = jtl::ref<struct cpp_cast>;
+    using cpp_conversion_ref = jtl::ref<struct cpp_conversion>;
     using cpp_unsafe_cast_ref = jtl::ref<struct cpp_unsafe_cast>;
     using cpp_call_ref = jtl::ref<struct cpp_call>;
     using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
@@ -341,16 +341,28 @@ namespace jank::ir
       analyze::expr::cpp_value_ref expr;
     };
 
-    struct cpp_cast : instruction
+    struct cpp_into_object : instruction
     {
-      cpp_cast(identifier const &name,
-               identifier const &value,
-               analyze::expr::cpp_cast_ref const expr);
+      cpp_into_object(identifier const &name,
+                      identifier const &value,
+                      analyze::expr::cpp_conversion_ref const expr);
 
       void print(jtl::string_builder &sb, usize) const override;
 
       identifier value;
-      analyze::expr::cpp_cast_ref expr;
+      analyze::expr::cpp_conversion_ref expr;
+    };
+
+    struct cpp_from_object : instruction
+    {
+      cpp_from_object(identifier const &name,
+                      identifier const &value,
+                      analyze::expr::cpp_conversion_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+      analyze::expr::cpp_conversion_ref expr;
     };
 
     struct cpp_unsafe_cast : instruction

@@ -389,11 +389,20 @@ namespace jank::ir
     return name;
   }
 
-  identifier builder::cpp_cast(identifier const &value, analyze::expr::cpp_cast_ref const expr)
+  identifier
+  builder::cpp_conversion(identifier const &value, analyze::expr::cpp_conversion_ref const expr)
   {
     auto name{ next_ident() };
-    current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_cast>(name, value, expr));
+    if(expr->policy == analyze::conversion_policy::into_object)
+    {
+      current_function()->blocks[block_index].instructions.emplace_back(
+        jtl::make_ref<inst::cpp_into_object>(name, value, expr));
+    }
+    else
+    {
+      current_function()->blocks[block_index].instructions.emplace_back(
+        jtl::make_ref<inst::cpp_from_object>(name, value, expr));
+    }
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));

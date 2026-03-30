@@ -63,7 +63,7 @@ namespace jank::ir
   jtl::option<identifier> gen(analyze::expr::cpp_raw_ref const, builder &);
   jtl::option<identifier> gen(analyze::expr::cpp_type_ref const, builder &);
   jtl::option<identifier> gen(analyze::expr::cpp_value_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_cast_ref const, builder &);
+  jtl::option<identifier> gen(analyze::expr::cpp_conversion_ref const, builder &);
   jtl::option<identifier> gen(analyze::expr::cpp_unsafe_cast_ref const, builder &);
   jtl::option<identifier> gen(analyze::expr::cpp_call_ref const, builder &);
   jtl::option<identifier> gen(analyze::expr::cpp_constructor_call_ref const, builder &);
@@ -571,9 +571,9 @@ namespace jank::ir
     return b.cpp_value(expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_cast_ref const expr, builder &b)
+  jtl::option<identifier> gen(analyze::expr::cpp_conversion_ref const expr, builder &b)
   {
-    return b.cpp_cast(gen(expr->value_expr, b).unwrap(), expr);
+    return b.cpp_conversion(gen(expr->value_expr, b).unwrap(), expr);
   }
 
   jtl::option<identifier> gen(analyze::expr::cpp_unsafe_cast_ref const expr, builder &b)

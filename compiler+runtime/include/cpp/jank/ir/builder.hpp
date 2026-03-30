@@ -17,7 +17,7 @@ namespace jank::analyze::expr
 {
   using cpp_raw_ref = jtl::ref<struct cpp_raw>;
   using cpp_value_ref = jtl::ref<struct cpp_value>;
-  using cpp_cast_ref = jtl::ref<struct cpp_cast>;
+  using cpp_conversion_ref = jtl::ref<struct cpp_conversion>;
   using cpp_unsafe_cast_ref = jtl::ref<struct cpp_unsafe_cast>;
   using cpp_call_ref = jtl::ref<struct cpp_call>;
   using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
@@ -98,7 +98,8 @@ namespace jank::ir
 
     identifier cpp_raw(analyze::expr::cpp_raw_ref const expr);
     identifier cpp_value(analyze::expr::cpp_value_ref const expr);
-    identifier cpp_cast(identifier const &value, analyze::expr::cpp_cast_ref const expr);
+    identifier
+    cpp_conversion(identifier const &value, analyze::expr::cpp_conversion_ref const expr);
     identifier
     cpp_unsafe_cast(identifier const &value, analyze::expr::cpp_unsafe_cast_ref const expr);
     identifier cpp_call(identifier const &value,

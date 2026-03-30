@@ -26,24 +26,23 @@ namespace jank::analyze
 
 namespace jank::analyze::expr
 {
-  using cpp_cast_ref = jtl::ref<struct cpp_cast>;
+  using cpp_cast_ref = jtl::ref<struct cpp_conversion>;
 
-  /* Cast expressions are only used for conversion calls using jank's
+  /* This expression is only used for conversion calls using jank's
    * conversion trait. During analysis, if the cast can be done using
    * normal construction, we'll create a cpp_constructor_call expression
    * instead. */
-  /* TODO: Rename to cpp_conversion or something. */
-  struct cpp_cast : expression
+  struct cpp_conversion : expression
   {
     static constexpr expression_kind expr_kind{ expression_kind::cpp_cast };
 
-    cpp_cast(expression_position position,
-             local_frame_ptr frame,
-             bool needs_box,
-             jtl::ptr<void> type,
-             jtl::ptr<void> conversion_type,
-             conversion_policy policy,
-             expression_ref value_expr);
+    cpp_conversion(expression_position position,
+                   local_frame_ptr frame,
+                   bool needs_box,
+                   jtl::ptr<void> type,
+                   jtl::ptr<void> conversion_type,
+                   conversion_policy policy,
+                   expression_ref value_expr);
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;

@@ -52,7 +52,7 @@
 #include <jank/analyze/expr/cpp_raw.hpp>
 #include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expr/cpp_value.hpp>
-#include <jank/analyze/expr/cpp_cast.hpp>
+#include <jank/analyze/expr/cpp_conversion.hpp>
 #include <jank/analyze/expr/cpp_unsafe_cast.hpp>
 #include <jank/analyze/expr/cpp_call.hpp>
 #include <jank/analyze/expr/cpp_constructor_call.hpp>
@@ -1144,26 +1144,26 @@ namespace jank::analyze
         {
           auto const cast_position{ expr->position };
           expr->propagate_position(expression_position::value);
-          return jtl::make_ref<expr::cpp_cast>(cast_position,
-                                               expr->frame,
-                                               expr->needs_box,
-                                               expected_type,
-                                               expr_type,
-                                               conversion_policy::into_object,
-                                               expr);
+          return jtl::make_ref<expr::cpp_conversion>(cast_position,
+                                                     expr->frame,
+                                                     expr->needs_box,
+                                                     expected_type,
+                                                     expr_type,
+                                                     conversion_policy::into_object,
+                                                     expr);
         }
 
       case cpp_util::implicit_conversion_action::from_object:
         {
           auto const cast_position{ expr->position };
           expr->propagate_position(expression_position::value);
-          return jtl::make_ref<expr::cpp_cast>(cast_position,
-                                               expr->frame,
-                                               expr->needs_box,
-                                               Cpp::GetNonReferenceType(expected_type),
-                                               expected_type,
-                                               conversion_policy::from_object,
-                                               expr);
+          return jtl::make_ref<expr::cpp_conversion>(cast_position,
+                                                     expr->frame,
+                                                     expr->needs_box,
+                                                     Cpp::GetNonReferenceType(expected_type),
+                                                     expected_type,
+                                                     conversion_policy::from_object,
+                                                     expr);
         }
       case cpp_util::implicit_conversion_action::cast:
         {
@@ -4037,23 +4037,23 @@ namespace jank::analyze
     }
     if(cpp_util::is_any_object(type) && cpp_util::is_trait_convertible(value_type))
     {
-      return jtl::make_ref<expr::cpp_cast>(position,
-                                           current_frame,
-                                           needs_box,
-                                           type,
-                                           value_type,
-                                           conversion_policy::into_object,
-                                           value_expr);
+      return jtl::make_ref<expr::cpp_conversion>(position,
+                                                 current_frame,
+                                                 needs_box,
+                                                 type,
+                                                 value_type,
+                                                 conversion_policy::into_object,
+                                                 value_expr);
     }
     if(cpp_util::is_any_object(value_type) && cpp_util::is_trait_convertible(type))
     {
-      return jtl::make_ref<expr::cpp_cast>(position,
-                                           current_frame,
-                                           needs_box,
-                                           type,
-                                           type,
-                                           conversion_policy::from_object,
-                                           value_expr);
+      return jtl::make_ref<expr::cpp_conversion>(position,
+                                                 current_frame,
+                                                 needs_box,
+                                                 type,
+                                                 type,
+                                                 conversion_policy::from_object,
+                                                 value_expr);
     }
 
     return error::analyze_invalid_cpp_cast(

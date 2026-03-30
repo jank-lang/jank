@@ -173,13 +173,13 @@ namespace jank::evaluate
     if(!cpp_util::is_untyped_object(expr_type))
     {
       jank_debug_assert(cpp_util::is_trait_convertible(expr_type));
-      expr_to_add = jtl::make_ref<expr::cpp_cast>(expr->position,
-                                                  expr->frame,
-                                                  expr->needs_box,
-                                                  cpp_util::untyped_object_ref_type(),
-                                                  expr_type,
-                                                  conversion_policy::into_object,
-                                                  expr);
+      expr_to_add = jtl::make_ref<expr::cpp_conversion>(expr->position,
+                                                        expr->frame,
+                                                        expr->needs_box,
+                                                        cpp_util::untyped_object_ref_type(),
+                                                        expr_type,
+                                                        conversion_policy::into_object,
+                                                        expr);
       expr->propagate_position(expression_position::value);
     }
     arity.body->values.push_back(expr_to_add);
@@ -708,7 +708,7 @@ namespace jank::evaluate
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_cast", {})));
+    return dynamic_call(eval(wrap_expression(expr, "cpp_conversion", {})));
   }
 
   object_ref eval(expr::cpp_unsafe_cast_ref const expr)

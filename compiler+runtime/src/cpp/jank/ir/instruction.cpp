@@ -261,9 +261,18 @@ namespace jank::ir::inst
   {
   }
 
-  cpp_cast::cpp_cast(identifier const &name,
-                     identifier const &value,
-                     analyze::expr::cpp_cast_ref const expr)
+  cpp_into_object::cpp_into_object(identifier const &name,
+                                   identifier const &value,
+                                   analyze::expr::cpp_conversion_ref const expr)
+    : instruction{ name, expr->type }
+    , value{ value }
+    , expr{ expr }
+  {
+  }
+
+  cpp_from_object::cpp_from_object(identifier const &name,
+                                   identifier const &value,
+                                   analyze::expr::cpp_conversion_ref const expr)
     : instruction{ name, expr->type }
     , value{ value }
     , expr{ expr }
