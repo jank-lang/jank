@@ -10,7 +10,6 @@ namespace jank::analyze
     from_object
   };
 
-  [[gnu::visibility("default")]]
   constexpr char const *conversion_policy_str(conversion_policy const policy)
   {
     switch(policy)

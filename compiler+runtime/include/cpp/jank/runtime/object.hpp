@@ -95,7 +95,6 @@ namespace jank::runtime
     reader_conditional,
   };
 
-  [[gnu::visibility("default")]]
   constexpr char const *object_type_str(object_type const type)
   {
     switch(type)
