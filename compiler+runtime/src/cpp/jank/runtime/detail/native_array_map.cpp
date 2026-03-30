@@ -33,81 +33,83 @@ namespace jank::runtime::detail
         }
       case 4:
         {
-          auto const ret(new(UseGC) object_ref[6]{ prev[0], prev[1], prev[2], prev[3], key, value });
+          auto const ret(new(UseGC)
+                           object_ref[6]{ prev[0], prev[1], prev[2], prev[3], key, value });
           return ret;
         }
       case 6:
         {
-          auto const ret(new(
-            UseGC) object_ref[8]{ prev[0], prev[1], prev[2], prev[3], prev[4], prev[5], key, value });
+          auto const ret(
+            new(UseGC)
+              object_ref[8]{ prev[0], prev[1], prev[2], prev[3], prev[4], prev[5], key, value });
           return ret;
         }
       case 8:
         {
           auto const ret(new(UseGC) object_ref[10]{ prev[0],
-                                                 prev[1],
-                                                 prev[2],
-                                                 prev[3],
-                                                 prev[4],
-                                                 prev[5],
-                                                 prev[6],
-                                                 prev[7],
-                                                 key,
-                                                 value });
+                                                    prev[1],
+                                                    prev[2],
+                                                    prev[3],
+                                                    prev[4],
+                                                    prev[5],
+                                                    prev[6],
+                                                    prev[7],
+                                                    key,
+                                                    value });
           return ret;
         }
       case 10:
         {
           auto const ret(new(UseGC) object_ref[12]{ prev[0],
-                                                 prev[1],
-                                                 prev[2],
-                                                 prev[3],
-                                                 prev[4],
-                                                 prev[5],
-                                                 prev[6],
-                                                 prev[7],
-                                                 prev[8],
-                                                 prev[9],
-                                                 key,
-                                                 value });
+                                                    prev[1],
+                                                    prev[2],
+                                                    prev[3],
+                                                    prev[4],
+                                                    prev[5],
+                                                    prev[6],
+                                                    prev[7],
+                                                    prev[8],
+                                                    prev[9],
+                                                    key,
+                                                    value });
           return ret;
         }
       case 12:
         {
           auto const ret(new(UseGC) object_ref[14]{ prev[0],
-                                                 prev[1],
-                                                 prev[2],
-                                                 prev[3],
-                                                 prev[4],
-                                                 prev[5],
-                                                 prev[6],
-                                                 prev[7],
-                                                 prev[8],
-                                                 prev[9],
-                                                 prev[10],
-                                                 prev[11],
-                                                 key,
-                                                 value });
+                                                    prev[1],
+                                                    prev[2],
+                                                    prev[3],
+                                                    prev[4],
+                                                    prev[5],
+                                                    prev[6],
+                                                    prev[7],
+                                                    prev[8],
+                                                    prev[9],
+                                                    prev[10],
+                                                    prev[11],
+                                                    key,
+                                                    value });
           return ret;
         }
       case 14:
         {
           auto const ret(new(UseGC) object_ref[16]{ prev[0],
-                                                 prev[1],
-                                                 prev[2],
-                                                 prev[3],
-                                                 prev[4],
-                                                 prev[5],
-                                                 prev[6],
-                                                 prev[7],
-                                                 prev[8],
-                                                 prev[9],
-                                                 prev[10],
-                                                 prev[11],
-                                                 prev[12],
-                                                 prev[13],
-                                                 key,
-                                                 value });
+                                                    prev[1],
+                                                    prev[2],
+                                                    prev[3],
+                                                    prev[4],
+                                                    prev[5],
+                                                    prev[6],
+                                                    prev[7],
+                                                    prev[8],
+                                                    prev[9],
+                                                    prev[10],
+                                                    prev[11],
+                                                    prev[12],
+                                                    prev[13],
+                                                    key,
+                                                    value });
           return ret;
         }
       default:
