@@ -1,6 +1,7 @@
 #include <jank/ir/builder.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/analyze/cpp_util.hpp>
+#include <jank/analyze/visit.hpp>
 
 namespace jank::ir
 {
@@ -361,6 +362,118 @@ namespace jank::ir
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::ret>(name, type, value));
+    return name;
+  }
+
+  identifier builder::cpp_raw(analyze::expr::cpp_raw_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_raw>(name, expr));
+    return name;
+  }
+
+  identifier builder::cpp_value(analyze::expr::cpp_value_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_value>(name, expr));
+    return name;
+  }
+
+  identifier builder::cpp_cast(identifier const &value, analyze::expr::cpp_cast_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_cast>(name, value, expr));
+    return name;
+  }
+
+  identifier
+  builder::cpp_unsafe_cast(identifier const &value, analyze::expr::cpp_unsafe_cast_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_unsafe_cast>(name, value, expr));
+    return name;
+  }
+
+  identifier builder::cpp_call(identifier const &value,
+                               native_vector<identifier> &&args,
+                               analyze::expr::cpp_call_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_call>(name, value, jtl::move(args), expr));
+    return name;
+  }
+
+  identifier builder::cpp_constructor_call(native_vector<identifier> &&args,
+                                           analyze::expr::cpp_constructor_call_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_constructor_call>(name, jtl::move(args), expr));
+    return name;
+  }
+
+  identifier builder::cpp_member_call(native_vector<identifier> &&args,
+                                      analyze::expr::cpp_member_call_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_member_call>(name, jtl::move(args), expr));
+    return name;
+  }
+
+  identifier builder::cpp_member_access(identifier const &value,
+                                        analyze::expr::cpp_member_access_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_member_access>(name, value, expr));
+    return name;
+  }
+
+  identifier
+  builder::cpp_builtin_operator_call(native_vector<identifier> &&args,
+                                     analyze::expr::cpp_builtin_operator_call_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_builtin_operator_call>(name, jtl::move(args), expr));
+    return name;
+  }
+
+  identifier builder::cpp_box(identifier const &value, analyze::expr::cpp_box_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_box>(name, value, expr));
+    return name;
+  }
+
+  identifier builder::cpp_unbox(identifier const &value, analyze::expr::cpp_unbox_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_unbox>(name, value, expr));
+    return name;
+  }
+
+  identifier builder::cpp_new(identifier const &value, analyze::expr::cpp_new_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_new>(name, value, expr));
+    return name;
+  }
+
+  identifier builder::cpp_delete(identifier const &value, analyze::expr::cpp_delete_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_delete>(name, value, expr));
     return name;
   }
 }

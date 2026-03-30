@@ -5,6 +5,28 @@
 
 #include <jank/runtime/object.hpp>
 
+namespace jank::analyze
+{
+  using expression_ref = jtl::ref<struct expression>;
+
+  namespace expr
+  {
+    using cpp_raw_ref = jtl::ref<struct cpp_raw>;
+    using cpp_value_ref = jtl::ref<struct cpp_value>;
+    using cpp_cast_ref = jtl::ref<struct cpp_cast>;
+    using cpp_unsafe_cast_ref = jtl::ref<struct cpp_unsafe_cast>;
+    using cpp_call_ref = jtl::ref<struct cpp_call>;
+    using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
+    using cpp_member_call_ref = jtl::ref<struct cpp_member_call>;
+    using cpp_member_access_ref = jtl::ref<struct cpp_member_access>;
+    using cpp_builtin_operator_call_ref = jtl::ref<struct cpp_builtin_operator_call>;
+    using cpp_box_ref = jtl::ref<struct cpp_box>;
+    using cpp_unbox_ref = jtl::ref<struct cpp_unbox>;
+    using cpp_new_ref = jtl::ref<struct cpp_new>;
+    using cpp_delete_ref = jtl::ref<struct cpp_delete>;
+  }
+}
+
 namespace jank::ir
 {
   using identifier = jtl::immutable_string;
@@ -299,6 +321,159 @@ namespace jank::ir
       void print(jtl::string_builder &sb, usize indent) const override;
 
       identifier value;
+    };
+
+    struct cpp_raw : instruction
+    {
+      cpp_raw(identifier const &name, analyze::expr::cpp_raw_ref const expr);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      analyze::expr::cpp_raw_ref const expr;
+    };
+
+    struct cpp_value : instruction
+    {
+      cpp_value(identifier const &name, analyze::expr::cpp_value_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      analyze::expr::cpp_value_ref expr;
+    };
+
+    struct cpp_cast : instruction
+    {
+      cpp_cast(identifier const &name,
+               identifier const &value,
+               analyze::expr::cpp_cast_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+      analyze::expr::cpp_cast_ref expr;
+    };
+
+    struct cpp_unsafe_cast : instruction
+    {
+      cpp_unsafe_cast(identifier const &name,
+                      identifier const &value,
+                      analyze::expr::cpp_unsafe_cast_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+      analyze::expr::cpp_unsafe_cast_ref expr;
+    };
+
+    struct cpp_call : instruction
+    {
+      cpp_call(identifier const &name,
+               identifier const &value,
+               native_vector<identifier> &&args,
+               analyze::expr::cpp_call_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+      native_vector<identifier> args;
+      analyze::expr::cpp_call_ref expr;
+    };
+
+    struct cpp_constructor_call : instruction
+    {
+      cpp_constructor_call(identifier const &name,
+                           native_vector<identifier> &&args,
+                           analyze::expr::cpp_constructor_call_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      native_vector<identifier> args;
+      analyze::expr::cpp_constructor_call_ref expr;
+    };
+
+    struct cpp_member_call : instruction
+    {
+      cpp_member_call(identifier const &name,
+                      native_vector<identifier> &&args,
+                      analyze::expr::cpp_member_call_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+      native_vector<identifier> args;
+      analyze::expr::cpp_member_call_ref expr;
+    };
+
+    struct cpp_member_access : instruction
+    {
+      cpp_member_access(identifier const &name,
+                        identifier const &value,
+                        analyze::expr::cpp_member_access_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+      analyze::expr::cpp_member_access_ref expr;
+    };
+
+    struct cpp_builtin_operator_call : instruction
+    {
+      cpp_builtin_operator_call(identifier const &name,
+                                native_vector<identifier> &&args,
+                                analyze::expr::cpp_builtin_operator_call_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      native_vector<identifier> args;
+      analyze::expr::cpp_builtin_operator_call_ref expr;
+    };
+
+    struct cpp_box : instruction
+    {
+      cpp_box(identifier const &name,
+              identifier const &value,
+              analyze::expr::cpp_box_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+      analyze::expr::cpp_box_ref expr;
+    };
+
+    struct cpp_unbox : instruction
+    {
+      cpp_unbox(identifier const &name,
+                identifier const &value,
+                analyze::expr::cpp_unbox_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+      analyze::expr::cpp_unbox_ref expr;
+    };
+
+    struct cpp_new : instruction
+    {
+      cpp_new(identifier const &name,
+              identifier const &value,
+              analyze::expr::cpp_new_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+      analyze::expr::cpp_new_ref expr;
+    };
+
+    struct cpp_delete : instruction
+    {
+      cpp_delete(identifier const &name,
+                 identifier const &value,
+                 analyze::expr::cpp_delete_ref const expr);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+      analyze::expr::cpp_delete_ref expr;
     };
   }
 }

@@ -1,6 +1,7 @@
 #include <jank/ir/print.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/analyze/cpp_util.hpp>
+#include <jank/analyze/visit.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::ir
@@ -369,6 +370,157 @@ namespace jank::ir
   {
     util::format_to(sb,
                     "{:name {} :op :ret :value {} :type \"{}\"}",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_raw::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :cpp-raw :type \"{}\"}",
+                    name,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_value::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :cpp-value :scope \"{}\" :type \"{}\"}",
+                    name,
+                    get_qualified_name(expr->scope),
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_cast::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :cpp-cast :value {} :type \"{}\"}",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_unsafe_cast::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :cpp-unsafe-cast :value {} :type \"{}\"}",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_call::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :cpp-call :value {} :args [", name, value);
+    bool needs_space{};
+    for(auto const &arg : args)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      sb(arg);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
+  void inst::cpp_constructor_call::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :cpp-constructor-call :args [", name);
+    bool needs_space{};
+    for(auto const &arg : args)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      sb(arg);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
+  void inst::cpp_member_call::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :cpp-member-call :fn \"{}\" :args [",
+                    name,
+                    get_qualified_name(expr->fn));
+    bool needs_space{};
+    for(auto const &arg : args)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      sb(arg);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
+  void inst::cpp_member_access::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    R"({:name {} :op :cpp-member-access :value {} :member "{}" :type "{}"})",
+                    name,
+                    value,
+                    get_qualified_name(expr->scope),
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_builtin_operator_call::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :cpp-builtin-operator-call :op \"{}\" :args [",
+                    name,
+                    operator_name(static_cast<Cpp::Operator>(expr->op)));
+    bool needs_space{};
+    for(auto const &arg : args)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      sb(arg);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
+  void inst::cpp_box::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    R"({:name {} :op :cpp-box :value {} :type "{}"})",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_unbox::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    R"({:name {} :op :cpp-unbox :value {} :type "{}"})",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_new::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    R"({:name {} :op :cpp-new :value {} :type "{}"})",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_delete::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    R"({:name {} :op :cpp-delete :value {} :type "{}"})",
                     name,
                     value,
                     get_qualified_type_name(type));

@@ -2,6 +2,7 @@
 
 #include <jank/ir/instruction.hpp>
 #include <jank/analyze/cpp_util.hpp>
+#include <jank/analyze/visit.hpp>
 
 namespace jank::ir
 {
@@ -246,5 +247,119 @@ namespace jank::ir::inst
   bool ret::is_terminator() const
   {
     return true;
+  }
+
+  cpp_raw::cpp_raw(identifier const &name, analyze::expr::cpp_raw_ref const expr)
+    : instruction{ name, Cpp::GetVoidType() }
+    , expr{ expr }
+  {
+  }
+
+  cpp_value::cpp_value(identifier const &name, analyze::expr::cpp_value_ref const expr)
+    : instruction{ name, expression_type(expr) }
+    , expr{ expr }
+  {
+  }
+
+  cpp_cast::cpp_cast(identifier const &name,
+                     identifier const &value,
+                     analyze::expr::cpp_cast_ref const expr)
+    : instruction{ name, expr->type }
+    , value{ value }
+    , expr{ expr }
+  {
+  }
+
+  cpp_unsafe_cast::cpp_unsafe_cast(identifier const &name,
+                                   identifier const &value,
+                                   analyze::expr::cpp_unsafe_cast_ref const expr)
+    : instruction{ name, expression_type(expr) }
+    , value{ value }
+    , expr{ expr }
+  {
+  }
+
+  cpp_call::cpp_call(identifier const &name,
+                     identifier const &value,
+                     native_vector<identifier> &&args,
+                     analyze::expr::cpp_call_ref const expr)
+    : instruction{ name, expression_type(expr) }
+    , value{ value }
+    , args{ jtl::move(args) }
+    , expr{ expr }
+  {
+  }
+
+  cpp_constructor_call::cpp_constructor_call(identifier const &name,
+                                             native_vector<identifier> &&args,
+                                             analyze::expr::cpp_constructor_call_ref const expr)
+    : instruction{ name, expression_type(expr) }
+    , args{ jtl::move(args) }
+    , expr{ expr }
+  {
+  }
+
+  cpp_member_call::cpp_member_call(identifier const &name,
+                                   native_vector<identifier> &&args,
+                                   analyze::expr::cpp_member_call_ref const expr)
+    : instruction{ name, expression_type(expr) }
+    , args{ jtl::move(args) }
+    , expr{ expr }
+  {
+  }
+
+  cpp_member_access::cpp_member_access(identifier const &name,
+                                       identifier const &value,
+                                       analyze::expr::cpp_member_access_ref const expr)
+    : instruction{ name, expression_type(expr) }
+    , value{ value }
+    , expr{ expr }
+  {
+  }
+
+  cpp_builtin_operator_call::cpp_builtin_operator_call(
+    identifier const &name,
+    native_vector<identifier> &&args,
+    analyze::expr::cpp_builtin_operator_call_ref const expr)
+    : instruction{ name, expression_type(expr) }
+    , args{ jtl::move(args) }
+    , expr{ expr }
+  {
+  }
+
+  cpp_box::cpp_box(identifier const &name,
+                   identifier const &value,
+                   analyze::expr::cpp_box_ref const expr)
+    : instruction{ name, expression_type(expr) }
+    , value{ value }
+    , expr{ expr }
+  {
+  }
+
+  cpp_unbox::cpp_unbox(identifier const &name,
+                       identifier const &value,
+                       analyze::expr::cpp_unbox_ref const expr)
+    : instruction{ name, expression_type(expr) }
+    , value{ value }
+    , expr{ expr }
+  {
+  }
+
+  cpp_new::cpp_new(identifier const &name,
+                   identifier const &value,
+                   analyze::expr::cpp_new_ref const expr)
+    : instruction{ name, expression_type(expr) }
+    , value{ value }
+    , expr{ expr }
+  {
+  }
+
+  cpp_delete::cpp_delete(identifier const &name,
+                         identifier const &value,
+                         analyze::expr::cpp_delete_ref const expr)
+    : instruction{ name, expression_type(expr) }
+    , value{ value }
+    , expr{ expr }
+  {
   }
 }

@@ -13,6 +13,23 @@ namespace jtl
   struct string_builder;
 }
 
+namespace jank::analyze::expr
+{
+  using cpp_raw_ref = jtl::ref<struct cpp_raw>;
+  using cpp_value_ref = jtl::ref<struct cpp_value>;
+  using cpp_cast_ref = jtl::ref<struct cpp_cast>;
+  using cpp_unsafe_cast_ref = jtl::ref<struct cpp_unsafe_cast>;
+  using cpp_call_ref = jtl::ref<struct cpp_call>;
+  using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
+  using cpp_member_call_ref = jtl::ref<struct cpp_member_call>;
+  using cpp_member_access_ref = jtl::ref<struct cpp_member_access>;
+  using cpp_builtin_operator_call_ref = jtl::ref<struct cpp_builtin_operator_call>;
+  using cpp_box_ref = jtl::ref<struct cpp_box>;
+  using cpp_unbox_ref = jtl::ref<struct cpp_unbox>;
+  using cpp_new_ref = jtl::ref<struct cpp_new>;
+  using cpp_delete_ref = jtl::ref<struct cpp_delete>;
+}
+
 namespace jank::ir
 {
   struct builder
@@ -78,6 +95,27 @@ namespace jank::ir
     identifier catch_(jtl::ptr<void> const type);
     identifier throw_(identifier const &value);
     identifier ret(identifier const &value, jtl::ptr<void> const type);
+
+    identifier cpp_raw(analyze::expr::cpp_raw_ref const expr);
+    identifier cpp_value(analyze::expr::cpp_value_ref const expr);
+    identifier cpp_cast(identifier const &value, analyze::expr::cpp_cast_ref const expr);
+    identifier
+    cpp_unsafe_cast(identifier const &value, analyze::expr::cpp_unsafe_cast_ref const expr);
+    identifier cpp_call(identifier const &value,
+                        native_vector<identifier> &&args,
+                        analyze::expr::cpp_call_ref const expr);
+    identifier cpp_constructor_call(native_vector<identifier> &&args,
+                                    analyze::expr::cpp_constructor_call_ref const expr);
+    identifier cpp_member_call(native_vector<identifier> &&args,
+                               analyze::expr::cpp_member_call_ref const expr);
+    identifier
+    cpp_member_access(identifier const &value, analyze::expr::cpp_member_access_ref const expr);
+    identifier cpp_builtin_operator_call(native_vector<identifier> &&args,
+                                         analyze::expr::cpp_builtin_operator_call_ref const expr);
+    identifier cpp_box(identifier const &value, analyze::expr::cpp_box_ref const expr);
+    identifier cpp_unbox(identifier const &value, analyze::expr::cpp_unbox_ref const expr);
+    identifier cpp_new(identifier const &value, analyze::expr::cpp_new_ref const expr);
+    identifier cpp_delete(identifier const &value, analyze::expr::cpp_delete_ref const expr);
 
     jtl::ref<module> mod;
     usize fn_index{};

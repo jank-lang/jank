@@ -12,6 +12,7 @@
 #include <jank/ui/highlight.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
+#include <jank/error/codegen.hpp>
 
 namespace jank::ir
 {
@@ -554,74 +555,99 @@ namespace jank::ir
     return none;
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_raw_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_raw_ref const expr, builder &b)
   {
-    return none;
+    return b.cpp_raw(expr);
   }
 
   jtl::option<identifier> gen(analyze::expr::cpp_type_ref const, builder &)
   {
-    return none;
+    throw error::internal_codegen_failure(
+      "A cpp_type expression was found during codegen, but that should not be possible.");
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_value_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_value_ref const expr, builder &b)
   {
-    return none;
+    return b.cpp_value(expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_cast_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_cast_ref const expr, builder &b)
   {
-    return none;
+    return b.cpp_cast(gen(expr->value_expr, b).unwrap(), expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_unsafe_cast_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_unsafe_cast_ref const expr, builder &b)
   {
-    return none;
+    return b.cpp_unsafe_cast(gen(expr->value_expr, b).unwrap(), expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_call_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_call_ref const expr, builder &b)
   {
-    return none;
+    native_vector<identifier> args;
+    args.reserve(expr->arg_exprs.size());
+    for(auto const arg : expr->arg_exprs)
+    {
+      args.emplace_back(gen(arg, b).unwrap());
+    }
+    return b.cpp_call(gen(expr->source_expr, b).unwrap(), jtl::move(args), expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_constructor_call_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_constructor_call_ref const expr, builder &b)
   {
-    return none;
+    native_vector<identifier> args;
+    args.reserve(expr->arg_exprs.size());
+    for(auto const arg : expr->arg_exprs)
+    {
+      args.emplace_back(gen(arg, b).unwrap());
+    }
+    return b.cpp_constructor_call(jtl::move(args), expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_member_call_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_member_call_ref const expr, builder &b)
   {
-    return none;
+    native_vector<identifier> args;
+    args.reserve(expr->arg_exprs.size());
+    for(auto const arg : expr->arg_exprs)
+    {
+      args.emplace_back(gen(arg, b).unwrap());
+    }
+    return b.cpp_member_call(jtl::move(args), expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_member_access_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_member_access_ref const expr, builder &b)
   {
-    return none;
+    return b.cpp_member_access(gen(expr->obj_expr, b).unwrap(), expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_builtin_operator_call_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_builtin_operator_call_ref const expr, builder &b)
   {
-    return none;
+    native_vector<identifier> args;
+    args.reserve(expr->arg_exprs.size());
+    for(auto const arg : expr->arg_exprs)
+    {
+      args.emplace_back(gen(arg, b).unwrap());
+    }
+    return b.cpp_builtin_operator_call(jtl::move(args), expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_box_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_box_ref const expr, builder &b)
   {
-    return none;
+    return b.cpp_box(gen(expr->value_expr, b).unwrap(), expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_unbox_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_unbox_ref const expr, builder &b)
   {
-    return none;
+    return b.cpp_unbox(gen(expr->value_expr, b).unwrap(), expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_new_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_new_ref const expr, builder &b)
   {
-    return none;
+    return b.cpp_new(gen(expr->value_expr, b).unwrap(), expr);
   }
 
-  jtl::option<identifier> gen(analyze::expr::cpp_delete_ref const, builder &)
+  jtl::option<identifier> gen(analyze::expr::cpp_delete_ref const expr, builder &b)
   {
-    return none;
+    return b.cpp_delete(gen(expr->value_expr, b).unwrap(), expr);
   }
 
   jtl::option<identifier> gen(analyze::expression_ref const expr, builder &b)
