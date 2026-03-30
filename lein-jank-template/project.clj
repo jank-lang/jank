@@ -1,4 +1,4 @@
-(defproject org.jank-lang/lein-template.jank "0.6"
+(defproject org.jank-lang/lein-template.jank "0.7"
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
   :eval-in-leiningen true)
