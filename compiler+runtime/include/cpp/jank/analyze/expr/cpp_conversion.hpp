@@ -26,7 +26,7 @@ namespace jank::analyze
 
 namespace jank::analyze::expr
 {
-  using cpp_cast_ref = jtl::ref<struct cpp_conversion>;
+  using cpp_conversion_ref = jtl::ref<struct cpp_conversion>;
 
   /* This expression is only used for conversion calls using jank's
    * conversion trait. During analysis, if the cast can be done using
@@ -34,7 +34,7 @@ namespace jank::analyze::expr
    * instead. */
   struct cpp_conversion : expression
   {
-    static constexpr expression_kind expr_kind{ expression_kind::cpp_cast };
+    static constexpr expression_kind expr_kind{ expression_kind::cpp_conversion };
 
     cpp_conversion(expression_position position,
                    local_frame_ptr frame,

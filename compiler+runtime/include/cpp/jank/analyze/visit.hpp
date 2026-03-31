@@ -92,7 +92,7 @@ namespace jank::analyze
         return f(jtl::static_ref_cast<expr::cpp_type>(e), std::forward<Args>(args)...);
       case expression_kind::cpp_value:
         return f(jtl::static_ref_cast<expr::cpp_value>(e), std::forward<Args>(args)...);
-      case expression_kind::cpp_cast:
+      case expression_kind::cpp_conversion:
         return f(jtl::static_ref_cast<expr::cpp_conversion>(e), std::forward<Args>(args)...);
       case expression_kind::cpp_unsafe_cast:
         return f(jtl::static_ref_cast<expr::cpp_unsafe_cast>(e), std::forward<Args>(args)...);

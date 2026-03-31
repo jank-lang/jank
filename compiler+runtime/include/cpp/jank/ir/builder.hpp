@@ -71,7 +71,8 @@ namespace jank::ir
     identifier def(analyze::expression_position const pos,
                    jtl::immutable_string const &qualified_var,
                    jtl::option<identifier> const &value,
-                   identifier const &meta);
+                   identifier const &meta,
+                   bool const is_dynamic);
     identifier
     var_deref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var);
     identifier

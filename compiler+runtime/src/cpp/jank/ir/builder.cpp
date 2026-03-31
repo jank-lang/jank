@@ -198,12 +198,13 @@ namespace jank::ir
   identifier builder::def(analyze::expression_position const pos,
                           jtl::immutable_string const &qualified_var,
                           jtl::option<identifier> const &value,
-                          identifier const &meta)
+                          identifier const &meta,
+                          bool const is_dynamic)
   {
     auto name{ next_ident() };
     auto const type{ var_type() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::def>(name, type, qualified_var, value, meta));
+      jtl::make_ref<inst::def>(name, type, qualified_var, value, meta, is_dynamic));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);

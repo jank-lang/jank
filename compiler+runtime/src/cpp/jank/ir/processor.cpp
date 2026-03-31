@@ -1,8 +1,12 @@
 #include <jank/ir/processor.hpp>
 #include <jank/ir/print.hpp>
+#include <jank/runtime/context.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/analyze/cpp_util.hpp>
@@ -39,41 +43,6 @@ namespace jank::ir
     return !instructions.empty() && instructions.back()->is_terminator();
   }
 
-  jtl::option<identifier> gen(analyze::expr::def_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::var_deref_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::var_ref_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::call_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::primitive_literal_ref const expr, builder &b);
-  jtl::option<identifier> gen(analyze::expr::list_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::vector_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::map_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::set_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::local_reference_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::function_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::recur_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::recursion_reference_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::named_recursion_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::let_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::letfn_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::do_ref const expr, builder &b);
-  jtl::option<identifier> gen(analyze::expr::if_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::throw_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::try_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::case_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_raw_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_type_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_value_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_conversion_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_unsafe_cast_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_call_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_constructor_call_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_member_call_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_member_access_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_builtin_operator_call_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_box_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_unbox_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_new_ref const, builder &);
-  jtl::option<identifier> gen(analyze::expr::cpp_delete_ref const, builder &);
   jtl::option<identifier> gen(analyze::expression_ref const expr, builder &b);
 
   jtl::option<identifier> gen(analyze::expr::def_ref const expr, builder &b)
@@ -83,10 +52,13 @@ namespace jank::ir
     {
       value_ident = gen(expr->value.unwrap(), b);
     }
+
+    static auto const dynamic_kw{ runtime::__rt_ctx->intern_keyword("dynamic").expect_ok() };
     return b.def(expr->position,
-                 expr->name->get_name(),
+                 expr->name->to_code_string(),
                  value_ident,
-                 b.literal(analyze::expression_position::value, expr->name->meta));
+                 b.literal(analyze::expression_position::value, expr->name->meta),
+                 runtime::truthy(runtime::get(expr->name->meta, dynamic_kw)));
   }
 
   jtl::option<identifier> gen(analyze::expr::var_deref_ref const expr, builder &b)

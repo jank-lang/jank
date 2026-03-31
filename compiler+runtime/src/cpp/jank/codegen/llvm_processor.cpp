@@ -120,7 +120,7 @@ namespace jank::codegen
     llvm::Value *gen(analyze::expr::cpp_raw_ref, analyze::expr::function_arity const &);
     static llvm::Value *gen(analyze::expr::cpp_type_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_value_ref, analyze::expr::function_arity const &);
-    llvm::Value *gen(analyze::expr::cpp_cast_ref, analyze::expr::function_arity const &);
+    llvm::Value *gen(analyze::expr::cpp_conversion_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_unsafe_cast_ref, analyze::expr::function_arity const &);
     llvm::Value *gen(analyze::expr::cpp_call_ref, analyze::expr::function_arity const &);
     llvm::Value *
@@ -2687,7 +2687,7 @@ namespace jank::codegen
   }
 
   llvm::Value *
-  llvm_processor::impl::gen(expr::cpp_cast_ref const expr, expr::function_arity const &arity)
+  llvm_processor::impl::gen(expr::cpp_conversion_ref const expr, expr::function_arity const &arity)
   {
     auto const value{ gen(expr->value_expr, arity) };
     auto converted{ convert_object(*ctx,

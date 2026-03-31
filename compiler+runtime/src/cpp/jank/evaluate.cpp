@@ -22,6 +22,7 @@
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/error/analyze.hpp>
 #include <jank/ir/processor.hpp>
+#include <jank/codegen/cpp_processor.hpp>
 
 namespace jank::evaluate
 {
@@ -558,7 +559,8 @@ namespace jank::evaluate
                    munge(expr->unique_name) }
         .to_string());
 
-    ir::create(expr, module, codegen::compilation_target::eval);
+    auto const mod{ ir::create(expr, module, codegen::compilation_target::eval) };
+    codegen::gen_cpp(mod);
 
     if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
     {
@@ -704,7 +706,7 @@ namespace jank::evaluate
     return dynamic_call(eval(wrap_expression(expr, "cpp_value", {})));
   }
 
-  object_ref eval(expr::cpp_cast_ref const expr)
+  object_ref eval(expr::cpp_conversion_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();

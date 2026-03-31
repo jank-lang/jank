@@ -2061,10 +2061,10 @@ namespace jank::codegen
     return tmp;
   }
 
-  jtl::option<handle>
-  processor::gen(analyze::expr::cpp_cast_ref const expr, analyze::expr::function_arity const &arity)
+  jtl::option<handle> processor::gen(analyze::expr::cpp_conversion_ref const expr,
+                                     analyze::expr::function_arity const &arity)
   {
-    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_cast")));
+    auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_conversion")));
     auto const value_tmp{ gen(expr->value_expr, arity) };
 
     /* There's no need to do a conversion for void, since we always just

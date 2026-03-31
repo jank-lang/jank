@@ -33,7 +33,7 @@ namespace jank::analyze
     using cpp_raw_ref = jtl::ref<struct cpp_raw>;
     using cpp_type_ref = jtl::ref<struct cpp_type>;
     using cpp_value_ref = jtl::ref<struct cpp_value>;
-    using cpp_cast_ref = jtl::ref<struct cpp_conversion>;
+    using cpp_conversion_ref = jtl::ref<struct cpp_conversion>;
     using cpp_unsafe_cast_ref = jtl::ref<struct cpp_unsafe_cast>;
     using cpp_call_ref = jtl::ref<struct cpp_call>;
     using cpp_constructor_call_ref = jtl::ref<struct cpp_constructor_call>;
@@ -132,7 +132,7 @@ namespace jank::codegen
     jtl::option<handle>
     gen(analyze::expr::cpp_value_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
-    gen(analyze::expr::cpp_cast_ref const, analyze::expr::function_arity const &);
+    gen(analyze::expr::cpp_conversion_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
     gen(analyze::expr::cpp_unsafe_cast_ref const, analyze::expr::function_arity const &);
     jtl::option<handle>
