@@ -52,16 +52,21 @@ namespace jank::ir
                        jtl::ptr<void> const type,
                        jtl::immutable_string const &value);
     identifier literal(analyze::expression_position const pos, runtime::object_ref const value);
-    identifier
-    persistent_list(analyze::expression_position const pos, native_vector<identifier> &&values);
-    identifier
-    persistent_vector(analyze::expression_position const pos, native_vector<identifier> &&values);
+    identifier persistent_list(analyze::expression_position const pos,
+                               native_vector<identifier> &&values,
+                               jtl::option<identifier> const &meta);
+    identifier persistent_vector(analyze::expression_position const pos,
+                                 native_vector<identifier> &&values,
+                                 jtl::option<identifier> const &meta);
     identifier persistent_array_map(analyze::expression_position const pos,
-                                    native_vector<std::pair<identifier, identifier>> &&values);
+                                    native_vector<std::pair<identifier, identifier>> &&values,
+                                    jtl::option<identifier> const &meta);
     identifier persistent_hash_map(analyze::expression_position const pos,
-                                   native_vector<std::pair<identifier, identifier>> &&values);
-    identifier
-    persistent_hash_set(analyze::expression_position const pos, native_vector<identifier> &&values);
+                                   native_vector<std::pair<identifier, identifier>> &&values,
+                                   jtl::option<identifier> const &meta);
+    identifier persistent_hash_set(analyze::expression_position const pos,
+                                   native_vector<identifier> &&values,
+                                   jtl::option<identifier> const &meta);
     identifier function(analyze::expression_position const pos,
                         native_unordered_map<u8, jtl::immutable_string> &&arities);
     identifier closure(analyze::expression_position const pos,

@@ -132,22 +132,28 @@ namespace jank::ir
 
     struct persistent_list : instruction
     {
-      persistent_list(identifier const &name, native_vector<identifier> &&values);
+      persistent_list(identifier const &name,
+                      native_vector<identifier> &&values,
+                      jtl::option<identifier> const &meta);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<identifier> values;
+      jtl::option<identifier> meta;
     };
 
     using persistent_list_ref = jtl::ref<persistent_list>;
 
     struct persistent_vector : instruction
     {
-      persistent_vector(identifier const &name, native_vector<identifier> &&values);
+      persistent_vector(identifier const &name,
+                        native_vector<identifier> &&values,
+                        jtl::option<identifier> const &meta);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<identifier> values;
+      jtl::option<identifier> meta;
     };
 
     using persistent_vector_ref = jtl::ref<persistent_vector>;
@@ -155,11 +161,13 @@ namespace jank::ir
     struct persistent_array_map : instruction
     {
       persistent_array_map(identifier const &name,
-                           native_vector<std::pair<identifier, identifier>> &&values);
+                           native_vector<std::pair<identifier, identifier>> &&values,
+                           jtl::option<identifier> const &meta);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<std::pair<identifier, identifier>> values;
+      jtl::option<identifier> meta;
     };
 
     using persistent_array_map_ref = jtl::ref<persistent_array_map>;
@@ -167,22 +175,27 @@ namespace jank::ir
     struct persistent_hash_map : instruction
     {
       persistent_hash_map(identifier const &name,
-                          native_vector<std::pair<identifier, identifier>> &&values);
+                          native_vector<std::pair<identifier, identifier>> &&values,
+                          jtl::option<identifier> const &meta);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<std::pair<identifier, identifier>> values;
+      jtl::option<identifier> meta;
     };
 
     using persistent_hash_map_ref = jtl::ref<persistent_hash_map>;
 
     struct persistent_hash_set : instruction
     {
-      persistent_hash_set(identifier const &name, native_vector<identifier> &&values);
+      persistent_hash_set(identifier const &name,
+                          native_vector<identifier> &&values,
+                          jtl::option<identifier> const &meta);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<identifier> values;
+      jtl::option<identifier> meta;
     };
 
     using persistent_hash_set_ref = jtl::ref<persistent_hash_set>;

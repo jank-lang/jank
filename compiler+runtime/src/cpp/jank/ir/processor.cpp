@@ -99,7 +99,13 @@ namespace jank::ir
     {
       values.emplace_back(gen(value_expr, b).unwrap());
     }
-    return b.persistent_list(expr->position, jtl::move(values));
+
+    jtl::option<identifier> meta;
+    if(!is_empty(expr->meta))
+    {
+      meta = b.literal(analyze::expression_position::value, expr->meta);
+    }
+    return b.persistent_list(expr->position, jtl::move(values), meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::vector_ref const expr, builder &b)
@@ -110,7 +116,13 @@ namespace jank::ir
     {
       values.emplace_back(gen(value_expr, b).unwrap());
     }
-    return b.persistent_vector(expr->position, jtl::move(values));
+
+    jtl::option<identifier> meta;
+    if(!is_empty(expr->meta))
+    {
+      meta = b.literal(analyze::expression_position::value, expr->meta);
+    }
+    return b.persistent_vector(expr->position, jtl::move(values), meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::map_ref const expr, builder &b)
@@ -121,11 +133,18 @@ namespace jank::ir
     {
       values.emplace_back(gen(value_expr.first, b).unwrap(), gen(value_expr.second, b).unwrap());
     }
+
+    jtl::option<identifier> meta;
+    if(!is_empty(expr->meta))
+    {
+      meta = b.literal(analyze::expression_position::value, expr->meta);
+    }
+
     if(expr->data_exprs.size() <= runtime::obj::persistent_array_map::max_size)
     {
-      return b.persistent_array_map(expr->position, jtl::move(values));
+      return b.persistent_array_map(expr->position, jtl::move(values), meta);
     }
-    return b.persistent_hash_map(expr->position, jtl::move(values));
+    return b.persistent_hash_map(expr->position, jtl::move(values), meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::set_ref const expr, builder &b)
@@ -136,7 +155,13 @@ namespace jank::ir
     {
       values.emplace_back(gen(value_expr, b).unwrap());
     }
-    return b.persistent_hash_set(expr->position, jtl::move(values));
+
+    jtl::option<identifier> meta;
+    if(!is_empty(expr->meta))
+    {
+      meta = b.literal(analyze::expression_position::value, expr->meta);
+    }
+    return b.persistent_hash_set(expr->position, jtl::move(values), meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::local_reference_ref const expr, builder &b)
@@ -640,8 +665,8 @@ namespace jank::ir
       gen_arity(mod, fn_expr, arity);
     }
 
-    //util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
-    util::println("{}", print(mod));
+    util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
+    //util::println("{}", print(mod));
 
     return mod;
   }

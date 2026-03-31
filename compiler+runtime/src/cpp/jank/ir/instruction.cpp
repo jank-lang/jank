@@ -50,38 +50,50 @@ namespace jank::ir::inst
   {
   }
 
-  persistent_list::persistent_list(identifier const &name, native_vector<identifier> &&values)
+  persistent_list::persistent_list(identifier const &name,
+                                   native_vector<identifier> &&values,
+                                   jtl::option<identifier> const &meta)
     : instruction{ instruction_kind::persistent_list, name, persistent_list_ref_type() }
     , values{ jtl::move(values) }
+    , meta{ meta }
   {
   }
 
-  persistent_vector::persistent_vector(identifier const &name, native_vector<identifier> &&values)
+  persistent_vector::persistent_vector(identifier const &name,
+                                       native_vector<identifier> &&values,
+                                       jtl::option<identifier> const &meta)
     : instruction{ instruction_kind::persistent_vector, name, persistent_vector_ref_type() }
     , values{ jtl::move(values) }
+    , meta{ meta }
   {
   }
 
   persistent_array_map::persistent_array_map(
     identifier const &name,
-    native_vector<std::pair<identifier, identifier>> &&values)
+    native_vector<std::pair<identifier, identifier>> &&values,
+    jtl::option<identifier> const &meta)
     : instruction{ instruction_kind::persistent_array_map, name, persistent_array_map_ref_type() }
     , values{ jtl::move(values) }
+    , meta{ meta }
   {
   }
 
   persistent_hash_map::persistent_hash_map(
     identifier const &name,
-    native_vector<std::pair<identifier, identifier>> &&values)
+    native_vector<std::pair<identifier, identifier>> &&values,
+    jtl::option<identifier> const &meta)
     : instruction{ instruction_kind::persistent_hash_map, name, persistent_hash_map_ref_type() }
     , values{ jtl::move(values) }
+    , meta{ meta }
   {
   }
 
   persistent_hash_set::persistent_hash_set(identifier const &name,
-                                           native_vector<identifier> &&values)
+                                           native_vector<identifier> &&values,
+                                           jtl::option<identifier> const &meta)
     : instruction{ instruction_kind::persistent_hash_set, name, persistent_hash_set_ref_type() }
     , values{ jtl::move(values) }
+    , meta{ meta }
   {
   }
 

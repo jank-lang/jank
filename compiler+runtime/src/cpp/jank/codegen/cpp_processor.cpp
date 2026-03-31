@@ -377,19 +377,38 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::var_deref_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::var_deref_ref const &inst, builder &b)
   {
-    return none;
+    util::format_to(
+      b.body_buffer,
+      "auto const {}(jank::runtime::__rt_ctx->intern_var(\"{}\").expect_ok()->deref());",
+      inst->name,
+      inst->qualified_var);
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::var_ref_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::var_ref_ref const &inst, builder &b)
   {
-    return none;
+    util::format_to(b.body_buffer,
+                    "auto const {}(jank::runtime::__rt_ctx->intern_var(\"{}\").expect_ok());",
+                    inst->name,
+                    inst->qualified_var);
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::dynamic_call_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::dynamic_call_ref const &inst, builder &b)
   {
-    return none;
+    util::format_to(b.body_buffer,
+                    "auto const {}(jank::runtime::dynamic_call({}",
+                    inst->name,
+                    inst->fn);
+    for(auto const &arg : inst->args)
+    {
+      util::format_to(b.body_buffer, ", {}", arg);
+    }
+
+    util::format_to(b.body_buffer, "));");
+    return inst->name;
   }
 
   jtl::option<identifier> gen(ir::inst::literal_ref const &inst, builder &b)
@@ -400,29 +419,129 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::persistent_list_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::persistent_list_ref const &inst, builder &b)
   {
-    return none;
+    util::format_to(b.body_buffer,
+                    "auto const {}(jank::runtime::make_box<jank::runtime::obj::persistent_list>(",
+                    inst->name);
+    if(inst->meta.is_some())
+    {
+      util::format_to(b.body_buffer, "{}, ", inst->meta.unwrap());
+    }
+    util::format_to(b.body_buffer, "std::in_place ");
+    for(auto const &val : inst->values)
+    {
+      util::format_to(b.body_buffer, ", ");
+      util::format_to(b.body_buffer, "{}", val);
+    }
+    util::format_to(b.body_buffer, "));");
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::persistent_vector_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::persistent_vector_ref const &inst, builder &b)
   {
-    return none;
+    util::format_to(b.body_buffer,
+                    "auto const {}(jank::runtime::make_box<jank::runtime::obj::persistent_vector>(",
+                    inst->name);
+    if(inst->meta.is_some())
+    {
+      util::format_to(b.body_buffer, "{}, ", inst->meta.unwrap());
+    }
+    util::format_to(b.body_buffer, "std::in_place ");
+    for(auto const &val : inst->values)
+    {
+      util::format_to(b.body_buffer, ", ");
+      util::format_to(b.body_buffer, "{}", val);
+    }
+    util::format_to(b.body_buffer, "));");
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::persistent_array_map_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::persistent_array_map_ref const &inst, builder &b)
   {
-    return none;
+    if(inst->meta.is_some())
+    {
+      util::format_to(
+        b.body_buffer,
+        "auto const {}(jank::runtime::obj::persistent_array_map::create_unique_with_meta({},",
+        inst->name,
+        inst->meta.unwrap());
+    }
+    else
+    {
+      util::format_to(b.body_buffer,
+                      "auto const {}(jank::runtime::obj::persistent_array_map::create_unique(",
+                      inst->name);
+    }
+
+    bool need_comma{};
+    for(auto const &val : inst->values)
+    {
+      if(need_comma)
+      {
+        util::format_to(b.body_buffer, ", ");
+      }
+      need_comma = true;
+      util::format_to(b.body_buffer, "{}, {}", val.first, val.second);
+    }
+    util::format_to(b.body_buffer, "));");
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::persistent_hash_map_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::persistent_hash_map_ref const &inst, builder &b)
   {
-    return none;
+    if(inst->meta.is_some())
+    {
+      util::format_to(
+        b.body_buffer,
+        "auto const {}(jank::runtime::obj::persistent_hash_map::create_unique_with_meta({},",
+        inst->name,
+        inst->meta.unwrap());
+    }
+    else
+    {
+      util::format_to(b.body_buffer,
+                      "auto const {}(jank::runtime::obj::persistent_hash_map::create_unique(",
+                      inst->name);
+    }
+
+    bool need_comma{};
+    for(auto const &val : inst->values)
+    {
+      if(need_comma)
+      {
+        util::format_to(b.body_buffer, ", ");
+      }
+      need_comma = true;
+      util::format_to(b.body_buffer, "{}, {}", val.first, val.second);
+    }
+    util::format_to(b.body_buffer, "));");
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::persistent_hash_set_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::persistent_hash_set_ref const &inst, builder &b)
   {
-    return none;
+    util::format_to(
+      b.body_buffer,
+      "auto const {}(jank::runtime::make_box<jank::runtime::obj::persistent_hash_set>(",
+      inst->name);
+    if(inst->meta.is_some())
+    {
+      util::format_to(b.body_buffer, "{}, ", inst->meta.unwrap());
+    }
+    util::format_to(b.body_buffer, "std::in_place ");
+    for(auto const &val : inst->values)
+    {
+      util::format_to(b.body_buffer, ", ");
+      util::format_to(b.body_buffer, "{}", val);
+    }
+    util::format_to(b.body_buffer, "));");
+
+    return inst->name;
   }
 
   jtl::option<identifier> gen(ir::inst::function_ref const &, builder &)
