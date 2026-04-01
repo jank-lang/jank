@@ -1,4 +1,8 @@
+#include <CppInterOp/Compatibility.h>
+#include <CppInterOp/CppInterOp.h>
+
 #include <jank/analyze/visit.hpp>
+#include <jank/analyze/cpp_util.hpp>
 #include <jank/ir/processor.hpp>
 #include <jank/ir/visit.hpp>
 #include <jank/codegen/cpp_processor.hpp>
@@ -6,6 +10,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/escape.hpp>
@@ -14,6 +19,8 @@
 
 namespace jank::codegen
 {
+  using namespace analyze::cpp_util;
+
   struct builder
   {
     jtl::ref<ir::module> module;
@@ -589,8 +596,14 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::throw_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::throw_ref const &inst, builder &b)
   {
+    /* We static_cast to object_ref here, since we'll be trying to catch an object_ref in any
+     * try/catch forms. This loses us our type info, but C++ doesn't do implicit conversions
+     * when catching and we're not using inheritance. */
+    util::format_to(b.body_buffer,
+                    "throw static_cast<jank::runtime::object_ref>({});",
+                    inst->value);
     return none;
   }
 
@@ -616,14 +629,33 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_raw_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::cpp_raw_ref const &inst, builder &b)
   {
+    util::format_to(b.cpp_raw_buffer, "\n{}\n", inst->expr->code);
+
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_value_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::cpp_value_ref const &inst, builder &b)
   {
-    return none;
+    if(inst->expr->val_kind == analyze::expr::cpp_value::value_kind::null)
+    {
+      return "nullptr";
+    }
+    if(inst->expr->val_kind == analyze::expr::cpp_value::value_kind::bool_true
+       || inst->expr->val_kind == analyze::expr::cpp_value::value_kind::bool_false)
+    {
+      auto const val{ inst->expr->val_kind == analyze::expr::cpp_value::value_kind::bool_true };
+      return util::format("{}", val);
+    }
+
+    util::format_to(b.body_buffer,
+                    "auto &&{}({}{});",
+                    inst->name,
+                    (Cpp::IsPointerToMemberType(inst->expr->type) ? "&" : ""),
+                    Cpp::GetQualifiedCompleteNameWithTemplateArgs(inst->expr->scope));
+
+    return inst->name;
   }
 
   jtl::option<identifier> gen(ir::inst::cpp_into_object_ref const &, builder &)
@@ -641,49 +673,527 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_call_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::cpp_call_ref const &inst, builder &b)
   {
-    return none;
+    //if((target == compilation_target::module || target == compilation_target::module_function)
+    //   && !expr->function_code.empty())
+    //{
+    //  util::format_to(cpp_raw_buffer, "\n{}\n", expr->function_code);
+    //}
+
+    auto const source_type{ expression_type(inst->expr->source_expr) };
+
+    if(inst->expr->source_expr->kind == analyze::expression_kind::cpp_value)
+    {
+      auto const source{ static_cast<analyze::expr::cpp_value *>(inst->expr->source_expr.data) };
+      auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_call")));
+
+      auto const is_void{ Cpp::IsVoid(Cpp::GetFunctionReturnType(source->scope)) };
+      if(is_void)
+      {
+        ret_tmp = "jank::runtime::jank_nil()";
+      }
+      else
+      {
+        util::format_to(b.body_buffer, "auto &&{}{ ", ret_tmp);
+      }
+
+      util::format_to(b.body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
+
+      bool need_comma{};
+      for(usize arg_idx{}; arg_idx < inst->expr->arg_exprs.size(); ++arg_idx)
+      {
+        auto const arg_expr{ inst->expr->arg_exprs[arg_idx] };
+        auto const arg_type{ expression_type(arg_expr) };
+        /* This will be null in variadic positions. */
+        auto const param_type{ Cpp::GetFunctionArgType(source->scope, arg_idx) };
+        auto const &arg_tmp{ inst->args[arg_idx] };
+
+        if(need_comma)
+        {
+          util::format_to(b.body_buffer, ", ");
+        }
+
+        if(param_type && Cpp::IsRvalueReferenceType(param_type))
+        {
+          util::format_to(b.body_buffer, "std::move({})", arg_tmp);
+        }
+        else
+        {
+          util::format_to(b.body_buffer, "{}", arg_tmp);
+        }
+
+        if(param_type && Cpp::IsPointerType(param_type) && is_any_object(arg_type))
+        {
+          util::format_to(b.body_buffer, ".get()");
+        }
+        need_comma = true;
+      }
+
+      util::format_to(b.body_buffer, ")");
+
+      if(!is_void)
+      {
+        util::format_to(b.body_buffer, "};");
+      }
+      else
+      {
+        util::format_to(b.body_buffer, ";");
+      }
+
+      return ret_tmp;
+    }
+    else if(Cpp::IsPointerToMemberVariableType(source_type))
+    {
+      auto const is_void{ Cpp::IsVoid(inst->expr->type) };
+      if(is_void)
+      {
+        util::format_to(b.body_buffer, "jank::runtime::object_ref const {};", inst->name);
+      }
+      else
+      {
+        util::format_to(b.body_buffer, "auto &&{}{ ", inst->name);
+      }
+
+      auto const obj_type{ Cpp::GetNonReferenceType(expression_type(inst->expr->arg_exprs[0])) };
+      auto const &obj_name{ inst->args[0] };
+      if(Cpp::IsPointerType(obj_type))
+      {
+        util::format_to(b.body_buffer, "{}->*{}", obj_name, inst->value);
+      }
+      else
+      {
+        util::format_to(b.body_buffer, "{}.*{}", obj_name, inst->value);
+      }
+
+      if(!is_void)
+      {
+        util::format_to(b.body_buffer, "};");
+      }
+      else
+      {
+        util::format_to(b.body_buffer, ";");
+      }
+
+      return inst->name;
+    }
+    else if(Cpp::IsPointerToMemberFunctionType(source_type))
+    {
+      auto const is_void{ Cpp::IsVoid(inst->expr->type) };
+      if(is_void)
+      {
+        util::format_to(b.body_buffer, "jank::runtime::object_ref const {};", inst->name);
+      }
+      else
+      {
+        util::format_to(b.body_buffer, "auto &&{}{ ", inst->name);
+      }
+
+      auto const obj_type{ Cpp::GetNonReferenceType(expression_type(inst->expr->arg_exprs[0])) };
+      auto const &obj_name{ inst->args[0] };
+      if(Cpp::IsPointerType(obj_type))
+      {
+        util::format_to(b.body_buffer, "({}->*{})(", obj_name, inst->value);
+      }
+      else
+      {
+        util::format_to(b.body_buffer, "({}.*{})(", obj_name, inst->value);
+      }
+
+      bool need_comma{};
+      for(auto it{ inst->args.begin() + 1 }; it != inst->args.end(); ++it)
+      {
+        if(need_comma)
+        {
+          util::format_to(b.body_buffer, ", ");
+        }
+        util::format_to(b.body_buffer, "{}", *it);
+        need_comma = true;
+      }
+
+      util::format_to(b.body_buffer, ")");
+
+      if(!is_void)
+      {
+        util::format_to(b.body_buffer, "};");
+      }
+      else
+      {
+        util::format_to(b.body_buffer, ";");
+      }
+
+      return inst->name;
+    }
+    else
+    {
+      auto const is_void{ Cpp::IsVoid(inst->expr->type) };
+      if(is_void)
+      {
+        util::format_to(b.body_buffer, "jank::runtime::object_ref const {};", inst->name);
+      }
+      else
+      {
+        util::format_to(b.body_buffer, "auto &&{}{ ", inst->name);
+      }
+
+      util::format_to(b.body_buffer, "{}(", inst->value);
+
+      bool need_comma{};
+      for(auto const &arg : inst->args)
+      {
+        if(need_comma)
+        {
+          util::format_to(b.body_buffer, ", ");
+        }
+        util::format_to(b.body_buffer, "{}", arg);
+        need_comma = true;
+      }
+
+      util::format_to(b.body_buffer, ")");
+
+      if(!is_void)
+      {
+        util::format_to(b.body_buffer, "};");
+      }
+      else
+      {
+        util::format_to(b.body_buffer, ";");
+      }
+
+      return inst->name;
+    }
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_constructor_call_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::cpp_constructor_call_ref const &inst, builder &b)
   {
-    return none;
+    auto const non_ref_type{ Cpp::GetNonReferenceType(inst->expr->type) };
+
+    if(inst->args.empty())
+    {
+      if(Cpp::IsFunctionPointerType(inst->expr->type))
+      {
+        util::format_to(
+          b.body_buffer,
+          "{} ",
+          get_qualified_type_name(Cpp::GetFunctionReturnTypeFromType(inst->expr->type)));
+        util::format_to(b.body_buffer,
+                        "(* {} {} {})(",
+                        Cpp::IsConstType(inst->expr->type) ? "const" : "",
+                        Cpp::HasTypeQualifier(inst->expr->type, Cpp::Volatile) ? "volatile" : "",
+                        inst->name);
+        auto const param_count{ Cpp::GetFunctionNumArgsFromType(inst->expr->type) };
+        for(usize i{}; i < param_count; ++i)
+        {
+          auto const param_type{ Cpp::GetFunctionArgTypeFromType(inst->expr->type, i) };
+          util::format_to(b.body_buffer,
+                          "{} {}",
+                          (i != 0) ? ", " : "",
+                          get_qualified_type_name(param_type));
+        }
+        util::format_to(b.body_buffer, "){ };");
+      }
+      else if(Cpp::IsArrayType(non_ref_type)
+              || (Cpp::IsPointerType(non_ref_type)
+                  && Cpp::IsArrayType(Cpp::GetUnderlyingType(non_ref_type))))
+      {
+        auto const array_type{ Cpp::IsPointerType(non_ref_type)
+                                 ? Cpp::GetUnderlyingType(non_ref_type)
+                                 : non_ref_type };
+        util::format_to(
+          b.body_buffer,
+          "{} ({}{})[{}]{ };",
+          get_qualified_type_name(Cpp::GetArrayElementType(array_type)),
+          (Cpp::IsPointerType(inst->expr->type)
+             ? "*"
+             /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
+             : (Cpp::IsReferenceType(inst->expr->type) ? "&" : "")),
+          inst->name,
+          Cpp::IsSizedArrayType(array_type) ? std::to_string(Cpp::GetArraySize(array_type)) : "");
+      }
+      else
+      {
+        util::format_to(b.body_buffer,
+                        "{} {}{ };",
+                        get_qualified_type_name(inst->expr->type),
+                        inst->name);
+      }
+      return inst->name;
+    }
+
+    native_vector<void *> param_types;
+    if(inst->expr->fn)
+    {
+      auto const param_count{ Cpp::GetFunctionNumArgs(inst->expr->fn) };
+      for(usize i{}; i < param_count; ++i)
+      {
+        param_types.emplace_back(Cpp::GetFunctionArgType(inst->expr->fn, i));
+      }
+    }
+    else if(is_primitive(Cpp::GetNonReferenceType(inst->expr->type)))
+    {
+      param_types.emplace_back(inst->expr->type);
+    }
+    else
+    {
+      jank_debug_assert(inst->expr->is_aggregate);
+      auto const scope{ Cpp::GetScopeFromType(inst->expr->type) };
+      jank_debug_assert(scope);
+      auto const member_types{ aggregate_initialization_types(scope) };
+      std::ranges::copy(member_types, std::back_inserter(param_types));
+    }
+    jank_debug_assert(inst->expr->arg_exprs.size() <= param_types.size());
+
+    if(Cpp::IsArrayType(Cpp::GetNonReferenceType(inst->expr->type)))
+    {
+      util::format_to(b.body_buffer, "auto {} ", inst->name);
+    }
+    else
+    {
+      util::format_to(b.body_buffer,
+                      "{} {} ",
+                      get_qualified_type_name(inst->expr->type),
+                      inst->name);
+    }
+
+    /* For aggregate initialization, we want to use the uniform initialization syntax. However,
+     * for any other initialization, we're expecting to call a ctor, so we use parens. This
+     * removes any ambiguity when there is a ctor which takes an initializer list, which we
+     * don't currently support. */
+    util::format_to(b.body_buffer, "{}", (inst->expr->is_aggregate ? "{" : "("));
+
+    bool need_comma{};
+    for(usize arg_idx{}; arg_idx < inst->expr->arg_exprs.size(); ++arg_idx)
+    {
+      if(need_comma)
+      {
+        util::format_to(b.body_buffer, ", ");
+      }
+      need_comma = true;
+
+      auto const arg_type{ expression_type(inst->expr->arg_exprs[arg_idx]) };
+      bool needs_conversion{};
+      jtl::immutable_string conversion_direction, trait_type;
+      if(is_any_object(param_types[arg_idx]) && !is_any_object(arg_type))
+      {
+        needs_conversion = true;
+        conversion_direction = "into_object";
+        trait_type = get_qualified_type_name(arg_type);
+      }
+      else if(!is_any_object(param_types[arg_idx]) && is_any_object(arg_type))
+      {
+        needs_conversion = true;
+        conversion_direction = "from_object";
+        trait_type = get_qualified_type_name(param_types[arg_idx]);
+      }
+
+      if(needs_conversion)
+      {
+        util::format_to(b.body_buffer,
+                        "jank::runtime::convert<{}>::{}({}.get())",
+                        trait_type,
+                        conversion_direction,
+                        inst->args[0]);
+      }
+      else
+      {
+        auto const needs_static_cast{ param_types[arg_idx] != arg_type };
+        if(needs_static_cast)
+        {
+          util::format_to(b.body_buffer,
+                          "static_cast<{}>(",
+                          get_qualified_type_name(param_types[arg_idx]));
+        }
+
+        util::format_to(b.body_buffer, "{}", inst->args[arg_idx]);
+
+        if(needs_static_cast)
+        {
+          util::format_to(b.body_buffer, ")");
+        }
+      }
+    }
+
+    util::format_to(b.body_buffer, "{};", (inst->expr->is_aggregate ? "}" : ")"));
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_member_call_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::cpp_member_call_ref const &inst, builder &b)
   {
-    return none;
+    auto const fn_name{ Cpp::GetName(inst->expr->fn) };
+    auto const is_void{ Cpp::IsVoid(Cpp::GetFunctionReturnType(inst->expr->fn)) };
+
+    if(is_void)
+    {
+      util::format_to(b.body_buffer, "jank::runtime::object_ref {}{ };", inst->name);
+      util::format_to(b.body_buffer,
+                      "{}{}{}(",
+                      inst->args[0],
+                      (Cpp::IsPointerType(expression_type(inst->expr->arg_exprs[0])) ? "->" : "."),
+                      fn_name);
+    }
+    else
+    {
+      util::format_to(b.body_buffer,
+                      "auto &&{}{ {}{}{}(",
+                      inst->name,
+                      inst->args[0],
+                      (Cpp::IsPointerType(expression_type(inst->expr->arg_exprs[0])) ? "->" : "."),
+                      fn_name);
+    }
+
+    bool need_comma{};
+    for(auto it{ inst->args.begin() + 1 }; it != inst->args.end(); ++it)
+    {
+      if(need_comma)
+      {
+        util::format_to(b.body_buffer, ", ");
+      }
+      util::format_to(b.body_buffer, "{}", *it);
+      need_comma = true;
+    }
+
+    if(is_void)
+    {
+      util::format_to(b.body_buffer, ");");
+    }
+    else
+    {
+      util::format_to(b.body_buffer, ") };");
+    }
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_member_access_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::cpp_member_access_ref const &inst, builder &b)
   {
-    return none;
+    util::format_to(b.body_buffer,
+                    "auto &&{}{ {}{}{} };",
+                    inst->name,
+                    inst->value,
+                    (Cpp::IsPointerType(expression_type(inst->expr->obj_expr)) ? "->" : "."),
+                    inst->expr->name);
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_builtin_operator_call_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::cpp_builtin_operator_call_ref const &inst, builder &b)
   {
-    return none;
+    auto const op_name{ operator_name(static_cast<Cpp::Operator>(inst->expr->op)).unwrap() };
+
+    if(inst->args.size() == 1)
+    {
+      util::format_to(b.body_buffer, "auto &&{}( {}{} );", inst->name, op_name, inst->args[0]);
+    }
+    else if(op_name == "aget")
+    {
+      util::format_to(b.body_buffer,
+                      "auto &&{}( {}[{}] );",
+                      inst->name,
+                      inst->args[0],
+                      inst->args[1]);
+    }
+    else
+    {
+      util::format_to(b.body_buffer,
+                      "auto &&{}( {} {} {} );",
+                      inst->name,
+                      inst->args[0],
+                      op_name,
+                      inst->args[1]);
+    }
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_box_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::cpp_box_ref const &inst, builder &b)
   {
-    return none;
+    auto const value_expr_type{ expression_type(inst->expr->value_expr) };
+    auto const type_str{ get_qualified_type_name(
+      Cpp::GetCanonicalType(Cpp::GetNonReferenceType(value_expr_type))) };
+
+    util::format_to(
+      b.body_buffer,
+      "auto {}{ jank::runtime::make_box<jank::runtime::obj::opaque_box>({}, \"{}\") };\n",
+      inst->name,
+      inst->value,
+      type_str);
+
+    auto const meta{ runtime::source_to_meta(inst->expr->source) };
+    util::format_to(
+      b.body_buffer,
+      "jank::runtime::reset_meta({}, jank::runtime::__rt_ctx->forcefully_read_string(\"{}\"));",
+      inst->name,
+      util::escape(runtime::to_code_string(meta)));
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_unbox_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::cpp_unbox_ref const &inst, builder &b)
   {
-    return none;
+    auto const type_name{ get_qualified_type_name(Cpp::GetCanonicalType(inst->expr->type)) };
+    util::format_to(b.body_buffer,
+                    "auto {}{ "
+                    "static_cast<{}>(jank_unbox_with_source(\"{}\", {}.data, {}.data)) };",
+                    inst->name,
+                    type_name,
+                    type_name,
+                    inst->value,
+                    meta);
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_new_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::cpp_new_ref const &inst, builder &b)
   {
-    return none;
+    auto finalizer_name{ runtime::munge(__rt_ctx->unique_string("finalizer")) };
+    auto const type_name{ get_qualified_type_name(inst->expr->type) };
+    auto const needs_finalizer{ !Cpp::IsTriviallyDestructible(inst->expr->type) };
+
+    if(needs_finalizer)
+    {
+      util::format_to(b.body_buffer,
+                      "using T = {};\n"
+                      "static auto const {}{ "
+                      "[](void * const obj, void *){"
+                      "reinterpret_cast<T*>(obj)->~T();"
+                      "} };",
+                      type_name,
+                      finalizer_name);
+    }
+
+    util::format_to(b.body_buffer,
+                    "auto {}{ "
+                    "new (UseGC{}) {}{ {} }"
+                    " };",
+                    inst->name,
+                    (needs_finalizer ? ", " + finalizer_name : ""),
+                    type_name,
+                    inst->value);
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_delete_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::cpp_delete_ref const &inst, builder &b)
   {
-    return none;
+    auto const value_type{ Cpp::GetPointeeType(expression_type(inst->expr->value_expr)) };
+    auto const type_name{ get_qualified_type_name(value_type) };
+    auto const needs_finalizer{ !Cpp::IsTriviallyDestructible(value_type) };
+
+    /* Calling GC_free won't trigger the finalizer. Not sure why, but it's explicitly
+     * documented in bdwgc. So, we'll invoke it manually if needed, prior to GC_free. */
+    if(needs_finalizer)
+    {
+      util::format_to(b.body_buffer,
+                      "using T = {};\n"
+                      "{}->~T();",
+                      type_name,
+                      inst->value);
+    }
+
+    util::format_to(b.body_buffer, "GC_free({});", inst->value);
+
+    return "jank::runtime::jank_nil()";
   }
 
   jtl::option<identifier> gen(ir::instruction_ref const &inst, builder &b)
