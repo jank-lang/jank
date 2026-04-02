@@ -181,8 +181,6 @@ OPTIONS
       {   "check-health",   command::check_health }
     };
 
-    jtl::option<compilation_eagerness> eagerness{};
-
     /* The flow of this is broken into the following steps.
      *
      * 1. Parse known flags into changes to the `opts` global

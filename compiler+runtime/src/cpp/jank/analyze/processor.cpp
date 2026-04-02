@@ -1356,10 +1356,6 @@ namespace jank::analyze
                                              meta_source(sym),
                                              latest_expansion(macro_expansions));
     }
-    auto const dynamic{ truthy(
-      get(qualified_sym->meta, __rt_ctx->intern_keyword("dynamic").expect_ok())) };
-    var_res.expect_ok()->dynamic.store(dynamic);
-
     jtl::option<jtl::ref<expression>> value_expr;
     bool const has_value{ 3 <= length };
     bool const has_docstring{ 4 <= length };
@@ -1405,10 +1401,7 @@ namespace jank::analyze
     auto const var{ var_res.expect_ok() };
 
     auto const dynamic_kw{ __rt_ctx->intern_keyword("dynamic").expect_ok() };
-    if(runtime::truthy(runtime::get(qualified_sym->meta, dynamic_kw)))
-    {
-      var->dynamic.store(true);
-    }
+    var->dynamic.store(runtime::truthy(runtime::get(qualified_sym->meta, dynamic_kw)));
 
     return jtl::make_ref<expr::def>(position, current_frame, true, qualified_sym, var, value_expr);
   }

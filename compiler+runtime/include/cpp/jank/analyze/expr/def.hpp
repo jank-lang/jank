@@ -14,11 +14,6 @@ namespace jank::runtime::obj
   using symbol_ref = oref<struct symbol>;
 }
 
-namespace jank::runtime
-{
-  using var_ref = oref<struct var>;
-}
-
 namespace jank::analyze::expr
 {
   using def_ref = jtl::ref<struct def>;
