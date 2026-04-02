@@ -46,13 +46,16 @@
 
 (defn read-message
   "Read a complete message (TODO) from the client and decode it."
-  [client*]
+  [client* remainder*]
+  (println :hello1 remainder*)
   (let [client  (cpp/unbox (:* jank.nrepl.server.native_client) client*)
-        msg-str (.read_some client)]
-    ;; TODO: There is no guarantee that we read an entire message. We should
-    ;; attempt to parse it, and if we encounter an unexpected EOF then buffer it
-    ;; until more data arrives.
-    (bencode/parse msg-str)))
+        data (.read_some client)
+        _ (println :hello3 (str @remainder* data))
+        [msg rem] (bencode/parse (str @remainder* data))]
+    (println :msg msg :rem rem :remainder* remainder*)
+    ;;(reset! remainder* rem)
+    (println :done)
+    msg))
 
 (defn write-message
   "Encode the given message and write it to the client socket."
@@ -65,13 +68,14 @@
 (defn handle-client
   "For as long as the client is connected, read requests and write replies."
   [client*]
-  (while (connected? client*)
-    (when-let [req (read-message client*)]
-      (log "<-" (pr-str (abbreviate req 20)))
-      (let [resps (responses-for req (handle-message req))]
-        (doseq [resp resps]
-          (log "->" (pr-str (abbreviate resp 20)))
-          (write-message client* resp))))))
+  (let [remainder* (atom nil)]
+    (while (connected? client*)
+      (when-let [req (read-message client* remainder*)]
+        (log "<-" (pr-str (abbreviate req 20)))
+        (let [resps (responses-for req (handle-message req))]
+          (doseq [resp resps]
+            (log "->" (pr-str (abbreviate resp 20)))
+            (write-message client* resp)))))))
 
 (defn -main [& args]
   (when (some #{"-v" "--verbose"} args)
@@ -84,6 +88,7 @@
     ;; format to assist with setting up a REPL via jack-in.
     (println "nREPL server started on port" (str (.get_port server))
              "on host 127.0.0.1 -" (.get_endpoint server))
+    (cpp/fflush cpp/stdout)
     (while true
       (let [client* (accept server*)]
         (future (handle-client client*))))))

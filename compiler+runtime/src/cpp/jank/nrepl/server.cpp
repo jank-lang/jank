@@ -48,6 +48,14 @@ namespace jank::nrepl::server
       socket_.write_some(buffer(message), error_code);
     }
 
+    void close()
+    {
+      boost::system::error_code ec;
+      socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+      socket_.close(ec);
+      connected_ = false;
+    }
+
     tcp::socket socket_;
     bool connected_{ false };
 
@@ -73,6 +81,11 @@ namespace jank::nrepl::server
   void native_client::write_some(std::string const &data) const
   {
     impl_->write_some(data);
+  }
+
+  void native_client::close()
+  {
+    impl_->close();
   }
 
   // server
@@ -120,5 +133,19 @@ namespace jank::nrepl::server
     // TODO: This leaks memory but jank complains about not being able to delete
     // an opaque type if we return unique_ptr<native_client>.
     return new native_client(std::move(impl));
+  }
+
+  native_client* native_server::connect_test_client() const
+  {
+    boost::asio::io_context io_ctx;
+    boost::asio::ip::tcp::socket socket(io_ctx);
+    socket.connect(impl_->acceptor_.local_endpoint());
+    auto client_impl = std::make_unique<native_client::impl>(io_ctx);
+    client_impl->socket_ = std::move(socket);
+    client_impl->connected_ = true;
+
+    // TODO: This leaks memory but jank complains about not being able to delete
+    // an opaque type if we return unique_ptr<native_client>.
+    return new native_client(std::move(client_impl));
   }
 }

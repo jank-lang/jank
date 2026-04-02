@@ -22,6 +22,8 @@ namespace jank::nrepl::server
     /* Write some data to the client. */
     void write_some(std::string const &data) const;
 
+    void close();
+
     std::unique_ptr<impl> impl_;
   };
 
@@ -37,5 +39,12 @@ namespace jank::nrepl::server
     native_client *accept() const;
 
     std::shared_ptr<impl> impl_;
+
+    /* Returns a native client connected to the server for testing.
+       Should be called after accept() is running, typically in a
+       separate thread, so the connection can complete
+       successfully. */
+    native_client* connect_test_client() const;
+
   };
 }

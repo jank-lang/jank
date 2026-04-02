@@ -1,7 +1,15 @@
 (ns jank.nrepl.server.handler)
 
-(defmulti handle-message #(some-> (get % "op") keyword))
+(def xx (atom 0))
+(defmulti handle-message #(do
+                            (swap! xx inc)
+                            (spit (str "/tmp/jank-nrepl-handle-" @xx) (str %))
+                            (some-> (get % "op") keyword)))
 
-(defmethod handle-message :default [_]
+
+
+(defmethod handle-message :default [msg]
   ;; Behavior from: https://github.com/nrepl/nrepl/blob/3cc751a/src/clojure/nrepl/server.clj#L111
+
+  (spit (str "/tmp/jank-nrepl-error-" @xx) (str msg))
   {:status [:error :unknown-op :done]})

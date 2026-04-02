@@ -1,0 +1,172 @@
+#!/usr/bin/env bb
+
+(deps/add-deps '{:deps {babashka/nrepl-client {:git/url "https://github.com/babashka/nrepl-client"
+                                               :git/sha "19fbef2525e47d80b9278c49a545de58f48ee7cf"}}})
+^{:clj-kondo/ignore [:namespace-name-mismatch]}
+(ns jank.test.nrepl-server
+  (:require [babashka.fs :as fs]
+            [babashka.nrepl-client :as nrepl]
+
+            [bencode.core :as b]
+            [babashka.process :as ps]
+            [clojure.string :as string]
+            [clojure.java.io :as io]
+            [clojure.test :as t :refer [deftest is testing]]))
+
+;;(nrepl/eval-expr {:port 1667 :expr "(+ 1 2 3) (+ 1 2 3)"}) 
+(def this-nsym (ns-name *ns*))
+
+(def ^:dynamic *nrepl-port*
+  "The port the :lpy:py:`with-server` is bound to."
+  nil)
+
+
+(defn bytes->str [x]
+  (if (bytes? x) (String. (bytes x))
+      (str x)))
+
+(defn read-msg [msg]
+  (let [res (zipmap (map keyword (keys msg))
+                    (map #(if (bytes? %)
+                            (String. (bytes %))
+                            %)
+                         (vals msg)))
+        _ (println :res res)
+        res (if-let [status (:status res)]
+              (assoc res :status (mapv bytes->str status))
+              res)
+        _ (println :res1 res)
+        res (if-let [status (:sessions res)]
+              (assoc res :sessions (mapv bytes->str status))
+              res)]
+        _ (println :res2 res)
+    res))
+
+(defn read-reply [in session id]
+  (loop []
+    (let [msg (read-msg (b/read-bencode in))]
+      (if (and (= (:session msg) session)
+               (= (:id msg) id))
+        msg
+        (recur)))))
+(def current-id (atom 0))
+(defn next-id []
+  (str (swap! current-id inc)))
+(defn read-port-from-process
+  [reader timeout-ms]
+  (let [sb (StringBuilder.)
+        end (+ (System/currentTimeMillis) timeout-ms)]
+    (loop []
+      (while (.ready reader)
+        (let [c (char (.read reader))]
+          (.append sb c)))
+
+      (let [s (str sb)]
+        (println :XXXX s)
+        (if-let [[_ port] (re-find #"nrepl://127\.0\.0\.1:(\d+)" s)]
+          (Long/parseLong port)
+          (if (< (System/currentTimeMillis) end)
+            (do
+              (Thread/sleep 500)
+              (recur))
+            (throw (ex-info "Timeout waiting for nREPL port"
+                            {:output s}))))))))
+
+
+(defn read-x
+  [reader timeout-ms]
+  (let [sb (StringBuilder.)
+        end (+ (System/currentTimeMillis) timeout-ms)]
+    (loop []
+      (while (.ready reader)
+        (let [c (char (.read reader))]
+          (.append sb c)))
+
+      (let [s (str sb)]
+        (println :XXXX s)
+        (if (< (System/currentTimeMillis) end)
+          (do
+            (Thread/sleep 500)
+            (recur))
+          (throw (ex-info "Timeout waiting for nREPL port"
+                          {:output s})))))))
+
+(defmacro with-server
+  [& body]
+  `(fs/with-temp-dir [tmp#]
+     (let [timeout-ms# 2000
+           proc# (ps/process ["jank" "repl"]
+                             {:out :pipe
+                              :dir tmp#})]
+       (with-open [reader# (io/reader (:out proc#))]
+         (try
+           (let [port# (read-port-from-process reader# timeout-ms#)]
+             (binding [*nrepl-port* port#]
+               ~@body))
+                      
+           (finally
+             (read-x reader# 2000)
+
+             (ps/destroy proc#)))))))
+
+(defn coerce-long [x]
+  (if (string? x) (Long/parseLong x) x))
+
+(defn encode-bytes [m]
+  (let [out (java.io.ByteArrayOutputStream.)]
+    (b/write-bencode out m)
+    (.toByteArray out)))
+
+(defn eval-expr
+"Execute :expr in nREPL on given :host (defaults to localhost)
+and :port. Returns map with :vals. Prints any output to *out*.
+
+:vals is a vector with eval results from all the top-level
+forms in the :expr. See the README for an example."
+[{:keys [host port expr]}]
+(let [s (java.net.Socket. (or host "localhost") (coerce-long port))
+      out (.getOutputStream s)
+      in (java.io.PushbackInputStream. (.getInputStream s))
+      id (next-id)
+      _ (b/write-bencode out {"op" "clone"})
+      _ (println :w)
+      {session :new-session} (read-msg (b/read-bencode in))
+      id (next-id)
+      ;; _ (b/write-bencode out {"op" "eval" "code" expr "id" id "session" session})
+      ]
+  (println :x id)
+  ;; (loop [m {:vals [] :responses []}]
+  ;;   (let [{:keys [status out value err] :as resp} (read-reply in session id)]
+  ;;     (when out
+  ;;       (print out)
+  ;;       (flush))
+  ;;     (when err
+  ;;       (binding [*out* *err*]
+  ;;         (print err)
+  ;;         (flush)))
+  ;;     (let [m (cond-> (update m :responses conj resp)
+  ;;               value
+  ;;               (update :vals conj value))]
+  ;;       (if (= ["done"] status)
+  ;;         m
+  ;;         (recur m)))))
+  ))
+
+(deftest xyz
+  (with-server
+    (println :nrepl-port *nrepl-port*)
+    (let [f (future
+              (eval-expr
+               {:port *nrepl-port*
+                :expr "(+ 1 2 3) (+ 1 2 3)"}))]
+      (is (= 5 (deref f 2000 :timeout))))))
+
+(defn -main []
+  (System/exit
+   (if (t/successful? (t/run-tests this-nsym))
+     0
+     1)))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))
+  

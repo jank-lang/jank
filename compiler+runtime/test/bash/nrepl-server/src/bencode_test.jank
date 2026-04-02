@@ -1,0 +1,109 @@
+(ns bencode-test
+  (:require [clojure.test :refer [deftest is run-tests successful? testing]]
+            [jank.nrepl.server.bencode :as b]))
+
+(deftest bint-test
+  (testing "parses integer fully"
+    (is (= [42 nil] ((b/bint) "i42e"))))
+  (testing "parses integer with remainder"
+    (is (= [42 "abc"] ((b/bint) "i42eabc"))))
+  (testing "parses negative integer"
+    (is (= [-7 nil] ((b/bint) "i-7e"))))
+  (testing "fails on invalid format"
+    (is (nil? ((b/bint) "42e"))))
+  (testing "incomplete integer (missing closing e)"
+    (is (nil? ((b/bint) "i42")))))
+
+(deftest bstring-test
+  (testing "parses string fully"
+    (is (= ["hello" nil] ((b/bstring) "5:hello"))))
+  (testing "parses string with remainder"
+    (is (= ["hello" "xyz"] ((b/bstring) "5:helloxyz"))))
+  (testing "parses empty string"
+    (is (= ["" nil] ((b/bstring) "0:"))))
+  (testing "incomplete string (length longer than available input)"
+    (is (nil? ((b/bstring) "5:hi")))))
+
+(deftest blist-test
+  (testing "parses list fully"
+    (is (= [[1 2 3] nil] ((b/blist) "li1ei2ei3ee"))))
+  (testing "parses list with remainder"
+    (is (= [[1 2] "abc"] ((b/blist) "li1ei2eeabc"))))
+  (testing "parses nested list"
+    (is (= [[[1 2] 3] nil] ((b/blist) "lli1ei2eei3ee"))))
+  (testing "incomplete list (missing closing e)"
+    (is (nil? ((b/blist) "li1ei2e")))))
+
+(deftest bdict-test
+  (testing "parses dict fully"
+    (is (= [{"foo" "bar"} nil] ((b/bdict) "d3:foo3:bare"))))
+  (testing "parses dict with remainder"
+    (is (= [{"a" 1} "zzz"] ((b/bdict) "d1:ai1eezzz"))))
+  (testing "parses multiple entries"
+    (is (= [{"a" 1 "b" 2} nil] ((b/bdict) "d1:ai1e1:bi2ee"))))
+   (testing "incomplete dict (missing closing e)"
+     (is (nil? ((b/bdict) "d1:ai1e")))))
+
+(deftest parse-test
+  (testing "parse integer fully"
+    (is (= [42 nil] (b/parse "i42e"))))
+  (testing "parse integer with remainder"
+    (is (= [42 "rest"] (b/parse "i42erest"))))
+  (testing "parse string"
+    (is (= ["hi" nil] (b/parse "2:hi"))))
+  (testing "parse list"
+    (is (= [[42 "hi"] nil] (b/parse "li42e2:hie"))))
+  (testing "parse list with remainder"
+    (is (= [[42 "hi"] "xx"] (b/parse "li42e2:hiexx"))))
+  (testing "parse dict"
+    (is (= [{"a" 1} nil] (b/parse "d1:ai1ee"))))
+
+  ;; nested
+  (testing "parses list inside list"
+    (is (= [[[1 2] 3] nil]
+           (b/parse "lli1ei2eei3ee"))))
+  (testing "parses dict inside list"
+    (is (= [[{"a" 1}] nil]
+           (b/parse "ld1:ai1eee"))))
+  (testing "parses list inside dict"
+    (is (= [{"a" [1 2]} nil]
+           (b/parse "d1:ali1ei2eee"))))
+  (testing "parses dict inside dict"
+    (is (= [{"a" {"b" 2}} nil]
+           (b/parse "d1:ad1:bi2eee"))))
+  (testing "parses deeply nested combination"
+    (is (= [[{"a" [1 {"b" 2}]}] nil]
+           (b/parse "ld1:ali1ed1:bi2eeeee"))))
+  (testing "nested structure with remainder"
+    (is (= [[[1 {"a" 2}] 3] "zzz"]
+           (b/parse "lli1ed1:ai2eeei3eezzz"))))
+  (testing "incomplete nested structure"
+    (is (nil? (b/parse "ld1:ali1ed1:bi2eee"))))
+  (testing "empty input"
+    (is (nil? (b/parse "")))))
+
+;; -----------------------
+;; Write tests
+;; -----------------------
+
+(deftest write-test
+  (testing "write integer"
+    (is (= "i42e" (b/write 42))))
+  (testing "write string"
+    (is (= "2:hi" (b/write "hi"))))
+  (testing "write list"
+    (is (= "li1ei2ee" (b/write [1 2]))))
+  (testing "write map"
+    (is (= "d1:ai1ee" (b/write {"a" 1}))))
+  (testing "round trip"
+    (is (= [42 nil] (b/parse (b/write 42))))
+    (is (= [[1 2] nil] (b/parse (b/write [1 2]))))
+    (is (= [[{"a" [1 {"b" 2}]}] nil] (b/parse (b/write [{"a" [1 {"b" 2}]}]))))))
+
+(def this-nsym (ns-name *ns*))
+
+(defn -main []
+  (cpp/exit
+    (if (successful? (run-tests this-nsym))
+      0
+      1)))
