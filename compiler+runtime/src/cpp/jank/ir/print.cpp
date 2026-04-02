@@ -305,13 +305,16 @@ namespace jank::ir
 
   void inst::branch::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb,
-                    "{:name {} :op :branch :condition {} :then {} :else {} :type \"{}\"}",
-                    name,
-                    condition,
-                    then_block,
-                    else_block,
-                    get_qualified_type_name(type));
+    util::format_to(
+      sb,
+      "{:name {} :op :branch :condition {} :then {} :else {} :merge {} :shadow {} :type \"{}\"}",
+      name,
+      condition,
+      then_block,
+      else_block,
+      merge_block.unwrap_or("<none>"),
+      (shadow.is_some() ? shadow.unwrap().name : "<none>"),
+      get_qualified_type_name(type));
   }
 
   void inst::case_::print(jtl::string_builder &sb, usize const) const

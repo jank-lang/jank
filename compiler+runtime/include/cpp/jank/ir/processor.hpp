@@ -37,6 +37,7 @@ namespace jank::ir
   {
     usize add_block(identifier const &name);
     void remove_block(usize const index);
+    usize find_block(identifier const &name) const;
 
     jtl::ref<analyze::expr::function_arity> arity;
     identifier name{};

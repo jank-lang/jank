@@ -38,6 +38,18 @@ namespace jank::ir
     }
   }
 
+  usize function::find_block(identifier const &name) const
+  {
+    for(usize i{}; i < blocks.size(); ++i)
+    {
+      if(blocks[i].name == name)
+      {
+        return i;
+      }
+    }
+    jank_panic_fmt("Unable to find IR block '{}'.", name);
+  }
+
   bool block::has_terminator() const
   {
     return !instructions.empty() && instructions.back()->is_terminator();
@@ -415,13 +427,20 @@ namespace jank::ir
     {
       bool_condition = b.truthy(bool_condition);
     }
-    b.branch(bool_condition, b.block_name(then_blk), b.block_name(else_blk));
+    b.branch(bool_condition,
+             b.block_name(then_blk),
+             b.block_name(else_blk),
+             (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
+                                                                    : jtl::option<identifier>{},
+             (expr->position != analyze::expression_position::tail)
+               ? inst::branch::shadow_details{ shadow, expression_type(expr->then) }
+               : jtl::option<inst::branch::shadow_details>{});
 
     b.enter_block(then_blk);
-    auto const then_name{ gen(expr->then, b).unwrap() };
+    auto const then_name{ gen(expr->then, b) };
     if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
     {
-      b.branch_set(shadow, then_name);
+      b.branch_set(shadow, then_name.unwrap());
       b.jump(merge_blk);
     }
 

@@ -364,10 +364,18 @@ namespace jank::ir
 
     struct branch : instruction
     {
+      struct shadow_details
+      {
+        identifier name;
+        jtl::ptr<void> type;
+      };
+
       branch(identifier const &name,
              identifier const &condition,
              identifier const &then_block,
-             identifier const &else_block);
+             identifier const &else_block,
+             jtl::option<identifier> const &merge_block,
+             jtl::option<shadow_details> const &shadow);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;
@@ -375,6 +383,8 @@ namespace jank::ir
       identifier condition;
       identifier then_block;
       identifier else_block;
+      jtl::option<identifier> merge_block;
+      jtl::option<shadow_details> shadow;
     };
 
     using branch_ref = jtl::ref<branch>;

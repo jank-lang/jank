@@ -92,8 +92,11 @@ namespace jank::ir
     identifier jump(usize const index);
     identifier branch_set(identifier const &shadow, identifier const &value);
     identifier branch_get(identifier const &name, jtl::ptr<void> const type) const;
-    identifier
-    branch(identifier const &condition, identifier const &then_blk, identifier const &else_blk);
+    identifier branch(identifier const &condition,
+                      identifier const &then_blk,
+                      identifier const &else_blk,
+                      jtl::option<identifier> const &merge_blk,
+                      jtl::option<inst::branch::shadow_details> const &shadow);
     identifier case_(identifier const &value,
                      native_unordered_map<i64, identifier> &&cases,
                      identifier const &default_block);

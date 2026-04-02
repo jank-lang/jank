@@ -321,11 +321,13 @@ namespace jank::ir
 
   identifier builder::branch(identifier const &condition,
                              identifier const &then_blk,
-                             identifier const &else_blk)
+                             identifier const &else_blk,
+                             jtl::option<identifier> const &merge_blk,
+                             jtl::option<inst::branch::shadow_details> const &shadow)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::branch>(name, condition, then_blk, else_blk));
+      jtl::make_ref<inst::branch>(name, condition, then_blk, else_blk, merge_blk, shadow));
     return name;
   }
 

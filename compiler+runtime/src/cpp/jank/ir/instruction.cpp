@@ -204,11 +204,15 @@ namespace jank::ir::inst
   branch::branch(identifier const &name,
                  identifier const &condition,
                  identifier const &then_block,
-                 identifier const &else_block)
+                 identifier const &else_block,
+                 jtl::option<identifier> const &merge_block,
+                 jtl::option<shadow_details> const &shadow)
     : instruction{ instruction_kind::branch, name, Cpp::GetVoidType() }
     , condition{ condition }
     , then_block{ then_block }
     , else_block{ else_block }
+    , merge_block{ merge_block }
+    , shadow{ shadow }
   {
   }
 
