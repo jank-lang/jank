@@ -98,18 +98,24 @@ namespace jank::ir::inst
   }
 
   function::function(identifier const &name,
-                     native_unordered_map<u8, jtl::immutable_string> &&arities)
+                     native_unordered_map<u8, jtl::immutable_string> &&arities,
+                     runtime::callable_arity_flags const arity_flags)
     : instruction{ instruction_kind::function, name, jit_function_ref_type() }
     , arities{ jtl::move(arities) }
+    , arity_flags{ arity_flags }
   {
   }
 
   closure::closure(identifier const &name,
+                   jtl::immutable_string const &context,
                    native_unordered_map<u8, jtl::immutable_string> &&arities,
-                   native_unordered_map<jtl::immutable_string, identifier> &&captures)
+                   native_unordered_map<jtl::immutable_string, identifier> &&captures,
+                   runtime::callable_arity_flags const arity_flags)
     : instruction{ instruction_kind::closure, name, jit_closure_ref_type() }
+    , context{ context }
     , arities{ jtl::move(arities) }
     , captures{ jtl::move(captures) }
+    , arity_flags{ arity_flags }
   {
   }
 

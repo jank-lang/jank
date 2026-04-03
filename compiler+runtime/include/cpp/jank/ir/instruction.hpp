@@ -202,11 +202,14 @@ namespace jank::ir
 
     struct function : instruction
     {
-      function(identifier const &name, native_unordered_map<u8, jtl::immutable_string> &&arities);
+      function(identifier const &name,
+               native_unordered_map<u8, jtl::immutable_string> &&arities,
+               runtime::callable_arity_flags const arity_flags);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_unordered_map<u8, jtl::immutable_string> arities;
+      runtime::callable_arity_flags arity_flags{};
     };
 
     using function_ref = jtl::ref<function>;
@@ -214,13 +217,17 @@ namespace jank::ir
     struct closure : instruction
     {
       closure(identifier const &name,
+              jtl::immutable_string const &context,
               native_unordered_map<u8, jtl::immutable_string> &&arities,
-              native_unordered_map<jtl::immutable_string, identifier> &&captures);
+              native_unordered_map<jtl::immutable_string, identifier> &&captures,
+              runtime::callable_arity_flags const arity_flags);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
+      jtl::immutable_string context;
       native_unordered_map<u8, jtl::immutable_string> arities;
       native_unordered_map<jtl::immutable_string, identifier> captures;
+      runtime::callable_arity_flags arity_flags{};
     };
 
     using closure_ref = jtl::ref<closure>;

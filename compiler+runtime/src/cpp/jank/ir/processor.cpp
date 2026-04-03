@@ -5,6 +5,8 @@
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/truthy.hpp>
+#include <jank/runtime/core/call.hpp>
+#include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/ns.hpp>
@@ -202,7 +204,7 @@ namespace jank::ir
                                   analyze::expr::function_arity const &arity)
   {
     auto &fn{ mod.functions.emplace_back(&arity) };
-    fn.name = util::format("{}_{}", fn_expr->unique_name, arity.params.size());
+    fn.name = runtime::munge(util::format("{}_{}", fn_expr->unique_name, arity.params.size()));
     fn.add_block("entry");
     builder b{ &mod, mod.functions.size() - 1 };
 
@@ -249,9 +251,42 @@ namespace jank::ir
     return fn.name;
   }
 
+  static runtime::callable_arity_flags
+  arity_flags(native_vector<analyze::expr::function_arity> const &arities)
+  {
+    analyze::expr::function_arity const *variadic_arity{};
+    analyze::expr::function_arity const *highest_fixed_arity{};
+    for(auto const &arity : arities)
+    {
+      if(arity.fn_ctx->is_variadic)
+      {
+        variadic_arity = &arity;
+      }
+      else if(!highest_fixed_arity
+              || highest_fixed_arity->fn_ctx->param_count < arity.fn_ctx->param_count)
+      {
+        highest_fixed_arity = &arity;
+      }
+    }
+
+    if(variadic_arity)
+    {
+      bool const variadic_ambiguous{ variadic_arity && highest_fixed_arity
+                                     && highest_fixed_arity->fn_ctx->param_count
+                                       == variadic_arity->fn_ctx->param_count - 1 };
+
+      return runtime::build_arity_flags(variadic_arity->fn_ctx->param_count - 1,
+                                        true,
+                                        variadic_ambiguous);
+    }
+    jank_assert(highest_fixed_arity != nullptr);
+    return runtime::build_arity_flags(highest_fixed_arity->fn_ctx->param_count, false, false);
+  }
+
   jtl::option<identifier> gen(analyze::expr::function_ref const expr, builder &b)
   {
     native_unordered_map<u8, jtl::immutable_string> arities;
+    auto const flags{ arity_flags(expr->arities) };
     for(auto const &arity : expr->arities)
     {
       arities[arity.params.size()] = gen_arity(*b.mod, expr, arity);
@@ -272,10 +307,14 @@ namespace jank::ir
                                                         capture.second };
         captured_idents[name] = gen(analyze::expr::local_reference_ref{ &local_ref }, b).unwrap();
       }
-      return b.closure(expr->position, jtl::move(arities), jtl::move(captured_idents));
+      return b.closure(expr->position,
+                       runtime::munge(expr->unique_name + "_ctx"),
+                       jtl::move(arities),
+                       jtl::move(captured_idents),
+                       flags);
     }
 
-    return b.function(expr->position, jtl::move(arities));
+    return b.function(expr->position, jtl::move(arities), flags);
   }
 
   jtl::option<identifier> gen(analyze::expr::recur_ref const expr, builder &b)
@@ -677,7 +716,14 @@ namespace jank::ir
                 jtl::immutable_string const &module_name,
                 [[maybe_unused]] codegen::compilation_target const target)
   {
-    module mod{ module_name };
+    native_vector<jtl::immutable_string> entry_points;
+    entry_points.reserve(fn_expr->arities.size());
+    for(auto const &arity : fn_expr->arities)
+    {
+      entry_points.emplace_back(
+        runtime::munge(util::format("{}_{}", fn_expr->unique_name, arity.params.size())));
+    }
+    module mod{ module_name, jtl::move(entry_points) };
 
     for(auto const &arity : fn_expr->arities)
     {

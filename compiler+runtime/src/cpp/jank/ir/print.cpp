@@ -152,12 +152,15 @@ namespace jank::ir
       needs_space = true;
       util::format_to(sb, "{} {}", arity.first, arity.second);
     }
-    util::format_to(sb, "} :type \"{}\"}", get_qualified_type_name(type));
+    util::format_to(sb,
+                    "} :arity-flags {} :type \"{}\"}",
+                    arity_flags,
+                    get_qualified_type_name(type));
   }
 
   void inst::closure::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb, "{:name {} :op :closure :arities {", name);
+    util::format_to(sb, "{:name {} :op :closure :context {} :arities {", name, context);
     bool needs_space{};
     for(auto const &arity : arities)
     {
@@ -180,7 +183,10 @@ namespace jank::ir
       needs_space = true;
       util::format_to(sb, "{} {}", capture.first, capture.second);
     }
-    util::format_to(sb, "} :type \"{}\"}", get_qualified_type_name(type));
+    util::format_to(sb,
+                    "} :arity-flags {} :type \"{}\"}",
+                    arity_flags,
+                    get_qualified_type_name(type));
   }
 
   void inst::letfn::print(jtl::string_builder &sb, usize const) const

@@ -21,12 +21,50 @@ namespace jank::codegen
 {
   using namespace analyze::cpp_util;
 
+  jtl::ref<ir::function>
+  find_function(jtl::ref<ir::module> const module, jtl::immutable_string const &function_name)
+  {
+    for(auto const &fn : module->functions)
+    {
+      if(fn.name == function_name)
+      {
+        return &fn;
+      }
+    }
+    jank_panic_fmt("Unable to find IR function '{}'.", function_name);
+  }
+
   struct builder
   {
+    builder(jtl::ref<ir::module> const module, jtl::immutable_string const &function_name)
+      : module{ module }
+      , function{ find_function(module, function_name) }
+    {
+    }
+
     void enter_block(ir::identifier const &block)
     {
       block_index = function->find_block(block);
       instruction_index = 0;
+    }
+
+    jtl::immutable_string declaration_str() const
+    {
+      native_transient_string declaration;
+      declaration.reserve(cpp_raw_buffer.size() + deps_buffer.size() + header_buffer.size()
+                          + body_buffer.size() + footer_buffer.size());
+      declaration += jtl::immutable_string_view{ cpp_raw_buffer.data(), cpp_raw_buffer.size() };
+      declaration += jtl::immutable_string_view{ deps_buffer.data(), deps_buffer.size() };
+      declaration += jtl::immutable_string_view{ header_buffer.data(), header_buffer.size() };
+      declaration += jtl::immutable_string_view{ body_buffer.data(), body_buffer.size() };
+      declaration += jtl::immutable_string_view{ footer_buffer.data(), footer_buffer.size() };
+
+      return declaration;
+    }
+
+    jtl::immutable_string expression_str() const
+    {
+      return "";
     }
 
     jtl::ref<ir::module> module;
@@ -43,6 +81,8 @@ namespace jank::codegen
   };
 
   using identifier = jtl::immutable_string;
+
+  void gen(ir::function const &fn, builder &b);
 
   namespace detail
   {
@@ -560,12 +600,67 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::function_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::function_ref const &inst, builder &b)
   {
-    return none;
+    util::format_to(b.body_buffer, "auto const {}{ ", inst->name);
+    util::format_to(b.body_buffer,
+                    "jank::runtime::make_box<jank::runtime::obj::jit_function>({})",
+                    inst->arity_flags);
+    util::format_to(b.body_buffer, "};");
+
+    for(auto const &arity : inst->arities)
+    {
+      util::format_to(b.body_buffer, "{}->arity_{} = &{};", inst->name, arity.first, arity.second);
+      builder nested{ b.module, arity.second };
+      gen(*nested.function, nested);
+      util::format_to(b.deps_buffer, "{}", nested.declaration_str());
+    }
+
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::closure_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::closure_ref const &inst, builder &b)
+  {
+    util::format_to(b.deps_buffer, "struct {}{", inst->context);
+    util::format_to(b.body_buffer,
+                    "auto const {}{ jtl::make_ref<struct {}>(",
+                    inst->context,
+                    inst->context);
+
+    bool need_comma{};
+    for(auto const &capture : inst->captures)
+    {
+      util::format_to(b.deps_buffer, "jank::runtime::object_ref {};", capture.first);
+
+      if(need_comma)
+      {
+        util::format_to(b.body_buffer, ", ");
+      }
+      b.body_buffer(capture.second);
+    }
+
+    util::format_to(b.deps_buffer, "};");
+    util::format_to(b.body_buffer, ") };");
+
+
+    util::format_to(b.body_buffer, "auto const {}{ ", inst->name);
+    util::format_to(b.body_buffer,
+                    "jank::runtime::make_box<jank::runtime::obj::jit_closure>({})",
+                    inst->arity_flags);
+    util::format_to(b.body_buffer, "};");
+
+    for(auto const &arity : inst->arities)
+    {
+      util::format_to(b.body_buffer, "{}->arity_{} = &{};", inst->name, arity.first, arity.second);
+      builder nested{ b.module, arity.second };
+      gen(*nested.function, nested);
+      util::format_to(b.deps_buffer, "{}", nested.declaration_str());
+    }
+
+    return inst->name;
+  }
+
+  jtl::option<identifier> gen(ir::inst::capture_ref const &, builder &)
   {
     return none;
   }
@@ -1308,7 +1403,7 @@ namespace jank::codegen
     auto const &fn_name{ fn.arity->fn_ctx->name };
     auto const &munged_fn_name{ munge(fn.arity->fn_ctx->name) };
     auto const &munged_linkage_name{ munge(fn.arity->fn_ctx->unique_name) };
-    auto const &closure_ctx{ munge(fn_name + "_ctx") };
+    auto const &closure_ctx{ munge(fn.arity->fn_ctx->unique_name + "_ctx") };
 
     bool param_shadows_fn{};
     for(auto const &param : fn.arity->params)
@@ -1378,6 +1473,8 @@ namespace jank::codegen
           )");
     }
 
+    b.block_index = 0;
+    b.instruction_index = 0;
     while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
     {
       gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
@@ -1397,37 +1494,19 @@ namespace jank::codegen
     util::format_to(b.body_buffer, "}");
   }
 
-  static jtl::immutable_string gen_declaration(builder &b)
-  {
-    native_transient_string declaration;
-    declaration.reserve(b.cpp_raw_buffer.size() + b.deps_buffer.size() + b.header_buffer.size()
-                        + b.body_buffer.size() + b.footer_buffer.size());
-    declaration += jtl::immutable_string_view{ b.cpp_raw_buffer.data(), b.cpp_raw_buffer.size() };
-    declaration += jtl::immutable_string_view{ b.deps_buffer.data(), b.deps_buffer.size() };
-    declaration += jtl::immutable_string_view{ b.header_buffer.data(), b.header_buffer.size() };
-    declaration += jtl::immutable_string_view{ b.body_buffer.data(), b.body_buffer.size() };
-    declaration += jtl::immutable_string_view{ b.footer_buffer.data(), b.footer_buffer.size() };
-
-    util::println("\n\n{}", util::format_cpp_source(declaration).expect_ok());
-
-    return declaration;
-  }
-
-  static jtl::immutable_string gen_expresssion(builder &)
-  {
-    return "";
-  }
-
   generated_cpp gen_cpp(ir::module const &mod)
   {
-    builder b{ &mod, mod.functions.data() };
+    builder b{ &mod, mod.entry_points[0] };
 
-    for(auto const &fn : mod.functions)
+    for(auto const &fn_name : mod.entry_points)
     {
-      b.function = &fn;
-      gen(fn, b);
+      auto const fn{ find_function(&mod, fn_name) };
+      b.function = fn;
+      gen(*fn, b);
     }
 
-    return { gen_declaration(b), gen_expresssion(b) };
+    generated_cpp ret{ b.declaration_str(), b.expression_str() };
+    util::println("\n\n{}", util::format_cpp_source(ret.declaration).expect_ok());
+    return ret;
   }
 }

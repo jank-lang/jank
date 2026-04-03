@@ -47,6 +47,7 @@ namespace jank::ir
   struct module
   {
     jtl::immutable_string name{};
+    native_vector<jtl::immutable_string> entry_points{};
     native_vector<function> functions{};
   };
 
