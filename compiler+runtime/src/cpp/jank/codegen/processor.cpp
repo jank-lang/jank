@@ -192,7 +192,8 @@ namespace jank::codegen
     }
 
     /* Emits a lazy-init guard that resolves a deferred var and caches its root.
-     * Generated code: if(ns::var.is_nil()) { ns::var = intern_var(...); ns::var_root = ...; ... } */
+     * We check var_root_ (not the var itself) because the footer's placement new
+     * may have already initialized the var_ref while leaving var_root_ nil. */
     static void
     emit_deferred_var_init(jtl::string_builder &buffer,
                            jtl::immutable_string const &native_ns,
@@ -201,7 +202,7 @@ namespace jank::codegen
     {
       util::format_to(
         buffer,
-        "if({}::{}.is_nil()) {{ "
+        "if({}::var_root_{}.is_nil()) {{ "
         "{}::{} = jank::runtime::__rt_ctx->intern_var(\"{}\").expect_ok(); "
         "{}::var_root_{} = {}::{}->get_root(); "
         "{}::var_root_arity_flags_{} = {}::var_root_{}->get_arity_flags(); "
