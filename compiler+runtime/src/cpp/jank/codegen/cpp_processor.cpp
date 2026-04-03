@@ -660,19 +660,41 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::capture_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::parameter_ref const &inst, builder &b)
   {
-    return none;
+    util::format_to(b.body_buffer, "auto &&{}{ {} };", inst->name, inst->value);
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::recursion_reference_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::capture_ref const &inst, builder &b)
   {
-    return none;
+    auto const &closure_ctx{ munge(b.function->arity->fn_ctx->unique_name + "_ctx") };
+    util::format_to(b.body_buffer, "auto &&{}{ {}->{} };", inst->name, closure_ctx, inst->value);
+    return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::named_recursion_ref const &, builder &)
+  jtl::option<identifier> gen(ir::inst::recursion_reference_ref const &inst, builder &b)
   {
-    return none;
+    util::format_to(b.body_buffer,
+                    "auto &&{}{ {} };",
+                    inst->name,
+                    munge(b.function->arity->fn_ctx->fn->name));
+    return inst->name;
+  }
+
+  jtl::option<identifier> gen(ir::inst::named_recursion_ref const &inst, builder &b)
+  {
+    util::format_to(b.body_buffer,
+                    "auto const {}(jank::runtime::dynamic_call({}",
+                    inst->name,
+                    inst->fn);
+    for(auto const &arg : inst->args)
+    {
+      util::format_to(b.body_buffer, ", {}", arg);
+    }
+
+    util::format_to(b.body_buffer, "));");
+    return inst->name;
   }
 
   jtl::option<identifier> gen(ir::inst::letfn_ref const &, builder &)
@@ -1400,7 +1422,6 @@ namespace jank::codegen
   void gen(ir::function const &fn, builder &b)
   {
     auto const &all_captures{ fn.arity->frame->captures };
-    auto const &fn_name{ fn.arity->fn_ctx->name };
     auto const &munged_fn_name{ munge(fn.arity->fn_ctx->name) };
     auto const &munged_linkage_name{ munge(fn.arity->fn_ctx->unique_name) };
     auto const &closure_ctx{ munge(fn.arity->fn_ctx->unique_name + "_ctx") };
@@ -1436,24 +1457,6 @@ namespace jank::codegen
                       closure_ctx,
                       closure_ctx,
                       munged_fn_name);
-
-      for(auto const &capture : all_captures)
-      {
-        /* We have an analysis bug which causes letfn named recursion references to
-         * end up being captures, since they're found as locals. This works around issue
-         * for now. */
-        if(capture.second.binding.native_name == fn_name)
-        {
-          continue;
-        }
-
-        auto const capture_name{ munge(capture.second.binding.native_name) };
-        util::format_to(b.body_buffer,
-                        "auto &&{}{ {}->{} };",
-                        capture_name,
-                        closure_ctx,
-                        capture_name);
-      }
     }
 
     if(fn.arity->fn_ctx->is_recur_recursive)

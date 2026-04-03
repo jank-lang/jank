@@ -88,8 +88,9 @@ namespace jank::ir
     identifier dynamic_call(analyze::expression_position const pos,
                             identifier const &fn,
                             native_vector<identifier> &&args);
-    identifier
-    named_recursion(analyze::expression_position const pos, native_vector<identifier> &&args);
+    identifier named_recursion(analyze::expression_position const pos,
+                               identifier const &fn,
+                               native_vector<identifier> &&args);
     identifier recursion_reference(analyze::expression_position const pos);
     identifier truthy(identifier const &value);
     identifier jump(usize const index);

@@ -350,6 +350,15 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::recursion_reference_ref const expr, builder &b)
   {
+    if(expr->fn_ctx != b.current_function()->arity->fn_ctx)
+    {
+      auto name{ b.locals[expr->fn_ctx->name] };
+      if(expr->position == analyze::expression_position::tail)
+      {
+        return b.ret(name, expression_type(expr));
+      }
+      return name;
+    }
     return b.recursion_reference(expr->position);
   }
 
@@ -362,7 +371,10 @@ namespace jank::ir
       arg_idents.emplace_back(gen(arg_expr, b).unwrap());
     }
 
-    return b.named_recursion(expr->position, jtl::move(arg_idents));
+    return b.named_recursion(
+      expr->position,
+      gen(analyze::expr::recursion_reference_ref{ &expr->recursion_ref }, b).unwrap(),
+      jtl::move(arg_idents));
   }
 
   jtl::option<identifier> gen(analyze::expr::let_ref const expr, builder &b)

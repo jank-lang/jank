@@ -114,7 +114,7 @@ namespace jank::ir
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
-      jtl::immutable_string const &value;
+      jtl::immutable_string value;
     };
 
     using capture_ref = jtl::ref<capture>;
@@ -307,10 +307,12 @@ namespace jank::ir
     {
       named_recursion(identifier const &name,
                       jtl::ptr<void> const type,
+                      identifier const &fn,
                       native_vector<identifier> &&args);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
+      identifier fn;
       native_vector<identifier> args;
     };
 

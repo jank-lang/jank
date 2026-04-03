@@ -251,7 +251,7 @@ namespace jank::ir
 
   void inst::named_recursion::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb, "{:name {} :op :named-recursion :args [", name);
+    util::format_to(sb, "{:name {} :op :named-recursion :fn {} :args [", name, fn);
     bool needs_space{};
     for(auto const &arg : args)
     {
