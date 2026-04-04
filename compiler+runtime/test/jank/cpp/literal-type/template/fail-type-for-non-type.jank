@@ -1,2 +1,2 @@
-(let* [_ ((cpp/type (std.array char char)))]
+(let* [_ (#cpp (std.array char char))]
   :success)

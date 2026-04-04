@@ -2048,7 +2048,9 @@ namespace jank::codegen
       return util::format("{}", val);
     }
 
-    auto tmp{ Cpp::GetQualifiedCompleteName(expr->scope) };
+    auto tmp{ util::format("{}{}",
+                           (Cpp::IsPointerToMemberType(expr->type) ? "&" : ""),
+                           Cpp::GetQualifiedCompleteNameWithTemplateArgs(expr->scope)) };
 
     if(expr->position == expression_position::tail)
     {
@@ -2764,7 +2766,7 @@ namespace jank::codegen
 
     util::format_to(body_buffer,
                     "auto {}{ "
-                    "new (GC{}) {}{ {} }"
+                    "new (UseGC{}) {}{ {} }"
                     " };",
                     ret_tmp,
                     (needs_finalizer ? ", " + finalizer_tmp : ""),

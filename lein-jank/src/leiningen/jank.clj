@@ -1,84 +1,17 @@
 (ns leiningen.jank
   (:refer-clojure :exclude [run!])
-  (:require [babashka.process :as ps]
-            [babashka.fs :as b.f]
-            [clojure.pprint :as pp]
-            [clojure.string :as string]
-            [leiningen.core.project :as p]
-            [leiningen.core.classpath :as lcp]
+  (:require [clojure.pprint :as pp]
+
             [leiningen.core.main :as lmain]
-            [leiningen.jank.discovery :as d])
-  (:import [java.io File]))
-
-(defonce verbose? (atom false))
-
-(defn build-declarative-flag [flag value]
-  (case flag
-    :output-dir
-    ["--output-dir" value]
-
-    :direct-call
-    (if value
-      ["--direct-call"]
-      [])
-
-    :optimization-level
-    ; TODO: Validate.
-    [(str "-O" value)]
-
-    :codegen
-    ["--codegen " (name value)]
-
-    :defines
-    (map (fn [[k v]] (str "-D" k "=" v)) value)
-
-    :include-dirs
-    (map (fn [v] (str "-I" v)) value)
-
-    :library-dirs
-    (map (fn [v] (str "-L" v)) value)
-
-    :linked-libraries
-    (map (fn [v] (str "-l" v)) value)
-
-    (lmain/warn (str "Unknown flag " flag))))
-
-(defn build-declarative-flags [project]
-  (flatten (map (fn [[flag value]]
-                  (build-declarative-flag flag value))
-                (:jank project))))
-
-(defn shell-out! [project classpath command compiler-args runtime-args]
-  (let [jank (b.f/which "jank")
-        env (System/getenv)
-        args (concat [jank command "--module-path" classpath]
-                     (build-declarative-flags project)
-                     compiler-args
-                     ["--"]
-                     runtime-args)
-        ; TODO: Better error handling.
-        _ (assert (some? jank))
-        _ (when @verbose?
-            (println ">" (clojure.string/join " " args)))
-        proc (apply ps/shell
-                    {:continue true
-                     :dir (:root project)
-                     :extra-env env}
-                    args)]
-    (when-not (zero? (:exit proc))
-      (System/exit (:exit proc)))))
-
-(defn build-module-path [project]
-  (->> project
-       lcp/get-classpath
-       (string/join File/pathSeparatorChar)))
+            [leiningen.jank.core :as ljc]
+            [leiningen.jank.test :as ljt]))
 
 (defn run!
   "Run your project, starting at the main entrypoint."
   [project & args]
-  (let [cp-str (build-module-path project)]
+  (let [cp-str (ljc/build-module-path project)]
     (if (:main project)
-      (shell-out! project cp-str "run-main" [(:main project)] args)
+      (ljc/shell-out! project cp-str "run-main" [(:main project)] args)
       (do
         (lmain/warn "No :main entrypoint for project.")
         (lmain/exit 1)))))
@@ -86,9 +19,9 @@
 (defn repl!
   "Start a terminal REPL in your :main ns."
   [project & args]
-  (let [cp-str (build-module-path project)]
+  (let [cp-str (ljc/build-module-path project)]
     (if (:main project)
-      (shell-out! project cp-str "repl" [(:main project)] args)
+      (ljc/shell-out! project cp-str "repl" [(:main project)] args)
       (do
         (lmain/warn "No :main entrypoint for project.")
         (lmain/exit 1)))))
@@ -96,9 +29,9 @@
 (defn compile!
   "Compile your project to an executable."
   [project & args]
-  (let [cp-str (build-module-path project)]
+  (let [cp-str (ljc/build-module-path project)]
     (if (:main project)
-      (shell-out! project cp-str "compile" [(:main project)] args)
+      (ljc/shell-out! project cp-str "compile" [(:main project)] args)
       (do
         (lmain/warn "No :main entrypoint for project.")
         (lmain/exit 1)))))
@@ -106,49 +39,14 @@
 (defn compile-module!
   "Compile a single module and its dependencies to object files."
   [project & args]
-  (let [cp-str (build-module-path project)]
-    (shell-out! project cp-str "compile-module" [] args)))
+  (let [cp-str (ljc/build-module-path project)]
+    (ljc/shell-out! project cp-str "compile-module" [] args)))
 
 (defn check-health!
   "Perform a health check on your jank install."
   [project & args]
-  (let [cp-str (build-module-path project)]
-    (shell-out! project cp-str "check-health" [] args)))
-
-(def test-runner-template
-  "
-(def namespaces (quote %s))
-
-(doseq [namespace namespaces]
-  (require namespace))
-
-(require 'clojure.test)
-
-(let [failures (->> namespaces
-                    (map clojure.test/run-tests)
-                    (map #(select-keys %% [:fail :error]))
-                    (map vals)
-                    (flatten)
-                    (apply +))]
-  (when (> failures 0)
-    (cpp/exit 1)))")
-
-(defn generate-test-runner! [namespaces]
-  (let [test-runner-file (b.f/create-temp-file {:prefix "jank_test_runner"
-                                                :suffix ".jank"})]
-    (spit (b.f/file test-runner-file)
-          (format test-runner-template (pr-str namespaces)))
-    test-runner-file))
-
-(defn test!
-  "Run tests in your jank project."
-  [project & args]
-  (let [test-project (p/merge-profiles project [:test])
-        test-paths (:test-paths test-project)
-        test-namespaces (d/jank-namespaces test-paths)
-        cp-str (build-module-path test-project)
-        test-runner-file (generate-test-runner! test-namespaces)]
-    (shell-out! test-project cp-str "run" [(str test-runner-file)] [])))
+  (let [cp-str (ljc/build-module-path project)]
+    (ljc/shell-out! project cp-str "check-health" [] args)))
 
 (declare print-help!)
 
@@ -157,7 +55,7 @@
                       :compile #'compile!
                       :compile-module #'compile-module!
                       :check-health #'check-health!
-                      :test #'test!
+                      :test #'ljt/test!
                       :help #'print-help!})
 
 (defn print-help!
@@ -177,7 +75,7 @@
       (let [arg (first args)
             ret (case arg
                   "-v" (do
-                         (reset! verbose? true)
+                         (reset! ljc/verbose? true)
                          ret)
                   (conj ret arg))]
         (recur (rest args) ret)))))

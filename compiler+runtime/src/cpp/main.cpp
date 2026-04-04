@@ -417,7 +417,7 @@ int main(int const argc, char const **argv)
       return jank::environment::check_health() ? 0 : 1;
     }
 
-    __rt_ctx = new(GC) runtime::context{};
+    __rt_ctx = new(UseGC) runtime::context{};
 
     jank_load_clojure_core_native();
 

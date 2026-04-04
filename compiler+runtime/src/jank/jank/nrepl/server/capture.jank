@@ -63,8 +63,8 @@
   :stderr/:stdout, the string data which was captured from the respective
   streams."
   [f]
-  (let [stdout-handle (start (cpp/box (cpp/value "&*stdout")))
-        stderr-handle (start (cpp/box (cpp/value "&*stderr")))
+  (let [stdout-handle (start (cpp/box #cpp stdout))
+        stderr-handle (start (cpp/box #cpp stderr))
         ret           (try
                         (f)
                         (finally

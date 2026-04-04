@@ -1,2 +1,2 @@
-(let* [_ ((cpp/type (:array 0 0)))]
+(let* [_ (#cpp (:array 0 0))]
   :success)

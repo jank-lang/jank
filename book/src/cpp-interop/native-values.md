@@ -174,7 +174,8 @@ $ jank run person.jank
 
 > [!NOTE]
 > Although this works, consider moving this C++ into a header file and including
-> it instead. Writing large amounts of C++ in `cpp/raw` strings doesn't scale very well.
+> it instead. Writing large amounts of C++ in `cpp/raw` strings doesn't scale
+> very well, in terms of maintainability.
 
 ## Opaque boxes
 There is a performance cost to the convenience of implicit conversions. For pure
@@ -196,12 +197,12 @@ Given a hypothetical `my_db` C++ database library, boxing is done like this:
 (defn query! [db-box q]
   (let [; db-box is an object_ref
         ; db is a my_db.connection*
-        db (cpp/unbox cpp/my_db.connection* db-box)]
+        db (cpp/unbox (:* my_db.connection) db-box)]
     (.query db q)))
 
 (defn -main [& args]
   (let [; db is a my_db.connection*
-        db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+        db (cpp/new my_db.connection #cpp "localhost:5758")
         ; db-box is a opaque_box_ref
         db-box (cpp/box db)]
     ))
@@ -223,10 +224,10 @@ error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
 ─────┼─────────────────────────────────────────────────────────────────────────
  21  │   (let [; db-box is an object_ref
  22  │         ; db is a my_db.connection*
- 23  │         db (cpp/unbox cpp/my_db.secure_connection* db-box)]
+ 23  │         db (cpp/unbox (:* my_db.secure_connection) db-box)]
      │             ^^^^^^^^^ Unboxed here.
      │ …
- 28  │         db (cpp/new cpp/my_db.connection #cpp "localhost:5758")
+ 28  │         db (cpp/new my_db.connection #cpp "localhost:5758")
  29  │         ; db-box is a opaque_box_ref
  30  │         db-box (cpp/box db)]
      │                 ^^^^^^^ Boxed here.
@@ -238,19 +239,16 @@ error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
 ```
 
 ## Complex literal values
-If your C++ value is not representable using jank's interop syntax, due to
-template arguments or other shenanigans, you can use `cpp/value` to provide the
-complete value using an inline C++ string. For example, here's how we grab the
-`npos` from a template instantiation:
+If your C++ value is not representable using just a symbol, due to
+template arguments or other shenanigans, you can use jank's C++ domain specific language (DSL).
+Documentation on that is [here](./dsl.md). For example, here's how we grab
+`std::basic_string<char>::npos`:
 
 ```clojure
-(let [m (cpp/value "std::basic_string<char>::npos")]
+(let [m #cpp (:member (std.basic_string char) npos)]
   )
 ```
 
 No implicit boxing will happen here, unless you use this value in a way which
 requires it. jank will give you a reference to the value you specified. If you
 need a copy, you will need to manually do that.
-
-* `(t a1 a2...)` build a template instantiation
-* `(:member t name)` nests into a type

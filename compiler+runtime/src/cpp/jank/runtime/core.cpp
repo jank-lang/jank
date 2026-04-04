@@ -1,8 +1,7 @@
 #include <pthread.h>
 #include <cxxabi.h>
 
-#include <gc/gc.h>
-
+#include <jank/gc.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/nameable.hpp>

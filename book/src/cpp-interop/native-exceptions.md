@@ -28,7 +28,7 @@ can catch the exception by the base type and then rely on the virtual `.what`
 member function to get the exception message.
 ```clojure
 
-(let [v ((cpp/type "std::vector<int>"))]
+(let [v (#cpp (std::vector int))]
   (try
     ; This will throw.
     (.at v #cpp 0)

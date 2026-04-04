@@ -1,2 +1,2 @@
-(let* [_ ((cpp/type (:unsigned float)))]
+(let* [_ (#cpp (:unsigned float))]
   :success)

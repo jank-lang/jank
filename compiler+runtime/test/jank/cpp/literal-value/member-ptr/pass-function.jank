@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::literal_value::member_ptr::pass_function
+          {
+            struct foo
+            {
+              i64 get_42()
+              { return 42; }
+            };
+          }")
+(let* [p #cpp (:&member jank.cpp.literal_value.member_ptr.pass_function.foo get_42)
+       f (cpp/jank.cpp.literal_value.member_ptr.pass_function.foo)]
+  (if (= (p f) 42)
+    :success))

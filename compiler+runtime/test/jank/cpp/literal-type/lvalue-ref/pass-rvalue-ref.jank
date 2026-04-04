@@ -1,2 +1,2 @@
-(let* [_ ((cpp/type (:& (:&& jtl.i64))) #cpp 0)]
+(let* [_ (#cpp (:& (:&& jtl.i64)) #cpp 0)]
   :success)

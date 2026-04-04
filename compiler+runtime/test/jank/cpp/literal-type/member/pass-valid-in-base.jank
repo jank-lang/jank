@@ -8,5 +8,5 @@
             {
             };
           }")
-(let* [_ ((cpp/type (:member jank.cpp.literal_type.member.pass_valid_in_base.foo bar)))]
+(let* [_ (#cpp (:member jank.cpp.literal_type.member.pass_valid_in_base.foo bar))]
   :success)

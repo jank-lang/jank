@@ -1,0 +1,5 @@
+(let* [t (cpp/value true)
+       f (cpp/value false)]
+  (if (and (= true t)
+           (= false f))
+    :success))

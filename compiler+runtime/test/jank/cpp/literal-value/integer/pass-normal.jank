@@ -1,0 +1,7 @@
+(let* [z (cpp/value 0)
+       p (cpp/value 3)
+       n (cpp/value -10)]
+  (if (and (= 0 z)
+           (= 3 p)
+           (= -10 n))
+    :success))

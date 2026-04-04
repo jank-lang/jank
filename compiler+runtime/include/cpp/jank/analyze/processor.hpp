@@ -37,8 +37,6 @@ namespace jank::analyze
     file
   };
 
-  enum class literal_kind : u8;
-
   struct processor
   {
     using expression_result = jtl::result<expression_ref, error_ref>;
@@ -55,6 +53,15 @@ namespace jank::analyze
                               expression_position,
                               jtl::option<expr::function_context_ref> const &,
                               bool needs_box);
+    expression_result analyze_cpp_dsl(runtime::obj::persistent_list_ref const,
+                                      local_frame_ptr,
+                                      expression_position,
+                                      jtl::option<expr::function_context_ref> const &,
+                                      bool needs_box);
+    expression_result analyze_cpp_dsl_impl(runtime::object_ref const,
+                                           local_frame_ptr,
+                                           expression_position const,
+                                           jtl::option<expr::function_context_ref> const &);
     jtl::result<jtl::ptr<void>, error_ref>
     analyze_type(runtime::object_ref const,
                  local_frame_ptr,
@@ -180,12 +187,6 @@ namespace jank::analyze
                                       expression_position,
                                       jtl::option<expr::function_context_ref> const &,
                                       bool needs_box);
-    expression_result analyze_cpp_literal(runtime::obj::persistent_list_ref const,
-                                          local_frame_ptr,
-                                          expression_position,
-                                          jtl::option<expr::function_context_ref> const &,
-                                          bool needs_box,
-                                          literal_kind kind);
     expression_result analyze_cpp_type(runtime::obj::persistent_list_ref const,
                                        local_frame_ptr,
                                        expression_position,
