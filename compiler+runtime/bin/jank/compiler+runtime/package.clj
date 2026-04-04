@@ -10,10 +10,15 @@
 (def jank-version "0.1")
 
 (defmulti create-package!
-  (fn [_props]
-    (System/getProperty "os.name")))
+(fn [_props]
+    (let [os (System/getProperty "os.name")]
+      (cond
+        (.startsWith os "Windows") :win
+        (.startsWith os "Linux")   :linux
+        (.startsWith os "Mac")     :mac
+        :else                      :unknown))))
 
-(defmethod create-package! "Linux" [_props]
+(defmethod create-package! :linux [_props]
   (let [dir (format "jank_%s-1_amd64" jank-version)
         control (format "Package: jank
 Version: %s
@@ -33,7 +38,7 @@ Description: The native Clojure dialect hosted on LLVM with seamless C++ interop
       (b.f/copy (format "%s/%s.deb" compiler+runtime-dir dir) (format "%s.deb" dir))
       (spit gh-output (format "deb=%s.deb" dir)))))
 
-(defmethod create-package! "Mac OS X" [_props]
+(defmethod create-package! :mac [_props]
   (let [dir (format "jank_%s-1_aarch64" jank-version)
         tarball (format "%s.tar.gz" dir)]
     (util/quiet-shell {:dir compiler+runtime-dir
@@ -44,6 +49,9 @@ Description: The native Clojure dialect hosted on LLVM with seamless C++ interop
     (when-some [gh-output (util/get-env "GITHUB_OUTPUT")]
       (b.f/copy (format "%s/%s" compiler+runtime-dir tarball) tarball)
       (spit gh-output (format "homebrew-tarball=%s" tarball)))))
+
+(defmethod create-package! :win [_props]
+  (println :win-todo))
 
 (defn -main [{:keys [enabled?] :as props}]
   (util/log-step "Create distro package")

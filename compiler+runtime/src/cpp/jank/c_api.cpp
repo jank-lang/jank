@@ -1,6 +1,12 @@
 #include <cstdarg>
 #include <utility>
 
+#ifdef JANK_WINDOWS_LIKE
+  // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+  #define WIN32_LEAN_AND_MEAN 1
+  #include <windows.h>
+#endif
+
 #include <llvm-c/Target.h>
 #include <llvm/ExecutionEngine/Orc/AbsoluteSymbols.h>
 #include <llvm/Support/CommandLine.h>
@@ -1032,10 +1038,17 @@ extern "C"
   {
     JANK_TRY
     {
+#ifdef JANK_WINDOWS_LIKE
+      std::setlocale(LC_CTYPE, ".UTF8");
+      std::locale::global(std::locale(".UTF-8"));
+      SetConsoleOutputCP(CP_UTF8);
+      SetConsoleCP(CP_UTF8);
+#else
       /* To handle UTF-8, we set the locale to the current environment locale.
        * Usage of the local locale allows better localization.
        * Notably, this might make text encoding become more platform dependent. */
       std::locale::global(std::locale(""));
+#endif
 
       /* The GC needs to initialized even before arg parsing, since our native types,
        * like strings, use the GC for allocations. It can still be configured later. */

@@ -15,13 +15,17 @@ set +e
   make_j="$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 4)"
 set -e
 
+install=0
 update=0
 
-while getopts ":huj:" opt; do
+while getopts ":hiuj:" opt; do
   case "${opt}" in
     h)
-      echo "Usage ${0} [-j N] [-u] [srcdir]"
+      echo "Usage ${0} [-j N] [-i] [-u] [srcdir]"
       exit 0
+      ;;
+    i)
+      install=1
       ;;
     j)
       make_j="${OPTARG}"
@@ -53,25 +57,83 @@ llvm_url="https://github.com/jank-lang/llvm-project.git"
 llvm_version=22
 llvm_branch="jank-snapshot/llvm${llvm_version}"
 # 8164f1a0c17b192e133817436bdb07598b7402a3
+llvm_commit="8164f1a0c17b192e133817436bdb07598b7402a3"
+llvm_branch="jank"
+llvm_dest_dir="${srcdir}/llvm-install"
+llvm_build_dir="${srcdir}/llvm-build"
+if [[ -n "${MSYSTEM:-}" ]]; then
+    # Building LLVM on MSYS2 requires a pacman package definition.  a
+    # patched version of MINGW-packages/mingw-w64-llvm is used, which
+    # is maintain separately.
+    llvm_mingw_pkg_gen=1  # Increment this whenever the LLVM version is updated
+    llvm_mingw_pkg_url="https://github.com/ikappaki/MINGW-packages.git"
+    llvm_mingw_pkg_branch="master-jank-win"
+    llvm_mingw_pkg_commit="15506e70d02aea54d249ba2086dccec845bbf2fe"
+    llvm_mingw_pkg_repo_dir="${build_dir}/MINGW-packages"
+    # The package definition  copied into ${llvm_build_dir} and
+    # expects the LLVM source tree to be available at
+    # ${llvm_build_dir}/src
+    llvm_mingw_pkg_build_dir="${llvm_build_dir}"
+    llvm_src_dir="${llvm_mingw_pkg_build_dir}/src"
+else
+    llvm_src_dir="${srcdir}/llvm"
+fi
+
+if [[ ${install} == 1 ]]; then
+   if [[ -n "${MSYSTEM:-}" ]]; then
+       pacman --noconfirm -U ${llvm_dest_dir}/*.tar.zst
+       exit 0
+   else
+       echo "Binary package installation is only supported in the MSYS2 CLANG environment on Windows."
+       exit 1
+   fi
+fi
 
 function prepare()
 {
-  if [[ ! -d "${srcdir}/llvm" ]];
+  if [[ ! -d "${llvm_src_dir}" ]];
   then
-    git clone -b "${llvm_branch}" --depth 1 --shallow-submodules --single-branch "${llvm_url}" "${srcdir}"/llvm
+    git clone --no-checkout --filter=blob:none --depth 1 "${llvm_url}" "${llvm_src_dir}"
+    cd "${llvm_src_dir}"
+      git fetch origin "${llvm_commit}" --depth 1
+      git checkout "${llvm_commit}"
+      git submodule update --init --depth 1 --recursive
+    cd -
   elif [[ ${update} == 1 ]];
   then
-    cd "${srcdir}"/llvm
+    cd ${llvm_src_dir}
+      git stash || true
       git checkout "${llvm_branch}"
       git pull origin "${llvm_branch}"
     cd -
+  fi
+
+  mkdir -p ${llvm_build_dir}
+
+  if [[ -n "${MSYSTEM:-}" ]]; then
+      pacman --noconfirm -S base-devel git
+
+      echo "Cloning MINGW-packages repo to ${llvm_mingw_pkg_repo_dir}..."
+      rm -fr ${llvm_mingw_pkg_repo_dir}
+      # Clone the repo shallowly and check out only the mingw-w64-llvm directory
+      git clone --depth 1 --filter=blob:none --no-checkout ${llvm_mingw_pkg_url} ${llvm_mingw_pkg_repo_dir}
+      cd ${llvm_mingw_pkg_repo_dir}
+        git sparse-checkout init --cone
+        git sparse-checkout set mingw-w64-llvm
+        git checkout ${llvm_mingw_pkg_commit}
+      cd -
+      cp ${llvm_mingw_pkg_repo_dir}/mingw-w64-llvm/* ${llvm_mingw_pkg_build_dir}
+
+      llvm_git_hash=$(git -C ${llvm_src_dir} rev-parse --short HEAD)
+      # so that the llvm packages include the hash in their names
+      sed -i "s/^pkgrel=0\.jank$/pkgrel=${llvm_mingw_pkg_gen}.jank_${llvm_git_hash}/" ${llvm_mingw_pkg_build_dir}/PKGBUILD
   fi
 }
 
 function build()
 {
-  mkdir -p "${srcdir}/llvm-build"
-  cd "${srcdir}/llvm-build"
+  mkdir -p "${llvm_build_dir}"
+  cd "${llvm_build_dir}"
 
   cmake -DCMAKE_BUILD_TYPE=Release \
         -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind;compiler-rt" \
@@ -89,16 +151,26 @@ function build()
         -DLLVM_BUILD_OCAML_BINDINGS=OFF \
         -DLLVM_ENABLE_OCAMLDOC=OFF \
         -G "Ninja" \
-        ../llvm/llvm
+        ${llvm_src_dir}/llvm
 
-  export DESTDIR="${srcdir}/llvm-install"
+  export DESTDIR="${llvm_dest_dir}"
   ninja clang clang-repl compiler-rt clang-cpp clang-tidy install -j"${make_j}"
   mkdir -p "${DESTDIR}/usr/local/lib/clang/${llvm_version}/lib"
   cp -r lib/clang/"${llvm_version}"/lib/* "${DESTDIR}/usr/local/lib/clang/${llvm_version}/lib/"
 }
 
+function build_mingw()
+{
+    cd ${llvm_build_dir}
+    makepkg-mingw -sLf --nocheck
+    rm -fr ${llvm_dest_dir}
+    mkdir -p ${llvm_dest_dir}
+    mv ${llvm_build_dir}/*.tar.zst ${llvm_dest_dir}
+    echo "LLVM binary packages copied to ${llvm_dest_dir}."
+}
+
 prepare
-build
+if [[ -n "${MSYSTEM:-}" ]]; then build_mingw; else build; fi
 
 echo
 echo "Clang/LLVM successfully compiled. You can now build jank."

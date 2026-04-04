@@ -2533,7 +2533,8 @@ namespace jank::read::lex
        * issue is the same as what's reported here. https://github.com/evanj/isspace_locale
        *
        * Altogether not a big problem. */
-      if constexpr(jtl::current_platform != jtl::platform::macos_like)
+      if constexpr(jtl::current_platform != jtl::platform::macos_like
+                   && jtl::current_platform != jtl::platform::windows_like)
       {
         SUBCASE("Whitespace Characters")
         {

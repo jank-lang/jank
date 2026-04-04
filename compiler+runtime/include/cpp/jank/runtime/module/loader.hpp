@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <optional>
 
 #include <folly/Synchronized.h>
 
@@ -54,7 +55,7 @@ namespace jank::runtime::module
   {
     object_ref to_runtime_data() const;
     bool exists() const;
-    std::time_t last_modified_at() const;
+    std::filesystem::file_time_type last_modified_at() const;
 
     /* If the file is within a JAR, this will be the path to the JAR. */
     jtl::option<jtl::immutable_string> archive_path;
@@ -62,6 +63,27 @@ namespace jank::runtime::module
      * filesystem path. */
     jtl::immutable_string path;
   };
+
+#ifdef JANK_WINDOWS_LIKE
+  using HANDLE = void *;
+
+  struct HANDLES
+  {
+    HANDLE hFile;
+    HANDLE hMapping;
+    HANDLES() = delete;
+
+    HANDLES(HANDLE file, HANDLE mapping)
+      : hFile(file)
+      , hMapping(mapping)
+    {
+    }
+  };
+
+  using file_handle = HANDLES;
+#else
+  using file_handle = int;
+#endif
 
   /* When reading a file, we may find it on the filesystem or within a JAR. In the
    * first case, we map it with `mmap`, but we can't do that for JAR files since
@@ -72,7 +94,10 @@ namespace jank::runtime::module
     file_view() = default;
     file_view(file_view const &) = delete;
     file_view(file_view &&) noexcept;
-    file_view(jtl::immutable_string const &file, int const f, char const * const h, usize const s);
+    file_view(jtl::immutable_string const &file,
+              file_handle f,
+              char const * const h,
+              usize const s);
     file_view(jtl::immutable_string const &file, jtl::immutable_string const &buff);
     ~file_view();
 
@@ -90,7 +115,7 @@ namespace jank::runtime::module
 
     /* In the case where we map a file, we track this information so we can read it and
      * later unmap it. */
-    int fd{};
+    std::optional<file_handle> fd{};
     char const *head{};
     usize len{};
 
@@ -146,7 +171,7 @@ namespace jank::runtime::module
     };
 
     /* These separators match what the JVM does on each system. */
-#ifdef _WIN32
+#ifdef JANK_WINDOWS_LIKE
     static constexpr char module_separator{ ';' };
     static constexpr char const *module_separator_name{ "semicolon" };
 #else

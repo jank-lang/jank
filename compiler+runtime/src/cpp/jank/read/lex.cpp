@@ -1230,7 +1230,8 @@ namespace jank::read::lex
               while(true)
               {
                 auto const result(convert_to_codepoint(file.substr(pos), pos));
-                if(result.is_err() || !is_symbol_char(result.expect_ok().character))
+                if(result.is_err() || !is_symbol_char(result.expect_ok().character)
+                   || result.expect_ok().len == 0)
                 {
                   break;
                 }
@@ -1473,7 +1474,7 @@ namespace jank::read::lex
               break;
             }
 
-            if(!is_symbol_char(result.expect_ok().character))
+            if(!is_symbol_char(result.expect_ok().character) || result.expect_ok().len == 0)
             {
               break;
             }

@@ -373,8 +373,9 @@ namespace jank::environment
     JANK_TRY
     {
       auto const tmp{ std::filesystem::temp_directory_path() };
-      std::string path_tmp{ tmp / "jank-aot-XXXXXX" };
-      mkstemp(path_tmp.data());
+      std::string path_tmp{ (tmp / "jank-aot-XXXXXX").string() };
+      int const fd{ mkstemp(path_tmp.data()) };
+      close(fd);
       std::filesystem::remove(path_tmp);
       std::filesystem::create_directories(path_tmp);
 
@@ -387,7 +388,7 @@ namespace jank::environment
       auto const saved_opts{ util::cli::opts };
       util::cli::opts.target_module = "health";
       util::cli::opts.output_target = util::cli::compilation_target::object;
-      util::cli::opts.output_filename = exe_output;
+      util::cli::opts.output_filename = exe_output.string();
       util::cli::opts.module_path = path_tmp;
       util::scope_exit const finally{ /* NOLINTNEXTLINE(bugprone-exception-escape) */
                                       [=] { util::cli::opts = saved_opts; }
@@ -406,11 +407,12 @@ namespace jank::environment
       aot_prc.build_executable(util::cli::opts.target_module).expect_ok();
 
       auto const stdout_file{ std::filesystem::path{ path_tmp } / "stdout" };
+      std::string const stdout_file_str{ stdout_file.string() };
       auto const proc_code{ llvm::sys::ExecuteAndWait(
-        exe_output.c_str(),
-        { exe_output.c_str() },
+        exe_output.string(),
+        { exe_output.string() },
         std::nullopt,
-        { std::nullopt, stdout_file.c_str(), std::nullopt },
+        { std::nullopt, stdout_file_str.c_str(), std::nullopt },
         5) };
       if(proc_code != 0)
       {

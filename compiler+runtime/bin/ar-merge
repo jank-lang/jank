@@ -22,7 +22,7 @@ case "${command}" in
 
   # We use this prior to building the jank executable, but after building all libraries.
   merge)
-    object_files="$(cat "${cache_dir}"/*)"
+    object_files="$(find ${cache_dir} -type f -exec cat {} +)"
     merge_output="${cmake_binary_dir}/libjank-standalone-phase-1.a"
     rm -f "${merge_output}"
     # shellcheck disable=SC2086
@@ -32,7 +32,7 @@ case "${command}" in
   # This follows merge, but also bundles in the Clojure core library object files, following
   # jank's phase 2 building.
   merge-phase-2)
-    object_files="$(cat "${cache_dir}"/*) @jank_clojure_core_binary_output@ @jank_nrepl_server_outputs_str@"
+    object_files="$(find ${cache_dir} -type f -exec cat {} +) @jank_clojure_core_binary_output@ @jank_nrepl_server_outputs_str@"
     merge_output="${cmake_binary_dir}/libjank-standalone.a"
     rm -f "${merge_output}"
     # shellcheck disable=SC2086
@@ -46,6 +46,7 @@ case "${command}" in
     shift
     base="${output//\//_}"
     rm -f "${cache_dir}/${base}.list"
+    mkdir -p "$(dirname ${cache_dir}/${base}.list)"
     echo "$@" > "${cache_dir}/${base}.list"
     "${ar}" "${command}" "${output}" "$@"
     ;;

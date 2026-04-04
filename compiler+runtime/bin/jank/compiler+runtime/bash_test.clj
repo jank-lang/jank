@@ -14,7 +14,7 @@
     (util/log-info "Not enabled")
     (let [bash-test-dir (str compiler+runtime-dir "/test/bash")
           test-files (b.f/glob bash-test-dir "**/{pass,fail,skip}-test")
-          extra-env (merge {"PATH" (str compiler+runtime-dir "/build" ":" (util/get-env "PATH"))}
+          extra-env (merge {"PATH" (str compiler+runtime-dir "/build" b.f/path-separator (util/get-env "PATH"))}
                            (let [skip (System/getenv "JANK_SKIP_AOT_CHECK")]
                              (when-not (empty? skip)
                                {"JANK_SKIP_AOT_CHECK" skip})))
@@ -34,7 +34,7 @@
                                          :err :out
                                          :dir dirname
                                          :extra-env extra-env}
-                                        test-file)]
+                                        (util/command-make-portable (str test-file)))]
                   (when (or (and (zero? (:exit res)) expect-failure?)
                             (and (not (zero? (:exit res))) (not expect-failure?)))
                     (vreset! unexpected-result res))))

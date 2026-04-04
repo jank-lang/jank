@@ -51,7 +51,7 @@ namespace jank::nrepl::server
     tcp::socket socket_;
     bool connected_{ false };
 
-    static constexpr std::size_t rx_capacity{ 1024ul * 1024ul }; // 1MiB
+    static constexpr std::size_t rx_capacity{ static_cast<std::size_t>(1024 * 1024) }; // 1MiB
     char rx_buf_[rx_capacity]{};
   };
 

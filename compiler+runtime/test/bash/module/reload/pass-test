@@ -10,16 +10,40 @@
 
 (def this-nsym (ns-name *ns*))
 
-(defn send-command [writer command]
-  (doto writer
-    (.write command)
-    (.flush)))
+(defn sentinel->str
+  "Converts a keyword SENTINEL into a string marker used in REPL output."
+  [sentinel]
+  (str "<<<" (name sentinel) ">>>"))
 
-(defn read-available [reader]
-  (let [sb (StringBuilder.)]
-    (while (.ready reader)
-      (.append sb (char (.read reader))))
-    (str sb)))
+(defn send-command
+  "Writes a COMMAND to the WRITER. If SENTINEL-KW is provided, appends a
+  sentinel print for tracking output."
+  ([writer command] (send-command writer command nil))
+  ([writer command sentinel-kw]
+   (let [s (when sentinel-kw (sentinel->str sentinel-kw))]
+     (doto writer
+       (.write (str command (when s (str "\n(println \"" s "\")")) "\n"))
+       (.flush))
+     s)))
+
+(defn read-available
+  "Reads REPL output from READER until the SENTINEL-KW appears or 3000ms timeout.
+  Returns output or a not-found message."
+  [reader sentinel-kw]
+  (let [timeout-ms 3000
+        sentinel (sentinel->str sentinel-kw)
+        sb (StringBuilder.)
+        end (+ (System/currentTimeMillis) timeout-ms)]
+    (loop []
+      (while (.ready reader)
+        (.append sb (char (.read reader))))
+      (if (re-find (re-pattern sentinel) (str sb))
+        (str sb)
+        (if (< (System/currentTimeMillis) end)
+          (do
+            (Thread/sleep 10)
+            (recur))
+          (str "Marker not found: " sentinel-kw))))))
 
 (defmacro with-backup [path & body]
   `(fs/with-temp-dir [dir#]
@@ -41,19 +65,19 @@
                   repl-reader (io/reader (:out proc))]
         (doto repl-writer
           (send-command "(require '[jank-test.reload.dependent :as d])\n")
-          (send-command "(d/first-fn)\n"))
+          (send-command "(d/first-fn)\n" :111))
 
         ;; Wait for repl to start
         (Thread/sleep 2000)
         (is (string/includes?
-             (read-available repl-reader)
+             (read-available repl-reader :111)
              "Hello"))
 
-        (send-command repl-writer "(d/hi)\n")
+        (send-command repl-writer "(d/hi)\n" :222)
 
         (Thread/sleep 500)
         (is (string/includes?
-             (read-available repl-reader)
+             (read-available repl-reader :222)
              "Unable to resolve symbol 'jank-test.reload.dependent/hi'"))
 
         (testing "new var should be added to the module"
@@ -64,22 +88,22 @@
 
           (doto repl-writer
             (send-command "(require '[jank-test.reload.dependent :as d] :reload)\n")
-            (send-command "(d/hi)\n"))
+            (send-command "(d/hi)\n" :333))
 
           (Thread/sleep 500)
           (is (string/includes?
-               (read-available repl-reader)
+               (read-available repl-reader :333)
                "Hi!")))
 
         (testing "var removed from the source should still available"
           (spit dependent-module-path original-dependent-content)
           (doto repl-writer
             (send-command "(require '[jank-test.reload.dependent :as d] :reload)\n")
-            (send-command "(d/hi)\n"))
+            (send-command "(d/hi)\n" :444))
 
           (Thread/sleep 500)
           (is (string/includes?
-               (read-available repl-reader)
+               (read-available repl-reader :444)
                "Hi!")))
         (testing "dependency module should not reload"
           (doto dependency-module-path
@@ -88,12 +112,12 @@
           (doto repl-writer
             (send-command "(require '[jank-test.reload.dependency :as dep])\n")
             (send-command "(require '[jank-test.reload.dependent :as d] :reload)\n")
-            (send-command "(dep/hi)\n"))
+            (send-command "(dep/hi)\n" :555))
 
           (Thread/sleep 500)
 
           (is (string/includes?
-               (read-available repl-reader)
+               (read-available repl-reader :555)
                "Unable to resolve symbol 'jank-test.reload.dependency/hi'"))))
       (ps/destroy proc))))
 
@@ -106,19 +130,19 @@
                   repl-reader (io/reader (:out proc))]
         (doto repl-writer
           (send-command "(require '[jank-test.reload-all.dependent :as d])\n")
-          (send-command "(d/first-fn)\n"))
+          (send-command "(d/first-fn)\n" :111))
 
         ;; Wait for repl to start
         (Thread/sleep 2000)
         (is (string/includes?
-             (read-available repl-reader)
+             (read-available repl-reader :111)
              "Hello"))
 
-        (send-command repl-writer "(d/hi)\n")
+        (send-command repl-writer "(d/hi)\n" :222)
 
         (Thread/sleep 500)
         (is (string/includes?
-             (read-available repl-reader)
+             (read-available repl-reader :222)
              "Unable to resolve symbol 'jank-test.reload-all.dependent/hi'"))
 
         (testing "module is reloaded"
@@ -129,11 +153,11 @@
 
           (doto repl-writer
             (send-command "(require '[jank-test.reload-all.dependent :as d] :reload-all)\n")
-            (send-command "(d/hi)\n"))
+            (send-command "(d/hi)\n" :333))
 
           (Thread/sleep 500)
           (is (string/includes?
-               (read-available repl-reader)
+               (read-available repl-reader :333)
                "Hi!")))
 
         (testing "module's dependency is also reloaded"
@@ -143,20 +167,20 @@
 
           (doto repl-writer
             (send-command "(require '[jank-test.reload-all.dependency :as dep])\n")
-            (send-command "(dep/hi)\n"))
+            (send-command "(dep/hi)\n" :444))
 
           (Thread/sleep 500)
           (is (string/includes?
-               (read-available repl-reader)
+               (read-available repl-reader :444)
                "Unable to resolve symbol 'jank-test.reload-all.dependency/hi'"))
 
           (doto repl-writer
             (send-command "(require '[jank-test.reload-all.dependent :as d] :reload-all)\n")
-            (send-command "(dep/hi)\n"))
+            (send-command "(dep/hi)\n" :555))
 
           (Thread/sleep 500)
           (is (string/includes?
-               (read-available repl-reader)
+               (read-available repl-reader :555)
                "Hi in dependency!"))))
       (ps/destroy proc))))
 
