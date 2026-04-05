@@ -122,6 +122,15 @@ namespace jank::runtime
       auto const current_ns(expect_object<ns>(current_ns_var->deref()));
       qualified_sym = make_box<obj::symbol>(current_ns->name->name, sym->name);
     }
+    else
+    {
+      auto const resolved_ns(__rt_ctx->resolve_ns(make_box<obj::symbol>(qualified_sym->ns)));
+
+      if(resolved_ns.is_some())
+      {
+        qualified_sym = make_box<obj::symbol>(resolved_ns->name->name, sym->name);
+      }
+    }
     return qualified_sym;
   }
 
@@ -939,7 +948,8 @@ namespace jank::runtime
             return typed_o;
           }
 
-          auto const var(find_var(first_sym_obj));
+          auto const resolved_sym(qualify_symbol(first_sym_obj));
+          auto const var(find_var(resolved_sym));
           if(var.is_nil())
           {
             return typed_o;
