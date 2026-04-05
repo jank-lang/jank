@@ -78,7 +78,7 @@
         (Thread/sleep 500)
         (is (string/includes?
              (read-available repl-reader :222)
-             "Unable to resolve symbol 'jank-test.reload.dependent/hi'"))
+             "Unable to resolve symbol 'd/hi'"))
 
         (testing "new var should be added to the module"
           ;; Add a new var
@@ -118,7 +118,7 @@
 
           (is (string/includes?
                (read-available repl-reader :555)
-               "Unable to resolve symbol 'jank-test.reload.dependency/hi'"))))
+               "Unable to resolve symbol 'dep/hi'"))))
       (ps/destroy proc))))
 
 (deftest reload-all
@@ -143,7 +143,7 @@
         (Thread/sleep 500)
         (is (string/includes?
              (read-available repl-reader :222)
-             "Unable to resolve symbol 'jank-test.reload-all.dependent/hi'"))
+             "Unable to resolve symbol 'd/hi'"))
 
         (testing "module is reloaded"
           ;; Add a new var
@@ -172,7 +172,7 @@
           (Thread/sleep 500)
           (is (string/includes?
                (read-available repl-reader :444)
-               "Unable to resolve symbol 'jank-test.reload-all.dependency/hi'"))
+               "Unable to resolve symbol 'dep/hi'"))
 
           (doto repl-writer
             (send-command "(require '[jank-test.reload-all.dependent :as d] :reload-all)\n")
