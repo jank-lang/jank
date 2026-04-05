@@ -948,7 +948,8 @@ namespace jank::runtime
             return typed_o;
           }
 
-          auto const var(find_var(first_sym_obj));
+          auto const resolved_sym(qualify_symbol(first_sym_obj));
+          auto const var(find_var(resolved_sym));
           if(var.is_nil())
           {
             return typed_o;
