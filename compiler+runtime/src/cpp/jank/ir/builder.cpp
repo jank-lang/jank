@@ -349,19 +349,33 @@ namespace jank::ir
     return name;
   }
 
-  identifier builder::try_(native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches)
+  identifier builder::try_(native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches,
+                           jtl::option<identifier> const &merge_block,
+                           jtl::option<identifier> const &shadow,
+                           jtl::option<identifier> const &finally_block)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::try_>(name, jtl::move(catches)));
+      jtl::make_ref<inst::try_>(name, jtl::move(catches), merge_block, shadow, finally_block));
     return name;
   }
 
-  identifier builder::catch_(jtl::ptr<void> const type)
+  identifier builder::catch_(jtl::ptr<void> const type,
+                             jtl::option<identifier> const &merge_block,
+                             jtl::option<identifier> const &shadow,
+                             jtl::option<identifier> const &finally_block)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::catch_>(name, type));
+      jtl::make_ref<inst::catch_>(name, type, merge_block, shadow, finally_block));
+    return name;
+  }
+
+  identifier builder::finally(identifier const &merge_block)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::finally>(name, merge_block));
     return name;
   }
 

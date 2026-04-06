@@ -104,8 +104,15 @@ namespace jank::ir
     identifier case_(identifier const &value,
                      native_unordered_map<i64, identifier> &&cases,
                      identifier const &default_block);
-    identifier try_(native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches);
-    identifier catch_(jtl::ptr<void> const type);
+    identifier try_(native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches,
+                    jtl::option<identifier> const &merge_block,
+                    jtl::option<identifier> const &shadow,
+                    jtl::option<identifier> const &finally_block);
+    identifier catch_(jtl::ptr<void> const type,
+                      jtl::option<identifier> const &merge_block,
+                      jtl::option<identifier> const &shadow,
+                      jtl::option<identifier> const &finally_block);
+    identifier finally(identifier const &merge_block);
     identifier throw_(identifier const &value);
     identifier ret(identifier const &value, jtl::ptr<void> const type);
 

@@ -318,8 +318,8 @@ namespace jank::ir
       condition,
       then_block,
       else_block,
-      merge_block.unwrap_or("<none>"),
-      (shadow.is_some() ? shadow.unwrap().name : "<none>"),
+      merge_block.unwrap_or("nil"),
+      (shadow.is_some() ? shadow.unwrap().name : "nil"),
       get_qualified_type_name(type));
   }
 
@@ -358,12 +358,31 @@ namespace jank::ir
                       get_qualified_type_name(catch_.first),
                       catch_.second);
     }
-    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+    util::format_to(sb,
+                    "] :merge {} :shadow {} :finally {} :type \"{}\"}",
+                    merge_block.unwrap_or("nil"),
+                    shadow.unwrap_or("nil"),
+                    finally_block.unwrap_or("nil"),
+                    get_qualified_type_name(type));
   }
 
   void inst::catch_::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb, "{:name {} :op :catch :type \"{}\"}", name, get_qualified_type_name(type));
+    util::format_to(sb,
+                    "{:name {} :op :catch :merge {} :shadow {} :type \"{}\"}",
+                    name,
+                    merge_block.unwrap_or("nil"),
+                    shadow.unwrap_or("nil"),
+                    get_qualified_type_name(type));
+  }
+
+  void inst::finally::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :finally :merge {} :type \"{}\"}",
+                    name,
+                    merge_block,
+                    get_qualified_type_name(type));
   }
 
   void inst::throw_::print(jtl::string_builder &sb, usize const) const

@@ -245,14 +245,34 @@ namespace jank::ir::inst
     return true;
   }
 
-  try_::try_(identifier const &name, native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches)
+  try_::try_(identifier const &name,
+             native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches,
+             jtl::option<identifier> const &merge_block,
+             jtl::option<identifier> const &shadow,
+             jtl::option<identifier> const &finally_block)
     : instruction{ instruction_kind::try_, name, Cpp::GetVoidType() }
     , catches{ jtl::move(catches) }
+    , merge_block{ merge_block }
+    , shadow{ shadow }
+    , finally_block{ finally_block }
   {
   }
 
-  catch_::catch_(identifier const &name, jtl::ptr<void> const type)
+  catch_::catch_(identifier const &name,
+                 jtl::ptr<void> const type,
+                 jtl::option<identifier> const &merge_block,
+                 jtl::option<identifier> const &shadow,
+                 jtl::option<identifier> const &finally_block)
     : instruction{ instruction_kind::catch_, name, type }
+    , merge_block{ merge_block }
+    , shadow{ shadow }
+    , finally_block{ finally_block }
+  {
+  }
+
+  finally::finally(identifier const &name, identifier const &merge_block)
+    : instruction{ instruction_kind::finally, name, Cpp::GetVoidType() }
+    , merge_block{ merge_block }
   {
   }
 

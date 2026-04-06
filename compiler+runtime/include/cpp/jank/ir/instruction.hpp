@@ -58,6 +58,7 @@ namespace jank::ir
     case_,
     try_,
     catch_,
+    finally,
     throw_,
     ret,
     cpp_raw,
@@ -417,23 +418,49 @@ namespace jank::ir
 
     struct try_ : instruction
     {
-      try_(identifier const &name, native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches);
+      try_(identifier const &name,
+           native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches,
+           jtl::option<identifier> const &merge_block,
+           jtl::option<identifier> const &shadow,
+           jtl::option<identifier> const &finally_block);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<std::pair<jtl::ptr<void>, identifier>> catches;
+      jtl::option<identifier> merge_block;
+      jtl::option<identifier> shadow;
+      jtl::option<identifier> finally_block;
     };
 
     using try_ref = jtl::ref<try_>;
 
     struct catch_ : instruction
     {
-      catch_(identifier const &name, jtl::ptr<void> const type);
+      catch_(identifier const &name,
+             jtl::ptr<void> const type,
+             jtl::option<identifier> const &merge_block,
+             jtl::option<identifier> const &shadow,
+             jtl::option<identifier> const &finally_block);
 
       void print(jtl::string_builder &sb, usize indent) const override;
+
+      jtl::option<identifier> merge_block;
+      jtl::option<identifier> shadow;
+      jtl::option<identifier> finally_block;
     };
 
     using catch_ref = jtl::ref<catch_>;
+
+    struct finally : instruction
+    {
+      finally(identifier const &name, identifier const &merge_block);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier merge_block;
+    };
+
+    using finally_ref = jtl::ref<finally>;
 
     struct throw_ : instruction
     {

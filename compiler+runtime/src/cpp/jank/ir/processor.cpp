@@ -534,6 +534,26 @@ namespace jank::ir
 
     auto const merge_blk{ b.block(b.next_ident("merge")) };
     auto const shadow{ b.next_shadow() };
+    auto const original_pos{ expr->position };
+
+    auto jump_blk{ merge_blk };
+    jtl::option<identifier> finally_blk;
+    if(expr->finally_body.is_some())
+    {
+      auto const blk{ b.block(b.next_ident("finally")) };
+      jump_blk = blk;
+      finally_blk = b.block_name(blk);
+      b.enter_block(blk);
+      b.finally(b.block_name(merge_blk));
+
+      gen(expr->finally_body.unwrap(), b);
+      b.jump(merge_blk);
+
+      expr->propagate_position(analyze::expression_position::value);
+    }
+
+    auto const needs_merge_blk{ original_pos != analyze::expression_position::tail
+                                || finally_blk.is_some() };
 
     native_vector<std::pair<jtl::ptr<void>, identifier>> catch_blocks;
     catch_blocks.reserve(expr->catch_bodies.size());
@@ -543,7 +563,11 @@ namespace jank::ir
       b.enter_block(catch_blk);
       auto old_locals{ b.locals };
       util::scope_exit const finally{ [&] { b.locals = jtl::move(old_locals); } };
-      b.locals[catch_.sym->get_name()] = b.catch_(catch_.type);
+      b.locals[catch_.sym->get_name()]
+        = b.catch_(catch_.type,
+                   needs_merge_blk ? b.block_name(merge_blk) : jtl::option<identifier>{},
+                   needs_merge_blk ? shadow : jtl::option<identifier>{},
+                   finally_blk);
 
       auto const catch_res{ gen(catch_.body, b) };
       catch_blocks.emplace_back(catch_.type, b.block_name(catch_blk));
@@ -551,25 +575,34 @@ namespace jank::ir
       if(expr->position != analyze::expression_position::tail)
       {
         b.branch_set(shadow, catch_res.unwrap());
-        b.jump(merge_blk);
+        b.jump(jump_blk);
       }
     }
 
     b.enter_block(try_blk);
-    b.try_(jtl::move(catch_blocks));
+    b.try_(jtl::move(catch_blocks),
+           needs_merge_blk ? b.block_name(merge_blk) : jtl::option<identifier>{},
+           needs_merge_blk ? shadow : jtl::option<identifier>{},
+           finally_blk);
 
+    //expr->propagate_position(original_pos);
     auto try_res{ gen(expr->body, b) };
 
-    if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
+    if(needs_merge_blk && !b.current_block()->has_terminator())
     {
       b.branch_set(shadow, try_res.unwrap());
-      b.jump(merge_blk);
+      b.jump(jump_blk);
     }
 
-    if(expr->position != analyze::expression_position::tail)
+    if(needs_merge_blk)
     {
       b.enter_block(merge_blk);
-      return b.branch_get(shadow, untyped_object_ref_type());
+      auto phi{ b.branch_get(shadow, untyped_object_ref_type()) };
+      if(original_pos == analyze::expression_position::tail)
+      {
+        return b.ret(phi, untyped_object_ref_type());
+      }
+      return phi;
     }
 
     b.remove_block(merge_blk);

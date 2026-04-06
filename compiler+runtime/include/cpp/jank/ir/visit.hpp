@@ -59,6 +59,8 @@ namespace jank::ir
         return f(jtl::static_ref_cast<inst::try_>(i), std::forward<Args>(args)...);
       case instruction_kind::catch_:
         return f(jtl::static_ref_cast<inst::catch_>(i), std::forward<Args>(args)...);
+      case instruction_kind::finally:
+        return f(jtl::static_ref_cast<inst::finally>(i), std::forward<Args>(args)...);
       case instruction_kind::throw_:
         return f(jtl::static_ref_cast<inst::throw_>(i), std::forward<Args>(args)...);
       case instruction_kind::ret:

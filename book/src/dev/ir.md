@@ -22,3 +22,12 @@
 6. Function inlining (small)
 7. Constant propagation (again)
 8. DCE (again)
+9. Global value numbering (GVN)
+  * https://bernsteinbear.com/blog/value-numbering/
+
+## References
+* riogu
+  * https://github.com/riogu/henceforth/blob/main/src/hfs/optimizer.rs
+  * https://github.com/riogu/henceforth/blob/main/src/hfs/ir_arena.rs
+  * https://github.com/riogu/henceforth/blob/main/src/hfs/hfs_mir.rs
+  * https://github.com/riogu/henceforth/blob/main/src/hfs/ir_analysis.rs
