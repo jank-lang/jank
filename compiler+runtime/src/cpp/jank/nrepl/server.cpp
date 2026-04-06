@@ -144,8 +144,6 @@ namespace jank::nrepl::server
     client_impl->socket_ = std::move(socket);
     client_impl->connected_ = true;
 
-    // TODO: This leaks memory but jank complains about not being able to delete
-    // an opaque type if we return unique_ptr<native_client>.
     return new native_client(std::move(client_impl));
   }
 }

@@ -1,0 +1,51 @@
+(ns core-test
+  (:include "session_fixture.hpp")
+  (:require [clojure.test :refer [deftest is run-tests successful? testing]]
+            [jank.nrepl.server.bencode :as ben]
+            [jank.nrepl.server.core :as core]))
+
+
+(def this-nsym (ns-name *ns*))
+
+(def ^:dynamic *session* nil)
+
+(deftest session-test
+  (let [session* (cpp/session_fixture.make)
+        server*        (.-server session*)
+        test-client*   (.-test_client session*)
+        server-client* (.-server_client session*)]
+
+    (testing "connection initialization"
+      (is (cpp/!= cpp/nullptr server*))
+      (is (cpp/!= cpp/nullptr test-client*))
+      (is (cpp/!= cpp/nullptr server-client*)))
+
+    (testing "connected state"
+      (is (.is_connected (cpp/* test-client*)))
+      (is (.is_connected (cpp/* server-client*))))
+    
+    (testing "data roundtrip"
+      (let [msg "hello"]
+        (.write_some (cpp/* test-client*) msg)
+        (let [received (.read_some (cpp/* server-client*))]
+          (is (= msg received)))))
+
+    (testing "server to client write"
+      (let [msg "world"]
+        (.write_some (cpp/* server-client*) msg)
+        (let [received (.read_some (cpp/* test-client*))]
+          (is (= msg received)))))
+
+    (testing "connection close"
+      (.close (cpp/* test-client*))
+      (is (not (.is_connected (cpp/* test-client*))))
+      (.close (cpp/* server-client*))
+      (is (not (.is_connected (cpp/* server-client*))))))
+  
+  )
+
+(defn -main []
+  (cpp/exit
+   (if (successful? (run-tests this-nsym))
+     0
+     1)))
