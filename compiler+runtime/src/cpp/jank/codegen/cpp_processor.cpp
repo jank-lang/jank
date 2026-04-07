@@ -405,6 +405,22 @@ namespace jank::codegen
 
   jtl::option<identifier> gen(ir::instruction_ref const &, builder &);
 
+  void gen_until_jump(builder &b, identifier const &jump_block)
+  {
+    while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
+    {
+      auto const current_inst{
+        b.function->blocks[b.block_index].instructions[b.instruction_index]
+      };
+      if(current_inst->kind == ir::instruction_kind::jump
+         && static_box_cast<ir::inst::jump>(current_inst)->block == jump_block)
+      {
+        break;
+      }
+      gen(current_inst, b);
+    }
+  }
+
   jtl::option<identifier> gen(ir::inst::def_ref const &inst, builder &b)
   {
     b.next_instruction();
@@ -765,35 +781,11 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer, "if({}){ ", inst->condition);
     b.enter_block(inst->then_block);
-    while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-    {
-      auto const current_inst{
-        b.function->blocks[b.block_index].instructions[b.instruction_index]
-      };
-      if(current_inst->kind == ir::instruction_kind::jump
-         && static_box_cast<ir::inst::jump>(current_inst)->block == inst->merge_block.unwrap())
-      {
-        break;
-      }
-      gen(current_inst, b);
-      //b.next_instruction();
-    }
+    gen_until_jump(b, inst->merge_block.unwrap());
 
     util::format_to(b.body_buffer, "} else {");
     b.enter_block(inst->else_block);
-    while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-    {
-      auto const current_inst{
-        b.function->blocks[b.block_index].instructions[b.instruction_index]
-      };
-      if(current_inst->kind == ir::instruction_kind::jump
-         && static_box_cast<ir::inst::jump>(current_inst)->block == inst->merge_block.unwrap())
-      {
-        break;
-      }
-      gen(current_inst, b);
-      //b.next_instruction();
-    }
+    gen_until_jump(b, inst->merge_block.unwrap());
     util::format_to(b.body_buffer, "}");
 
     if(inst->merge_block.is_some())
@@ -836,19 +828,7 @@ namespace jank::codegen
         auto const block_index{ b.block_index };
         b.enter_block(inst->finally_block.unwrap());
 
-        while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-        {
-          auto const current_inst{
-            b.function->blocks[b.block_index].instructions[b.instruction_index]
-          };
-          if(current_inst->kind == ir::instruction_kind::jump
-             && static_box_cast<ir::inst::jump>(current_inst)->block == inst->merge_block.unwrap())
-          {
-            break;
-          }
-          gen(current_inst, b);
-          //b.next_instruction();
-        }
+        gen_until_jump(b, inst->merge_block.unwrap());
 
         b.instruction_index = instruction_index;
         b.block_index = block_index;
@@ -857,37 +837,13 @@ namespace jank::codegen
       auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                             : inst->merge_block };
 
-      while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-      {
-        auto const current_inst{
-          b.function->blocks[b.block_index].instructions[b.instruction_index]
-        };
-        if(current_inst->kind == ir::instruction_kind::jump
-           && static_box_cast<ir::inst::jump>(current_inst)->block == jump_block.unwrap())
-        {
-          break;
-        }
-        gen(current_inst, b);
-        //b.next_instruction();
-      }
+      gen_until_jump(b, jump_block.unwrap());
 
       util::format_to(b.body_buffer, "}");
       for(auto const &catch_details : inst->catches)
       {
         b.enter_block(catch_details.second);
-        while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-        {
-          auto const current_inst{
-            b.function->blocks[b.block_index].instructions[b.instruction_index]
-          };
-          if(current_inst->kind == ir::instruction_kind::jump
-             && static_box_cast<ir::inst::jump>(current_inst)->block == jump_block.unwrap())
-          {
-            break;
-          }
-          gen(current_inst, b);
-          //b.next_instruction();
-        }
+        gen_until_jump(b, jump_block.unwrap());
       }
 
       if(inst->merge_block.is_some())
@@ -904,19 +860,7 @@ namespace jank::codegen
         b.enter_block(inst->finally_block.unwrap());
 
         util::format_to(b.body_buffer, "{");
-        while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-        {
-          auto const current_inst{
-            b.function->blocks[b.block_index].instructions[b.instruction_index]
-          };
-          if(current_inst->kind == ir::instruction_kind::jump
-             && static_box_cast<ir::inst::jump>(current_inst)->block == inst->merge_block.unwrap())
-          {
-            break;
-          }
-          gen(current_inst, b);
-          //b.next_instruction();
-        }
+        gen_until_jump(b, inst->merge_block.unwrap());
         util::format_to(b.body_buffer, "}");
 
         b.instruction_index = instruction_index;
@@ -926,19 +870,7 @@ namespace jank::codegen
       auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                             : inst->merge_block };
 
-      while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-      {
-        auto const current_inst{
-          b.function->blocks[b.block_index].instructions[b.instruction_index]
-        };
-        if(current_inst->kind == ir::instruction_kind::jump
-           && static_box_cast<ir::inst::jump>(current_inst)->block == jump_block.unwrap())
-        {
-          break;
-        }
-        gen(current_inst, b);
-        //b.next_instruction();
-      }
+      gen_until_jump(b, jump_block.unwrap());
 
       if(inst->finally_block.is_some())
       {
@@ -959,19 +891,7 @@ namespace jank::codegen
 
     auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                           : inst->merge_block };
-    while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-    {
-      auto const current_inst{
-        b.function->blocks[b.block_index].instructions[b.instruction_index]
-      };
-      if(current_inst->kind == ir::instruction_kind::jump
-         && static_box_cast<ir::inst::jump>(current_inst)->block == jump_block.unwrap())
-      {
-        break;
-      }
-      gen(current_inst, b);
-      //b.next_instruction();
-    }
+    gen_until_jump(b, jump_block.unwrap());
     util::format_to(b.body_buffer, "}");
     return none;
   }
@@ -982,19 +902,7 @@ namespace jank::codegen
 
     auto const fn_name{ inst->name + "_fn" };
     util::format_to(b.body_buffer, "auto const {}{ [&](){ ", fn_name);
-    while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-    {
-      auto const current_inst{
-        b.function->blocks[b.block_index].instructions[b.instruction_index]
-      };
-      if(current_inst->kind == ir::instruction_kind::jump
-         && static_box_cast<ir::inst::jump>(current_inst)->block == inst->merge_block)
-      {
-        break;
-      }
-      gen(current_inst, b);
-      //b.next_instruction();
-    }
+    gen_until_jump(b, inst->merge_block);
     util::format_to(b.body_buffer, "} };");
     util::format_to(b.body_buffer, "jank::util::scope_exit {}{ {}, true };", inst->name, fn_name);
     return none;
