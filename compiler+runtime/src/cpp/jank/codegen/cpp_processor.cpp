@@ -1689,6 +1689,7 @@ namespace jank::codegen
   {
     builder b{ &mod, mod.entry_points[0] };
 
+    auto const arity_flags{ find_function(&mod, mod.entry_points[0])->arity->fn_ctx->fn->arities };
     for(auto const &fn_name : mod.entry_points)
     {
       auto const fn{ find_function(&mod, fn_name) };

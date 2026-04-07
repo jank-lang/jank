@@ -775,14 +775,18 @@ namespace jank::ir
       entry_points.emplace_back(
         runtime::munge(util::format("{}_{}", fn_expr->unique_name, arity.params.size())));
     }
-    module mod{ module_name, jtl::move(entry_points) };
+    module mod{ module_name, arity_flags(fn_expr->arities), fn_expr, jtl::move(entry_points) };
 
     for(auto const &arity : fn_expr->arities)
     {
       gen_arity(mod, fn_expr, arity);
     }
 
-    util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
+    jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
+    if(print_settings == "1")
+    {
+      util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
+    }
     //util::println("{}", print(mod));
 
     return mod;

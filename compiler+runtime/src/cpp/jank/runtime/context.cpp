@@ -28,7 +28,9 @@
 #include <jank/util/environment.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
+#include <jank/ir/processor.hpp>
 #include <jank/codegen/llvm_processor.hpp>
+#include <jank/codegen/cpp_processor.hpp>
 #include <jank/codegen/processor.hpp>
 #include <jank/codegen/optimize.hpp>
 #include <jank/aot/processor.hpp>
@@ -232,41 +234,30 @@ namespace jank::runtime
         an_prc.analyze(form, analyze::expression_position::statement).expect_ok()));
       auto const fn{ static_box_cast<analyze::expr::function>(expr) };
       fn->unique_name = name;
+      auto const mod{ ir::create(fn, module, codegen::compilation_target::eval) };
 
-      if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
+      auto const generated{ codegen::gen_cpp(mod) };
+      //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
+      auto const &code{ generated.declaration };
+      auto const module_name{ runtime::to_string(current_module_var->deref()) };
+      //aot::processor const aot_prc;
+      //auto const res{ aot_prc.compile_object(module_name, code) };
+      //if(res.is_err())
+      //{
+      //  throw res.expect_err();
+      //}
+      auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
+      if(!parse_res)
       {
-        codegen::llvm_processor const cg_prc{ fn, module, codegen::compilation_target::module };
-        cg_prc.gen().expect_ok();
-        cg_prc.optimize();
-        write_module(cg_prc.get_module_name(), "", cg_prc.get_module().getModuleUnlocked())
-          .expect_ok();
+        /* TODO: Helper to turn an llvm::Error into a string. */
+        jtl::immutable_string const res{ "Unable to compile generated C++ source." };
+        llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
+        throw error::internal_codegen_failure(res);
       }
-      else
-      {
-        profile::timer const timer{ "rt compile-module parse + write" };
-        codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
-        //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
-        auto const code{ cg_prc.declaration_str() };
-        auto const module_name{ runtime::to_string(current_module_var->deref()) };
-        //aot::processor const aot_prc;
-        //auto const res{ aot_prc.compile_object(module_name, code) };
-        //if(res.is_err())
-        //{
-        //  throw res.expect_err();
-        //}
-        auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
-        if(!parse_res)
-        {
-          /* TODO: Helper to turn an llvm::Error into a string. */
-          jtl::immutable_string const res{ "Unable to compile generated C++ source." };
-          llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
-          throw error::internal_codegen_failure(res);
-        }
-        auto &partial_tu{ parse_res.get() };
-        codegen::optimize(partial_tu.TheModule.get(), module_name);
-        //auto module_name{ runtime::to_string(current_module_var->deref()) };
-        write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
-      }
+      auto &partial_tu{ parse_res.get() };
+      codegen::optimize(partial_tu.TheModule.get(), module_name);
+      //auto module_name{ runtime::to_string(current_module_var->deref()) };
+      write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
     }
 
     return ret;

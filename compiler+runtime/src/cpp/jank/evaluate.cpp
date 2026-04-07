@@ -554,66 +554,32 @@ namespace jank::evaluate
   object_ref eval(expr::function_ref const expr, jtl::immutable_string const &)
   {
     profile::timer const timer{ util::format("eval jit function {}", expr->name) };
-    auto const &module(
-      obj::symbol{ expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
-                   munge(expr->unique_name) }
-        .to_string());
-
+    auto const module{ munge(expr->unique_name) };
     auto const mod{ ir::create(expr, module, codegen::compilation_target::eval) };
-    codegen::gen_cpp(mod);
 
-    if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
+    if(current_def_var.is_some()
+       && util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
     {
-      /* TODO: Remove extra wrapper, if possible. Just create function object directly? */
-      auto const wrapped_expr(wrap_expression(expr, "repl_fn", {}));
+      auto const generated{ codegen::gen_cpp(mod) };
+      native_vector<u8> arities;
+      arities.reserve(mod.root_fn_expr->arities.size());
+      for(auto const &arity : mod.root_fn_expr->arities)
+      {
+        arities.emplace_back(arity.params.size());
+      }
 
-      codegen::llvm_processor const cg_prc{ wrapped_expr,
-                                            module,
-                                            codegen::compilation_target::eval };
-      cg_prc.gen().expect_ok();
-      cg_prc.optimize();
-
-      __rt_ctx->jit_prc.load_ir_module(jtl::move(cg_prc.get_module()));
-
-      auto const fn(
-        __rt_ctx->jit_prc.find_symbol(util::format("{}_0", munge(cg_prc.get_root_fn_name())))
-          .expect_ok());
-      return reinterpret_cast<object *(*)()>(fn)();
+      auto const ret{ make_box<obj::deferred_cpp_function>(expr->meta,
+                                                           current_def_var,
+                                                           generated.declaration,
+                                                           mod.arity_flags,
+                                                           mod.name,
+                                                           arities) };
+      current_def_var = jank_nil();
+      return ret;
     }
     else
     {
-      codegen::processor cg_prc{ expr, module, codegen::compilation_target::eval };
-
-      /* TODO: Rename to something generic which makes sense for IR and C++ gen? */
-      jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
-      if(print_settings == "1")
-      {
-        util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
-      }
-
-      if(current_def_var.is_some()
-         && util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
-      {
-        native_vector<u8> arities;
-        arities.reserve(cg_prc.root_fn->arities.size());
-        for(auto const &arity : cg_prc.root_fn->arities)
-        {
-          arities.emplace_back(arity.params.size());
-        }
-
-        auto const ret{ make_box<obj::deferred_cpp_function>(expr->meta,
-                                                             current_def_var,
-                                                             cg_prc.declaration_str(),
-                                                             cg_prc.arity_flags(),
-                                                             cg_prc.struct_name,
-                                                             arities) };
-        current_def_var = jank_nil();
-        return ret;
-      }
-      else
-      {
-        return __rt_ctx->jit_prc.eval(cg_prc);
-      }
+      return __rt_ctx->jit_prc.eval(mod);
     }
   }
 

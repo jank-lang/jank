@@ -26,7 +26,9 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
+#include <jank/ir/processor.hpp>
 #include <jank/codegen/processor.hpp>
+#include <jank/codegen/cpp_processor.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/system.hpp>
 #include <jank/error/runtime.hpp>
@@ -260,6 +262,20 @@ namespace jank::jit
     }
 
     return create_function(cg_prc.arity_flags(), cg_prc.struct_name, arities);
+  }
+
+  runtime::obj::jit_function_ref processor::eval(ir::module const &module) const
+  {
+    auto const generated{ codegen::gen_cpp(module) };
+    eval_string(generated.declaration);
+    native_vector<u8> arities;
+    arities.reserve(module.root_fn_expr->arities.size());
+    for(auto const &arity : module.root_fn_expr->arities)
+    {
+      arities.emplace_back(arity.params.size());
+    }
+
+    return create_function(module.arity_flags, module.name, arities);
   }
 
   runtime::obj::jit_function_ref

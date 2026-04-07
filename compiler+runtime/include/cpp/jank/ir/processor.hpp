@@ -47,6 +47,8 @@ namespace jank::ir
   struct module
   {
     jtl::immutable_string name{};
+    runtime::callable_arity_flags arity_flags{};
+    analyze::expr::function_ref root_fn_expr;
     native_vector<jtl::immutable_string> entry_points{};
     native_vector<function> functions{};
   };
