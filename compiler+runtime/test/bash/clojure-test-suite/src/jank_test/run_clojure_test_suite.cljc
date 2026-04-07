@@ -16,17 +16,17 @@
     ; clojure.core-test.bigdec ; Uncaught exception: not a number: "1"
     ; clojure.core-test.bigint ; Uncaught exception: not a number: "1"
     ; clojure.core-test.binding ; TODO: port future
-    ; clojure.core-test.bit-and ; Panic encountered: invalid object type: nil, raw value 0
-    ; clojure.core-test.bit-and-not ; Panic encountered: invalid object type: nil, raw value 0
-    ; clojure.core-test.bit-clear ; Panic encountered: invalid object type: nil, raw value 0
-    ; clojure.core-test.bit-flip ; Panic encountered: invalid object type: nil, raw value 0
-    ; clojure.core-test.bit-not ; Panic encountered: invalid object type: nil, raw value 0
-    ; clojure.core-test.bit-or ; Panic encountered: invalid object type: nil, raw value 0
-    ; clojure.core-test.bit-set ; Panic encountered: invalid object type: nil, raw value 0
-    ; clojure.core-test.bit-shift-left ; Panic encountered: invalid object type: nil, raw value 0
-    ; clojure.core-test.bit-shift-right ; Panic encountered: invalid object type: nil, raw value 0
-    ; clojure.core-test.bit-test ; Panic encountered: invalid object type: nil, raw value 0
-    ; clojure.core-test.bit-xor ; Panic encountered: invalid object type: nil, raw value 0
+    clojure.core-test.bit-and
+    clojure.core-test.bit-and-not
+    clojure.core-test.bit-clear
+    clojure.core-test.bit-flip
+    clojure.core-test.bit-not
+    clojure.core-test.bit-or
+    clojure.core-test.bit-set
+    clojure.core-test.bit-shift-left
+    clojure.core-test.bit-shift-right
+    clojure.core-test.bit-test
+    clojure.core-test.bit-xor
     clojure.core-test.boolean
     clojure.core-test.boolean-qmark
     ; clojure.core-test.bound-fn ; TODO: port future

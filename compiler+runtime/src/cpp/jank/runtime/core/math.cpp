@@ -1010,161 +1010,182 @@ namespace jank::runtime
 
   i64 bit_not(object_ref const l)
   {
-    return visit_type<obj::integer>([](auto const typed_l) -> i64 { return ~typed_l->data; }, l);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+
+    if(typed_l == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return ~typed_l->data;
   }
 
   i64 bit_and(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l & typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l == jank_nil() || typed_r == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data & typed_r->data;
   }
 
   i64 bit_or(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l | typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l == jank_nil() || typed_r == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data | typed_r->data;
   }
 
   i64 bit_xor(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l ^ typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l == jank_nil() || typed_r == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data ^ typed_r->data;
   }
 
   i64 bit_and_not(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l & (~typed_r->data); },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l == jank_nil() || typed_r == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data & (~typed_r->data);
   }
 
   i64 bit_clear(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l & ~(static_cast<i64>(1) << typed_r->data);
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l == jank_nil() || typed_r == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data & ~(static_cast<i64>(1) << typed_r->data);
   }
 
   i64 bit_set(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l | (static_cast<i64>(1) << typed_r->data);
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l == jank_nil() || typed_r == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data | (static_cast<i64>(1) << typed_r->data);
   }
 
   i64 bit_flip(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l ^ (static_cast<i64>(1) << typed_r->data);
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l == jank_nil() || typed_r == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data ^ (static_cast<i64>(1) << typed_r->data);
   }
 
   bool bit_test(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> bool {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> bool {
-            return (typed_l >> typed_r->data) & static_cast<i64>(1);
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l == jank_nil() || typed_r == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return (typed_l->data >> typed_r->data) & static_cast<i64>(1);
   }
 
   i64 bit_shift_left(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l << typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l == jank_nil() || typed_r == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data << typed_r->data;
   }
 
   i64 bit_shift_right(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l >> typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l == jank_nil() || typed_r == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data >> typed_r->data;
   }
 
   i64 bit_unsigned_shift_right(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            using uni = std::make_unsigned_t<i64>;
-            return static_cast<uni>(typed_l) >> static_cast<uni>(typed_r->data);
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l == jank_nil() || typed_r == jank_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    using uni = std::make_unsigned_t<i64>;
+    return static_cast<i64>(static_cast<uni>(typed_l->data) >> static_cast<uni>(typed_r->data));
   }
 
   f64 rand()
