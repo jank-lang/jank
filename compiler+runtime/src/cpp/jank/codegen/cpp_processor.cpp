@@ -53,6 +53,11 @@ namespace jank::codegen
       ++instruction_index;
     }
 
+    void defer(jtl::immutable_string const &context, jtl::immutable_string const &binding)
+    {
+      deferred_bindings.emplace_back(context, binding);
+    }
+
     jtl::immutable_string declaration_str() const
     {
       native_transient_string declaration;
@@ -83,6 +88,7 @@ namespace jank::codegen
     jtl::string_builder expression_buffer{};
 
     usize block_index{}, instruction_index{};
+    native_vector<std::pair<jtl::immutable_string, jtl::immutable_string>> deferred_bindings;
   };
 
   using identifier = jtl::immutable_string;
@@ -669,7 +675,15 @@ namespace jank::codegen
       {
         util::format_to(b.body_buffer, ", ");
       }
-      b.body_buffer(capture.second);
+      if(capture.second == ":defer")
+      {
+        b.defer(inst->context, capture.first);
+        b.body_buffer("jank::runtime::jank_nil()");
+      }
+      else
+      {
+        b.body_buffer(capture.second);
+      }
     }
 
     util::format_to(b.deps_buffer, "};");
@@ -678,8 +692,9 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer, "auto const {}(", inst->name);
     util::format_to(b.body_buffer,
-                    "jank::runtime::make_box<jank::runtime::obj::jit_closure>({})",
-                    inst->arity_flags);
+                    "jank::runtime::make_box<jank::runtime::obj::jit_closure>({}, {}.data)",
+                    inst->arity_flags,
+                    inst->context);
     util::format_to(b.body_buffer, ");");
 
     for(auto const &arity : inst->arities)
@@ -734,10 +749,27 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::letfn_ref const &, builder &b)
+  jtl::option<identifier> gen(ir::inst::letfn_ref const &inst, builder &b)
   {
     b.next_instruction();
-    return none;
+
+    native_unordered_map<jtl::immutable_string, ir::identifier> bindings;
+    for(auto const &bind : inst->bindings)
+    {
+      bindings[bind]
+        = gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b).unwrap();
+    }
+
+    for(auto const &deferred : b.deferred_bindings)
+    {
+      util::format_to(b.body_buffer,
+                      "{}->{} = {};",
+                      deferred.first,
+                      deferred.second,
+                      bindings[deferred.second]);
+    }
+
+    return inst->name;
   }
 
   jtl::option<identifier> gen(ir::inst::jump_ref const &inst, builder &b)
