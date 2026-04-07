@@ -51,6 +51,21 @@ namespace jank::runtime
       r);
   }
 
+  object_ref add(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{ util::format("Can't add {} to {}.", to_string(r), to_string(l)) };
+  }
+
+  object_ref add(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{ util::format("Can't add {} to {}.", to_string(r), to_string(l)) };
+  }
+
+  object_ref add(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{ util::format("Can't add {} to {}.", to_string(r), to_string(l)) };
+  }
+
   object_ref add(obj::integer_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -218,6 +233,27 @@ namespace jank::runtime
       },
       l,
       r);
+  }
+
+  object_ref sub(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't subtract {} from {}.", to_string(r), to_string(l))
+    };
+  }
+
+  object_ref sub(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't subtract {} from {}.", to_string(r), to_string(l))
+    };
+  }
+
+  object_ref sub(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't subtract {} from {}.", to_string(r), to_string(l))
+    };
   }
 
   object_ref sub(obj::integer_ref const l, object_ref const r)
@@ -408,6 +444,21 @@ namespace jank::runtime
       r);
   }
 
+  object_ref div(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{ util::format("Can't divide {} by {}.", to_string(l), to_string(r)) };
+  }
+
+  object_ref div(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{ util::format("Can't divide {} by {}.", to_string(l), to_string(r)) };
+  }
+
+  object_ref div(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{ util::format("Can't divide {} by {}.", to_string(l), to_string(r)) };
+  }
+
   object_ref div(obj::integer_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -541,6 +592,27 @@ namespace jank::runtime
       },
       l,
       r);
+  }
+
+  object_ref mul(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't multiply {} by {}.", to_string(l), to_string(r))
+    };
+  }
+
+  object_ref mul(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't multiply {} by {}.", to_string(l), to_string(r))
+    };
+  }
+
+  object_ref mul(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't multiply {} by {}.", to_string(l), to_string(r))
+    };
   }
 
   object_ref mul(obj::integer_ref const l, object_ref const r)
@@ -1116,6 +1188,27 @@ namespace jank::runtime
       r);
   }
 
+  bool lt(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+    };
+  }
+
+  bool lt(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+    };
+  }
+
+  bool lt(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+    };
+  }
+
   bool lt(obj::integer_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -1231,6 +1324,27 @@ namespace jank::runtime
       },
       l,
       r);
+  }
+
+  bool lte(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+    };
+  }
+
+  bool lte(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+    };
+  }
+
+  bool lte(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+    };
   }
 
   bool lte(obj::integer_ref const l, object_ref const r)
@@ -1351,6 +1465,27 @@ namespace jank::runtime
       },
       l,
       r);
+  }
+
+  object_ref min(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a min between {} and {}.", to_string(l), to_string(r))
+    };
+  }
+
+  object_ref min(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a min between {} and {}.", to_string(l), to_string(r))
+    };
+  }
+
+  object_ref min(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a min between {} and {}.", to_string(l), to_string(r))
+    };
   }
 
   object_ref min(obj::integer_ref const l, object_ref const r)
@@ -1500,6 +1635,27 @@ namespace jank::runtime
       r);
   }
 
+  object_ref max(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a max between {} and {}.", to_string(l), to_string(r))
+    };
+  }
+
+  object_ref max(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a max between {} and {}.", to_string(l), to_string(r))
+    };
+  }
+
+  object_ref max(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a max between {} and {}.", to_string(l), to_string(r))
+    };
+  }
+
   object_ref max(obj::integer_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -1636,6 +1792,11 @@ namespace jank::runtime
                                    : make_box(typed_l->data).erase();
       },
       l);
+  }
+
+  object_ref abs(obj::nil_ref const l)
+  {
+    throw std::runtime_error{ util::format("not a number: {}", to_string(l)) };
   }
 
   i64 abs(obj::integer_ref const l)
@@ -1858,6 +2019,11 @@ namespace jank::runtime
   i64 to_int(object_ref const l)
   {
     return visit_number_like([](auto const typed_l) -> i64 { return typed_l->to_integer(); }, l);
+  }
+
+  i64 to_int(obj::nil_ref const l)
+  {
+    throw std::runtime_error{ util::format("not a number: {}", to_string(l)) };
   }
 
   i64 to_int(obj::integer_ref const l)

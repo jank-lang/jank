@@ -3,7 +3,7 @@
 
 (def namespaces
   '[
-    ; clojure.core-test.abs ; error: call to 'abs' is ambiguous
+    clojure.core-test.abs
     ; clojure.core-test.aclone ; analyze/invalid-cpp-operator-call error: Binary operator aget is not supported for 'jank::runtime::object *' and 'jank::runtime::object *', TODO: port int-array, TODO: port aclone
     ; clojure.core-test.add-watch ; TODO: port sync
     ; clojure.core-test.ancestors ; analyze/unresolved-symbol error: Unable to resolve symbol 'Object'.
@@ -78,14 +78,14 @@
     ; clojure.core-test.format ; TODO: port format
     ; clojure.core-test.get ; TODO: port to-array
     ; clojure.core-test.get-in ; FIXME: Failing tests. 
-    ; clojure.core-test.gt ; error: call to 'lt' is ambiguous.
+    clojure.core-test.gt
     clojure.core-test.hash-map
     clojure.core-test.hash-set
     clojure.core-test.ident-qmark
     clojure.core-test.identical-qmark
     ; clojure.core-test.ifn-qmark ; TODO: port promise
     ; clojure.core-test.inc ; overflow untested,
-    ; clojure.core-test.int ; error: call to 'to_int' is ambiguous
+    ; clojure.core-test.int ; FIXME: Failing tests.
     ; clojure.core-test.int-qmark ; FIXME: Failing tests.
     ; clojure.core-test.integer-qmark ; FIXME: Failing tests.
     clojure.core-test.interleave
@@ -99,16 +99,16 @@
     clojure.core-test.last
     ; clojure.core-test.list-qmark ; TODO: port array-map, TODO: port object-array
     ; clojure.core-test.long ; TODO: port long
-    ; clojure.core-test.lt ; error: call to 'lt' is ambiguous.
-    ; clojure.core-test.lt-eq ; error: call to 'lte' is ambiguous.
+    clojure.core-test.lt
+    clojure.core-test.lt-eq
     clojure.core-test.make-hierarchy
     ; clojure.core-test.map-qmark ; TODO: port array-map, TODO: port object-array
     ; clojure.core-test.mapcat ; Program hangs.
-    ; clojure.core-test.max ; error: call to 'max' is ambiguous.
+    ; clojure.core-test.max ; FIXME: Failing tests.
     ; clojure.core-test.merge ; Program hangs.
-    ; clojure.core-test.min ; error: call to 'min' is ambiguous.
+    ; clojure.core-test.min ; FIXME: Failing tests.
     clojure.core-test.min-key
-    ; clojure.core-test.minus ; error: call to 'sub' is ambiguous.
+    ; clojure.core-test.minus ; FIXME: Failing tests.
     ; clojure.core-test.mod ; FIXME: Failing tests.
     clojure.core-test.name
     clojure.core-test.namespace
@@ -139,7 +139,7 @@
     clojure.core-test.partial
     clojure.core-test.peek
     clojure.core-test.persistent-bang
-    ; clojure.core-test.plus ; error: call to 'add' is ambiguous.
+    ; clojure.core-test.plus ; FIXME: Failing tests.
     ; clojure.core-test.plus-squote ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.BigInt'.
     clojure.core-test.pop-bang
     clojure.core-test.pos-int-qmark
@@ -182,7 +182,7 @@
     clojure.core-test.simple-ident-qmark
     clojure.core-test.simple-keyword-qmark
     clojure.core-test.simple-symbol-qmark
-    ; clojure.core-test.slash ; error: call to 'div' is ambiguous.
+    ; clojure.core-test.slash ; FIXME: Failing tests.
     ; clojure.core-test.some ; TODO: port int-array, TODO: port long-array, TODO: port double-array & TODO: port float-array.
     clojure.core-test.some-fn
     clojure.core-test.some-qmark
@@ -190,7 +190,7 @@
     ; clojure.core-test.sort-by ; Assertion failed! !this->data.empty().
     ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?
-    ; clojure.core-test.star ; error: call to 'mul' is ambiguous.
+    ; clojure.core-test.star ; FIXME: Failing tests.
     ; clojure.core-test.star-squote ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.BigInt'.
     ; clojure.core-test.str ; FIXME: Failing tests.
     clojure.core-test.string-qmark
