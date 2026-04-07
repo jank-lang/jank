@@ -325,7 +325,12 @@ namespace jank::ir
 
   void inst::case_::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb, "{:name {} :op :case :value {} :case-blocks [", name, value);
+    util::format_to(sb,
+                    "{:name {} :op :case :shift {} :mask {} :value {} :case-blocks [",
+                    name,
+                    shift,
+                    mask,
+                    value);
     bool needs_space{};
     for(auto const &c : case_blocks)
     {
@@ -337,8 +342,10 @@ namespace jank::ir
       util::format_to(sb, "{:value {} :block {}}", c.first, c.second);
     }
     util::format_to(sb,
-                    "] :default-block {} :type \"{}\"}",
+                    "] :default-block {} :merge-block {} :shadow {} :type \"{}\"}",
                     default_block,
+                    merge_block.unwrap_or("nil"),
+                    shadow.unwrap_or("nil"),
                     get_qualified_type_name(type));
   }
 

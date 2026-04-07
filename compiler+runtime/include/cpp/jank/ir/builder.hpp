@@ -101,9 +101,13 @@ namespace jank::ir
                       identifier const &else_blk,
                       jtl::option<identifier> const &merge_blk,
                       jtl::option<inst::branch::shadow_details> const &shadow);
-    identifier case_(identifier const &value,
+    identifier case_(i64 const shift,
+                     i64 const mask,
+                     identifier const &value,
                      native_unordered_map<i64, identifier> &&cases,
-                     identifier const &default_block);
+                     identifier const &default_block,
+                     jtl::option<identifier> const &merge_block,
+                     jtl::option<identifier> const &shadow);
     identifier try_(native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches,
                     jtl::option<identifier> const &merge_block,
                     jtl::option<identifier> const &shadow,

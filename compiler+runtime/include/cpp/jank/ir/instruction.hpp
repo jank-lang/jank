@@ -402,16 +402,24 @@ namespace jank::ir
     struct case_ : instruction
     {
       case_(identifier const &name,
+            i64 const shift,
+            i64 const mask,
             identifier const &value,
             native_unordered_map<i64, identifier> &&case_blocks,
-            identifier const &default_block);
+            identifier const &default_block,
+            jtl::option<identifier> const &merge_block,
+            jtl::option<identifier> const &shadow);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;
 
+      i64 shift{};
+      i64 mask{};
       identifier value;
       native_unordered_map<i64, identifier> case_blocks;
       identifier default_block;
+      jtl::option<identifier> merge_block;
+      jtl::option<identifier> shadow;
     };
 
     using case_ref = jtl::ref<case_>;

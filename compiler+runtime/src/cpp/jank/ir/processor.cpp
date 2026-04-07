@@ -642,7 +642,15 @@ namespace jank::ir
     }
 
     b.enter_block(starting_block);
-    b.case_(value_ident, jtl::move(cases), b.block_name(default_block));
+    b.case_(expr->shift,
+            expr->mask,
+            value_ident,
+            jtl::move(cases),
+            b.block_name(default_block),
+            (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
+                                                                   : jtl::option<identifier>{},
+            (expr->position != analyze::expression_position::tail) ? shadow
+                                                                   : jtl::option<identifier>{});
 
     if(expr->position != analyze::expression_position::tail)
     {

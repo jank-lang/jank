@@ -405,15 +405,15 @@ namespace jank::codegen
 
   jtl::option<identifier> gen(ir::instruction_ref const &, builder &);
 
-  void gen_until_jump(identifier const &jump_block, builder &b)
+  void gen_until_jump(jtl::option<identifier> const &jump_block, builder &b)
   {
     while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
     {
       auto const current_inst{
         b.function->blocks[b.block_index].instructions[b.instruction_index]
       };
-      if(current_inst->kind == ir::instruction_kind::jump
-         && static_box_cast<ir::inst::jump>(current_inst)->block == jump_block)
+      if(current_inst->kind == ir::instruction_kind::jump && jump_block.is_some()
+         && static_box_cast<ir::inst::jump>(current_inst)->block == jump_block.unwrap())
       {
         break;
       }
@@ -781,17 +781,16 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer, "if({}){ ", inst->condition);
     b.enter_block(inst->then_block);
-    gen_until_jump(inst->merge_block.unwrap(), b);
+    gen_until_jump(inst->merge_block, b);
 
     util::format_to(b.body_buffer, "} else {");
     b.enter_block(inst->else_block);
-    gen_until_jump(inst->merge_block.unwrap(), b);
+    gen_until_jump(inst->merge_block, b);
     util::format_to(b.body_buffer, "}");
 
     if(inst->merge_block.is_some())
     {
-      b.block_index = b.function->find_block(inst->merge_block.unwrap());
-      b.instruction_index = 0;
+      b.enter_block(inst->merge_block.unwrap());
     }
 
     return none;
@@ -828,7 +827,7 @@ namespace jank::codegen
         auto const block_index{ b.block_index };
         b.enter_block(inst->finally_block.unwrap());
 
-        gen_until_jump(inst->merge_block.unwrap(), b);
+        gen_until_jump(inst->merge_block, b);
 
         b.instruction_index = instruction_index;
         b.block_index = block_index;
@@ -837,13 +836,13 @@ namespace jank::codegen
       auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                             : inst->merge_block };
 
-      gen_until_jump(jump_block.unwrap(), b);
+      gen_until_jump(jump_block, b);
 
       util::format_to(b.body_buffer, "}");
       for(auto const &catch_details : inst->catches)
       {
         b.enter_block(catch_details.second);
-        gen_until_jump(jump_block.unwrap(), b);
+        gen_until_jump(jump_block, b);
       }
 
       if(inst->merge_block.is_some())
@@ -860,7 +859,7 @@ namespace jank::codegen
         b.enter_block(inst->finally_block.unwrap());
 
         util::format_to(b.body_buffer, "{");
-        gen_until_jump(inst->merge_block.unwrap(), b);
+        gen_until_jump(inst->merge_block, b);
         util::format_to(b.body_buffer, "}");
 
         b.instruction_index = instruction_index;
@@ -870,7 +869,7 @@ namespace jank::codegen
       auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                             : inst->merge_block };
 
-      gen_until_jump(jump_block.unwrap(), b);
+      gen_until_jump(jump_block, b);
 
       if(inst->finally_block.is_some())
       {
@@ -891,7 +890,7 @@ namespace jank::codegen
 
     auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                           : inst->merge_block };
-    gen_until_jump(jump_block.unwrap(), b);
+    gen_until_jump(jump_block, b);
     util::format_to(b.body_buffer, "}");
     return none;
   }
@@ -908,9 +907,41 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::case_ref const &, builder &b)
+  jtl::option<identifier> gen(ir::inst::case_ref const &inst, builder &b)
   {
     b.next_instruction();
+
+    if(inst->shadow.is_some())
+    {
+      util::format_to(b.body_buffer, "jank::runtime::object_ref {};", inst->shadow.unwrap());
+    }
+
+    util::format_to(b.body_buffer,
+                    "switch(jank_shift_mask_case_integer({}.get(), {}, {})) {",
+                    inst->value,
+                    inst->shift,
+                    inst->mask);
+
+    for(auto const &case_block : inst->case_blocks)
+    {
+      util::format_to(b.body_buffer, "case {}: {", case_block.first);
+      b.enter_block(case_block.second);
+      gen_until_jump(inst->merge_block, b);
+      util::format_to(b.body_buffer, "break; }");
+    }
+
+    util::format_to(b.body_buffer, "default: {");
+    b.enter_block(inst->default_block);
+    gen_until_jump(inst->merge_block, b);
+    util::format_to(b.body_buffer, "break; }");
+
+    util::format_to(b.body_buffer, "}");
+
+    if(inst->merge_block.is_some())
+    {
+      b.enter_block(inst->merge_block.unwrap());
+    }
+
     return none;
   }
 

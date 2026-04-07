@@ -339,13 +339,24 @@ namespace jank::ir
     return name;
   }
 
-  identifier builder::case_(identifier const &value,
+  identifier builder::case_(i64 const shift,
+                            i64 const mask,
+                            identifier const &value,
                             native_unordered_map<i64, identifier> &&cases,
-                            identifier const &default_block)
+                            identifier const &default_block,
+                            jtl::option<identifier> const &merge_block,
+                            jtl::option<identifier> const &shadow)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::case_>(name, value, jtl::move(cases), default_block));
+      jtl::make_ref<inst::case_>(name,
+                                 shift,
+                                 mask,
+                                 value,
+                                 jtl::move(cases),
+                                 default_block,
+                                 merge_block,
+                                 shadow));
     return name;
   }
 

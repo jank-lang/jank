@@ -230,13 +230,21 @@ namespace jank::ir::inst
   }
 
   case_::case_(identifier const &name,
+               i64 const shift,
+               i64 const mask,
                identifier const &value,
                native_unordered_map<i64, identifier> &&case_blocks,
-               identifier const &default_block)
+               identifier const &default_block,
+               jtl::option<identifier> const &merge_block,
+               jtl::option<identifier> const &shadow)
     : instruction{ instruction_kind::case_, name, Cpp::GetVoidType() }
+    , shift{ shift }
+    , mask{ mask }
     , value{ value }
     , case_blocks{ jtl::move(case_blocks) }
     , default_block{ default_block }
+    , merge_block{ merge_block }
+    , shadow{ shadow }
   {
   }
 
