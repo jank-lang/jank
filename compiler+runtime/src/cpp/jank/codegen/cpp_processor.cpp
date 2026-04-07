@@ -405,7 +405,7 @@ namespace jank::codegen
 
   jtl::option<identifier> gen(ir::instruction_ref const &, builder &);
 
-  void gen_until_jump(builder &b, identifier const &jump_block)
+  void gen_until_jump(identifier const &jump_block, builder &b)
   {
     while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
     {
@@ -781,11 +781,11 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer, "if({}){ ", inst->condition);
     b.enter_block(inst->then_block);
-    gen_until_jump(b, inst->merge_block.unwrap());
+    gen_until_jump(inst->merge_block.unwrap(), b);
 
     util::format_to(b.body_buffer, "} else {");
     b.enter_block(inst->else_block);
-    gen_until_jump(b, inst->merge_block.unwrap());
+    gen_until_jump(inst->merge_block.unwrap(), b);
     util::format_to(b.body_buffer, "}");
 
     if(inst->merge_block.is_some())
@@ -828,7 +828,7 @@ namespace jank::codegen
         auto const block_index{ b.block_index };
         b.enter_block(inst->finally_block.unwrap());
 
-        gen_until_jump(b, inst->merge_block.unwrap());
+        gen_until_jump(inst->merge_block.unwrap(), b);
 
         b.instruction_index = instruction_index;
         b.block_index = block_index;
@@ -837,13 +837,13 @@ namespace jank::codegen
       auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                             : inst->merge_block };
 
-      gen_until_jump(b, jump_block.unwrap());
+      gen_until_jump(jump_block.unwrap(), b);
 
       util::format_to(b.body_buffer, "}");
       for(auto const &catch_details : inst->catches)
       {
         b.enter_block(catch_details.second);
-        gen_until_jump(b, jump_block.unwrap());
+        gen_until_jump(jump_block.unwrap(), b);
       }
 
       if(inst->merge_block.is_some())
@@ -860,7 +860,7 @@ namespace jank::codegen
         b.enter_block(inst->finally_block.unwrap());
 
         util::format_to(b.body_buffer, "{");
-        gen_until_jump(b, inst->merge_block.unwrap());
+        gen_until_jump(inst->merge_block.unwrap(), b);
         util::format_to(b.body_buffer, "}");
 
         b.instruction_index = instruction_index;
@@ -870,7 +870,7 @@ namespace jank::codegen
       auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                             : inst->merge_block };
 
-      gen_until_jump(b, jump_block.unwrap());
+      gen_until_jump(jump_block.unwrap(), b);
 
       if(inst->finally_block.is_some())
       {
@@ -891,7 +891,7 @@ namespace jank::codegen
 
     auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                           : inst->merge_block };
-    gen_until_jump(b, jump_block.unwrap());
+    gen_until_jump(jump_block.unwrap(), b);
     util::format_to(b.body_buffer, "}");
     return none;
   }
@@ -902,7 +902,7 @@ namespace jank::codegen
 
     auto const fn_name{ inst->name + "_fn" };
     util::format_to(b.body_buffer, "auto const {}{ [&](){ ", fn_name);
-    gen_until_jump(b, inst->merge_block);
+    gen_until_jump(inst->merge_block, b);
     util::format_to(b.body_buffer, "} };");
     util::format_to(b.body_buffer, "jank::util::scope_exit {}{ {}, true };", inst->name, fn_name);
     return none;
@@ -1607,7 +1607,6 @@ namespace jank::codegen
     while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
     {
       gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
-      //b.next_instruction();
     }
 
     if(fn.arity->body->values.empty())

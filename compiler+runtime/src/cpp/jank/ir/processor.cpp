@@ -585,7 +585,6 @@ namespace jank::ir
            needs_merge_blk ? shadow : jtl::option<identifier>{},
            finally_blk);
 
-    //expr->propagate_position(original_pos);
     auto try_res{ gen(expr->body, b) };
 
     if(needs_merge_blk && !b.current_block()->has_terminator())
