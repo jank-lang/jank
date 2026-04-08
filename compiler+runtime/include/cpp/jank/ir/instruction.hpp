@@ -561,13 +561,13 @@ namespace jank::ir
     struct cpp_call : instruction
     {
       cpp_call(identifier const &name,
-               identifier const &value,
+               jtl::option<identifier> const &value,
                native_vector<identifier> &&args,
                analyze::expr::cpp_call_ref const expr);
 
       void print(jtl::string_builder &sb, usize) const override;
 
-      identifier value;
+      jtl::option<identifier> value;
       native_vector<identifier> args;
       analyze::expr::cpp_call_ref expr;
     };

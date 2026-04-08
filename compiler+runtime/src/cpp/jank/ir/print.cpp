@@ -456,7 +456,7 @@ namespace jank::ir
 
   void inst::cpp_call::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb, "{:name {} :op :cpp/call :value {} :args [", name, value);
+    util::format_to(sb, "{:name {} :op :cpp/call :value {} :args [", name, value.unwrap_or("nil"));
     bool needs_space{};
     for(auto const &arg : args)
     {

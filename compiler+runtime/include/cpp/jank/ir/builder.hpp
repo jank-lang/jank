@@ -126,7 +126,7 @@ namespace jank::ir
     cpp_conversion(identifier const &value, analyze::expr::cpp_conversion_ref const expr);
     identifier
     cpp_unsafe_cast(identifier const &value, analyze::expr::cpp_unsafe_cast_ref const expr);
-    identifier cpp_call(identifier const &value,
+    identifier cpp_call(jtl::option<identifier> const &value,
                         native_vector<identifier> &&args,
                         analyze::expr::cpp_call_ref const expr);
     identifier cpp_constructor_call(native_vector<identifier> &&args,

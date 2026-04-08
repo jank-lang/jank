@@ -464,7 +464,7 @@ namespace jank::ir
     return name;
   }
 
-  identifier builder::cpp_call(identifier const &value,
+  identifier builder::cpp_call(jtl::option<identifier> const &value,
                                native_vector<identifier> &&args,
                                analyze::expr::cpp_call_ref const expr)
   {

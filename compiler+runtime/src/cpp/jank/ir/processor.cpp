@@ -696,6 +696,11 @@ namespace jank::ir
     {
       args.emplace_back(gen(arg, b).unwrap());
     }
+
+    if(expr->source_expr->kind == analyze::expression_kind::cpp_value)
+    {
+      return b.cpp_call(none, jtl::move(args), expr);
+    }
     return b.cpp_call(gen(expr->source_expr, b).unwrap(), jtl::move(args), expr);
   }
 

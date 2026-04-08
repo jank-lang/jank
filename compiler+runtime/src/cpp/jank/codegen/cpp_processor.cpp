@@ -711,7 +711,7 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::parameter_ref const &inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer, "auto &&{}{ {} };", inst->name, inst->value);
+    util::format_to(b.body_buffer, "auto &&{}({});", inst->name, inst->value);
     return inst->name;
   }
 
@@ -719,7 +719,7 @@ namespace jank::codegen
   {
     b.next_instruction();
     auto const &closure_ctx{ munge(b.function->arity->fn_ctx->unique_name + "_ctx") };
-    util::format_to(b.body_buffer, "auto &&{}{ {}->{} };", inst->name, closure_ctx, inst->value);
+    util::format_to(b.body_buffer, "auto &&{}({}->{});", inst->name, closure_ctx, inst->value);
     return inst->name;
   }
 
@@ -727,7 +727,7 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer,
-                    "auto &&{}{ {} };",
+                    "auto &&{}({});",
                     inst->name,
                     munge(b.function->arity->fn_ctx->fn->name));
     return inst->name;
@@ -1080,16 +1080,15 @@ namespace jank::codegen
     if(inst->expr->source_expr->kind == analyze::expression_kind::cpp_value)
     {
       auto const source{ static_cast<analyze::expr::cpp_value *>(inst->expr->source_expr.data) };
-      auto ret_tmp(runtime::munge(__rt_ctx->unique_string("cpp_call")));
 
       auto const is_void{ Cpp::IsVoid(Cpp::GetFunctionReturnType(source->scope)) };
       if(is_void)
       {
-        ret_tmp = "jank::runtime::jank_nil()";
+        util::format_to(b.body_buffer, "jank::runtime::object_ref {};", inst->name);
       }
       else
       {
-        util::format_to(b.body_buffer, "auto &&{}{ ", ret_tmp);
+        util::format_to(b.body_buffer, "auto &&{}(", inst->name);
       }
 
       util::format_to(b.body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
@@ -1128,14 +1127,14 @@ namespace jank::codegen
 
       if(!is_void)
       {
-        util::format_to(b.body_buffer, "};");
+        util::format_to(b.body_buffer, ");");
       }
       else
       {
         util::format_to(b.body_buffer, ";");
       }
 
-      return ret_tmp;
+      return inst->name;
     }
     else if(Cpp::IsPointerToMemberVariableType(source_type))
     {
@@ -1146,23 +1145,23 @@ namespace jank::codegen
       }
       else
       {
-        util::format_to(b.body_buffer, "auto &&{}{ ", inst->name);
+        util::format_to(b.body_buffer, "auto &&{}(", inst->name);
       }
 
       auto const obj_type{ Cpp::GetNonReferenceType(expression_type(inst->expr->arg_exprs[0])) };
       auto const &obj_name{ inst->args[0] };
       if(Cpp::IsPointerType(obj_type))
       {
-        util::format_to(b.body_buffer, "{}->*{}", obj_name, inst->value);
+        util::format_to(b.body_buffer, "{}->*{}", obj_name, inst->value.unwrap());
       }
       else
       {
-        util::format_to(b.body_buffer, "{}.*{}", obj_name, inst->value);
+        util::format_to(b.body_buffer, "{}.*{}", obj_name, inst->value.unwrap());
       }
 
       if(!is_void)
       {
-        util::format_to(b.body_buffer, "};");
+        util::format_to(b.body_buffer, ");");
       }
       else
       {
@@ -1180,18 +1179,18 @@ namespace jank::codegen
       }
       else
       {
-        util::format_to(b.body_buffer, "auto &&{}{ ", inst->name);
+        util::format_to(b.body_buffer, "auto &&{}(", inst->name);
       }
 
       auto const obj_type{ Cpp::GetNonReferenceType(expression_type(inst->expr->arg_exprs[0])) };
       auto const &obj_name{ inst->args[0] };
       if(Cpp::IsPointerType(obj_type))
       {
-        util::format_to(b.body_buffer, "({}->*{})(", obj_name, inst->value);
+        util::format_to(b.body_buffer, "({}->*{})(", obj_name, inst->value.unwrap());
       }
       else
       {
-        util::format_to(b.body_buffer, "({}.*{})(", obj_name, inst->value);
+        util::format_to(b.body_buffer, "({}.*{})(", obj_name, inst->value.unwrap());
       }
 
       bool need_comma{};
@@ -1209,7 +1208,7 @@ namespace jank::codegen
 
       if(!is_void)
       {
-        util::format_to(b.body_buffer, "};");
+        util::format_to(b.body_buffer, ");");
       }
       else
       {
@@ -1227,10 +1226,10 @@ namespace jank::codegen
       }
       else
       {
-        util::format_to(b.body_buffer, "auto &&{}{ ", inst->name);
+        util::format_to(b.body_buffer, "auto &&{}(", inst->name);
       }
 
-      util::format_to(b.body_buffer, "{}(", inst->value);
+      util::format_to(b.body_buffer, "{}(", inst->value.unwrap());
 
       bool need_comma{};
       for(auto const &arg : inst->args)
@@ -1247,7 +1246,7 @@ namespace jank::codegen
 
       if(!is_void)
       {
-        util::format_to(b.body_buffer, "};");
+        util::format_to(b.body_buffer, ");");
       }
       else
       {
@@ -1431,7 +1430,7 @@ namespace jank::codegen
     else
     {
       util::format_to(b.body_buffer,
-                      "auto &&{}{ {}{}{}(",
+                      "auto &&{}({}{}{}(",
                       inst->name,
                       inst->args[0],
                       (Cpp::IsPointerType(expression_type(inst->expr->arg_exprs[0])) ? "->" : "."),
@@ -1455,7 +1454,7 @@ namespace jank::codegen
     }
     else
     {
-      util::format_to(b.body_buffer, ") };");
+      util::format_to(b.body_buffer, "));");
     }
 
     return inst->name;
@@ -1465,7 +1464,7 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer,
-                    "auto &&{}{ {}{}{} };",
+                    "auto &&{}({}{}{});",
                     inst->name,
                     inst->value,
                     (Cpp::IsPointerType(expression_type(inst->expr->obj_expr)) ? "->" : "."),

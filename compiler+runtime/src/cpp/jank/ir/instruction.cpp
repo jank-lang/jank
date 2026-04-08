@@ -346,7 +346,7 @@ namespace jank::ir::inst
   }
 
   cpp_call::cpp_call(identifier const &name,
-                     identifier const &value,
+                     jtl::option<identifier> const &value,
                      native_vector<identifier> &&args,
                      analyze::expr::cpp_call_ref const expr)
     : instruction{ instruction_kind::cpp_call, name, expression_type(expr) }
