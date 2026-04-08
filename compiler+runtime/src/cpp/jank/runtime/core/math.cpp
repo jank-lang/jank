@@ -53,17 +53,23 @@ namespace jank::runtime
 
   object_ref add(obj::nil_ref const l, obj::nil_ref const r)
   {
-    throw std::runtime_error{ util::format("Can't add {} to {}.", to_string(r), to_string(l)) };
+    throw std::runtime_error{
+      util::format("Can't add {} to {}.", to_code_string(r), to_code_string(l))
+    };
   }
 
   object_ref add(obj::nil_ref const l, object_ref const r)
   {
-    throw std::runtime_error{ util::format("Can't add {} to {}.", to_string(r), to_string(l)) };
+    throw std::runtime_error{
+      util::format("Can't add {} to {}.", to_code_string(r), to_code_string(l))
+    };
   }
 
   object_ref add(object_ref const l, obj::nil_ref const r)
   {
-    throw std::runtime_error{ util::format("Can't add {} to {}.", to_string(r), to_string(l)) };
+    throw std::runtime_error{
+      util::format("Can't add {} to {}.", to_code_string(r), to_code_string(l))
+    };
   }
 
   object_ref add(obj::integer_ref const l, object_ref const r)
@@ -238,21 +244,21 @@ namespace jank::runtime
   object_ref sub(obj::nil_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't subtract {} from {}.", to_string(r), to_string(l))
+      util::format("Can't subtract {} from {}.", to_code_string(r), to_code_string(l))
     };
   }
 
   object_ref sub(obj::nil_ref const l, object_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't subtract {} from {}.", to_string(r), to_string(l))
+      util::format("Can't subtract {} from {}.", to_code_string(r), to_code_string(l))
     };
   }
 
   object_ref sub(object_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't subtract {} from {}.", to_string(r), to_string(l))
+      util::format("Can't subtract {} from {}.", to_code_string(r), to_code_string(l))
     };
   }
 
@@ -446,17 +452,23 @@ namespace jank::runtime
 
   object_ref div(obj::nil_ref const l, obj::nil_ref const r)
   {
-    throw std::runtime_error{ util::format("Can't divide {} by {}.", to_string(l), to_string(r)) };
+    throw std::runtime_error{
+      util::format("Can't divide {} by {}.", to_code_string(l), to_code_string(r))
+    };
   }
 
   object_ref div(obj::nil_ref const l, object_ref const r)
   {
-    throw std::runtime_error{ util::format("Can't divide {} by {}.", to_string(l), to_string(r)) };
+    throw std::runtime_error{
+      util::format("Can't divide {} by {}.", to_code_string(l), to_code_string(r))
+    };
   }
 
   object_ref div(object_ref const l, obj::nil_ref const r)
   {
-    throw std::runtime_error{ util::format("Can't divide {} by {}.", to_string(l), to_string(r)) };
+    throw std::runtime_error{
+      util::format("Can't divide {} by {}.", to_code_string(l), to_code_string(r))
+    };
   }
 
   object_ref div(obj::integer_ref const l, object_ref const r)
@@ -597,21 +609,21 @@ namespace jank::runtime
   object_ref mul(obj::nil_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't multiply {} by {}.", to_string(l), to_string(r))
+      util::format("Can't multiply {} by {}.", to_code_string(l), to_code_string(r))
     };
   }
 
   object_ref mul(obj::nil_ref const l, object_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't multiply {} by {}.", to_string(l), to_string(r))
+      util::format("Can't multiply {} by {}.", to_code_string(l), to_code_string(r))
     };
   }
 
   object_ref mul(object_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't multiply {} by {}.", to_string(l), to_string(r))
+      util::format("Can't multiply {} by {}.", to_code_string(l), to_code_string(r))
     };
   }
 
@@ -1012,7 +1024,7 @@ namespace jank::runtime
   {
     auto const typed_l{ dyn_cast<obj::integer>(l) };
 
-    if(typed_l == jank_nil())
+    if(typed_l.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1027,7 +1039,7 @@ namespace jank::runtime
     auto const typed_l{ dyn_cast<obj::integer>(l) };
     auto const typed_r{ dyn_cast<obj::integer>(r) };
 
-    if(typed_l == jank_nil() || typed_r == jank_nil())
+    if(typed_l.is_nil() || typed_r.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1042,7 +1054,7 @@ namespace jank::runtime
     auto const typed_l{ dyn_cast<obj::integer>(l) };
     auto const typed_r{ dyn_cast<obj::integer>(r) };
 
-    if(typed_l == jank_nil() || typed_r == jank_nil())
+    if(typed_l.is_nil() || typed_r.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1057,7 +1069,7 @@ namespace jank::runtime
     auto const typed_l{ dyn_cast<obj::integer>(l) };
     auto const typed_r{ dyn_cast<obj::integer>(r) };
 
-    if(typed_l == jank_nil() || typed_r == jank_nil())
+    if(typed_l.is_nil() || typed_r.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1072,7 +1084,7 @@ namespace jank::runtime
     auto const typed_l{ dyn_cast<obj::integer>(l) };
     auto const typed_r{ dyn_cast<obj::integer>(r) };
 
-    if(typed_l == jank_nil() || typed_r == jank_nil())
+    if(typed_l.is_nil() || typed_r.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1087,7 +1099,7 @@ namespace jank::runtime
     auto const typed_l{ dyn_cast<obj::integer>(l) };
     auto const typed_r{ dyn_cast<obj::integer>(r) };
 
-    if(typed_l == jank_nil() || typed_r == jank_nil())
+    if(typed_l.is_nil() || typed_r.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1102,7 +1114,7 @@ namespace jank::runtime
     auto const typed_l{ dyn_cast<obj::integer>(l) };
     auto const typed_r{ dyn_cast<obj::integer>(r) };
 
-    if(typed_l == jank_nil() || typed_r == jank_nil())
+    if(typed_l.is_nil() || typed_r.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1117,7 +1129,7 @@ namespace jank::runtime
     auto const typed_l{ dyn_cast<obj::integer>(l) };
     auto const typed_r{ dyn_cast<obj::integer>(r) };
 
-    if(typed_l == jank_nil() || typed_r == jank_nil())
+    if(typed_l.is_nil() || typed_r.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1132,7 +1144,7 @@ namespace jank::runtime
     auto const typed_l{ dyn_cast<obj::integer>(l) };
     auto const typed_r{ dyn_cast<obj::integer>(r) };
 
-    if(typed_l == jank_nil() || typed_r == jank_nil())
+    if(typed_l.is_nil() || typed_r.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1147,7 +1159,7 @@ namespace jank::runtime
     auto const typed_l{ dyn_cast<obj::integer>(l) };
     auto const typed_r{ dyn_cast<obj::integer>(r) };
 
-    if(typed_l == jank_nil() || typed_r == jank_nil())
+    if(typed_l.is_nil() || typed_r.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1162,7 +1174,7 @@ namespace jank::runtime
     auto const typed_l{ dyn_cast<obj::integer>(l) };
     auto const typed_r{ dyn_cast<obj::integer>(r) };
 
-    if(typed_l == jank_nil() || typed_r == jank_nil())
+    if(typed_l.is_nil() || typed_r.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1177,7 +1189,7 @@ namespace jank::runtime
     auto const typed_l{ dyn_cast<obj::integer>(l) };
     auto const typed_r{ dyn_cast<obj::integer>(r) };
 
-    if(typed_l == jank_nil() || typed_r == jank_nil())
+    if(typed_l.is_nil() || typed_r.is_nil())
     {
       throw std::runtime_error{
         "Bitwise operators are only supported for values of type integer."
@@ -1212,21 +1224,21 @@ namespace jank::runtime
   bool lt(obj::nil_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
     };
   }
 
   bool lt(object_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
     };
   }
 
   bool lt(obj::nil_ref const l, object_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
     };
   }
 
@@ -1350,21 +1362,21 @@ namespace jank::runtime
   bool lte(obj::nil_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
     };
   }
 
   bool lte(object_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
     };
   }
 
   bool lte(obj::nil_ref const l, object_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't compare {} with {}.", to_string(l), to_string(r))
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
     };
   }
 
@@ -1491,21 +1503,21 @@ namespace jank::runtime
   object_ref min(obj::nil_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't find a min between {} and {}.", to_string(l), to_string(r))
+      util::format("Can't find a min between {} and {}.", to_code_string(l), to_code_string(r))
     };
   }
 
   object_ref min(obj::nil_ref const l, object_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't find a min between {} and {}.", to_string(l), to_string(r))
+      util::format("Can't find a min between {} and {}.", to_code_string(l), to_code_string(r))
     };
   }
 
   object_ref min(object_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't find a min between {} and {}.", to_string(l), to_string(r))
+      util::format("Can't find a min between {} and {}.", to_code_string(l), to_code_string(r))
     };
   }
 
@@ -1659,21 +1671,21 @@ namespace jank::runtime
   object_ref max(obj::nil_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't find a max between {} and {}.", to_string(l), to_string(r))
+      util::format("Can't find a max between {} and {}.", to_code_string(l), to_code_string(r))
     };
   }
 
   object_ref max(obj::nil_ref const l, object_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't find a max between {} and {}.", to_string(l), to_string(r))
+      util::format("Can't find a max between {} and {}.", to_code_string(l), to_code_string(r))
     };
   }
 
   object_ref max(object_ref const l, obj::nil_ref const r)
   {
     throw std::runtime_error{
-      util::format("Can't find a max between {} and {}.", to_string(l), to_string(r))
+      util::format("Can't find a max between {} and {}.", to_code_string(l), to_code_string(r))
     };
   }
 
@@ -1817,7 +1829,7 @@ namespace jank::runtime
 
   object_ref abs(obj::nil_ref const l)
   {
-    throw std::runtime_error{ util::format("not a number: {}", to_string(l)) };
+    throw std::runtime_error{ util::format("not a number: {}", to_code_string(l)) };
   }
 
   i64 abs(obj::integer_ref const l)
@@ -2044,7 +2056,7 @@ namespace jank::runtime
 
   i64 to_int(obj::nil_ref const l)
   {
-    throw std::runtime_error{ util::format("not a number: {}", to_string(l)) };
+    throw std::runtime_error{ util::format("not a number: {}", to_code_string(l)) };
   }
 
   i64 to_int(obj::integer_ref const l)
