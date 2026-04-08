@@ -771,7 +771,7 @@ namespace jank::ir
 
   module create(analyze::expr::function_ref const fn_expr,
                 jtl::immutable_string const &module_name,
-                [[maybe_unused]] codegen::compilation_target const target)
+                codegen::compilation_target const target)
   {
     native_vector<jtl::immutable_string> entry_points;
     entry_points.reserve(fn_expr->arities.size());
@@ -780,7 +780,11 @@ namespace jank::ir
       entry_points.emplace_back(
         runtime::munge(util::format("{}_{}", fn_expr->unique_name, arity.params.size())));
     }
-    module mod{ module_name, arity_flags(fn_expr->arities), fn_expr, jtl::move(entry_points) };
+    module mod{ module_name,
+                target,
+                arity_flags(fn_expr->arities),
+                fn_expr,
+                jtl::move(entry_points) };
 
     for(auto const &arity : fn_expr->arities)
     {

@@ -234,7 +234,7 @@ namespace jank::runtime
         an_prc.analyze(form, analyze::expression_position::statement).expect_ok()));
       auto const fn{ static_box_cast<analyze::expr::function>(expr) };
       fn->unique_name = name;
-      auto const mod{ ir::create(fn, module, codegen::compilation_target::eval) };
+      auto const mod{ ir::create(fn, module, codegen::compilation_target::module) };
 
       auto const generated{ codegen::gen_cpp(mod) };
       //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());

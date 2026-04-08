@@ -61,9 +61,11 @@ namespace jank::codegen
     jtl::immutable_string declaration_str() const
     {
       native_transient_string declaration;
-      declaration.reserve(cpp_raw_buffer.size() + deps_buffer.size() + header_buffer.size()
-                          + body_buffer.size() + footer_buffer.size());
+      declaration.reserve(cpp_raw_buffer.size() + module_header_buffer.size() + deps_buffer.size()
+                          + header_buffer.size() + body_buffer.size() + footer_buffer.size());
       declaration += jtl::immutable_string_view{ cpp_raw_buffer.data(), cpp_raw_buffer.size() };
+      declaration
+        += jtl::immutable_string_view{ module_header_buffer.data(), module_header_buffer.size() };
       declaration += jtl::immutable_string_view{ deps_buffer.data(), deps_buffer.size() };
       declaration += jtl::immutable_string_view{ header_buffer.data(), header_buffer.size() };
       declaration += jtl::immutable_string_view{ body_buffer.data(), body_buffer.size() };
@@ -72,15 +74,119 @@ namespace jank::codegen
       return declaration;
     }
 
-    jtl::immutable_string expression_str() const
+    jtl::immutable_string expression_str()
     {
-      return "";
+      if(!expression_buffer.empty())
+      {
+        return { expression_buffer.data(), expression_buffer.size() };
+      }
+
+      //bool is_closure{};
+      //for(auto const &arity : root_fn->arities)
+      //{
+      //  if(!arity.frame->captures.empty())
+      //  {
+      //    is_closure = true;
+      //  }
+      //}
+
+      //auto const ret_ctx_tmp{ closure_ctx };
+
+      //if(is_closure)
+      //{
+      //  util::format_to(buffer, "auto const {}{ jtl::make_ref<struct {}>(", ret_ctx_tmp, closure_ctx);
+
+      //  native_set<uhash> used_captures;
+      //  bool need_comma{};
+      //  for(auto const &arity : root_fn->arities)
+      //  {
+      //    for(auto const &v : arity.frame->captures)
+      //    {
+      //      if(used_captures.contains(v.first->to_hash()))
+      //      {
+      //        continue;
+      //      }
+      //      used_captures.emplace(v.first->to_hash());
+
+      //      /* We're generating the inputs to the function ctor, which means we don't
+      //       * want the binding of the capture within the function; we want the one outside
+      //       * of it, which we're capturing. We need to reach further for that.
+      //       *
+      //       * We check for named recursion first, since that takes higher precedence
+      //       * than locals or captures. */
+      //      auto const recursion(root_fn->frame->find_named_recursion(v.first));
+      //      if(recursion.is_some())
+      //      {
+      //        auto const tmp{ munge(recursion.unwrap().fn_frame->fn_ctx->name) };
+      //        util::format_to(buffer, "{} {}", (need_comma ? "," : ""), tmp);
+      //      }
+      //      else
+      //      {
+      //        handle const h{ v.second.originating_binding };
+      //        auto const local_type{ v.second.originating_binding->type };
+      //        auto const needs_conversion{ !cpp_util::is_any_object(local_type) };
+
+      //        if(needs_conversion)
+      //        {
+      //          util::format_to(buffer,
+      //                          "{} jank::runtime::convert<{}>::{}({})",
+      //                          (need_comma ? "," : ""),
+      //                          cpp_util::get_qualified_type_name(local_type),
+      //                          "into_object",
+      //                          h.str(true));
+      //        }
+      //        else
+      //        {
+      //          util::format_to(buffer, "{} {}", (need_comma ? "," : ""), h.str(true));
+      //        }
+      //      }
+      //      need_comma = true;
+      //    }
+      //  }
+
+      //  util::format_to(buffer, ") };");
+      //}
+
+      auto const ret_tmp{ runtime::munge(__rt_ctx->unique_string("fnexpr")) };
+      util::format_to(expression_buffer, "auto const {}(", ret_tmp);
+
+      //if(is_closure)
+      //{
+      //  util::format_to(buffer,
+      //                  "jank::runtime::make_box<jank::runtime::obj::jit_closure>({}, {}.data)",
+      //                  arity_flags(),
+      //                  ret_ctx_tmp);
+      //}
+      //else
+      {
+        util::format_to(expression_buffer,
+                        "jank::runtime::make_box<jank::runtime::obj::jit_function>({})",
+                        module->arity_flags);
+      }
+
+      util::format_to(expression_buffer, ");");
+
+      for(auto const &arity : module->root_fn_expr->arities)
+      {
+        auto const param_count{ arity.fn_ctx->param_count };
+        util::format_to(expression_buffer,
+                        "{}->arity_{} = &{}_{};",
+                        ret_tmp,
+                        param_count,
+                        module->root_fn_expr->unique_name,
+                        param_count);
+      }
+
+      util::format_to(expression_buffer, "{}", ret_tmp);
+
+      return { expression_buffer.data(), expression_buffer.size() };
     }
 
     jtl::ref<ir::module> module;
     jtl::ref<ir::function> function;
 
     jtl::string_builder cpp_raw_buffer{};
+    jtl::string_builder module_header_buffer{};
     jtl::string_builder deps_buffer{};
     jtl::string_builder header_buffer{};
     jtl::string_builder body_buffer{};
@@ -718,7 +824,7 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::capture_ref const &inst, builder &b)
   {
     b.next_instruction();
-    auto const &closure_ctx{ munge(b.function->arity->fn_ctx->unique_name + "_ctx") };
+    auto const &closure_ctx{ munge(b.function->arity->fn_ctx->fn->unique_name + "_ctx") };
     util::format_to(b.body_buffer, "auto &&{}({}->{});", inst->name, closure_ctx, inst->value);
     return inst->name;
   }
@@ -1610,14 +1716,14 @@ namespace jank::codegen
   void gen(ir::function const &fn, builder &b)
   {
     auto const &all_captures{ fn.arity->frame->captures };
-    auto const &munged_fn_name{ munge(fn.arity->fn_ctx->name) };
-    auto const &munged_linkage_name{ munge(fn.arity->fn_ctx->unique_name) };
-    auto const &closure_ctx{ munge(fn.arity->fn_ctx->unique_name + "_ctx") };
+    auto const &munged_fn_name{ munge(fn.arity->fn_ctx->fn->name) };
+    auto const &munged_linkage_name{ munge(fn.arity->fn_ctx->fn->unique_name) };
+    auto const &closure_ctx{ munge(fn.arity->fn_ctx->fn->unique_name + "_ctx") };
 
     bool param_shadows_fn{};
     for(auto const &param : fn.arity->params)
     {
-      param_shadows_fn |= param->name == fn.arity->fn_ctx->name;
+      param_shadows_fn |= param->name == fn.arity->fn_ctx->fn->name;
     }
 
     util::format_to(
@@ -1688,12 +1794,132 @@ namespace jank::codegen
   {
     builder b{ &mod, mod.entry_points[0] };
 
+    /* Module targeting works in a special way, with the goal of
+     * cutting down the generated code size. Instead of each function
+     * having its own lifted vars/constants, we have one namespace for
+     * the module with the lifted globals there, at namespace level.
+     * Then every function within that module can share the same globals.
+     * This also makes creating functions cheaper. However, it requires
+     * some special tracking. */
+    if(mod.target == compilation_target::module)
+    {
+      util::format_to(b.module_header_buffer,
+                      "namespace {} {",
+                      runtime::module::module_to_native_ns(mod.name));
+    }
+
     auto const arity_flags{ find_function(&mod, mod.entry_points[0])->arity->fn_ctx->fn->arities };
     for(auto const &fn_name : mod.entry_points)
     {
       auto const fn{ find_function(&mod, fn_name) };
       b.function = fn;
       gen(*fn, b);
+    }
+
+    if(mod.target == compilation_target::module)
+    {
+      util::format_to(b.footer_buffer,
+                      "extern \"C\" void {}(){",
+                      runtime::module::module_to_load_function(mod.name));
+
+      /* First thing we do when loading this module is to intern our ns. Everything else will
+       * build on that. */
+      util::format_to(b.footer_buffer, "jank_ns_intern_c(\"{}\");", mod.name);
+
+      /* This dance is performed to keep symbol names unique across all the modules.
+       * Considering LLVM JIT symbols to be global, we need to define them with
+       * unique names to avoid conflicts during JIT recompilation/reloading.
+       *
+       * The approach, right now, is for each namespace, we will keep a counter
+       * and will increase it every time we define a new symbol. When we JIT reload
+       * the same namespace again, we will define new symbols.
+       *
+       * This IR codegen for calling `jank_ns_set_symbol_counter`, is to set the counter
+       * on an initial load.
+       */
+      auto const current_ns{ __rt_ctx->current_ns() };
+      util::format_to(b.footer_buffer,
+                      "jank_ns_set_symbol_counter(\"{}\", {});",
+                      current_ns->name->get_name(),
+                      current_ns->symbol_counter.load());
+
+      //auto const native_ns{ runtime::module::module_to_native_ns(mod.name) };
+
+      ///* BDWGC doesn't pick up globals in JIT compiled code, so we need to register both
+      // * our lifted vars and lifted constants. Since they're right next to each other,
+      // * we can just register the range of the first -> last. */
+      //if(!lifted_vars.empty())
+      //{
+      //  auto const &first{ *lifted_vars.begin() };
+      //  auto last{ lifted_vars.begin() };
+      //  std::advance(last, lifted_vars.size() - 1);
+      //  util::format_to(footer_buffer,
+      //                  R"(GC_add_roots(&{}::{}, (&{}::{} + 1));)",
+      //                  native_ns,
+      //                  first.second.native_name,
+      //                  native_ns,
+      //                  last->second.native_name);
+      //}
+
+      //for(auto const &v : lifted_vars)
+      //{
+      //  /* Since global ctors don't run when loading object files, we
+      //   * need to manually initialize these. We use placement new to
+      //   * properly run ctors, just like what would happen normally. */
+      //  if(v.second.owned)
+      //  {
+      //    util::format_to(
+      //      footer_buffer,
+      //      R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
+      //      native_ns,
+      //      v.second.native_name,
+      //      v.first);
+      //  }
+      //  else
+      //  {
+      //    util::format_to(
+      //      footer_buffer,
+      //      R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
+      //      native_ns,
+      //      v.second.native_name,
+      //      v.first);
+      //  }
+      //}
+
+      //if(!lifted_constants.empty())
+      //{
+      //  auto const &first{ *lifted_constants.begin() };
+      //  auto last{ lifted_constants.begin() };
+      //  std::advance(last, lifted_constants.size() - 1);
+      //  util::format_to(footer_buffer,
+      //                  R"(GC_add_roots(&{}::{}, (&{}::{} + sizeof({}::{}) + 1));)",
+      //                  native_ns,
+      //                  first.second,
+      //                  native_ns,
+      //                  last->second,
+      //                  native_ns,
+      //                  last->second);
+      //}
+
+      //for(auto const &v : lifted_constants)
+      //{
+      //  util::format_to(footer_buffer,
+      //                  "new (&{}::{}) {}(",
+      //                  native_ns,
+      //                  v.second,
+      //                  detail::gen_constant_type(v.first, true));
+      //  detail::gen_constant(v.first, footer_buffer, true);
+      //  util::format_to(footer_buffer, ");");
+      //}
+
+      auto const fn_tmp{ b.expression_str() };
+      util::format_to(b.footer_buffer, "{}->call();", fn_tmp);
+
+      /* Load fn. */
+      util::format_to(b.footer_buffer, "}");
+
+      /* Namespace. */
+      util::format_to(b.footer_buffer, "}");
     }
 
     generated_cpp ret{ b.declaration_str(), b.expression_str() };
