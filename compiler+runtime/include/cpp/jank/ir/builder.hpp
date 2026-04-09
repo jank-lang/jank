@@ -43,7 +43,7 @@ namespace jank::ir
     jtl::ref<block> current_block() const;
     usize block(identifier const &name) const;
     identifier block_name(usize const block_index) const;
-    void remove_block(usize const block_index) const;
+    void remove_block(usize const block_index);
     void enter_block(usize const blk_index);
 
     identifier
@@ -94,13 +94,18 @@ namespace jank::ir
     identifier recursion_reference(analyze::expression_position const pos);
     identifier truthy(identifier const &value);
     identifier jump(usize const index);
+    identifier jump(usize const index, bool const loop);
     identifier branch_set(identifier const &shadow, identifier const &value);
     identifier branch_get(identifier const &name, jtl::ptr<void> const type) const;
     identifier branch(identifier const &condition,
                       identifier const &then_blk,
                       identifier const &else_blk,
                       jtl::option<identifier> const &merge_blk,
-                      jtl::option<inst::branch::shadow_details> const &shadow);
+                      jtl::option<detail::typed_shadow> const &shadow);
+    identifier loop(identifier const &loop_blk,
+                    jtl::option<identifier> const &merge_blk,
+                    jtl::option<detail::typed_shadow> const &shadow,
+                    native_vector<inst::loop::binding_shadow_details> &&shadows);
     identifier case_(i64 const shift,
                      i64 const mask,
                      identifier const &value,

@@ -55,6 +55,7 @@ namespace jank::ir
     branch_set,
     branch_get,
     branch,
+    loop,
     case_,
     try_,
     catch_,
@@ -91,6 +92,15 @@ namespace jank::ir
   };
 
   using instruction_ref = jtl::ref<instruction>;
+
+  namespace detail
+  {
+    struct typed_shadow
+    {
+      identifier name;
+      jtl::ptr<void> type;
+    };
+  }
 
   namespace inst
   {
@@ -342,11 +352,13 @@ namespace jank::ir
     struct jump : instruction
     {
       jump(identifier const &name, identifier const &block);
+      jump(identifier const &name, identifier const &block, bool const loop);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;
 
       identifier block;
+      bool loop{};
     };
 
     using jump_ref = jtl::ref<jump>;
@@ -374,18 +386,12 @@ namespace jank::ir
 
     struct branch : instruction
     {
-      struct shadow_details
-      {
-        identifier name;
-        jtl::ptr<void> type;
-      };
-
       branch(identifier const &name,
              identifier const &condition,
              identifier const &then_block,
              identifier const &else_block,
              jtl::option<identifier> const &merge_block,
-             jtl::option<shadow_details> const &shadow);
+             jtl::option<detail::typed_shadow> const &shadow);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;
@@ -394,10 +400,36 @@ namespace jank::ir
       identifier then_block;
       identifier else_block;
       jtl::option<identifier> merge_block;
-      jtl::option<shadow_details> shadow;
+      jtl::option<detail::typed_shadow> shadow;
     };
 
     using branch_ref = jtl::ref<branch>;
+
+    struct loop : instruction
+    {
+      struct binding_shadow_details
+      {
+        identifier name;
+        identifier value;
+        jtl::ptr<void> type;
+      };
+
+      loop(identifier const &name,
+           identifier const &loop_block,
+           jtl::option<identifier> const &merge_block,
+           jtl::option<detail::typed_shadow> const &shadow,
+           native_vector<binding_shadow_details> &&binding_shadows);
+
+      bool is_terminator() const override;
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier loop_block;
+      jtl::option<identifier> merge_block;
+      jtl::option<detail::typed_shadow> shadow;
+      native_vector<binding_shadow_details> binding_shadows;
+    };
+
+    using loop_ref = jtl::ref<loop>;
 
     struct case_ : instruction
     {

@@ -192,6 +192,13 @@ namespace jank::ir::inst
   {
   }
 
+  jump::jump(identifier const &name, identifier const &block, bool const loop)
+    : instruction{ instruction_kind::jump, name, Cpp::GetVoidType() }
+    , block{ block }
+    , loop{ loop }
+  {
+  }
+
   bool jump::is_terminator() const
   {
     return true;
@@ -214,7 +221,7 @@ namespace jank::ir::inst
                  identifier const &then_block,
                  identifier const &else_block,
                  jtl::option<identifier> const &merge_block,
-                 jtl::option<shadow_details> const &shadow)
+                 jtl::option<detail::typed_shadow> const &shadow)
     : instruction{ instruction_kind::branch, name, Cpp::GetVoidType() }
     , condition{ condition }
     , then_block{ then_block }
@@ -225,6 +232,24 @@ namespace jank::ir::inst
   }
 
   bool branch::is_terminator() const
+  {
+    return true;
+  }
+
+  loop::loop(identifier const &name,
+             identifier const &loop_block,
+             jtl::option<identifier> const &merge_block,
+             jtl::option<detail::typed_shadow> const &shadow,
+             native_vector<loop::binding_shadow_details> &&binding_shadows)
+    : instruction{ instruction_kind::loop, name, Cpp::GetVoidType() }
+    , loop_block{ loop_block }
+    , merge_block{ merge_block }
+    , shadow{ shadow }
+    , binding_shadows{ jtl::move(binding_shadows) }
+  {
+  }
+
+  bool loop::is_terminator() const
   {
     return true;
   }

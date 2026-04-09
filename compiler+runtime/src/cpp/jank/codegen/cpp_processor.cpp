@@ -46,6 +46,7 @@ namespace jank::codegen
     {
       block_index = function->find_block(block);
       instruction_index = 0;
+      seen_blocks.emplace(block);
     }
 
     void next_instruction()
@@ -173,11 +174,13 @@ namespace jank::codegen
                         "{}->arity_{} = &{}_{};",
                         ret_tmp,
                         param_count,
-                        module->root_fn_expr->unique_name,
+                        munge(module->root_fn_expr->unique_name),
                         param_count);
       }
 
       util::format_to(expression_buffer, "{}", ret_tmp);
+
+      util::println("// BINGBONG\n{}", expression_buffer.view());
 
       return { expression_buffer.data(), expression_buffer.size() };
     }
@@ -195,6 +198,7 @@ namespace jank::codegen
 
     usize block_index{}, instruction_index{};
     native_vector<std::pair<jtl::immutable_string, jtl::immutable_string>> deferred_bindings;
+    native_set<ir::identifier> seen_blocks;
   };
 
   using identifier = jtl::immutable_string;
@@ -524,14 +528,40 @@ namespace jank::codegen
       auto const current_inst{
         b.function->blocks[b.block_index].instructions[b.instruction_index]
       };
-      if(current_inst->kind == ir::instruction_kind::jump && jump_block.is_some()
-         && static_box_cast<ir::inst::jump>(current_inst)->block == jump_block.unwrap())
-      {
-        break;
-      }
       gen(current_inst, b);
+      if(current_inst->kind == ir::instruction_kind::jump)
+      {
+        auto const jump{ static_box_cast<ir::inst::jump>(current_inst) };
+        if(b.seen_blocks.contains(jump->block)
+           || (jump_block.is_some() && jump->block == jump_block.unwrap()))
+        {
+          break;
+        }
+      }
     }
   }
+
+  //void gen_until_jump(native_vector<jtl::option<identifier>> const &jump_blocks, builder &b)
+  //{
+  //  while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
+  //  {
+  //    auto const current_inst{
+  //      b.function->blocks[b.block_index].instructions[b.instruction_index]
+  //    };
+  //    if(current_inst->kind == ir::instruction_kind::jump)
+  //    {
+  //      for(auto const &jump_block : jump_blocks)
+  //      {
+  //        if(jump_block.is_some()
+  //           && static_box_cast<ir::inst::jump>(current_inst)->block == jump_block.unwrap())
+  //        {
+  //          break;
+  //        }
+  //      }
+  //    }
+  //    gen(current_inst, b);
+  //  }
+  //}
 
   jtl::option<identifier> gen(ir::inst::def_ref const &inst, builder &b)
   {
@@ -775,12 +805,13 @@ namespace jank::codegen
     bool need_comma{};
     for(auto const &capture : inst->captures)
     {
-      util::format_to(b.deps_buffer, "jank::runtime::object_ref {};", capture.first);
+      util::format_to(b.deps_buffer, "jank::runtime::object_ref {};", munge(capture.first));
 
       if(need_comma)
       {
         util::format_to(b.body_buffer, ", ");
       }
+      need_comma = true;
       if(capture.second == ":defer")
       {
         b.defer(inst->context, capture.first);
@@ -817,7 +848,7 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::parameter_ref const &inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer, "auto &&{}({});", inst->name, inst->value);
+    util::format_to(b.body_buffer, "auto &&{}({});", inst->name, munge(inst->value));
     return inst->name;
   }
 
@@ -825,7 +856,11 @@ namespace jank::codegen
   {
     b.next_instruction();
     auto const &closure_ctx{ munge(b.function->arity->fn_ctx->fn->unique_name + "_ctx") };
-    util::format_to(b.body_buffer, "auto &&{}({}->{});", inst->name, closure_ctx, inst->value);
+    util::format_to(b.body_buffer,
+                    "auto &&{}({}->{});",
+                    inst->name,
+                    closure_ctx,
+                    munge(inst->value));
     return inst->name;
   }
 
@@ -880,6 +915,17 @@ namespace jank::codegen
 
   jtl::option<identifier> gen(ir::inst::jump_ref const &inst, builder &b)
   {
+    b.next_instruction();
+
+    if(inst->loop)
+    {
+      util::format_to(b.body_buffer, "continue;");
+    }
+
+    if(b.seen_blocks.contains(inst->block))
+    {
+      return none;
+    }
     b.enter_block(inst->block);
     return none;
   }
@@ -925,6 +971,46 @@ namespace jank::codegen
     b.enter_block(inst->else_block);
     gen_until_jump(inst->merge_block, b);
     util::format_to(b.body_buffer, "}");
+
+    if(inst->merge_block.is_some())
+    {
+      b.enter_block(inst->merge_block.unwrap());
+    }
+
+    return none;
+  }
+
+  jtl::option<identifier> gen(ir::inst::loop_ref const &inst, builder &b)
+  {
+    b.next_instruction();
+
+    if(inst->shadow.is_some())
+    {
+      util::format_to(b.body_buffer,
+                      "{} {};",
+                      get_qualified_type_name(inst->shadow.unwrap().type),
+                      inst->shadow.unwrap().name);
+    }
+
+    for(auto const &shadow : inst->binding_shadows)
+    {
+      if(is_any_object(shadow.type))
+      {
+        util::format_to(b.body_buffer,
+                        "jank::runtime::object_ref {}({});",
+                        shadow.name,
+                        shadow.value);
+      }
+      else
+      {
+        util::format_to(b.body_buffer, "{ auto {}({}); ", shadow.name, shadow.value);
+      }
+    }
+
+    util::format_to(b.body_buffer, "while(true){");
+    b.enter_block(inst->loop_block);
+    gen_until_jump(inst->merge_block, b);
+    util::format_to(b.body_buffer, " break; }");
 
     if(inst->merge_block.is_some())
     {
@@ -1138,7 +1224,8 @@ namespace jank::codegen
      * to untype objects. */
     if(is_untyped_object(inst->expr->type) && is_any_object(inst->expr->conversion_type))
     {
-      return inst->value;
+      util::format_to(b.body_buffer, "auto &&{}({});", inst->name, inst->value);
+      return inst->name;
     }
 
     util::format_to(b.body_buffer,
@@ -1155,7 +1242,6 @@ namespace jank::codegen
 
   jtl::option<identifier> gen(ir::inst::cpp_from_object_ref const &inst, builder &b)
   {
-    b.next_instruction();
     ir::inst::cpp_into_object from{ inst->name, inst->value, inst->expr };
     return gen(ir::inst::cpp_into_object_ref{ &from }, b);
   }
@@ -1707,7 +1793,7 @@ namespace jank::codegen
   {
     jtl::string_builder sb;
     inst->print(sb, 0);
-    util::println("gen {}", sb.release());
+    //util::println("gen {}", sb.release());
     jtl::option<identifier> name;
     ir::visit_inst([&](auto const typed_inst) { name = gen(typed_inst, b); }, inst);
     return name;
@@ -1753,23 +1839,6 @@ namespace jank::codegen
                       munged_fn_name);
     }
 
-    if(fn.arity->fn_ctx->is_recur_recursive)
-    {
-      util::format_to(b.body_buffer, "{");
-
-      for(auto const &param : fn.arity->params)
-      {
-        auto const name{ munge(param->name) };
-        util::format_to(b.body_buffer, "auto {}({});", name, name);
-      }
-
-      util::format_to(b.body_buffer,
-                      R"(
-            while(true)
-            {
-          )");
-    }
-
     b.block_index = 0;
     b.instruction_index = 0;
     while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
@@ -1780,11 +1849,6 @@ namespace jank::codegen
     if(fn.arity->body->values.empty())
     {
       util::format_to(b.body_buffer, "return { };");
-    }
-
-    if(fn.arity->fn_ctx->is_recur_recursive)
-    {
-      util::format_to(b.body_buffer, "} }");
     }
 
     util::format_to(b.body_buffer, "}");
@@ -1814,6 +1878,7 @@ namespace jank::codegen
       auto const fn{ find_function(&mod, fn_name) };
       b.function = fn;
       gen(*fn, b);
+      b.seen_blocks.clear();
     }
 
     if(mod.target == compilation_target::module)

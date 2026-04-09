@@ -42,9 +42,15 @@ namespace jank::ir
     return current_function()->blocks[block_index].name;
   }
 
-  void builder::remove_block(usize const block_index) const
+  void builder::remove_block(usize const block_index)
   {
+    jank_debug_assert(this->block_index != block_index);
     current_function()->remove_block(block_index);
+
+    if(this->block_index >= block_index)
+    {
+      --this->block_index;
+    }
   }
 
   void builder::enter_block(usize const blk_index)
@@ -312,6 +318,15 @@ namespace jank::ir
     return name;
   }
 
+  identifier builder::jump(usize const index, bool const loop)
+  {
+    auto name{ next_ident() };
+    auto const &block{ current_function()->blocks[index].name };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::jump>(name, block, loop));
+    return name;
+  }
+
   identifier builder::branch_set(identifier const &shadow, identifier const &value)
   {
     auto name{ next_ident() };
@@ -331,11 +346,22 @@ namespace jank::ir
                              identifier const &then_blk,
                              identifier const &else_blk,
                              jtl::option<identifier> const &merge_blk,
-                             jtl::option<inst::branch::shadow_details> const &shadow)
+                             jtl::option<detail::typed_shadow> const &shadow)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::branch>(name, condition, then_blk, else_blk, merge_blk, shadow));
+    return name;
+  }
+
+  identifier builder::loop(identifier const &loop_blk,
+                           jtl::option<identifier> const &merge_blk,
+                           jtl::option<detail::typed_shadow> const &shadow,
+                           native_vector<inst::loop::binding_shadow_details> &&shadows)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::loop>(name, loop_blk, merge_blk, shadow, jtl::move(shadows)));
     return name;
   }
 

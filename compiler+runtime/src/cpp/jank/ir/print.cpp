@@ -285,9 +285,10 @@ namespace jank::ir
   void inst::jump::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,
-                    "{:name {} :op :jump :block {} :type \"{}\"}",
+                    "{:name {} :op :jump :block {} :loop {} :type \"{}\"}",
                     name,
                     block,
+                    loop,
                     get_qualified_type_name(type));
   }
 
@@ -321,6 +322,31 @@ namespace jank::ir
       merge_block.unwrap_or("nil"),
       (shadow.is_some() ? shadow.unwrap().name : "nil"),
       get_qualified_type_name(type));
+  }
+
+  void inst::loop::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :loop :loop-block {} :merge {} :shadow {} :shadows {",
+                    name,
+                    loop_block,
+                    merge_block.unwrap_or("nil"),
+                    (shadow.is_some() ? shadow.unwrap().name : "nil"));
+    bool needs_space{};
+    for(auto const &s : binding_shadows)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      util::format_to(sb,
+                      "{:name {} :value {} :type \"{}\"}",
+                      s.name,
+                      s.value,
+                      get_qualified_type_name(s.type));
+    }
+    util::format_to(sb, "} :type \"{}\"}", get_qualified_type_name(type));
   }
 
   void inst::case_::print(jtl::string_builder &sb, usize const) const

@@ -196,7 +196,7 @@ namespace jank::ir
       return ":defer";
     }
 
-    return b.locals[local_name] = b.parameter(expr->position, local_name);
+    return b.parameter(expr->position, local_name);
   }
 
   jtl::immutable_string gen_arity(module &mod,
@@ -204,43 +204,74 @@ namespace jank::ir
                                   analyze::expr::function_arity const &arity)
   {
     auto &fn{ mod.functions.emplace_back(&arity) };
-    fn.name = runtime::munge(util::format("{}_{}", fn_expr->unique_name, arity.params.size()));
+    auto name{ runtime::munge(util::format("{}_{}", fn_expr->unique_name, arity.params.size())) };
+    fn.name = name;
     fn.add_block("entry");
     builder b{ &mod, mod.functions.size() - 1 };
 
     for(auto const &capture : arity.frame->captures)
     {
       auto const &name{ capture.first->get_name() };
-      b.locals[name]
-        = b.capture(analyze::expression_position::value, capture.second.binding.type, name);
+      b.locals[name] = b.capture(analyze::expression_position::value,
+                                 capture.second.binding.type,
+                                 runtime::munge(name));
     }
 
     if(arity.fn_ctx->is_recur_recursive)
     {
+      auto recur_shadow{ b.next_shadow() };
+      native_vector<inst::loop::binding_shadow_details> shadows;
+      shadows.reserve(arity.params.size());
       for(auto const param : arity.params)
       {
         auto const shadow{ b.next_shadow() };
         auto const &name{ param->get_name() };
         b.locals[name] = b.parameter(analyze::expression_position::value, name);
         b.local_to_loop_shadow[name] = shadow;
-        b.branch_set(shadow, b.locals[name]);
+        shadows.emplace_back(shadow, b.locals[name], untyped_object_ref_type());
       }
 
       auto const recur_blk{ b.block(b.next_ident("recur")) };
       b.fn_recur_target = recur_blk;
-      b.jump(recur_blk);
+
+      auto const merge_blk{ b.block(b.next_ident("recur-merge")) };
+      b.loop(b.block_name(recur_blk),
+             b.block_name(merge_blk),
+             detail::typed_shadow{ recur_shadow, untyped_object_ref_type() },
+             jtl::move(shadows));
       b.enter_block(recur_blk);
 
+      for(auto const &param : arity.params)
+      {
+        auto const &name{ param->get_name() };
+        b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
+      }
+
+      jtl::option<identifier> body_res;
+      for(auto const expr : arity.body->values)
+      {
+        body_res = gen(expr, b);
+      }
+
+      if(!b.current_block()->has_terminator())
+      {
+        b.branch_set(recur_shadow, body_res.unwrap());
+        b.jump(merge_blk);
+      }
+
+      b.enter_block(merge_blk);
       for(auto const param : arity.params)
       {
         auto const &name{ param->get_name() };
         b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
       }
     }
-
-    for(auto const expr : arity.body->values)
+    else
     {
-      gen(expr, b);
+      for(auto const expr : arity.body->values)
+      {
+        gen(expr, b);
+      }
     }
 
     if(arity.body->values.empty())
@@ -248,7 +279,7 @@ namespace jank::ir
       b.literal(analyze::expression_position::tail, runtime::jank_nil());
     }
 
-    return fn.name;
+    return name;
   }
 
   static runtime::callable_arity_flags
@@ -334,7 +365,7 @@ namespace jank::ir
         auto const &name{ loop->pairs[i].first->name->get_name() };
         b.branch_set(b.local_to_loop_shadow[name], arg_idents[i]);
       }
-      return b.jump(b.loop_recur_target.unwrap());
+      return b.jump(b.loop_recur_target.unwrap(), true);
     }
     else
     {
@@ -344,7 +375,7 @@ namespace jank::ir
         auto const &name{ b.current_function()->arity->params[i]->get_name() };
         b.branch_set(b.local_to_loop_shadow[name], arg_idents[i]);
       }
-      return b.jump(b.fn_recur_target.unwrap());
+      return b.jump(b.fn_recur_target.unwrap(), true);
     }
   }
 
@@ -379,6 +410,9 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::let_ref const expr, builder &b)
   {
+    auto old_locals{ b.locals };
+    util::scope_exit const finally{ [&] { b.locals = jtl::move(old_locals); } };
+
     for(auto const &pair : expr->pairs)
     {
       b.locals[pair.first->name->get_name()] = gen(pair.second, b).unwrap();
@@ -386,19 +420,30 @@ namespace jank::ir
 
     if(expr->is_loop)
     {
+      auto loop_shadow{ b.next_shadow() };
+      native_vector<inst::loop::binding_shadow_details> shadows;
+      shadows.reserve(expr->pairs.size());
       for(auto const &pair : expr->pairs)
       {
         auto const shadow{ b.next_shadow() };
         auto const &name{ pair.first->name->get_name() };
+        auto const type{ expression_type(pair.second) };
         b.local_to_loop_shadow[name] = shadow;
-        b.branch_set(shadow, b.locals[name]);
+        shadows.emplace_back(shadow, b.locals[name], type);
       }
 
       auto const loop_blk{ b.block(b.next_ident("loop")) };
+      auto const merge_blk{ b.block(b.next_ident("loop-merge")) };
       auto old_current_loop{ b.loop_recur_target };
       util::scope_exit const finally{ [&] { b.loop_recur_target = jtl::move(old_current_loop); } };
       b.loop_recur_target = loop_blk;
-      b.jump(loop_blk);
+      b.loop(b.block_name(loop_blk),
+             (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
+                                                                    : jtl::option<identifier>{},
+             (expr->position != analyze::expression_position::tail)
+               ? detail::typed_shadow{ loop_shadow, expression_type(expr) }
+               : jtl::option<detail::typed_shadow>{},
+             jtl::move(shadows));
       b.enter_block(loop_blk);
 
       for(auto const &pair : expr->pairs)
@@ -407,7 +452,25 @@ namespace jank::ir
         b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], expression_type(pair.second));
       }
 
-      return gen(expr->body, b);
+      auto const body_res{ gen(expr->body, b) };
+
+      if(expr->position != analyze::expression_position::tail
+         && !b.current_block()->has_terminator())
+      {
+        b.branch_set(loop_shadow, body_res.unwrap());
+        b.jump(merge_blk);
+      }
+
+      if(expr->position != analyze::expression_position::tail)
+      {
+        b.enter_block(merge_blk);
+        b.branch_get(loop_shadow, expression_type(expr));
+        return loop_shadow;
+      }
+
+      b.remove_block(merge_blk);
+
+      return loop_shadow;
     }
     else
     {
@@ -469,7 +532,7 @@ namespace jank::ir
   {
     auto const then_blk{ b.block(b.next_ident("if")) };
     auto const else_blk{ b.block(b.next_ident("else")) };
-    auto const merge_blk{ b.block(b.next_ident("merge")) };
+    auto const merge_blk{ b.block(b.next_ident("if-merge")) };
     auto const condition_name{ gen(expr->condition, b).unwrap() };
     auto const shadow{ b.next_shadow() };
 
@@ -484,8 +547,8 @@ namespace jank::ir
              (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
                                                                     : jtl::option<identifier>{},
              (expr->position != analyze::expression_position::tail)
-               ? inst::branch::shadow_details{ shadow, expression_type(expr->then) }
-               : jtl::option<inst::branch::shadow_details>{});
+               ? detail::typed_shadow{ shadow, expression_type(expr->then) }
+               : jtl::option<detail::typed_shadow>{});
 
     b.enter_block(then_blk);
     auto const then_name{ gen(expr->then, b) };
@@ -496,10 +559,10 @@ namespace jank::ir
     }
 
     b.enter_block(else_blk);
-    identifier else_name;
+    jtl::option<identifier> else_name;
     if(expr->else_.is_some())
     {
-      else_name = gen(expr->else_.unwrap(), b).unwrap();
+      else_name = gen(expr->else_.unwrap(), b);
     }
     else
     {
@@ -507,7 +570,7 @@ namespace jank::ir
     }
     if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
     {
-      b.branch_set(shadow, else_name);
+      b.branch_set(shadow, else_name.unwrap());
       b.jump(merge_blk);
     }
 
@@ -532,7 +595,7 @@ namespace jank::ir
     auto const try_blk{ b.block(b.next_ident("try")) };
     b.jump(try_blk);
 
-    auto const merge_blk{ b.block(b.next_ident("merge")) };
+    auto const merge_blk{ b.block(b.next_ident("try-merge")) };
     auto const shadow{ b.next_shadow() };
     auto const original_pos{ expr->position };
 
@@ -613,7 +676,7 @@ namespace jank::ir
     auto const value_ident{ gen(expr->value_expr, b).unwrap() };
     auto const starting_block{ b.current_block()->index };
     auto const shadow{ b.next_shadow() };
-    auto const merge_blk{ b.block(b.next_ident("merge")) };
+    auto const merge_blk{ b.block(b.next_ident("case-merge")) };
 
     native_unordered_map<i64, identifier> cases;
     for(usize i{}; i < expr->keys.size(); ++i)
@@ -794,9 +857,9 @@ namespace jank::ir
     jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
     if(print_settings == "1")
     {
-      util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
+      //util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
+      util::println("{}", print(mod));
     }
-    //util::println("{}", print(mod));
 
     return mod;
   }
