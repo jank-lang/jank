@@ -16,14 +16,14 @@
           :coerce :boolean}})
 
 (defn usage []
-  (println "Usage: bb bash-test.bb [--list] [--help] [filters...]
+  (println (str "Usage: " (-> *file* java.io.File. .getName) " [--list] [--help] [filters...]
 
 Options:
   -l, --list    List matching tests and exit
   -h, --help    Show this help
 
 Filters:
-  Positional arguments filter tests by substring match in the test path."))
+  Positional arguments filter tests by substring match in the test path.")))
 
 (defn matches-filter? [filters path]
   (or (empty? filters)
