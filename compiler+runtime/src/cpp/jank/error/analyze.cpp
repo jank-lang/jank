@@ -399,6 +399,21 @@ namespace jank::error
     return make_error(kind::analyze_invalid_cpp_new, message, source, expansion);
   }
 
+  error_ref analyze_invalid_cpp_def(jtl::immutable_string const &message,
+                                    read::source const &source,
+                                    runtime::object_ref const expansion)
+  {
+    return make_error(kind::analyze_invalid_cpp_def, message, source, expansion);
+  }
+
+  error_ref analyze_invalid_cpp_def(jtl::immutable_string const &message,
+                                    read::source const &source,
+                                    error::note const &note,
+                                    runtime::object_ref const expansion)
+  {
+    return make_error(kind::analyze_invalid_def, message, source, note, expansion);
+  }
+
   error_ref analyze_invalid_cpp_delete(jtl::immutable_string const &message,
                                        read::source const &source,
                                        runtime::object_ref const expansion)

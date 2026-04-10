@@ -107,6 +107,7 @@ namespace jank::codegen
     jtl::ref<ir::module> module;
     jtl::ref<ir::function> function;
 
+    jtl::string_builder cpp_def_buffer{};
     jtl::string_builder cpp_raw_buffer{};
     jtl::string_builder module_header_buffer{};
     jtl::string_builder deps_buffer{};
@@ -1736,6 +1737,36 @@ namespace jank::codegen
     return inst->name;
   }
 
+  jtl::option<identifier> gen(ir::inst::cpp_def_ref const &inst, builder &b)
+  {
+    b.next_instruction();
+    auto const type_name{ get_qualified_type_name(inst->expr->type) };
+    auto const munged_current_ns{ runtime::munge(__rt_ctx->current_ns()->name->name) };
+    auto const munged_var_name{ runtime::munge(inst->expr->name->get_name()) };
+
+    auto const native_ns{ module::module_to_native_ns(munged_current_ns) };
+
+    util::format_to(b.cpp_def_buffer, "{} {}{ };", type_name, munged_var_name);
+    if(inst->value.is_some())
+    {
+      util::format_to(b.body_buffer,
+                      "{}::{} = {};",
+                      native_ns,
+                      munged_var_name,
+                      inst->value.unwrap());
+    }
+
+    util::format_to(b.body_buffer,
+                    R"(_jank_refer_global("{}.{}", "{}");)",
+                    munged_current_ns,
+                    munged_var_name,
+                    inst->expr->name->name);
+
+    util::format_to(b.body_buffer, "auto {}{jank::runtime::jank_nil};", inst->name);
+
+    return inst->name;
+  }
+
   jtl::option<identifier> gen(ir::inst::cpp_delete_ref const &inst, builder &b)
   {
     b.next_instruction();
@@ -1861,6 +1892,8 @@ namespace jank::codegen
                       "namespace {} {\n",
                       module::module_to_native_ns(mod.name));
 
+      util::format_to(b.module_header_buffer, "{}", b.cpp_def_buffer.view());
+
       /* We need to initialize these with the special _jank_null, which temporarily stores
        * a nullptr within them. This isn't normally allowed, but we can't assume we have
        * access to jank_nil when these are initialized because initialization order across
@@ -1878,6 +1911,13 @@ namespace jank::codegen
                         "jank::runtime::var_ref {}{ _jank_null{ } };\n",
                         v.second.name);
       }
+    }
+    else if(!b.cpp_def_buffer.empty())
+    {
+      util::format_to(b.module_header_buffer,
+                      "namespace {}{ {} }",
+                      module::module_to_native_ns(__rt_ctx->current_ns()->name->name),
+                      b.cpp_def_buffer.view());
     }
 
     if(mod.target == compilation_target::module)

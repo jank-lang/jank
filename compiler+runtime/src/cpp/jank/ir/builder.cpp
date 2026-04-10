@@ -672,6 +672,19 @@ namespace jank::ir
     return name;
   }
 
+  identifier
+  builder::cpp_def(jtl::option<identifier> const &value, analyze::expr::cpp_def_ref const expr)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_def>(name, value, expr));
+    if(expr->position == analyze::expression_position::tail)
+    {
+      return ret(name, expression_type(expr));
+    }
+    return name;
+  }
+
   identifier builder::cpp_delete(identifier const &value, analyze::expr::cpp_delete_ref const expr)
   {
     auto name{ next_ident() };

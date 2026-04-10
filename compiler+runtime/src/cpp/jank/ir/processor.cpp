@@ -855,6 +855,16 @@ namespace jank::ir
     return b.cpp_new(gen(expr->value_expr, b).unwrap(), expr);
   }
 
+  jtl::option<identifier> gen(analyze::expr::cpp_def_ref const expr, builder &b)
+  {
+    jtl::option<identifier> value_ident;
+    if(expr->value_expr.is_some())
+    {
+      value_ident = gen(expr->value_expr.unwrap(), b);
+    }
+    return b.cpp_def(value_ident, expr);
+  }
+
   jtl::option<identifier> gen(analyze::expr::cpp_delete_ref const expr, builder &b)
   {
     return b.cpp_delete(gen(expr->value_expr, b).unwrap(), expr);
