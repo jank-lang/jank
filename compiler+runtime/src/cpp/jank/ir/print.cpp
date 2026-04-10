@@ -627,6 +627,15 @@ namespace jank::ir
                     get_qualified_type_name(type));
   }
 
+  void inst::cpp_def::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    R"({:name {} :op :cpp/def :value {} :type "{}"})",
+                    name,
+                    value.unwrap_or("nil"),
+                    get_qualified_type_name(type));
+  }
+
   void inst::cpp_delete::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,

@@ -1,0 +1,5 @@
+(ns jank.cpp.def.fail-invalid-type-dsl)
+
+(cpp/def :ivalid-type my-var)
+
+:success

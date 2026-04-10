@@ -61,6 +61,7 @@
 #include <jank/analyze/expr/cpp_builtin_operator_call.hpp>
 #include <jank/analyze/expr/cpp_box.hpp>
 #include <jank/analyze/expr/cpp_unbox.hpp>
+#include <jank/analyze/expr/cpp_def.hpp>
 #include <jank/analyze/expr/cpp_new.hpp>
 #include <jank/analyze/expr/cpp_delete.hpp>
 #include <jank/analyze/rtti.hpp>
@@ -1341,6 +1342,7 @@ namespace jank::analyze
       {         make_box<symbol>("cpp/box"),         &processor::analyze_cpp_box },
       {       make_box<symbol>("cpp/unbox"),       &processor::analyze_cpp_unbox },
       {         make_box<symbol>("cpp/new"),         &processor::analyze_cpp_new },
+      {         make_box<symbol>("cpp/def"),         &processor::analyze_cpp_def },
       {      make_box<symbol>("cpp/delete"),      &processor::analyze_cpp_delete },
     };
     return ret;
@@ -4628,6 +4630,122 @@ namespace jank::analyze
     }
 
     return jtl::make_ref<expr::cpp_delete>(position, current_frame, needs_box, l, value_expr);
+  }
+
+  processor::expression_result
+  processor::analyze_cpp_def(obj::persistent_list_ref const l,
+                             local_frame_ptr const current_frame,
+                             expression_position const position,
+                             jtl::option<expr::function_context_ref> const &fn_ctx,
+                             bool const needs_box)
+  {
+    auto const count(l->count());
+    if(count < 2)
+    {
+      return error::analyze_invalid_cpp_def("The call to 'cpp/def' is missing a type to allocate.",
+                                            object_source(l->first()),
+                                            latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+    if(count < 3)
+    {
+      return error::analyze_invalid_cpp_def("The call to 'cpp/def' is missing the identifier.",
+                                            object_source(l->first()),
+                                            latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 0));
+    }
+
+    auto const type_obj{ l->data.rest().first().unwrap() };
+    auto const type_expr_res{ analyze_type(type_obj, current_frame, fn_ctx) };
+    if(type_expr_res.is_err())
+    {
+      return type_expr_res.expect_err()->add_usage(read::parse::reparse_nth(l, 1));
+    }
+
+    auto const sym_obj{ l->data.rest().rest().first().unwrap() };
+    if(sym_obj.get_type() != runtime::object_type::symbol)
+    {
+      return error::analyze_invalid_cpp_def("The var name in a 'cpp/def' must be a symbol.",
+                                            object_source(sym_obj),
+                                            latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
+    }
+
+    auto const name_sym{ runtime::expect_object<runtime::obj::symbol>(sym_obj) };
+    if(!name_sym->ns.empty())
+    {
+      return error::analyze_invalid_cpp_def(
+               "The provided var name for a 'cpp/def' must not be qualified.",
+               meta_source(name_sym->get_meta()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
+    }
+
+    auto const found_var{ __rt_ctx->find_var(name_sym) };
+    if(found_var.is_some())
+    {
+      return error::analyze_invalid_cpp_def(
+               util::format("'{}' already refers to {} in namespace '{}'",
+                            name_sym->name,
+                            found_var->to_string(),
+                            __rt_ctx->current_ns()->to_string()),
+               meta_source(name_sym->get_meta()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
+    }
+
+    if(__rt_ctx->current_ns()->find_referred_global(name_sym).is_some())
+    {
+      return error::analyze_invalid_cpp_def(
+               util::format("'{}' already exists as global in namespace '{}'",
+                            name_sym->name,
+                            __rt_ctx->current_ns()->to_string()),
+               meta_source(name_sym->get_meta()),
+               latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(l, 2));
+    }
+
+    auto const type{ type_expr_res.expect_ok() };
+    jtl::option<expression_ref> value_expr_opt{};
+
+    if(l->count() == 4)
+    {
+      auto value_expr_res{ analyze(l->data.rest().rest().rest().first().unwrap(),
+                                   current_frame,
+                                   expression_position::value,
+                                   fn_ctx,
+                                   false) };
+
+      if(value_expr_res.is_err())
+      {
+        return value_expr_res.expect_err()->add_usage(read::parse::reparse_nth(l, 3));
+      }
+
+      value_expr_res
+        = apply_implicit_conversion(value_expr_res.expect_ok(), type, macro_expansions);
+      if(value_expr_res.is_err())
+      {
+        return error::analyze_invalid_cpp_def(
+                 "The type of the value does not match the variable type.",
+                 object_source(l->first()),
+                 /* TODO: Reparse for the note. */
+                 error::note{
+                   "value here",
+                   object_source(l->next()->next()->next()->first()),
+                 },
+                 latest_expansion(macro_expansions))
+          ->add_usage(read::parse::reparse_nth(l, 0));
+      }
+
+      value_expr_opt = value_expr_res.expect_ok();
+    }
+
+    return jtl::make_ref<expr::cpp_def>(position,
+                                        current_frame,
+                                        needs_box,
+                                        type,
+                                        name_sym,
+                                        value_expr_opt);
   }
 
   processor::expression_result
