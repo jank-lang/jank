@@ -1,0 +1,4 @@
+(ns jank.cpp.def.fail-type-mismatch)
+
+(cpp/def int foo "bar")
+:success
