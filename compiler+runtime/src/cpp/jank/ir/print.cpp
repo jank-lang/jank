@@ -55,7 +55,7 @@ namespace jank::ir
     util::format_to(sb,
                     "{:name {} :op :literal :value {} :type \"{}\"}",
                     name,
-                    runtime::to_code_string(value),
+                    value,
                     get_qualified_type_name(type));
   }
 
@@ -220,7 +220,7 @@ namespace jank::ir
     util::format_to(sb,
                     "{:name {} :op :var-deref :var {} :type \"{}\"}",
                     name,
-                    qualified_var,
+                    var,
                     get_qualified_type_name(type));
   }
 
@@ -640,18 +640,54 @@ namespace jank::ir
   {
     util::format_to(sb, "{:name {}\n", mod.name);
     print_indent(sb, ++indent);
-    util::format_to(sb, ":functions [");
-    indent = determine_indent(sb);
-    bool needs_indent{};
-    for(auto const &f : mod.functions)
+    util::format_to(sb, ":lifted-vars {");
     {
-      if(needs_indent)
+      auto const indent{ determine_indent(sb) };
+      bool needs_indent{};
+      for(auto const &v : mod.lifted_vars)
       {
-        sb('\n');
-        print_indent(sb, indent);
+        if(needs_indent)
+        {
+          sb('\n');
+          print_indent(sb, indent);
+        }
+        needs_indent = true;
+        util::format_to(sb, "{} {}", v.first, v.second.qualified_var);
       }
-      needs_indent = true;
-      print(f, sb, indent);
+    }
+    util::format_to(sb, "}\n");
+    print_indent(sb, indent);
+    util::format_to(sb, ":lifted-constants {");
+    {
+      auto const indent{ determine_indent(sb) };
+      bool needs_indent{};
+      for(auto const &c : mod.lifted_constants)
+      {
+        if(needs_indent)
+        {
+          sb('\n');
+          print_indent(sb, indent);
+        }
+        needs_indent = true;
+        util::format_to(sb, "{} {}", c.first, c.second->to_code_string());
+      }
+    }
+    util::format_to(sb, "}\n");
+    print_indent(sb, indent);
+    util::format_to(sb, ":functions [");
+    {
+      auto const indent{ determine_indent(sb) };
+      bool needs_indent{};
+      for(auto const &f : mod.functions)
+      {
+        if(needs_indent)
+        {
+          sb('\n');
+          print_indent(sb, indent);
+        }
+        needs_indent = true;
+        print(f, sb, indent);
+      }
     }
     util::format_to(sb, "]}");
   }

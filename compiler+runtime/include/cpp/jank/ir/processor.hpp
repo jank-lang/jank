@@ -52,6 +52,15 @@ namespace jank::ir
     analyze::expr::function_ref root_fn_expr;
     native_vector<jtl::immutable_string> entry_points{};
     native_vector<function> functions{};
+    native_unordered_map<identifier, runtime::object_ref> lifted_constants{};
+
+    struct lifted_var
+    {
+      jtl::immutable_string qualified_var;
+      bool owned{};
+    };
+
+    native_unordered_map<identifier, lifted_var> lifted_vars{};
   };
 
   module create(analyze::expr::function_ref,

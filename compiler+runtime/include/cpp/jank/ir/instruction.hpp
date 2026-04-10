@@ -132,11 +132,15 @@ namespace jank::ir
 
     struct literal : instruction
     {
-      literal(identifier const &name, jtl::ptr<void> const type, runtime::object_ref const value);
+      literal(identifier const &name,
+              jtl::ptr<void> const type,
+              runtime::object_ref const obj,
+              identifier const &value);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
-      runtime::object_ref value;
+      runtime::object_ref obj;
+      identifier value;
     };
 
     using literal_ref = jtl::ref<literal>;
@@ -275,13 +279,11 @@ namespace jank::ir
 
     struct var_deref : instruction
     {
-      var_deref(identifier const &name,
-                jtl::ptr<void> const type,
-                jtl::immutable_string const &qualified_var);
+      var_deref(identifier const &name, identifier const &var);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
-      jtl::immutable_string qualified_var;
+      identifier var;
     };
 
     using var_deref_ref = jtl::ref<var_deref>;

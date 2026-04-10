@@ -180,8 +180,6 @@ namespace jank::codegen
 
       util::format_to(expression_buffer, "{}", ret_tmp);
 
-      util::println("// BINGBONG\n{}", expression_buffer.view());
-
       return { expression_buffer.data(), expression_buffer.size() };
     }
 
@@ -201,7 +199,73 @@ namespace jank::codegen
     native_set<ir::identifier> seen_blocks;
   };
 
-  using identifier = jtl::immutable_string;
+  using identifier = ir::identifier;
+
+
+  static folly::Synchronized<native_unordered_map<runtime::object_ref,
+                                                  identifier,
+                                                  std::hash<runtime::object_ref>,
+                                                  runtime::very_equal_to>>
+    /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+    global_constants;
+  static folly::Synchronized<native_unordered_map<jtl::immutable_string, identifier>>
+    /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+    global_vars;
+
+  static identifier lift_constant(identifier const &name, builder &b)
+  {
+    auto const o{ b.module->lifted_constants.at(name) };
+    if(b.module->target == compilation_target::eval)
+    {
+      auto locked_global_constants{ global_constants.wlock() };
+      auto const found{ locked_global_constants->find(o) };
+      if(found != locked_global_constants->end())
+      {
+        return found->second;
+      }
+
+      /* We want to use this global directly, since it's already in memory. We need the
+       * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
+       * our object. */
+      [[maybe_unused]]
+      auto * const root{ new(NoGC) runtime::object *{ o.data } };
+      /* TODO: Not a fan of this. Move into global? Init with uncollectable ptr. */
+      auto const fmt_str{ util::format("{}{ (void*){} }",
+                                       get_qualified_type_name(literal_type(o)),
+                                       static_cast<void *>(o.data)) };
+      locked_global_constants->emplace(o, fmt_str);
+      return fmt_str;
+    }
+    return name;
+  }
+
+  static jtl::immutable_string lift_var(identifier const &name, builder &b)
+  {
+    auto const &module_var{ b.module->lifted_vars.at(name) };
+    auto const qualified_name{ module_var.qualified_var };
+    if(b.module->target == compilation_target::eval)
+    {
+      auto locked_global_vars{ global_vars.wlock() };
+      auto const found{ locked_global_vars->find(qualified_name) };
+      if(found != locked_global_vars->end())
+      {
+        return found->second;
+      }
+
+      auto const var{ __rt_ctx->intern_var(qualified_name).expect_ok() };
+
+      /* We want to use this global directly, since it's already in memory. We need the
+       * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
+       * our object. */
+      [[maybe_unused]]
+      auto const root{ new(NoGC) runtime::var *{ reinterpret_cast<runtime::var *>(var.data) } };
+      auto const fmt_str{ util::format("reinterpret_cast<jank::runtime::var*>({})",
+                                       static_cast<void *>(var.data)) };
+      locked_global_vars->emplace(qualified_name, fmt_str);
+      return fmt_str;
+    }
+    return name;
+  }
 
   void gen(ir::function const &fn, builder &b);
 
@@ -600,21 +664,17 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::var_deref_ref const &inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(
-      b.body_buffer,
-      "auto const {}(jank::runtime::__rt_ctx->intern_var(\"{}\").expect_ok()->deref());",
-      inst->name,
-      inst->qualified_var);
+    auto const lifted{ lift_var(inst->var, b) };
+    util::format_to(b.body_buffer, "auto const {}({}->deref());", inst->name, lifted);
     return inst->name;
   }
 
   jtl::option<identifier> gen(ir::inst::var_ref_ref const &inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer,
-                    "auto const {}(jank::runtime::__rt_ctx->intern_var(\"{}\").expect_ok());",
-                    inst->name,
-                    inst->qualified_var);
+
+    auto const lifted{ lift_var(inst->qualified_var, b) };
+    util::format_to(b.body_buffer, "auto const {}({});", inst->name, lifted);
     return inst->name;
   }
 
@@ -637,9 +697,8 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::literal_ref const &inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer, "auto const {}(", inst->name);
-    detail::gen_constant(inst->value, b.body_buffer);
-    util::format_to(b.body_buffer, ");");
+    auto const lifted{ lift_constant(inst->value, b) };
+    util::format_to(b.body_buffer, "auto const {}({});", inst->name, lifted);
     return inst->name;
   }
 
@@ -1261,11 +1320,12 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_call_ref const &inst, builder &b)
   {
     b.next_instruction();
-    //if((target == compilation_target::module || target == compilation_target::module_function)
-    //   && !expr->function_code.empty())
-    //{
-    //  util::format_to(cpp_raw_buffer, "\n{}\n", expr->function_code);
-    //}
+    if((b.module->target == compilation_target::module
+        || b.module->target == compilation_target::module_function)
+       && !inst->expr->function_code.empty())
+    {
+      util::format_to(b.cpp_raw_buffer, "\n{}\n", inst->expr->function_code);
+    }
 
     auto const source_type{ expression_type(inst->expr->source_expr) };
 
@@ -1858,6 +1918,15 @@ namespace jank::codegen
   {
     builder b{ &mod, mod.entry_points[0] };
 
+    auto const arity_flags{ find_function(&mod, mod.entry_points[0])->arity->fn_ctx->fn->arities };
+    for(auto const &fn_name : mod.entry_points)
+    {
+      auto const fn{ find_function(&mod, fn_name) };
+      b.function = fn;
+      gen(*fn, b);
+      b.seen_blocks.clear();
+    }
+
     /* Module targeting works in a special way, with the goal of
      * cutting down the generated code size. Instead of each function
      * having its own lifted vars/constants, we have one namespace for
@@ -1870,16 +1939,49 @@ namespace jank::codegen
       util::format_to(b.module_header_buffer,
                       "namespace {} {",
                       runtime::module::module_to_native_ns(mod.name));
-    }
 
-    auto const arity_flags{ find_function(&mod, mod.entry_points[0])->arity->fn_ctx->fn->arities };
-    for(auto const &fn_name : mod.entry_points)
-    {
-      auto const fn{ find_function(&mod, fn_name) };
-      b.function = fn;
-      gen(*fn, b);
-      b.seen_blocks.clear();
+      for(auto const &v : b.module->lifted_constants)
+      {
+        /* TODO: Typed lifted constants (in analysis). */
+        util::format_to(b.module_header_buffer,
+                        "{} {};",
+                        get_qualified_type_name(literal_type(v.second)),
+                        v.first);
+      }
+      for(auto const &v : b.module->lifted_vars)
+      {
+        util::format_to(b.module_header_buffer, "jank::runtime::var_ref {};", v.first);
+      }
     }
+    //else
+    //{
+    //  for(auto const &v : b.lifted_constants)
+    //  {
+    //    /* TODO: Typed lifted constants (in analysis). */
+    //    util::format_to(b.header_buffer, "extern \"C\" auto const {}{ ", v.second);
+    //    detail::gen_constant(v.first, b.header_buffer);
+    //    util::format_to(b.header_buffer, "};");
+    //  }
+    //  for(auto const &v : b.module->lifted_vars)
+    //  {
+    //    if(v.second.owned)
+    //    {
+    //      util::format_to(
+    //        b.header_buffer,
+    //        R"(extern "C" auto const {}{ jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok() };)",
+    //        v.first,
+    //        v.second.qualified_var);
+    //    }
+    //    else
+    //    {
+    //      util::format_to(
+    //        b.header_buffer,
+    //        R"(extern "C" auto const {}{ jank::runtime::__rt_ctx->intern_var("{}").expect_ok() };)",
+    //        v.first,
+    //        v.second.qualified_var);
+    //    }
+    //  }
+    //}
 
     if(mod.target == compilation_target::module)
     {
@@ -1908,74 +2010,74 @@ namespace jank::codegen
                       current_ns->name->get_name(),
                       current_ns->symbol_counter.load());
 
-      //auto const native_ns{ runtime::module::module_to_native_ns(mod.name) };
+      auto const native_ns{ runtime::module::module_to_native_ns(mod.name) };
 
-      ///* BDWGC doesn't pick up globals in JIT compiled code, so we need to register both
-      // * our lifted vars and lifted constants. Since they're right next to each other,
-      // * we can just register the range of the first -> last. */
-      //if(!lifted_vars.empty())
-      //{
-      //  auto const &first{ *lifted_vars.begin() };
-      //  auto last{ lifted_vars.begin() };
-      //  std::advance(last, lifted_vars.size() - 1);
-      //  util::format_to(footer_buffer,
-      //                  R"(GC_add_roots(&{}::{}, (&{}::{} + 1));)",
-      //                  native_ns,
-      //                  first.second.native_name,
-      //                  native_ns,
-      //                  last->second.native_name);
-      //}
+      /* BDWGC doesn't pick up globals in JIT compiled code, so we need to register both
+       * our lifted vars and lifted constants. Since they're right next to each other,
+       * we can just register the range of the first -> last. */
+      if(!b.module->lifted_vars.empty())
+      {
+        auto const &first{ *b.module->lifted_vars.begin() };
+        auto last{ b.module->lifted_vars.begin() };
+        std::advance(last, b.module->lifted_vars.size() - 1);
+        util::format_to(b.footer_buffer,
+                        R"(GC_add_roots(&{}::{}, (&{}::{} + 1));)",
+                        native_ns,
+                        first.first,
+                        native_ns,
+                        last->first);
+      }
 
-      //for(auto const &v : lifted_vars)
-      //{
-      //  /* Since global ctors don't run when loading object files, we
-      //   * need to manually initialize these. We use placement new to
-      //   * properly run ctors, just like what would happen normally. */
-      //  if(v.second.owned)
-      //  {
-      //    util::format_to(
-      //      footer_buffer,
-      //      R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
-      //      native_ns,
-      //      v.second.native_name,
-      //      v.first);
-      //  }
-      //  else
-      //  {
-      //    util::format_to(
-      //      footer_buffer,
-      //      R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
-      //      native_ns,
-      //      v.second.native_name,
-      //      v.first);
-      //  }
-      //}
+      for(auto const &v : b.module->lifted_vars)
+      {
+        /* Since global ctors don't run when loading object files, we
+         * need to manually initialize these. We use placement new to
+         * properly run ctors, just like what would happen normally. */
+        if(v.second.owned)
+        {
+          util::format_to(
+            b.footer_buffer,
+            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
+            native_ns,
+            v.first,
+            v.second.qualified_var);
+        }
+        else
+        {
+          util::format_to(
+            b.footer_buffer,
+            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
+            native_ns,
+            v.first,
+            v.second.qualified_var);
+        }
+      }
 
-      //if(!lifted_constants.empty())
-      //{
-      //  auto const &first{ *lifted_constants.begin() };
-      //  auto last{ lifted_constants.begin() };
-      //  std::advance(last, lifted_constants.size() - 1);
-      //  util::format_to(footer_buffer,
-      //                  R"(GC_add_roots(&{}::{}, (&{}::{} + sizeof({}::{}) + 1));)",
-      //                  native_ns,
-      //                  first.second,
-      //                  native_ns,
-      //                  last->second,
-      //                  native_ns,
-      //                  last->second);
-      //}
+      if(!b.module->lifted_constants.empty())
+      {
+        auto const &first{ *b.module->lifted_constants.begin() };
+        auto last{ b.module->lifted_constants.begin() };
+        std::advance(last, b.module->lifted_constants.size() - 1);
+        util::format_to(b.footer_buffer,
+                        R"(GC_add_roots(&{}::{}, (&{}::{} + sizeof({}::{}) + 1));)",
+                        native_ns,
+                        first.first,
+                        native_ns,
+                        last->first,
+                        native_ns,
+                        last->first);
+      }
 
-      //for(auto const &v : lifted_constants)
-      //{
-      //  util::format_to(footer_buffer,
-      //                  "new (&{}::{}) {}(",
-      //                  native_ns,
-      //                  v.second,
-      //                  detail::gen_constant_type(v.first, true));
-      //  detail::gen_constant(v.first, footer_buffer, true);
-      //  util::format_to(footer_buffer, ");");
-      //}
+      for(auto const &v : b.module->lifted_constants)
+      {
+        util::format_to(b.footer_buffer,
+                        "new (&{}::{}) {}(",
+                        native_ns,
+                        v.first,
+                        get_qualified_type_name(literal_type(v.second)));
+        detail::gen_constant(v.second, b.footer_buffer);
+        util::format_to(b.footer_buffer, ");");
+      }
 
       auto const fn_tmp{ b.expression_str() };
       util::format_to(b.footer_buffer, "{}->call();", fn_tmp);

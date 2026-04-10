@@ -156,5 +156,11 @@ namespace jank::ir
     native_set<jtl::immutable_string> allowed_defers{};
     jtl::option<usize> loop_recur_target{};
     jtl::option<usize> fn_recur_target{};
+    native_unordered_map<jtl::immutable_string, identifier> lifted_vars{};
+    native_unordered_map<runtime::object_ref,
+                         identifier,
+                         std::hash<runtime::object_ref>,
+                         runtime::very_equal_to>
+      lifted_constants{};
   };
 }

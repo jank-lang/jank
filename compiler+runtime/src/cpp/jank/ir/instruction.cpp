@@ -44,8 +44,10 @@ namespace jank::ir::inst
 
   literal::literal(identifier const &name,
                    jtl::ptr<void> const type,
-                   runtime::object_ref const value)
+                   runtime::object_ref const obj,
+                   identifier const &value)
     : instruction{ instruction_kind::literal, name, type }
+    , obj{ obj }
     , value{ value }
   {
   }
@@ -139,11 +141,9 @@ namespace jank::ir::inst
   {
   }
 
-  var_deref::var_deref(identifier const &name,
-                       jtl::ptr<void> const type,
-                       jtl::immutable_string const &qualified_var)
-    : instruction{ instruction_kind::var_deref, name, type }
-    , qualified_var{ qualified_var }
+  var_deref::var_deref(identifier const &name, identifier const &var)
+    : instruction{ instruction_kind::var_deref, name, untyped_object_ref_type() }
+    , var{ var }
   {
   }
 

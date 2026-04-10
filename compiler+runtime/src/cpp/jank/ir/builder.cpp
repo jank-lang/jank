@@ -1,5 +1,7 @@
 #include <jank/ir/builder.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/core/munge.hpp>
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
 
@@ -89,10 +91,23 @@ namespace jank::ir
   identifier
   builder::literal(analyze::expression_position const pos, runtime::object_ref const value)
   {
-    auto name{ next_ident() };
+    auto literal_name{ runtime::munge(runtime::__rt_ctx->unique_string("const")) };
+    auto const found{ lifted_constants.find(value) };
     auto const type{ literal_type(value) };
+    if(found != lifted_constants.end())
+    {
+      if(pos == analyze::expression_position::tail)
+      {
+        return ret(found->second, type);
+      }
+      return found->second;
+    }
+    lifted_constants.emplace(value, literal_name);
+    mod->lifted_constants.emplace(literal_name, value);
+
+    auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::literal>(name, type, value));
+      jtl::make_ref<inst::literal>(name, type, value, literal_name));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
@@ -234,12 +249,26 @@ namespace jank::ir
                                 jtl::immutable_string const &qualified_var)
   {
     auto name{ next_ident() };
-    auto const type{ untyped_object_ref_type() };
+    static jtl::immutable_string const dot{ "\\." };
+    auto const us{ runtime::__rt_ctx->unique_string(qualified_var) };
+    jtl::immutable_string lifted_var_name;
+    auto const found{ lifted_vars.find(qualified_var) };
+    if(found == lifted_vars.end())
+    {
+      lifted_var_name = runtime::munge_and_replace(us, dot, "_");
+      mod->lifted_vars.emplace(lifted_var_name, qualified_var);
+      lifted_vars.emplace(qualified_var, lifted_var_name);
+    }
+    else
+    {
+      lifted_var_name = lifted_vars.at(qualified_var);
+    }
+
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::var_deref>(name, type, qualified_var));
+      jtl::make_ref<inst::var_deref>(name, lifted_var_name));
     if(pos == analyze::expression_position::tail)
     {
-      return ret(name, type);
+      return ret(name, untyped_object_ref_type());
     }
     return name;
   }
@@ -247,10 +276,18 @@ namespace jank::ir
   identifier builder::var_ref(analyze::expression_position const pos,
                               jtl::immutable_string const &qualified_var)
   {
-    auto name{ next_ident() };
+    auto const found{ lifted_vars.find(qualified_var) };
+    if(found != lifted_vars.end())
+    {
+      return found->second;
+    }
+
+    static jtl::immutable_string const dot{ "\\." };
+    auto const us{ runtime::__rt_ctx->unique_string(qualified_var) };
+    auto name{ runtime::munge_and_replace(us, dot, "_") };
+    lifted_vars.emplace(qualified_var, name);
+    mod->lifted_vars.emplace(name, module::lifted_var{ qualified_var, false });
     auto const type{ var_type() };
-    current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::var_ref>(name, type, qualified_var));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);

@@ -201,6 +201,13 @@ namespace jank::runtime
       jank_assert(this->data);
     }
 
+    /* We use this one during codegen. */
+    oref(void * const data) noexcept
+      : data{ static_cast<T *>(data) }
+    {
+      jank_assert(this->data);
+    }
+
     template <typename C>
     requires jtl::is_convertible<C *, T *>
     oref(oref<C> const &data) noexcept
