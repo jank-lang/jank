@@ -1,0 +1,10 @@
+(ns jank.cpp.def.pass-with-instantiation)
+
+(cpp/raw "struct Point { int x; int y; Point(int, int); Point* scale(int); void show(); }; ")
+(cpp/raw "Point::Point(int x, int y): x{ x }, y{ y }{}")
+(cpp/def (:* Point) foo (cpp/new Point 1 2))
+
+(if (and (= (.-x foo) 1)
+	 (= (.-y foo) 2))
+  :success
+  (throw :failure))

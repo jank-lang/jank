@@ -1,0 +1,6 @@
+(ns jank.cpp.def.fail-clash-with-other-def)
+
+(def foo 5)
+(cpp/def std.string foo "my-string")
+
+:success
