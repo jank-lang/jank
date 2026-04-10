@@ -290,13 +290,11 @@ namespace jank::ir
 
     struct var_ref : instruction
     {
-      var_ref(identifier const &name,
-              jtl::ptr<void> const type,
-              jtl::immutable_string const &qualified_var);
+      var_ref(identifier const &name, jtl::ptr<void> const type, identifier const &var);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
-      jtl::immutable_string qualified_var;
+      identifier var;
     };
 
     using var_ref_ref = jtl::ref<var_ref>;

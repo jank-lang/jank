@@ -673,7 +673,7 @@ namespace jank::codegen
   {
     b.next_instruction();
 
-    auto const lifted{ lift_var(inst->qualified_var, b) };
+    auto const lifted{ lift_var(inst->var, b) };
     util::format_to(b.body_buffer, "auto const {}({});", inst->name, lifted);
     return inst->name;
   }

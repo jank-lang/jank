@@ -54,6 +54,13 @@ namespace jank::runtime
       jank_assert(data);
     }
 
+    /* We use this one during codegen. */
+    oref(void * const data) noexcept
+      : data{ static_cast<value_type *>(data) }
+    {
+      jank_assert(this->data);
+    }
+
     template <typename T>
     requires behavior::object_like<T>
     oref(T * const typed_data) noexcept
@@ -378,6 +385,13 @@ namespace jank::runtime
 
     oref(value_type const * const data) noexcept
       : data{ const_cast<value_type *>(data) }
+    {
+      jank_assert(this->data);
+    }
+
+    /* We use this one during codegen. */
+    oref(void * const data) noexcept
+      : data{ static_cast<value_type *>(data) }
     {
       jank_assert(this->data);
     }

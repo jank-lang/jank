@@ -147,11 +147,9 @@ namespace jank::ir::inst
   {
   }
 
-  var_ref::var_ref(identifier const &name,
-                   jtl::ptr<void> const type,
-                   jtl::immutable_string const &qualified_var)
+  var_ref::var_ref(identifier const &name, jtl::ptr<void> const type, identifier const &var)
     : instruction{ instruction_kind::var_ref, name, type }
-    , qualified_var{ qualified_var }
+    , var{ var }
   {
   }
 

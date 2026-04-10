@@ -55,7 +55,7 @@ namespace jank::ir
     util::format_to(sb,
                     "{:name {} :op :literal :value {} :type \"{}\"}",
                     name,
-                    value,
+                    obj->to_code_string(),
                     get_qualified_type_name(type));
   }
 
@@ -229,7 +229,7 @@ namespace jank::ir
     util::format_to(sb,
                     "{:name {} :op :var-ref :var {} :type \"{}\"}",
                     name,
-                    qualified_var,
+                    var,
                     get_qualified_type_name(type));
   }
 
