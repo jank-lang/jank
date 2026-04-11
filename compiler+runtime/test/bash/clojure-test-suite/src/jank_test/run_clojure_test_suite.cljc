@@ -10,11 +10,11 @@
     clojure.core-test.and
     clojure.core-test.any-qmark
     clojure.core-test.assoc
-    ; clojure.core-test.assoc-bang ; libc++abi: terminating due to uncaught exception of type std::runtime_error: not associatively_writable_in_place: #object [transient_vector 0x11538da50]
+    clojure.core-test.assoc-bang
     ; clojure.core-test.associative-qmark ; TODO: port to-array
     ; clojure.core-test.atom ; libc++abi: terminating due to uncaught exception of type jank::runtime::invalid_arity<3ull>: invalid call to #object [unknown jit_function 0x1041da080] with 3 args provided
-    ; clojure.core-test.bigdec ; Uncaught exception: not a number: "1"
-    ; clojure.core-test.bigint ; Uncaught exception: not a number: "1"
+    clojure.core-test.bigdec
+    ; clojure.core-test.bigint ; FIXME: Failing tests.
     ; clojure.core-test.binding ; TODO: port future
     clojure.core-test.bit-and
     clojure.core-test.bit-and-not

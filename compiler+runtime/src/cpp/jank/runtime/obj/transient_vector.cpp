@@ -49,6 +49,38 @@ namespace jank::runtime::obj
     return this;
   }
 
+  transient_vector_ref transient_vector::assoc_in_place(object_ref const key, object_ref const val)
+  {
+    assert_active();
+    if(key->type != object_type::integer)
+    {
+      throw std::runtime_error{ "Key must be an integer." };
+    }
+
+    auto const i(expect_object<integer>(key)->data);
+    auto const size(static_cast<i64>(data.size()));
+
+    if(i > size || 0 > i)
+    {
+      throw std::runtime_error{ "Index out of bounds." };
+    }
+    else if(i == size)
+    {
+      data.push_back(val);
+    }
+    else
+    {
+      data.set(i, val);
+    }
+
+    return this;
+  }
+
+  transient_vector_ref transient_vector::dissoc_in_place(object_ref const /*key*/)
+  {
+    throw std::runtime_error{ "Unsupported dissoc operation!" };
+  }
+
   transient_vector::persistent_type_ref transient_vector::to_persistent()
   {
     assert_active();
