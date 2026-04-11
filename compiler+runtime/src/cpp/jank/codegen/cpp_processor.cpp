@@ -1249,20 +1249,31 @@ namespace jank::codegen
     b.next_instruction();
     if(inst->expr->val_kind == analyze::expr::cpp_value::value_kind::null)
     {
-      return "nullptr";
+      util::format_to(b.body_buffer, "auto &&{}(nullptr);", inst->name);
     }
-    if(inst->expr->val_kind == analyze::expr::cpp_value::value_kind::bool_true
-       || inst->expr->val_kind == analyze::expr::cpp_value::value_kind::bool_false)
+    else if(inst->expr->val_kind == analyze::expr::cpp_value::value_kind::bool_true
+            || inst->expr->val_kind == analyze::expr::cpp_value::value_kind::bool_false)
     {
       auto const val{ inst->expr->val_kind == analyze::expr::cpp_value::value_kind::bool_true };
-      return util::format("{}", val);
+      util::format_to(b.body_buffer, "auto &&{}({});", inst->name, val);
     }
-
-    util::format_to(b.body_buffer,
-                    "auto &&{}({}{});",
-                    inst->name,
-                    (Cpp::IsPointerToMemberType(inst->expr->type) ? "&" : ""),
-                    Cpp::GetQualifiedCompleteNameWithTemplateArgs(inst->expr->scope));
+    else if(Cpp::IsStaticVariable(inst->expr->scope)
+            && Cpp::IsConstType(Cpp::GetNonReferenceType(inst->expr->type))
+            && is_primitive(Cpp::GetNonReferenceType(inst->expr->type)))
+    {
+      util::format_to(b.body_buffer,
+                      "auto {}({});",
+                      inst->name,
+                      Cpp::GetQualifiedCompleteNameWithTemplateArgs(inst->expr->scope));
+    }
+    else
+    {
+      util::format_to(b.body_buffer,
+                      "auto &&{}({}{});",
+                      inst->name,
+                      (Cpp::IsPointerToMemberType(inst->expr->type) ? "&" : ""),
+                      Cpp::GetQualifiedCompleteNameWithTemplateArgs(inst->expr->scope));
+    }
 
     return inst->name;
   }
@@ -1635,7 +1646,7 @@ namespace jank::codegen
       if(needs_conversion)
       {
         util::format_to(b.body_buffer,
-                        "jank::runtime::convert<{}>::{}({}.get())",
+                        "jank::runtime::convert<{}>::{}({})",
                         trait_type,
                         conversion_direction,
                         inst->args[0]);
@@ -2090,7 +2101,7 @@ namespace jank::codegen
     }
 
     generated_cpp ret{ b.declaration_str(), b.expression_str() };
-    util::println("\n\n{}", util::format_cpp_source(ret.declaration).expect_ok());
+    //util::println("\n\n{}", util::format_cpp_source(ret.declaration).expect_ok());
     return ret;
   }
 }

@@ -348,9 +348,14 @@ namespace jank::jit
   void processor::eval_string(jtl::immutable_string const &s, clang::Value * const ret) const
   {
     profile::timer const timer{ "jit eval_string" };
-    auto const &formatted{ s };
-    //auto const &formatted{ util::format_cpp_source(s).expect_ok() };
-    //util::println("// eval_string:\n{}\n", formatted);
+    auto formatted{ s };
+
+    jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_CODEGEN") ?: "" };
+    if(print_settings == "1")
+    {
+      formatted = util::format_cpp_source(s).expect_ok();
+      util::println("\n{}\n", formatted);
+    }
     auto err(interpreter->ParseAndExecute({ formatted.data(), formatted.size() }, ret));
     if(err)
     {

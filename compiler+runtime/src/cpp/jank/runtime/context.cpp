@@ -237,15 +237,9 @@ namespace jank::runtime
       auto const mod{ ir::create(fn, module, codegen::compilation_target::module) };
 
       auto const generated{ codegen::gen_cpp(mod) };
-      //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
       auto const &code{ generated.declaration };
+      //util::println("{}\n", util::format_cpp_source(code).expect_ok());
       auto const module_name{ runtime::to_string(current_module_var->deref()) };
-      //aot::processor const aot_prc;
-      //auto const res{ aot_prc.compile_object(module_name, code) };
-      //if(res.is_err())
-      //{
-      //  throw res.expect_err();
-      //}
       auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
       if(!parse_res)
       {
@@ -256,7 +250,6 @@ namespace jank::runtime
       }
       auto &partial_tu{ parse_res.get() };
       codegen::optimize(partial_tu.TheModule.get(), module_name);
-      //auto module_name{ runtime::to_string(current_module_var->deref()) };
       write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
     }
 
