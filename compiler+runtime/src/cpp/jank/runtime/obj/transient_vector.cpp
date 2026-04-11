@@ -57,10 +57,10 @@ namespace jank::runtime::obj
       throw std::runtime_error{ "Key must be an integer." };
     }
 
-    auto const i(static_cast<size_t>(expect_object<integer>(key)->data));
-    auto const size(data.size());
+    auto const i(expect_object<integer>(key)->data);
+    auto const size(static_cast<i64>(data.size()));
 
-    if(i > size)
+    if(i > size || 0 > i)
     {
       throw std::runtime_error{ "Index out of bounds." };
     }
@@ -76,15 +76,10 @@ namespace jank::runtime::obj
     return this;
   }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-
-  transient_vector_ref transient_vector::dissoc_in_place(object_ref const key)
+  transient_vector_ref transient_vector::dissoc_in_place(object_ref const /*key*/)
   {
     throw std::runtime_error{ "Unsupported dissoc operation!" };
   }
-
-#pragma clang diagnostic pop
 
   transient_vector::persistent_type_ref transient_vector::to_persistent()
   {
