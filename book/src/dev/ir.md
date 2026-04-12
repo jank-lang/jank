@@ -22,8 +22,12 @@
 6. Function inlining (small)
 7. Constant propagation (again)
 8. DCE (again)
-9. Global value numbering (GVN)
+9. Global value numbering (GVN) -- not sure which order, but not last
   * https://bernsteinbear.com/blog/value-numbering/
+
+## Further optimizations
+* `-Omega` to enable mega/unity builds, where all modules get compiled as one
+  * Should allow for better inlining, function attribute knowledge, etc
 
 ## References
 * riogu
