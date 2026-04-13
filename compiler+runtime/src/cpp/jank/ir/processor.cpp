@@ -631,8 +631,11 @@ namespace jank::ir
       auto const catch_res{ gen(catch_.body, b) };
       catch_blocks.emplace_back(catch_.type, b.block_name(catch_blk));
 
-      b.branch_set(shadow, catch_res.unwrap());
-      b.jump(jump_blk);
+      if(!b.current_block()->has_terminator())
+      {
+        b.branch_set(shadow, catch_res.unwrap());
+        b.jump(jump_blk);
+      }
     }
 
     b.enter_block(try_blk);

@@ -1109,70 +1109,56 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::try_ref const &inst, builder &b)
   {
     b.next_instruction();
-    auto const has_catch{ !inst->catches.empty() };
+    auto const has_finally{ inst->finally_block.is_some() };
+    identifier finally_guard_name;
     if(inst->shadow.is_some())
     {
       util::format_to(b.body_buffer, "jank::runtime::object_ref {};", inst->shadow.unwrap());
     }
 
-    if(has_catch)
+    if(has_finally)
     {
-      util::format_to(b.body_buffer, "try {");
+      util::format_to(b.body_buffer, "{");
+      auto const instruction_index{ b.instruction_index };
+      auto const block_index{ b.block_index };
+      b.enter_block(inst->finally_block.unwrap());
 
-      if(inst->finally_block.is_some())
-      {
-        auto const instruction_index{ b.instruction_index };
-        auto const block_index{ b.block_index };
-        b.enter_block(inst->finally_block.unwrap());
+      finally_guard_name
+        = b.function->blocks[b.block_index].instructions[b.instruction_index]->name;
 
-        gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
+      gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
 
-        b.instruction_index = instruction_index;
-        b.block_index = block_index;
-      }
-
-      auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
-                                                            : inst->merge_block };
-
-      gen_until_jump(jump_block, b);
-
-      util::format_to(b.body_buffer, "}");
-      for(auto const &catch_details : inst->catches)
-      {
-        b.enter_block(catch_details.second);
-        gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
-      }
-
-      if(inst->merge_block.is_some())
-      {
-        b.enter_block(inst->merge_block.unwrap());
-      }
+      b.instruction_index = instruction_index;
+      b.block_index = block_index;
     }
-    else
+
+    util::format_to(b.body_buffer, "try {");
+
+    auto const &jump_block{ has_finally ? inst->finally_block : inst->merge_block };
+
+    gen_until_jump(jump_block, b);
+
+    util::format_to(b.body_buffer, "}");
+    for(auto const &catch_details : inst->catches)
     {
-      if(inst->finally_block.is_some())
-      {
-        auto const instruction_index{ b.instruction_index };
-        auto const block_index{ b.block_index };
-        b.enter_block(inst->finally_block.unwrap());
+      b.enter_block(catch_details.second);
+      gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
+    }
 
-        util::format_to(b.body_buffer, "{");
-        gen_until_jump(inst->merge_block, b);
-        util::format_to(b.body_buffer, "}");
+    if(has_finally)
+    {
+      auto const finally_name{ util::format("{}_fn", finally_guard_name) };
+      util::format_to(b.body_buffer,
+                      "catch(...) { {}.release(); {}(); throw; } {}.release(); {}(); }",
+                      finally_guard_name,
+                      finally_name,
+                      finally_guard_name,
+                      finally_name);
+    }
 
-        b.instruction_index = instruction_index;
-        b.block_index = block_index;
-      }
-
-      auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
-                                                            : inst->merge_block };
-
-      gen_until_jump(jump_block, b);
-
-      if(inst->finally_block.is_some())
-      {
-        b.enter_block(inst->merge_block.unwrap());
-      }
+    if(inst->merge_block.is_some())
+    {
+      b.enter_block(inst->merge_block.unwrap());
     }
 
     return none;

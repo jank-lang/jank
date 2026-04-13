@@ -2930,6 +2930,12 @@ namespace jank::analyze
       }
     }
 
+    /* If we have no catch and no finally, just treat this as a `do` instead of a `try`. */
+    if(!has_catch && !has_finally)
+    {
+      return ret->body;
+    }
+
     ret->body->frame = try_frame;
     ret->body->propagate_position(position);
     if(ret->finally_body.is_some())
