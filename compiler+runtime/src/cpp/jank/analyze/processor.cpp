@@ -4429,6 +4429,7 @@ namespace jank::analyze
                                        jtl::option<expr::function_context_ref> const &fn_ctx,
                                        bool const needs_box)
   {
+    /* We strip out the .- to get the member name. */
     auto const name{ try_object<obj::symbol>(val->form)->name.substr(2) };
     auto const count(l->count());
     if(count < 2)
