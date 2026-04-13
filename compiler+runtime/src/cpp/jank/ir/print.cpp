@@ -451,7 +451,7 @@ namespace jank::ir
   void inst::cpp_value::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,
-                    "{:name {} :op :cpp/value :scope \"{}\" :type \"{}\"}",
+                    R"({:name {} :op :cpp/value :scope "{}" :type "{}"})",
                     name,
                     get_qualified_name(expr->scope),
                     get_qualified_type_name(type));
