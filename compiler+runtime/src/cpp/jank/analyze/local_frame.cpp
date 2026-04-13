@@ -107,12 +107,9 @@ namespace jank::analyze
       /* To start with, we assume it's only boxed. */
       res.first->second.binding.has_unboxed_usage = false;
 
-      /* Native values which are captured get auto-boxed, so we need to adjust the type
+      /* Native values which are captured get copied, so we need to adjust the type
        * of the binding. */
-      if(!cpp_util::is_any_object(res.first->second.binding.type))
-      {
-        res.first->second.binding.type = cpp_util::untyped_object_ptr_type();
-      }
+      res.first->second.binding.type = Cpp::GetNonReferenceType(res.first->second.binding.type);
     }
   }
 

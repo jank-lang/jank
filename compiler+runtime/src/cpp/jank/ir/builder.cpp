@@ -190,11 +190,12 @@ namespace jank::ir
     return name;
   }
 
-  identifier builder::closure(analyze::expression_position const pos,
-                              jtl::immutable_string const &context,
-                              native_unordered_map<u8, jtl::immutable_string> &&arities,
-                              native_unordered_map<jtl::immutable_string, identifier> &&captures,
-                              runtime::callable_arity_flags const arity_flags)
+  identifier
+  builder::closure(analyze::expression_position const pos,
+                   jtl::immutable_string const &context,
+                   native_unordered_map<u8, jtl::immutable_string> &&arities,
+                   native_unordered_map<jtl::immutable_string, detail::typed_identifier> &&captures,
+                   runtime::callable_arity_flags const arity_flags)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
@@ -369,7 +370,7 @@ namespace jank::ir
                              identifier const &then_blk,
                              identifier const &else_blk,
                              jtl::option<identifier> const &merge_blk,
-                             jtl::option<detail::typed_shadow> const &shadow)
+                             jtl::option<detail::typed_identifier> const &shadow)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
@@ -379,7 +380,7 @@ namespace jank::ir
 
   identifier builder::loop(identifier const &loop_blk,
                            jtl::option<identifier> const &merge_blk,
-                           jtl::option<detail::typed_shadow> const &shadow,
+                           jtl::option<detail::typed_identifier> const &shadow,
                            native_vector<inst::loop::binding_shadow_details> &&shadows)
   {
     auto name{ next_ident() };

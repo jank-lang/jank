@@ -238,7 +238,7 @@ namespace jank::ir
       auto const merge_blk{ b.block(b.next_ident("recur-merge")) };
       b.loop(b.block_name(recur_blk),
              b.block_name(merge_blk),
-             detail::typed_shadow{ recur_shadow, untyped_object_ref_type() },
+             detail::typed_identifier{ recur_shadow, untyped_object_ref_type() },
              jtl::move(shadows));
       b.enter_block(recur_blk);
 
@@ -328,7 +328,7 @@ namespace jank::ir
     auto const is_closure{ !captures.empty() };
     if(is_closure)
     {
-      native_unordered_map<jtl::immutable_string, identifier> captured_idents;
+      native_unordered_map<jtl::immutable_string, detail::typed_identifier> captured_idents;
       for(auto const &capture : captures)
       {
         auto const &name{ capture.first->get_name() };
@@ -337,7 +337,8 @@ namespace jank::ir
                                                         expr->needs_box,
                                                         capture.first,
                                                         capture.second };
-        captured_idents[name] = gen(analyze::expr::local_reference_ref{ &local_ref }, b).unwrap();
+        captured_idents[name] = { gen(analyze::expr::local_reference_ref{ &local_ref }, b).unwrap(),
+                                  capture.second->type };
       }
       return b.closure(expr->position,
                        runtime::munge(expr->unique_name + "_ctx"),
@@ -442,8 +443,8 @@ namespace jank::ir
              (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
                                                                     : jtl::option<identifier>{},
              (expr->position != analyze::expression_position::tail)
-               ? detail::typed_shadow{ loop_shadow, expression_type(expr) }
-               : jtl::option<detail::typed_shadow>{},
+               ? detail::typed_identifier{ loop_shadow, expression_type(expr) }
+               : jtl::option<detail::typed_identifier>{},
              jtl::move(shadows));
       b.enter_block(loop_blk);
 
@@ -548,8 +549,8 @@ namespace jank::ir
              (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
                                                                     : jtl::option<identifier>{},
              (expr->position != analyze::expression_position::tail)
-               ? detail::typed_shadow{ shadow, expression_type(expr->then) }
-               : jtl::option<detail::typed_shadow>{});
+               ? detail::typed_identifier{ shadow, expression_type(expr->then) }
+               : jtl::option<detail::typed_identifier>{});
 
     b.enter_block(then_blk);
     auto const then_name{ gen(expr->then, b) };

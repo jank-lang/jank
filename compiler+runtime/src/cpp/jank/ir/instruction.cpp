@@ -111,7 +111,7 @@ namespace jank::ir::inst
   closure::closure(identifier const &name,
                    jtl::immutable_string const &context,
                    native_unordered_map<u8, jtl::immutable_string> &&arities,
-                   native_unordered_map<jtl::immutable_string, identifier> &&captures,
+                   native_unordered_map<jtl::immutable_string, detail::typed_identifier> &&captures,
                    runtime::callable_arity_flags const arity_flags)
     : instruction{ instruction_kind::closure, name, jit_closure_ref_type() }
     , context{ context }
@@ -219,7 +219,7 @@ namespace jank::ir::inst
                  identifier const &then_block,
                  identifier const &else_block,
                  jtl::option<identifier> const &merge_block,
-                 jtl::option<detail::typed_shadow> const &shadow)
+                 jtl::option<detail::typed_identifier> const &shadow)
     : instruction{ instruction_kind::branch, name, Cpp::GetVoidType() }
     , condition{ condition }
     , then_block{ then_block }
@@ -237,7 +237,7 @@ namespace jank::ir::inst
   loop::loop(identifier const &name,
              identifier const &loop_block,
              jtl::option<identifier> const &merge_block,
-             jtl::option<detail::typed_shadow> const &shadow,
+             jtl::option<detail::typed_identifier> const &shadow,
              native_vector<loop::binding_shadow_details> &&binding_shadows)
     : instruction{ instruction_kind::loop, name, Cpp::GetVoidType() }
     , loop_block{ loop_block }

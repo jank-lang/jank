@@ -1575,12 +1575,10 @@ namespace jank::analyze
       if(!unwrapped_local.crossed_fns.empty())
       {
         auto const binding_type{ unwrapped_local.binding->type };
-        if(!cpp_util::is_any_object(binding_type) && !cpp_util::is_trait_convertible(binding_type))
+        if(!Cpp::IsConstructible(Cpp::GetNonReferenceType(binding_type), binding_type))
         {
           return error::analyze_invalid_cpp_capture(
-            util::format("Unable to capture '{}', since its type '{}' is not able to be "
-                         "automatically converted to a jank object. You can mitigate this by "
-                         "wrapping the value in a 'cpp/box' before capturing it.",
+            util::format("Unable to capture '{}', since its type '{}' is not copyable.",
                          sym->to_string(),
                          cpp_util::get_qualified_type_name(binding_type)),
             meta_source(sym->meta),

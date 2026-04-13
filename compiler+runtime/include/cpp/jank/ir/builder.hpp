@@ -70,11 +70,12 @@ namespace jank::ir
     identifier function(analyze::expression_position const pos,
                         native_unordered_map<u8, jtl::immutable_string> &&arities,
                         runtime::callable_arity_flags const arity_flags);
-    identifier closure(analyze::expression_position const pos,
-                       jtl::immutable_string const &context,
-                       native_unordered_map<u8, jtl::immutable_string> &&arities,
-                       native_unordered_map<jtl::immutable_string, identifier> &&captures,
-                       runtime::callable_arity_flags const arity_flags);
+    identifier
+    closure(analyze::expression_position const pos,
+            jtl::immutable_string const &context,
+            native_unordered_map<u8, jtl::immutable_string> &&arities,
+            native_unordered_map<jtl::immutable_string, detail::typed_identifier> &&captures,
+            runtime::callable_arity_flags const arity_flags);
     identifier letfn(native_vector<jtl::immutable_string> &&bindings);
     identifier def(analyze::expression_position const pos,
                    jtl::immutable_string const &qualified_var,
@@ -101,10 +102,10 @@ namespace jank::ir
                       identifier const &then_blk,
                       identifier const &else_blk,
                       jtl::option<identifier> const &merge_blk,
-                      jtl::option<detail::typed_shadow> const &shadow);
+                      jtl::option<detail::typed_identifier> const &shadow);
     identifier loop(identifier const &loop_blk,
                     jtl::option<identifier> const &merge_blk,
-                    jtl::option<detail::typed_shadow> const &shadow,
+                    jtl::option<detail::typed_identifier> const &shadow,
                     native_vector<inst::loop::binding_shadow_details> &&shadows);
     identifier case_(i64 const shift,
                      i64 const mask,

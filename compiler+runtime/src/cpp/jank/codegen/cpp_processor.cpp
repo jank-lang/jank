@@ -879,21 +879,24 @@ namespace jank::codegen
     bool need_comma{};
     for(auto const &capture : inst->captures)
     {
-      util::format_to(b.deps_buffer, "jank::runtime::object_ref {};", munge(capture.first));
+      util::format_to(b.deps_buffer,
+                      "{} {};",
+                      get_qualified_type_name(capture.second.type),
+                      munge(capture.first));
 
       if(need_comma)
       {
         util::format_to(b.body_buffer, ", ");
       }
       need_comma = true;
-      if(capture.second == ":defer")
+      if(capture.second.name == ":defer")
       {
         b.defer(inst->context, capture.first);
         b.body_buffer("jank::runtime::jank_nil()");
       }
       else
       {
-        b.body_buffer(capture.second);
+        b.body_buffer(capture.second.name);
       }
     }
 

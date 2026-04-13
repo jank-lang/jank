@@ -181,7 +181,11 @@ namespace jank::ir
         util::format_to(sb, " ");
       }
       needs_space = true;
-      util::format_to(sb, "{} {}", capture.first, capture.second);
+      util::format_to(sb,
+                      "{} {:name {} :type {}}",
+                      capture.first,
+                      capture.second.name,
+                      get_qualified_type_name(capture.second.type));
     }
     util::format_to(sb,
                     "} :arity-flags {} :type \"{}\"}",

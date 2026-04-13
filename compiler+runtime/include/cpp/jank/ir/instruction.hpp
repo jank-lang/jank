@@ -95,7 +95,7 @@ namespace jank::ir
 
   namespace detail
   {
-    struct typed_shadow
+    struct typed_identifier
     {
       identifier name;
       jtl::ptr<void> type;
@@ -234,14 +234,14 @@ namespace jank::ir
       closure(identifier const &name,
               jtl::immutable_string const &context,
               native_unordered_map<u8, jtl::immutable_string> &&arities,
-              native_unordered_map<jtl::immutable_string, identifier> &&captures,
+              native_unordered_map<jtl::immutable_string, detail::typed_identifier> &&captures,
               runtime::callable_arity_flags const arity_flags);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       jtl::immutable_string context;
       native_unordered_map<u8, jtl::immutable_string> arities;
-      native_unordered_map<jtl::immutable_string, identifier> captures;
+      native_unordered_map<jtl::immutable_string, detail::typed_identifier> captures;
       runtime::callable_arity_flags arity_flags{};
     };
 
@@ -391,7 +391,7 @@ namespace jank::ir
              identifier const &then_block,
              identifier const &else_block,
              jtl::option<identifier> const &merge_block,
-             jtl::option<detail::typed_shadow> const &shadow);
+             jtl::option<detail::typed_identifier> const &shadow);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;
@@ -400,7 +400,7 @@ namespace jank::ir
       identifier then_block;
       identifier else_block;
       jtl::option<identifier> merge_block;
-      jtl::option<detail::typed_shadow> shadow;
+      jtl::option<detail::typed_identifier> shadow;
     };
 
     using branch_ref = jtl::ref<branch>;
@@ -417,7 +417,7 @@ namespace jank::ir
       loop(identifier const &name,
            identifier const &loop_block,
            jtl::option<identifier> const &merge_block,
-           jtl::option<detail::typed_shadow> const &shadow,
+           jtl::option<detail::typed_identifier> const &shadow,
            native_vector<binding_shadow_details> &&binding_shadows);
 
       bool is_terminator() const override;
@@ -425,7 +425,7 @@ namespace jank::ir
 
       identifier loop_block;
       jtl::option<identifier> merge_block;
-      jtl::option<detail::typed_shadow> shadow;
+      jtl::option<detail::typed_identifier> shadow;
       native_vector<binding_shadow_details> binding_shadows;
     };
 
