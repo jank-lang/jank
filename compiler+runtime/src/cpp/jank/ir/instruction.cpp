@@ -427,9 +427,11 @@ namespace jank::ir::inst
 
   cpp_unbox::cpp_unbox(identifier const &name,
                        identifier const &value,
+                       identifier const &meta,
                        analyze::expr::cpp_unbox_ref const expr)
     : instruction{ instruction_kind::cpp_unbox, name, expression_type(expr) }
     , value{ value }
+    , meta{ meta }
     , expr{ expr }
   {
   }

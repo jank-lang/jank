@@ -143,7 +143,9 @@ namespace jank::ir
     identifier cpp_builtin_operator_call(native_vector<identifier> &&args,
                                          analyze::expr::cpp_builtin_operator_call_ref const expr);
     identifier cpp_box(identifier const &value, analyze::expr::cpp_box_ref const expr);
-    identifier cpp_unbox(identifier const &value, analyze::expr::cpp_unbox_ref const expr);
+    identifier cpp_unbox(identifier const &value,
+                         identifier const &meta,
+                         analyze::expr::cpp_unbox_ref const expr);
     identifier cpp_new(identifier const &value, analyze::expr::cpp_new_ref const expr);
     identifier cpp_delete(identifier const &value, analyze::expr::cpp_delete_ref const expr);
 

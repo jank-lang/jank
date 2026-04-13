@@ -7,6 +7,7 @@
 #include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/core/call.hpp>
 #include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/ns.hpp>
@@ -795,7 +796,10 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::cpp_unbox_ref const expr, builder &b)
   {
-    return b.cpp_unbox(gen(expr->value_expr, b).unwrap(), expr);
+    return b.cpp_unbox(
+      gen(expr->value_expr, b).unwrap(),
+      b.literal(analyze::expression_position::value, runtime::source_to_meta(expr->source)),
+      expr);
   }
 
   jtl::option<identifier> gen(analyze::expr::cpp_new_ref const expr, builder &b)

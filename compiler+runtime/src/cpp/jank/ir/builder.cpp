@@ -592,11 +592,13 @@ namespace jank::ir
     return name;
   }
 
-  identifier builder::cpp_unbox(identifier const &value, analyze::expr::cpp_unbox_ref const expr)
+  identifier builder::cpp_unbox(identifier const &value,
+                                identifier const &meta,
+                                analyze::expr::cpp_unbox_ref const expr)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_unbox>(name, value, expr));
+      jtl::make_ref<inst::cpp_unbox>(name, value, meta, expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));

@@ -681,11 +681,13 @@ namespace jank::ir
     {
       cpp_unbox(identifier const &name,
                 identifier const &value,
+                identifier const &meta,
                 analyze::expr::cpp_unbox_ref const expr);
 
       void print(jtl::string_builder &sb, usize) const override;
 
       identifier value;
+      identifier meta;
       analyze::expr::cpp_unbox_ref expr;
     };
 

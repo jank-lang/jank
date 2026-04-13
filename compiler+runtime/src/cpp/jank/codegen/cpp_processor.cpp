@@ -1262,6 +1262,7 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_value_ref const &inst, builder &b)
   {
     b.next_instruction();
+
     if(inst->expr->val_kind == analyze::expr::cpp_value::value_kind::null)
     {
       util::format_to(b.body_buffer, "auto &&{}(nullptr);", inst->name);
@@ -1272,12 +1273,31 @@ namespace jank::codegen
       auto const val{ inst->expr->val_kind == analyze::expr::cpp_value::value_kind::bool_true };
       util::format_to(b.body_buffer, "auto &&{}({});", inst->name, val);
     }
+    /* Static const primitives need to be copied, since they won't have linkage. */
     else if(Cpp::IsStaticVariable(inst->expr->scope)
             && Cpp::IsConstType(Cpp::GetNonReferenceType(inst->expr->type))
             && is_primitive(Cpp::GetNonReferenceType(inst->expr->type)))
     {
       util::format_to(b.body_buffer,
                       "auto {}({});",
+                      inst->name,
+                      Cpp::GetQualifiedCompleteNameWithTemplateArgs(inst->expr->scope));
+    }
+    /* Functions referred to by value should get a cast, in case they're overloaded. */
+    else if(Cpp::IsFunction(inst->expr->scope) || Cpp::IsTemplatedFunction(inst->expr->scope))
+    {
+      util::format_to(b.body_buffer,
+                      "auto &&{}(static_cast<{}>(&{}));",
+                      inst->name,
+                      get_qualified_type_name(inst->expr->type),
+                      Cpp::GetQualifiedCompleteNameWithTemplateArgs(inst->expr->scope));
+    }
+    else if(Cpp::IsArrayType(Cpp::GetNonReferenceType(inst->expr->type)))
+    {
+      util::format_to(b.body_buffer,
+                      "{} {}({});",
+                      get_qualified_type_name(Cpp::GetPointerType(
+                        Cpp::GetArrayElementType(Cpp::GetNonReferenceType(inst->expr->type)))),
                       inst->name,
                       Cpp::GetQualifiedCompleteNameWithTemplateArgs(inst->expr->scope));
     }
@@ -1816,7 +1836,7 @@ namespace jank::codegen
                     type_name,
                     type_name,
                     inst->value,
-                    meta);
+                    inst->meta);
 
     return inst->name;
   }
