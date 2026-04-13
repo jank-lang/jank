@@ -8,9 +8,9 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/analyze/pass/optimize.hpp>
+#include <jank/ir/processor.hpp>
+#include <jank/codegen/cpp_processor.hpp>
 #include <jank/evaluate.hpp>
-#include <jank/codegen/llvm_processor.hpp>
-#include <jank/codegen/processor.hpp>
 #include <jank/util/clang_format.hpp>
 #include <jank/util/fmt/print.hpp>
 
@@ -30,21 +30,10 @@ namespace jank::compiler_native
     auto const &module(
       expect_object<runtime::ns>(__rt_ctx->intern_var("clojure.core", "*ns*").expect_ok()->deref())
         ->to_string());
+    auto const ir_mod{ ir::create(wrapped_expr, module, codegen::compilation_target::eval) };
+    auto const generated{ codegen::gen_cpp(ir_mod) };
 
-    if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
-    {
-      codegen::llvm_processor const cg_prc{ wrapped_expr,
-                                            module,
-                                            codegen::compilation_target::eval };
-      cg_prc.gen().expect_ok();
-      cg_prc.optimize();
-      cg_prc.print();
-    }
-    else
-    {
-      codegen::processor cg_prc{ wrapped_expr, module, codegen::compilation_target::eval };
-      util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
-    }
+    util::println("{}\n", util::format_cpp_source(generated.declaration).expect_ok());
 
     return {};
   }

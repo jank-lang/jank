@@ -29,9 +29,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/ir/processor.hpp>
-#include <jank/codegen/llvm_processor.hpp>
 #include <jank/codegen/cpp_processor.hpp>
-#include <jank/codegen/processor.hpp>
 #include <jank/codegen/optimize.hpp>
 #include <jank/aot/processor.hpp>
 #include <jank/error/codegen.hpp>

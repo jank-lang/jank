@@ -15,7 +15,6 @@
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
 #include <jank/ir/builder.hpp>
-#include <jank/codegen/llvm_processor.hpp>
 #include <jank/ui/highlight.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>

@@ -10,8 +10,6 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/core/call.hpp>
-#include <jank/codegen/llvm_processor.hpp>
-#include <jank/codegen/processor.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/profile/time.hpp>

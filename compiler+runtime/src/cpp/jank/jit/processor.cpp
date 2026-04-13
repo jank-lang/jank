@@ -27,7 +27,6 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/ir/processor.hpp>
-#include <jank/codegen/processor.hpp>
 #include <jank/codegen/cpp_processor.hpp>
 #include <jank/profile/time.hpp>
 #include <jank/error/system.hpp>
@@ -248,20 +247,6 @@ namespace jank::jit
   processor::~processor()
   {
     llvm::remove_fatal_error_handler();
-  }
-
-  runtime::obj::jit_function_ref processor::eval(codegen::processor &cg_prc) const
-  {
-    eval_string(cg_prc.declaration_str());
-
-    native_vector<u8> arities;
-    arities.reserve(cg_prc.root_fn->arities.size());
-    for(auto const &arity : cg_prc.root_fn->arities)
-    {
-      arities.emplace_back(arity.params.size());
-    }
-
-    return create_function(cg_prc.arity_flags(), cg_prc.struct_name, arities);
   }
 
   runtime::obj::jit_function_ref processor::eval(ir::module const &module) const

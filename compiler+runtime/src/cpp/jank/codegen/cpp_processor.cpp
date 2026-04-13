@@ -6,7 +6,6 @@
 #include <jank/ir/processor.hpp>
 #include <jank/ir/visit.hpp>
 #include <jank/codegen/cpp_processor.hpp>
-#include <jank/codegen/llvm_processor.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/seq.hpp>
@@ -20,6 +19,7 @@
 namespace jank::codegen
 {
   using namespace analyze::cpp_util;
+  using namespace runtime;
 
   jtl::ref<ir::function>
   find_function(jtl::ref<ir::module> const module, jtl::immutable_string const &function_name)
@@ -148,7 +148,7 @@ namespace jank::codegen
       //  util::format_to(buffer, ") };");
       //}
 
-      auto const ret_tmp{ runtime::munge(__rt_ctx->unique_string("fnexpr")) };
+      auto const ret_tmp{ munge(__rt_ctx->unique_string("fnexpr")) };
       util::format_to(expression_buffer, "auto const {}(", ret_tmp);
 
       //if(is_closure)
@@ -202,10 +202,8 @@ namespace jank::codegen
   using identifier = ir::identifier;
 
 
-  static folly::Synchronized<native_unordered_map<runtime::object_ref,
-                                                  identifier,
-                                                  std::hash<runtime::object_ref>,
-                                                  runtime::very_equal_to>>
+  static folly::Synchronized<
+    native_unordered_map<object_ref, identifier, std::hash<object_ref>, very_equal_to>>
     /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
     global_constants;
   static folly::Synchronized<native_unordered_map<jtl::immutable_string, identifier>>
@@ -228,7 +226,7 @@ namespace jank::codegen
        * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
        * our object. */
       [[maybe_unused]]
-      auto * const root{ new(NoGC) runtime::object *{ o.data } };
+      auto * const root{ new(NoGC) object *{ o.data } };
       /* TODO: Not a fan of this. Move into global? Init with uncollectable ptr. */
       auto const fmt_str{ util::format("{}{ (void*){} }",
                                        get_qualified_type_name(literal_type(o)),
@@ -273,20 +271,20 @@ namespace jank::codegen
   {
     static bool should_gen_meta(object_ref const meta)
     {
-      return meta.is_some() && !runtime::is_empty(meta);
+      return meta.is_some() && !is_empty(meta);
     }
 
-    static void gen_constant(runtime::object_ref const o, jtl::string_builder &buffer)
+    static void gen_constant(object_ref const o, jtl::string_builder &buffer)
     {
-      runtime::visit_object(
+      visit_object(
         [&](auto const typed_o) {
           using T = typename decltype(typed_o)::value_type;
 
-          if constexpr(std::same_as<T, runtime::obj::nil>)
+          if constexpr(std::same_as<T, obj::nil>)
           {
             util::format_to(buffer, "jank::runtime::jank_nil()");
           }
-          else if constexpr(std::same_as<T, runtime::obj::boolean>)
+          else if constexpr(std::same_as<T, obj::boolean>)
           {
             if(typed_o->data)
             {
@@ -297,14 +295,14 @@ namespace jank::codegen
               util::format_to(buffer, "jank::runtime::jank_false");
             }
           }
-          else if constexpr(std::same_as<T, runtime::obj::integer>)
+          else if constexpr(std::same_as<T, obj::integer>)
           {
             util::format_to(buffer,
                             "jank::runtime::make_box(static_cast<jank::"
                             "i64>({}))",
                             typed_o->data);
           }
-          else if constexpr(std::same_as<T, runtime::obj::real>)
+          else if constexpr(std::same_as<T, obj::real>)
           {
             util::format_to(buffer,
                             "jank::runtime::make_box(static_cast<jank::"
@@ -325,26 +323,26 @@ namespace jank::codegen
 
             util::format_to(buffer, "))");
           }
-          else if constexpr(std::same_as<T, runtime::obj::big_integer>)
+          else if constexpr(std::same_as<T, obj::big_integer>)
           {
             util::format_to(buffer,
                             "jank::runtime::make_box<jank::runtime::obj::big_integer>(\"{}\")",
                             typed_o->to_string());
           }
-          else if constexpr(std::same_as<T, runtime::obj::big_decimal>)
+          else if constexpr(std::same_as<T, obj::big_decimal>)
           {
             util::format_to(buffer,
                             "jank::runtime::make_box<jank::runtime::obj::big_decimal>(\"{}\")",
                             typed_o->to_string());
           }
-          else if constexpr(std::same_as<T, runtime::obj::ratio>)
+          else if constexpr(std::same_as<T, obj::ratio>)
           {
             util::format_to(buffer,
                             "jank::runtime::obj::ratio::create({}, {})",
                             typed_o->data.numerator,
                             typed_o->data.denominator);
           }
-          else if constexpr(std::same_as<T, runtime::obj::symbol>)
+          else if constexpr(std::same_as<T, obj::symbol>)
           {
             if(typed_o->meta.is_some())
             {
@@ -360,13 +358,13 @@ namespace jank::codegen
                               typed_o->name);
             }
           }
-          else if constexpr(std::same_as<T, runtime::obj::character>)
+          else if constexpr(std::same_as<T, obj::character>)
           {
             util::format_to(buffer,
                             R"(jank::runtime::make_box<jank::runtime::obj::character>("{}"))",
                             util::escape(typed_o->to_string()));
           }
-          else if constexpr(std::same_as<T, runtime::obj::keyword>)
+          else if constexpr(std::same_as<T, obj::keyword>)
           {
             util::format_to(
               buffer,
@@ -374,20 +372,20 @@ namespace jank::codegen
               typed_o->sym->ns,
               typed_o->sym->name);
           }
-          else if constexpr(std::same_as<T, runtime::obj::re_pattern>)
+          else if constexpr(std::same_as<T, obj::re_pattern>)
           {
             util::format_to(buffer,
                             R"(jank::runtime::make_box<jank::runtime::obj::re_pattern>({}))",
                             /* We remove the # prefix here. */
                             typed_o->to_code_string().substr(1));
           }
-          else if constexpr(std::same_as<T, runtime::obj::uuid>)
+          else if constexpr(std::same_as<T, obj::uuid>)
           {
             util::format_to(buffer,
                             R"(jank::runtime::make_box<jank::runtime::obj::uuid>("{}"))",
                             typed_o->to_string());
           }
-          else if constexpr(std::same_as<T, runtime::obj::persistent_string>)
+          else if constexpr(std::same_as<T, obj::persistent_string>)
           {
             if(typed_o->data.empty())
             {
@@ -400,7 +398,7 @@ namespace jank::codegen
                               typed_o->to_code_string());
             }
           }
-          else if constexpr(std::same_as<T, runtime::obj::persistent_vector>)
+          else if constexpr(std::same_as<T, obj::persistent_vector>)
           {
             if(typed_o->data.empty())
             {
@@ -430,7 +428,7 @@ namespace jank::codegen
               util::format_to(buffer, ")");
             }
           }
-          else if constexpr(std::same_as<T, runtime::obj::persistent_list>)
+          else if constexpr(std::same_as<T, obj::persistent_list>)
           {
             if(typed_o->data.empty())
             {
@@ -460,7 +458,7 @@ namespace jank::codegen
               util::format_to(buffer, ")");
             }
           }
-          else if constexpr(std::same_as<T, runtime::obj::persistent_hash_set>)
+          else if constexpr(std::same_as<T, obj::persistent_hash_set>)
           {
             if(typed_o->data.empty())
             {
@@ -490,7 +488,7 @@ namespace jank::codegen
               util::format_to(buffer, ")");
             }
           }
-          else if constexpr(std::same_as<T, runtime::obj::persistent_array_map>)
+          else if constexpr(std::same_as<T, obj::persistent_array_map>)
           {
             if(typed_o->data.empty())
             {
@@ -531,7 +529,7 @@ namespace jank::codegen
               util::format_to(buffer, ")");
             }
           }
-          else if constexpr(std::same_as<T, runtime::obj::persistent_hash_map>)
+          else if constexpr(std::same_as<T, obj::persistent_hash_map>)
           {
             if(typed_o->data.empty())
             {
@@ -561,12 +559,12 @@ namespace jank::codegen
             }
           }
           /* Cons, etc. */
-          else if constexpr(runtime::behavior::seqable<T>)
+          else if constexpr(behavior::seqable<T>)
           {
             util::format_to(
               buffer,
               "jank::runtime::make_box<jank::runtime::obj::persistent_list>(std::in_place");
-            for(auto const it : runtime::make_sequence_range(typed_o))
+            for(auto const it : make_sequence_range(typed_o))
             {
               util::format_to(buffer, ", ");
               gen_constant(it, buffer);
@@ -1804,12 +1802,12 @@ namespace jank::codegen
       inst->value,
       type_str);
 
-    auto const meta{ runtime::source_to_meta(inst->expr->source) };
+    auto const meta{ source_to_meta(inst->expr->source) };
     util::format_to(
       b.body_buffer,
       "jank::runtime::reset_meta({}, jank::runtime::__rt_ctx->forcefully_read_string(\"{}\"));",
       inst->name,
-      util::escape(runtime::to_code_string(meta)));
+      util::escape(to_code_string(meta)));
 
     return inst->name;
   }
@@ -1833,7 +1831,7 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_new_ref const &inst, builder &b)
   {
     b.next_instruction();
-    auto finalizer_name{ runtime::munge(__rt_ctx->unique_string("finalizer")) };
+    auto finalizer_name{ munge(__rt_ctx->unique_string("finalizer")) };
     auto const type_name{ get_qualified_type_name(inst->expr->type) };
     auto const needs_finalizer{ !Cpp::IsTriviallyDestructible(inst->expr->type) };
 
@@ -1973,7 +1971,7 @@ namespace jank::codegen
     {
       util::format_to(b.module_header_buffer,
                       "namespace {} {",
-                      runtime::module::module_to_native_ns(mod.name));
+                      module::module_to_native_ns(mod.name));
 
       for(auto const &v : b.module->lifted_constants)
       {
@@ -2022,7 +2020,7 @@ namespace jank::codegen
     {
       util::format_to(b.footer_buffer,
                       "extern \"C\" void {}(){",
-                      runtime::module::module_to_load_function(mod.name));
+                      module::module_to_load_function(mod.name));
 
       /* First thing we do when loading this module is to intern our ns. Everything else will
        * build on that. */
@@ -2045,7 +2043,7 @@ namespace jank::codegen
                       current_ns->name->get_name(),
                       current_ns->symbol_counter.load());
 
-      auto const native_ns{ runtime::module::module_to_native_ns(mod.name) };
+      auto const native_ns{ module::module_to_native_ns(mod.name) };
 
       /* BDWGC doesn't pick up globals in JIT compiled code, so we need to register both
        * our lifted vars and lifted constants. Since they're right next to each other,
