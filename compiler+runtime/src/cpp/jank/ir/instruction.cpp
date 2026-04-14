@@ -26,11 +26,8 @@ namespace jank::ir::inst
 {
   using namespace analyze::cpp_util;
 
-  parameter::parameter(identifier const &name,
-                       jtl::ptr<void> const type,
-                       jtl::immutable_string const &value)
+  parameter::parameter(identifier const &name, jtl::ptr<void> const type)
     : instruction{ instruction_kind::parameter, name, type }
-    , value{ value }
   {
   }
 

@@ -154,15 +154,13 @@ namespace jank::codegen
       //if(is_closure)
       //{
       //  util::format_to(buffer,
-      //                  "jank::runtime::make_box<jank::runtime::obj::jit_closure>({}, {}.data)",
+      //                  "_jank_closure({}, {}.data)",
       //                  arity_flags(),
       //                  ret_ctx_tmp);
       //}
       //else
       {
-        util::format_to(expression_buffer,
-                        "jank::runtime::make_box<jank::runtime::obj::jit_function>({})",
-                        module->arity_flags);
+        util::format_to(expression_buffer, "_jank_fn({})", module->arity_flags);
       }
 
       util::format_to(expression_buffer, ");");
@@ -297,16 +295,11 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, obj::integer>)
           {
-            util::format_to(buffer,
-                            "jank::runtime::make_box(static_cast<jank::"
-                            "i64>({}))",
-                            typed_o->data);
+            util::format_to(buffer, "_jank_int({})", typed_o->data);
           }
           else if constexpr(std::same_as<T, obj::real>)
           {
-            util::format_to(buffer,
-                            "jank::runtime::make_box(static_cast<jank::"
-                            "f64>(");
+            util::format_to(buffer, "_jank_real(");
 
             if(std::isinf(typed_o->data))
             {
@@ -321,7 +314,7 @@ namespace jank::codegen
               util::format_to(buffer, "{}", typed_o->data);
             }
 
-            util::format_to(buffer, "))");
+            util::format_to(buffer, ")");
           }
           else if constexpr(std::same_as<T, obj::big_integer>)
           {
@@ -842,9 +835,7 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(", inst->name);
-    util::format_to(b.body_buffer,
-                    "jank::runtime::make_box<jank::runtime::obj::jit_function>({})",
-                    inst->arity_flags);
+    util::format_to(b.body_buffer, "_jank_fn({})", inst->arity_flags);
     util::format_to(b.body_buffer, ");");
 
     for(auto const &arity : inst->arities)
@@ -896,10 +887,7 @@ namespace jank::codegen
 
 
     util::format_to(b.body_buffer, "auto const {}(", inst->name);
-    util::format_to(b.body_buffer,
-                    "jank::runtime::make_box<jank::runtime::obj::jit_closure>({}, {}.data)",
-                    inst->arity_flags,
-                    inst->context);
+    util::format_to(b.body_buffer, "_jank_closure({}, {}.data)", inst->arity_flags, inst->context);
     util::format_to(b.body_buffer, ");");
 
     for(auto const &arity : inst->arities)
@@ -916,7 +904,6 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::parameter_ref const &inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer, "auto &&{}({});", inst->name, munge(inst->value));
     return inst->name;
   }
 

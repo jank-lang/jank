@@ -106,13 +106,9 @@ namespace jank::ir
   {
     struct parameter : instruction
     {
-      parameter(identifier const &name,
-                jtl::ptr<void> const type,
-                jtl::immutable_string const &value);
+      parameter(identifier const &name, jtl::ptr<void> const type);
 
       void print(jtl::string_builder &sb, usize indent) const override;
-
-      jtl::immutable_string value;
     };
 
     using parameter_ref = jtl::ref<parameter>;

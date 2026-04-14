@@ -63,10 +63,10 @@ namespace jank::ir
   identifier
   builder::parameter(analyze::expression_position const pos, jtl::immutable_string const &value)
   {
-    auto name{ next_ident() };
+    auto name{ runtime::munge(value) };
     auto const type{ untyped_object_ref_type() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::parameter>(name, type, value));
+      jtl::make_ref<inst::parameter>(name, type));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);

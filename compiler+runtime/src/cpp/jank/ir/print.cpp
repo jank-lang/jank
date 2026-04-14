@@ -35,9 +35,8 @@ namespace jank::ir
   void inst::parameter::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,
-                    "{:name {} :op :parameter :value {} :type \"{}\"}",
+                    "{:name {} :op :parameter :type \"{}\"}",
                     name,
-                    value,
                     get_qualified_type_name(type));
   }
 
