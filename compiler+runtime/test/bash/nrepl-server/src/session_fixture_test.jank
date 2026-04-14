@@ -1,13 +1,9 @@
-(ns core-test
+(ns session-fixture-test
   (:include "session_fixture.hpp")
   (:require [clojure.test :refer [deftest is run-tests successful? testing]]
             [jank.nrepl.server.bencode :as ben]
-            [jank.nrepl.server.core :as core]))
-
-
-(def this-nsym (ns-name *ns*))
-
-(def ^:dynamic *session* nil)
+            [jank.nrepl.server.core :as core]
+            [session-fixture :as sf :refer [with-session *client* read-some! *server* write-some!]]))
 
 (deftest session-test
   (let [session* (cpp/session_fixture.make)
@@ -41,8 +37,39 @@
       (is (not (.is_connected (cpp/* test-client*))))
       (.close (cpp/* server-client*))
       (is (not (.is_connected (cpp/* server-client*))))))
-  
   )
+
+(deftest read-write-fn-test
+  (let [session* (cpp/session_fixture.make)
+        server-client* (.-server_client session*)
+        test-client* (.-test_client session*)]
+    (testing "write sends data"
+      (write-some! (cpp/box test-client*) "hello")
+      (is (= "hello" (.read_some (cpp/* server-client*)))))
+
+    (testing "read returns data"
+      (.write_some (cpp/* server-client*) "world")
+      (is (= "world" (read-some! (cpp/box test-client*)))))
+
+    (.cleanup session*)))
+
+(deftest with-session-test
+  (with-session
+    (testing "dynamic vars are bound"
+      (is (some? session-fixture/*session*))
+      (is (some? session-fixture/*client*))
+      (is (some? session-fixture/*server*)))
+
+    (testing "client write, server read with read-some!"
+      (write-some! *client* "hello")
+      (is (= "hello" (read-some! *server*))))
+
+    (testing "server write, client read"
+      (write-some! *server* "response")
+      (is (= "response" (read-some! *client*))))))
+
+
+(def this-nsym (ns-name *ns*))
 
 (defn -main []
   (cpp/exit

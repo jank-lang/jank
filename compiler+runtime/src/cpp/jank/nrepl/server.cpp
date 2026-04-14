@@ -50,10 +50,13 @@ namespace jank::nrepl::server
 
     void close()
     {
-      boost::system::error_code ec;
-      socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-      socket_.close(ec);
-      connected_ = false;
+      if (connected_)
+      {
+        boost::system::error_code ec;
+        socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+        socket_.close(ec);
+        connected_ = false;
+      }
     }
 
     tcp::socket socket_;
@@ -137,10 +140,12 @@ namespace jank::nrepl::server
 
   native_client* native_server::connect_test_client() const
   {
-    boost::asio::io_context io_ctx;
-    boost::asio::ip::tcp::socket socket(io_ctx);
+    auto& ctx = impl_->io_context_;
+
+    tcp::socket socket(ctx);
     socket.connect(impl_->acceptor_.local_endpoint());
-    auto client_impl = std::make_unique<native_client::impl>(io_ctx);
+
+    auto client_impl = std::make_unique<native_client::impl>(ctx);
     client_impl->socket_ = std::move(socket);
     client_impl->connected_ = true;
 

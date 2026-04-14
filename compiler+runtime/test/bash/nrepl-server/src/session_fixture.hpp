@@ -15,11 +15,13 @@ struct session_fixture
   /* A test client connected to the server */
   jank::nrepl::server::native_client* test_client = nullptr;
 
-  ~session_fixture() {
-    if(thread && thread->joinable())
-      thread->join();
-    if(server_client) server_client->close();
-    if(test_client) test_client->close();
+  void cleanup()
+  {
+    if (thread && thread->joinable())
+       thread->join();
+    if (server_client) server_client->close();
+    if (test_client) test_client->close();
+    if (server) delete server;
   }
 
   static session_fixture* make()
@@ -29,13 +31,15 @@ struct session_fixture
 
     std::promise<void> ready;
     std::future<void> fut = ready.get_future();
+
     session->thread = new std::thread([&ready, session]() {
       session->server_client = session->server->accept();
       ready.set_value(); 
     });
-    fut.wait();
 
     session->test_client = session->server->connect_test_client();
+    fut.wait();
+
     return session;
   }
 };
