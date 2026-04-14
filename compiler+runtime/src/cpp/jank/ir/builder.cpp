@@ -92,12 +92,22 @@ namespace jank::ir
   builder::literal(analyze::expression_position const pos, runtime::object_ref const value)
   {
     auto const type{ literal_type(value) };
-    auto literal_name{ runtime::munge(runtime::__rt_ctx->unique_string("const")) };
-    mod->lifted_constants.emplace(literal_name, value);
+    jtl::immutable_string lifted_literal_name;
+    auto const found{ lifted_constants.find(value) };
+    if(found == lifted_constants.end())
+    {
+      lifted_literal_name = runtime::munge(runtime::__rt_ctx->unique_string("const"));
+      mod->lifted_constants.emplace(lifted_literal_name, value);
+      lifted_constants.emplace(value, lifted_literal_name);
+    }
+    else
+    {
+      lifted_literal_name = found->second;
+    }
 
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::literal>(name, type, value, literal_name));
+      jtl::make_ref<inst::literal>(name, type, value, lifted_literal_name));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
@@ -252,7 +262,7 @@ namespace jank::ir
     }
     else
     {
-      lifted_var_name = lifted_vars.at(qualified_var);
+      lifted_var_name = found->second;
     }
 
     current_function()->blocks[block_index].instructions.emplace_back(
