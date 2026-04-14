@@ -344,18 +344,15 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, obj::symbol>)
           {
-            if(typed_o->meta.is_some())
+            if(should_gen_meta(typed_o->meta))
             {
-              util::format_to(buffer, "jank::runtime::make_box<jank::runtime::obj::symbol>( ");
+              util::format_to(buffer, "_jank_symbol( ");
               gen_constant(typed_o->meta, buffer);
               util::format_to(buffer, R"(, "{}", "{}"))", typed_o->ns, typed_o->name);
             }
             else
             {
-              util::format_to(buffer,
-                              R"(jank::runtime::make_box<jank::runtime::obj::symbol>("{}", "{}"))",
-                              typed_o->ns,
-                              typed_o->name);
+              util::format_to(buffer, R"(_jank_symbol("{}", "{}"))", typed_o->ns, typed_o->name);
             }
           }
           else if constexpr(std::same_as<T, obj::character>)
@@ -366,11 +363,10 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, obj::keyword>)
           {
-            util::format_to(
-              buffer,
-              R"(jank::runtime::__rt_ctx->intern_keyword("{}", "{}", true).expect_ok())",
-              typed_o->sym->ns,
-              typed_o->sym->name);
+            util::format_to(buffer,
+                            R"(_jank_keyword("{}", "{}"))",
+                            typed_o->sym->ns,
+                            typed_o->sym->name);
           }
           else if constexpr(std::same_as<T, obj::re_pattern>)
           {
@@ -393,9 +389,7 @@ namespace jank::codegen
             }
             else
             {
-              util::format_to(buffer,
-                              "jank::runtime::make_box<jank::runtime::obj::persistent_string>({})",
-                              typed_o->to_code_string());
+              util::format_to(buffer, "_jank_string({})", typed_o->to_code_string());
             }
           }
           else if constexpr(std::same_as<T, obj::persistent_vector>)
@@ -549,7 +543,7 @@ namespace jank::codegen
                 util::format_to(buffer, "jank::runtime::with_meta(");
               }
               util::format_to(buffer,
-                              "jank::runtime::__rt_ctx->forcefully_read_string(\"{}\")",
+                              "_jank_read(\"{}\")",
                               util::escape(typed_o->to_code_string()));
               if(has_meta)
               {
@@ -648,11 +642,10 @@ namespace jank::codegen
      * of the def, rather than prior (i.e. due to lifting), since there could be
      * some other var-related effects such as refer which need to happen before
      * def. */
-    util::format_to(
-      b.body_buffer,
-      R"(auto const {}(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
-      inst->name,
-      inst->qualified_var);
+    util::format_to(b.body_buffer,
+                    R"(auto const {}(_jank_var_owned("{}"));)",
+                    inst->name,
+                    inst->qualified_var);
 
     /* Forward declarations just intern the var and evaluate to it. */
     if(inst->value.is_none())
@@ -1803,11 +1796,10 @@ namespace jank::codegen
       type_str);
 
     auto const meta{ source_to_meta(inst->expr->source) };
-    util::format_to(
-      b.body_buffer,
-      "jank::runtime::reset_meta({}, jank::runtime::__rt_ctx->forcefully_read_string(\"{}\"));",
-      inst->name,
-      util::escape(to_code_string(meta)));
+    util::format_to(b.body_buffer,
+                    "jank::runtime::reset_meta({}, _jank_read(\"{}\"));",
+                    inst->name,
+                    util::escape(to_code_string(meta)));
 
     return inst->name;
   }
@@ -2068,21 +2060,19 @@ namespace jank::codegen
          * properly run ctors, just like what would happen normally. */
         if(v.second.owned)
         {
-          util::format_to(
-            b.footer_buffer,
-            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok());)",
-            native_ns,
-            v.first,
-            v.second.qualified_var);
+          util::format_to(b.footer_buffer,
+                          R"(new (&{}::{}) auto(_jank_var_owned("{}"));)",
+                          native_ns,
+                          v.first,
+                          v.second.qualified_var);
         }
         else
         {
-          util::format_to(
-            b.footer_buffer,
-            R"(new (&{}::{}) jank::runtime::var_ref(jank::runtime::__rt_ctx->intern_var("{}").expect_ok());)",
-            native_ns,
-            v.first,
-            v.second.qualified_var);
+          util::format_to(b.footer_buffer,
+                          R"(new (&{}::{}) auto(_jank_var("{}"));)",
+                          native_ns,
+                          v.first,
+                          v.second.qualified_var);
         }
       }
 
@@ -2092,7 +2082,7 @@ namespace jank::codegen
         auto last{ b.module->lifted_constants.begin() };
         std::advance(last, b.module->lifted_constants.size() - 1);
         util::format_to(b.footer_buffer,
-                        R"(GC_add_roots(&{}::{}, (&{}::{} + sizeof({}::{}) + 1));)",
+                        R"(GC_add_roots(&{}::{}, (&{}::{} + 1));)",
                         native_ns,
                         first.first,
                         native_ns,
@@ -2103,11 +2093,7 @@ namespace jank::codegen
 
       for(auto const &v : b.module->lifted_constants)
       {
-        util::format_to(b.footer_buffer,
-                        "new (&{}::{}) {}(",
-                        native_ns,
-                        v.first,
-                        get_qualified_type_name(literal_type(v.second)));
+        util::format_to(b.footer_buffer, "new (&{}::{}) auto(", native_ns, v.first);
         detail::gen_constant(v.second, b.footer_buffer);
         util::format_to(b.footer_buffer, ");");
       }

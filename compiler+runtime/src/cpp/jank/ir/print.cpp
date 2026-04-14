@@ -550,7 +550,7 @@ namespace jank::ir
     util::format_to(sb,
                     "{:name {} :op :cpp/builtin-operator-call :op \"{}\" :args [",
                     name,
-                    operator_name(static_cast<Cpp::Operator>(expr->op)));
+                    operator_name(static_cast<Cpp::Operator>(expr->op)).unwrap());
     bool needs_space{};
     for(auto const &arg : args)
     {

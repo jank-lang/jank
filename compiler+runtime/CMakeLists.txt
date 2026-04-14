@@ -650,6 +650,7 @@ add_library(
   src/cpp/jank/ir/print.cpp
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/cpp_processor.cpp
+  src/cpp/jank/codegen/api.cpp
   src/cpp/jank/codegen/optimize.cpp
   src/cpp/jank/jit/processor.cpp
   src/cpp/jank/aot/processor.cpp

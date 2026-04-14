@@ -515,7 +515,7 @@ extern "C"
     return trans.to_persistent().erase().data;
   }
 
-  jank_object_ref jank_set_create(u64 const size, ...)
+  jank_object_ref jank_set_create(jank_u64 const size, ...)
   {
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
     va_list args{};
