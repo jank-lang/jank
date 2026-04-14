@@ -180,17 +180,6 @@ namespace jank
       }
     }
 
-    if(opts.output_target == util::cli::compilation_target::cpp
-       && opts.codegen != util::cli::codegen_type::cpp)
-    {
-      /* TODO: Dedicated error. */
-      throw error::internal_failure(
-        util::format("Unable to output C++ when the codegen flag is set to '{}'. Please either "
-                     "output a different target or change the codegen to C++.",
-                     util::cli::codegen_type_str(opts.codegen)));
-    }
-
-
     if(opts.target_module != "clojure.core")
     {
       __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
