@@ -195,6 +195,25 @@ namespace jank::jit
       args.emplace_back(strdup(util::format("-D{}", define_macro).c_str()));
     }
 
+    switch(util::cli::opts.runtime_optimization_level)
+    {
+      case 0:
+        args.push_back(strdup("-O0"));
+        break;
+      case 1:
+        args.push_back(strdup("-O1"));
+        break;
+      case 2:
+        args.push_back(strdup("-O2"));
+        break;
+      case 3:
+        args.push_back(strdup("-O3"));
+        break;
+      default:
+        args.push_back(strdup("-O0"));
+        break;
+    }
+
     //util::println("jit flags {}", args);
 
     interpreter.reset(static_cast<CppInternal::Interpreter *>(

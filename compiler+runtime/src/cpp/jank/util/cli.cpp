@@ -374,11 +374,11 @@ OPTIONS
         {
           opts.output_target = compilation_target::object;
         }
+      }
 
-        if(command == "run" || command == "run-main")
-        {
-          opts.runtime_optimization_level = opts.codegen_optimization_level;
-        }
+      if(command == "run" || command == "run-main")
+      {
+        opts.runtime_optimization_level = opts.codegen_optimization_level;
       }
 
       /* If we have any more pending flags at this point, they don't belong. */
