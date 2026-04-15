@@ -380,6 +380,7 @@ namespace jank::ir
 
     using branch_get_ref = jtl::ref<branch_get>;
 
+    /* Branch is a terminator. Nothing may follow it, in the same block. */
     struct branch : instruction
     {
       branch(identifier const &name,
@@ -401,6 +402,7 @@ namespace jank::ir
 
     using branch_ref = jtl::ref<branch>;
 
+    /* Loop is a terminator. Nothing may follow it, in the same block. */
     struct loop : instruction
     {
       struct binding_shadow_details
@@ -452,19 +454,21 @@ namespace jank::ir
 
     using case_ref = jtl::ref<case_>;
 
+    /* Try indicates that the rest of the block should be in a try body. A try must either
+     * have some catches or a finally. The merge block is always present. */
     struct try_ : instruction
     {
       try_(identifier const &name,
            native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches,
-           jtl::option<identifier> const &merge_block,
-           jtl::option<identifier> const &shadow,
+           identifier const &merge_block,
+           identifier const &shadow,
            jtl::option<identifier> const &finally_block);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<std::pair<jtl::ptr<void>, identifier>> catches;
-      jtl::option<identifier> merge_block;
-      jtl::option<identifier> shadow;
+      identifier merge_block;
+      identifier shadow;
       jtl::option<identifier> finally_block;
     };
 
@@ -498,6 +502,9 @@ namespace jank::ir
 
     using finally_ref = jtl::ref<finally>;
 
+    /* Throw is a terminator, but we currently allow it in the middle of a block as well. This
+     * is mainly just a convenience. We can have a pass which strips out all instructions in
+     * a block after a throw. */
     struct throw_ : instruction
     {
       throw_(identifier const &name, identifier const &value);
@@ -510,6 +517,7 @@ namespace jank::ir
 
     using throw_ref = jtl::ref<throw_>;
 
+    /* Ret is a terminator. Nothing may follow it, in the same block. */
     struct ret : instruction
     {
       ret(identifier const &name, jtl::ptr<void> const type, identifier const &value);

@@ -115,8 +115,8 @@ namespace jank::ir
                      jtl::option<identifier> const &merge_block,
                      jtl::option<identifier> const &shadow);
     identifier try_(native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches,
-                    jtl::option<identifier> const &merge_block,
-                    jtl::option<identifier> const &shadow,
+                    identifier const &merge_block,
+                    identifier const &shadow,
                     jtl::option<identifier> const &finally_block);
     identifier catch_(jtl::ptr<void> const type,
                       jtl::option<identifier> const &merge_block,

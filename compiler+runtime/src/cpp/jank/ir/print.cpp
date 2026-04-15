@@ -396,8 +396,8 @@ namespace jank::ir
     }
     util::format_to(sb,
                     "] :merge {} :shadow {} :finally {} :type \"{}\"}",
-                    merge_block.unwrap_or("nil"),
-                    shadow.unwrap_or("nil"),
+                    merge_block,
+                    shadow,
                     finally_block.unwrap_or("nil"),
                     get_qualified_type_name(type));
   }

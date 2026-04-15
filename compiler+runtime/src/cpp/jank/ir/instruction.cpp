@@ -275,8 +275,8 @@ namespace jank::ir::inst
 
   try_::try_(identifier const &name,
              native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches,
-             jtl::option<identifier> const &merge_block,
-             jtl::option<identifier> const &shadow,
+             identifier const &merge_block,
+             identifier const &shadow,
              jtl::option<identifier> const &finally_block)
     : instruction{ instruction_kind::try_, name, Cpp::GetVoidType() }
     , catches{ jtl::move(catches) }

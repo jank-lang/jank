@@ -993,10 +993,7 @@ namespace jank::codegen
     b.next_instruction();
     auto const has_finally{ inst->finally_block.is_some() };
     identifier finally_guard_name;
-    if(inst->shadow.is_some())
-    {
-      util::format_to(b.body_buffer, "jank::runtime::object_ref {};", inst->shadow.unwrap());
-    }
+    util::format_to(b.body_buffer, "jank::runtime::object_ref {};", inst->shadow);
 
     if(has_finally)
     {
@@ -1038,10 +1035,7 @@ namespace jank::codegen
                       finally_name);
     }
 
-    if(inst->merge_block.is_some())
-    {
-      b.enter_block(inst->merge_block.unwrap());
-    }
+    b.enter_block(inst->merge_block);
 
     return none;
   }
