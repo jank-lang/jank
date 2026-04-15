@@ -1,0 +1,6 @@
+(try
+  (if (throw :success)
+    (assert false)
+    (assert false))
+  (catch jank.runtime.object_ref e
+    e))

@@ -515,6 +515,11 @@ namespace jank::ir
     for(auto const ex : expr->values)
     {
       name = gen(ex, b);
+
+      if(b.current_block()->has_terminator())
+      {
+        return none;
+      }
     }
 
     if(name.is_some())

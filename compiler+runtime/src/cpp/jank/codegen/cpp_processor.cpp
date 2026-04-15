@@ -520,7 +520,8 @@ namespace jank::codegen
           break;
         }
       }
-      else if(current_inst->kind == ir::instruction_kind::ret)
+      else if(current_inst->kind == ir::instruction_kind::ret
+              || current_inst->kind == ir::instruction_kind::throw_)
       {
         break;
       }
