@@ -34,11 +34,6 @@ namespace jank::ir
   struct module;
 }
 
-namespace jank::codegen
-{
-  struct processor;
-}
-
 namespace jank::runtime::obj
 {
   using jit_function_ref = oref<struct jit_function>;
@@ -51,7 +46,6 @@ namespace jank::jit
     processor(jtl::immutable_string const &binary_version);
     ~processor();
 
-    runtime::obj::jit_function_ref eval(codegen::processor &cg_prc) const;
     runtime::obj::jit_function_ref eval(ir::module const &module) const;
     runtime::obj::jit_function_ref create_function(runtime::callable_arity_flags flags,
                                                    jtl::immutable_string const &base_name,

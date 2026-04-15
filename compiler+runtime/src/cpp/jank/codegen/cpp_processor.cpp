@@ -82,87 +82,9 @@ namespace jank::codegen
         return { expression_buffer.data(), expression_buffer.size() };
       }
 
-      //bool is_closure{};
-      //for(auto const &arity : root_fn->arities)
-      //{
-      //  if(!arity.frame->captures.empty())
-      //  {
-      //    is_closure = true;
-      //  }
-      //}
-
-      //auto const ret_ctx_tmp{ closure_ctx };
-
-      //if(is_closure)
-      //{
-      //  util::format_to(buffer, "auto const {}{ jtl::make_ref<struct {}>(", ret_ctx_tmp, closure_ctx);
-
-      //  native_set<uhash> used_captures;
-      //  bool need_comma{};
-      //  for(auto const &arity : root_fn->arities)
-      //  {
-      //    for(auto const &v : arity.frame->captures)
-      //    {
-      //      if(used_captures.contains(v.first->to_hash()))
-      //      {
-      //        continue;
-      //      }
-      //      used_captures.emplace(v.first->to_hash());
-
-      //      /* We're generating the inputs to the function ctor, which means we don't
-      //       * want the binding of the capture within the function; we want the one outside
-      //       * of it, which we're capturing. We need to reach further for that.
-      //       *
-      //       * We check for named recursion first, since that takes higher precedence
-      //       * than locals or captures. */
-      //      auto const recursion(root_fn->frame->find_named_recursion(v.first));
-      //      if(recursion.is_some())
-      //      {
-      //        auto const tmp{ munge(recursion.unwrap().fn_frame->fn_ctx->name) };
-      //        util::format_to(buffer, "{} {}", (need_comma ? "," : ""), tmp);
-      //      }
-      //      else
-      //      {
-      //        handle const h{ v.second.originating_binding };
-      //        auto const local_type{ v.second.originating_binding->type };
-      //        auto const needs_conversion{ !cpp_util::is_any_object(local_type) };
-
-      //        if(needs_conversion)
-      //        {
-      //          util::format_to(buffer,
-      //                          "{} jank::runtime::convert<{}>::{}({})",
-      //                          (need_comma ? "," : ""),
-      //                          cpp_util::get_qualified_type_name(local_type),
-      //                          "into_object",
-      //                          h.str(true));
-      //        }
-      //        else
-      //        {
-      //          util::format_to(buffer, "{} {}", (need_comma ? "," : ""), h.str(true));
-      //        }
-      //      }
-      //      need_comma = true;
-      //    }
-      //  }
-
-      //  util::format_to(buffer, ") };");
-      //}
-
       auto const ret_tmp{ munge(__rt_ctx->unique_string("fnexpr")) };
       util::format_to(expression_buffer, "auto const {}(", ret_tmp);
-
-      //if(is_closure)
-      //{
-      //  util::format_to(buffer,
-      //                  "_jank_closure({}, {}.data)",
-      //                  arity_flags(),
-      //                  ret_ctx_tmp);
-      //}
-      //else
-      {
-        util::format_to(expression_buffer, "_jank_fn({})", module->arity_flags);
-      }
-
+      util::format_to(expression_buffer, "_jank_fn({})", module->arity_flags);
       util::format_to(expression_buffer, ");");
 
       for(auto const &arity : module->root_fn_expr->arities)
@@ -604,28 +526,6 @@ namespace jank::codegen
       }
     }
   }
-
-  //void gen_until_jump(native_vector<jtl::option<identifier>> const &jump_blocks, builder &b)
-  //{
-  //  while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-  //  {
-  //    auto const current_inst{
-  //      b.function->blocks[b.block_index].instructions[b.instruction_index]
-  //    };
-  //    if(current_inst->kind == ir::instruction_kind::jump)
-  //    {
-  //      for(auto const &jump_block : jump_blocks)
-  //      {
-  //        if(jump_block.is_some()
-  //           && static_box_cast<ir::inst::jump>(current_inst)->block == jump_block.unwrap())
-  //        {
-  //          break;
-  //        }
-  //      }
-  //    }
-  //    gen(current_inst, b);
-  //  }
-  //}
 
   jtl::option<identifier> gen(ir::inst::def_ref const &inst, builder &b)
   {
@@ -1651,7 +1551,7 @@ namespace jank::codegen
                         "jank::runtime::convert<{}>::{}({})",
                         trait_type,
                         conversion_direction,
-                        inst->args[0]);
+                        inst->args[arg_idx]);
       }
       else
       {
@@ -1930,7 +1830,6 @@ namespace jank::codegen
   {
     builder b{ &mod, mod.entry_points[0] };
 
-    auto const arity_flags{ find_function(&mod, mod.entry_points[0])->arity->fn_ctx->fn->arities };
     for(auto const &fn_name : mod.entry_points)
     {
       auto const fn{ find_function(&mod, fn_name) };
@@ -1965,35 +1864,6 @@ namespace jank::codegen
         util::format_to(b.module_header_buffer, "jank::runtime::var_ref {};", v.first);
       }
     }
-    //else
-    //{
-    //  for(auto const &v : b.lifted_constants)
-    //  {
-    //    /* TODO: Typed lifted constants (in analysis). */
-    //    util::format_to(b.header_buffer, "extern \"C\" auto const {}{ ", v.second);
-    //    detail::gen_constant(v.first, b.header_buffer);
-    //    util::format_to(b.header_buffer, "};");
-    //  }
-    //  for(auto const &v : b.module->lifted_vars)
-    //  {
-    //    if(v.second.owned)
-    //    {
-    //      util::format_to(
-    //        b.header_buffer,
-    //        R"(extern "C" auto const {}{ jank::runtime::__rt_ctx->intern_owned_var("{}").expect_ok() };)",
-    //        v.first,
-    //        v.second.qualified_var);
-    //    }
-    //    else
-    //    {
-    //      util::format_to(
-    //        b.header_buffer,
-    //        R"(extern "C" auto const {}{ jank::runtime::__rt_ctx->intern_var("{}").expect_ok() };)",
-    //        v.first,
-    //        v.second.qualified_var);
-    //    }
-    //  }
-    //}
 
     if(mod.target == compilation_target::module)
     {

@@ -603,7 +603,7 @@ namespace jank::ir
   {
     util::format_to(sb, "{:name {}\n", b.name);
     print_indent(sb, ++indent);
-    util::format_to(sb, ":instructions [", b.name);
+    util::format_to(sb, ":instructions [");
     indent = determine_indent(sb);
     bool needs_indent{};
     for(auto const &i : b.instructions)

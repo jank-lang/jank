@@ -133,7 +133,7 @@ OPTIONS
                               The name of the output file.
           --output-dir <path> [default: target]
                               The prefix to use for object files.
-          --output-target <cpp, llvm-ir, o> [default: o]
+          --output-target <cpp, llvm-ir, object> [default: object]
                               The target of each compiled module artifact.
   -I,     --include-dir <path>
                               Absolute or relative path to the directory for includes
