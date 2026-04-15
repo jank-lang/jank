@@ -334,6 +334,7 @@ namespace jank::ir
 
     using recursion_reference_ref = jtl::ref<recursion_reference>;
 
+    /* Truthy converts a jank object into a bool by calling `jank::runtime::truthy`. */
     struct truthy : instruction
     {
       truthy(identifier const &name, identifier const &value);
@@ -345,6 +346,7 @@ namespace jank::ir
 
     using truthy_ref = jtl::ref<truthy>;
 
+    /* Jump is a terminator. Nothing may follow it, in the same block. */
     struct jump : instruction
     {
       jump(identifier const &name, identifier const &block);
@@ -359,6 +361,8 @@ namespace jank::ir
 
     using jump_ref = jtl::ref<jump>;
 
+    /* Branch set/get follow the pizlo-style upsilon/phi practice.
+     * https://gist.github.com/pizlonator/cf1e72b8600b1437dda8153ea3fdb963 */
     struct branch_set : instruction
     {
       branch_set(identifier const &name, identifier const &shadow, identifier const &value);
@@ -429,6 +433,9 @@ namespace jank::ir
 
     using loop_ref = jtl::ref<loop>;
 
+    /* Case is a terminator. Nothing may follow it, in the same block. The map of case blocks
+     * shows all of the different cases which need to be covered and their corresponding starting
+     * blocks. */
     struct case_ : instruction
     {
       case_(identifier const &name,
@@ -474,6 +481,8 @@ namespace jank::ir
 
     using try_ref = jtl::ref<try_>;
 
+    /* Catch instructions are positioned at the start of a block and they indicate that the
+     * block is dedicated to the catch body. */
     struct catch_ : instruction
     {
       catch_(identifier const &name,
