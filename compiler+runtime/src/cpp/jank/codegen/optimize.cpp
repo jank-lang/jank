@@ -34,7 +34,7 @@ namespace jank::codegen
     pb.crossRegisterProxies(lam, fam, cgam, mam);
 
     auto level{ llvm::OptimizationLevel::O0 };
-    switch(util::cli::opts.runtime_optimization_level)
+    switch(util::cli::opts.codegen_optimization_level)
     {
       case 0:
         level = llvm::OptimizationLevel::O0;
