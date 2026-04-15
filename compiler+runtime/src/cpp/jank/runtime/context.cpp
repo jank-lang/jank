@@ -247,7 +247,10 @@ namespace jank::runtime
         throw error::internal_codegen_failure(res);
       }
       auto &partial_tu{ parse_res.get() };
-      codegen::optimize(partial_tu.TheModule.get(), module_name);
+      if(util::cli::opts.output_target != util::cli::compilation_target::cpp)
+      {
+        codegen::optimize(partial_tu.TheModule.get(), module_name);
+      }
       write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
     }
 

@@ -376,7 +376,7 @@ OPTIONS
         }
       }
 
-      if(command == "run" || command == "run-main")
+      if(command == "run" || command == "run-main" || command == "repl")
       {
         opts.runtime_optimization_level = opts.codegen_optimization_level;
       }
