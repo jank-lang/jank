@@ -30,7 +30,7 @@
       ;; If we return :exception then CIDER will try to load clojure.stacktrace.
       (not success)
       {:value  (str *e)
-       :status [:eval-error]}
+       :status [:done :eval-error]}
 
       ;; Client requests an inspection of the last result.
       inspect?
