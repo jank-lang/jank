@@ -1203,8 +1203,9 @@
 ;; Primitives.
 ;;; Arithmetic.
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.add l r))
+    :inline-arities #{2}}
   +
   ([]
    0)
@@ -1219,8 +1220,9 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.sub l r))
+    :inline-arities #{2}}
   -
   ([x]
    (- 0 x))
@@ -1356,8 +1358,9 @@
      false)))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.lte l r))
+    :inline-arities #{2}}
   <=
   ([x]
    true)

@@ -315,12 +315,14 @@ namespace jank::ir
       named_recursion(identifier const &name,
                       jtl::ptr<void> const type,
                       identifier const &fn,
-                      native_vector<identifier> &&args);
+                      native_vector<identifier> &&args,
+                      bool const needs_dynamic_call);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       identifier fn;
       native_vector<identifier> args;
+      bool needs_dynamic_call{ true };
     };
 
     using named_recursion_ref = jtl::ref<named_recursion>;

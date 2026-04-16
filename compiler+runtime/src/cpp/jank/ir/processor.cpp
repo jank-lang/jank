@@ -403,10 +403,21 @@ namespace jank::ir
       arg_idents.emplace_back(gen(arg_expr, b).unwrap());
     }
 
+    bool needs_dynamic_call{ true };
+    if(!expr->recursion_ref.fn_ctx->is_variadic)
+    {
+      needs_dynamic_call = false;
+    }
+    else
+    {
+      /* TODO: Check if this particular arity is variadic. Needs per-arity info. */
+    }
+
     return b.named_recursion(
       expr->position,
       gen(analyze::expr::recursion_reference_ref{ &expr->recursion_ref }, b).unwrap(),
-      jtl::move(arg_idents));
+      jtl::move(arg_idents),
+      needs_dynamic_call);
   }
 
   jtl::option<identifier> gen(analyze::expr::let_ref const expr, builder &b)

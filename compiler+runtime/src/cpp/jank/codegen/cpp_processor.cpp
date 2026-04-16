@@ -833,10 +833,19 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::named_recursion_ref const &inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer,
-                    "auto const {}(jank::runtime::dynamic_call({}",
-                    inst->name,
-                    inst->fn);
+
+    if(inst->needs_dynamic_call)
+    {
+      util::format_to(b.body_buffer,
+                      "auto const {}(jank::runtime::dynamic_call({}",
+                      inst->name,
+                      inst->fn);
+    }
+    else
+    {
+      util::format_to(b.body_buffer, "auto const {}({}({}", inst->name, b.function->name, inst->fn);
+    }
+
     for(auto const &arg : inst->args)
     {
       util::format_to(b.body_buffer, ", {}", arg);

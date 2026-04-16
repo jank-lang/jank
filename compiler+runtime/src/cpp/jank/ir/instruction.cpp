@@ -163,10 +163,12 @@ namespace jank::ir::inst
   named_recursion::named_recursion(identifier const &name,
                                    jtl::ptr<void> const type,
                                    identifier const &fn,
-                                   native_vector<identifier> &&args)
+                                   native_vector<identifier> &&args,
+                                   bool const needs_dynamic_call)
     : instruction{ instruction_kind::named_recursion, name, type }
     , fn{ fn }
     , args{ jtl::move(args) }
+    , needs_dynamic_call{ needs_dynamic_call }
   {
   }
 

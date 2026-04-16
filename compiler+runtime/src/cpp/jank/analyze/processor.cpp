@@ -3236,45 +3236,24 @@ namespace jank::analyze
       source = sym_result.expect_ok();
       auto const var_deref(llvm::dyn_cast<expr::var_deref>(source.data));
 
-      /* If this expression doesn't need to be boxed, based on where it's called, we can dig
-       * into the call details itself to see if the function supports unboxed returns. Most don't. */
+      /* Some vars have meta which defines how calls to it can be inlined. This works similarly
+       * to macro expansion in that there's just a function for us to call which gives us the
+       * new form to analyze in place of this form. */
       if(var_deref)
       {
-        auto const arity_meta(
-          runtime::get_in(var_deref->var->get_meta(),
-                          make_box<runtime::obj::persistent_vector>(
-                            std::in_place,
-                            __rt_ctx->intern_keyword("", "arities", true).expect_ok(),
-                            /* NOTE: We don't support unboxed meta on variadic arities. */
-                            make_box(arg_count))));
+        auto const inline_arities(
+          runtime::get(var_deref->var->get_meta(),
+                       __rt_ctx->intern_keyword("", "inline-arities", true).expect_ok()));
 
-        bool const supports_unboxed_input(runtime::truthy(
-          get(arity_meta,
-              __rt_ctx->intern_keyword("", "supports-unboxed-input?", true).expect_ok())));
-        bool const supports_unboxed_output(
-          runtime::truthy
-          /* TODO: Rename key. */
-          (get(arity_meta, __rt_ctx->intern_keyword("", "unboxed-output?", true).expect_ok())));
-
-        if(supports_unboxed_input || supports_unboxed_output)
+        if(runtime::contains(inline_arities, make_box(arg_count)))
         {
-          auto const fn_res(vars.find(var_deref->var));
-          /* If we don't have a valid var_deref, we know the var exists, but we
-           * don't have an AST node for it. This means the var came in through
-           * a pre-compiled module. In that case, we can only rely on meta to
-           * tell us what we need. */
-          if(fn_res != vars.end())
-          {
-            if(fn_res->second.data->kind != expression_kind::function)
-            {
-              return error::internal_analyze_failure("Unsupported arity meta on non-function var.",
-                                                     object_source(first),
-                                                     latest_expansion(macro_expansions));
-            }
-          }
-
-          needs_arg_box = !supports_unboxed_input;
-          needs_ret_box = needs_box | !supports_unboxed_output;
+          auto const inline_fn(
+            runtime::get(var_deref->var->get_meta(),
+                         __rt_ctx->intern_keyword("", "inline", true).expect_ok()));
+          /* TODO: Once we're evaluating meta, we can remove this eval. */
+          auto const actual_fn{ __rt_ctx->eval(inline_fn) };
+          auto const expanded{ apply_to(actual_fn, o->next()) };
+          return analyze(expanded, current_frame, position, fn_ctx, needs_box);
         }
       }
     }

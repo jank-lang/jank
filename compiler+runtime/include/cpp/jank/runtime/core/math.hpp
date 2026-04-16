@@ -158,6 +158,16 @@ namespace jank::runtime
   bool lte(i64 l, object_ref const r);
   bool lte(i64 l, i64 r);
 
+  template <typename L, typename R>
+  bool lte(L const l, R const r)
+  {
+    using IntL = std::conditional_t<std::is_integral_v<L>, i64, L>;
+    using RealL = std::conditional_t<std::is_floating_point_v<IntL>, f64, IntL>;
+    using IntR = std::conditional_t<std::is_integral_v<R>, i64, R>;
+    using RealR = std::conditional_t<std::is_floating_point_v<IntR>, f64, IntR>;
+    return lte(static_cast<RealL>(l), static_cast<RealR>(r));
+  }
+
   object_ref min(object_ref const l, object_ref const r);
   object_ref min(obj::integer_ref const l, object_ref const r);
   object_ref min(object_ref const l, obj::integer_ref const r);
