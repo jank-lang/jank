@@ -864,9 +864,8 @@ namespace jank::runtime::module
      * making it hard to share them. */
     bool const has_o{ entry.o.is_some() && entry.o.unwrap().exists()
                       && entry.o.unwrap().archive_path.is_none() };
-    bool const has_cpp{ entry.cpp.is_some() && entry.cpp.unwrap().exists() };
 
-    auto const target = util::cli::opts.output_target;
+    auto const target{ util::cli::opts.output_target };
 
     /* When jank is compiling the sources, it will use `cli::opts.output_target`
      * to check for the compiled cache. If the user wants output to be .cpp,
@@ -881,44 +880,18 @@ namespace jank::runtime::module
         compiled_entry = entry.o.unwrap();
         compiled_type = module_type::o;
       }
-      else if(target == util::cli::compilation_target::cpp && has_cpp)
-      {
-        compiled_entry = entry.cpp.unwrap();
-        compiled_type = module_type::cpp;
-      }
     }
     else
     {
-      if(has_o && has_cpp)
-      {
-        if(get_mod_time(entry.o.unwrap()) >= get_mod_time(entry.cpp.unwrap()))
-        {
-          compiled_entry = entry.o.unwrap();
-          compiled_type = module_type::o;
-        }
-        else
-        {
-          compiled_entry = entry.cpp.unwrap();
-          compiled_type = module_type::cpp;
-        }
-      }
-      else if(has_o)
-      {
-        compiled_entry = entry.o.unwrap();
-        compiled_type = module_type::o;
-      }
-      else if(has_cpp)
-      {
-        compiled_entry = entry.cpp.unwrap();
-        compiled_type = module_type::cpp;
-      }
+      compiled_entry = entry.o.unwrap();
+      compiled_type = module_type::o;
     }
 
     /* We now have the latest compiled entry. If it's up to date with
      * the source, we can use it. Otherwise, we'll use the source. */
     if(compiled_entry.is_some())
     {
-      auto const &c_entry = compiled_entry.unwrap();
+      auto const &c_entry{ compiled_entry.unwrap() };
       if(get_mod_time(c_entry) >= source_entry.unwrap().last_modified_at())
       {
         return find_result{ entry, compiled_type };
@@ -1044,7 +1017,7 @@ namespace jank::runtime::module
       auto const managed_load_fn{ locked_state->managed_load_fns.find(module) };
       if(managed_load_fn != locked_state->managed_load_fns.end())
       {
-        //log_managed_load(module);
+        log_managed_load(module);
         (*managed_load_fn->second)();
         set_is_loaded(module);
         return ok();
@@ -1064,7 +1037,7 @@ namespace jank::runtime::module
     auto const module_type_to_load{ found_module.expect_ok().to_load.unwrap() };
     auto const &module_sources{ found_module.expect_ok().sources };
 
-    //log_load(module, module_type_to_load, module_sources);
+    log_load(module, module_type_to_load, module_sources);
 
     switch(module_type_to_load)
     {
@@ -1073,9 +1046,6 @@ namespace jank::runtime::module
         break;
       case module_type::o:
         res = load_o(module, module_sources.o.unwrap());
-        break;
-      case module_type::cpp:
-        res = load_cpp(module, module_sources.cpp.unwrap());
         break;
       case module_type::cljc:
         res = load_cljc(module_sources.cljc.unwrap());
@@ -1128,56 +1098,6 @@ namespace jank::runtime::module
 
     auto const load_fn_res{ __rt_ctx->jit_prc.find_symbol(load_function_name).expect_ok() };
     reinterpret_cast<void (*)()>(load_fn_res)();
-
-    return ok();
-  }
-
-  jtl::result<void, error_ref>
-  loader::load_cpp(jtl::immutable_string const &module, file_entry const &entry) const
-  {
-    if(entry.archive_path.is_some())
-    {
-      jtl::result<void, error_ref> res{ ok() };
-      auto const visit_res{ visit_jar_entry(entry,
-                                            [&](zip_t * const zip) -> jtl::result<void, error_ref> {
-                                              auto const read_result{ read_zip_entry(zip) };
-                                              if(read_result.is_err())
-                                              {
-                                                return read_result.expect_err();
-                                              }
-                                              res = __rt_ctx->eval_cpp_string(
-                                                read_result.expect_ok());
-                                              return ok();
-                                            }) };
-      if(res.is_err())
-      {
-        return res;
-      }
-      if(visit_res.is_err())
-      {
-        return visit_res;
-      }
-    }
-    else
-    {
-      auto const file(module::loader::read_file(entry.path));
-      if(file.is_err())
-      {
-        return file.expect_err();
-      }
-      auto const res{ __rt_ctx->eval_cpp_string(file.expect_ok().view()) };
-      if(res.is_err())
-      {
-        return res;
-      }
-    }
-
-    /* TODO: What if there is no load function?
-     * What if load function is defined in another module?
-     * What if load function is already loaded/defined? The llvm::Interpreter::Execute will fail. */
-    auto const load_function_name{ module_to_load_function(module) };
-    auto const load{ __rt_ctx->jit_prc.find_symbol(load_function_name).expect_ok() };
-    reinterpret_cast<void (*)()>(load)();
 
     return ok();
   }
