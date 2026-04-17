@@ -196,7 +196,7 @@ namespace jank::ir
       return ":defer";
     }
 
-    return b.parameter(expr->position, local_name);
+    return none;
   }
 
   jtl::immutable_string gen_arity(module &mod,
@@ -208,6 +208,14 @@ namespace jank::ir
     fn.name = name;
     fn.add_block("entry");
     builder b{ &mod, mod.functions.size() - 1 };
+
+    b.locals[fn_expr->name]
+      = b.parameter(analyze::expression_position::value, runtime::munge(fn_expr->name));
+    for(auto const &param : arity.params)
+    {
+      auto const &name{ param->get_name() };
+      b.locals[name] = b.parameter(analyze::expression_position::value, runtime::munge(name));
+    }
 
     for(auto const &capture : arity.frame->captures)
     {
@@ -226,7 +234,6 @@ namespace jank::ir
       {
         auto const shadow{ b.next_shadow() };
         auto const &name{ param->get_name() };
-        b.locals[name] = b.parameter(analyze::expression_position::value, name);
         b.local_to_loop_shadow[name] = shadow;
         shadows.emplace_back(shadow, b.locals[name], untyped_object_ref_type());
       }
@@ -413,11 +420,21 @@ namespace jank::ir
       /* TODO: Check if this particular arity is variadic. Needs per-arity info. */
     }
 
-    return b.named_recursion(
-      expr->position,
-      gen(analyze::expr::recursion_reference_ref{ &expr->recursion_ref }, b).unwrap(),
-      jtl::move(arg_idents),
-      needs_dynamic_call);
+    identifier fn;
+    if(expr->recursion_ref.fn_ctx != b.current_function()->arity->fn_ctx)
+    {
+      fn = runtime::munge(b.locals[expr->recursion_ref.fn_ctx->name]);
+    }
+    else
+    {
+      fn = runtime::munge(expr->recursion_ref.fn_ctx->name);
+    }
+
+    return b.named_recursion(expr->position,
+                             fn,
+                             runtime::munge(expr->recursion_ref.fn_ctx->fn->unique_name),
+                             jtl::move(arg_idents),
+                             needs_dynamic_call);
   }
 
   jtl::option<identifier> gen(analyze::expr::let_ref const expr, builder &b)

@@ -2266,7 +2266,16 @@ namespace jank::analyze
         return value_res.expect_err();
       }
       auto const value_expr{ value_res.expect_ok() };
-      auto const expr_type{ cpp_util::non_void_expression_type(value_expr) };
+      auto expr_type{ cpp_util::non_void_expression_type(value_expr) };
+
+      /* Loop bindings are mutable, so if we have a typed object, force it to be untyped since
+       * we have no idea what type it'll be assigned to later on. For example, you might start
+       * with an empty array map, but then assoc some stuff on and get a hash map afterward. */
+      if(loop_details.is_some() && cpp_util::is_typed_object(expr_type))
+      {
+        expr_type = cpp_util::untyped_object_ref_type();
+      }
+
       auto const &binding{ ret->frame->locals[sym].emplace_back(
         local_binding{ sym,
                        __rt_ctx->unique_string(sym->name),

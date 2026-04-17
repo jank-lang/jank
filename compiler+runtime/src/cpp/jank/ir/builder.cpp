@@ -309,13 +309,19 @@ namespace jank::ir
 
   identifier builder::named_recursion(analyze::expression_position const pos,
                                       identifier const &fn,
+                                      jtl::immutable_string const &fn_base_name,
                                       native_vector<identifier> &&args,
                                       bool const needs_dynamic_call)
   {
     auto name{ next_ident() };
     auto const type{ untyped_object_ref_type() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::named_recursion>(name, type, fn, jtl::move(args), needs_dynamic_call));
+      jtl::make_ref<inst::named_recursion>(name,
+                                           type,
+                                           fn,
+                                           fn_base_name,
+                                           jtl::move(args),
+                                           needs_dynamic_call));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);

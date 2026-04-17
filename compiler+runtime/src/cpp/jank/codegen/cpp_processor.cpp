@@ -843,7 +843,23 @@ namespace jank::codegen
     }
     else
     {
-      util::format_to(b.body_buffer, "auto const {}({}({}", inst->name, b.function->name, inst->fn);
+      auto const fn_name{ util::format("{}_{}", inst->fn_base_name, inst->args.size()) };
+      util::format_to(b.body_buffer, "auto const {}({}({}", inst->name, fn_name, inst->fn);
+
+      /* TODO: Save some state that we did this so we don't do it again. */
+      //if(b.function->arity->params.size() < inst->args.size())
+      {
+        util::format_to(b.deps_buffer,
+                        "extern \"C\" jank::runtime::object_ref {}(jank::runtime::object_ref const",
+                        fn_name);
+
+        for(auto const &_ : inst->args)
+        {
+          util::format_to(b.deps_buffer, ", jank::runtime::object_ref");
+        }
+
+        util::format_to(b.deps_buffer, ");");
+      }
     }
 
     for(auto const &arg : inst->args)
