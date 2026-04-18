@@ -881,7 +881,7 @@ namespace jank::runtime::module
         compiled_type = module_type::o;
       }
     }
-    else
+    else if(has_o)
     {
       compiled_entry = entry.o.unwrap();
       compiled_type = module_type::o;

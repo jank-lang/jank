@@ -409,12 +409,13 @@ int main(int const argc, char const **argv)
 
     jank_load_clojure_core_native();
 
+    __rt_ctx->module_loader.add_load_fn("jank.compiler-native", &jank_load_jank_compiler_native);
+    __rt_ctx->module_loader.add_load_fn("jank.perf-native", &jank_load_jank_perf_native);
+
 #ifdef JANK_PHASE_2
     __rt_ctx->module_loader.add_load_fn("clojure.core", &jank_load_clojure_core);
     __rt_ctx->module_loader.add_load_fn("clojure.string", &jank_load_clojure_string);
     __rt_ctx->module_loader.add_load_fn("clojure.walk", &jank_load_clojure_walk);
-    __rt_ctx->module_loader.add_load_fn("jank.compiler-native", &jank_load_jank_compiler_native);
-    __rt_ctx->module_loader.add_load_fn("jank.perf-native", &jank_load_jank_perf_native);
     __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.core",
                                         &jank_load_jank_nrepl_server_core);
     __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.inspect",
