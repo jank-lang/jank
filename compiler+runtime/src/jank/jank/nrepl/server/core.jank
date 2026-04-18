@@ -47,15 +47,13 @@
 (defn read-message
   "Read a complete message (TODO) from the client and decode it."
   [client* remainder]
-  (println :hello1 remainder)
   (let [client  (cpp/unbox (:* jank.nrepl.server.native_client) client*)
         data (.read_some client)
-        _ (println :hello3 (str remainder data))
-        [msg rem :as data] (bencode/parse (str remainder data))]
-    (println :msg msg :rem rem :remainder* remainder)
-    ;;(reset! remainder* rem)
-    (println :done)
-    data))
+        combined (str remainder data)
+        decoded (bencode/parse combined)]
+    (if decoded
+      decoded
+      [nil combined])))
 
 (defn write-message
   "Encode the given message and write it to the client socket."
@@ -69,7 +67,6 @@
   "For as long as the client is connected, read requests and write replies."
   [client*]
   (loop [[req remainder] nil]
-    (println :req req)
     (when (connected? client*)
       (when req
         (log "<-" (pr-str (abbreviate req 20)))

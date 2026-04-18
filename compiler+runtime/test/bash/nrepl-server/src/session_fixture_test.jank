@@ -3,7 +3,7 @@
   (:require [clojure.test :refer [deftest is run-tests successful? testing]]
             [jank.nrepl.server.bencode :as ben]
             [jank.nrepl.server.core :as core]
-            [session-fixture :as sf :refer [with-session *client* read-some! *server* write-some!]]))
+            [session-fixture :as sf :refer [with-session *client* read-some! *server* *session* write-some!]]))
 
 (deftest session-test
   (let [session* (cpp/session_fixture.make)
@@ -56,9 +56,15 @@
 (deftest with-session-test
   (with-session
     (testing "dynamic vars are bound"
-      (is (some? session-fixture/*session*))
-      (is (some? session-fixture/*client*))
-      (is (some? session-fixture/*server*)))
+      (is (some? *session*))
+      (is (some? *client*))
+      (is (some? *server*)))
+
+    (testing "session get port"
+      (is (pos?  (-> (cpp/unbox (:* session_fixture) *session*)
+                     .-server
+                     cpp/*
+                     .get_port))))
 
     (testing "client write, server read with read-some!"
       (write-some! *client* "hello")
