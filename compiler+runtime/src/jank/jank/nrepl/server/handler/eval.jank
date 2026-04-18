@@ -14,16 +14,17 @@
 (binding [*ns* default-ns]
   (clojure.core/refer-clojure))
 
-(defn- do-eval [ns code inspect?]
+(defn- do-eval [ns code file-path line col inspect?]
   ;; TODO: Once we have threads, we can spawn a background thread to capture and
   ;; send interleaved output during a long eval.
   (let [target-ns        (or (some-> ns symbol find-ns) default-ns)
         ;; do the eval, capturing anything on stdout
         {:keys [ret stdout stderr]} (with-capture
                                       (fn []
-                                        (binding [*ns* target-ns]
+                                        (binding [*ns* target-ns
+                                                  *file* file-path]
                                           ;; the evaluation may change the namespace
-                                          [(safe-eval code) *ns*])))
+                                          [(safe-eval code line col) *ns*])))
         [success res-ns] ret]
     (cond
       ;; Eval results in error. For now, just report the exception as a value.
@@ -48,9 +49,15 @@
 (defmethod handle-message :eval [msg]
   (do-eval (get msg "ns")
            (get msg "code" "")
+           (get msg "file" "NO_SOURCE_PATH")
+           (get msg "line" 0)
+           (get msg "column" 0)
            (some-> (get msg "inspect") parse-boolean)))
 
 (defmethod handle-message :load-file [msg]
   (do-eval (get msg "ns")
            (get msg "file" "")
+           (get msg "file-path" "NO_SOURCE_PATH")
+           (get msg "line" 0)
+           (get msg "column" 0)
            false))
