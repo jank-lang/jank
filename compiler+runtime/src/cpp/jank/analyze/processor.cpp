@@ -2470,27 +2470,31 @@ namespace jank::analyze
      * we're in a loop. */
     auto const old_loop_details{ loop_details };
     loop_details = some(nullptr);
+
     /* Using recur from this loop is fine, even if we're in a try, since the jump target
      * is this loop. */
-    context::binding_scope const _(runtime::obj::persistent_hash_map::create_unique(
-      std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)));
+    context::binding_scope const _{ runtime::obj::persistent_hash_map::create_unique(
+      std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)) };
     util::scope_exit const finally{ [&]() { loop_details = old_loop_details; } };
 
     /* We always analyze loops in tail position, since `recur` always expects to be in
      * tail position, and it can be used within a loop. We then later reset the position
      * of this expression back to what it should be. */
-    auto let{ analyze_let(list, current_frame, expression_position::tail, fn_ctx, true) };
-    if(let.is_err())
+    auto let_res{ analyze_let(list, current_frame, expression_position::tail, fn_ctx, true) };
+    if(let_res.is_err())
     {
-      return let;
+      return let_res;
     }
 
-    let.expect_ok()->propagate_position(position);
+    auto const let{ static_box_cast<expr::let>(let_res.expect_ok()) };
+    let->propagate_position(position);
 
-    auto const typed_let{ static_box_cast<expr::let>(let.expect_ok()) };
-    if(typed_let->loop_kind == expr::let::loop_kind::none)
+    /* If no recur is found, we still need to note that this is a loop, since loop bindings
+     * are type-erased. During IR gen, this is crucial information to ensure the IR matches
+     * what was analyzed. */
+    if(let->loop_kind == expr::let::loop_kind::none)
     {
-      typed_let->loop_kind = expr::let::loop_kind::loop_without_recur;
+      let->loop_kind = expr::let::loop_kind::loop_without_recur;
     }
 
     return let;
