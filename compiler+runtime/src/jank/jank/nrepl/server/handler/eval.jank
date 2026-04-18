@@ -50,14 +50,14 @@
   (do-eval (get msg "ns")
            (get msg "code" "")
            (get msg "file" "NO_SOURCE_PATH")
-           (get msg "line" 0)
-           (get msg "column" 0)
+           (get msg "line" 1)
+           (get msg "column" 1)
            (some-> (get msg "inspect") parse-boolean)))
 
 (defmethod handle-message :load-file [msg]
   (do-eval (get msg "ns")
            (get msg "file" "")
            (get msg "file-path" "NO_SOURCE_PATH")
-           (get msg "line" 0)
-           (get msg "column" 0)
+           (get msg "line" 1)
+           (get msg "column" 1)
            false))

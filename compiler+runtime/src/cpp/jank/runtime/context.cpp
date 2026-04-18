@@ -284,7 +284,7 @@ namespace jank::runtime
 
   jtl::option<object_ref> context::eval_string(jtl::immutable_string const &code) const
   {
-    return eval_string(code, 0, 0);
+    return eval_string(code, 1, 1);
   }
 
   jtl::result<void, error_ref> context::eval_cpp_string(jtl::immutable_string const &code) const
