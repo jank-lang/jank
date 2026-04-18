@@ -1,0 +1,4 @@
+(let* [a (cpp/int #cpp 77)
+       b (cpp/int #cpp 76)]
+  (if (cpp/== a (cpp/++ b))
+    :success))

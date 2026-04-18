@@ -2540,13 +2540,17 @@ namespace jank::analyze
     {
       return condition_expr.expect_err();
     }
-    /* TODO: Support native types if they're compatible with bool. */
-    condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
-                                               cpp_util::untyped_object_ref_type(),
-                                               macro_expansions);
+
+    auto const condition_type{ condition_expr.expect_ok()->get_type() };
+    if(!cpp_util::is_any_object(condition_type))
+    {
+      condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
+                                                 cpp_util::bool_type(),
+                                                 macro_expansions);
+    }
     if(condition_expr.is_err())
     {
-      return condition_expr.expect_err();
+      return condition_expr.expect_err()->add_usage(read::parse::reparse_nth(o, 1));
     }
 
     auto const then(o->data.rest().rest().first().unwrap());
