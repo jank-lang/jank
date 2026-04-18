@@ -668,53 +668,27 @@ namespace jank::analyze::cpp_util
     return false;
   }
 
-  /* TODO: Just put a type member function in expression_base and read it from there. */
+  /* TODO: Remove entirely. */
   jtl::ptr<void> expression_type(expression_ref const expr)
   {
-    return visit_expr(
-      [](auto const typed_expr) -> jtl::ptr<void> {
-        using T = typename decltype(typed_expr)::value_type;
+    return expr->get_type();
+  }
 
-        if constexpr(jtl::is_same<T, expr::cpp_new>)
-        {
-          return Cpp::GetPointerType(typed_expr->type);
-        }
-        else if constexpr(requires(T *t) {
-                            { t->type } -> jtl::is_convertible<jtl::ptr<void>>;
-                          })
-        {
-          return typed_expr->type;
-        }
-        else if constexpr(jtl::is_same<T, expr::cpp_member_call>)
-        {
-          return Cpp::GetFunctionReturnType(typed_expr->fn);
-        }
-        else if constexpr(jtl::is_same<T, expr::local_reference>)
-        {
-          return typed_expr->binding->type;
-        }
-        else if constexpr(jtl::is_same<T, expr::let> || jtl::is_same<T, expr::letfn>)
-        {
-          return expression_type(typed_expr->body);
-        }
-        else if constexpr(jtl::is_same<T, expr::if_>)
-        {
-          return expression_type(typed_expr->then);
-        }
-        else if constexpr(jtl::is_same<T, expr::do_>)
-        {
-          if(typed_expr->values.empty())
-          {
-            return untyped_object_ref_type();
-          }
-          return expression_type(typed_expr->values.back());
-        }
-        else
-        {
-          return untyped_object_ref_type();
-        }
-      },
-      expr);
+  jtl::ptr<void> mutable_type(jtl::ptr<void> const type)
+  {
+    /* foo_ref => object_ref */
+    if(is_typed_object(type))
+    {
+      return untyped_object_ref_type();
+    }
+    /* foo const & => foo */
+    /* foo const => foo */
+    if(Cpp::IsConstType(Cpp::GetNonReferenceType(type)))
+    {
+      return Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type));
+    }
+
+    return type;
   }
 
   jtl::ptr<void> expression_scope(expression_ref const expr)
@@ -1088,7 +1062,7 @@ namespace jank::analyze::cpp_util
 
     if(cpp_util::is_untyped_object(expected_type) && cpp_util::is_typed_object(expr_type))
     {
-      return implicit_conversion_action::into_object;
+      return implicit_conversion_action::none;
     }
 
     if(cpp_util::is_typed_object(expected_type) && cpp_util::is_untyped_object(expr_type))

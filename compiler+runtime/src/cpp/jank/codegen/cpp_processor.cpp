@@ -578,6 +578,17 @@ namespace jank::codegen
     return inst->name;
   }
 
+  jtl::option<identifier> gen(ir::inst::type_erase_ref const &inst, builder &b)
+  {
+    b.next_instruction();
+
+    util::format_to(b.body_buffer,
+                    "jank::runtime::object_ref const {}({});",
+                    inst->name,
+                    inst->value);
+    return inst->name;
+  }
+
   jtl::option<identifier> gen(ir::inst::dynamic_call_ref const &inst, builder &b)
   {
     b.next_instruction();

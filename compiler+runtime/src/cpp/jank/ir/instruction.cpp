@@ -150,6 +150,12 @@ namespace jank::ir::inst
   {
   }
 
+  type_erase::type_erase(identifier const &name, identifier const &value)
+    : instruction{ instruction_kind::type_erase, name, untyped_object_ref_type() }
+    , value{ value }
+  {
+  }
+
   dynamic_call::dynamic_call(identifier const &name,
                              jtl::ptr<void> const type,
                              identifier const &fn,

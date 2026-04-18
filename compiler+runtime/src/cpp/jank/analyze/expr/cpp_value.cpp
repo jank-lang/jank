@@ -30,4 +30,9 @@ namespace jank::analyze::expr
     /* TODO: Fill in. */
     return merge(expression::to_runtime_data(), obj::persistent_array_map::create_unique());
   }
+
+  jtl::ptr<void> cpp_value::get_type() const
+  {
+    return type;
+  }
 }

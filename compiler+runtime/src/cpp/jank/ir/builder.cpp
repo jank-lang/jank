@@ -292,6 +292,19 @@ namespace jank::ir
     return name;
   }
 
+  identifier builder::type_erase(analyze::expression_position const pos, identifier const &value)
+  {
+    auto name{ next_ident() };
+    auto const type{ untyped_object_ref_type() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::type_erase>(name, value));
+    if(pos == analyze::expression_position::tail)
+    {
+      return ret(name, type);
+    }
+    return name;
+  }
+
   identifier builder::dynamic_call(analyze::expression_position const pos,
                                    identifier const &fn,
                                    native_vector<identifier> &&args)

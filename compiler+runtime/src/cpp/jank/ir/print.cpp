@@ -236,6 +236,15 @@ namespace jank::ir
                     get_qualified_type_name(type));
   }
 
+  void inst::type_erase::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :type-erase :value {} :type \"{}\"}",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
   void inst::dynamic_call::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb, "{:name {} :op :dynamic-call :fn {} :args [", name, fn);

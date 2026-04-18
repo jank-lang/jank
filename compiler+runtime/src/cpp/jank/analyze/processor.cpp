@@ -2089,7 +2089,10 @@ namespace jank::analyze
       jtl::ptr<void> expected_type{ cpp_util::untyped_object_ref_type() };
       if(is_loop)
       {
-        expected_type = cpp_util::expression_type(loop_details.unwrap()->pairs[arg_index].second);
+        /* Loop bindings are mutable. If they start as typed objects, we have no idea what
+         * kind of object they'll end up as, so we need to type erase. */
+        expected_type
+          = cpp_util::mutable_type(loop_details.unwrap()->pairs[arg_index].second->get_type());
 
         /* Check if op = can be used, since we'll be using it to update the loop values. */
         auto const op_equal_sym{ make_box<obj::symbol>("cpp", "=") };
@@ -2127,7 +2130,7 @@ namespace jank::analyze
      * just a let* by another name. */
     if(is_loop)
     {
-      loop_details.unwrap()->is_loop = true;
+      loop_details.unwrap()->loop_kind = expr::let::loop_kind::loop_with_recur;
     }
     else
     {
@@ -2271,9 +2274,9 @@ namespace jank::analyze
       /* Loop bindings are mutable, so if we have a typed object, force it to be untyped since
        * we have no idea what type it'll be assigned to later on. For example, you might start
        * with an empty array map, but then assoc some stuff on and get a hash map afterward. */
-      if(loop_details.is_some() && cpp_util::is_typed_object(expr_type))
+      if(loop_details.is_some())
       {
-        expr_type = cpp_util::untyped_object_ref_type();
+        expr_type = cpp_util::mutable_type(expr_type);
       }
 
       auto const &binding{ ret->frame->locals[sym].emplace_back(
@@ -2483,6 +2486,12 @@ namespace jank::analyze
     }
 
     let.expect_ok()->propagate_position(position);
+
+    auto const typed_let{ static_box_cast<expr::let>(let.expect_ok()) };
+    if(typed_let->loop_kind == expr::let::loop_kind::none)
+    {
+      typed_let->loop_kind = expr::let::loop_kind::loop_without_recur;
+    }
 
     return let;
   }

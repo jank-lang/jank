@@ -1,5 +1,6 @@
 #include <jank/analyze/expr/primitive_literal.hpp>
 #include <jank/detail/to_runtime_data.hpp>
+#include <jank/analyze/cpp_util.hpp>
 
 namespace jank::analyze::expr
 {
@@ -20,5 +21,10 @@ namespace jank::analyze::expr
 
     return merge(expression::to_runtime_data(),
                  persistent_array_map::create_unique(make_box("data"), data));
+  }
+
+  jtl::ptr<void> primitive_literal::get_type() const
+  {
+    return cpp_util::literal_type(data);
   }
 }

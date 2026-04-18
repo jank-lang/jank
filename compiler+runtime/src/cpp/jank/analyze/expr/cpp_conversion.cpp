@@ -36,4 +36,9 @@ namespace jank::analyze::expr
     f(value_expr);
     expression::walk(f);
   }
+
+  jtl::ptr<void> cpp_conversion::get_type() const
+  {
+    return type;
+  }
 }

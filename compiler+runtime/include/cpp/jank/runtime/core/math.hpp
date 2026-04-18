@@ -41,6 +41,18 @@ namespace jank::runtime
   object_ref add(obj::ratio_ref const l, obj::integer_ref const r);
   obj::ratio_ref add(obj::integer_ref const l, obj::ratio_ref const r);
 
+  template <typename L, typename R>
+  auto add(L const l, R const r)
+  {
+    using NormalizedL = std::conditional_t<std::is_integral_v<L>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<L>, f64, L>>;
+    using NormalizedR = std::conditional_t<std::is_integral_v<R>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<R>, f64, R>>;
+    return add(static_cast<NormalizedL>(l), static_cast<NormalizedR>(r));
+  }
+
   object_ref promoting_add(object_ref const l, object_ref const r);
 
   object_ref sub(object_ref const l, object_ref const r);
@@ -65,6 +77,18 @@ namespace jank::runtime
   object_ref sub(object_ref const l, i64 r);
   object_ref sub(i64 l, object_ref const r);
   i64 sub(i64 l, i64 r);
+
+  template <typename L, typename R>
+  auto sub(L const l, R const r)
+  {
+    using NormalizedL = std::conditional_t<std::is_integral_v<L>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<L>, f64, L>>;
+    using NormalizedR = std::conditional_t<std::is_integral_v<R>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<R>, f64, R>>;
+    return sub(static_cast<NormalizedL>(l), static_cast<NormalizedR>(r));
+  }
 
   object_ref promoting_sub(object_ref const l, object_ref const r);
 
@@ -91,6 +115,18 @@ namespace jank::runtime
   object_ref div(i64 l, object_ref const r);
   i64 div(i64 l, i64 r);
 
+  template <typename L, typename R>
+  auto div(L const l, R const r)
+  {
+    using NormalizedL = std::conditional_t<std::is_integral_v<L>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<L>, f64, L>>;
+    using NormalizedR = std::conditional_t<std::is_integral_v<R>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<R>, f64, R>>;
+    return div(static_cast<NormalizedL>(l), static_cast<NormalizedR>(r));
+  }
+
   object_ref mul(object_ref const l, object_ref const r);
   object_ref mul(obj::integer_ref const l, object_ref const r);
   object_ref mul(object_ref const l, obj::integer_ref const r);
@@ -114,6 +150,18 @@ namespace jank::runtime
   object_ref mul(i64 l, object_ref const r);
   i64 mul(i64 l, i64 r);
 
+  template <typename L, typename R>
+  auto mul(L const l, R const r)
+  {
+    using NormalizedL = std::conditional_t<std::is_integral_v<L>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<L>, f64, L>>;
+    using NormalizedR = std::conditional_t<std::is_integral_v<R>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<R>, f64, R>>;
+    return mul(static_cast<NormalizedL>(l), static_cast<NormalizedR>(r));
+  }
+
   object_ref promoting_mul(object_ref const l, object_ref const r);
 
   bool lt(object_ref const l, object_ref const r);
@@ -135,7 +183,21 @@ namespace jank::runtime
 
   bool lt(object_ref const l, i64 r);
   bool lt(i64 l, object_ref const r);
+  bool lt(obj::integer_ref const l, i64 r);
+  bool lt(i64 l, obj::integer_ref const r);
   bool lt(i64 l, i64 r);
+
+  template <typename L, typename R>
+  bool lt(L const l, R const r)
+  {
+    using NormalizedL = std::conditional_t<std::is_integral_v<L>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<L>, f64, L>>;
+    using NormalizedR = std::conditional_t<std::is_integral_v<R>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<R>, f64, R>>;
+    return lt(static_cast<NormalizedL>(l), static_cast<NormalizedR>(r));
+  }
 
   bool lte(object_ref const l, object_ref const r);
   bool lte(obj::integer_ref const l, object_ref const r);
@@ -161,11 +223,13 @@ namespace jank::runtime
   template <typename L, typename R>
   bool lte(L const l, R const r)
   {
-    using IntL = std::conditional_t<std::is_integral_v<L>, i64, L>;
-    using RealL = std::conditional_t<std::is_floating_point_v<IntL>, f64, IntL>;
-    using IntR = std::conditional_t<std::is_integral_v<R>, i64, R>;
-    using RealR = std::conditional_t<std::is_floating_point_v<IntR>, f64, IntR>;
-    return lte(static_cast<RealL>(l), static_cast<RealR>(r));
+    using NormalizedL = std::conditional_t<std::is_integral_v<L>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<L>, f64, L>>;
+    using NormalizedR = std::conditional_t<std::is_integral_v<R>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<R>, f64, R>>;
+    return lte(static_cast<NormalizedL>(l), static_cast<NormalizedR>(r));
   }
 
   object_ref min(object_ref const l, object_ref const r);
@@ -189,6 +253,18 @@ namespace jank::runtime
   object_ref min(i64 l, object_ref const r);
   i64 min(i64 l, i64 r);
 
+  template <typename L, typename R>
+  auto min(L const l, R const r)
+  {
+    using NormalizedL = std::conditional_t<std::is_integral_v<L>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<L>, f64, L>>;
+    using NormalizedR = std::conditional_t<std::is_integral_v<R>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<R>, f64, R>>;
+    return min(static_cast<NormalizedL>(l), static_cast<NormalizedR>(r));
+  }
+
   object_ref max(object_ref const l, object_ref const r);
   object_ref max(obj::integer_ref const l, object_ref const r);
   object_ref max(object_ref const l, obj::integer_ref const r);
@@ -209,6 +285,18 @@ namespace jank::runtime
   object_ref max(object_ref const l, i64 r);
   object_ref max(i64 l, object_ref const r);
   i64 max(i64 l, i64 r);
+
+  template <typename L, typename R>
+  auto max(L const l, R const r)
+  {
+    using NormalizedL = std::conditional_t<std::is_integral_v<L>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<L>, f64, L>>;
+    using NormalizedR = std::conditional_t<std::is_integral_v<R>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<R>, f64, R>>;
+    return max(static_cast<NormalizedL>(l), static_cast<NormalizedR>(r));
+  }
 
   object_ref abs(object_ref const l);
   i64 abs(obj::integer_ref const l);
@@ -233,6 +321,9 @@ namespace jank::runtime
   f64 pow(object_ref const l, obj::real_ref const r);
   f64 pow(obj::real_ref const l, obj::integer_ref const r);
   f64 pow(obj::integer_ref const l, obj::real_ref const r);
+  f64 pow(object_ref const l, obj::ratio_ref const r);
+  f64 pow(obj::ratio_ref const l, object_ref const r);
+  f64 pow(obj::ratio_ref const l, obj::ratio_ref const r);
 
   object_ref pow(object_ref const l, f64 r);
   object_ref pow(f64 l, object_ref const r);
@@ -244,6 +335,18 @@ namespace jank::runtime
   f64 pow(object_ref const l, i64 r);
   f64 pow(i64 l, object_ref const r);
   f64 pow(i64 l, i64 r);
+
+  template <typename L, typename R>
+  auto pow(L const l, R const r)
+  {
+    using NormalizedL = std::conditional_t<std::is_integral_v<L>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<L>, f64, L>>;
+    using NormalizedR = std::conditional_t<std::is_integral_v<R>,
+                                           i64,
+                                           std::conditional_t<std::is_floating_point_v<R>, f64, R>>;
+    return pow(static_cast<NormalizedL>(l), static_cast<NormalizedR>(r));
+  }
 
   object_ref rem(object_ref const l, object_ref const r);
   object_ref quot(object_ref const l, object_ref const r);

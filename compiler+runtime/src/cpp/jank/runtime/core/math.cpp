@@ -1215,6 +1215,16 @@ namespace jank::runtime
       l);
   }
 
+  bool lt(obj::integer_ref const l, i64 const r)
+  {
+    return l->data < r;
+  }
+
+  bool lt(i64 const l, obj::integer_ref const r)
+  {
+    return l < r->data;
+  }
+
   bool lt(i64 const l, i64 const r)
   {
     return l < r;
@@ -1775,6 +1785,35 @@ namespace jank::runtime
   f64 pow(obj::integer_ref const l, obj::real_ref const r)
   {
     return std::pow(static_cast<f64>(l->data), r->data);
+  }
+
+  f64 pow(object_ref const l, obj::ratio_ref const r)
+  {
+    return visit_number_like(
+      [](auto const typed_l, auto const typed_r) -> f64 {
+        auto const typed_l_data{ to_real(typed_l->data) };
+        using C = std::common_type_t<decltype(typed_l_data), jtl::decay_t<decltype(typed_r)>>;
+        return std::pow(static_cast<C>(typed_l_data), static_cast<C>(typed_r));
+      },
+      l,
+      r->to_real());
+  }
+
+  f64 pow(obj::ratio_ref const l, object_ref const r)
+  {
+    return visit_number_like(
+      [](auto const typed_r, auto const typed_l) -> f64 {
+        auto const typed_r_data{ to_real(typed_r->data) };
+        using C = std::common_type_t<decltype(typed_r_data), jtl::decay_t<decltype(typed_l)>>;
+        return std::pow(static_cast<C>(typed_r_data), static_cast<C>(typed_l));
+      },
+      r,
+      l->to_real());
+  }
+
+  f64 pow(obj::ratio_ref const l, obj::ratio_ref const r)
+  {
+    return std::pow(l->to_real(), r->to_real());
   }
 
   object_ref pow(object_ref const l, f64 const r)

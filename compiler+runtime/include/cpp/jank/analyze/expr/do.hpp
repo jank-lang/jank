@@ -20,6 +20,7 @@ namespace jank::analyze::expr
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
+    jtl::ptr<void> get_type() const override;
 
     /* TODO: Rename to value_exprs. */
     native_vector<expression_ref> values{};

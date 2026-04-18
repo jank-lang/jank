@@ -182,6 +182,7 @@ namespace jank::analyze
     virtual void propagate_position(expression_position const pos);
     virtual runtime::object_ref to_runtime_data() const;
     virtual void walk(std::function<void(jtl::ref<expression>)> const &f);
+    virtual jtl::ptr<void> get_type() const;
 
     expression_kind kind{};
     expression_position position{};

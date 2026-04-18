@@ -47,6 +47,7 @@ namespace jank::ir
     def,
     var_deref,
     var_ref,
+    type_erase,
     dynamic_call,
     named_recursion,
     recursion_reference,
@@ -294,6 +295,19 @@ namespace jank::ir
     };
 
     using var_ref_ref = jtl::ref<var_ref>;
+
+    /* `type_erase` converts a typed jank object ref into an `object_ref`. This is mainly
+     * used for mutable loop bindings. */
+    struct type_erase : instruction
+    {
+      type_erase(identifier const &name, identifier const &value);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+    };
+
+    using type_erase_ref = jtl::ref<type_erase>;
 
     struct dynamic_call : instruction
     {

@@ -1235,8 +1235,9 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.mul l r))
+    :inline-arities #{2}}
   *
   ([]
    1)
@@ -1251,8 +1252,9 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.div l r))
+    :inline-arities #{2}}
   /
   ([x]
    (/ 1 x))
@@ -1343,8 +1345,9 @@
    (not (apply = x y more))))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.lt l r))
+    :inline-arities #{2}}
   <
   ([x]
    true)
@@ -1374,8 +1377,9 @@
      false)))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.lt r l))
+    :inline-arities #{2}}
   >
   ([x]
    true)
@@ -1389,8 +1393,9 @@
      false)))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.lte r l))
+    :inline-arities #{2}}
   >=
   ([x]
    true)
@@ -1404,8 +1409,9 @@
      false)))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.min l r))
+    :inline-arities #{2}}
   min
   ([x]
    x)
@@ -1418,8 +1424,9 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.max l r))
+    :inline-arities #{2}}
   max
   ([x]
    x)

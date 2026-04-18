@@ -37,6 +37,8 @@ namespace jank::ir
         return f(jtl::static_ref_cast<inst::var_deref>(i), std::forward<Args>(args)...);
       case instruction_kind::var_ref:
         return f(jtl::static_ref_cast<inst::var_ref>(i), std::forward<Args>(args)...);
+      case instruction_kind::type_erase:
+        return f(jtl::static_ref_cast<inst::type_erase>(i), std::forward<Args>(args)...);
       case instruction_kind::dynamic_call:
         return f(jtl::static_ref_cast<inst::dynamic_call>(i), std::forward<Args>(args)...);
       case instruction_kind::named_recursion:

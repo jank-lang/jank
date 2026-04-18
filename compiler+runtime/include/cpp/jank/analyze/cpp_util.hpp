@@ -33,6 +33,7 @@ namespace jank::analyze::cpp_util
   void register_rtti(jtl::ptr<void> type);
 
   jtl::ptr<void> expression_type(expression_ref expr);
+  jtl::ptr<void> mutable_type(jtl::ptr<void> const type);
   jtl::ptr<void> non_void_expression_type(expression_ref expr);
   jtl::ptr<void> expression_scope(expression_ref const expr);
 

@@ -86,6 +86,7 @@ namespace jank::ir
     var_deref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var);
     identifier
     var_ref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var);
+    identifier type_erase(analyze::expression_position const pos, identifier const &value);
     identifier dynamic_call(analyze::expression_position const pos,
                             identifier const &fn,
                             native_vector<identifier> &&args);

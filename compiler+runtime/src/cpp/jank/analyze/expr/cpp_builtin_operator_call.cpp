@@ -41,4 +41,9 @@ namespace jank::analyze::expr
     }
     expression::walk(f);
   }
+
+  jtl::ptr<void> cpp_builtin_operator_call::get_type() const
+  {
+    return type;
+  }
 }

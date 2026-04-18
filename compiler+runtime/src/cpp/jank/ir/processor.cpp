@@ -344,7 +344,7 @@ namespace jank::ir
                                                         capture.first,
                                                         capture.second };
         captured_idents[name] = { gen(analyze::expr::local_reference_ref{ &local_ref }, b).unwrap(),
-                                  capture.second->type };
+                                  mutable_type(capture.second->type) };
       }
       return b.closure(expr->position,
                        runtime::munge(expr->unique_name + "_ctx"),
@@ -445,9 +445,16 @@ namespace jank::ir
     for(auto const &pair : expr->pairs)
     {
       b.locals[pair.first->name->get_name()] = gen(pair.second, b).unwrap();
+
+      auto const local_type{ pair.second->get_type() };
+      if(expr->loop_kind != analyze::expr::let::loop_kind::none && is_typed_object(local_type))
+      {
+        auto &local{ b.locals[pair.first->name->get_name()] };
+        local = b.type_erase(analyze::expression_position::value, local);
+      }
     }
 
-    if(expr->is_loop)
+    if(expr->loop_kind == analyze::expr::let::loop_kind::loop_with_recur)
     {
       auto loop_shadow{ b.next_shadow() };
       native_vector<inst::loop::binding_shadow_details> shadows;
@@ -456,7 +463,7 @@ namespace jank::ir
       {
         auto const shadow{ b.next_shadow() };
         auto const &name{ pair.first->name->get_name() };
-        auto const type{ expression_type(pair.second) };
+        auto const type{ mutable_type(pair.second->get_type()) };
         b.local_to_loop_shadow[name] = shadow;
         shadows.emplace_back(shadow, b.locals[name], type);
       }
@@ -581,7 +588,7 @@ namespace jank::ir
              (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
                                                                     : jtl::option<identifier>{},
              (expr->position != analyze::expression_position::tail)
-               ? detail::typed_identifier{ shadow, expression_type(expr->then) }
+               ? detail::typed_identifier{ shadow, mutable_type(expr->then->get_type()) }
                : jtl::option<detail::typed_identifier>{});
 
     b.enter_block(then_blk);

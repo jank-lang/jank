@@ -1,6 +1,7 @@
 #include <jank/analyze/expr/do.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 #include <jank/analyze/visit.hpp>
+#include <jank/analyze/cpp_util.hpp>
 
 namespace jank::analyze::expr
 {
@@ -54,5 +55,14 @@ namespace jank::analyze::expr
       f(expr);
     }
     expression::walk(f);
+  }
+
+  jtl::ptr<void> do_::get_type() const
+  {
+    if(values.empty())
+    {
+      return cpp_util::untyped_object_ref_type();
+    }
+    return values.back()->get_type();
   }
 }
