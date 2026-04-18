@@ -335,12 +335,13 @@ namespace jank::read::lex
     pos += offset;
   }
 
-  processor::processor(jtl::immutable_string_view const &f, usize const line, usize const col)
+  processor::processor(jtl::immutable_string_view const &f, source_position const &p)
     : pos{ .proc = this }
     , file{ f }
   {
-    pos.line = line;
-    pos.col = col;
+    pos.offset = p.offset;
+    pos.line = p.line;
+    pos.col = p.col;
   }
 
   movable_position &movable_position::operator++()
