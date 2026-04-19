@@ -156,7 +156,7 @@
     clojure.core-test.rand-int
     clojure.core-test.rand-nth
     clojure.core-test.random-sample
-    ; clojure.core-test.random-uuid ; internal/codegen-failure error: Unable to compile C++ source. unknown type name 'i64'; did you mean 'jank::i64'?
+    clojure.core-test.random-uuid
     ; clojure.core-test.ratio-qmark ; FIXME: Failing test.
     ; clojure.core-test.rational-qmark ; FIXME: Failing test.
     ; clojure.core-test.rationalize ; TODO: port rationalize
@@ -205,7 +205,7 @@
     ; clojure.core-test.taps ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.IPending'.
     clojure.core-test.true-qmark
     clojure.core-test.underive
-    ; clojure.core-test.unsigned-bit-shift-right ; Panic encountered: invalid object type: nil, raw value 0
+    clojure.core-test.unsigned-bit-shift-right
     ; clojure.core-test.update ; FIXME: Failing tests, Program hangs.
     clojure.core-test.uuid-qmark
     ; clojure.core-test.val ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
