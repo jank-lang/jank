@@ -11,6 +11,16 @@
 
 extern "C" void *jank_const_nil();
 
+/* During AOT codegen, we need to initialize a bunch of lifted constants and globals, but
+ * the jank_nil global may not yet be initialized, since the order of initialization of globals
+ * across C++ translation units is not defined. In the default initialization or oref, we
+ * try to grab the `jank_nil` global, which will be undefined behavior. Instead, we use
+ * this special tag type to initialize our orefs to nullptr, since will later do an in-place
+ * new on them with a proper ctor. */
+struct _jank_null
+{
+};
+
 namespace jank::runtime
 {
   namespace obj
@@ -41,6 +51,11 @@ namespace jank::runtime
     oref(oref &&rhs) noexcept = default;
 
     oref(nullptr_t) noexcept = delete;
+
+    oref(_jank_null) noexcept
+      : data{ nullptr }
+    {
+    }
 
     oref(value_type * const data) noexcept
       : data{ data }
@@ -195,6 +210,11 @@ namespace jank::runtime
     oref(oref &&rhs) noexcept = default;
 
     oref(nullptr_t) = delete;
+
+    oref(_jank_null) noexcept
+      : data{ nullptr }
+    {
+    }
 
     oref(jtl::remove_const_t<T> * const data) noexcept
       : data{ data }
@@ -376,6 +396,11 @@ namespace jank::runtime
     oref(oref &&) noexcept = default;
 
     oref(nullptr_t) = delete;
+
+    oref(_jank_null) noexcept
+      : data{ nullptr }
+    {
+    }
 
     oref(value_type * const data) noexcept
       : data{ data }

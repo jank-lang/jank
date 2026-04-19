@@ -173,7 +173,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_list::peek() const
   {
-    return data.first().unwrap_or(jank_nil());
+    return data.first().unwrap_or(jank_nil);
   }
 
   persistent_list_ref persistent_list::pop() const

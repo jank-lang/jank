@@ -56,7 +56,7 @@ extern "C"
   jank_object_ref jank_eval(jank_object_ref const s)
   {
     auto const s_obj(try_object<obj::persistent_string>(reinterpret_cast<object *>(s)));
-    return __rt_ctx->eval_string(s_obj->data).unwrap_or(jank_nil()).erase().data;
+    return __rt_ctx->eval_string(s_obj->data).unwrap_or(jank_nil).erase().data;
   }
 
   jank_object_ref jank_read_string(jank_object_ref const s)
@@ -374,7 +374,7 @@ extern "C"
 
   jank_object_ref jank_const_nil()
   {
-    return jank_nil().data;
+    return jank_nil.data;
   }
 
   jank_object_ref jank_const_true()

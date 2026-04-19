@@ -283,7 +283,7 @@ namespace jank::ir
 
     if(arity.body->values.empty())
     {
-      b.literal(analyze::expression_position::tail, runtime::jank_nil());
+      b.literal(analyze::expression_position::tail, runtime::jank_nil);
     }
 
     return name;
@@ -566,7 +566,7 @@ namespace jank::ir
       return none;
     }
 
-    return b.literal(expr->position, runtime::jank_nil());
+    return b.literal(expr->position, runtime::jank_nil);
   }
 
   jtl::option<identifier> gen(analyze::expr::if_ref const expr, builder &b)
@@ -607,7 +607,7 @@ namespace jank::ir
     }
     else
     {
-      else_name = b.literal(expr->position, runtime::jank_nil());
+      else_name = b.literal(expr->position, runtime::jank_nil);
     }
     if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
     {

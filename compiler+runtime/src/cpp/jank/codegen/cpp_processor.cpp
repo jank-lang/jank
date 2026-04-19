@@ -202,7 +202,7 @@ namespace jank::codegen
 
           if constexpr(std::same_as<T, obj::nil>)
           {
-            util::format_to(buffer, "jank::runtime::jank_nil()");
+            util::format_to(buffer, "jank::runtime::jank_nil");
           }
           else if constexpr(std::same_as<T, obj::boolean>)
           {
@@ -786,7 +786,7 @@ namespace jank::codegen
       if(capture.second.name == ":defer")
       {
         b.defer(inst->context, capture.first);
-        b.body_buffer("jank::runtime::jank_nil()");
+        b.body_buffer("jank::runtime::jank_nil");
       }
       else
       {
@@ -1219,7 +1219,7 @@ namespace jank::codegen
      * we have a global nil constant. */
     if(Cpp::IsVoid(inst->expr->conversion_type))
     {
-      util::format_to(b.body_buffer, "auto const {}(jank::runtime::jank_nil());", inst->name);
+      util::format_to(b.body_buffer, "auto const {}(jank::runtime::jank_nil);", inst->name);
       return inst->name;
     }
 
@@ -1789,7 +1789,7 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer, "GC_free({});", inst->value);
 
-    return "jank::runtime::jank_nil()";
+    return "jank::runtime::jank_nil";
   }
 
   jtl::option<identifier> gen(ir::instruction_ref const &inst, builder &b)
@@ -1884,15 +1884,16 @@ namespace jank::codegen
 
       for(auto const &v : b.module->lifted_constants)
       {
-        /* TODO: Typed lifted constants (in analysis). */
         util::format_to(b.module_header_buffer,
-                        "{} {};",
+                        "{} {}{ _jank_null{ } };",
                         get_qualified_type_name(literal_type(v.second)),
                         v.first);
       }
       for(auto const &v : b.module->lifted_vars)
       {
-        util::format_to(b.module_header_buffer, "jank::runtime::var_ref {};", v.first);
+        util::format_to(b.module_header_buffer,
+                        "jank::runtime::var_ref {}{ _jank_null{ } };",
+                        v.first);
       }
     }
 

@@ -53,7 +53,7 @@ namespace jank::runtime::obj
     if(n.is_some())
     {
       current = n->first();
-      cached_next.store(reinterpret_cast<iterator *>(jank_nil().data));
+      cached_next.store(reinterpret_cast<iterator *>(jank_nil.data));
     }
     else
     {

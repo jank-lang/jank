@@ -3368,7 +3368,7 @@ namespace jank::analyze
                                                        current_frame,
                                                        needs_arg_box,
                                                        std::move(packed_arg_exprs),
-                                                       jank_nil()));
+                                                       jank_nil));
     }
 
     auto const recursion_ref(llvm::dyn_cast<expr::recursion_reference>(source.data));

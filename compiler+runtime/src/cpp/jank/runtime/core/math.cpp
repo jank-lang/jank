@@ -300,6 +300,16 @@ namespace jank::runtime
       l);
   }
 
+  f64 sub(obj::real_ref const l, f64 const r)
+  {
+    return l->data - r;
+  }
+
+  f64 sub(f64 const l, obj::real_ref const r)
+  {
+    return l - r->data;
+  }
+
   f64 sub(f64 const l, f64 const r)
   {
     return l - r;

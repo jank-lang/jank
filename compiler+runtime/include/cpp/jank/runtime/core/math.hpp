@@ -69,6 +69,8 @@ namespace jank::runtime
 
   object_ref sub(object_ref const l, f64 r);
   object_ref sub(f64 l, object_ref const r);
+  f64 sub(obj::real_ref const l, f64 r);
+  f64 sub(f64 l, obj::real_ref const r);
   f64 sub(f64 l, f64 r);
 
   f64 sub(i64 l, f64 r);

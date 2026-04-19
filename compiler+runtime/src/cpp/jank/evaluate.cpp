@@ -220,7 +220,7 @@ namespace jank::evaluate
       return wrap_expression(jtl::make_ref<expr::primitive_literal>(expression_position::tail,
                                                                     an_prc.root_frame,
                                                                     true,
-                                                                    jank_nil()),
+                                                                    jank_nil),
                              name,
                              {});
     }
@@ -294,7 +294,7 @@ namespace jank::evaluate
       current_def_var = var;
       auto const evaluated_value(eval(value));
       var->bind_root(evaluated_value);
-      current_def_var = jank_nil();
+      current_def_var = jank_nil;
     }
     else
     {
@@ -572,7 +572,7 @@ namespace jank::evaluate
                                                            mod.arity_flags,
                                                            mod.name,
                                                            arities) };
-      current_def_var = jank_nil();
+      current_def_var = jank_nil;
       return ret;
     }
     else

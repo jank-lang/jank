@@ -107,10 +107,10 @@ namespace jank::runtime
 
     push_thread_bindings(obj::persistent_hash_map::create_unique(
                            std::make_pair(current_ns_var, current_ns_var->deref()),
-                           std::make_pair(star1, jank_nil()),
-                           std::make_pair(star2, jank_nil()),
-                           std::make_pair(star3, jank_nil()),
-                           std::make_pair(stare, jank_nil())))
+                           std::make_pair(star1, jank_nil),
+                           std::make_pair(star2, jank_nil),
+                           std::make_pair(star3, jank_nil),
+                           std::make_pair(stare, jank_nil)))
       .expect_ok();
   }
 
@@ -205,6 +205,7 @@ namespace jank::runtime
       return jtl::none;
     }
 
+    /* TODO: Analyze only once so macros are expanded only once. */
     /* When compiling, we analyze twice. This is because eval will modify its expression
      * in order to wrap it in a function. Undoing this is arduous and error prone, so
      * we just don't bother.
@@ -219,7 +220,7 @@ namespace jank::runtime
 
       if(forms.empty())
       {
-        forms.emplace_back(jank_nil());
+        forms.emplace_back(jank_nil);
       }
 
       auto const form{ runtime::conj(
@@ -236,7 +237,14 @@ namespace jank::runtime
 
       auto const generated{ codegen::gen_cpp(mod) };
       auto const &code{ generated.declaration };
-      //util::println("{}\n", util::format_cpp_source(code).expect_ok());
+
+      jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_CODEGEN") ?: "" };
+      if(print_settings == "1")
+      {
+        auto const formatted{ util::format_cpp_source(code).expect_ok() };
+        util::println("\n{}\n", formatted);
+      }
+
       auto const module_name{ runtime::to_string(current_module_var->deref()) };
       auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
       if(!parse_res)
@@ -370,7 +378,7 @@ namespace jank::runtime
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
-      std::make_pair(current_file_var, jank_nil())) };
+      std::make_pair(current_file_var, jank_nil)) };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(),
                                   l_prc.end(),

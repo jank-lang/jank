@@ -108,9 +108,5 @@ namespace jank::runtime
     return lhs->type != object_type::nil;
   }
 
-  obj::nil_ref jank_nil()
-  {
-    static obj::nil n{};
-    return &n;
-  }
+  obj::nil_ref const jank_nil{ make_box<obj::nil>() };
 }
