@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-# jank --module-path src run-main parsec-test
-# jank --module-path src run-main bencode-test
-jank -Isrc --module-path src run-main session-fixture-test
+jank --module-path src run-main parsec-test
+jank --module-path src run-main bencode-test
+jank -Isrc --module-path src run-main connection-harness-test
 jank -Isrc --module-path src run-main core-test

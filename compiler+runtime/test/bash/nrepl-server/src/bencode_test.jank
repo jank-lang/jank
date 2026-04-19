@@ -82,10 +82,6 @@
   (testing "empty input"
     (is (nil? (b/parse "")))))
 
-;; -----------------------
-;; Write tests
-;; -----------------------
-
 (deftest write-test
   (testing "write integer"
     (is (= "i42e" (b/write 42))))

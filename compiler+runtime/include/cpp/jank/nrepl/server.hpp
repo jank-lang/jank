@@ -22,6 +22,7 @@ namespace jank::nrepl::server
     /* Write some data to the client. */
     void write_some(std::string const &data) const;
 
+    /* Closes the connection and marks it as disconnected. */
     void close();
 
     std::unique_ptr<impl> impl_;

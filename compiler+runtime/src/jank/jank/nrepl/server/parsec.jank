@@ -3,11 +3,14 @@
 (def digits #{\0 \1 \2 \3 \4 \5 \6 \7 \8 \9})
 
 (defn parse
-  "Run a parser on input. Returns `[result remaining-input]` or `nil` if parse fails."
+  "Applies the PARSER function to INPUT."
   [parser input]
   (parser input))
 
 (defn digit
+  "Returns a function that consumes input and matches a
+  digit. Returns [result remainder] or nil if it cannot be parsed;
+  remainder is a non-empty string or nil."
   []
   (fn [input]
     (when (digits (first input))
@@ -15,18 +18,27 @@
        (not-empty (subs input 1))])))
 
 (defn one-char
+  "Returns a function that consumes input and matches
+  CH. Returns [result remainder] or nil if it cannot be parsed;
+  remainder is a non-empty string or nil."
   [ch]
   (fn [input]
     (when (= (first input) ch)
       [ch (not-empty (subs input 1))])))
 
 (defn any-char
+  "Returns a parser function that consumes input and matches a a
+  character. Returns [result remainder] or nil if it cannot be parsed;
+  remainder is a non-empty string or nil."
   []
   (fn [input]
     (when (seq input)
       [(first input) (not-empty (subs input 1))])))
 
 (defn many
+  "Returns a parser function that consumes input using the PARSER
+  function. Returns [result remainder] or nil if it cannot be parsed;
+  remainder is a non-empty string or nil."
   [parser]
   (fn [input]
     (loop [matches []
@@ -52,6 +64,9 @@
      (first))))
 
 (defn number
+  "Returns a parser function that consumes input and matches an
+  integer. Returns [result remainder] or nil if it cannot be parsed;
+  remainder is a non-empty string or nil."
   []
   (fn [input]
     (let [[sign input] (if (and (seq input) (= (first input) \-))

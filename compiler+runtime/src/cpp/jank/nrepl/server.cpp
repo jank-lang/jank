@@ -48,6 +48,7 @@ namespace jank::nrepl::server
       socket_.write_some(buffer(message), error_code);
     }
 
+    /* Closes the connection and marks it as disconnected. */
     void close()
     {
       if (connected_)

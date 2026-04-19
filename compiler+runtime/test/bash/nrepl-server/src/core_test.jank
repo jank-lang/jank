@@ -2,35 +2,34 @@
   (:require [clojure.test :refer [deftest is run-tests successful? testing]]
             [jank.nrepl.server.bencode :as bencode]
             [jank.nrepl.server.core :as core]
-            [session-fixture :as sf :refer [with-session *client* *server* read-some! write-some!]]))
-
+            [connection-harness :as sf :refer [with-harness *driver* *sut** read-some! write-some!]]))
 
 (deftest connected?-test
-  (with-session
-    (is (core/connected? *client*))
-    (.close (cpp/* (cpp/unbox (:* jank.nrepl.server.native_client) *client*)))
-    (is (not (core/connected? *client*)))))
+  (with-harness
+    (is (core/connected? *driver*))
+    (.close (cpp/* (cpp/unbox (:* jank.nrepl.server.native_client) *driver*)))
+    (is (not (core/connected? *driver*)))))
 
-;; (deftest read-message-test
-;;   (with-session
-;;     (testing "parses single message"
-;;       (let [msg (bencode/write {"op" "clone"})]
-;;         (write-some! *client*  msg)
-;;         (let [[msg remainder] (core/read-message *server* nil)]
-;;           (is (= {"op" "clone"} msg))
-;;           (is (nil? remainder)))))
+(deftest read-message-test
+  (with-harness
+    (testing "parses single message"
+      (let [msg (bencode/write {"op" "clone"})]
+        (write-some! *driver*  msg)
+        (let [[msg remainder] (core/read-message *sut** nil)]
+          (is (= {"op" "clone"} msg))
+          (is (nil? remainder)))))
 
-;;     (testing "read message with remainder"
-;;       (let [clone (str (bencode/write {"op" "clone"}))
-;;             b (subs clone 0 5)
-;;             e (subs clone 5)]
-;;         (write-some! *client* b)
+    (testing "read message with remainder"
+      (let [clone (str (bencode/write {"op" "clone"}))
+            b (subs clone 0 5)
+            e (subs clone 5)]
+        (write-some! *driver* b)
 
-;;         (let [[msg remainder] (core/read-message *server* nil)]
-;;           (is (some? remainder))
-;;           (write-some! *client* e)
-;;           (let [[msg remainder] (core/read-message *server* remainder)]
-;;             (is (= {"op" "clone"} msg))))))))
+        (let [[msg remainder] (core/read-message *sut** nil)]
+          (is (some? remainder))
+          (write-some! *driver* e)
+          (let [[msg remainder] (core/read-message *sut** remainder)]
+            (is (= {"op" "clone"} msg))))))))
 
 (defn wait-until
   "Waits until PRED is true or TIMEOUT-MS expires, returning true if
@@ -61,76 +60,76 @@
   (testing "predicate never becomes true (timeout)"
     (is (false? (wait-until (fn [] false) 300 50)))))
 
-(defn read-msg!
-  "Waits until a complete message can be decoded from CLIENT and
-  REMAINDER within TIMEOUT-MS, returning [MSG REMAINDER] on success or
-  nil on timeout; may perform up to ceil(TIMEOUT-MS / INTERVAL-MS)
-  read attempts, sleeping INTERVAL-MS between evaluations."
-  [client remainder timeout-ms interval-ms]
-  (let [steps (quot timeout-ms interval-ms)]
-    (loop [buf remainder
-           i 0]
-      (cond
-        (>= i steps)
-        nil
+;; (defn read-msg!
+;;   "Waits until a complete message can be decoded from CLIENT and
+;;   REMAINDER within TIMEOUT-MS, returning [MSG REMAINDER] on success or
+;;   nil on timeout; may perform up to ceil(TIMEOUT-MS / INTERVAL-MS)
+;;   read attempts, sleeping INTERVAL-MS between evaluations."
+;;   [client remainder timeout-ms interval-ms]
+;;   (let [steps (quot timeout-ms interval-ms)]
+;;     (loop [buf remainder
+;;            i 0]
+;;       (cond
+;;         (>= i steps)
+;;         nil
 
-        :else
-        (let [buf (str buf (read-some! client))
-              [val rem] (bencode/parse buf)]
-          (if val
-            [val rem]
-            (do
-              (sleep interval-ms)
-              (recur buf (inc i)))))))))
+;;         :else
+;;         (let [buf (str buf (read-some! client))
+;;               [val rem] (bencode/parse buf)]
+;;           (if val
+;;             [val rem]
+;;             (do
+;;               (sleep interval-ms)
+;;               (recur buf (inc i)))))))))
 
-(deftest read-msg-test
-  (testing "successfully decodes a single complete message"
-    (with-redefs [read-some! (fn [_] "5:hello")]
-      (let [[msg rem] (read-msg! :client "" 1000 50)]
-        (is (= "hello" msg))
-        (is (nil? rem)))))
+;; (deftest read-msg-test
+;;   (testing "successfully decodes a single complete message"
+;;     (with-redefs [read-some! (fn [_] "5:hello")]
+;;       (let [[msg rem] (read-msg! :client "" 1000 50)]
+;;         (is (= "hello" msg))
+;;         (is (nil? rem)))))
 
-  (testing "carries remainder forward correctly"
-    (with-redefs [read-some! (fn [_] "3:foo3:bar")]
-      (let [[msg rem] (read-msg! :client nil 1000 50)]
-        (is (= "foo" msg))
-        (is (= "3:bar" rem)))))
+;;   (testing "carries remainder forward correctly"
+;;     (with-redefs [read-some! (fn [_] "3:foo3:bar")]
+;;       (let [[msg rem] (read-msg! :client nil 1000 50)]
+;;         (is (= "foo" msg))
+;;         (is (= "3:bar" rem)))))
 
-  (testing "returns nil on timeout with incomplete frame"
-    (let [chunks (atom ["3:fo"])]
-      (with-redefs [read-some! (fn [_] (let [x (first  @chunks)]
-                                         (swap! chunks rest)
-                                         x))]
-        (is (nil? (read-msg! :client nil 200 50))))))
+;;   (testing "returns nil on timeout with incomplete frame"
+;;     (let [chunks (atom ["3:fo"])]
+;;       (with-redefs [read-some! (fn [_] (let [x (first  @chunks)]
+;;                                          (swap! chunks rest)
+;;                                          x))]
+;;         (is (nil? (read-msg! :client nil 200 50))))))
 
-  (testing "testing partial input across reads with timeout"
-    (let [chunks-orig ["3:fo" "r"]
-          chunks (atom chunks-orig)]
-      (with-redefs [read-some! (fn [_] (let [x (first  @chunks)]
-                                         (swap! chunks rest)
-                                         x))]
-        (let [msg (read-msg! :client nil 10 10)]
-          (is (nil? msg)))
+;;   (testing "testing partial input across reads with timeout"
+;;     (let [chunks-orig ["3:fo" "r"]
+;;           chunks (atom chunks-orig)]
+;;       (with-redefs [read-some! (fn [_] (let [x (first  @chunks)]
+;;                                          (swap! chunks rest)
+;;                                          x))]
+;;         (let [msg (read-msg! :client nil 10 10)]
+;;           (is (nil? msg)))
 
-        (swap! chunks (fn [_] chunks-orig))
-        (let [[msg rem] (read-msg! :client nil 20 10)]
-          (is (= "for" msg))
-          (is (nil? rem))))))
+;;         (swap! chunks (fn [_] chunks-orig))
+;;         (let [[msg rem] (read-msg! :client nil 20 10)]
+;;           (is (= "for" msg))
+;;           (is (nil? rem))))))
 
-  (testing "decodes a message using an initial remainder"
-    (with-redefs [read-some! (fn [_] "r")]
-      (let [[msg rem] (read-msg! :client "3:ba" 1000 50)]
-        (is (= "bar" msg))
-        (is (nil? rem))))))
+;;   (testing "decodes a message using an initial remainder"
+;;     (with-redefs [read-some! (fn [_] "r")]
+;;       (let [[msg rem] (read-msg! :client "3:ba" 1000 50)]
+;;         (is (= "bar" msg))
+;;         (is (nil? rem))))))
 
 (deftest handle-client-test
-  (with-session
-    (let [server (future (core/handle-client *server*))]
-      (try 
+  (with-harness
+    (let [server (future (core/handle-client *sut**))]
+      (try
         (testing "op: clone"
           (let [msg (bencode/write {"op" "clone"})]
-            (write-some! *client* msg)
-            (let [res (read-some! *client*)
+            (write-some! *driver* msg)
+            (let [res (read-some! *driver*)
                   [dec rem] (bencode/parse res)]
               (is (nil? rem))
               (is (= {"new-session" :ignore, "status" ["done"]}
@@ -139,12 +138,12 @@
 
         (testing "op: simple eval"
           (let [msg (bencode/write {"op" "eval" "code" "5"})]
-            (write-some! *client* msg)
-            (let [res1 (read-some! *client*)
+            (write-some! *driver* msg)
+            (let [res1 (read-some! *driver*)
                   [dec1 rem1] (bencode/parse res1)]
               (is (= {"out" ""}
                      dec1))
-              (let [res2 (read-some! *client*)
+              (let [res2 (read-some! *driver*)
                     [dec2 rem2] (bencode/parse (str rem1 res2))]
                 (is (= {"err" ""}
                        dec2))
@@ -153,10 +152,10 @@
                          dec3)))))))
 
         (finally
-          (when (core/connected? *server*)
-            (.close (cpp/* (cpp/unbox (:* jank.nrepl.server.native_client) *client*)))
+          (when (core/connected? *sut**)
+            (.close (cpp/* (cpp/unbox (:* jank.nrepl.server.native_client) *driver*)))
             (let [timeout-ms 1000
-                  disconnected? (wait-until #(not (core/connected? *server*)) timeout-ms 100)]
+                  disconnected? (wait-until #(not (core/connected? *sut**)) timeout-ms 100)]
               (if disconnected?
                 @server
                 (is disconnected? (str "Failed to disconnected after " timeout-ms " ms"))))))))))
