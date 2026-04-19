@@ -1,16 +1,18 @@
 #pragma once
 
-#include <vector>
 #include <mutex>
 #include <condition_variable>
-#include <optional>
 
-namespace jtl
+#include <jank/type.hpp>
+#include <jank/runtime/object.hpp>
+
+namespace jank::runtime::obj
 {
-  template <typename T>
+  using namespace jank::runtime;
+
   struct array_blocking_queue
   {
-    std::vector<T> buffer;
+    jank::native_vector<object_ref> buffer;
     size_t head = 0, tail = 0, count = 0, capacity;
     std::mutex mutex;
     std::condition_variable not_empty;
@@ -21,17 +23,17 @@ namespace jtl
     {
     }
 
-    T take()
+    object_ref take()
     {
       std::unique_lock<std::mutex> lock(mutex);
       not_empty.wait(lock, [&] { return count > 0; });
-      T value = buffer[head];
+      object_ref value = buffer[head];
       head = (head + 1) % capacity;
       --count;
       return value;
     }
 
-    bool offer(T value)
+    bool offer(object_ref value)
     {
       std::lock_guard<std::mutex> lock(mutex);
       if(count >= capacity)

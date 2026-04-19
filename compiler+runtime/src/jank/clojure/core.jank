@@ -65,7 +65,7 @@
 (cpp/raw "#include <jank/runtime/core/equal.hpp>")
 (cpp/raw "#include <jank/runtime/core/meta.hpp>")
 (cpp/raw "#include <jank/runtime/obj/repeat.hpp>")
-(cpp/raw "#include <jtl/array_blocking_queue.hpp>")
+(cpp/raw "#include <jank/runtime/obj/array_blocking_queue.hpp>")
 
 ; Syntax quoting.
 (def ^{:arglists '([_])}
@@ -7430,15 +7430,13 @@ fails, attempts to require sym's namespace and retries."
 
 (defonce ^:private tapset (atom #{}))
 
-(cpp/raw
- "namespace jank::runtime {
-  jtl::array_blocking_queue<jank::runtime::object_ref> tapq(1024);
-  }")
+(defonce ^:private tapq
+  (cpp/box (cpp/& (cpp/jank.runtime.obj.array_blocking_queue. 1024))))
 
 (defonce ^:private tap-loop
   (delay
     (future
-      (let [t (cpp/.take cpp/jank.runtime.tapq)
+      (let [t (cpp/.take (cpp/unbox (:* cpp/jank.runtime.obj.array_blocking_queue) tapq))
             x (if (identical? ::tap-nil t) nil t)
             taps @tapset]
         (doseq [tap taps]
@@ -7468,7 +7466,9 @@ fails, attempts to require sym's namespace and retries."
   false if not (dropped)."
   [x]
   (force tap-loop)
-  (cpp/.offer cpp/jank.runtime.tapq (if (nil? x) ::tap-nil x)))
+  (cpp/.offer
+   (cpp/unbox (:* cpp/jank.runtime.obj.array_blocking_queue) tapq)
+   (if (nil? x) ::tap-nil x)))
 
 (defn update-vals
   "m f => {k (f v) ...}
