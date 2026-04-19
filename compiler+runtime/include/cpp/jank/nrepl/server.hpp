@@ -40,11 +40,10 @@ namespace jank::nrepl::server
 
     std::shared_ptr<impl> impl_;
 
-    /* Returns a native client connected to the server for testing.
-       Should be called after accept() is running, typically in a
-       separate thread, so the connection can complete
-       successfully. */
-    native_client* connect_test_client() const;
-
+    /* Returns a test connection to the server for controlled test environments.
+     * Requires an active accept call in progress to complete the connection
+     * handshake successfully.
+     */
+    native_client* _create_test_connection() const;
   };
 }

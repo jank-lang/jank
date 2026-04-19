@@ -138,7 +138,7 @@ namespace jank::nrepl::server
     return new native_client(std::move(impl));
   }
 
-  native_client* native_server::connect_test_client() const
+  native_client* native_server::_create_test_connection() const
   {
     auto& ctx = impl_->io_context_;
 

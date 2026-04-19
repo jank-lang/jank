@@ -1,0 +1,38 @@
+(ns session-fixture
+  (:include "session_fixture.hpp")
+  (:require [jank.nrepl.server.bencode :as b]))
+
+(def ^:dynamic *session*
+  "The underlying C++ session_fixture object.")
+(def ^:dynamic *client*
+  "The boxed test `jank.nrepl.server.native_client` connected to the server.")
+(def ^:dynamic *server*
+  "The boxed server-side `jank.nrepl.server.native_client` of the connection.")
+
+(defn- read-some!
+  "Read a data string from the boxed `jank.nrepl.server.native_client` CLIENT*. Blocks until data is available."
+  [client*]
+  (let [client (cpp/* (cpp/unbox (:* jank.nrepl.server.native_client) client*))]
+    (.read_some client)))
+
+(defn- write-some!
+  "Write a DATA string from the boxed `jank.nrepl.server.native_client` CLIENT*."
+  [client* data]
+  (let [client (cpp/* (cpp/unbox (:* jank.nrepl.server.native_client) client*))]
+    (.write_some client data)))
+
+(defmacro with-session
+"Create a session, binding *session*, *client*, and *server* to the
+  underlying C++ session_fixture, its test client, and its server-side
+  client.  Cleans up the session on exit."
+  [& body]
+  `(let [session*# (cpp/session_fixture.make)]
+     (binding [session-fixture/*session* (cpp/box session*#)
+               session-fixture/*client* (cpp/box (~'.-driver session*#))
+               session-fixture/*server* (cpp/box (~'.-sut session*#))]
+       (try
+         ~@body
+         ;; (catch cpp/std.exception e#
+         ;;   (println :error (~'.what e#)))
+         (finally
+           (~'.teardown (cpp/unbox (:* session_fixture) session-fixture/*session*)))))))

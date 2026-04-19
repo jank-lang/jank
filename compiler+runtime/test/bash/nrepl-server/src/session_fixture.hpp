@@ -1,44 +1,59 @@
 #include <jank/nrepl/server.hpp>
 
-#include <future>
-#include <iostream>
+#include <atomic>
+#include <chrono>
 #include <thread>
 
 struct session_fixture
 {
-  /* Background thread running the server accept loop */
+  /* Thread blocking in accept() to establish the SUT connection. */
   std::thread* thread = nullptr;
 
+  /* Server that accepts the SUT connection and creates the driver connection. */
   jank::nrepl::server::native_server* server = nullptr;
-  /* The server-side client of the connection */
-  jank::nrepl::server::native_client* server_client = nullptr;
-  /* A test client connected to the server */
-  jank::nrepl::server::native_client* test_client = nullptr;
 
-  void cleanup()
+  /* System under test connection returned by server->accept(). */
+  jank::nrepl::server::native_client* sut = nullptr;
+
+  /* Test driver connection initiated via server. */
+  jank::nrepl::server::native_client* driver = nullptr;
+
+  /* Stops session activity and closes active connections. */
+  void teardown()
   {
-    if (thread && thread->joinable())
-       thread->join();
-    if (server_client) server_client->close();
-    if (test_client) test_client->close();
-    if (server) delete server;
+    if(thread && thread->joinable())
+    {
+      thread->join();
+    }
+    if(driver)
+    {
+      driver->close();
+    }
+    if(sut)
+    {
+      sut->close();
+    }
   }
 
+  /* Creates a connected test fixture with both SUT and driver endpoints
+   * ready for interaction.
+   */
   static session_fixture* make()
   {
-    session_fixture* session = new session_fixture();
+    auto session = new session_fixture();
     session->server = new jank::nrepl::server::native_server();
 
-    std::promise<void> ready;
-    std::future<void> fut = ready.get_future();
-
+    std::atomic<bool> ready{false};
     session->thread = new std::thread([&ready, session]() {
-      session->server_client = session->server->accept();
-      ready.set_value(); 
+      session->sut = session->server->accept();
+      ready.store(true, std::memory_order_release);
     });
 
-    session->test_client = session->server->connect_test_client();
-    fut.wait();
+
+    session->driver = session->server->_create_test_connection();
+    while (!ready.load(std::memory_order_acquire)) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 
     return session;
   }

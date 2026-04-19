@@ -8,8 +8,8 @@
 (deftest session-test
   (let [session* (cpp/session_fixture.make)
         server*        (.-server session*)
-        test-client*   (.-test_client session*)
-        server-client* (.-server_client session*)]
+        test-client*   (.-driver session*)
+        server-client* (.-sut session*)]
 
     (testing "connection initialization"
       (is (cpp/!= cpp/nullptr server*))
@@ -41,8 +41,8 @@
 
 (deftest read-write-fn-test
   (let [session* (cpp/session_fixture.make)
-        server-client* (.-server_client session*)
-        test-client* (.-test_client session*)]
+        server-client* (.-sut session*)
+        test-client* (.-driver session*)]
     (testing "write sends data"
       (write-some! (cpp/box test-client*) "hello")
       (is (= "hello" (.read_some (cpp/* server-client*)))))
