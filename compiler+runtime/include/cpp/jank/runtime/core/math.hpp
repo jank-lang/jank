@@ -13,6 +13,12 @@ namespace jank::runtime
     using big_decimal_ref = oref<struct big_decimal>;
   }
 
+  namespace detail
+  {
+    template <typename T>
+    concept primitive_number = (std::is_integral_v<T> || std::is_floating_point_v<T>);
+  }
+
   object_ref add(object_ref const l, object_ref const r);
   object_ref add(obj::integer_ref const l, object_ref const r);
   object_ref add(object_ref const l, obj::integer_ref const r);
@@ -108,6 +114,8 @@ namespace jank::runtime
 
   object_ref div(object_ref const l, f64 r);
   object_ref div(f64 l, object_ref const r);
+  f64 div(obj::integer_ref const l, f64 r);
+  f64 div(f64 l, obj::integer_ref const r);
   f64 div(f64 l, f64 r);
 
   f64 div(i64 l, f64 r);

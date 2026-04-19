@@ -498,6 +498,16 @@ namespace jank::runtime
       l);
   }
 
+  f64 div(obj::integer_ref const l, f64 const r)
+  {
+    return l->data / r;
+  }
+
+  f64 div(f64 const l, obj::integer_ref const r)
+  {
+    return l / r->data;
+  }
+
   f64 div(f64 const l, f64 const r)
   {
     return l / r;
