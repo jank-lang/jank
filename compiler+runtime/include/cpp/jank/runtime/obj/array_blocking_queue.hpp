@@ -13,11 +13,14 @@ namespace jank::runtime::obj
   struct array_blocking_queue
   {
     jank::native_vector<object_ref> buffer;
-    size_t head = 0, tail = 0, count = 0, capacity;
+    size_t head{};
+    size_t tail{};
+    size_t size{};
+    size_t capacity{};
     std::mutex mutex;
     std::condition_variable not_empty;
 
-    array_blocking_queue(size_t capacity)
+    array_blocking_queue(size_t const capacity)
       : buffer(capacity)
       , capacity(capacity)
     {
@@ -26,23 +29,23 @@ namespace jank::runtime::obj
     object_ref take()
     {
       std::unique_lock<std::mutex> lock(mutex);
-      not_empty.wait(lock, [&] { return count > 0; });
-      object_ref value = buffer[head];
+      not_empty.wait(lock, [&] { return size > 0; });
+      auto const value(buffer[head]);
       head = (head + 1) % capacity;
-      --count;
+      --size;
       return value;
     }
 
-    bool offer(object_ref value)
+    bool offer(object_ref const value)
     {
       std::lock_guard<std::mutex> lock(mutex);
-      if(count >= capacity)
+      if(size >= capacity)
       {
         return false;
       }
       buffer[tail] = value;
       tail = (tail + 1) % capacity;
-      ++count;
+      ++size;
       not_empty.notify_one();
       return true;
     }
