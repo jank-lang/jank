@@ -31,6 +31,10 @@ namespace jank::runtime::obj
     /* behavior::conjable_in_place */
     transient_hash_set_ref conj_in_place(object_ref const elem);
 
+    /* behavior::associatively_writable_in_place */
+    transient_hash_set_ref assoc_in_place(object_ref const key, object_ref const val);
+    transient_hash_set_ref dissoc_in_place(object_ref const key);
+
     /* behavior::persistentable */
     persistent_type_ref to_persistent();
 

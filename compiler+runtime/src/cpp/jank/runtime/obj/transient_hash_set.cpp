@@ -2,6 +2,8 @@
 #include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
@@ -44,6 +46,18 @@ namespace jank::runtime::obj
   {
     assert_active();
     data.insert(elem);
+    return this;
+  }
+
+  transient_hash_set_ref transient_hash_set::assoc_in_place(object_ref const, object_ref const)
+  {
+    throw std::runtime_error{ "Unsupported assoc operation!" };
+  }
+
+  transient_hash_set_ref transient_hash_set::dissoc_in_place(object_ref const key)
+  {
+    assert_active();
+    data.erase(key);
     return this;
   }
 

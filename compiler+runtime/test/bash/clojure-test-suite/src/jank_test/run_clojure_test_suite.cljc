@@ -53,7 +53,7 @@
     ; clojure.core-test.derive ; analyze/unresolved-symbol error: Unable to resolve symbol 'String'.
     ; clojure.core-test.descendants ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
     ; clojure.core-test.disj ; libc++abi: terminating due to uncaught exception of type std::runtime_error: not disjoinable: #{1 2 3}
-    ; clojure.core-test.disj-bang ; libc++abi: terminating due to uncaught exception of type std::runtime_error: not associatively_writable_in_place: #object [transient_hash_set 0x1074f4280]
+    clojure.core-test.disj-bang ; FIXME: Failing tests.
     ; clojure.core-test.dissoc ; analyze/unresolved-symbol error: Unable to resolve symbol 'defrecord'.
     clojure.core-test.dissoc-bang
     clojure.core-test.doseq
@@ -161,7 +161,7 @@
     ; clojure.core-test.rational-qmark ; FIXME: Failing test.
     ; clojure.core-test.rationalize ; TODO: port rationalize
     ; clojure.core-test.realized-qmark ; TODO: port promise
-    ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map.
+    ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map. TODO: into-array.
     ; clojure.core-test.rem ; FIXME: Failing tests.
     ; clojure.core-test.remove-watch ; TODO: port sync
     ; clojure.core-test.repeat ; libc++abi: terminating due to uncaught exception of type std::runtime_error: not a number: true
@@ -177,7 +177,7 @@
     ; clojure.core-test.sequential-qmark ; TODO: port to-array
     clojure.core-test.set
     ; clojure.core-test.set-qmark ; TODO: port array-map, TODO: port object-array
-    ; clojure.core-test.short ; analyze/macro-expansion-exception error: index out of bounds: 2,  TODO: port short
+    ; clojure.core-test.short ; analyze/macro-expansion-exception error: index out of bounds: 2,  TODO: port short, TODO: Port instance?
     ; clojure.core-test.shuffle ; FIXME: Failing tests.
     clojure.core-test.simple-ident-qmark
     clojure.core-test.simple-keyword-qmark
