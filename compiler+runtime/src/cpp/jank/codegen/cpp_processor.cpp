@@ -1882,6 +1882,10 @@ namespace jank::codegen
                       "namespace {} {",
                       module::module_to_native_ns(mod.name));
 
+      /* We need to initialize these with the special _jank_null, which temporarily stores
+       * a nullptr within them. This isn't normally allowed, but we can't assume we have
+       * access to jank_nil when these are initialized because initialization order across
+       * C++ translation units is undefined. */
       for(auto const &v : b.module->lifted_constants)
       {
         util::format_to(b.module_header_buffer,
