@@ -52,8 +52,8 @@
     clojure.core-test.denominator
     ; clojure.core-test.derive ; analyze/unresolved-symbol error: Unable to resolve symbol 'String'.
     ; clojure.core-test.descendants ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
-    ; clojure.core-test.disj ; libc++abi: terminating due to uncaught exception of type std::runtime_error: not disjoinable: #{1 2 3}
-    clojure.core-test.disj-bang ; FIXME: Failing tests.
+    clojure.core-test.disj
+    clojure.core-test.disj-bang
     ; clojure.core-test.dissoc ; analyze/unresolved-symbol error: Unable to resolve symbol 'defrecord'.
     clojure.core-test.dissoc-bang
     clojure.core-test.doseq

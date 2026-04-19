@@ -865,7 +865,7 @@
    does not contain key(s)."
   ([set] set)
   ([set elem]
-   (cpp/jank.runtime.dissoc_in_place set elem))
+   (cpp/jank.runtime.disj_in_place set elem))
   ([set elem & elems]
    (let [ret (disj! set elem)]
      (if elems

@@ -219,11 +219,15 @@ namespace jank::runtime
     {
       return expect_object<obj::transient_hash_set>(coll)->disjoin_in_place(o);
     }
+<<<<<<< HEAD
     else if(coll.get_type() == object_type::transient_array_map)
     {
       return expect_object<obj::transient_array_map>(coll)->dissoc_in_place(o);
     }
     else if(coll.get_type() == object_type::transient_sorted_set)
+=======
+    else if(coll->type == object_type::transient_sorted_set)
+>>>>>>> 7ce8cde9 (Update `disj!` tests)
     {
       return expect_object<obj::transient_sorted_set>(coll)->disjoin_in_place(o);
     }
@@ -516,14 +520,18 @@ namespace jank::runtime
     {
       return s;
     }
-    else if(s.get_type() == object_type::persistent_hash_set)
+    else if(is_set(s))
     {
-      auto const set(expect_object<obj::persistent_hash_set>(s));
-      return set->disj(o);
+      return visit_set_like(
+        [](auto const typed_s, object_ref const o) -> object_ref { return typed_s->disj(o); },
+        s,
+        o);
     }
     else
     {
-      throw std::runtime_error{ util::format("not disjoinable: {}", runtime::to_code_string(s)) };
+      throw std::runtime_error{ util::format("not disjoinable: {} - {}",
+                                             object_type_str(s.get_type()),
+                                             runtime::to_code_string(s)) };
     }
   }
 
