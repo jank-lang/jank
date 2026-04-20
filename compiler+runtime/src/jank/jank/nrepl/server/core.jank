@@ -90,7 +90,6 @@
     ;; format to assist with setting up a REPL via jack-in.
     (println "nREPL server started on port" (str (.get_port server))
              "on host 127.0.0.1 -" (.get_endpoint server))
-    (cpp/fflush cpp/stdout)
     (while true
       (let [client* (accept server*)]
         (future (handle-client client*))))))

@@ -3,7 +3,7 @@
   (:require [clojure.test :refer [deftest is run-tests successful? testing]]
             [jank.nrepl.server.bencode :as ben]
             [jank.nrepl.server.core :as core]
-            [connection-harness :as sf :refer [with-harness *driver* read-some! *sut** *harness* write-some!]]))
+            [connection-harness :as sf :refer [with-harness *driver* read-some! *sut* *harness* write-some!]]))
 
 (deftest session-test
   (let [harness* (cpp/connection_harness.make)
@@ -58,7 +58,7 @@
     (testing "dynamic vars are bound"
       (is (some? *harness*))
       (is (some? *driver*))
-      (is (some? *sut**)))
+      (is (some? *sut*)))
 
     (testing "harness get port"
       (is (pos?  (-> (cpp/unbox (:* connection_harness) *harness*)
@@ -68,10 +68,10 @@
 
     (testing "driver write, sut read with read-some!"
       (write-some! *driver* "hello")
-      (is (= "hello" (read-some! *sut**))))
+      (is (= "hello" (read-some! *sut*))))
 
     (testing "sut write, driver read"
-      (write-some! *sut** "response")
+      (write-some! *sut* "response")
       (is (= "response" (read-some! *driver*))))))
 
 

@@ -82,7 +82,6 @@
       (is (nil? (p/parse parser ""))))))
 
 (deftest parse-basic
-  ;; parse a digit
   (let [[result remaining] (p/parse (p/digit) "7xyz")]
     (is (= result 7))
     (is (= remaining "xyz")))

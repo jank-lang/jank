@@ -6,7 +6,7 @@
   "The underlying C++ connection_harness instance.")
 (def ^:dynamic *driver*
   "The boxed test `jank.nrepl.server.native_client` used to drive the system under test.")
-(def ^:dynamic *sut**
+(def ^:dynamic *sut*
   "The boxed system under test `jank.nrepl.server.native_client` representing the server side endpoint.")
 
 (defn- read-some!
@@ -30,7 +30,7 @@
   `(let [harness*# (cpp/connection_harness.make)]
      (binding [connection-harness/*harness* (cpp/box harness*#)
                connection-harness/*driver* (cpp/box (~'.-driver harness*#))
-               connection-harness/*sut** (cpp/box (~'.-sut harness*#))]
+               connection-harness/*sut* (cpp/box (~'.-sut harness*#))]
        (try
          ~@body
          ;; (catch cpp/std.exception e#

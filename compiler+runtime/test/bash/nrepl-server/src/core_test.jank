@@ -2,7 +2,7 @@
   (:require [clojure.test :refer [deftest is run-tests successful? testing]]
             [jank.nrepl.server.bencode :as bencode]
             [jank.nrepl.server.core :as core]
-            [connection-harness :as sf :refer [with-harness *driver* *sut** read-some! write-some!]]))
+            [connection-harness :as sf :refer [with-harness *driver* *sut* read-some! write-some!]]))
 
 (deftest connected?-test
   (with-harness
@@ -15,7 +15,7 @@
     (testing "parses single message"
       (let [msg (bencode/write {"op" "clone"})]
         (write-some! *driver*  msg)
-        (let [[msg remainder] (core/read-message *sut** nil)]
+        (let [[msg remainder] (core/read-message *sut* nil)]
           (is (= {"op" "clone"} msg))
           (is (nil? remainder)))))
 
@@ -25,10 +25,10 @@
             e (subs clone 5)]
         (write-some! *driver* b)
 
-        (let [[msg remainder] (core/read-message *sut** nil)]
+        (let [[msg remainder] (core/read-message *sut* nil)]
           (is (some? remainder))
           (write-some! *driver* e)
-          (let [[msg remainder] (core/read-message *sut** remainder)]
+          (let [[msg remainder] (core/read-message *sut* remainder)]
             (is (= {"op" "clone"} msg))))))))
 
 (defn wait-until
@@ -124,7 +124,7 @@
 
 (deftest handle-client-test
   (with-harness
-    (let [server (future (core/handle-client *sut**))]
+    (let [server (future (core/handle-client *sut*))]
       (try
         (testing "op: clone"
           (let [msg (bencode/write {"op" "clone"})]
@@ -148,14 +148,17 @@
                 (is (= {"err" ""}
                        dec2))
                 (let [[dec3 rem3] (bencode/parse rem2)]
-                  (is (= {"value" "5", "ns" "user", "status" ["done"]}
-                         dec3)))))))
+                  (is (= {"value" "5", "ns" "user"}
+                         dec3))
+                  (let [[dec4 rem4] (bencode/parse rem3)]
+                    (is (= {"status" ["done"]}
+                           dec4))))))))
 
         (finally
-          (when (core/connected? *sut**)
+          (when (core/connected? *sut*)
             (.close (cpp/* (cpp/unbox (:* jank.nrepl.server.native_client) *driver*)))
             (let [timeout-ms 1000
-                  disconnected? (wait-until #(not (core/connected? *sut**)) timeout-ms 100)]
+                  disconnected? (wait-until #(not (core/connected? *sut*)) timeout-ms 100)]
               (if disconnected?
                 @server
                 (is disconnected? (str "Failed to disconnected after " timeout-ms " ms"))))))))))

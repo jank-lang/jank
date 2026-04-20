@@ -8,9 +8,10 @@
   (parser input))
 
 (defn digit
-  "Returns a function that consumes input and matches a
-  digit. Returns [result remainder] or nil if it cannot be parsed;
-  remainder is a non-empty string or nil."
+ "Returns a parser function that consumes input and matches a
+  digit. Returns [result remainder] if a digit is found; returns nil
+  if it cannot be parsed. Remainder is the unconsumed input or nil if
+  fully consumed."
   []
   (fn [input]
     (when (digits (first input))
@@ -18,18 +19,19 @@
        (not-empty (subs input 1))])))
 
 (defn one-char
-  "Returns a function that consumes input and matches
-  CH. Returns [result remainder] or nil if it cannot be parsed;
-  remainder is a non-empty string or nil."
+  "Returns a parser function that consumes input and matches CH.
+  Returns [result remainder] if CH is found; returns nil if it cannot
+  be parsed. Remainder is the unconsumed input or nil if fully consumed."
   [ch]
   (fn [input]
     (when (= (first input) ch)
       [ch (not-empty (subs input 1))])))
 
 (defn any-char
-  "Returns a parser function that consumes input and matches a a
-  character. Returns [result remainder] or nil if it cannot be parsed;
-  remainder is a non-empty string or nil."
+  "Returns a parser function that consumes input and matches a
+  character. Returns [result remainder] if a character is found;
+  returns nil if it cannot be parsed. Remainder is the unconsumed
+  input or nil if fully consumed."
   []
   (fn [input]
     (when (seq input)
@@ -37,8 +39,10 @@
 
 (defn many
   "Returns a parser function that consumes input using the PARSER
-  function. Returns [result remainder] or nil if it cannot be parsed;
-  remainder is a non-empty string or nil."
+  function. Returns [result remainder] if one or more matches are
+  found; result is a sequence of matches. Returns nil if no matches
+  can be parsed. Remainder is the unconsumed input or nil if fully
+  consumed."
   [parser]
   (fn [input]
     (loop [matches []
@@ -65,8 +69,9 @@
 
 (defn number
   "Returns a parser function that consumes input and matches an
-  integer. Returns [result remainder] or nil if it cannot be parsed;
-  remainder is a non-empty string or nil."
+  integer. Returns [result remainder] if a number is found; returns
+  nil if it cannot be parsed. Remainder is the unconsumed input or nil
+  if fully consumed."
   []
   (fn [input]
     (let [[sign input] (if (and (seq input) (= (first input) \-))
