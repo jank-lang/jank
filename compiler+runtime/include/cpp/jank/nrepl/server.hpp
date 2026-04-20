@@ -23,7 +23,7 @@ namespace jank::nrepl::server
     void write_some(std::string const &data) const;
 
     /* Closes the connection and marks it as disconnected. */
-    void close();
+    void close() const;
 
     std::unique_ptr<impl> impl_;
   };
@@ -45,6 +45,6 @@ namespace jank::nrepl::server
      * Requires an active accept call in progress to complete the connection
      * handshake successfully.
      */
-    native_client* _create_test_connection() const;
+    native_client *_create_test_connection() const;
   };
 }

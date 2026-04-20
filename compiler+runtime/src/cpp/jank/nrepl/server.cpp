@@ -51,11 +51,11 @@ namespace jank::nrepl::server
     /* Closes the connection and marks it as disconnected. */
     void close()
     {
-      if (connected_)
+      if(connected_)
       {
         boost::system::error_code ec;
-        socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-        socket_.close(ec);
+        (void)socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
+        (void)socket_.close(ec);
         connected_ = false;
       }
     }
@@ -87,7 +87,7 @@ namespace jank::nrepl::server
     impl_->write_some(data);
   }
 
-  void native_client::close()
+  void native_client::close() const
   {
     impl_->close();
   }
@@ -139,9 +139,9 @@ namespace jank::nrepl::server
     return new native_client(std::move(impl));
   }
 
-  native_client* native_server::_create_test_connection() const
+  native_client *native_server::_create_test_connection() const
   {
-    auto& ctx = impl_->io_context_;
+    auto &ctx = impl_->io_context_;
 
     tcp::socket socket(ctx);
     socket.connect(impl_->acceptor_.local_endpoint());
