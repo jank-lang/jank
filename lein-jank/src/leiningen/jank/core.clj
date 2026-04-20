@@ -43,12 +43,18 @@
     :linked-libraries
     (map (fn [v] (str "-l" v)) value)
 
+    :frameworks
+    (mapcat (fn [v] ["-framework" v]) value)
+
+    :runtime-flags
+    value
+
     (lmain/warn (str "Unknown flag " flag))))
 
 (defn build-declarative-flags [project]
   (flatten (map (fn [[flag value]]
                   (build-declarative-flag flag value))
-                (:jank project))))
+                (dissoc (:jank project) :frameworks :runtime-flags))))
 
 (defn shell-out! [project classpath command compiler-args runtime-args]
   (let [jank (fs/which "jank")
@@ -57,6 +63,8 @@
                      (build-declarative-flags project)
                      compiler-args
                      ["--"]
+                     (flatten (build-declarative-flag :runtime-flags (get-in project [:jank :runtime-flags] [])))
+                     (flatten (build-declarative-flag :frameworks    (get-in project [:jank :frameworks] [])))
                      runtime-args)
         ; TODO: Better error handling.
         _ (assert (some? jank))
