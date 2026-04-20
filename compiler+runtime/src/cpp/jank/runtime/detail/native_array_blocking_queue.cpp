@@ -33,4 +33,9 @@ namespace jank::runtime::detail
     not_empty.notify_one();
     return true;
   }
+
+  native_array_blocking_queue *create_native_array_blocking_queue(usize const capacity)
+  {
+    return new(UseGC) native_array_blocking_queue(capacity);
+  }
 }

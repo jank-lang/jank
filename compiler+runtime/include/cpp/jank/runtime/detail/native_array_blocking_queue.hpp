@@ -24,4 +24,8 @@ namespace jank::runtime::detail
     std::mutex mutex;
     std::condition_variable not_empty;
   };
+
+  // TODO: remove this constructor function when it can be done via interop
+  // instead.
+  native_array_blocking_queue *create_native_array_blocking_queue(usize const capacity);
 }
