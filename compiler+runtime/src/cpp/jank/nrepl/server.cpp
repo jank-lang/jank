@@ -53,9 +53,8 @@ namespace jank::nrepl::server
     {
       if(connected_)
       {
-        boost::system::error_code ec;
-        (void)socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-        (void)socket_.close(ec);
+        socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+        socket_.close();
         connected_ = false;
       }
     }
