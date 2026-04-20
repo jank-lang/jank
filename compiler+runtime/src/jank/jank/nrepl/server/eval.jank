@@ -57,9 +57,9 @@ namespace jank::nrepl::server::eval
   ;; C++ and catch the exceptions there.
 
   (let [p (cpp/jank.read.source_position.
-           (cpp/cast cpp/jtl.usize 0)
-           (cpp/cast cpp/jtl.usize line)
-           (cpp/cast cpp/jtl.usize col))]
+           (cpp/jtl.usize 0)
+           (cpp/jtl.usize line)
+           (cpp/jtl.usize col))]
     (cpp/jank.nrepl.server.eval.safe_eval code p)))
 
 (comment
