@@ -14,6 +14,10 @@
 (binding [*ns* default-ns]
   (clojure.core/refer-clojure))
 
+;; NOTE: when eval'ing forms interactively, nREPL clients will send a code snippet
+;; and possibly the location (line/column) in a source file. Using this info during
+;; eval helps preserve correct source information relative to the entire file,
+;; which is useful for things such as error reporting and logging.
 (defn- do-eval [ns code file-path line col inspect?]
   ;; TODO: Once we have threads, we can spawn a background thread to capture and
   ;; send interleaved output during a long eval.
