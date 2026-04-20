@@ -130,7 +130,7 @@ if (NOT jank_local_clang)
 endif ()
 
 if(WIN32)
-  list(APPEND jank_linker_flags "-Wl,--export-all-symbols")
+  list(APPEND jank_linker_flags "-Wl,--export-all-symbols" -lws2_32 -ldbghelp)
 endif()
 
 # If the user opts into a specific build type, we will provide sane defaults. However, for
@@ -723,8 +723,6 @@ target_link_libraries(
 
 if(APPLE)
   target_link_libraries(jank_lib PUBLIC libzstd_static)
-elseif(WIN32)
-  target_link_libraries(jank_lib PRIVATE dbghelp ws2_32)
 endif()
 
 jank_hook_llvm(jank_lib)
@@ -752,13 +750,6 @@ foreach(dir ${jank_lib_includes_prop})
 endforeach()
 
 set(jank_lib_linker_flags_list "")
-
-if(WIN32)
-  list(APPEND jank_lib_linker_flags_list
-    -lws2_32
-    -ldbghelp
-  )
-endif()
 
 get_target_property(jank_lib_link_dirs_prop jank_lib LINK_DIRECTORIES)
 foreach(lib ${jank_lib_link_dirs_prop})
@@ -898,8 +889,6 @@ if(WIN32)
 
     pthread
     zstd
-    ws2_32
-    dbghelp
   )
 endif()
 
@@ -1026,8 +1015,6 @@ if(jank_test)
 
       pthread
       zstd
-      ws2_32
-      dbghelp
     )
   endif()
 
