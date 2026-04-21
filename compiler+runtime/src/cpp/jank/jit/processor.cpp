@@ -239,7 +239,8 @@ namespace jank::jit
     auto const &load_result{ load_dynamic_libs(util::cli::opts.libs) };
     if(load_result.is_err())
     {
-      throw error::system_failure(load_result.expect_err().c_str());
+      util::println(stderr, "error: {}", load_result.expect_err());
+      std::exit(1);
     }
   }
 
