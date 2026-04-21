@@ -6,7 +6,7 @@ namespace jank::nrepl::server::eval
   using namespace jank;
   using namespace jank::runtime;
 
-  inline bool safe_eval(jtl::immutable_string const &code)
+  inline bool safe_eval(jtl::immutable_string const &code, read::source_position const &p)
   {
     static auto var_1{ __rt_ctx->find_var(\"clojure.core\", \"*1\") };
     static auto var_2{ __rt_ctx->find_var(\"clojure.core\", \"*2\") };
@@ -15,7 +15,7 @@ namespace jank::nrepl::server::eval
 
     try
     {
-      auto const value{ __rt_ctx->eval_string(code).unwrap() };
+      auto const value{ __rt_ctx->eval_string(code, p).unwrap() };
 
       var_3->set(var_2->deref()).expect_ok();
       var_2->set(var_1->deref()).expect_ok();
@@ -47,7 +47,7 @@ namespace jank::nrepl::server::eval
 (defn safe-eval
   "Evaluate code similar to `eval`, but catch any errors. Returns whether the
   eval completed successfully. Results can be read on *1 or *e."
-  [code]
+  [code line col]
   ;; TODO(jank): Some jank printing functions bypass std::cout/std::cerr which
   ;; means we can't as easily intercept them. This is unlike java where
   ;; everything goes through System.out/System.err.
@@ -56,7 +56,11 @@ namespace jank::nrepl::server::eval
   ;; error will crash the server. Instead we create a safe evaluation wrapper in
   ;; C++ and catch the exceptions there.
 
-  (cpp/jank.nrepl.server.eval.safe_eval code))
+  (let [p (cpp/jank.read.source_position.
+           (cpp/jtl.usize 0)
+           (cpp/jtl.usize line)
+           (cpp/jtl.usize col))]
+    (cpp/jank.nrepl.server.eval.safe_eval code p)))
 
 (comment
   (+ 1 2)

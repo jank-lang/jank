@@ -262,10 +262,10 @@ namespace jank::runtime::obj
       throw std::runtime_error{ "Key must be integer." };
     }
 
-    auto const i(static_cast<size_t>(expect_object<integer>(key)->data));
-    auto const size(data.size());
+    auto const i(expect_object<integer>(key)->data);
+    auto const size(static_cast<i64>(data.size()));
 
-    if(i > size)
+    if(i > size || 0 > i)
     {
       throw std::runtime_error{ "Index out of bounds." };
     }

@@ -335,6 +335,15 @@ namespace jank::read::lex
     pos += offset;
   }
 
+  processor::processor(jtl::immutable_string_view const &f, source_position const &p)
+    : pos{ .proc = this }
+    , file{ f }
+  {
+    pos.offset = p.offset;
+    pos.line = p.line;
+    pos.col = p.col;
+  }
+
   movable_position &movable_position::operator++()
   {
     jank_debug_assert(offset < proc->file.size());

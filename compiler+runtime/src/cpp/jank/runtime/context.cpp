@@ -183,10 +183,11 @@ namespace jank::runtime
     return eval_string(file.expect_ok().view());
   }
 
-  jtl::option<object_ref> context::eval_string(jtl::immutable_string const &code) const
+  jtl::option<object_ref>
+  context::eval_string(jtl::immutable_string const &code, read::source_position const &p) const
   {
     profile::timer const timer{ "rt eval_string" };
-    read::lex::processor l_prc{ code };
+    read::lex::processor l_prc{ code, p };
     read::parse::processor p_prc{ l_prc.begin(), l_prc.end() };
 
     bool no_op{ true };
@@ -279,6 +280,12 @@ namespace jank::runtime
     }
 
     return ret;
+  }
+
+  jtl::option<object_ref> context::eval_string(jtl::immutable_string const &code) const
+  {
+    read::source_position const p{};
+    return eval_string(code, p);
   }
 
   jtl::result<void, error_ref> context::eval_cpp_string(jtl::immutable_string const &code) const

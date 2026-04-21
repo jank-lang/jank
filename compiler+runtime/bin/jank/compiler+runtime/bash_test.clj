@@ -3,22 +3,55 @@
 (ns jank.compiler+runtime.bash-test
   (:require [clojure.string]
             [jank.util :as util]
+            [babashka.cli :as cli]
             [babashka.process :as b.p]
             [babashka.fs :as b.f]))
 
 (def compiler+runtime-dir (str (b.f/parent *file*) "/../../.."))
 
+(def cli-spec
+  {:list {:alias :l
+          :coerce :boolean}
+   :help {:alias :h
+          :coerce :boolean}})
+
+(defn usage []
+  (println (str "Usage: " (-> *file* java.io.File. .getName) " [--list] [--help] [filters...]
+
+Options:
+  -l, --list    List matching tests and exit
+  -h, --help    Show this help
+
+Filters:
+  Positional arguments filter tests by substring match in the test path.")))
+
+(defn matches-filter? [filters path]
+  (or (empty? filters)
+      (some #(clojure.string/includes? path %) filters)))
+
 (defn -main [{:keys [enabled?]}]
   (util/log-step "Run bash test suite")
   (if-not enabled?
     (util/log-info "Not enabled")
-    (let [bash-test-dir (str compiler+runtime-dir "/test/bash")
-          test-files (b.f/glob bash-test-dir "**/{pass,fail,skip}-test")
+    (let [opts (cli/parse-opts *command-line-args* {:spec cli-spec})
+          args (-> opts meta :org.babashka/cli :args)
+          filters args
+          bash-test-dir (str compiler+runtime-dir "/test/bash")
+          all-tests (b.f/glob bash-test-dir "**/{pass,fail,skip}-test")
+          test-files (filter #(matches-filter? filters (str %)) all-tests)
           extra-env (merge {"PATH" (str compiler+runtime-dir "/build" b.f/path-separator (util/get-env "PATH"))}
                            (let [skip (System/getenv "JANK_SKIP_AOT_CHECK")]
                              (when-not (empty? skip)
                                {"JANK_SKIP_AOT_CHECK" skip})))
           passed? (volatile! true)]
+      (when (:help opts)
+        (usage)
+        (System/exit 0))
+      (when (:list opts)
+        (println "Available tests:\n")
+        (doseq [t test-files]
+          (println (str (b.f/relativize bash-test-dir (b.f/parent t)))))
+        (System/exit 0))
       (doseq [test-file test-files]
         (let [skip? (clojure.string/ends-with? (str test-file) "skip-test")
               expect-failure? (clojure.string/ends-with? (str test-file) "fail-test")
@@ -34,7 +67,7 @@
                                          :err :out
                                          :dir dirname
                                          :extra-env extra-env}
-                                        (util/command-make-portable (str test-file)))]
+                                        test-file)]
                   (when (or (and (zero? (:exit res)) expect-failure?)
                             (and (not (zero? (:exit res))) (not expect-failure?)))
                     (vreset! unexpected-result res))))
