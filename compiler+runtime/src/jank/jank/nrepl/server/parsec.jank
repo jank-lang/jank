@@ -9,9 +9,9 @@
 
 (defn digit
  "Returns a parser function that consumes input and matches a
-  digit. Returns [result remainder] if a digit is found; returns nil
-  if it cannot be parsed. Remainder is the unconsumed input or nil if
-  fully consumed."
+  digit. The parser returns [result remainder] if a digit is found;
+  returns nil if it cannot be parsed. Remainder is the unconsumed
+  input or nil if fully consumed."
   []
   (fn [input]
     (when (digits (first input))
@@ -20,8 +20,9 @@
 
 (defn one-char
   "Returns a parser function that consumes input and matches CH.
-  Returns [result remainder] if CH is found; returns nil if it cannot
-  be parsed. Remainder is the unconsumed input or nil if fully consumed."
+  The parser returns [result remainder] if CH is found; returns nil if
+  it cannot be parsed. Remainder is the unconsumed input or nil if
+  fully consumed."
   [ch]
   (fn [input]
     (when (= (first input) ch)
@@ -29,28 +30,27 @@
 
 (defn any-char
   "Returns a parser function that consumes input and matches a
-  character. Returns [result remainder] if a character is found;
-  returns nil if it cannot be parsed. Remainder is the unconsumed
-  input or nil if fully consumed."
+  character. The parser returns [result remainder] if a character is
+  found; returns nil if it cannot be parsed. Remainder is the
+  unconsumed input or nil if fully consumed."
   []
   (fn [input]
     (when (seq input)
       [(first input) (not-empty (subs input 1))])))
 
 (defn many
-  "Returns a parser function that consumes input using the PARSER
-  function. Returns [result remainder] if one or more matches are
-  found; result is a sequence of matches. Returns nil if no matches
-  can be parsed. Remainder is the unconsumed input or nil if fully
-  consumed."
+  "Returns a parser function that consumes input using PARSER.
+  The parser returns [result remainder], where result is a sequence of
+  matches (possibly empty). Remainder is the unconsumed input or nil
+  if fully consumed."
   [parser]
   (fn [input]
     (loop [matches []
            input   input]
-      (if-let [[match remaining] (parser input)]
-        (recur (conj matches match) remaining)
-        (when (> (count matches) 0)
-          [matches input])))))
+      (let [[match remaining :as ret] (parser input)]
+        (if (or (nil? ret) (= remaining input))
+          [matches input]
+          (recur (conj matches match) remaining))))))
 
 (defn many1
   [parser]
@@ -69,9 +69,9 @@
 
 (defn number
   "Returns a parser function that consumes input and matches an
-  integer. Returns [result remainder] if a number is found; returns
-  nil if it cannot be parsed. Remainder is the unconsumed input or nil
-  if fully consumed."
+  integer. The parser returns [result remainder] if a number is found;
+  returns nil if it cannot be parsed. Remainder is the unconsumed
+  input or nil if fully consumed."
   []
   (fn [input]
     (let [[sign input] (if (and (seq input) (= (first input) \-))

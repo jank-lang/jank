@@ -19,7 +19,7 @@
           (is (= {"op" "clone"} msg))
           (is (nil? remainder)))))
 
-    (testing "read message with remainder"
+    (testing "read message with partial message in remainder"
       (let [clone (str (bencode/write {"op" "clone"}))
             b (subs clone 0 5)
             e (subs clone 5)]
@@ -29,7 +29,21 @@
           (is (some? remainder))
           (write-some! *driver* e)
           (let [[msg remainder] (core/read-message *sut* remainder)]
-            (is (= {"op" "clone"} msg))))))))
+            (is (= {"op" "clone"} msg))))))
+
+    (testing "read message with full message in remainder"
+      (let [m1 (bencode/write {"op" "clone"})
+            m2 (bencode/write {"op" "eval"})
+            combined (str m1 m2)]
+        (write-some! *driver* combined)
+
+        (let [[msg remainder] (core/read-message *sut* nil)]
+          (is (= {"op" "clone"} msg))
+          (is (some? remainder))
+          
+          (let [[msg remainder] (core/read-message *sut* remainder)]
+            (is (= {"op" "eval"} msg))
+            (is (nil? remainder))))))))
 
 (defn wait-until
   "Waits until PRED is true or TIMEOUT-MS expires, returning true if

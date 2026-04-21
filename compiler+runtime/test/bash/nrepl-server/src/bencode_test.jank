@@ -31,6 +31,8 @@
     (is (= [[1 2] "abc"] ((b/blist) "li1ei2eeabc"))))
   (testing "parses nested list"
     (is (= [[[1 2] 3] nil] ((b/blist) "lli1ei2eei3ee"))))
+  (testing "parses empty list"
+    (is (= [[] nil] ((b/blist) "le"))))
   (testing "incomplete list (missing closing e)"
     (is (nil? ((b/blist) "li1ei2e")))))
 
@@ -41,8 +43,10 @@
     (is (= [{"a" 1} "zzz"] ((b/bdict) "d1:ai1eezzz"))))
   (testing "parses multiple entries"
     (is (= [{"a" 1 "b" 2} nil] ((b/bdict) "d1:ai1e1:bi2ee"))))
-   (testing "incomplete dict (missing closing e)"
-     (is (nil? ((b/bdict) "d1:ai1e")))))
+  (testing "parses empty dict"
+    (is (= [{} nil] ((b/bdict) "de"))))
+  (testing "incomplete dict (missing closing e)"
+    (is (nil? ((b/bdict) "d1:ai1e")))))
 
 (deftest parse-test
   (testing "parse integer fully"

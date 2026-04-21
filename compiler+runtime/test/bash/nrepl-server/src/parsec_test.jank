@@ -28,8 +28,8 @@
     (let [parser (p/many (p/one-char \a))]
       (is (= [[\a] "bcd"] (p/parse parser "abcd")))
       (is (= [[\a \a] "bcd"] (p/parse parser "aabcd")))
-      (is (nil? (p/parse parser "xyz")))
-      (is (nil? (p/parse parser ""))))))
+      (is (= [[] "xyz"] (p/parse parser "xyz")))
+      (is (= [[] ""] (p/parse parser ""))))))
 
 (deftest many1-test
   (testing "many1 parser"
