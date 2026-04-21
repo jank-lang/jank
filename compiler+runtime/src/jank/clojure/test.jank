@@ -724,7 +724,9 @@
   "Groups vars by their namespace and runs test-var on them with
   appropriate fixtures applied."
   [vars]
-  (doseq [[ns vars] (group-by (comp :ns meta) vars)]
+  ;;FIXME https://github.com/jank-lang/jank/issues/197
+  ;; (:ns (meta var)) is nil in jank; derive the ns from the var's symbol.
+  (doseq [[ns vars] (group-by -workaround-var->ns vars)]
     (let [once-fixture-fn (join-fixtures (::once-fixtures (meta ns)))
           each-fixture-fn (join-fixtures (::each-fixtures (meta ns)))]
       (once-fixture-fn
