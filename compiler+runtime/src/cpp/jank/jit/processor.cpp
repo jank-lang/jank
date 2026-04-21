@@ -196,6 +196,7 @@ namespace jank::jit
 
     //util::println("jit flags {}", args);
 
+    /* We don't actually own this interpreter. CppInterOp does. */
     interpreter.reset(static_cast<CppInternal::Interpreter *>(
       Cpp::CreateInterpreter(args, {}, vfs, static_cast<int>(llvm::CodeModel::Large))));
 
