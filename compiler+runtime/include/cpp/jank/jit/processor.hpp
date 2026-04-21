@@ -68,7 +68,7 @@ namespace jank::jit
 
     /*** XXX: Everything here is immutable after initialization. ***/
     /*** XXX: Calls through the interpreter and LLVM JIT runtime are thread-safe. ***/
-    std::unique_ptr<CppInternal::Interpreter> interpreter;
+    jtl::ptr<CppInternal::Interpreter> interpreter;
     native_vector<std::filesystem::path> library_dirs;
 
     /* The files within this map will get added into Clang's VFS prior to the creation of
