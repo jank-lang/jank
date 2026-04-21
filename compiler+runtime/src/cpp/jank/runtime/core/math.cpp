@@ -51,6 +51,27 @@ namespace jank::runtime
       r);
   }
 
+  object_ref add(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't add {} to {}.", to_code_string(r), to_code_string(l))
+    };
+  }
+
+  object_ref add(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't add {} to {}.", to_code_string(r), to_code_string(l))
+    };
+  }
+
+  object_ref add(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't add {} to {}.", to_code_string(r), to_code_string(l))
+    };
+  }
+
   object_ref add(obj::integer_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -218,6 +239,27 @@ namespace jank::runtime
       },
       l,
       r);
+  }
+
+  object_ref sub(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't subtract {} from {}.", to_code_string(r), to_code_string(l))
+    };
+  }
+
+  object_ref sub(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't subtract {} from {}.", to_code_string(r), to_code_string(l))
+    };
+  }
+
+  object_ref sub(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't subtract {} from {}.", to_code_string(r), to_code_string(l))
+    };
   }
 
   object_ref sub(obj::integer_ref const l, object_ref const r)
@@ -418,6 +460,27 @@ namespace jank::runtime
       r);
   }
 
+  object_ref div(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't divide {} by {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  object_ref div(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't divide {} by {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  object_ref div(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't divide {} by {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
   object_ref div(obj::integer_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -561,6 +624,27 @@ namespace jank::runtime
       },
       l,
       r);
+  }
+
+  object_ref mul(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't multiply {} by {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  object_ref mul(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't multiply {} by {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  object_ref mul(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't multiply {} by {}.", to_code_string(l), to_code_string(r))
+    };
   }
 
   object_ref mul(obj::integer_ref const l, object_ref const r)
@@ -958,161 +1042,182 @@ namespace jank::runtime
 
   i64 bit_not(object_ref const l)
   {
-    return visit_type<obj::integer>([](auto const typed_l) -> i64 { return ~typed_l->data; }, l);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+
+    if(typed_l.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return ~typed_l->data;
   }
 
   i64 bit_and(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l & typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l.is_nil() || typed_r.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data & typed_r->data;
   }
 
   i64 bit_or(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l | typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l.is_nil() || typed_r.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data | typed_r->data;
   }
 
   i64 bit_xor(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l ^ typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l.is_nil() || typed_r.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data ^ typed_r->data;
   }
 
   i64 bit_and_not(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l & (~typed_r->data); },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l.is_nil() || typed_r.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data & (~typed_r->data);
   }
 
   i64 bit_clear(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l & ~(static_cast<i64>(1) << typed_r->data);
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l.is_nil() || typed_r.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data & ~(static_cast<i64>(1) << typed_r->data);
   }
 
   i64 bit_set(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l | (static_cast<i64>(1) << typed_r->data);
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l.is_nil() || typed_r.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data | (static_cast<i64>(1) << typed_r->data);
   }
 
   i64 bit_flip(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            return typed_l ^ (static_cast<i64>(1) << typed_r->data);
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l.is_nil() || typed_r.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data ^ (static_cast<i64>(1) << typed_r->data);
   }
 
   bool bit_test(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> bool {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> bool {
-            return (typed_l >> typed_r->data) & static_cast<i64>(1);
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l.is_nil() || typed_r.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return (typed_l->data >> typed_r->data) & static_cast<i64>(1);
   }
 
   i64 bit_shift_left(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l << typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l.is_nil() || typed_r.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data << typed_r->data;
   }
 
   i64 bit_shift_right(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 { return typed_l >> typed_r->data; },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l.is_nil() || typed_r.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    return typed_l->data >> typed_r->data;
   }
 
   i64 bit_unsigned_shift_right(object_ref const l, object_ref const r)
   {
-    return visit_type<obj::integer>(
-      [](auto const typed_l, auto const r) -> i64 {
-        return visit_type<obj::integer>(
-          [](auto const typed_r, auto const typed_l) -> i64 {
-            using uni = std::make_unsigned_t<i64>;
-            return static_cast<uni>(typed_l) >> static_cast<uni>(typed_r->data);
-          },
-          r,
-          typed_l->data);
-      },
-      l,
-      r);
+    auto const typed_l{ dyn_cast<obj::integer>(l) };
+    auto const typed_r{ dyn_cast<obj::integer>(r) };
+
+    if(typed_l.is_nil() || typed_r.is_nil())
+    {
+      throw std::runtime_error{
+        "Bitwise operators are only supported for values of type integer."
+      };
+    }
+
+    using uni = std::make_unsigned_t<i64>;
+    return static_cast<i64>(static_cast<uni>(typed_l->data) >> static_cast<uni>(typed_r->data));
   }
 
   f64 rand()
@@ -1134,6 +1239,27 @@ namespace jank::runtime
       },
       l,
       r);
+  }
+
+  bool lt(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  bool lt(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  bool lt(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
+    };
   }
 
   bool lt(obj::integer_ref const l, object_ref const r)
@@ -1263,6 +1389,27 @@ namespace jank::runtime
       r);
   }
 
+  bool lte(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  bool lte(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  bool lte(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't compare {} with {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
   bool lte(obj::integer_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -1381,6 +1528,27 @@ namespace jank::runtime
       },
       l,
       r);
+  }
+
+  object_ref min(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a min between {} and {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  object_ref min(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a min between {} and {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  object_ref min(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a min between {} and {}.", to_code_string(l), to_code_string(r))
+    };
   }
 
   object_ref min(obj::integer_ref const l, object_ref const r)
@@ -1530,6 +1698,27 @@ namespace jank::runtime
       r);
   }
 
+  object_ref max(obj::nil_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a max between {} and {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  object_ref max(obj::nil_ref const l, object_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a max between {} and {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
+  object_ref max(object_ref const l, obj::nil_ref const r)
+  {
+    throw std::runtime_error{
+      util::format("Can't find a max between {} and {}.", to_code_string(l), to_code_string(r))
+    };
+  }
+
   object_ref max(obj::integer_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -1666,6 +1855,11 @@ namespace jank::runtime
                                    : make_box(typed_l->data).erase();
       },
       l);
+  }
+
+  object_ref abs(obj::nil_ref const l)
+  {
+    throw std::runtime_error{ util::format("not a number: {}", to_code_string(l)) };
   }
 
   i64 abs(obj::integer_ref const l)
@@ -1917,6 +2111,11 @@ namespace jank::runtime
   i64 to_int(object_ref const l)
   {
     return visit_number_like([](auto const typed_l) -> i64 { return typed_l->to_integer(); }, l);
+  }
+
+  i64 to_int(obj::nil_ref const l)
+  {
+    throw std::runtime_error{ util::format("not a number: {}", to_code_string(l)) };
   }
 
   i64 to_int(obj::integer_ref const l)

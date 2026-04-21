@@ -6,6 +6,7 @@ namespace jank::runtime
 {
   namespace obj
   {
+    using nil_ref = oref<struct nil>;
     using integer_ref = oref<struct integer>;
     using real_ref = oref<struct real>;
     using ratio_ref = oref<struct ratio>;
@@ -20,6 +21,9 @@ namespace jank::runtime
   }
 
   object_ref add(object_ref const l, object_ref const r);
+  object_ref add(obj::nil_ref const l, obj::nil_ref const r);
+  object_ref add(obj::nil_ref const l, object_ref const r);
+  object_ref add(object_ref const l, obj::nil_ref const r);
   object_ref add(obj::integer_ref const l, object_ref const r);
   object_ref add(object_ref const l, obj::integer_ref const r);
   object_ref add(object_ref const l, obj::ratio_ref const r);
@@ -62,6 +66,9 @@ namespace jank::runtime
   object_ref promoting_add(object_ref const l, object_ref const r);
 
   object_ref sub(object_ref const l, object_ref const r);
+  object_ref sub(obj::nil_ref const l, obj::nil_ref const r);
+  object_ref sub(obj::nil_ref const l, object_ref const r);
+  object_ref sub(object_ref const l, obj::nil_ref const r);
   object_ref sub(obj::integer_ref const l, object_ref const r);
   object_ref sub(object_ref const l, obj::integer_ref const r);
   object_ref sub(obj::big_decimal_ref const l, object_ref const r);
@@ -101,6 +108,9 @@ namespace jank::runtime
   object_ref promoting_sub(object_ref const l, object_ref const r);
 
   object_ref div(object_ref const l, object_ref const r);
+  object_ref div(obj::nil_ref const l, obj::nil_ref const r);
+  object_ref div(obj::nil_ref const l, object_ref const r);
+  object_ref div(object_ref const l, obj::nil_ref const r);
   object_ref div(obj::integer_ref const l, object_ref const r);
   object_ref div(object_ref const l, obj::integer_ref const r);
   object_ref div(obj::big_decimal_ref const l, object_ref const r);
@@ -138,6 +148,9 @@ namespace jank::runtime
   }
 
   object_ref mul(object_ref const l, object_ref const r);
+  object_ref mul(obj::nil_ref const l, obj::nil_ref const r);
+  object_ref mul(obj::nil_ref const l, object_ref const r);
+  object_ref mul(object_ref const l, obj::nil_ref const r);
   object_ref mul(obj::integer_ref const l, object_ref const r);
   object_ref mul(object_ref const l, obj::integer_ref const r);
   object_ref mul(obj::big_decimal_ref const l, object_ref const r);
@@ -175,6 +188,9 @@ namespace jank::runtime
   object_ref promoting_mul(object_ref const l, object_ref const r);
 
   bool lt(object_ref const l, object_ref const r);
+  bool lt(obj::nil_ref const l, obj::nil_ref const r);
+  bool lt(object_ref const l, obj::nil_ref const r);
+  bool lt(obj::nil_ref const l, object_ref const r);
   bool lt(obj::integer_ref const l, object_ref const r);
   bool lt(object_ref const l, obj::integer_ref const r);
   bool lt(obj::integer_ref const l, obj::integer_ref const r);
@@ -210,6 +226,9 @@ namespace jank::runtime
   }
 
   bool lte(object_ref const l, object_ref const r);
+  bool lte(obj::nil_ref const l, obj::nil_ref const r);
+  bool lte(object_ref const l, obj::nil_ref const r);
+  bool lte(obj::nil_ref const l, object_ref const r);
   bool lte(obj::integer_ref const l, object_ref const r);
   bool lte(object_ref const l, obj::integer_ref const r);
   bool lte(obj::integer_ref const l, obj::integer_ref const r);
@@ -243,6 +262,9 @@ namespace jank::runtime
   }
 
   object_ref min(object_ref const l, object_ref const r);
+  object_ref min(obj::nil_ref const l, obj::nil_ref const r);
+  object_ref min(obj::nil_ref const l, object_ref const r);
+  object_ref min(object_ref const l, obj::nil_ref const r);
   object_ref min(obj::integer_ref const l, object_ref const r);
   object_ref min(object_ref const l, obj::integer_ref const r);
   i64 min(obj::integer_ref const l, obj::integer_ref const r);
@@ -276,6 +298,9 @@ namespace jank::runtime
   }
 
   object_ref max(object_ref const l, object_ref const r);
+  object_ref max(obj::nil_ref const l, obj::nil_ref const r);
+  object_ref max(obj::nil_ref const l, object_ref const r);
+  object_ref max(object_ref const l, obj::nil_ref const r);
   object_ref max(obj::integer_ref const l, object_ref const r);
   object_ref max(object_ref const l, obj::integer_ref const r);
   i64 max(obj::integer_ref const l, obj::integer_ref const r);
@@ -309,6 +334,7 @@ namespace jank::runtime
   }
 
   object_ref abs(object_ref const l);
+  object_ref abs(obj::nil_ref const l);
   i64 abs(obj::integer_ref const l);
   f64 abs(obj::real_ref const l);
   i64 abs(i64 l);
@@ -392,6 +418,7 @@ namespace jank::runtime
   native_big_integer denominator(object_ref const o);
 
   i64 to_int(object_ref const l);
+  i64 to_int(obj::nil_ref const l);
   i64 to_int(obj::integer_ref const l);
   i64 to_int(obj::real_ref const l);
   i64 to_int(i64 l);

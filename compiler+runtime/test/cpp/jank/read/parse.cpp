@@ -548,7 +548,7 @@ namespace jank::read::parse
         auto const meow(__rt_ctx->intern_ns(make_box<obj::symbol>("meow")));
         __rt_ctx->current_ns()->add_alias(make_box<obj::symbol>("foo.bar"), meow).expect_ok();
         processor p{ lp.begin(), lp.end() };
-        for(auto const &s : { std::make_pair("meow", "bar") })
+        for(auto const &s : { std::make_pair("foo.bar", "bar") })
         {
           auto const r(p.next());
           CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::symbol>(s.first, s.second)));
