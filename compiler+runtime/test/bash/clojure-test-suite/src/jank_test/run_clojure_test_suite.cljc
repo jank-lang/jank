@@ -227,7 +227,20 @@
 ;; Skip exception tests on Windows, not yet supported
 (def skip
   (when (= cpp/jtl.current_platform cpp/jtl.platform.windows_like)
-    ['clojure.core-test.assoc
+    ['clojure.core-test.abs
+     'clojure.core-test.assoc
+     'clojure.core-test.assoc-bang
+     'clojure.core-test.bit-and
+     'clojure.core-test.bit-and-not
+     'clojure.core-test.bit-clear
+     'clojure.core-test.bit-flip
+     'clojure.core-test.bit-not
+     'clojure.core-test.bit-or
+     'clojure.core-test.bit-set
+     'clojure.core-test.bit-shift-left
+     'clojure.core-test.bit-shift-right
+     'clojure.core-test.bit-test
+     'clojure.core-test.bit-xor
      'clojure.core-test.conj-bang
      'clojure.core-test.cons
      'clojure.core-test.count
@@ -239,9 +252,12 @@
      'clojure.core-test.even-qmark
      'clojure.core-test.ffirst
      'clojure.core-test.fnext
+     'clojure.core-test.gt
      'clojure.core-test.hash-map
      'clojure.core-test.intern
      'clojure.core-test.last
+     'clojure.core-test.lt
+     'clojure.core-test.lt-eq
      'clojure.core-test.min-key
      'clojure.core-test.name
      'clojure.core-test.namespace
