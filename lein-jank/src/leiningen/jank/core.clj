@@ -52,7 +52,13 @@
 
 (defn shell-out! [project classpath command compiler-args runtime-args]
   (let [jank (fs/which "jank")
-        env (System/getenv)
+        extra-flags (->> (concat [(System/getenv "JANK_EXTRA_FLAGS")]
+                                 (mapcat (fn [framework] ["-framework" framework])
+                                         (-> project :jank :frameworks))
+                                 (-> project :jank :extra-flags))
+                         (remove nil?)
+                         (string/join " "))
+        project (update project :jank dissoc :frameworks :extra-flags)
         args (concat [jank command "--module-path" classpath]
                      (build-declarative-flags project)
                      compiler-args
@@ -61,11 +67,12 @@
         ; TODO: Better error handling.
         _ (assert (some? jank))
         _ (when @verbose?
-            (println ">" (clojure.string/join " " args)))
+            (println ">" (str "JANK_EXTRA_FLAGS=" (pr-str extra-flags)))
+            (println ">" (string/join " " args)))
         proc (apply ps/shell
                     {:continue true
                      :dir (:root project)
-                     :extra-env env}
+                     :extra-env {"JANK_EXTRA_FLAGS" extra-flags}}
                     args)]
     (when-not (zero? (:exit proc))
       (System/exit (:exit proc)))))
