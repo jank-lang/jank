@@ -42,7 +42,7 @@
   (let [args (concat
               ["jank" "--module-path"
                (str (src-dir) (when-not (empty? extra-module-path)
-                                (str ":" extra-module-path)))]
+                                (str fs/path-separator extra-module-path)))]
               flags
               [command module-name]
               (when out ["-o" out]))]

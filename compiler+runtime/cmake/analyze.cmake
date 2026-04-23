@@ -1,4 +1,16 @@
 if(jank_analyze)
+  if (WIN32)
+    execute_process(
+      COMMAND cygpath -m /usr/local/bin/clang-tidy-cache-wrapper
+      OUTPUT_VARIABLE CLANG_TIDY_WRAPPER
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    set(CMAKE_CXX_CLANG_TIDY
+      bash
+      ${CLANG_TIDY_WRAPPER}
+    )
+  endif()
+
   if(NOT DEFINED CMAKE_CXX_CLANG_TIDY)
     # In case clang-tidy exists wherever clang is, just try there.
     # Otherwise, fall back to the default of searching in PATH.

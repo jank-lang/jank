@@ -75,6 +75,9 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
   set(jank_link_whole_start "-Wl,-force_load")
   set(jank_link_whole_end "")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+  set(jank_link_whole_start "-Wl,--whole-archive")
+  set(jank_link_whole_end "-Wl,--no-whole-archive")
 else()
   message(FATAL_ERROR "Unsupported OS: " ${CMAKE_SYSTEM_NAME})
 endif()
@@ -111,6 +114,10 @@ set(
   #-stdlib=libc++
 )
 
+if (WIN32)
+  list(APPEND jank_common_compiler_flags -DGC_NOT_DLL -DWIN32_LEAN_AND_MEAN)
+endif()
+
 set(
   jank_linker_flags
   #-stdlib=libc++ -lc++abi
@@ -121,6 +128,10 @@ if (NOT jank_local_clang)
   # we're unable to catch exceptions thrown across JIT compiled frames.
   list(APPEND jank_linker_flags -L/opt/homebrew/opt/llvm/lib -L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib/unwind)
 endif ()
+
+if(WIN32)
+  list(APPEND jank_linker_flags "-Wl,--export-all-symbols" -lws2_32 -ldbghelp)
+endif()
 
 # If the user opts into a specific build type, we will provide sane defaults. However, for
 # packaging, we can expect that CMAKE_BUILD_TYPE=None will be used and packagers will provide
@@ -200,11 +211,11 @@ list(JOIN jank_nrepl_server_outputs " " jank_nrepl_server_outputs_str)
 if(jank_enable_phase_2)
   set(jank_core_lib_output_target --output-target cpp)
   set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.cpp")
-  set(jank_clojure_core_binary_output "${CMAKE_BINARY_DIR}/CMakeFiles/jank_exe_phase_2.dir/core-libs/clojure/core.cpp.o")
+  set(jank_clojure_core_binary_output "${CMAKE_BINARY_DIR}/CMakeFiles/jank_exe_phase_2.dir/core-libs/clojure/core.cpp${CMAKE_CXX_OUTPUT_EXTENSION}")
 
   list(
     TRANSFORM jank_nrepl_server_outputs
-    REPLACE "\.o$" ".cpp.o"
+    REPLACE "\.o$" ".cpp${CMAKE_CXX_OUTPUT_EXTENSION}"
     OUTPUT_VARIABLE jank_nrepl_server_binary_outputs
   )
   list(
@@ -252,7 +263,7 @@ endif()
 function(jank_hook_llvm target)
   set(tgt "${target}")
   target_include_directories("${tgt}" SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
-  target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS})
+  target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS_LIST})
   target_link_directories("${tgt}" PRIVATE ${llvm_dir}/lib)
 endfunction()
 # ---- Clang/LLVM ----
@@ -418,8 +429,16 @@ set_target_properties(jankzip_lib PROPERTIES ENABLE_EXPORTS 1)
 # a couple of other custom commands, including a command to merge all of the
 # object files seen into the final library.
 
+
+if(WIN32) # Use wrapper ar-merge.bat script if on MSYS2
+  configure_file(bin/ar-merge.bat ar-merge.bat USE_SOURCE_PERMISSIONS @ONLY)
+  set(EXT_AR ".bat")
+else()
+  set(EXT_AR "")
+endif()
+
 configure_file(bin/ar-merge ar-merge USE_SOURCE_PERMISSIONS @ONLY)
-set(CMAKE_AR "${CMAKE_BINARY_DIR}/ar-merge")
+set(CMAKE_AR "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}")
 set(jank_lib_standalone_deps
   jank_lib
   cpptrace::cpptrace
@@ -447,7 +466,7 @@ add_custom_command(
   OUTPUT ${CMAKE_BINARY_DIR}/libjank-standalone-phase-1.a
   COMMAND_EXPAND_LISTS
   VERBATIM
-  COMMAND "${CMAKE_BINARY_DIR}/ar-merge" merge
+  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge
 )
 add_custom_target(
   jank_lib_standalone_phase_1
@@ -460,7 +479,7 @@ add_custom_command(
   OUTPUT ${CMAKE_BINARY_DIR}/libjank-standalone.a
   COMMAND_EXPAND_LISTS
   VERBATIM
-  COMMAND "${CMAKE_BINARY_DIR}/ar-merge" merge-phase-2
+  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2
 )
 add_custom_target(
   jank_lib_standalone_phase_2
@@ -732,6 +751,7 @@ foreach(dir ${jank_lib_includes_prop})
 endforeach()
 
 set(jank_lib_linker_flags_list "")
+
 get_target_property(jank_lib_link_dirs_prop jank_lib LINK_DIRECTORIES)
 foreach(lib ${jank_lib_link_dirs_prop})
   list(APPEND jank_lib_linker_flags_list -L${lib})
@@ -790,6 +810,16 @@ set(
   third-party/folly/folly/detail/Futex.cpp
   third-party/folly/folly/memory/folly_stubs.cpp
 )
+
+if(WIN32)
+  list(APPEND folly_sources
+    third-party/folly/folly/net/NetOps.cpp
+    third-party/folly/folly/net/detail/SocketFileDescriptorMap.cpp
+    third-party/folly/folly/portability/Sockets.cpp
+    third-party/folly/folly/portability/SysResource.cpp
+    third-party/folly/folly/portability/Unistd.cpp
+  )
+endif()
 
 add_library(folly_lib STATIC ${folly_sources})
 
@@ -851,6 +881,18 @@ target_link_libraries(
   OpenSSL::Crypto
 )
 
+if(WIN32)
+  target_link_libraries(
+    jank_exe_phase_1 PUBLIC
+    ${jank_link_whole_start} libclang_rt.builtins-x86_64.a ${jank_link_whole_end}
+    # Required at least for mkstemp
+    ${jank_link_whole_start} libmingwex.a ${jank_link_whole_end}
+
+    pthread
+    zstd
+  )
+endif()
+
 jank_hook_llvm(jank_exe_phase_1)
 
 add_dependencies(jank_exe_phase_1 jank_lib_standalone_phase_1)
@@ -895,10 +937,10 @@ if(jank_enable_phase_2)
   #set_target_properties(jank_exe_phase_2 PROPERTIES LINK_FLAGS_RELEASE "-s")
 else()
   add_custom_command(
-    DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${jank_clojure_core_output} ${jank_nrepl_server_outputs} ${jank_incremental_pch_flag}
+    DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_clojure_core_output} ${jank_nrepl_server_outputs} ${jank_incremental_pch_flag}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     OUTPUT ${CMAKE_BINARY_DIR}/jank
-    COMMAND ln -sf jank-phase-1 jank
+    COMMAND ${CMAKE_COMMAND} -E create_symlink jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} jank${CMAKE_EXECUTABLE_SUFFIX}
   )
   add_custom_target(
     jank_exe_phase_2
@@ -965,6 +1007,18 @@ if(jank_test)
     doctest::doctest
   )
 
+  if(WIN32)
+    target_link_libraries(
+      jank_test_exe PUBLIC
+      ${jank_link_whole_start} libclang_rt.builtins-x86_64.a ${jank_link_whole_end}
+      # Required at least for mkstemp
+      ${jank_link_whole_start} libmingwex.a ${jank_link_whole_end}
+
+      pthread
+      zstd
+    )
+  endif()
+
   jank_hook_llvm(jank_test_exe)
 
   # Symbol exporting for JIT.
@@ -1001,7 +1055,7 @@ endif()
 separate_arguments(jank_incremental_pch_cxx_flags UNIX_COMMAND ${CMAKE_CXX_FLAGS})
 list(REMOVE_ITEM jank_incremental_pch_cxx_flags -fPIC)
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1
+  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX}
   OUTPUT ${jank_incremental_pch_flag}
   COMMAND_EXPAND_LISTS
   VERBATIM
@@ -1037,11 +1091,11 @@ add_custom_target(
 # change, or whenever the jank binary changes.
 set(jank_core_libraries_flag "${CMAKE_BINARY_DIR}/classes/core-libraries")
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1 ${jank_clojure_core_sources} ${jank_other_core_sources} ${jank_incremental_pch_flag}
+  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_clojure_core_sources} ${jank_other_core_sources} ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output} ${jank_nrepl_server_outputs}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module -o ${jank_clojure_core_output} ${jank_core_lib_output_target} clojure.core
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1 -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module -o ${jank_clojure_core_output} ${jank_core_lib_output_target} clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(

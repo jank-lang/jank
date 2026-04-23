@@ -1,4 +1,10 @@
-#include <sys/mman.h>
+#ifdef __MINGW64__
+  // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+  #define WIN32_LEAN_AND_MEAN 1
+  #include <windows.h>
+#else
+  #include <sys/mman.h>
+#endif
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -37,9 +43,9 @@ namespace jank::runtime::module
   /* This turns `foo_bar/spam/meow.cljc` into `foo-bar.spam.meow`. */
   jtl::immutable_string path_to_module(std::filesystem::path const &path)
   {
-    static std::regex const slash{ "/" };
+    static std::regex const slash{ R"([\\/])" };
 
-    auto const &s(runtime::demunge(path.native()));
+    auto const &s(runtime::demunge(path.string()));
     std::string ret{ s, 0, s.size() - path.extension().native().size() };
 
     /* There's a special case of the / function which shouldn't be treated as a path. */
@@ -292,7 +298,7 @@ namespace jank::runtime::module
                              file_entry const &entry)
   {
     std::filesystem::path const p{ native_transient_string{ entry.path } };
-    auto const ext(p.extension().native());
+    auto const ext(p.extension().string());
     bool registered{};
     if(ext == ".jank")
     {
@@ -371,7 +377,7 @@ namespace jank::runtime::module
     {
       if(std::filesystem::is_regular_file(f))
       {
-        register_relative_entry(entries, path, file_entry{ none, f.path().native() });
+        register_relative_entry(entries, path, file_entry{ none, f.path().string() });
       }
     }
   }
@@ -420,7 +426,7 @@ namespace jank::runtime::module
     {
       register_directory(entries, p);
     }
-    else if(p.extension().native() == ".jar")
+    else if(p.extension().string() == ".jar")
     {
       register_jar(entries, path);
     }
@@ -428,7 +434,7 @@ namespace jank::runtime::module
      * JVM supports this, but I like that it allows us to put specific files in the path. */
     else
     {
-      auto const &module_path(p.native());
+      auto const &module_path(p.string());
       register_entry(entries, module_path, { none, module_path });
     }
   }
@@ -480,13 +486,14 @@ namespace jank::runtime::module
     native_transient_string paths{ util::cli::opts.module_path };
 
     /* These paths are used by an installed jank. */
-    paths += util::format(":{}", binary_cache_dir);
-    paths += util::format(":{}", (resource_dir / "src/jank").native());
+    paths += util::format("{}{}", module_separator, binary_cache_dir);
+    paths += util::format("{}{}", module_separator, (resource_dir / "src/jank").string());
 
     /* These paths below are only used during development. */
-    paths += util::format(":{}", (jank_path / "core-libs").native());
-    paths += util::format(":{}", (jank_path / binary_cache_dir.c_str()).native());
-    paths += util::format(":{}", (jank_path / "../src/jank").native());
+    paths += util::format("{}{}", module_separator, (jank_path / "core-libs").string());
+    paths
+      += util::format("{}{}", module_separator, (jank_path / binary_cache_dir.c_str()).string());
+    paths += util::format("{}{}", module_separator, (jank_path / "../src/jank").string());
 
     auto const locked_state{ state.lock() };
     locked_state->paths = paths;
@@ -533,14 +540,10 @@ namespace jank::runtime::module
     }
   }
 
-  std::time_t file_entry::last_modified_at() const
+  std::filesystem::file_time_type file_entry::last_modified_at() const
   {
     auto const source_path{ archive_path.unwrap_or(path) };
-
-    /* NOLINTNEXTLINE(*-narrowing-conversions) */
-    return std::filesystem::last_write_time(native_transient_string{ source_path })
-      .time_since_epoch()
-      .count();
+    return std::filesystem::last_write_time(native_transient_string{ source_path });
   }
 
   file_view::file_view(file_view &&mf) noexcept
@@ -550,12 +553,12 @@ namespace jank::runtime::module
     , buff{ jtl::move(mf.buff) }
     , file{ jtl::move(mf.file) }
   {
-    mf.fd = -1;
+    mf.fd.reset();
     mf.head = nullptr;
   }
 
   file_view::file_view(jtl::immutable_string const &file,
-                       int const f,
+                       file_handle const f,
                        char const * const h,
                        usize const s)
     : fd{ f }
@@ -590,7 +593,7 @@ namespace jank::runtime::module
     buff = jtl::move(fv.buff);
     file = jtl::move(fv.file);
 
-    fv.fd = -1;
+    fv.reset();
     fv.head = nullptr;
 
     return *this;
@@ -621,13 +624,22 @@ namespace jank::runtime::module
     if(head != nullptr)
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast): I want const everywhere else. */
     {
+#ifdef JANK_WINDOWS_LIKE
+      UnmapViewOfFile(head);
+#else
       munmap(reinterpret_cast<void *>(const_cast<char *>(head)), len);
+#endif
       head = nullptr;
     }
-    if(fd >= 0)
+    if(fd)
     {
-      ::close(fd);
-      fd = -1;
+#ifdef JANK_WINDOWS_LIKE
+      CloseHandle(fd->hMapping);
+      CloseHandle(fd->hFile);
+#else
+      ::close(*fd);
+#endif
+      fd.reset();
     }
   }
 
@@ -672,6 +684,47 @@ namespace jank::runtime::module
     {
       return error::runtime_unable_to_open_file(util::format("File '{}' doesn't exist.", path));
     }
+
+#ifdef JANK_WINDOWS_LIKE
+    HANDLE hFile{ CreateFileA(path.c_str(),
+                              GENERIC_READ,
+                              FILE_SHARE_READ,
+                              nullptr,
+                              OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL,
+                              nullptr) };
+
+    if(hFile == INVALID_HANDLE_VALUE)
+    {
+      return error::runtime_unable_to_open_file(util::format("Unable to open file '{}'.", path));
+    }
+
+    LARGE_INTEGER fileSize{};
+    if(!GetFileSizeEx(hFile, &fileSize))
+    {
+      CloseHandle(hFile);
+      return error::internal_runtime_failure("Failed to get file size");
+    }
+
+    HANDLE hMapping{ CreateFileMappingA(hFile, nullptr, PAGE_READONLY, 0, 0, nullptr) };
+
+    if(!hMapping)
+    {
+      CloseHandle(hFile);
+      return error::internal_runtime_failure("Failed to create file mapping");
+    }
+
+    auto head{ static_cast<char const *>(MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0)) };
+    if(!head)
+    {
+      CloseHandle(hMapping);
+      CloseHandle(hFile);
+      return error::internal_runtime_failure("Failed to map view of file");
+    }
+
+    return ok(
+      file_view{ path, HANDLES(hFile, hMapping), head, static_cast<size_t>(fileSize.QuadPart) });
+#else
     auto const file_size(std::filesystem::file_size(path.c_str()));
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
     auto const fd(::open(path.c_str(), O_RDONLY));
@@ -683,16 +736,17 @@ namespace jank::runtime::module
       reinterpret_cast<char const *>(mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0)));
 
     /* MAP_FAILED is a macro which does a C-style cast. */
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wold-style-cast"
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wold-style-cast"
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr) */
     if(head == MAP_FAILED)
-#pragma clang diagnostic pop
+  #pragma clang diagnostic pop
     {
       return error::runtime_unable_to_open_file(util::format("Unable to map file '{}'.", path));
     }
 
     return ok(file_view{ path, fd, head, file_size });
+#endif
   }
 
   jtl::result<file_view, error_ref> loader::read_file(jtl::immutable_string const &path)
@@ -796,11 +850,9 @@ namespace jank::runtime::module
     return {};
   }
 
-  static long get_mod_time(file_entry const &e)
+  static std::filesystem::file_time_type get_mod_time(file_entry const &e)
   {
-    return static_cast<long>(std::filesystem::last_write_time(native_transient_string{ e.path })
-                               .time_since_epoch()
-                               .count());
+    return std::filesystem::last_write_time(native_transient_string{ e.path });
   }
 
   jtl::result<loader::find_result, error_ref>
@@ -971,12 +1023,12 @@ namespace jank::runtime::module
           if(source.archive_path.is_some())
           {
             path = util::format("{}:{}",
-                                util::relative_path(source.archive_path.unwrap()),
+                                util::relative_path(source.archive_path.unwrap()).string(),
                                 source.path);
           }
           else
           {
-            path = util::relative_path(source.path);
+            path = util::relative_path(source.path).string();
           }
         }
         break;
@@ -986,12 +1038,12 @@ namespace jank::runtime::module
           if(source.archive_path.is_some())
           {
             path = util::format("{}:{}",
-                                util::relative_path(source.archive_path.unwrap()),
+                                util::relative_path(source.archive_path.unwrap()).string(),
                                 source.path);
           }
           else
           {
-            path = util::relative_path(source.path);
+            path = util::relative_path(source.path).string();
           }
         }
         break;
@@ -1001,12 +1053,12 @@ namespace jank::runtime::module
           if(source.archive_path.is_some())
           {
             path = util::format("{}:{}",
-                                util::relative_path(source.archive_path.unwrap()),
+                                util::relative_path(source.archive_path.unwrap()).string(),
                                 source.path);
           }
           else
           {
-            path = util::relative_path(source.path);
+            path = util::relative_path(source.path).string();
           }
         }
         break;
@@ -1016,12 +1068,12 @@ namespace jank::runtime::module
           if(source.archive_path.is_some())
           {
             path = util::format("{}:{}",
-                                util::relative_path(source.archive_path.unwrap()),
+                                util::relative_path(source.archive_path.unwrap()).string(),
                                 source.path);
           }
           else
           {
-            path = util::relative_path(source.path);
+            path = util::relative_path(source.path).string();
           }
         }
         break;

@@ -141,7 +141,7 @@ namespace jank
       }
       else
       {
-        auto const ext{ std::filesystem::path{ opts.output_module_filename }.extension() };
+        auto const ext{ std::filesystem::path{ opts.output_module_filename.c_str() }.extension() };
         if(ext == ".ll")
         {
           opts.output_target = util::cli::compilation_target::llvm_ir;
@@ -167,7 +167,7 @@ namespace jank
     }
     else if(!opts.output_module_filename.empty())
     {
-      auto const ext{ std::filesystem::path{ opts.output_module_filename }.extension() };
+      auto const ext{ std::filesystem::path{ opts.output_module_filename.c_str() }.extension() };
       if((ext == ".ll" && opts.output_target != util::cli::compilation_target::llvm_ir)
          || (ext == ".cpp" && opts.output_target != util::cli::compilation_target::cpp)
          || (ext == ".o" && opts.output_target != util::cli::compilation_target::object))
@@ -175,7 +175,7 @@ namespace jank
         error::warn(util::format("The output file name '{}' has the extension '{}', but the output "
                                  "target is '{}'. These appear to be mismatched.",
                                  opts.output_module_filename,
-                                 ext,
+                                 ext.string(),
                                  util::cli::compilation_target_str(opts.output_target)));
       }
     }
@@ -246,8 +246,9 @@ namespace jank
      * to later review that for error reporting. We automatically clean it up
      * and we reuse the same file over and over. */
     auto const tmp{ std::filesystem::temp_directory_path() };
-    std::string path_tmp{ tmp / "jank-repl-XXXXXX" };
-    mkstemp(path_tmp.data());
+    std::string path_tmp{ (tmp / "jank-repl-XXXXXX").string() };
+    int const fd{ mkstemp(path_tmp.data()) };
+    close(fd);
 
     auto const first_res_var{ __rt_ctx->find_var("clojure.core", "*1") };
     auto const second_res_var{ __rt_ctx->find_var("clojure.core", "*2") };

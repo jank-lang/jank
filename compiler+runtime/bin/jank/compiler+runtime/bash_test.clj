@@ -67,7 +67,7 @@ Filters:
                                          :err :out
                                          :dir dirname
                                          :extra-env extra-env}
-                                        test-file)]
+                                        (util/command-make-portable (str test-file)))]
                   (when (or (and (zero? (:exit res)) expect-failure?)
                             (and (not (zero? (:exit res))) (not expect-failure?)))
                     (vreset! unexpected-result res))))

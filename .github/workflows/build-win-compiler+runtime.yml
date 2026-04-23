@@ -1,0 +1,160 @@
+name: Build compiler+runtime (MS-Windows)
+
+on:
+  pull_request:
+    paths:
+      - 'compiler\+runtime/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'compiler\+runtime/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Only allow one build per branch at a time. New builds will cancel existing builds.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Rather than having every job in the matrix try to build its own Clang, we built it once
+  # before running the matrix. Then we can just restore it from the cache in each job.
+  windows-build-clang:
+    name: Windows MSYS2 - clang
+    runs-on: windows-2022
+    timeout-minutes: 200
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Cache Clang/LLVM
+        id: clang-cache
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ github.workspace }}/compiler+runtime/build/llvm-install
+          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+
+      - uses: msys2/setup-msys2@v2
+        if: steps.clang-cache.outputs.cache-hit != 'true'
+        with:
+          msystem: CLANG64
+          install: base-devel git mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-ninja mingw-w64-clang-x86_64-pkgconf mingw-w64-clang-x86_64-libunwind mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-z3 mingw-w64-clang-x86_64-python mingw-w64-clang-x86_64-compiler-rt mingw-w64-clang-x86_64-libc++
+          update: true
+
+      - name: Build Clang/LLVM
+        if: steps.clang-cache.outputs.cache-hit != 'true'
+        shell: msys2 {0}
+        env:
+          MSYSTEM: CLANG64
+        run: |
+          pushd compiler+runtime
+            ./bin/build-clang
+          popd
+          ls -al compiler+runtime/build/llvm-install
+
+  build-jank:
+    needs:
+      - windows-build-clang
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          ## Release
+          - name: Windows - release
+            os: windows-2022
+            build_type: Debug
+            sanitize: none
+            analyze: on
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
+    env:
+      JANK_MATRIX_ID: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.sanitize }}
+      JANK_BUILD_TYPE: ${{ matrix.build_type }}
+      JANK_LINT: ${{ matrix.lint }}
+      JANK_COVERAGE: ${{ matrix.coverage }}
+      JANK_ANALYZE: ${{ matrix.analyze }}
+      JANK_SANITIZE: ${{ matrix.sanitize }}
+      JANK_PACKAGE: ${{ matrix.package }}
+      ASAN_OPTIONS: detect_leaks=0
+      TERM: xterm
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Install Homebrew packages
+        if: runner.os == 'macOS'
+        run: |
+          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib doctest boost clojure/tools/clojure
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          MSYSTEM: CLANG64
+          install: unzip mingw-w64-clang-x86_64-ccache base-devel curl zip mingw-w64-clang-x86_64-git-lfs mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-doctest mingw-w64-clang-x86_64-libzip mingw-w64-clang-x86_64-gc mingw-w64-clang-x86_64-boost
+          update: true
+      - name: Prepare java
+        if: runner.os == 'Windows'
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: '25'
+      - name: Locate java (MS-Windows)
+        if: runner.os == 'Windows'
+        id: find
+        shell: pwsh
+        run: |
+          $java = (Get-Command java).Path
+          $dir = Split-Path $java
+          "java_dir=$dir" >> $env:GITHUB_OUTPUT
+
+      - name: Cache Clang/LLVM
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ github.workspace }}/compiler+runtime/build/llvm-install
+          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+      - name: Cache ccache object files
+        if: matrix.analyze == 'off'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ github.workspace }}/compiler+runtime/.ctcache
+          key: ccache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
+      - name: Cache ctcache object files
+        if: matrix.analyze == 'on'
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            ${{ github.workspace }}/compiler+runtime/.ctcache
+          key: ctcache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
+      - name: Build and test jank (MS-Windows)
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        env:
+          msystem: CLANG64
+        id: jank-build-step-win
+        run: |
+          curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
+          ./install-bb
+
+          curl -sL https://raw.githubusercontent.com/borkdude/deps.clj/master/install > install_clojure
+          ./install_clojure --as-clj
+
+          JAVA_DIR=$(cygpath -u "${{ steps.find.outputs.java_dir }}")
+
+          pushd compiler+runtime
+            ./bin/build-clang -i
+            clang++ --version
+          popd
+
+          if [[ "${JANK_SANITIZE}" != "none" || "${JANK_COVERAGE}" == "on" ]];
+          then
+            export JANK_SKIP_AOT_CHECK=1
+          fi
+          PATH="$PATH:$JAVA_DIR" JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj

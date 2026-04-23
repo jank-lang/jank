@@ -18,6 +18,11 @@
        raw
        fallback))))
 
+(defmacro string=
+  "Compare L and R strings ignoring line ending differences."
+  [l r]
+  `(= (string/split-lines ~l) (string/split-lines ~r)))
+
 (defn format-ms [ms]
   (let [units [[3600000 "h"] [60000 "m"] [1000 "s"] [1 "ms"]]
         extract (fn [ms [unit label]]
@@ -62,8 +67,30 @@
 (defn log-error-with-time [time-ms & args]
   (log "❌ " (apply str args) (str "(" (format-ms time-ms) ")")))
 
-(defn quiet-shell [props cmd]
-  (let [proc @(b.p/process
+(defn command-make-portable
+  "Converts CMD into a form that can be executed portably across
+  supported platforms."
+  [cmd]
+  (if (b.f/windows?)
+    ;; Assumes an MSYS2 environment and runs the command via bash.
+    (let [bash-exe (b.f/which "bash")]
+      (when-not bash-exe
+        (throw (ex-info "Unable to find bash." {})))
+      (let [[prog & rest] (clojure.string/split cmd #"\s+")
+            unix-prog (b.f/unixify prog)
+            rebuilt (clojure.string/join " " (cons unix-prog rest))]
+        (str bash-exe " -c \"" rebuilt "\"")))
+    cmd))
+
+(defn quiet-shell
+  "Runs the shell string CMD in a cross-platform manner using
+  `babashka.process/process` with PROPS, capturing stdout and stderr
+  and producing a summary.  Returns the process on success.  On
+  failure, prints failed output, and exits the program with code 1."
+  [props cmd]
+  ;; (println :props props :cmd cmd)
+  (let [cmd (command-make-portable cmd)
+        proc @(b.p/process
                (merge {:out :string
                        :err :out}
                       props)

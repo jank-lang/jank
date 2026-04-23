@@ -115,7 +115,7 @@ int main(int argc, const char** argv)
   )");
 
     auto const tmp_dir{ std::filesystem::temp_directory_path() };
-    std::string main_file_path{ tmp_dir / "jank-main-XXXXXX" };
+    std::string main_file_path{ (tmp_dir / "jank-main-XXXXXX").string() };
 
     auto const fd{ mkstemp(main_file_path.data()) };
     close(fd);
@@ -138,19 +138,23 @@ int main(int argc, const char** argv)
     }
     auto const clang_dir{ std::filesystem::path{ clang_path_str.unwrap().c_str() }.parent_path() };
     compiler_args.emplace_back(strdup("-I"));
-    compiler_args.emplace_back(strdup((clang_dir / "../include").c_str()));
+    compiler_args.emplace_back(strdup((clang_dir / "../include").string().c_str()));
+#ifndef __MINGW64__
     compiler_args.emplace_back(
-      strdup(util::format("-Wl,-rpath,{}", (clang_dir / "../lib")).c_str()));
+      strdup(util::format("-Wl,-rpath,{}", (clang_dir / "../lib").string()).c_str()));
+#endif
 
     std::filesystem::path const jank_path{ util::process_dir().c_str() };
+    std::string const jank_path_str(jank_path.string());
     compiler_args.emplace_back(strdup("-L"));
-    compiler_args.emplace_back(strdup(jank_path.c_str()));
+    compiler_args.emplace_back(strdup(jank_path_str.c_str()));
 
     std::filesystem::path const jank_resource_dir{ util::resource_dir().c_str() };
     compiler_args.emplace_back(strdup("-I"));
-    compiler_args.emplace_back(strdup(util::format("{}/include", jank_resource_dir).c_str()));
+    compiler_args.emplace_back(
+      strdup(util::format("{}/include", jank_resource_dir.string()).c_str()));
     compiler_args.emplace_back(strdup("-L"));
-    compiler_args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir).c_str()));
+    compiler_args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir.string()).c_str()));
 
     std::stringstream flags{ JANK_JIT_FLAGS };
     std::string flag;
@@ -216,7 +220,9 @@ int main(int argc, const char** argv)
     {
       compiler_args.push_back(strdup("-Wl,--export-dynamic"));
     }
+#ifndef JANK_WINDOWS_LIKE
     compiler_args.push_back(strdup("-rdynamic"));
+#endif
     /* TODO: Change this based on the CLI optimization level. */
     compiler_args.push_back(strdup("-O2"));
 
@@ -284,6 +290,9 @@ int main(int argc, const char** argv)
                             "-lLLVM",
                             "-lclang-cpp",
                             "-lcrypto",
+#if defined(__MINGW64__)
+                            "-lpthread",
+#endif
                             "-lz",
                             "-lzstd" })
     {
@@ -342,12 +351,13 @@ int main(int argc, const char** argv)
     std::filesystem::path const module_path{
       util::cli::opts.output_module_filename.empty()
         ? util::format("{}/{}.o", util::cli::opts.output_dir, module::module_to_path(module_name))
-        : jtl::immutable_string{ util::cli::opts.output_module_filename }
+            .c_str()
+        : jtl::immutable_string{ util::cli::opts.output_module_filename }.c_str()
     };
     std::filesystem::create_directories(module_path.parent_path());
 
     auto const tmp{ std::filesystem::temp_directory_path() };
-    std::string path_tmp{ tmp / "jank-compile-XXXXXX" };
+    std::string path_tmp{ (tmp / "jank-compile-XXXXXX").string() };
     mkstemp(path_tmp.data());
 
     {
@@ -359,11 +369,13 @@ int main(int argc, const char** argv)
     std::filesystem::path const jank_resource_dir{ util::resource_dir().c_str() };
     compiler_args.push_back("-include");
     auto const prelude_path{ jank_resource_dir / "include/cpp/jank/prelude.hpp" };
-    compiler_args.push_back(prelude_path.c_str());
+    std::string const prelude_path_str{ prelude_path.string() };
+    std::string const module_path_str{ module_path.string() };
+    compiler_args.push_back(prelude_path_str.c_str());
 
     compiler_args.push_back("-c");
     compiler_args.push_back("-o");
-    compiler_args.push_back(module_path.c_str());
+    compiler_args.push_back(module_path_str.c_str());
 
     compiler_args.push_back("-x");
     compiler_args.push_back("c++");

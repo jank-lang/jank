@@ -2189,8 +2189,17 @@ namespace jank::codegen
        * exception information and transfers control flow to the landing pad block. */
       auto personality_fn_type{ llvm::FunctionType::get(ctx->builder->getInt32Ty(),
                                                         /*isVarArg=*/true) };
+#if defined(__MINGW64__)
+      /* Windows SEH exceptions are not supported yet.
+       * This is only to allow compilation; otherwise __gxx_personality_v0
+       * would be undefined.
+       */
+      auto personality_fn{ llvm_module->getOrInsertFunction("__gxx_personality_seh0",
+                                                            personality_fn_type) };
+#else
       auto personality_fn{ llvm_module->getOrInsertFunction("__gxx_personality_v0",
                                                             personality_fn_type) };
+#endif
       current_fn->setPersonalityFn(llvm::cast<llvm::Function>(personality_fn.getCallee()));
     }
 
