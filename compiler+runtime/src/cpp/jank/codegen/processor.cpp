@@ -3080,7 +3080,7 @@ namespace jank::codegen
 
     util::format_to(body_buffer,
                     "auto {}{ "
-                    "new (GC{}) {}{ {} }"
+                    "new (UseGC{}) {}{ {} }"
                     " };",
                     ret_tmp,
                     (needs_finalizer ? ", " + finalizer_tmp : ""),

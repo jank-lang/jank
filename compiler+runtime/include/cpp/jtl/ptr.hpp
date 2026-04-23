@@ -96,6 +96,11 @@ namespace jtl
       return data;
     }
 
+    constexpr void reset(value_type * const new_data)
+    {
+      data = new_data;
+    }
+
     value_type *data{};
   };
 
@@ -166,6 +171,11 @@ namespace jtl
     constexpr operator value_type *() const
     {
       return data;
+    }
+
+    constexpr void reset(value_type * const new_data)
+    {
+      data = new_data;
     }
 
     value_type *data{};

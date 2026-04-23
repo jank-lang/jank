@@ -65,6 +65,7 @@
 (cpp/raw "#include <jank/runtime/core/equal.hpp>")
 (cpp/raw "#include <jank/runtime/core/meta.hpp>")
 (cpp/raw "#include <jank/runtime/obj/repeat.hpp>")
+(cpp/raw "#include <jank/runtime/detail/native_array_blocking_queue.hpp>")
 
 ; Syntax quoting.
 (def ^{:arglists '([_])}
@@ -7429,23 +7430,20 @@ fails, attempts to require sym's namespace and retries."
 
 (defonce ^:private tapset (atom #{}))
 
-;; (defonce ^:private ^java.util.concurrent.ArrayBlockingQueue tapq (java.util.concurrent.ArrayBlockingQueue. 1024))
+(defonce ^:private tapq
+  (cpp/box (cpp/jank.runtime.detail.create_native_array_blocking_queue 1024)))
 
 (defonce ^:private tap-loop
-  ;; (delay
-  ;;  (doto (Thread.
-  ;;         #(let [t (.take tapq)
-  ;;                x (if (identical? ::tap-nil t) nil t)
-  ;;                taps @tapset]
-  ;;            (doseq [tap taps]
-  ;;              (try
-  ;;                (tap x)
-  ;;                (catch Throwable ex)))
-  ;;            (recur))
-  ;;         "clojure.core/tap-loop")
-  ;;    (.setDaemon true)
-  ;;    (.start)))
-  nil)
+  (delay
+    (future
+      (let [t (.take (cpp/unbox (:* jank.runtime.detail.native_array_blocking_queue) tapq))
+            x (if (identical? ::tap-nil t) nil t)
+            taps @tapset]
+        (doseq [tap taps]
+          (try
+            (tap x)
+            (catch jank.runtime.object_ref ex)))
+        (recur)))))
 
 (defn add-tap
   "adds f, a fn of one argument, to the tap set. This function will be called with anything sent via tap>.
@@ -7468,8 +7466,9 @@ fails, attempts to require sym's namespace and retries."
   false if not (dropped)."
   [x]
   (force tap-loop)
-  ;; (.offer tapq (if (nil? x) ::tap-nil x))
-  (throw "TODO: port tap>"))
+  (.offer
+   (cpp/unbox (:* jank.runtime.detail.native_array_blocking_queue) tapq)
+   (if (nil? x) ::tap-nil x)))
 
 (defn update-vals
   "m f => {k (f v) ...}

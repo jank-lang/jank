@@ -256,6 +256,7 @@ namespace jank::read::lex
 
     processor(jtl::immutable_string_view const &f);
     processor(jtl::immutable_string_view const &f, usize offset);
+    processor(jtl::immutable_string_view const &f, source_position const &p);
 
     jtl::result<token, error_ref> next();
     jtl::result<codepoint, error_ref> peek(usize const ahead = 1) const;

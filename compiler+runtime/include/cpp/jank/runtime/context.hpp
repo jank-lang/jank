@@ -83,6 +83,8 @@ namespace jank::runtime
 
     jtl::option<object_ref> eval_file(jtl::immutable_string const &path);
     jtl::option<object_ref> eval_string(jtl::immutable_string const &code) const;
+    jtl::option<object_ref>
+    eval_string(jtl::immutable_string const &code, read::source_position const &p) const;
     jtl::result<void, error_ref> eval_cpp_string(jtl::immutable_string const &code) const;
     object_ref read_string(jtl::immutable_string const &code,
                            object_ref const reader_opts,
