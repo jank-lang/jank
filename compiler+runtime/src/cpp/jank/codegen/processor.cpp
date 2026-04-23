@@ -18,6 +18,7 @@
 #include <jank/detail/to_runtime_data.hpp>
 #include <jank/util/cli.hpp>
 #include <jank/error/codegen.hpp>
+#include <jank/runtime/obj/jit_function.hpp>
 
 /* The strategy for codegen to C++ is quite simple. Codegen always happens on a
  * single fn, which generates one C++ function for each arity. Top-level expressions and
@@ -228,6 +229,34 @@ namespace jank::codegen
         buffer,
         "{}::var_root_arity_flags_{} = {}::var_root_{}->get_arity_flags();",
         native_ns, native_name, native_ns, native_name);
+    }
+
+    /* Computes the deterministic extern "C" function name for a direct call.
+     * The name is derived from the var's qualified symbol + arity count.
+     * Must match the naming used in analyze_def for unique_name + munge. */
+    static jtl::immutable_string
+    direct_call_fn_name(jtl::immutable_string const &qualified_name, size_t arity_count)
+    {
+      native_transient_string name{ qualified_name };
+      std::replace(name.begin(), name.end(), '.', '_');
+      std::replace(name.begin(), name.end(), '/', '_');
+      return util::format("{}_{}", runtime::munge(name), arity_count);
+    }
+
+    static void
+    emit_direct_call_fwd_decl(jtl::string_builder &buffer,
+                              jtl::immutable_string const &fn_name,
+                              size_t param_count)
+    {
+      /* Signature: object_ref fn_name(object_ref self, object_ref a0, ..., object_ref aN) */
+      util::format_to(buffer,
+                      R"(extern "C" jank::runtime::object_ref {}(jank::runtime::object_ref)",
+                      fn_name);
+      for(size_t i{}; i < param_count; ++i)
+      {
+        util::format_to(buffer, ", jank::runtime::object_ref");
+      }
+      util::format_to(buffer, ");");
     }
 
     static jtl::immutable_string gen_constant_type(runtime::object_ref const o, bool const boxed)
@@ -642,6 +671,19 @@ namespace jank::codegen
     , closure_ctx{ runtime::munge(root_fn->unique_name + "_ctx") }
   {
     assert(root_fn->frame.data);
+
+    /* For module-target direct-call functions, override the struct_name with a
+     * deterministic name derived from the var. This ensures the extern "C" function
+     * name is predictable for cross-module direct calls. Only done for module target
+     * to avoid JIT/AOT redefinition conflicts during compile-module. */
+    if((target == compilation_target::module || target == compilation_target::module_function)
+       && root_fn->can_be_direct && !root_fn->qualified_var_name.empty())
+    {
+      native_transient_string deterministic{ root_fn->qualified_var_name };
+      std::replace(deterministic.begin(), deterministic.end(), '.', '_');
+      std::replace(deterministic.begin(), deterministic.end(), '/', '_');
+      struct_name = runtime::munge(deterministic);
+    }
   }
 
   jtl::option<handle>
@@ -1341,11 +1383,48 @@ namespace jank::codegen
 
         if(!is_deferred)
         {
-          /* Arity flags are known at codegen time — dispatch statically. */
           auto const root_val{ var_deref_src->var->get_root() };
           auto const flags{ root_val->get_arity_flags() };
           bool const is_variadic{ (flags & jank::runtime::mask_variadic_arity(0)) != 0 };
-          if(is_variadic)
+
+          /* Check if eligible for a direct C call: must be module target (so the
+           * function is defined with a deterministic name), same namespace (cross-ns
+           * functions may not have deterministic names in the JIT), non-variadic,
+           * and a jit_function (not a jit_closure, meaning no captures). */
+          auto const callee_ns{ var_deref_src->var->n->name->get_name() };
+          bool const can_direct_c_call{
+            target == compilation_target::module
+            && callee_ns == module
+            && !is_variadic
+            && dynamic_cast<runtime::obj::jit_function *>(root_val.data) != nullptr
+          };
+
+          if(can_direct_c_call)
+          {
+            /* Emit a direct C call — zero indirection, like Clojure's invokeStatic. */
+            auto const fn_name{
+              detail::direct_call_fn_name(qualified_name, expr->arg_exprs.size())
+            };
+            detail::emit_direct_call_fwd_decl(deps_buffer, fn_name, expr->arg_exprs.size());
+
+            native_vector<handle> arg_tmps;
+            arg_tmps.reserve(expr->arg_exprs.size());
+            for(auto const &arg_expr : expr->arg_exprs)
+            {
+              arg_tmps.emplace_back(gen(arg_expr, fn_arity).unwrap());
+            }
+
+            util::format_to(body_buffer, "auto const {}({}({}",
+                            ret_tmp.str(true),
+                            fn_name,
+                            source_tmp.unwrap().str(true));
+            for(auto const &arg : arg_tmps)
+            {
+              util::format_to(body_buffer, ", {}", arg.str(true));
+            }
+            util::format_to(body_buffer, "));");
+          }
+          else if(is_variadic)
           {
             format_dynamic_call(source_tmp.unwrap().str(true),
                                 ret_tmp.str(true),
@@ -1354,6 +1433,7 @@ namespace jank::codegen
           }
           else
           {
+            /* Closure or other non-eligible: fall back to var_root->call(). */
             format_direct_call(source_tmp.unwrap().str(false),
                                ret_tmp.str(true),
                                expr->arg_exprs,
