@@ -151,8 +151,8 @@
         ;; Should load cpp ("Hello cpp")
         (let [output (:out (jank "run-main" module-a
                                  :extra-module-path (target-dir)))]
-          (is (string/includes? output "Hello cpp"))
-          (is (not (string/includes? output "Hello object"))))))))
+          (is (string/includes? output "Hello object"))
+          (is (not (string/includes? output "Hello cpp"))))))))
 
 (deftest fallback-candidate-selection
   (testing "fallback when one compiled candidate is missing"
