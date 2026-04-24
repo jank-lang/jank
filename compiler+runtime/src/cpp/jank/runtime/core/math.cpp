@@ -240,12 +240,12 @@ namespace jank::runtime
 
   f64 div(obj::integer_ref const l, f64 const r)
   {
-    return l->data / r;
+    return static_cast<f64>(l->data) / r;
   }
 
   f64 div(f64 const l, obj::integer_ref const r)
   {
-    return l / r->data;
+    return l / static_cast<f64>(r->data);
   }
 
   f64 div(f64 const l, f64 const r)
