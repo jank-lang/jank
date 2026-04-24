@@ -26,10 +26,10 @@ namespace jank::util
   {
     if(path.native().size() <= max_size)
     {
-      return path.native();
+      return path.string();
     }
 
-    auto str{ path.native() };
+    auto str{ path.string() };
     while(str.size() + 1 > max_size)
     {
       auto const slash{ str.find('/') };

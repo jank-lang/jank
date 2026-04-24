@@ -1,4 +1,8 @@
 #include <filesystem>
+#ifdef _WIN32
+  #include <fstream>
+  #include <unordered_set>
+#endif
 
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
@@ -76,18 +80,37 @@ namespace jank::jit
         auto const expect_failure(filename.starts_with("fail-"));
         auto const expect_throw(filename.starts_with("throw-"));
         auto const allow_failure(filename.starts_with("warn-"));
-        auto const skip(filename.starts_with("skip-"));
+        auto skip(filename.starts_with("skip-"));
         CHECK_MESSAGE((expect_success || expect_failure || allow_failure || expect_throw || skip),
                       "Test file needs to begin with pass- or fail- or throw- or warn- or skip-: ",
                       filename);
         ++test_count;
-
+#ifdef JANK_WINDOWS_LIKE
+        // skip tests mentioned in file.
+        static auto const windows_skips = [] {
+          std::unordered_set<std::string> s;
+          std::ifstream infile("test/jit_windows_skips.txt");
+          for(std::string line; std::getline(infile, line);)
+          {
+            if(auto pos = line.find_first_not_of(" \t\r\n");
+               pos != std::string::npos && line[pos] != '#')
+            {
+              s.insert(line.substr(pos));
+            }
+          }
+          return s;
+        }();
+        if(windows_skips.contains(filename))
+        {
+          skip = true;
+        }
+#endif
         /* TODO: Clear our rt_ctx for each run. Using the copy ctor leads to odd failures with
          * macros, likely due to interned keywords not being identical. */
         bool passed{ true };
         std::stringstream const captured_output;
 
-        util::print("testing file {} => ", dir_entry.path().string());
+        util::print("testing file {} => ", dir_entry.path().generic_string());
         std::fflush(stdout);
 
         if(skip)

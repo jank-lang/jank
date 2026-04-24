@@ -7,7 +7,10 @@
             [clojure.test :as t :refer [deftest is testing use-fixtures]]))
 
 (def this-nsym (ns-name *ns*))
-(def default-output-file "target/cli")
+(def default-output-file
+  (cond-> "target/cli"
+    (fs/windows?)
+    (str ".exe")))
 
 (defn module-path [alias]
   (-> (proc/sh "clojure" (str "-A:" alias) "-Spath") :out str/trim))
@@ -28,6 +31,11 @@
     (println "Cleaned up 'target'")
     (f)))
 
+(defmacro string=
+  "Compare L and R strings ignoring line ending differences."
+  [l r]
+  `(= (str/split-lines ~l) (str/split-lines ~r)))
+
 (deftest aot-single-jank-module
   (let [alias-name  "single-jank-module"
         module-path (module-path alias-name)]
@@ -45,14 +53,14 @@
                       (proc/sh {:out *out*
                                 :err *out*})
                       :exit)))
-        (is (= expected-output (->> args (str default-output-file)
-                                    proc/sh :out))))
+        (is (string= expected-output (->> args (str default-output-file)
+                                          proc/sh :out))))
       (testing "Executable in temp directory"
         (fs/with-temp-dir [dir {}]
           (fs/move default-output-file dir)
-          (is (= expected-output (->> (str "./cli " args)
-                                      (proc/sh {:dir dir})
-                                      :out))))))))
+          (is (string= expected-output (->> (str "./cli " args)
+                                            (proc/sh {:dir dir})
+                                            :out))))))))
 
 (deftest aot-multiple-jank-modules
   (let [alias-name "only-jank-modules"
@@ -67,8 +75,8 @@
                     (proc/sh {:out *out*
                               :err *out*})
                     :exit)))
-      (is (= expected-output (-> output-filename (str args)
-                                 proc/sh :out))))))
+      (is (string= expected-output (-> output-filename (str args)
+                                       proc/sh :out))))))
 
 (deftest aot-multiple-jank-modules-release-build
   (let [alias-name "only-jank-modules"
@@ -84,8 +92,8 @@
                     (proc/sh {:out *out*
                               :err *out*})
                     :exit)))
-      (is (= expected-output (-> output-filename (str args)
-                                 proc/sh :out))))))
+      (is (string= expected-output (-> output-filename (str args)
+                                       proc/sh :out))))))
 
 (deftest aot-cpp-raw-inline
   (let [alias-name "cpp-raw-inline"
@@ -98,7 +106,7 @@
                     (proc/sh {:out *out*
                               :err *out*})
                     :exit)))
-      (is (= expected-output (-> default-output-file proc/sh :out))))))
+      (is (string= expected-output (-> default-output-file proc/sh :out))))))
 
 (defn -main []
   (when (empty? (System/getenv "JANK_SKIP_AOT_CHECK"))

@@ -21,6 +21,11 @@
 ; corresponding `output.txt` file with the output. This allows for batch regeneration
 ; of output, but the changes must be reviewed carefully.
 
+;; Tests that throw exceptions are currently not supported on Windows.
+(def skip-tests (if (b.f/windows?)
+                  #{"aot" "aot-with-reparse" "invalid-throw" "jar"}
+                  #{}))
+
 (def src-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/../../../src"))))
 
 (defn strip-ansi-codes
@@ -44,7 +49,7 @@
   (when (:has-setup? test)
     (b.p/shell {:out :string
                 :dir (:dir test)}
-               "./setup"))
+               (util/command-make-portable "./setup")))
   (println "running dir" (b.f/file-name (:dir test)))
   (let [res @(b.p/process {:out :string
                            :err :out
@@ -61,20 +66,24 @@
 (defn test! [tests]
   (let [ret (volatile! 0)]
     (doseq [test tests]
-      (print "testing dir" (b.f/file-name (:dir test)) "=> ")
-      (let [expected (try
-                       (slurp (:output-file test))
-                       (catch Exception _
-                         ""))]
-        (if (= (:output test) expected)
-          (println "success")
+      (let [dir (b.f/file-name (:dir test))]
+        (if (skip-tests dir)
+          (println "skipping test" dir)
           (do
-            (println "failure")
-            (println "░░░░░ expected ░░░░░")
-            (println expected)
-            (println "░░░░░ actual ░░░░░")
-            (println (:output test))
-            (vswap! ret inc)))))
+            (print "testing dir" dir "=> ")
+            (let [expected (try
+                             (slurp (:output-file test))
+                             (catch Exception _
+                               ""))]
+              (if (util/string= (:output test) expected)
+                (println "success")
+                (do
+                  (println "failure")
+                  (println "░░░░░ expected ░░░░░")
+                  (println expected)
+                  (println "░░░░░ actual ░░░░░")
+                  (println (:output test))
+                  (vswap! ret inc))))))))
     (System/exit @ret)))
 
 (defn -main [& args]

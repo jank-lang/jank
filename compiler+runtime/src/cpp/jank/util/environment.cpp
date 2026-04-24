@@ -18,6 +18,12 @@
 #include <jank/util/fmt.hpp>
 #include <jank/error/system.hpp>
 
+#ifdef JANK_WINDOWS_LIKE
+  // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+  #define WIN32_LEAN_AND_MEAN 1
+  #include <windows.h>
+#endif
+
 namespace jank::util
 {
   jtl::immutable_string const &user_home_dir()
@@ -33,6 +39,19 @@ namespace jank::util
     {
       res = home;
     }
+#ifdef JANK_WINDOWS_LIKE
+    else if(char const *userprofile = getenv("USERPROFILE"))
+    {
+      res = userprofile;
+    }
+    else if(char const *drive = getenv("HOMEDRIVE"))
+    {
+      if(char const *path = getenv("HOMEPATH"))
+      {
+        res = std::string(drive) + path;
+      }
+    }
+#endif
     return res;
   }
 
@@ -135,6 +154,15 @@ namespace jank::util
     return std::filesystem::canonical(path).string();
 #elif defined(__linux__)
     return std::filesystem::canonical("/proc/self/exe").string();
+#elif defined(JANK_WINDOWS_LIKE)
+    char path[MAX_PATH]{};
+    const DWORD size{ GetModuleFileNameA(nullptr, path, MAX_PATH) };
+
+    if(size == 0)
+    {
+      return {};
+    }
+    return { path, size };
 #else
     static_assert(false, "Unsupported platform");
 #endif
@@ -142,7 +170,7 @@ namespace jank::util
 
   jtl::immutable_string process_dir()
   {
-    return std::filesystem::path{ process_path().c_str() }.parent_path().c_str();
+    return std::filesystem::path{ process_path().c_str() }.parent_path().string();
   }
 
   jtl::immutable_string resource_dir()
@@ -150,7 +178,7 @@ namespace jank::util
     std::filesystem::path const dir{ JANK_RESOURCE_DIR };
     if(dir.is_absolute())
     {
-      return dir.c_str();
+      return dir.string();
     }
     else
     {
@@ -164,13 +192,13 @@ namespace jank::util
       if(dev_build)
       {
         auto const compiler_runtime{ jank_path / ".." };
-        return compiler_runtime.c_str();
+        return compiler_runtime.string();
       }
 
       auto const configured_path{ (jank_path / dir) };
       if(std::filesystem::exists(configured_path))
       {
-        return configured_path.c_str();
+        return configured_path.string();
       }
 
       /* However, if the configured path doesn't exist, and we're not in a dev build, chances
@@ -184,12 +212,12 @@ namespace jank::util
       if(installed_jank_res)
       {
         std::filesystem::path const installed_jank_path{ *installed_jank_res };
-        return (installed_jank_path.parent_path() / dir).c_str();
+        return (installed_jank_path.parent_path() / dir).string();
       }
 
       /* Otherwise, just return what we can and we'll raise an error down the road when we
        * fail to find things. */
-      return configured_path.c_str();
+      return configured_path.string();
     }
   }
 
@@ -206,7 +234,7 @@ namespace jank::util
       if(sdk_path.empty())
       {
         auto const tmp{ std::filesystem::temp_directory_path() };
-        std::string path_tmp{ tmp / "jank-xcrun-XXXXXX" };
+        std::string path_tmp{ (tmp / "jank-xcrun-XXXXXX").string() };
         mkstemp(path_tmp.data());
 
         auto const xcrun_path{ llvm::sys::findProgramByName("xcrun") };

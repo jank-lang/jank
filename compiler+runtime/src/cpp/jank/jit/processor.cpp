@@ -44,6 +44,10 @@ namespace jank::jit
   {
     return util::format("lib{}.so", lib);
   }
+#elif defined(JANK_WINDOWS_LIKE)
+  {
+    return util::format("{}.dll", lib);
+  }
 #endif
 
   [[maybe_unused]]
@@ -136,11 +140,11 @@ namespace jank::jit
     {
       args.emplace_back("-nostdinc++");
       args.emplace_back("-I");
-      args.emplace_back(strdup((clang_dir / "../include/c++/v1").c_str()));
+      args.emplace_back(strdup((clang_dir / "../include/c++/v1").string().c_str()));
     }
 
     args.emplace_back("-I");
-    args.emplace_back(strdup((clang_dir / "../include").c_str()));
+    args.emplace_back(strdup((clang_dir / "../include").string().c_str()));
 
     auto const clang_resource_dir{ util::find_clang_resource_dir() };
     if(clang_resource_dir.is_none())

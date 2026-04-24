@@ -18,6 +18,13 @@
   (util/log-info "JANK_SANITIZE: " (System/getenv "JANK_SANITIZE"))
   (util/log-info "JANK_PACKAGE: " (System/getenv "JANK_PACKAGE")))
 
+(defn sudo
+  "Adds 'sudo' to CMD on non-Windows systems."
+  [cmd]
+  (cond->> cmd
+    (not (b.f/windows?))
+    (str "sudo ")))
+
 (defn install-common-deps []
   ; TODO: Enable once we're linting Clojure/jank again.
   ;(util/quiet-shell {} "sudo npm install --global @chrisoakman/standard-clojure-style")
@@ -26,18 +33,23 @@
   (when (= "on" (util/get-env "JANK_ANALYZE"))
     (util/quiet-shell {} "curl -Lo clang-tidy-cache https://raw.githubusercontent.com/matus-chochlik/ctcache/refs/heads/main/src/ctcache/clang_tidy_cache.py")
     (util/quiet-shell {} "chmod +x clang-tidy-cache")
-    (util/quiet-shell {} "sudo mv clang-tidy-cache /usr/local/bin")
-    (let [clang-tidy (util/find-llvm-tool "clang-tidy")]
+    (util/quiet-shell {} (sudo "mv clang-tidy-cache /usr/local/bin"))
+    (let [clang-tidy (b.f/unixify (util/find-llvm-tool "clang-tidy"))]
       (spit "clang-tidy-cache-wrapper"
             (str "#!/bin/bash\nclang-tidy-cache " clang-tidy " \"${@}\"")))
     (util/quiet-shell {} "chmod +x clang-tidy-cache-wrapper")
-    (util/quiet-shell {} "sudo mv clang-tidy-cache-wrapper /usr/local/bin")))
+    (util/quiet-shell {} (sudo "mv clang-tidy-cache-wrapper /usr/local/bin"))))
 
 (defmulti install-deps
-  (fn [_props]
-    (System/getProperty "os.name")))
+  (fn [_]
+    (let [os (System/getProperty "os.name")]
+      (cond
+        (.startsWith os "Windows") :win
+        (.startsWith os "Linux")   :linux
+        (.startsWith os "Mac")     :mac
+        :else                      :unknown))))
 
-(defmethod install-deps "Linux" [{:keys [validate-formatting?]}]
+(defmethod install-deps :linux [{:keys [validate-formatting?]}]
   (install-common-deps)
   ; TODO: Enable once we're not building Clang/LLVM from source again.
   ;; Install Clang/LLVM.
@@ -53,7 +65,10 @@
   (util/quiet-shell {} "chmod +x linux-install.sh")
   (util/quiet-shell {} "sudo ./linux-install.sh"))
 
-(defmethod install-deps "Mac OS X" [_props]
+(defmethod install-deps :mac [_props]
+  (install-common-deps))
+
+(defmethod install-deps :win [_props]
   (install-common-deps))
 
 (defn -main [{:keys [install-deps? validate-formatting? compiler+runtime

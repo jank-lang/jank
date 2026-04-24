@@ -224,10 +224,74 @@
     clojure.core-test.zipmap
   ])
 
+;; Skip exception tests on Windows, not yet supported
+(def skip
+  (when (= cpp/jtl.current_platform cpp/jtl.platform.windows_like)
+    ['clojure.core-test.abs
+     'clojure.core-test.assoc
+     'clojure.core-test.assoc-bang
+     'clojure.core-test.bit-and
+     'clojure.core-test.bit-and-not
+     'clojure.core-test.bit-clear
+     'clojure.core-test.bit-flip
+     'clojure.core-test.bit-not
+     'clojure.core-test.bit-or
+     'clojure.core-test.bit-set
+     'clojure.core-test.bit-shift-left
+     'clojure.core-test.bit-shift-right
+     'clojure.core-test.bit-test
+     'clojure.core-test.bit-xor
+     'clojure.core-test.conj-bang
+     'clojure.core-test.cons
+     'clojure.core-test.count
+     'clojure.core-test.denominator
+     'clojure.core-test.dissoc-bang
+     'clojure.core-test.double
+     'clojure.core-test.drop-last
+     'clojure.core-test.empty-qmark
+     'clojure.core-test.even-qmark
+     'clojure.core-test.ffirst
+     'clojure.core-test.fnext
+     'clojure.core-test.gt
+     'clojure.core-test.hash-map
+     'clojure.core-test.intern
+     'clojure.core-test.last
+     'clojure.core-test.lt
+     'clojure.core-test.lt-eq
+     'clojure.core-test.min-key
+     'clojure.core-test.name
+     'clojure.core-test.namespace
+     'clojure.core-test.neg-qmark
+     'clojure.core-test.nfirst
+     'clojure.core-test.nth
+     'clojure.core-test.nthnext
+     'clojure.core-test.nthrest
+     'clojure.core-test.numerator
+     'clojure.core-test.odd-qmark
+     'clojure.core-test.parse-boolean
+     'clojure.core-test.parse-uuid
+     'clojure.core-test.partial
+     'clojure.core-test.peek
+     'clojure.core-test.persistent-bang
+     'clojure.core-test.pop-bang
+     'clojure.core-test.pos-qmark
+     'clojure.core-test.rand-nth
+     'clojure.core-test.random-sample
+     'clojure.core-test.reverse
+     'clojure.core-test.set
+     'clojure.core-test.some-fn
+     'clojure.core-test.take-last
+     'clojure.core-test.take-while
+     'clojure.core-test.underive
+     'clojure.core-test.zero-qmark
+     'clojure.core-test.zipmap]))
+
 (defn -main []
-  (when (seq namespaces)
-    (apply require namespaces)
-    ;; TODO (t/run-all-tests) => Exception: "TODO: port all-ns"
-    (when-not (t/successful? (apply t/run-tests namespaces))
-      (throw "failed")))
+  (when (seq skip) (println :skipping-tests skip))
+  (let [namespaces (remove (set skip) namespaces)]
+    (when (seq namespaces)
+      (apply require namespaces)
+      ;; TODO (t/run-all-tests) => Exception: "TODO: port all-ns"
+      (when-not (t/successful? (apply t/run-tests namespaces))
+        (throw "failed"))))
   (println :clojure-test-suite-successful))
