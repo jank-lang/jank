@@ -74,6 +74,8 @@ namespace jank::nrepl::server
   {
   }
 
+  native_client::~native_client() = default;
+
   bool native_client::is_connected() const
   {
     return impl_->is_connected();

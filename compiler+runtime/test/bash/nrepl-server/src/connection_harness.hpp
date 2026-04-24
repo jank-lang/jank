@@ -7,8 +7,7 @@
 /* A test harness that creates a `jank::nrepl::server::native_server`
  * and establishes paired driver and System Under Test (SUT) endpoints
  * for controlled interaction, and is torn down after use.
- *
- *  NOTE: Assumes newly created objects are managed by the GC. */
+ */
 struct connection_harness
 {
   /* Thread blocking in accept() to establish the SUT connection. */
@@ -24,20 +23,35 @@ struct connection_harness
      the SUT. */
   jank::nrepl::server::native_client* driver = nullptr;
 
-  /* Stops harness activity and closes active connections. */
+  /* Stops harness activity and releases resources. */
   void teardown()
   {
-    if(thread && thread->joinable())
+    if(driver) driver->close();
+    if(sut)    sut->close();
+
+    if(thread)
     {
-      thread->join();
+      if(thread->joinable())
+      {
+        thread->join();
+      }
+      delete thread;
+      thread = nullptr;
     }
     if(driver)
     {
-      driver->close();
+      delete driver;
+      driver = nullptr;
     }
     if(sut)
     {
-      sut->close();
+      delete sut;
+      sut = nullptr;
+    }
+    if(server)
+    {
+      delete server;
+      server = nullptr;
     }
   }
 
@@ -49,6 +63,9 @@ struct connection_harness
     auto harness = new connection_harness();
     harness->server = new jank::nrepl::server::native_server();
 
+   /* std::promise would be cleaner, but not usable yet due to JIT
+    * emutls issue:
+    * https://github.com/jank-lang/jank/discussions/729 */
     std::atomic<bool> ready{false};
     harness->thread = new std::thread([&ready, harness]() {
       harness->sut = harness->server->accept();

@@ -13,6 +13,8 @@ namespace jank::nrepl::server
 
     native_client(std::unique_ptr<impl> impl);
 
+    ~native_client();
+
     /* Indicates that reading and writing may be performed on this client. */
     bool is_connected() const;
 
