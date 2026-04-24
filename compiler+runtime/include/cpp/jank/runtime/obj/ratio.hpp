@@ -183,9 +183,9 @@ namespace jank::runtime::obj
 
   template <typename T>
   requires std::is_integral_v<T>
-  ratio_ref operator/(T const l, ratio_data const &r)
+  object_ref operator/(T const l, ratio_data const &r)
   {
-    return make_box<ratio>(ratio_data(r.numerator, r.denominator * l));
+    return ratio_data(l, 1ll) / r;
   }
 
   template <typename T>
