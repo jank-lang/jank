@@ -48,20 +48,6 @@ namespace jank::nrepl::server
       socket_.write_some(buffer(message), error_code);
     }
 
-    /* Closes the connection and marks it as disconnected. */
-    void close()
-    {
-      if(connected_)
-      {
-        boost::system::error_code ec;
-        /* NOLINTNEXTLINE(bugprone-unused-return-value) */
-        socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-        /* NOLINTNEXTLINE(bugprone-unused-return-value) */
-        socket_.close(ec);
-        connected_ = false;
-      }
-    }
-
     tcp::socket socket_;
     bool connected_{ false };
 
@@ -73,8 +59,6 @@ namespace jank::nrepl::server
     : impl_{ std::move(impl) }
   {
   }
-
-  native_client::~native_client() = default;
 
   bool native_client::is_connected() const
   {
@@ -89,11 +73,6 @@ namespace jank::nrepl::server
   void native_client::write_some(std::string const &data) const
   {
     impl_->write_some(data);
-  }
-
-  void native_client::close() const
-  {
-    impl_->close();
   }
 
   // server
@@ -141,19 +120,5 @@ namespace jank::nrepl::server
     // TODO: This leaks memory but jank complains about not being able to delete
     // an opaque type if we return unique_ptr<native_client>.
     return new native_client(std::move(impl));
-  }
-
-  native_client *native_server::_create_test_connection() const
-  {
-    auto &ctx = impl_->io_context_;
-
-    tcp::socket socket(ctx);
-    socket.connect(impl_->acceptor_.local_endpoint());
-
-    auto client_impl = std::make_unique<native_client::impl>(ctx);
-    client_impl->socket_ = std::move(socket);
-    client_impl->connected_ = true;
-
-    return new native_client(std::move(client_impl));
   }
 }

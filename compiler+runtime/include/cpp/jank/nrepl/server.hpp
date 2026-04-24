@@ -13,8 +13,6 @@ namespace jank::nrepl::server
 
     native_client(std::unique_ptr<impl> impl);
 
-    ~native_client();
-
     /* Indicates that reading and writing may be performed on this client. */
     bool is_connected() const;
 
@@ -23,9 +21,6 @@ namespace jank::nrepl::server
 
     /* Write some data to the client. */
     void write_some(std::string const &data) const;
-
-    /* Closes the connection and marks it as disconnected. */
-    void close() const;
 
     std::unique_ptr<impl> impl_;
   };
@@ -42,11 +37,5 @@ namespace jank::nrepl::server
     native_client *accept() const;
 
     std::shared_ptr<impl> impl_;
-
-    /* Returns a test connection to the server for controlled test environments.
-     * Requires an active accept call in progress to complete the connection
-     * handshake successfully.
-     */
-    native_client *_create_test_connection() const;
   };
 }
