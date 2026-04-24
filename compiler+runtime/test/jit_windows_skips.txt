@@ -14,6 +14,7 @@ pass-catch-ordering.jank
 pass-catch-rethrow-alloc.jank
 pass-closure-capture.jank
 pass-finally-behavior.jank
+pass-immediate-throw.jank
 pass-nested-fn-finally.jank
 pass-nested-no-catch.jank
 pass-nested-try-catch.jank
