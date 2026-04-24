@@ -65,20 +65,6 @@ namespace jank::runtime::obj
     return obj::big_integer::to_f64(l) + r;
   }
 
-  //template <typename T>
-  //requires std::is_integral_v<T>
-  //big_integer_ref operator+(T const l, native_big_integer const &r)
-  //{
-  //  return make_box<big_integer>(r + l);
-  //}
-
-  //template <typename T>
-  //requires std::is_integral_v<T>
-  //big_integer_ref operator+(native_big_integer const &l, T const r)
-  //{
-  //  return make_box<big_integer>(l + r);
-  //}
-
   template <typename T>
   requires std::is_floating_point_v<T>
   f64 operator-(T const l, native_big_integer const &r)
@@ -92,20 +78,6 @@ namespace jank::runtime::obj
   {
     return obj::big_integer::to_f64(l) - r;
   }
-
-  //template <typename T>
-  //requires std::is_integral_v<T>
-  //big_integer_ref operator-(T const l, native_big_integer const &r)
-  //{
-  //  return make_box<big_integer>(r - l);
-  //}
-
-  //template <typename T>
-  //requires std::is_integral_v<T>
-  //big_integer_ref operator-(native_big_integer const &l, T const r)
-  //{
-  //  return make_box<big_integer>(l - r);
-  //}
 
   template <typename T>
   requires std::is_floating_point_v<T>
@@ -121,20 +93,6 @@ namespace jank::runtime::obj
     return obj::big_integer::to_f64(l) * r;
   }
 
-  //template <typename T>
-  //requires std::is_integral_v<T>
-  //big_integer_ref operator*(T const l, native_big_integer const &r)
-  //{
-  //  return make_box<big_integer>(r * l);
-  //}
-
-  //template <typename T>
-  //requires std::is_integral_v<T>
-  //big_integer_ref operator*(native_big_integer const &l, T const r)
-  //{
-  //  return make_box<big_integer>(l * r);
-  //}
-
   template <typename T>
   requires std::is_floating_point_v<T>
   f64 operator/(T const l, native_big_integer const &r)
@@ -148,18 +106,4 @@ namespace jank::runtime::obj
   {
     return obj::big_integer::to_f64(l) / r;
   }
-
-  //template <typename T>
-  //requires std::is_integral_v<T>
-  //big_integer_ref operator/(T const l, native_big_integer const &r)
-  //{
-  //  return make_box<big_integer>(r / l);
-  //}
-
-  //template <typename T>
-  //requires std::is_integral_v<T>
-  //big_integer_ref operator/(native_big_integer const &l, T const r)
-  //{
-  //  return make_box<big_integer>(l / r);
-  //}
 }
