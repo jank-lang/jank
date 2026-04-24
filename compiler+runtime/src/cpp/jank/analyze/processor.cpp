@@ -2466,16 +2466,15 @@ namespace jank::analyze
                           bool const)
   {
     /* When we analyze a loop, we actually just set a flag and then analyze a let.
-     * The flag is setting `loop_details` to `some(nullptr)`, which conveys that
-     * we're in a loop. */
+     * The flag is setting `loop_details` to `some`, which conveys that we're in a loop. */
     auto const old_loop_details{ loop_details };
     loop_details = some(nullptr);
+    util::scope_exit const finally{ [&]() { loop_details = old_loop_details; } };
 
     /* Using recur from this loop is fine, even if we're in a try, since the jump target
      * is this loop. */
     context::binding_scope const _{ runtime::obj::persistent_hash_map::create_unique(
       std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)) };
-    util::scope_exit const finally{ [&]() { loop_details = old_loop_details; } };
 
     /* We always analyze loops in tail position, since `recur` always expects to be in
      * tail position, and it can be used within a loop. We then later reset the position

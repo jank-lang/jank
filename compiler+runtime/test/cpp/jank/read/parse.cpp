@@ -9,11 +9,7 @@
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/math.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/obj/persistent_hash_set.hpp>
-#include <jank/runtime/obj/persistent_vector.hpp>
-#include <jank/runtime/obj/persistent_array_map.hpp>
-#include <jank/runtime/obj/persistent_hash_map.hpp>
-#include <jank/runtime/obj/keyword.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/util/fmt.hpp>
 

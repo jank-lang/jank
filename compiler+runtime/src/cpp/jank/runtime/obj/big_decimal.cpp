@@ -67,12 +67,12 @@ namespace jank::runtime
 
   bool operator>(native_big_decimal const &l, native_big_integer const &r)
   {
-    return l > native_big_decimal(r.str());
+    return native_big_decimal(r.str()) < l;
   }
 
   bool operator>(native_big_integer const &l, native_big_decimal const &r)
   {
-    return native_big_decimal(l.str()) > r;
+    return r < native_big_decimal(l.str());
   }
 
   bool operator<(native_big_decimal const &l, native_big_integer const &r)
@@ -87,12 +87,12 @@ namespace jank::runtime
 
   bool operator>=(native_big_decimal const &l, native_big_integer const &r)
   {
-    return l >= native_big_decimal(r.str());
+    return native_big_decimal(r.str()) <= l;
   }
 
   bool operator>=(native_big_integer const &l, native_big_decimal const &r)
   {
-    return native_big_decimal(l.str()) >= r;
+    return r <= native_big_decimal(l.str());
   }
 
   bool operator<=(native_big_decimal const &l, native_big_integer const &r)
@@ -176,7 +176,7 @@ namespace jank::runtime::obj
   i64 big_decimal::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },

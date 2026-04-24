@@ -5,111 +5,6 @@
 #include <jank/util/fmt.hpp>
 #include <ranges>
 
-namespace jank::runtime
-{
-  f64 operator+(native_big_integer const &l, f64 const &r)
-  {
-    return obj::big_integer::to_f64(l) + r;
-  }
-
-  f64 operator+(f64 const &l, native_big_integer const &r)
-  {
-    return l + obj::big_integer::to_f64(r);
-  }
-
-  f64 operator-(native_big_integer const &l, f64 const &r)
-  {
-    return obj::big_integer::to_f64(l) - r;
-  }
-
-  f64 operator-(f64 const &l, native_big_integer const &r)
-  {
-    return l - obj::big_integer::to_f64(r);
-  }
-
-  f64 operator*(native_big_integer const &l, f64 const &r)
-  {
-    return obj::big_integer::to_f64(l) * r;
-  }
-
-  f64 operator*(f64 const &l, native_big_integer const &r)
-  {
-    return r * l;
-  }
-
-  f64 operator/(native_big_integer const &l, f64 const &r)
-  {
-    return obj::big_integer::to_f64(l) / r;
-  }
-
-  f64 operator/(f64 const &l, native_big_integer const &r)
-  {
-    return l / obj::big_integer::to_f64(r);
-  }
-
-  bool operator>(native_big_integer const &l, f64 const &r)
-  {
-    return obj::big_integer::to_f64(l) > r;
-  }
-
-  bool operator>(f64 const &l, native_big_integer const &r)
-  {
-    return l > obj::big_integer::to_f64(r);
-  }
-
-  bool operator==(native_big_integer const &l, f64 const &r)
-  {
-    constexpr f64 epsilon{ std::numeric_limits<f64>::epsilon() };
-    return std::abs(l - r) < epsilon;
-  }
-
-  bool operator==(f64 const &l, native_big_integer const &r)
-  {
-    return r == l;
-  }
-
-  bool operator!=(native_big_integer const &l, f64 const &r)
-  {
-    return !(l == r);
-  }
-
-  bool operator!=(f64 const &l, native_big_integer const &r)
-  {
-    return r != l;
-  }
-
-  bool operator<(native_big_integer const &l, f64 const &r)
-  {
-    return obj::big_integer::to_f64(l) < r;
-  }
-
-  bool operator<(f64 const &l, native_big_integer const &r)
-  {
-    return l < obj::big_integer::to_f64(r);
-  }
-
-  bool operator<=(native_big_integer const &l, f64 const &r)
-  {
-    return l < r || l == r;
-  }
-
-  bool operator<=(f64 const &l, native_big_integer const &r)
-  {
-    return l < r || l == r;
-  }
-
-  bool operator>=(native_big_integer const &l, f64 const &r)
-  {
-    return l > r || l == r;
-  }
-
-  bool operator>=(f64 const &l, native_big_integer const &r)
-  {
-    return l > r || l == r;
-  }
-
-}
-
 namespace jank::runtime::obj
 {
   big_integer::big_integer()
@@ -289,7 +184,7 @@ namespace jank::runtime::obj
   i64 big_integer::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },

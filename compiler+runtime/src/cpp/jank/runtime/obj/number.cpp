@@ -54,7 +54,7 @@ namespace jank::runtime::obj
   i64 boolean::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },
@@ -63,7 +63,7 @@ namespace jank::runtime::obj
 
   i64 boolean::compare(boolean const &o) const
   {
-    return (data > o.data) - (data < o.data);
+    return (o.data < data) - (data < o.data);
   }
 
   /***** integer *****/
@@ -119,7 +119,7 @@ namespace jank::runtime::obj
   i64 integer::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },
@@ -128,7 +128,7 @@ namespace jank::runtime::obj
 
   i64 integer::compare(integer const &o) const
   {
-    return (data > o.data) - (data < o.data);
+    return (o.data < data) - (data < o.data);
   }
 
   i64 integer::to_integer() const
@@ -208,7 +208,7 @@ namespace jank::runtime::obj
   i64 real::compare(object const &o) const
   {
     return visit_number_like(
-      [this](auto const typed_o) -> i64 { return (data > typed_o->data) - (data < typed_o->data); },
+      [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
         throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
       },
@@ -217,7 +217,7 @@ namespace jank::runtime::obj
 
   i64 real::compare(real const &o) const
   {
-    return (data > o.data) - (data < o.data);
+    return (o.data < data) - (data < o.data);
   }
 
   i64 real::to_integer() const
