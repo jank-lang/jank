@@ -39,7 +39,6 @@ namespace jank::runtime::obj
 
   object_ref atom::reset(object_ref const o)
   {
-    jank_debug_assert(o.is_some());
     auto const v(val.load());
     val = o.data;
     notify_watches(this, v, o);
