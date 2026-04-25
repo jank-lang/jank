@@ -1,0 +1,8 @@
+(assert (nil? (let* [n (cpp/raw "namespace jank::cpp::raw::pass_as_expression
+                                 {
+                                   bool const set{ true };
+                                 }")]
+                n)))
+
+(if cpp/jank.cpp.raw.pass_as_expression.set
+  :success)

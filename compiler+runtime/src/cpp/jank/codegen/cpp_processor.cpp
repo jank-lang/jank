@@ -1153,6 +1153,7 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.cpp_raw_buffer, "\n{}\n", inst->expr->code);
+    util::format_to(b.body_buffer, "jank::runtime::object_ref const {};", inst->name);
 
     return none;
   }

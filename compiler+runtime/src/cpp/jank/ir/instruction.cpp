@@ -337,7 +337,7 @@ namespace jank::ir::inst
   }
 
   cpp_raw::cpp_raw(identifier const &name, analyze::expr::cpp_raw_ref const expr)
-    : instruction{ instruction_kind::cpp_raw, name, Cpp::GetVoidType() }
+    : instruction{ instruction_kind::cpp_raw, name, untyped_object_ref_type() }
     , expr{ expr }
   {
   }

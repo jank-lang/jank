@@ -3,4 +3,4 @@
             bool const set{ true };
           }")
 (if cpp/jank.cpp.raw.pass_valid_cpp.set
-  :success)
+  (println :success))
