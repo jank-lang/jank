@@ -553,7 +553,7 @@ namespace jank::ir
 
       if(b.current_block()->has_terminator())
       {
-        return none;
+        return name;
       }
     }
 
