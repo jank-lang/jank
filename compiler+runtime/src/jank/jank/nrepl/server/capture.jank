@@ -3,7 +3,8 @@
             "filesystem")
   (:require [jank.nrepl.server.util :refer [close dup dup2 unlink]]))
 
-(def temp-file-template (str (cpp/getenv #cpp "TEMP") "/" "jank-nrepl-XXXXXX"))
+(def temp-file-template
+  (str (.string (cpp/std.filesystem.temp_directory_path)) "/" "jank-nrepl-XXXXXX"))
 
 (defn- make-temp-file []
   (let [name (cpp/std.string (cpp/cast std.string temp-file-template))
