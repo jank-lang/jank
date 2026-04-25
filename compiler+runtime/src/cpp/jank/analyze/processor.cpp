@@ -2312,9 +2312,7 @@ namespace jank::analyze
 
     if(ret->body->values.empty())
     {
-      auto const nil{
-        analyze_primitive_literal({}, ret->frame, expression_position::tail, fn_ctx, needs_box)
-      };
+      auto const nil{ analyze_primitive_literal({}, ret->frame, ret->position, fn_ctx, needs_box) };
       if(nil.is_err())
       {
         return nil.expect_err();
@@ -2445,9 +2443,7 @@ namespace jank::analyze
 
     if(ret->body->values.empty())
     {
-      auto const nil{
-        analyze_primitive_literal({}, ret->frame, expression_position::tail, fn_ctx, needs_box)
-      };
+      auto const nil{ analyze_primitive_literal({}, ret->frame, ret->position, fn_ctx, needs_box) };
       if(nil.is_err())
       {
         return nil.expect_err();

@@ -1,3 +1,0 @@
-(let* [f (letfn* [foo (fn* foo [])]
-           )]
-  :success)

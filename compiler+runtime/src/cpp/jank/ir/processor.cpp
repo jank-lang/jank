@@ -477,7 +477,7 @@ namespace jank::ir
              (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
                                                                     : jtl::option<identifier>{},
              (expr->position != analyze::expression_position::tail)
-               ? detail::typed_identifier{ loop_shadow, expression_type(expr) }
+               ? detail::typed_identifier{ loop_shadow, mutable_type(expr->get_type()) }
                : jtl::option<detail::typed_identifier>{},
              jtl::move(shadows));
       b.enter_block(loop_blk);
