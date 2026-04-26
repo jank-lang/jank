@@ -169,7 +169,7 @@ namespace jank::evaluate
 
     auto const expr_type{ cpp_util::expression_type(expr) };
     expression_ref expr_to_add{ expr };
-    if(!cpp_util::is_untyped_object(expr_type))
+    if(!cpp_util::is_any_object(expr_type))
     {
       jank_debug_assert(cpp_util::is_trait_convertible(expr_type));
       expr_to_add = jtl::make_ref<expr::cpp_conversion>(expr->position,
