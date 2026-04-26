@@ -111,6 +111,15 @@
               )
             '';
 
+            # Disable _FORTIFY_SOURCE to prevent linker errors for substituted
+            # memcpy/strcpy/etc. symbols.
+            #
+            # See:  https://github.com/jank-lang/jank/pull/735#issuecomment-4316754811
+            #
+            # TODO: Figure out how to solve the linker issues without disabling
+            # fortification.
+            hardeningDisable = ["fortify"];
+
             cmakeBuildDir = "./compiler+runtime/build";
             cmakeDir = "..";
             cmakeFlags = [
