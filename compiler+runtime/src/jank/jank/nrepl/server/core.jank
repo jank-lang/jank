@@ -45,14 +45,19 @@
     (.is_connected client)))
 
 (defn read-message
-  "Read a complete message (TODO) from the client and decode it."
-  [client*]
-  (let [client  (cpp/unbox (:* jank.nrepl.server.native_client) client*)
-        msg-str (.read_some client)]
-    ;; TODO: There is no guarantee that we read an entire message. We should
-    ;; attempt to parse it, and if we encounter an unexpected EOF then buffer it
-    ;; until more data arrives.
-    (bencode/parse msg-str)))
+  "Reads input from the boxed `jank.nrepl.server.native_client` CLIENT*
+  and previously uncosumed input BUFFER, returning [msg buffer],
+  where msg is the parsed message or nil if incomplete and buffer
+  is the unconsumed input."
+  [client* buffer]
+  (let [client  (cpp/unbox (:* jank.nrepl.server.native_client) client*)]
+    (if-let [result (bencode/parse buffer)]
+      result
+      (let [chunk (.read_some client)
+            input (str buffer chunk)]
+        (if-let [result (bencode/parse input)]
+          result
+          [nil input])))))
 
 (defn write-message
   "Encode the given message and write it to the client socket."
@@ -65,13 +70,15 @@
 (defn handle-client
   "For as long as the client is connected, read requests and write replies."
   [client*]
-  (while (connected? client*)
-    (when-let [req (read-message client*)]
-      (log "<-" (pr-str (abbreviate req 20)))
-      (let [resps (responses-for req (handle-message req))]
-        (doseq [resp resps]
-          (log "->" (pr-str (abbreviate resp 20)))
-          (write-message client* resp))))))
+  (loop [[req remainder] nil]
+    (when (connected? client*)
+      (when req
+        (log "<-" (pr-str (abbreviate req 20)))
+        (let [resps (responses-for req (handle-message req))]
+          (doseq [resp resps]
+            (log "->" (pr-str (abbreviate resp 20)))
+            (write-message client* resp))))
+      (recur (read-message client* remainder)))))
 
 (defn -main [& args]
   (when (some #{"-v" "--verbose"} args)

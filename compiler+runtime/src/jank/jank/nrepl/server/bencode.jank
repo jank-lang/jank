@@ -13,13 +13,16 @@
                 (p/one-char \e))))
 
 (defn bstring
-  "Parser for a byte string encoded as `<length>:<contents>`."
+  "Parser for a byte string encoded as `<length>:<contents>`.
+
+  Returns a parser function that consumes input and produces
+  `[parsed-string remaining-input]`, or nil if parsing fails."
   []
   (fn [input]
     (when-let [[[n _] remaining] ((p/sequencep (p/number)
                                                (p/one-char \:))
                                   input)]
-      (let [[s remaining] ((p/n-times n (p/any-char)) remaining)]
+      (when-let [[s remaining] ((p/n-times n (p/any-char)) remaining)]
         [(apply str s) remaining]))))
 
 (defn blist

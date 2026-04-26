@@ -34,8 +34,10 @@
       ;; Eval results in error. For now, just report the exception as a value.
       ;; If we return :exception then CIDER will try to load clojure.stacktrace.
       (not success)
-      {:value  (str *e)
-       :status [:done :eval-error]}
+      [{:out stdout}
+       {:err stderr}
+       {:value  (str *e)
+        :status [:done :eval-error]}]
 
       ;; Client requests an inspection of the last result.
       inspect?
@@ -47,8 +49,11 @@
       [{:out stdout}
        {:err stderr}
        {:value  (pr-str *1)
-        :ns     (str res-ns)
-        :status [:done]}])))
+        :ns     (str res-ns)}
+       ;; CIDER expects :status in a separate response message
+       ;; from :value.
+       ;; see: https://github.com/clojure-emacs/cider/issues/3869
+       {:status [:done]}])))
 
 (defmethod handle-message :eval [msg]
   (do-eval (get msg "ns")
