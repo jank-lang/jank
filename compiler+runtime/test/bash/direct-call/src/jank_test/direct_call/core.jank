@@ -1,0 +1,8 @@
+(ns jank-test.direct-call.core
+  (:require jank-test.direct-call.util))
+
+(defn answer []
+  (jank-test.direct-call.util/inc2))
+
+(defn -main [& _]
+  (println (answer)))

@@ -1356,7 +1356,6 @@ namespace jank::analyze
                                              meta_source(sym),
                                              latest_expansion(macro_expansions));
     }
-
     jtl::option<jtl::ref<expression>> value_expr;
     bool const has_value{ 3 <= length };
     bool const has_docstring{ 4 <= length };
@@ -1399,7 +1398,26 @@ namespace jank::analyze
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
     }
 
-    return jtl::make_ref<expr::def>(position, current_frame, true, qualified_sym, value_expr);
+    auto const var{ var_res.expect_ok() };
+
+    auto const dynamic_kw{ __rt_ctx->intern_keyword("dynamic").expect_ok() };
+    auto const is_dynamic{ runtime::truthy(runtime::get(qualified_sym->meta, dynamic_kw)) };
+    var->dynamic.store(is_dynamic);
+
+    /* For direct-call: mark non-closure, non-dynamic functions as eligible for
+     * direct C calls. The deterministic name is computed during codegen (not here)
+     * to avoid JIT/AOT naming conflicts during compile-module. */
+    if(value_expr.is_some() && !is_dynamic)
+    {
+      auto *fn_expr = dynamic_cast<expr::function *>(value_expr.unwrap().data);
+      if(fn_expr != nullptr && fn_expr->captures().empty())
+      {
+        fn_expr->can_be_direct = true;
+        fn_expr->qualified_var_name = qualified_sym->to_string();
+      }
+    }
+
+    return jtl::make_ref<expr::def>(position, current_frame, true, qualified_sym, var, value_expr);
   }
 
   processor::expression_result

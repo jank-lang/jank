@@ -75,6 +75,11 @@ namespace jank::analyze::expr
     jtl::immutable_string unique_name;
     native_vector<function_arity> arities;
     runtime::obj::persistent_hash_map_ref meta{};
+    /* When this function is def'd to a non-dynamic var and has no captures,
+     * it's eligible for direct C calls. The qualified_var_name is stored so the
+     * codegen can compute a deterministic extern "C" function name from it. */
+    bool can_be_direct{};
+    jtl::immutable_string qualified_var_name;
   };
 }
 
