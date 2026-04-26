@@ -20,6 +20,7 @@ pass-nested-no-catch.jank
 pass-nested-try-catch.jank
 pass-recur-local-to-catch.jank
 pass-throw-from-finally.jank
+pass-throw-condition.jank
 pass-try-basic.jank
 pass-try-catch-finally-execution.jank
 pass-try-empty-bodies.jank
