@@ -35,6 +35,8 @@ jobs:
           tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
           sudo mv mdbook /usr/local/bin/
           rm -f mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
+          curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+          cargo binstall mdbook-mermaid
           pushd ${{ github.workspace }}/book
             mdbook build || exit 1
           popd
@@ -56,6 +58,8 @@ jobs:
           tar xf mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
           sudo mv mdbook /usr/local/bin/
           rm -f mdbook-v*-x86_64-unknown-linux-gnu.tar.gz
+          curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
+          cargo binstall mdbook-mermaid
           pushd ${{ github.workspace }}/book
             ./bin/publish || exit 1
           popd
