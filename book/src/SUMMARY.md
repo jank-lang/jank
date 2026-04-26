@@ -48,7 +48,5 @@ TODO:
   * [Where to get help](troubleshooting/getting-help.md)
   * [FAQ](troubleshooting/faq.md)
 
-<!--
 * [Developing jank](dev/index.md)
   * [IR reference](dev/ir.md)
--->
