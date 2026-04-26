@@ -17,7 +17,6 @@ TODO:
   .jank, .cljc, .cpp files
     All modules need to intern the ns
   AOT compiling programs (and distributing them)
-  Printing codegen
   Known issues
   Reference
    Special forms
@@ -44,6 +43,7 @@ TODO:
 
 * [Troubleshooting](troubleshooting/index.md)
   * [Checking jank's health](troubleshooting/health-check.md)
+  * [Printing jank's IR or codegen](troubleshooting/printing.md)
   * [How to get a stack trace](troubleshooting/stack-trace.md)
   * [Where to get help](troubleshooting/getting-help.md)
   * [FAQ](troubleshooting/faq.md)

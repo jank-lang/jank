@@ -74,6 +74,8 @@ which are a common fundamental principle in control flow graphs (CFGs). Each
 basic block has exactly one terminator, which must be the last instruction in
 the block. We start at the first block, which is generally called `entry`.
 
+The remainder of this document will describe each IR instruction.
+
 ## Data structures
 ### `literal`
 The `literal` instruction introduces a lifted constant into the scope. This
