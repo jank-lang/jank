@@ -14,3 +14,9 @@ preferred-dark-theme = "ayu"
 additional-css = ["theme/css/custom.css"]
 admonitions = true
 git-repository-url = "https://github.com/jank-lang/jank"
+additional-js = ["asset/mermaid.min.js", "asset/mermaid-init.js"]
+
+[preprocessor]
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"

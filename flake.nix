@@ -182,6 +182,10 @@
 
             ## Dev libs.
             doctest
+
+            ## Book.
+            mdbook
+            mdbook-mermaid
           ];
 
           shellHook = ''

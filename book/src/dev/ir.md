@@ -8,6 +8,20 @@ semantics of Clojure. However, jank's IR is exactly at the level of Clojure's
 semantics, which allows us to optimize things like var derefs, persistent data
 structures, transients, closure captures, and so on.
 
+## Compilation model
+Every compiled function gets turned into jank IR after it's analyzed into the
+jank abstract syntax tree (AST). From there, we optimize the IR and then finally
+generate C++ code from the IR, which we give to Clang to compile into LLVM IR.
+
+```mermaid
+%% Enable JavaScript to see this diagram rendered nicely. :)
+flowchart TD
+    source([jank source]) --> ast[AST]
+    ast --> jank-ir[jank IR]
+    jank-ir --> cpp[Generated C++]
+    cpp --> llvm-ir[LLVM IR]
+```
+
 ## Overview
 jank's IR is represented as an IR module, at the highest level. IR modules
 contain the following:
