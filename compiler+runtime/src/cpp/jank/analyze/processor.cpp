@@ -2268,8 +2268,21 @@ namespace jank::analyze
       {
         return value_res.expect_err();
       }
-      auto const value_expr{ value_res.expect_ok() };
-      auto expr_type{ cpp_util::non_void_expression_type(value_expr) };
+      auto value_expr{ value_res.expect_ok() };
+      auto expr_type{ value_expr->get_type() };
+
+      /* We need to have a value for every binding, so convert void to nil. */
+      if(Cpp::IsVoid(expr_type))
+      {
+        value_expr = jtl::make_ref<expr::cpp_conversion>(value_expr->position,
+                                                         value_expr->frame,
+                                                         value_expr->needs_box,
+                                                         cpp_util::untyped_object_ref_type(),
+                                                         expr_type,
+                                                         conversion_policy::into_object,
+                                                         value_expr);
+        expr_type = cpp_util::untyped_object_ref_type();
+      }
 
       /* Loop bindings are mutable, so if we have a typed object, force it to be untyped since
        * we have no idea what type it'll be assigned to later on. For example, you might start
