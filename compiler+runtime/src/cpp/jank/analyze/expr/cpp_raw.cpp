@@ -1,10 +1,7 @@
+#include <CppInterOp/CppInterOp.h>
+
 #include <jank/analyze/expr/cpp_raw.hpp>
 #include <jank/detail/to_runtime_data.hpp>
-
-namespace CppImpl
-{
-  void *GetVoidType();
-}
 
 namespace jank::analyze::expr
 {
@@ -32,6 +29,6 @@ namespace jank::analyze::expr
 
   jtl::ptr<void> cpp_raw::get_type() const
   {
-    return CppImpl::GetVoidType();
+    return Cpp::GetVoidType();
   }
 }
