@@ -59,10 +59,10 @@ using function_arity = typename make_function_arity<std::make_index_sequence<N>>
 
 extern "C"
 {
-  jank_object_ref jank_eval(jank_object_ref const s)
+  jank_object_ref jank_eval(jank_object_ref const o)
   {
-    auto const s_obj(try_object<obj::persistent_string>(reinterpret_cast<object *>(s)));
-    return __rt_ctx->eval_string(s_obj->data).unwrap_or(jank_nil).erase().data;
+    auto const o_obj(reinterpret_cast<object *>(o));
+    return __rt_ctx->eval(o_obj).erase().data;
   }
 
   jank_object_ref jank_read_string(jank_object_ref const s)
