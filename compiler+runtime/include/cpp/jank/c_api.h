@@ -45,7 +45,7 @@ extern "C"
   /* NOLINTNEXTLINE(modernize-use-using) */
   typedef jank_u8 jank_arity_flags;
 
-  jank_object_ref jank_eval(jank_object_ref s);
+  jank_object_ref jank_eval(jank_object_ref o);
   jank_object_ref jank_read_string(jank_object_ref s);
   jank_object_ref jank_read_string_c(char const * const s);
 
