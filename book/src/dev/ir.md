@@ -16,7 +16,7 @@ generate C++ code from the IR, which we give to Clang to compile into LLVM IR.
 ```mermaid
 %% Enable JavaScript to see this diagram rendered nicely. :)
 flowchart TD
-    source([jank source]) --> ast[AST]
+    source[jank source] --> ast[AST]
     ast --> jank-ir[jank IR]
     jank-ir --> cpp[Generated C++]
     cpp --> llvm-ir[LLVM IR]

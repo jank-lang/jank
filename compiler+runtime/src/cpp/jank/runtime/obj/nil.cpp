@@ -108,6 +108,6 @@ namespace jank::runtime
     return lhs->type != object_type::nil;
   }
 
-  obj::nil const * const _jank_nil{ make_box<obj::nil>().data };
-  obj::nil_ref const jank_nil{ _jank_nil };
+  obj::nil const _jank_nil;
+  obj::nil_ref const jank_nil{ &_jank_nil };
 }
