@@ -1,0 +1,637 @@
+<!DOCTYPE HTML>
+<html lang="en" class="rust sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>IR reference - The jank Programming Language</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="../theme/css/custom-14cc8901.css">
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "rust";
+            const default_dark_theme = "ayu";
+            window.path_to_searchindex_js = "../searchindex-641bc994.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-f18007b9.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('rust')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The jank Programming Language</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/jank-lang/jank" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="ir-reference"><a class="header" href="#ir-reference">IR reference</a></h1>
+<p>jank has its own custom
+<a href="https://en.wikipedia.org/wiki/Static_single-assignment_form">SSA-based</a> intermediate
+representation (IR), which it uses for all compiled jank code. Even though jank
+is tightly coupled with Clang/LLVM, using LLVM IR directly rules out large
+classes of optimizations, since LLVM IR is significantly lower level than the
+semantics of Clojure. However, jank’s IR is exactly at the level of Clojure’s
+semantics, which allows us to optimize things like var derefs, persistent data
+structures, transients, closure captures, and so on.</p>
+<h2 id="compilation-model"><a class="header" href="#compilation-model">Compilation model</a></h2>
+<p>Every compiled function gets turned into jank IR after it’s analyzed into the
+jank abstract syntax tree (AST). From there, we optimize the IR and then finally
+generate C++ code from the IR, which we give to Clang to compile into LLVM IR.</p>
+<pre class="mermaid">%% Enable JavaScript to see this diagram rendered nicely. :)
+flowchart TD
+    source[jank source] --&gt; ast[AST]
+    ast --&gt; jank-ir[jank IR]
+    jank-ir --&gt; cpp[Generated C++]
+    cpp --&gt; llvm-ir[LLVM IR]
+</pre>
+
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>jank’s IR is represented as an IR module, at the highest level. IR modules
+contain the following:</p>
+<ul>
+<li>Module name</li>
+<li>Lifted vars</li>
+<li>Lifted constants</li>
+<li>Functions</li>
+</ul>
+<p>IR modules are stored in memory as C++ objects, but they can be rendered to
+Clojure data for easy debugging or for writing tests. Round trip serialization
+is not supported, since there’s more information that we store than we can
+reasonably render to Clojure data, including some Clang AST internals needed for
+C++ interop. As an example of some jank IR, here’s a simple jank function
+and its corresponding IR.</p>
+<pre><code class="language-clojure">(defn greet
+  [name]
+  (if (= "jeaye" name)
+    (println "Are you me?!")
+    (println (str "Hello, " name "!"))))
+</code></pre>
+<p>We can get the IR printed for each compiled function by setting
+<code>JANK_PRINT_IR=1</code> when we invoke jank.</p>
+<pre><code class="language-clojure">{:name user_greet_82687
+ :lifted-vars {clojure_core_SLASH_str_82694 clojure.core/str
+               clojure_core_SLASH_println_82691 clojure.core/println
+               clojure_core_SLASH__EQ__82689 clojure.core/=}
+ :lifted-constants {const_82693 "!"
+                    const_82692 "Hello, "
+                    const_82690 "Are you me?!"
+                    const_82688 "jeaye"}
+ :functions [{:name user_greet_82687_1
+              :blocks [{:name entry
+                        :instructions [{:name greet :op :parameter :type "jank::runtime::object_ref"}
+                                       {:name name :op :parameter :type "jank::runtime::object_ref"}
+                                       {:name v3 :op :literal :value "jeaye" :type "jank::runtime::obj::persistent_string_ref"}
+                                       {:name v4 :op :var-deref :var clojure_core_SLASH__EQ__82689 :type "jank::runtime::object_ref"}
+                                       {:name v5 :op :dynamic-call :fn v4 :args [v3 name] :type "jank::runtime::object_ref"}
+                                       {:name v7 :op :truthy :value v5 :type "bool"}
+                                       {:name v8 :op :branch :condition v7 :then if0 :else else1 :merge nil :shadow nil :type "void"}]}
+                       {:name if0
+                        :instructions [{:name v9 :op :literal :value "Are you me?!" :type "jank::runtime::obj::persistent_string_ref"}
+                                       {:name v10 :op :var-deref :var clojure_core_SLASH_println_82691 :type "jank::runtime::object_ref"}
+                                       {:name v11 :op :dynamic-call :fn v10 :args [v9] :type "jank::runtime::object_ref"}
+                                       {:name v12 :op :ret :value v11 :type "jank::runtime::object_ref"}]}
+                       {:name else1
+                        :instructions [{:name v13 :op :literal :value "Hello, " :type "jank::runtime::obj::persistent_string_ref"}
+                                       {:name v14 :op :literal :value "!" :type "jank::runtime::obj::persistent_string_ref"}
+                                       {:name v15 :op :var-deref :var clojure_core_SLASH_str_82694 :type "jank::runtime::object_ref"}
+                                       {:name v16 :op :dynamic-call :fn v15 :args [v13 name v14] :type "jank::runtime::object_ref"}
+                                       {:name v17 :op :var-deref :var clojure_core_SLASH_println_82691 :type "jank::runtime::object_ref"}
+                                       {:name v18 :op :dynamic-call :fn v17 :args [v16] :type "jank::runtime::object_ref"}
+                                       {:name v19 :op :ret :value v18 :type "jank::runtime::object_ref"}]}]}]}
+</code></pre>
+<p>Modules have at least one function, where each function corresponds with a
+single arity of a jank function. IR functions are broken into basic blocks,
+which are a common fundamental principle in control flow graphs (CFGs). Each
+basic block has exactly one terminator, which must be the last instruction in
+the block. We start at the first block, which is generally called <code>entry</code>.</p>
+<p>The remainder of this document will describe each IR instruction.</p>
+<h2 id="data-structures"><a class="header" href="#data-structures">Data structures</a></h2>
+<h3 id="literal"><a class="header" href="#literal"><code>literal</code></a></h3>
+<p>The <code>literal</code> instruction introduces a lifted constant into the scope. This
+instruction is only used for boxed jank values, not unboxed C++ literals.</p>
+<pre><code class="language-clojure">{:name v8 :op :literal :value 1 :type "jank::runtime::obj::integer_ref"}
+</code></pre>
+<h3 id="persistent-list"><a class="header" href="#persistent-list"><code>persistent-list</code></a></h3>
+<p>The <code>persistent-list</code> instruction creates a list object, given the values
+provided. This is generally only used for packing arguments to variadic
+functions, since otherwise a list would just be a literal.</p>
+<pre><code class="language-clojure">{:name v12 :op :persistent-list :values [v10 v11] :type "jank::runtime::obj::persistent_list_ref"}
+</code></pre>
+<h3 id="persistent-vector"><a class="header" href="#persistent-vector"><code>persistent-vector</code></a></h3>
+<p>The <code>persistent-vector</code> instruction creates a vector object, given the values
+provided. This is only used for vectors which aren’t literals.</p>
+<pre><code class="language-clojure">{:name v3 :op :persistent-vector :values [v0 v1 v2] :type "jank::runtime::obj::persistent_vector_ref"}
+</code></pre>
+<h3 id="persistent-array-map"><a class="header" href="#persistent-array-map"><code>persistent-array-map</code></a></h3>
+<p>The <code>persistent-array-map</code> instruction creates an array map object, given the values
+provided. This is only used for maps which aren’t literals and only if they’re
+small enough to fit in an array map. Otherwise, a hash map is used.</p>
+<pre><code class="language-clojure">{:name v4 :op :persistent-array-map :values [[v1 v0] [v2 v3]] :type "jank::runtime::obj::persistent_array_map_ref"}
+</code></pre>
+<h3 id="persistent-hash-map"><a class="header" href="#persistent-hash-map"><code>persistent-hash-map</code></a></h3>
+<p>The <code>persistent-hash-map</code> instruction creates a hash map object, given the values
+provided. This is only used for maps which aren’t literals and only if they’re
+too large to fit in an array map.</p>
+<pre><code class="language-clojure">{:name v4 :op :persistent-hash-map :values [[v1 v0] [v2 v3]] :type "jank::runtime::obj::persistent_hash_map_ref"}
+</code></pre>
+<h3 id="persistent-hash-set"><a class="header" href="#persistent-hash-set"><code>persistent-hash-set</code></a></h3>
+<p>The <code>persistent-hash-set</code> instruction creates a hash set object, given the values
+provided. This is only used for maps which aren’t literals.</p>
+<pre><code class="language-clojure">{:name v3 :op :persistent-hash-set :values [v0 v1 v2] :type "jank::runtime::obj::persistent_hash_set_ref"}
+</code></pre>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<h3 id="function"><a class="header" href="#function"><code>function</code></a></h3>
+<p>The <code>function</code> instruction creates a new function object, given all of its
+arities and the arity flags. Each arity is its own C function. Note that
+function objects don’t support captured values. For those, we use <code>closure</code>.</p>
+<pre><code class="language-clojure">{:name v0 :op :function :arities {0 user_foo_82687_0} :arity-flags 0 :type "jank::runtime::obj::jit_function_ref"}
+</code></pre>
+<h3 id="closure"><a class="header" href="#closure"><code>closure</code></a></h3>
+<p>The <code>closure</code> instruction creates a new closure object, given all of its
+arities, arity flags, and captures. Each arity is its own C function. Note that
+closure objects are used when we have captures. If there are no captures, we use
+a <code>function</code>. The context of a closure is the name of the struct which is
+created just for this closure, to hold its captures.</p>
+<pre><code class="language-clojure">{:name v1 :op :closure :context user_foo_82688_ctx :arities {0 user_foo_82688_0} :captures {a {:name v0 :type jank::runtime::object_ref}} :arity-flags 0 :type "jank::runtime::obj::jit_closure_ref"}
+</code></pre>
+<h3 id="parameter"><a class="header" href="#parameter"><code>parameter</code></a></h3>
+<p>The <code>parameter</code> instruction introduces a named parameter of the function into
+the local scope. jank will automatically generate one of these for each
+parameter a function has. Unlike most instructions, the name used for this
+instruction is not auto-generated. The munged name of the actual parameter is
+used. Parameters will always have the type <code>object_ref</code>.</p>
+<pre><code class="language-clojure">{:name n :op :parameter :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="capture"><a class="header" href="#capture"><code>capture</code></a></h3>
+<p>The <code>capture</code> instruction is similar to the <code>parameter</code> instruction, in that it
+introduces a named closure capture into the scope. jank will automatically
+generate one of these for each capture a function has. Like <code>parameter</code>, the
+munged name of the actual capture is used for the instruction name. Captures may
+have the type <code>object_ref</code> or any other type.</p>
+<pre><code class="language-clojure">{:name n :op :capture :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="dynamic-call"><a class="header" href="#dynamic-call"><code>dynamic-call</code></a></h3>
+<p>The <code>dynamic-call</code> instruction will invoke the <code>call</code> behavior on the provided
+<code>:fn</code>. This works for any jank runtime object which implements the <code>call</code>
+behavior, such as functions, closures, keywords, maps, and so on. Any number of
+arguments can be provided and the runtime will handle packing them as necessary.</p>
+<pre><code class="language-clojure">{:name v2 :op :dynamic-call :fn v1 :args [v0] :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="named-recursion"><a class="header" href="#named-recursion"><code>named-recursion</code></a></h3>
+<p>The <code>named-recursion</code> instruction will recur into the current function, without
+performing argument packing. This recursion doesn’t need to be in tail position,
+unlike normal <code>recur</code> usage. It’s separated from <code>dynamic-call</code> as an
+optimization.</p>
+<pre><code class="language-clojure">{:name v1 :op :named-recursion :fn foo :args [v0] :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="recursion-reference"><a class="header" href="#recursion-reference"><code>recursion-reference</code></a></h3>
+<p>The <code>recursion-reference</code> instruction will store a reference to the current
+function. This is only used when capturing or returning the function object.
+When the recursion reference is called, a <code>named-recursion</code> instruction is used
+instead.</p>
+<p>Note that recursion references that cross function boundaries are represented as
+a <code>capture</code> instruction instead. So a <code>recursion-reference</code> is only ever used
+for the immediate function.</p>
+<pre><code class="language-clojure">{:name v0 :op :recursion-reference :type "jank::runtime::object_ref"}
+</code></pre>
+<h2 id="vars"><a class="header" href="#vars">Vars</a></h2>
+<h3 id="def"><a class="header" href="#def"><code>def</code></a></h3>
+<p>The <code>def</code> instruction interns a var, sets is root, and updates its metadata. The
+name of this instruction will refer to the var itself. Note the the <code>:value</code> is
+optional. If there is no value present, the var will still be interned and have
+its metadata updated, but its root will not be updated.</p>
+<pre><code class="language-clojure">{:name v2 :op :def :var user/foo :value v0 :meta v1 :type "jank::runtime::obj::var_ref"}
+</code></pre>
+<h3 id="var-deref"><a class="header" href="#var-deref"><code>var-deref</code></a></h3>
+<p>The <code>var-deref</code> instruction grabs the latest value out of an interned var. This
+is implicitly done, via Clojure’s semantics, whenever a var is referenced by
+its name. For example, <code>(println :meow)</code> implicitly derefs
+<code>clojure.core/println</code>.</p>
+<pre><code class="language-clojure">{:name v1 :op :var-deref :var clojure_core_SLASH_println_82689 :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="var-ref"><a class="header" href="#var-ref"><code>var-ref</code></a></h3>
+<p>The <code>var-ref</code> instruction grabs an interned var directly, without dereferencing
+it. This is analogous to the <code>#'foo</code> syntax, in Clojure.</p>
+<pre><code class="language-clojure">{:name v1 :op :var-ref :var clojure_core_SLASH_println_82689 :type "jank::runtime::obj::var_ref"}
+</code></pre>
+<h3 id="type-erase"><a class="header" href="#type-erase"><code>type-erase</code></a></h3>
+<p>The <code>type-erase</code> instruction will strip typed object information away from boxed
+jank runtime objects. This is used specifically for mutable values, such as loop
+bindings, since they may be initialized with an empty vector, but we have no
+idea what type of value each iteration will bring, so we need to represent the
+value as a type-erased <code>object_ref</code> instead. This instruction is only meant to
+be used on boxed jank objects.</p>
+<pre><code class="language-clojure">{:name v1 :op :type-erase :value v0 :type "jank::runtime::object_ref"}
+</code></pre>
+<h2 id="control-flow"><a class="header" href="#control-flow">Control flow</a></h2>
+<h3 id="jump"><a class="header" href="#jump"><code>jump</code></a></h3>
+<p>The <code>jump</code> instruction is a terminator which will unconditionally jump to a
+different IR block. The instruction also knows whether it’s part of a loop, in
+which case it’s effectively a <code>continue;</code>.</p>
+<pre><code class="language-clojure">{:name v9 :op :jump :block if-merge3 :loop false :type "void"}
+</code></pre>
+<h3 id="branch-set"><a class="header" href="#branch-set"><code>branch-set</code></a></h3>
+<p>The <code>branch-set</code> instruction is half of the <code>branch-set</code>/<code>branch-get</code> pair,
+which is used to store the expression result of branching so that the merge
+block can have a value to use. In other IRs, <code>branch-get</code> is called <code>phi</code>.
+jank’s IR usage of <code>branch-set</code>/<code>branch-get</code> is based on the Pizlo-style
+upsilon/phi, just without the Greek naming.</p>
+<p>Each <code>branch-set</code> will refer to a “shadow” name, without assigning it into the
+SSA semantics. The shadow gets assigned into a proper instruction name when
+<code>branch-get</code> is used.</p>
+<p>The name of the <code>branch-set</code> instruction is never used and the type is always
+<code>void</code>.</p>
+<pre><code class="language-clojure">{:name v11 :op :branch-set :shadow s4 :value v10 :type "void"}
+</code></pre>
+<h3 id="branch-get"><a class="header" href="#branch-get"><code>branch-get</code></a></h3>
+<p>The <code>branch-get</code> instruction is half of the <code>branch-set</code>/<code>branch-get</code> pair,
+which is used to store the expression result of branching so that the merge
+block can have a value to use. See the <code>branch-set</code> docs for more info.</p>
+<p>The name of the <code>branch-get</code> is always the same as the shadow variable used in
+the <code>branch-set</code>. The type is the actual type of the shadow variable, which
+could be any jank object or native type.</p>
+<pre><code class="language-clojure">{:name s4 :op :branch-get :type "jank::runtime::obj::keyword_ref"}
+</code></pre>
+<h3 id="branch"><a class="header" href="#branch"><code>branch</code></a></h3>
+<p>The <code>branch</code> instruction is a terminator which conditionally jumps to either the
+<code>:then</code> or <code>:else</code> block, depending on whether the <code>:condition</code> value is true.
+The <code>branch</code> instruction also tracks the resulting merge block, if there is one,
+and the shadow variable used.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v6 :op :branch :condition v5 :then if1 :else else2 :merge if-merge3 :shadow s4 :type "void"}
+</code></pre>
+<h3 id="loop"><a class="header" href="#loop"><code>loop</code></a></h3>
+<p>The <code>loop</code> instruction is a terminator which sets up mutable bindings and then
+jumps to the provided merge block. Each mutable binding gets a shadow variable
+and the result of the loop also has one.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v6 :op :loop :loop-block loop4 :merge loop-merge5 :shadow s2 :shadows {{:name s3 :value v1 :type "jank::runtime::object_ref"}} :type "void"}
+</code></pre>
+<h3 id="case"><a class="header" href="#case"><code>case</code></a></h3>
+<p>The <code>case</code> instruction is a terminator which branches to one of the
+corresponding case blocks, depending on the provided value. The shift and mask
+are set up by the <code>clojure.core/case</code> macro and each case block disambiguates
+hash collisions. This instruction also tracks whether there’s a merge block and
+shadow variable.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v54 :op :case :shift 0 :mask 0 :value v3 :case-blocks [{:value 3 :block case36} {:value 2 :block case21} {:value 1 :block case6}] :default-block default51 :merge-block nil :shadow nil :type "void"}
+</code></pre>
+<h3 id="ret"><a class="header" href="#ret"><code>ret</code></a></h3>
+<p>The <code>ret</code> instruction is a block terminator which returns a value from the
+current function. It has a name, like all instructions, but that name will never
+be used. The type of a <code>ret</code> instruction is the type of the returned data.</p>
+<pre><code class="language-clojure">{:name v7 :op :ret :value v4 :type "jank::runtime::object_ref"}
+</code></pre>
+<h2 id="exceptions"><a class="header" href="#exceptions">Exceptions</a></h2>
+<h3 id="try"><a class="header" href="#try"><code>try</code></a></h3>
+<p>The <code>try</code> instruction is a starter which denotes that the rest of the basic
+block will be part of a <code>try</code> body. This instruction notes the various catch
+types and their corresponding blocks, as well as whether there is a finally
+block. A <code>try</code> instruction will always have a merge block and a shadow variable
+for its result.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v11 :op :try :catches [{:type "jank::runtime::oref&lt;jank::runtime::object&gt; &amp;" :block catch4}] :merge try-merge2 :shadow s3 :finally nil :type "void"}
+</code></pre>
+<h3 id="catch"><a class="header" href="#catch"><code>catch</code></a></h3>
+<p>The <code>catch</code> instruction is a starter which denotes that the rest of the basic
+block will be part of a <code>catch</code> body. This instruction also knows the merge
+block of the corresponding <code>try</code>, as well as the shadow of the <code>try</code>.</p>
+<p>The name of this instruction, and its type, correspond with the caught exception
+value.</p>
+<pre><code class="language-clojure">{:name v5 :op :catch :merge try-merge2 :shadow s3 :type "jank::runtime::oref&lt;jank::runtime::object&gt; &amp;"}
+</code></pre>
+<h3 id="finally"><a class="header" href="#finally"><code>finally</code></a></h3>
+<p>The <code>finally</code> instruction is a starter which denotes that the rest of the basic
+block will be part of a <code>finally</code> body. This instruction also knows the merge
+block of the corresponding <code>try</code>.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v5 :op :finally :merge try-merge2 :type "void"}
+</code></pre>
+<h3 id="throw"><a class="header" href="#throw"><code>throw</code></a></h3>
+<p>The <code>throw</code> instruction is a terminator which throws an exeption value. Any
+value type can be thrown.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v19 :op :throw :value v18 :type "void"}
+</code></pre>
+<h2 id="utilities"><a class="header" href="#utilities">Utilities</a></h2>
+<h3 id="truthy"><a class="header" href="#truthy"><code>truthy</code></a></h3>
+<p>The <code>truthy</code> instruction will convert a boxed jank object to a <code>bool</code>, generally
+for branching. This is avoided whenever we already have a bool, such as when
+working with native values.</p>
+<pre><code class="language-clojure">{:name v5 :op :truthy :value v0 :type "bool"}
+</code></pre>
+<h3 id="letfn"><a class="header" href="#letfn"><code>letfn</code></a></h3>
+<p>The <code>letfn</code> instruction introduces one or more function/closure locals
+simultaneously. It’s expected that for <code>N</code> bindings, there are <code>N</code> instructions
+which follow the <code>letfn</code> instruction, one to create each binding. The name of
+this instruction will not be used.</p>
+<pre><code class="language-clojure">{:name v0 :op :letfn :bindings [foo bar] :type "void"}
+{:name v1 :op :function :arities {0 user_foo_82687_0} :arity-flags 0 :type "jank::runtime::obj::jit_function_ref"}
+{:name v2 :op :function :arities {0 user_bar_82688_0} :arity-flags 0 :type "jank::runtime::obj::jit_function_ref"}
+</code></pre>
+<p>Mutual recursion is handled via <code>:defer</code> for the capture. For example, if both
+<code>foo</code> and <code>bar</code> functions do nothing but return each other, we would get this
+IR. Notice how the <code>bar</code> capture’s value name is <code>:defer</code>.</p>
+<pre><code class="language-clojure">{:name v0 :op :letfn :bindings [foo bar] :type "void"}
+{:name v1 :op :closure :context user_foo_82687_ctx :arities {0 user_foo_82687_0} :captures {bar {:name :defer :type jank::runtime::object_ref}} :arity-flags 0 :type "jank::runtime::obj::jit_closure_ref"}
+{:name v2 :op :closure :context user_bar_82688_ctx :arities {0 user_bar_82688_0} :captures {foo {:name v1 :type jank::runtime::object_ref}} :arity-flags 0 :type "jank::runtime::obj::jit_closure_ref"}
+</code></pre>
+<h2 id="c-interop"><a class="header" href="#c-interop">C++ interop</a></h2>
+<h3 id="cppraw"><a class="header" href="#cppraw"><code>cpp/raw</code></a></h3>
+<p>The <code>cpp/raw</code> instruction introduces some global C++ which needs to be compiled
+alongside this module.</p>
+<p>This instruction always has the type <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v0 :op :cpp/raw :type "void"}
+</code></pre>
+<h3 id="cppvalue"><a class="header" href="#cppvalue"><code>cpp/value</code></a></h3>
+<p>The <code>cpp/value</code> instruction accesses an arbitrary C++ value. The value could be
+a C++ constant, function, variable, or member access.</p>
+<pre><code class="language-clojure">{:name v0 :op :cpp/value :scope "std::basic_string&lt;char&gt;::npos" :type "const std::basic_string&lt;char&gt;::size_type &amp;"}
+</code></pre>
+<h3 id="cppinto-object"><a class="header" href="#cppinto-object"><code>cpp/into-object</code></a></h3>
+<p>The <code>cpp/into-object</code> instruction converts a native C++ value into a jank
+runtime object using the <code>jank::runtime::convert</code> trait.</p>
+<pre><code class="language-clojure">{:name v2 :op :cpp/into-object :value v1 :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="cppfrom-object"><a class="header" href="#cppfrom-object"><code>cpp/from-object</code></a></h3>
+<p>The <code>cpp/from-object</code> instruction converts a boxed jank object into a native C++
+value using the <code>jank::runtime::convert</code> trait.</p>
+<pre><code class="language-clojure">{:name v2 :op :cpp/from-object :value v1 :type "int"}
+</code></pre>
+<h3 id="cppunsafe-cast"><a class="header" href="#cppunsafe-cast"><code>cpp/unsafe-cast</code></a></h3>
+<p>The <code>cpp/unsafe-cast</code> instruction performs a C-style cast from one type to
+another.</p>
+<p>The type of this instruction is the resulting type of the data.</p>
+<pre><code class="language-clojure">{:name v1 :op :cpp/unsafe-cast :value v0 :type "int *"}
+</code></pre>
+<h3 id="cppcall"><a class="header" href="#cppcall"><code>cpp/call</code></a></h3>
+<p>The <code>cpp/call</code> instruction calls a C++ function, pointer to function, or
+functor, with the given arguments. The value of this call will render as <code>nil</code>
+if it’s inlined as a C++ symbol.</p>
+<p>The type of this instruction is the return type of the function.</p>
+<pre><code class="language-clojure">{:name v1 :op :cpp/call :value nil :args [v0] :type "std::string"}
+</code></pre>
+<p>For example, if you have a <code>cpp/call</code> for an IR value, it will be set.</p>
+<pre><code class="language-clojure">{:name v1 :op :cpp/call :value v0 :args [] :type "int"}
+</code></pre>
+<h3 id="cppconstructor-call"><a class="header" href="#cppconstructor-call"><code>cpp/constructor-call</code></a></h3>
+<p>The <code>cpp/constructor-call</code> instruction constructs a stack-allocated C++ value.
+This is used for both overloaded constructors and aggregate initialization.</p>
+<p>The type of this instruction is the type of the object being constructed.</p>
+<pre><code class="language-clojure">{:name v1 :op :cpp/constructor-call :args [v0] :type "foo"}
+</code></pre>
+<h3 id="cppmember-call"><a class="header" href="#cppmember-call"><code>cpp/member-call</code></a></h3>
+<p>The <code>cpp/member-call</code> instruction calls a member function or operator on an invoking object.
+This instruction supports direct members as well as base members. Virtual
+functions are supported, as well as default arguments.</p>
+<p>The type of this instruction is the return type of the function.</p>
+<pre><code class="language-clojure">{:name v1 :op :cpp/member-call :fn "std::function&lt;void ()&gt;::operator()" :args [v0] :type "void"}
+</code></pre>
+<h3 id="cppmember-access"><a class="header" href="#cppmember-access"><code>cpp/member-access</code></a></h3>
+<p>The <code>cpp/member-access</code> instruction reaches into a member of the provided C++
+object and grabs a reference to it. This instruction supports direct members as
+well as base members.</p>
+<p>The type of this instruction is the return type of the function.</p>
+<pre><code class="language-clojure">{:name v3 :op :cpp/member-access :value v2 :member "std::pair&lt;long long, long long&gt;::first" :type "long long &amp;"}
+</code></pre>
+<h3 id="cppbuiltin-operator-call"><a class="header" href="#cppbuiltin-operator-call"><code>cpp/builtin-operator-call</code></a></h3>
+<p>The <code>cpp/builtin-operator-call</code> instruction performs a C++ operator on primitive
+types. Overloaded operators and operators defined for custom types will use
+<code>cpp/call</code> or <code>cpp/member-call</code>, depending on whether the operator is defined
+as a member.</p>
+<p>The type of this instruction is the return type of the operator.</p>
+<pre><code class="language-clojure">{:name v2 :op :cpp/builtin-operator-call :op "+" :args [v0 v1] :type "jtl::f64"}
+</code></pre>
+<h3 id="cppbox"><a class="header" href="#cppbox"><code>cpp/box</code></a></h3>
+<p>The <code>cpp/box</code> instruction creates an opaque boxed jank object to store a native
+pointer as a <code>void*</code>. This value can then be retrieved via <code>cpp/unbox</code>, but the
+type must be provided, so a cast can be performed. The type will be verified at
+runtime.</p>
+<pre><code class="language-clojure">{:name v2 :op :cpp/box :value v1 :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="cppunbox"><a class="header" href="#cppunbox"><code>cpp/unbox</code></a></h3>
+<p>The <code>cpp/unbox</code> instruction extracts the <code>void*</code> from an opaque boxed jank
+object and casts it to the specified type. The type will be verified at runtime.</p>
+<p>The type of this instruction is the extracted type of the native pointer.</p>
+<pre><code class="language-clojure">{:name v4 :op :cpp/unbox :value v2 :type "jtl::i64 *"}
+</code></pre>
+<h3 id="cppnew"><a class="header" href="#cppnew"><code>cpp/new</code></a></h3>
+<p>The <code>cpp/new</code> instruction GC allocates a new C++ value. The result will be a
+pointer to that value.</p>
+<p>The type of this instruction is the extracted type of the native pointer.</p>
+<pre><code class="language-clojure">{:name v2 :op :cpp/new :value v1 :type "int *"}
+</code></pre>
+<h3 id="cppdelete"><a class="header" href="#cppdelete"><code>cpp/delete</code></a></h3>
+<p>The <code>cpp/delete</code> instruction frees memory allocated via <code>cpp/new</code>. This is not
+required, since all values allocated via <code>cpp/new</code> are tracked by jank’s GC.</p>
+<p>This instruction always has the type <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v3 :op :cpp/delete :value v2 :type "void"}
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../dev/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../dev/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-14465888.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../asset/mermaid-eefea253.min.js"></script>
+        <script src="../asset/mermaid-init-ccf746f1.js"></script>
+
+
+
+    </div>
+    </body>
+</html>

@@ -29,6 +29,7 @@
         <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
+        <link rel="stylesheet" href="theme/css/custom-14cc8901.css">
 
 
         <!-- Provide site root and default themes to javascript -->
@@ -36,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-2bc80c85.js";
+            window.path_to_searchindex_js = "searchindex-641bc994.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-15aabc7d.js"></script>
+        <script src="toc-f18007b9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -938,13 +939,21 @@ need a copy, you will need to manually do that.</p>
 <h2 id="accessing-c-types"><a class="header" href="#accessing-c-types">Accessing C++ types</a></h2>
 <p>C++ types are available within the <code>cpp</code> namespace, but you must replace <code>::</code> with
 <code>.</code>. For example, <code>std::string</code> becomes <code>cpp/std.string</code>. This also works for
-type aliases.</p>
+type aliases. Given a type, a value can be constructed by calling the type. This
+supports both constructor overload resolution and aggregate initialization.
+C++ initializer lists are not currently supported.</p>
+<pre><code class="language-clojure">(let [i (cpp/int)] ; Stack-allocates an int.
+  )
+</code></pre>
 <h2 id="complex-literal-types"><a class="header" href="#complex-literal-types">Complex literal types</a></h2>
 <p>For complex types like template instantiations, pointers to members, and so on,
 jank supports a C++ domain-specific language (DSL).
 This is available implicitly when in type position, but it can be
 explicitly requested by using the special <code>#cpp</code> tag. The documentation for this
 DSL is <a href="#the-c-dsl">here</a>.</p>
+<pre><code class="language-clojure">(let [i (#cpp (:* void))] ; Stack-allocates a void*.
+  )
+</code></pre>
 <h2 id="defining-new-types"><a class="header" href="#defining-new-types">Defining new types</a></h2>
 <p>There isn’t yet a way to define new types using jank’s syntax, but you can
 always drop to <code>cpp/raw</code> to either include headers or define some C++ types
@@ -1573,6 +1582,17 @@ up with your expectations.</p>
 <p>Either way, when you’re reporting a bug or submitting system information,
 including your health check output is very useful.</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="printing-janks-ir-or-codegen"><a class="header" href="#printing-janks-ir-or-codegen">Printing jank’s IR or codegen</a></h1>
+<p>You can glimpse under the hood of jank and have it print out both the generated
+jank IR and the generated C++ code, separately. These are accomplished via
+environment variables.</p>
+<ul>
+<li><code>JANK_PRINT_IR=1</code> will print out formatted IR for each compiled jank function.</li>
+<li><code>JANK_PRINT_CODEGEN=1</code> will print out formatted C++ code for each compiled function.</li>
+</ul>
+<p>Note that not all evaluated code is compiled. If you want to be sure some code
+is compiled, wrap it in a function and call it.</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="how-to-get-a-stack-trace"><a class="header" href="#how-to-get-a-stack-trace">How to get a stack trace</a></h1>
 <p>If jank is crashing, or your AOT compiled program is, you may be asked to
 provide a stack trace. In case you’re not familiar with how to do this, here’s a
@@ -1713,6 +1733,417 @@ However, any C++ interop uses normal C++ idioms, including RAII. For example, if
 you stack allocate a C++ value which has a destructor, jank will ensure that
 destructor runs at the end of the object’s scope. Also, you can use <code>cpp/new</code>
 and <code>cpp/delete</code> or <code>cpp/malloc</code> and <code>cpp/free</code>, if you so desire.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="developing-jank"><a class="header" href="#developing-jank">Developing jank</a></h1>
+<p>This documentation is for the compiler hackers working on jank itself. Anything
+documented here is not intended to be stable unless otherwise stated, since
+these are the internals of jank’s compiler and runtime. jank aims to offer
+stable language syntax and semantics, and a stable C API, while leaving the
+underlying C++ API unburdened with backward compatibility.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="ir-reference"><a class="header" href="#ir-reference">IR reference</a></h1>
+<p>jank has its own custom
+<a href="https://en.wikipedia.org/wiki/Static_single-assignment_form">SSA-based</a> intermediate
+representation (IR), which it uses for all compiled jank code. Even though jank
+is tightly coupled with Clang/LLVM, using LLVM IR directly rules out large
+classes of optimizations, since LLVM IR is significantly lower level than the
+semantics of Clojure. However, jank’s IR is exactly at the level of Clojure’s
+semantics, which allows us to optimize things like var derefs, persistent data
+structures, transients, closure captures, and so on.</p>
+<h2 id="compilation-model-1"><a class="header" href="#compilation-model-1">Compilation model</a></h2>
+<p>Every compiled function gets turned into jank IR after it’s analyzed into the
+jank abstract syntax tree (AST). From there, we optimize the IR and then finally
+generate C++ code from the IR, which we give to Clang to compile into LLVM IR.</p>
+<pre class="mermaid">%% Enable JavaScript to see this diagram rendered nicely. :)
+flowchart TD
+    source[jank source] --&gt; ast[AST]
+    ast --&gt; jank-ir[jank IR]
+    jank-ir --&gt; cpp[Generated C++]
+    cpp --&gt; llvm-ir[LLVM IR]
+</pre>
+
+<h2 id="overview"><a class="header" href="#overview">Overview</a></h2>
+<p>jank’s IR is represented as an IR module, at the highest level. IR modules
+contain the following:</p>
+<ul>
+<li>Module name</li>
+<li>Lifted vars</li>
+<li>Lifted constants</li>
+<li>Functions</li>
+</ul>
+<p>IR modules are stored in memory as C++ objects, but they can be rendered to
+Clojure data for easy debugging or for writing tests. Round trip serialization
+is not supported, since there’s more information that we store than we can
+reasonably render to Clojure data, including some Clang AST internals needed for
+C++ interop. As an example of some jank IR, here’s a simple jank function
+and its corresponding IR.</p>
+<pre><code class="language-clojure">(defn greet
+  [name]
+  (if (= "jeaye" name)
+    (println "Are you me?!")
+    (println (str "Hello, " name "!"))))
+</code></pre>
+<p>We can get the IR printed for each compiled function by setting
+<code>JANK_PRINT_IR=1</code> when we invoke jank.</p>
+<pre><code class="language-clojure">{:name user_greet_82687
+ :lifted-vars {clojure_core_SLASH_str_82694 clojure.core/str
+               clojure_core_SLASH_println_82691 clojure.core/println
+               clojure_core_SLASH__EQ__82689 clojure.core/=}
+ :lifted-constants {const_82693 "!"
+                    const_82692 "Hello, "
+                    const_82690 "Are you me?!"
+                    const_82688 "jeaye"}
+ :functions [{:name user_greet_82687_1
+              :blocks [{:name entry
+                        :instructions [{:name greet :op :parameter :type "jank::runtime::object_ref"}
+                                       {:name name :op :parameter :type "jank::runtime::object_ref"}
+                                       {:name v3 :op :literal :value "jeaye" :type "jank::runtime::obj::persistent_string_ref"}
+                                       {:name v4 :op :var-deref :var clojure_core_SLASH__EQ__82689 :type "jank::runtime::object_ref"}
+                                       {:name v5 :op :dynamic-call :fn v4 :args [v3 name] :type "jank::runtime::object_ref"}
+                                       {:name v7 :op :truthy :value v5 :type "bool"}
+                                       {:name v8 :op :branch :condition v7 :then if0 :else else1 :merge nil :shadow nil :type "void"}]}
+                       {:name if0
+                        :instructions [{:name v9 :op :literal :value "Are you me?!" :type "jank::runtime::obj::persistent_string_ref"}
+                                       {:name v10 :op :var-deref :var clojure_core_SLASH_println_82691 :type "jank::runtime::object_ref"}
+                                       {:name v11 :op :dynamic-call :fn v10 :args [v9] :type "jank::runtime::object_ref"}
+                                       {:name v12 :op :ret :value v11 :type "jank::runtime::object_ref"}]}
+                       {:name else1
+                        :instructions [{:name v13 :op :literal :value "Hello, " :type "jank::runtime::obj::persistent_string_ref"}
+                                       {:name v14 :op :literal :value "!" :type "jank::runtime::obj::persistent_string_ref"}
+                                       {:name v15 :op :var-deref :var clojure_core_SLASH_str_82694 :type "jank::runtime::object_ref"}
+                                       {:name v16 :op :dynamic-call :fn v15 :args [v13 name v14] :type "jank::runtime::object_ref"}
+                                       {:name v17 :op :var-deref :var clojure_core_SLASH_println_82691 :type "jank::runtime::object_ref"}
+                                       {:name v18 :op :dynamic-call :fn v17 :args [v16] :type "jank::runtime::object_ref"}
+                                       {:name v19 :op :ret :value v18 :type "jank::runtime::object_ref"}]}]}]}
+</code></pre>
+<p>Modules have at least one function, where each function corresponds with a
+single arity of a jank function. IR functions are broken into basic blocks,
+which are a common fundamental principle in control flow graphs (CFGs). Each
+basic block has exactly one terminator, which must be the last instruction in
+the block. We start at the first block, which is generally called <code>entry</code>.</p>
+<p>The remainder of this document will describe each IR instruction.</p>
+<h2 id="data-structures"><a class="header" href="#data-structures">Data structures</a></h2>
+<h3 id="literal"><a class="header" href="#literal"><code>literal</code></a></h3>
+<p>The <code>literal</code> instruction introduces a lifted constant into the scope. This
+instruction is only used for boxed jank values, not unboxed C++ literals.</p>
+<pre><code class="language-clojure">{:name v8 :op :literal :value 1 :type "jank::runtime::obj::integer_ref"}
+</code></pre>
+<h3 id="persistent-list"><a class="header" href="#persistent-list"><code>persistent-list</code></a></h3>
+<p>The <code>persistent-list</code> instruction creates a list object, given the values
+provided. This is generally only used for packing arguments to variadic
+functions, since otherwise a list would just be a literal.</p>
+<pre><code class="language-clojure">{:name v12 :op :persistent-list :values [v10 v11] :type "jank::runtime::obj::persistent_list_ref"}
+</code></pre>
+<h3 id="persistent-vector"><a class="header" href="#persistent-vector"><code>persistent-vector</code></a></h3>
+<p>The <code>persistent-vector</code> instruction creates a vector object, given the values
+provided. This is only used for vectors which aren’t literals.</p>
+<pre><code class="language-clojure">{:name v3 :op :persistent-vector :values [v0 v1 v2] :type "jank::runtime::obj::persistent_vector_ref"}
+</code></pre>
+<h3 id="persistent-array-map"><a class="header" href="#persistent-array-map"><code>persistent-array-map</code></a></h3>
+<p>The <code>persistent-array-map</code> instruction creates an array map object, given the values
+provided. This is only used for maps which aren’t literals and only if they’re
+small enough to fit in an array map. Otherwise, a hash map is used.</p>
+<pre><code class="language-clojure">{:name v4 :op :persistent-array-map :values [[v1 v0] [v2 v3]] :type "jank::runtime::obj::persistent_array_map_ref"}
+</code></pre>
+<h3 id="persistent-hash-map"><a class="header" href="#persistent-hash-map"><code>persistent-hash-map</code></a></h3>
+<p>The <code>persistent-hash-map</code> instruction creates a hash map object, given the values
+provided. This is only used for maps which aren’t literals and only if they’re
+too large to fit in an array map.</p>
+<pre><code class="language-clojure">{:name v4 :op :persistent-hash-map :values [[v1 v0] [v2 v3]] :type "jank::runtime::obj::persistent_hash_map_ref"}
+</code></pre>
+<h3 id="persistent-hash-set"><a class="header" href="#persistent-hash-set"><code>persistent-hash-set</code></a></h3>
+<p>The <code>persistent-hash-set</code> instruction creates a hash set object, given the values
+provided. This is only used for maps which aren’t literals.</p>
+<pre><code class="language-clojure">{:name v3 :op :persistent-hash-set :values [v0 v1 v2] :type "jank::runtime::obj::persistent_hash_set_ref"}
+</code></pre>
+<h2 id="functions"><a class="header" href="#functions">Functions</a></h2>
+<h3 id="function"><a class="header" href="#function"><code>function</code></a></h3>
+<p>The <code>function</code> instruction creates a new function object, given all of its
+arities and the arity flags. Each arity is its own C function. Note that
+function objects don’t support captured values. For those, we use <code>closure</code>.</p>
+<pre><code class="language-clojure">{:name v0 :op :function :arities {0 user_foo_82687_0} :arity-flags 0 :type "jank::runtime::obj::jit_function_ref"}
+</code></pre>
+<h3 id="closure"><a class="header" href="#closure"><code>closure</code></a></h3>
+<p>The <code>closure</code> instruction creates a new closure object, given all of its
+arities, arity flags, and captures. Each arity is its own C function. Note that
+closure objects are used when we have captures. If there are no captures, we use
+a <code>function</code>. The context of a closure is the name of the struct which is
+created just for this closure, to hold its captures.</p>
+<pre><code class="language-clojure">{:name v1 :op :closure :context user_foo_82688_ctx :arities {0 user_foo_82688_0} :captures {a {:name v0 :type jank::runtime::object_ref}} :arity-flags 0 :type "jank::runtime::obj::jit_closure_ref"}
+</code></pre>
+<h3 id="parameter"><a class="header" href="#parameter"><code>parameter</code></a></h3>
+<p>The <code>parameter</code> instruction introduces a named parameter of the function into
+the local scope. jank will automatically generate one of these for each
+parameter a function has. Unlike most instructions, the name used for this
+instruction is not auto-generated. The munged name of the actual parameter is
+used. Parameters will always have the type <code>object_ref</code>.</p>
+<pre><code class="language-clojure">{:name n :op :parameter :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="capture"><a class="header" href="#capture"><code>capture</code></a></h3>
+<p>The <code>capture</code> instruction is similar to the <code>parameter</code> instruction, in that it
+introduces a named closure capture into the scope. jank will automatically
+generate one of these for each capture a function has. Like <code>parameter</code>, the
+munged name of the actual capture is used for the instruction name. Captures may
+have the type <code>object_ref</code> or any other type.</p>
+<pre><code class="language-clojure">{:name n :op :capture :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="dynamic-call"><a class="header" href="#dynamic-call"><code>dynamic-call</code></a></h3>
+<p>The <code>dynamic-call</code> instruction will invoke the <code>call</code> behavior on the provided
+<code>:fn</code>. This works for any jank runtime object which implements the <code>call</code>
+behavior, such as functions, closures, keywords, maps, and so on. Any number of
+arguments can be provided and the runtime will handle packing them as necessary.</p>
+<pre><code class="language-clojure">{:name v2 :op :dynamic-call :fn v1 :args [v0] :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="named-recursion"><a class="header" href="#named-recursion"><code>named-recursion</code></a></h3>
+<p>The <code>named-recursion</code> instruction will recur into the current function, without
+performing argument packing. This recursion doesn’t need to be in tail position,
+unlike normal <code>recur</code> usage. It’s separated from <code>dynamic-call</code> as an
+optimization.</p>
+<pre><code class="language-clojure">{:name v1 :op :named-recursion :fn foo :args [v0] :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="recursion-reference"><a class="header" href="#recursion-reference"><code>recursion-reference</code></a></h3>
+<p>The <code>recursion-reference</code> instruction will store a reference to the current
+function. This is only used when capturing or returning the function object.
+When the recursion reference is called, a <code>named-recursion</code> instruction is used
+instead.</p>
+<p>Note that recursion references that cross function boundaries are represented as
+a <code>capture</code> instruction instead. So a <code>recursion-reference</code> is only ever used
+for the immediate function.</p>
+<pre><code class="language-clojure">{:name v0 :op :recursion-reference :type "jank::runtime::object_ref"}
+</code></pre>
+<h2 id="vars"><a class="header" href="#vars">Vars</a></h2>
+<h3 id="def"><a class="header" href="#def"><code>def</code></a></h3>
+<p>The <code>def</code> instruction interns a var, sets is root, and updates its metadata. The
+name of this instruction will refer to the var itself. Note the the <code>:value</code> is
+optional. If there is no value present, the var will still be interned and have
+its metadata updated, but its root will not be updated.</p>
+<pre><code class="language-clojure">{:name v2 :op :def :var user/foo :value v0 :meta v1 :type "jank::runtime::obj::var_ref"}
+</code></pre>
+<h3 id="var-deref"><a class="header" href="#var-deref"><code>var-deref</code></a></h3>
+<p>The <code>var-deref</code> instruction grabs the latest value out of an interned var. This
+is implicitly done, via Clojure’s semantics, whenever a var is referenced by
+its name. For example, <code>(println :meow)</code> implicitly derefs
+<code>clojure.core/println</code>.</p>
+<pre><code class="language-clojure">{:name v1 :op :var-deref :var clojure_core_SLASH_println_82689 :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="var-ref"><a class="header" href="#var-ref"><code>var-ref</code></a></h3>
+<p>The <code>var-ref</code> instruction grabs an interned var directly, without dereferencing
+it. This is analogous to the <code>#'foo</code> syntax, in Clojure.</p>
+<pre><code class="language-clojure">{:name v1 :op :var-ref :var clojure_core_SLASH_println_82689 :type "jank::runtime::obj::var_ref"}
+</code></pre>
+<h3 id="type-erase"><a class="header" href="#type-erase"><code>type-erase</code></a></h3>
+<p>The <code>type-erase</code> instruction will strip typed object information away from boxed
+jank runtime objects. This is used specifically for mutable values, such as loop
+bindings, since they may be initialized with an empty vector, but we have no
+idea what type of value each iteration will bring, so we need to represent the
+value as a type-erased <code>object_ref</code> instead. This instruction is only meant to
+be used on boxed jank objects.</p>
+<pre><code class="language-clojure">{:name v1 :op :type-erase :value v0 :type "jank::runtime::object_ref"}
+</code></pre>
+<h2 id="control-flow"><a class="header" href="#control-flow">Control flow</a></h2>
+<h3 id="jump"><a class="header" href="#jump"><code>jump</code></a></h3>
+<p>The <code>jump</code> instruction is a terminator which will unconditionally jump to a
+different IR block. The instruction also knows whether it’s part of a loop, in
+which case it’s effectively a <code>continue;</code>.</p>
+<pre><code class="language-clojure">{:name v9 :op :jump :block if-merge3 :loop false :type "void"}
+</code></pre>
+<h3 id="branch-set"><a class="header" href="#branch-set"><code>branch-set</code></a></h3>
+<p>The <code>branch-set</code> instruction is half of the <code>branch-set</code>/<code>branch-get</code> pair,
+which is used to store the expression result of branching so that the merge
+block can have a value to use. In other IRs, <code>branch-get</code> is called <code>phi</code>.
+jank’s IR usage of <code>branch-set</code>/<code>branch-get</code> is based on the Pizlo-style
+upsilon/phi, just without the Greek naming.</p>
+<p>Each <code>branch-set</code> will refer to a “shadow” name, without assigning it into the
+SSA semantics. The shadow gets assigned into a proper instruction name when
+<code>branch-get</code> is used.</p>
+<p>The name of the <code>branch-set</code> instruction is never used and the type is always
+<code>void</code>.</p>
+<pre><code class="language-clojure">{:name v11 :op :branch-set :shadow s4 :value v10 :type "void"}
+</code></pre>
+<h3 id="branch-get"><a class="header" href="#branch-get"><code>branch-get</code></a></h3>
+<p>The <code>branch-get</code> instruction is half of the <code>branch-set</code>/<code>branch-get</code> pair,
+which is used to store the expression result of branching so that the merge
+block can have a value to use. See the <code>branch-set</code> docs for more info.</p>
+<p>The name of the <code>branch-get</code> is always the same as the shadow variable used in
+the <code>branch-set</code>. The type is the actual type of the shadow variable, which
+could be any jank object or native type.</p>
+<pre><code class="language-clojure">{:name s4 :op :branch-get :type "jank::runtime::obj::keyword_ref"}
+</code></pre>
+<h3 id="branch"><a class="header" href="#branch"><code>branch</code></a></h3>
+<p>The <code>branch</code> instruction is a terminator which conditionally jumps to either the
+<code>:then</code> or <code>:else</code> block, depending on whether the <code>:condition</code> value is true.
+The <code>branch</code> instruction also tracks the resulting merge block, if there is one,
+and the shadow variable used.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v6 :op :branch :condition v5 :then if1 :else else2 :merge if-merge3 :shadow s4 :type "void"}
+</code></pre>
+<h3 id="loop"><a class="header" href="#loop"><code>loop</code></a></h3>
+<p>The <code>loop</code> instruction is a terminator which sets up mutable bindings and then
+jumps to the provided merge block. Each mutable binding gets a shadow variable
+and the result of the loop also has one.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v6 :op :loop :loop-block loop4 :merge loop-merge5 :shadow s2 :shadows {{:name s3 :value v1 :type "jank::runtime::object_ref"}} :type "void"}
+</code></pre>
+<h3 id="case"><a class="header" href="#case"><code>case</code></a></h3>
+<p>The <code>case</code> instruction is a terminator which branches to one of the
+corresponding case blocks, depending on the provided value. The shift and mask
+are set up by the <code>clojure.core/case</code> macro and each case block disambiguates
+hash collisions. This instruction also tracks whether there’s a merge block and
+shadow variable.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v54 :op :case :shift 0 :mask 0 :value v3 :case-blocks [{:value 3 :block case36} {:value 2 :block case21} {:value 1 :block case6}] :default-block default51 :merge-block nil :shadow nil :type "void"}
+</code></pre>
+<h3 id="ret"><a class="header" href="#ret"><code>ret</code></a></h3>
+<p>The <code>ret</code> instruction is a block terminator which returns a value from the
+current function. It has a name, like all instructions, but that name will never
+be used. The type of a <code>ret</code> instruction is the type of the returned data.</p>
+<pre><code class="language-clojure">{:name v7 :op :ret :value v4 :type "jank::runtime::object_ref"}
+</code></pre>
+<h2 id="exceptions"><a class="header" href="#exceptions">Exceptions</a></h2>
+<h3 id="try"><a class="header" href="#try"><code>try</code></a></h3>
+<p>The <code>try</code> instruction is a starter which denotes that the rest of the basic
+block will be part of a <code>try</code> body. This instruction notes the various catch
+types and their corresponding blocks, as well as whether there is a finally
+block. A <code>try</code> instruction will always have a merge block and a shadow variable
+for its result.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v11 :op :try :catches [{:type "jank::runtime::oref&lt;jank::runtime::object&gt; &amp;" :block catch4}] :merge try-merge2 :shadow s3 :finally nil :type "void"}
+</code></pre>
+<h3 id="catch"><a class="header" href="#catch"><code>catch</code></a></h3>
+<p>The <code>catch</code> instruction is a starter which denotes that the rest of the basic
+block will be part of a <code>catch</code> body. This instruction also knows the merge
+block of the corresponding <code>try</code>, as well as the shadow of the <code>try</code>.</p>
+<p>The name of this instruction, and its type, correspond with the caught exception
+value.</p>
+<pre><code class="language-clojure">{:name v5 :op :catch :merge try-merge2 :shadow s3 :type "jank::runtime::oref&lt;jank::runtime::object&gt; &amp;"}
+</code></pre>
+<h3 id="finally"><a class="header" href="#finally"><code>finally</code></a></h3>
+<p>The <code>finally</code> instruction is a starter which denotes that the rest of the basic
+block will be part of a <code>finally</code> body. This instruction also knows the merge
+block of the corresponding <code>try</code>.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v5 :op :finally :merge try-merge2 :type "void"}
+</code></pre>
+<h3 id="throw"><a class="header" href="#throw"><code>throw</code></a></h3>
+<p>The <code>throw</code> instruction is a terminator which throws an exeption value. Any
+value type can be thrown.</p>
+<p>The name of this instruction is never used and its type is always <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v19 :op :throw :value v18 :type "void"}
+</code></pre>
+<h2 id="utilities"><a class="header" href="#utilities">Utilities</a></h2>
+<h3 id="truthy"><a class="header" href="#truthy"><code>truthy</code></a></h3>
+<p>The <code>truthy</code> instruction will convert a boxed jank object to a <code>bool</code>, generally
+for branching. This is avoided whenever we already have a bool, such as when
+working with native values.</p>
+<pre><code class="language-clojure">{:name v5 :op :truthy :value v0 :type "bool"}
+</code></pre>
+<h3 id="letfn"><a class="header" href="#letfn"><code>letfn</code></a></h3>
+<p>The <code>letfn</code> instruction introduces one or more function/closure locals
+simultaneously. It’s expected that for <code>N</code> bindings, there are <code>N</code> instructions
+which follow the <code>letfn</code> instruction, one to create each binding. The name of
+this instruction will not be used.</p>
+<pre><code class="language-clojure">{:name v0 :op :letfn :bindings [foo bar] :type "void"}
+{:name v1 :op :function :arities {0 user_foo_82687_0} :arity-flags 0 :type "jank::runtime::obj::jit_function_ref"}
+{:name v2 :op :function :arities {0 user_bar_82688_0} :arity-flags 0 :type "jank::runtime::obj::jit_function_ref"}
+</code></pre>
+<p>Mutual recursion is handled via <code>:defer</code> for the capture. For example, if both
+<code>foo</code> and <code>bar</code> functions do nothing but return each other, we would get this
+IR. Notice how the <code>bar</code> capture’s value name is <code>:defer</code>.</p>
+<pre><code class="language-clojure">{:name v0 :op :letfn :bindings [foo bar] :type "void"}
+{:name v1 :op :closure :context user_foo_82687_ctx :arities {0 user_foo_82687_0} :captures {bar {:name :defer :type jank::runtime::object_ref}} :arity-flags 0 :type "jank::runtime::obj::jit_closure_ref"}
+{:name v2 :op :closure :context user_bar_82688_ctx :arities {0 user_bar_82688_0} :captures {foo {:name v1 :type jank::runtime::object_ref}} :arity-flags 0 :type "jank::runtime::obj::jit_closure_ref"}
+</code></pre>
+<h2 id="c-interop"><a class="header" href="#c-interop">C++ interop</a></h2>
+<h3 id="cppraw"><a class="header" href="#cppraw"><code>cpp/raw</code></a></h3>
+<p>The <code>cpp/raw</code> instruction introduces some global C++ which needs to be compiled
+alongside this module.</p>
+<p>This instruction always has the type <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v0 :op :cpp/raw :type "void"}
+</code></pre>
+<h3 id="cppvalue"><a class="header" href="#cppvalue"><code>cpp/value</code></a></h3>
+<p>The <code>cpp/value</code> instruction accesses an arbitrary C++ value. The value could be
+a C++ constant, function, variable, or member access.</p>
+<pre><code class="language-clojure">{:name v0 :op :cpp/value :scope "std::basic_string&lt;char&gt;::npos" :type "const std::basic_string&lt;char&gt;::size_type &amp;"}
+</code></pre>
+<h3 id="cppinto-object"><a class="header" href="#cppinto-object"><code>cpp/into-object</code></a></h3>
+<p>The <code>cpp/into-object</code> instruction converts a native C++ value into a jank
+runtime object using the <code>jank::runtime::convert</code> trait.</p>
+<pre><code class="language-clojure">{:name v2 :op :cpp/into-object :value v1 :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="cppfrom-object"><a class="header" href="#cppfrom-object"><code>cpp/from-object</code></a></h3>
+<p>The <code>cpp/from-object</code> instruction converts a boxed jank object into a native C++
+value using the <code>jank::runtime::convert</code> trait.</p>
+<pre><code class="language-clojure">{:name v2 :op :cpp/from-object :value v1 :type "int"}
+</code></pre>
+<h3 id="cppunsafe-cast-1"><a class="header" href="#cppunsafe-cast-1"><code>cpp/unsafe-cast</code></a></h3>
+<p>The <code>cpp/unsafe-cast</code> instruction performs a C-style cast from one type to
+another.</p>
+<p>The type of this instruction is the resulting type of the data.</p>
+<pre><code class="language-clojure">{:name v1 :op :cpp/unsafe-cast :value v0 :type "int *"}
+</code></pre>
+<h3 id="cppcall"><a class="header" href="#cppcall"><code>cpp/call</code></a></h3>
+<p>The <code>cpp/call</code> instruction calls a C++ function, pointer to function, or
+functor, with the given arguments. The value of this call will render as <code>nil</code>
+if it’s inlined as a C++ symbol.</p>
+<p>The type of this instruction is the return type of the function.</p>
+<pre><code class="language-clojure">{:name v1 :op :cpp/call :value nil :args [v0] :type "std::string"}
+</code></pre>
+<p>For example, if you have a <code>cpp/call</code> for an IR value, it will be set.</p>
+<pre><code class="language-clojure">{:name v1 :op :cpp/call :value v0 :args [] :type "int"}
+</code></pre>
+<h3 id="cppconstructor-call"><a class="header" href="#cppconstructor-call"><code>cpp/constructor-call</code></a></h3>
+<p>The <code>cpp/constructor-call</code> instruction constructs a stack-allocated C++ value.
+This is used for both overloaded constructors and aggregate initialization.</p>
+<p>The type of this instruction is the type of the object being constructed.</p>
+<pre><code class="language-clojure">{:name v1 :op :cpp/constructor-call :args [v0] :type "foo"}
+</code></pre>
+<h3 id="cppmember-call"><a class="header" href="#cppmember-call"><code>cpp/member-call</code></a></h3>
+<p>The <code>cpp/member-call</code> instruction calls a member function or operator on an invoking object.
+This instruction supports direct members as well as base members. Virtual
+functions are supported, as well as default arguments.</p>
+<p>The type of this instruction is the return type of the function.</p>
+<pre><code class="language-clojure">{:name v1 :op :cpp/member-call :fn "std::function&lt;void ()&gt;::operator()" :args [v0] :type "void"}
+</code></pre>
+<h3 id="cppmember-access"><a class="header" href="#cppmember-access"><code>cpp/member-access</code></a></h3>
+<p>The <code>cpp/member-access</code> instruction reaches into a member of the provided C++
+object and grabs a reference to it. This instruction supports direct members as
+well as base members.</p>
+<p>The type of this instruction is the return type of the function.</p>
+<pre><code class="language-clojure">{:name v3 :op :cpp/member-access :value v2 :member "std::pair&lt;long long, long long&gt;::first" :type "long long &amp;"}
+</code></pre>
+<h3 id="cppbuiltin-operator-call"><a class="header" href="#cppbuiltin-operator-call"><code>cpp/builtin-operator-call</code></a></h3>
+<p>The <code>cpp/builtin-operator-call</code> instruction performs a C++ operator on primitive
+types. Overloaded operators and operators defined for custom types will use
+<code>cpp/call</code> or <code>cpp/member-call</code>, depending on whether the operator is defined
+as a member.</p>
+<p>The type of this instruction is the return type of the operator.</p>
+<pre><code class="language-clojure">{:name v2 :op :cpp/builtin-operator-call :op "+" :args [v0 v1] :type "jtl::f64"}
+</code></pre>
+<h3 id="cppbox"><a class="header" href="#cppbox"><code>cpp/box</code></a></h3>
+<p>The <code>cpp/box</code> instruction creates an opaque boxed jank object to store a native
+pointer as a <code>void*</code>. This value can then be retrieved via <code>cpp/unbox</code>, but the
+type must be provided, so a cast can be performed. The type will be verified at
+runtime.</p>
+<pre><code class="language-clojure">{:name v2 :op :cpp/box :value v1 :type "jank::runtime::object_ref"}
+</code></pre>
+<h3 id="cppunbox"><a class="header" href="#cppunbox"><code>cpp/unbox</code></a></h3>
+<p>The <code>cpp/unbox</code> instruction extracts the <code>void*</code> from an opaque boxed jank
+object and casts it to the specified type. The type will be verified at runtime.</p>
+<p>The type of this instruction is the extracted type of the native pointer.</p>
+<pre><code class="language-clojure">{:name v4 :op :cpp/unbox :value v2 :type "jtl::i64 *"}
+</code></pre>
+<h3 id="cppnew"><a class="header" href="#cppnew"><code>cpp/new</code></a></h3>
+<p>The <code>cpp/new</code> instruction GC allocates a new C++ value. The result will be a
+pointer to that value.</p>
+<p>The type of this instruction is the extracted type of the native pointer.</p>
+<pre><code class="language-clojure">{:name v2 :op :cpp/new :value v1 :type "int *"}
+</code></pre>
+<h3 id="cppdelete"><a class="header" href="#cppdelete"><code>cpp/delete</code></a></h3>
+<p>The <code>cpp/delete</code> instruction frees memory allocated via <code>cpp/new</code>. This is not
+required, since all values allocated via <code>cpp/new</code> are tracked by jank’s GC.</p>
+<p>This instruction always has the type <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v3 :op :cpp/delete :value v2 :type "void"}
+</code></pre>
 
                     </main>
 
@@ -1753,6 +2184,8 @@ and <code>cpp/delete</code> or <code>cpp/malloc</code> and <code>cpp/free</code>
         <script src="book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
+        <script src="asset/mermaid-eefea253.min.js"></script>
+        <script src="asset/mermaid-init-ccf746f1.js"></script>
 
         <script>
         window.addEventListener('load', function() {

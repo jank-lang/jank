@@ -1,0 +1,9 @@
+:root
+{
+  --content-max-width: 75%;
+}
+
+.mermaid
+{
+  text-align: center;
+}
