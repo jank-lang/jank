@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-641bc994.js";
+            window.path_to_searchindex_js = "searchindex-7eaa85f0.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f18007b9.js"></script>
@@ -1931,15 +1931,6 @@ its name. For example, <code>(println :meow)</code> implicitly derefs
 it. This is analogous to the <code>#'foo</code> syntax, in Clojure.</p>
 <pre><code class="language-clojure">{:name v1 :op :var-ref :var clojure_core_SLASH_println_82689 :type "jank::runtime::obj::var_ref"}
 </code></pre>
-<h3 id="type-erase"><a class="header" href="#type-erase"><code>type-erase</code></a></h3>
-<p>The <code>type-erase</code> instruction will strip typed object information away from boxed
-jank runtime objects. This is used specifically for mutable values, such as loop
-bindings, since they may be initialized with an empty vector, but we have no
-idea what type of value each iteration will bring, so we need to represent the
-value as a type-erased <code>object_ref</code> instead. This instruction is only meant to
-be used on boxed jank objects.</p>
-<pre><code class="language-clojure">{:name v1 :op :type-erase :value v0 :type "jank::runtime::object_ref"}
-</code></pre>
 <h2 id="control-flow"><a class="header" href="#control-flow">Control flow</a></h2>
 <h3 id="jump"><a class="header" href="#jump"><code>jump</code></a></h3>
 <p>The <code>jump</code> instruction is a terminator which will unconditionally jump to a
@@ -2036,6 +2027,15 @@ value type can be thrown.</p>
 for branching. This is avoided whenever we already have a bool, such as when
 working with native values.</p>
 <pre><code class="language-clojure">{:name v5 :op :truthy :value v0 :type "bool"}
+</code></pre>
+<h3 id="type-erase"><a class="header" href="#type-erase"><code>type-erase</code></a></h3>
+<p>The <code>type-erase</code> instruction will strip typed object information away from boxed
+jank runtime objects. This is used specifically for mutable values, such as loop
+bindings, since they may be initialized with an empty vector, but we have no
+idea what type of value each iteration will bring, so we need to represent the
+value as a type-erased <code>object_ref</code> instead. This instruction is only meant to
+be used on boxed jank objects.</p>
+<pre><code class="language-clojure">{:name v1 :op :type-erase :value v0 :type "jank::runtime::object_ref"}
 </code></pre>
 <h3 id="letfn"><a class="header" href="#letfn"><code>letfn</code></a></h3>
 <p>The <code>letfn</code> instruction introduces one or more function/closure locals
