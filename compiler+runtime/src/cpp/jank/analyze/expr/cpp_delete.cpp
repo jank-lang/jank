@@ -1,3 +1,5 @@
+#include <CppInterOp/CppInterOp.h>
+
 #include <jank/analyze/expr/cpp_delete.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
@@ -29,5 +31,10 @@ namespace jank::analyze::expr
   {
     f(value_expr);
     expression::walk(f);
+  }
+
+  jtl::ptr<void> cpp_delete::get_type() const
+  {
+    return Cpp::GetVoidType();
   }
 }

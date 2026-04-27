@@ -23,6 +23,7 @@ namespace jank::analyze::expr
                     local_binding_ptr binding);
 
     runtime::object_ref to_runtime_data() const override;
+    jtl::ptr<void> get_type() const override;
 
     runtime::obj::symbol_ref name{};
     local_binding_ptr binding;

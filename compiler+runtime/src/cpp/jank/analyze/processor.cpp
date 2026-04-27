@@ -52,7 +52,7 @@
 #include <jank/analyze/expr/cpp_raw.hpp>
 #include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expr/cpp_value.hpp>
-#include <jank/analyze/expr/cpp_cast.hpp>
+#include <jank/analyze/expr/cpp_conversion.hpp>
 #include <jank/analyze/expr/cpp_unsafe_cast.hpp>
 #include <jank/analyze/expr/cpp_call.hpp>
 #include <jank/analyze/expr/cpp_constructor_call.hpp>
@@ -841,7 +841,7 @@ namespace jank::analyze
       else
       {
         auto const return_type{ Cpp::GetFunctionReturnType(match) };
-        auto const source{ jtl::make_ref<expr::cpp_value>(position,
+        auto const source{ jtl::make_ref<expr::cpp_value>(expression_position::value,
                                                           current_frame,
                                                           needs_box,
                                                           /* TODO: Is symbol needed? */
@@ -929,7 +929,7 @@ namespace jank::analyze
       else
       {
         auto const return_type{ Cpp::GetFunctionReturnType(match) };
-        auto const source{ jtl::make_ref<expr::cpp_value>(position,
+        auto const source{ jtl::make_ref<expr::cpp_value>(expression_position::value,
                                                           current_frame,
                                                           needs_box,
                                                           /* TODO: Is symbol needed? */
@@ -1144,26 +1144,26 @@ namespace jank::analyze
         {
           auto const cast_position{ expr->position };
           expr->propagate_position(expression_position::value);
-          return jtl::make_ref<expr::cpp_cast>(cast_position,
-                                               expr->frame,
-                                               expr->needs_box,
-                                               expected_type,
-                                               expr_type,
-                                               conversion_policy::into_object,
-                                               expr);
+          return jtl::make_ref<expr::cpp_conversion>(cast_position,
+                                                     expr->frame,
+                                                     expr->needs_box,
+                                                     expected_type,
+                                                     expr_type,
+                                                     conversion_policy::into_object,
+                                                     expr);
         }
 
       case cpp_util::implicit_conversion_action::from_object:
         {
           auto const cast_position{ expr->position };
           expr->propagate_position(expression_position::value);
-          return jtl::make_ref<expr::cpp_cast>(cast_position,
-                                               expr->frame,
-                                               expr->needs_box,
-                                               Cpp::GetNonReferenceType(expected_type),
-                                               expected_type,
-                                               conversion_policy::from_object,
-                                               expr);
+          return jtl::make_ref<expr::cpp_conversion>(cast_position,
+                                                     expr->frame,
+                                                     expr->needs_box,
+                                                     Cpp::GetNonReferenceType(expected_type),
+                                                     expected_type,
+                                                     conversion_policy::from_object,
+                                                     expr);
         }
       case cpp_util::implicit_conversion_action::cast:
         {
@@ -1575,12 +1575,10 @@ namespace jank::analyze
       if(!unwrapped_local.crossed_fns.empty())
       {
         auto const binding_type{ unwrapped_local.binding->type };
-        if(!cpp_util::is_any_object(binding_type) && !cpp_util::is_trait_convertible(binding_type))
+        if(!Cpp::IsConstructible(Cpp::GetNonReferenceType(binding_type), binding_type))
         {
           return error::analyze_invalid_cpp_capture(
-            util::format("Unable to capture '{}', since its type '{}' is not able to be "
-                         "automatically converted to a jank object. You can mitigate this by "
-                         "wrapping the value in a 'cpp/box' before capturing it.",
+            util::format("Unable to capture '{}', since its type '{}' is not copyable.",
                          sym->to_string(),
                          cpp_util::get_qualified_type_name(binding_type)),
             meta_source(sym->meta),
@@ -2091,7 +2089,10 @@ namespace jank::analyze
       jtl::ptr<void> expected_type{ cpp_util::untyped_object_ref_type() };
       if(is_loop)
       {
-        expected_type = cpp_util::expression_type(loop_details.unwrap()->pairs[arg_index].second);
+        /* Loop bindings are mutable. If they start as typed objects, we have no idea what
+         * kind of object they'll end up as, so we need to type erase. */
+        expected_type
+          = cpp_util::mutable_type(loop_details.unwrap()->pairs[arg_index].second->get_type());
 
         /* Check if op = can be used, since we'll be using it to update the loop values. */
         auto const op_equal_sym{ make_box<obj::symbol>("cpp", "=") };
@@ -2129,7 +2130,7 @@ namespace jank::analyze
      * just a let* by another name. */
     if(is_loop)
     {
-      loop_details.unwrap()->is_loop = true;
+      loop_details.unwrap()->loop_kind = expr::let::loop_kind::loop_with_recur;
     }
     else
     {
@@ -2267,8 +2268,30 @@ namespace jank::analyze
       {
         return value_res.expect_err();
       }
-      auto const value_expr{ value_res.expect_ok() };
-      auto const expr_type{ cpp_util::non_void_expression_type(value_expr) };
+      auto value_expr{ value_res.expect_ok() };
+      auto expr_type{ value_expr->get_type() };
+
+      /* We need to have a value for every binding, so convert void to nil. */
+      if(Cpp::IsVoid(expr_type))
+      {
+        value_expr = jtl::make_ref<expr::cpp_conversion>(value_expr->position,
+                                                         value_expr->frame,
+                                                         value_expr->needs_box,
+                                                         cpp_util::untyped_object_ref_type(),
+                                                         expr_type,
+                                                         conversion_policy::into_object,
+                                                         value_expr);
+        expr_type = cpp_util::untyped_object_ref_type();
+      }
+
+      /* Loop bindings are mutable, so if we have a typed object, force it to be untyped since
+       * we have no idea what type it'll be assigned to later on. For example, you might start
+       * with an empty array map, but then assoc some stuff on and get a hash map afterward. */
+      if(loop_details.is_some())
+      {
+        expr_type = cpp_util::mutable_type(expr_type);
+      }
+
       auto const &binding{ ret->frame->locals[sym].emplace_back(
         local_binding{ sym,
                        __rt_ctx->unique_string(sym->name),
@@ -2302,9 +2325,7 @@ namespace jank::analyze
 
     if(ret->body->values.empty())
     {
-      auto const nil{
-        analyze_primitive_literal({}, ret->frame, expression_position::tail, fn_ctx, needs_box)
-      };
+      auto const nil{ analyze_primitive_literal({}, ret->frame, ret->position, fn_ctx, needs_box) };
       if(nil.is_err())
       {
         return nil.expect_err();
@@ -2435,9 +2456,7 @@ namespace jank::analyze
 
     if(ret->body->values.empty())
     {
-      auto const nil{
-        analyze_primitive_literal({}, ret->frame, expression_position::tail, fn_ctx, needs_box)
-      };
+      auto const nil{ analyze_primitive_literal({}, ret->frame, ret->position, fn_ctx, needs_box) };
       if(nil.is_err())
       {
         return nil.expect_err();
@@ -2456,26 +2475,35 @@ namespace jank::analyze
                           bool const)
   {
     /* When we analyze a loop, we actually just set a flag and then analyze a let.
-     * The flag is setting `loop_details` to `some(nullptr)`, which conveys that
-     * we're in a loop. */
+     * The flag is setting `loop_details` to `some`, which conveys that we're in a loop. */
     auto const old_loop_details{ loop_details };
     loop_details = some(nullptr);
+    util::scope_exit const finally{ [&]() { loop_details = old_loop_details; } };
+
     /* Using recur from this loop is fine, even if we're in a try, since the jump target
      * is this loop. */
-    context::binding_scope const _(runtime::obj::persistent_hash_map::create_unique(
-      std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)));
-    util::scope_exit const finally{ [&]() { loop_details = old_loop_details; } };
+    context::binding_scope const _{ runtime::obj::persistent_hash_map::create_unique(
+      std::make_pair(__rt_ctx->no_recur_var, runtime::jank_false)) };
 
     /* We always analyze loops in tail position, since `recur` always expects to be in
      * tail position, and it can be used within a loop. We then later reset the position
      * of this expression back to what it should be. */
-    auto let{ analyze_let(list, current_frame, expression_position::tail, fn_ctx, true) };
-    if(let.is_err())
+    auto let_res{ analyze_let(list, current_frame, expression_position::tail, fn_ctx, true) };
+    if(let_res.is_err())
     {
-      return let;
+      return let_res;
     }
 
-    let.expect_ok()->propagate_position(position);
+    auto const let{ static_box_cast<expr::let>(let_res.expect_ok()) };
+    let->propagate_position(position);
+
+    /* If no recur is found, we still need to note that this is a loop, since loop bindings
+     * are type-erased. During IR gen, this is crucial information to ensure the IR matches
+     * what was analyzed. */
+    if(let->loop_kind == expr::let::loop_kind::none)
+    {
+      let->loop_kind = expr::let::loop_kind::loop_without_recur;
+    }
 
     return let;
   }
@@ -2520,13 +2548,17 @@ namespace jank::analyze
     {
       return condition_expr.expect_err();
     }
-    /* TODO: Support native types if they're compatible with bool. */
-    condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
-                                               cpp_util::untyped_object_ref_type(),
-                                               macro_expansions);
+
+    auto const condition_type{ condition_expr.expect_ok()->get_type() };
+    if(!cpp_util::is_any_object(condition_type))
+    {
+      condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
+                                                 cpp_util::bool_type(),
+                                                 macro_expansions);
+    }
     if(condition_expr.is_err())
     {
-      return condition_expr.expect_err();
+      return condition_expr.expect_err()->add_usage(read::parse::reparse_nth(o, 1));
     }
 
     auto const then(o->data.rest().rest().first().unwrap());
@@ -2930,6 +2962,12 @@ namespace jank::analyze
       }
     }
 
+    /* If we have no catch and no finally, just treat this as a `do` instead of a `try`. */
+    if(!has_catch && !has_finally)
+    {
+      return ret->body;
+    }
+
     ret->body->frame = try_frame;
     ret->body->propagate_position(position);
     if(ret->finally_body.is_some())
@@ -3232,45 +3270,24 @@ namespace jank::analyze
       source = sym_result.expect_ok();
       auto const var_deref(llvm::dyn_cast<expr::var_deref>(source.data));
 
-      /* If this expression doesn't need to be boxed, based on where it's called, we can dig
-       * into the call details itself to see if the function supports unboxed returns. Most don't. */
+      /* Some vars have meta which defines how calls to it can be inlined. This works similarly
+       * to macro expansion in that there's just a function for us to call which gives us the
+       * new form to analyze in place of this form. */
       if(var_deref)
       {
-        auto const arity_meta(
-          runtime::get_in(var_deref->var->get_meta(),
-                          make_box<runtime::obj::persistent_vector>(
-                            std::in_place,
-                            __rt_ctx->intern_keyword("", "arities", true).expect_ok(),
-                            /* NOTE: We don't support unboxed meta on variadic arities. */
-                            make_box(arg_count))));
+        auto const inline_arities(
+          runtime::get(var_deref->var->get_meta(),
+                       __rt_ctx->intern_keyword("", "inline-arities", true).expect_ok()));
 
-        bool const supports_unboxed_input(runtime::truthy(
-          get(arity_meta,
-              __rt_ctx->intern_keyword("", "supports-unboxed-input?", true).expect_ok())));
-        bool const supports_unboxed_output(
-          runtime::truthy
-          /* TODO: Rename key. */
-          (get(arity_meta, __rt_ctx->intern_keyword("", "unboxed-output?", true).expect_ok())));
-
-        if(supports_unboxed_input || supports_unboxed_output)
+        if(runtime::contains(inline_arities, make_box(arg_count)))
         {
-          auto const fn_res(vars.find(var_deref->var));
-          /* If we don't have a valid var_deref, we know the var exists, but we
-           * don't have an AST node for it. This means the var came in through
-           * a pre-compiled module. In that case, we can only rely on meta to
-           * tell us what we need. */
-          if(fn_res != vars.end())
-          {
-            if(fn_res->second.data->kind != expression_kind::function)
-            {
-              return error::internal_analyze_failure("Unsupported arity meta on non-function var.",
-                                                     object_source(first),
-                                                     latest_expansion(macro_expansions));
-            }
-          }
-
-          needs_arg_box = !supports_unboxed_input;
-          needs_ret_box = needs_box | !supports_unboxed_output;
+          auto const inline_fn(
+            runtime::get(var_deref->var->get_meta(),
+                         __rt_ctx->intern_keyword("", "inline", true).expect_ok()));
+          /* TODO: Once we're evaluating meta, we can remove this eval. */
+          auto const actual_fn{ __rt_ctx->eval(inline_fn) };
+          auto const expanded{ apply_to(actual_fn, o->next()) };
+          return analyze(expanded, current_frame, position, fn_ctx, needs_box);
         }
       }
     }
@@ -3359,7 +3376,7 @@ namespace jank::analyze
                                                        current_frame,
                                                        needs_arg_box,
                                                        std::move(packed_arg_exprs),
-                                                       jank_nil()));
+                                                       jank_nil));
     }
 
     auto const recursion_ref(llvm::dyn_cast<expr::recursion_reference>(source.data));
@@ -3680,7 +3697,7 @@ namespace jank::analyze
       if(literal_value.is_ok())
       {
         auto const &result{ literal_value.expect_ok() };
-        auto const source{ jtl::make_ref<expr::cpp_value>(position,
+        auto const source{ jtl::make_ref<expr::cpp_value>(expression_position::value,
                                                           current_frame,
                                                           needs_box,
                                                           sym,
@@ -3939,7 +3956,7 @@ namespace jank::analyze
     }
 
     auto const &result{ literal_res.expect_ok() };
-    auto const source{ jtl::make_ref<expr::cpp_value>(position,
+    auto const source{ jtl::make_ref<expr::cpp_value>(expression_position::value,
                                                       current_frame,
                                                       false,
                                                       /* TODO: Is symbol needed? */
@@ -4037,23 +4054,23 @@ namespace jank::analyze
     }
     if(cpp_util::is_any_object(type) && cpp_util::is_trait_convertible(value_type))
     {
-      return jtl::make_ref<expr::cpp_cast>(position,
-                                           current_frame,
-                                           needs_box,
-                                           type,
-                                           value_type,
-                                           conversion_policy::into_object,
-                                           value_expr);
+      return jtl::make_ref<expr::cpp_conversion>(position,
+                                                 current_frame,
+                                                 needs_box,
+                                                 type,
+                                                 value_type,
+                                                 conversion_policy::into_object,
+                                                 value_expr);
     }
     if(cpp_util::is_any_object(value_type) && cpp_util::is_trait_convertible(type))
     {
-      return jtl::make_ref<expr::cpp_cast>(position,
-                                           current_frame,
-                                           needs_box,
-                                           type,
-                                           type,
-                                           conversion_policy::from_object,
-                                           value_expr);
+      return jtl::make_ref<expr::cpp_conversion>(position,
+                                                 current_frame,
+                                                 needs_box,
+                                                 type,
+                                                 type,
+                                                 conversion_policy::from_object,
+                                                 value_expr);
     }
 
     return error::analyze_invalid_cpp_cast(
@@ -4425,6 +4442,7 @@ namespace jank::analyze
                                        jtl::option<expr::function_context_ref> const &fn_ctx,
                                        bool const needs_box)
   {
+    /* We strip out the .- to get the member name. */
     auto const name{ try_object<obj::symbol>(val->form)->name.substr(2) };
     auto const count(l->count());
     if(count < 2)

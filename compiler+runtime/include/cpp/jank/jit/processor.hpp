@@ -29,9 +29,9 @@ namespace CppInternal
   class Interpreter;
 }
 
-namespace jank::codegen
+namespace jank::ir
 {
-  struct processor;
+  struct module;
 }
 
 namespace jank::runtime::obj
@@ -46,7 +46,7 @@ namespace jank::jit
     processor(jtl::immutable_string const &binary_version);
     ~processor();
 
-    runtime::obj::jit_function_ref eval(codegen::processor &cg_prc) const;
+    runtime::obj::jit_function_ref eval(ir::module const &module) const;
     runtime::obj::jit_function_ref create_function(runtime::callable_arity_flags flags,
                                                    jtl::immutable_string const &base_name,
                                                    native_vector<u8> const &arities) const;

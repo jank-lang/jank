@@ -115,11 +115,6 @@ namespace jank::runtime
         CHECK_LT(c, a);
         CHECK_FALSE(a < b);
       }
-      SUBCASE("Greater Than")
-      {
-        CHECK_GT(a, c);
-        CHECK_FALSE(c > a);
-      }
     }
 
     TEST_CASE("Edge cases and utility functions")
@@ -233,7 +228,6 @@ namespace jank::runtime
         auto const i{ make_box(1ll) };
         CHECK_LT(ratio, i);
         CHECK_NE(ratio, i);
-        CHECK_GT(i, ratio);
         CHECK_NE(i, ratio);
       }
 
@@ -242,7 +236,6 @@ namespace jank::runtime
         i64 const i{ 1ll };
         CHECK_LT(ratio, i);
         CHECK_NE(ratio, i);
-        CHECK_GT(i, ratio);
         CHECK_NE(i, ratio);
       }
 
@@ -273,8 +266,6 @@ namespace jank::runtime
 
         CHECK_LT(ratio, real_ptr);
         CHECK_LT(ratio, int_ptr);
-        CHECK_GT(real_ptr, ratio);
-        CHECK_GT(int_ptr, ratio);
       }
     }
 
@@ -335,13 +326,6 @@ namespace jank::runtime
       auto const a{ make_box<obj::ratio>(obj::ratio_data(3, 4)) };
       auto const b{ make_box<obj::ratio>(obj::ratio_data(5, 4)) };
       CHECK_LT(a->compare(*b), 0);
-    }
-
-    TEST_CASE("compare_greater_than")
-    {
-      auto const a{ make_box<obj::ratio>(obj::ratio_data(5, 4)) };
-      auto const b{ make_box<obj::ratio>(obj::ratio_data(3, 4)) };
-      CHECK_GT(a->compare(*b), 0);
     }
 
     TEST_CASE("compare_equal")

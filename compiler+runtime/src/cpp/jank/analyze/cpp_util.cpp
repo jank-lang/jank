@@ -398,8 +398,8 @@ namespace jank::analyze::cpp_util
 
   jtl::ptr<void> untyped_object_ref_type()
   {
-    static jtl::ptr<void> const ret{ Cpp::GetCanonicalType(
-      Cpp::GetTypeFromScope(Cpp::GetScopeFromCompleteName("jank::runtime::object_ref"))) };
+    static jtl::ptr<void> const ret{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.object_ref").expect_ok()) };
     return ret;
   }
 
@@ -410,6 +410,157 @@ namespace jank::analyze::cpp_util
      * exact type for "char". */
     static auto const char_literal_type{ resolve_literal_type("char").expect_ok() };
     return char_literal_type;
+  }
+
+  jtl::ptr<void> bool_type()
+  {
+    static auto const type{ Cpp::GetType("bool") };
+    return type;
+  }
+
+  jtl::ptr<void> var_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.var_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> persistent_list_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.persistent_list_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> persistent_vector_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.persistent_vector_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> persistent_array_map_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.persistent_array_map_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> persistent_hash_map_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.persistent_hash_map_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> persistent_hash_set_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.persistent_hash_set_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> jit_function_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.jit_function_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> jit_closure_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.jit_closure_ref").expect_ok()) };
+    return type;
+  }
+
+  jtl::ptr<void> literal_type(runtime::object_ref const o)
+  {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(o->type)
+    {
+      case jank::runtime::object_type::nil:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.nil_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::boolean:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.boolean_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::integer:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.integer_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::character:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.character_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::real:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.real_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::symbol:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.symbol_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::keyword:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.keyword_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_string:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_string_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_list:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_list_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_vector:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_vector_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_hash_set:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_hash_set_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_array_map:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_array_map_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::var:
+        return var_type();
+      default:
+        {
+          static auto const type{ untyped_object_ref_type() };
+          return type;
+        }
+    }
+#pragma clang diagnostic pop
   }
 
   bool is_member_function(jtl::ptr<void> const scope)
@@ -452,7 +603,8 @@ namespace jank::analyze::cpp_util
   {
     auto const can_type{ Cpp::GetCanonicalType(
       Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
-    return can_type == untyped_object_ptr_type() || can_type == untyped_object_ref_type();
+    return can_type == untyped_object_ptr_type()
+      || can_type == Cpp::GetCanonicalType(untyped_object_ref_type());
   }
 
   jtl::ptr<void> base_type(jtl::ptr<void> type)
@@ -516,53 +668,27 @@ namespace jank::analyze::cpp_util
     return false;
   }
 
-  /* TODO: Just put a type member function in expression_base and read it from there. */
+  /* TODO: Remove entirely. */
   jtl::ptr<void> expression_type(expression_ref const expr)
   {
-    return visit_expr(
-      [](auto const typed_expr) -> jtl::ptr<void> {
-        using T = typename decltype(typed_expr)::value_type;
+    return expr->get_type();
+  }
 
-        if constexpr(jtl::is_same<T, expr::cpp_new>)
-        {
-          return Cpp::GetPointerType(typed_expr->type);
-        }
-        else if constexpr(requires(T *t) {
-                            { t->type } -> jtl::is_convertible<jtl::ptr<void>>;
-                          })
-        {
-          return typed_expr->type;
-        }
-        else if constexpr(jtl::is_same<T, expr::cpp_member_call>)
-        {
-          return Cpp::GetFunctionReturnType(typed_expr->fn);
-        }
-        else if constexpr(jtl::is_same<T, expr::local_reference>)
-        {
-          return typed_expr->binding->type;
-        }
-        else if constexpr(jtl::is_same<T, expr::let> || jtl::is_same<T, expr::letfn>)
-        {
-          return expression_type(typed_expr->body);
-        }
-        else if constexpr(jtl::is_same<T, expr::if_>)
-        {
-          return expression_type(typed_expr->then);
-        }
-        else if constexpr(jtl::is_same<T, expr::do_>)
-        {
-          if(typed_expr->values.empty())
-          {
-            return untyped_object_ref_type();
-          }
-          return expression_type(typed_expr->values.back());
-        }
-        else
-        {
-          return untyped_object_ref_type();
-        }
-      },
-      expr);
+  jtl::ptr<void> mutable_type(jtl::ptr<void> const type)
+  {
+    /* foo_ref => object_ref */
+    if(is_typed_object(type))
+    {
+      return untyped_object_ref_type();
+    }
+    /* foo const & => foo */
+    /* foo const => foo */
+    if(Cpp::IsConstType(Cpp::GetNonReferenceType(type)))
+    {
+      return Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type));
+    }
+
+    return type;
   }
 
   jtl::ptr<void> expression_scope(expression_ref const expr)
@@ -936,7 +1062,7 @@ namespace jank::analyze::cpp_util
 
     if(cpp_util::is_untyped_object(expected_type) && cpp_util::is_typed_object(expr_type))
     {
-      return implicit_conversion_action::into_object;
+      return implicit_conversion_action::none;
     }
 
     if(cpp_util::is_typed_object(expected_type) && cpp_util::is_untyped_object(expr_type))

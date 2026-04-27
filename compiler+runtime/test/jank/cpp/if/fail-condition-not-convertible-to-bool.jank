@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::cpp::if_::fail_condition_not_convertible_to_bool
+          {
+            struct foo
+            {
+              i64 i{};
+            };
+          }")
+(let* [foo (cpp/jank.cpp.if_.fail_condition_not_convertible_to_bool.foo #cpp 7)]
+  (if foo
+    :success
+    :success))

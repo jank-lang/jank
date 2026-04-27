@@ -41,6 +41,7 @@ namespace jank::analyze::expr
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
+    jtl::ptr<void> get_type() const override;
 
     /* The original value form of either the type symbol or the value
      * being casted. We use this mainly for source info. */

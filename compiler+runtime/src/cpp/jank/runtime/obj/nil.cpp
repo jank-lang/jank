@@ -108,9 +108,6 @@ namespace jank::runtime
     return lhs->type != object_type::nil;
   }
 
-  obj::nil_ref jank_nil()
-  {
-    static obj::nil n{};
-    return &n;
-  }
+  obj::nil const _jank_nil;
+  obj::nil_ref const jank_nil{ &_jank_nil };
 }

@@ -220,11 +220,29 @@ int main(int argc, const char** argv)
     {
       compiler_args.push_back(strdup("-Wl,--export-dynamic"));
     }
+
 #ifndef JANK_WINDOWS_LIKE
     compiler_args.push_back(strdup("-rdynamic"));
 #endif
-    /* TODO: Change this based on the CLI optimization level. */
-    compiler_args.push_back(strdup("-O2"));
+
+    switch(util::cli::opts.codegen_optimization_level)
+    {
+      case 0:
+        compiler_args.push_back(strdup("-O0"));
+        break;
+      case 1:
+        compiler_args.push_back(strdup("-O1"));
+        break;
+      case 2:
+        compiler_args.push_back(strdup("-O2"));
+        break;
+      case 3:
+        compiler_args.push_back(strdup("-O3"));
+        break;
+      default:
+        compiler_args.push_back(strdup("-O2"));
+        break;
+    }
 
     return compiler_args;
   }

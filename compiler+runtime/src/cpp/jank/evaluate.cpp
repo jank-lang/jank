@@ -10,8 +10,6 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/core/call.hpp>
-#include <jank/codegen/llvm_processor.hpp>
-#include <jank/codegen/processor.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/evaluate.hpp>
 #include <jank/profile/time.hpp>
@@ -21,6 +19,8 @@
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/error/analyze.hpp>
+#include <jank/ir/processor.hpp>
+#include <jank/codegen/cpp_processor.hpp>
 
 namespace jank::evaluate
 {
@@ -169,16 +169,16 @@ namespace jank::evaluate
 
     auto const expr_type{ cpp_util::expression_type(expr) };
     expression_ref expr_to_add{ expr };
-    if(!cpp_util::is_untyped_object(expr_type))
+    if(!cpp_util::is_any_object(expr_type))
     {
       jank_debug_assert(cpp_util::is_trait_convertible(expr_type));
-      expr_to_add = jtl::make_ref<expr::cpp_cast>(expr->position,
-                                                  expr->frame,
-                                                  expr->needs_box,
-                                                  cpp_util::untyped_object_ref_type(),
-                                                  expr_type,
-                                                  conversion_policy::into_object,
-                                                  expr);
+      expr_to_add = jtl::make_ref<expr::cpp_conversion>(expr->position,
+                                                        expr->frame,
+                                                        expr->needs_box,
+                                                        cpp_util::untyped_object_ref_type(),
+                                                        expr_type,
+                                                        conversion_policy::into_object,
+                                                        expr);
       expr->propagate_position(expression_position::value);
     }
     arity.body->values.push_back(expr_to_add);
@@ -220,7 +220,7 @@ namespace jank::evaluate
       return wrap_expression(jtl::make_ref<expr::primitive_literal>(expression_position::tail,
                                                                     an_prc.root_frame,
                                                                     true,
-                                                                    jank_nil()),
+                                                                    jank_nil),
                              name,
                              {});
     }
@@ -294,7 +294,7 @@ namespace jank::evaluate
       current_def_var = var;
       auto const evaluated_value(eval(value));
       var->bind_root(evaluated_value);
-      current_def_var = jank_nil();
+      current_def_var = jank_nil;
     }
     else
     {
@@ -552,63 +552,32 @@ namespace jank::evaluate
   object_ref eval(expr::function_ref const expr, jtl::immutable_string const &)
   {
     profile::timer const timer{ util::format("eval jit function {}", expr->name) };
-    auto const &module(
-      obj::symbol{ expect_object<ns>(__rt_ctx->current_ns_var->deref())->to_string(),
-                   munge(expr->unique_name) }
-        .to_string());
+    auto const module{ munge(expr->unique_name) };
+    auto const mod{ ir::create(expr, module, codegen::compilation_target::eval) };
 
-    if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
+    if(current_def_var.is_some()
+       && util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
     {
-      /* TODO: Remove extra wrapper, if possible. Just create function object directly? */
-      auto const wrapped_expr(wrap_expression(expr, "repl_fn", {}));
+      auto const generated{ codegen::gen_cpp(mod) };
+      native_vector<u8> arities;
+      arities.reserve(mod.root_fn_expr->arities.size());
+      for(auto const &arity : mod.root_fn_expr->arities)
+      {
+        arities.emplace_back(arity.params.size());
+      }
 
-      codegen::llvm_processor const cg_prc{ wrapped_expr,
-                                            module,
-                                            codegen::compilation_target::eval };
-      cg_prc.gen().expect_ok();
-      cg_prc.optimize();
-
-      __rt_ctx->jit_prc.load_ir_module(jtl::move(cg_prc.get_module()));
-
-      auto const fn(
-        __rt_ctx->jit_prc.find_symbol(util::format("{}_0", munge(cg_prc.get_root_fn_name())))
-          .expect_ok());
-      return reinterpret_cast<object *(*)()>(fn)();
+      auto const ret{ make_box<obj::deferred_cpp_function>(expr->meta,
+                                                           current_def_var,
+                                                           generated.declaration,
+                                                           mod.arity_flags,
+                                                           mod.name,
+                                                           arities) };
+      current_def_var = jank_nil;
+      return ret;
     }
     else
     {
-      codegen::processor cg_prc{ expr, module, codegen::compilation_target::eval };
-
-      /* TODO: Rename to something generic which makes sense for IR and C++ gen? */
-      jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
-      if(print_settings == "1")
-      {
-        util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
-      }
-
-      if(current_def_var.is_some()
-         && util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
-      {
-        native_vector<u8> arities;
-        arities.reserve(cg_prc.root_fn->arities.size());
-        for(auto const &arity : cg_prc.root_fn->arities)
-        {
-          arities.emplace_back(arity.params.size());
-        }
-
-        auto const ret{ make_box<obj::deferred_cpp_function>(expr->meta,
-                                                             current_def_var,
-                                                             cg_prc.declaration_str(),
-                                                             cg_prc.arity_flags(),
-                                                             cg_prc.struct_name,
-                                                             arities) };
-        current_def_var = jank_nil();
-        return ret;
-      }
-      else
-      {
-        return __rt_ctx->jit_prc.eval(cg_prc);
-      }
+      return __rt_ctx->jit_prc.eval(mod);
     }
   }
 
@@ -701,11 +670,11 @@ namespace jank::evaluate
     return dynamic_call(eval(wrap_expression(expr, "cpp_value", {})));
   }
 
-  object_ref eval(expr::cpp_cast_ref const expr)
+  object_ref eval(expr::cpp_conversion_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_cast", {})));
+    return dynamic_call(eval(wrap_expression(expr, "cpp_conversion", {})));
   }
 
   object_ref eval(expr::cpp_unsafe_cast_ref const expr)

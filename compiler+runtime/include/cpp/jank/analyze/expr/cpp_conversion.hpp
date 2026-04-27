@@ -10,7 +10,6 @@ namespace jank::analyze
     from_object
   };
 
-  [[gnu::visibility("default")]]
   constexpr char const *conversion_policy_str(conversion_policy const policy)
   {
     switch(policy)
@@ -27,28 +26,28 @@ namespace jank::analyze
 
 namespace jank::analyze::expr
 {
-  using cpp_cast_ref = jtl::ref<struct cpp_cast>;
+  using cpp_conversion_ref = jtl::ref<struct cpp_conversion>;
 
-  /* Cast expressions are only used for conversion calls using jank's
+  /* This expression is only used for conversion calls using jank's
    * conversion trait. During analysis, if the cast can be done using
    * normal construction, we'll create a cpp_constructor_call expression
    * instead. */
-  /* TODO: Rename to cpp_conversion or something. */
-  struct cpp_cast : expression
+  struct cpp_conversion : expression
   {
-    static constexpr expression_kind expr_kind{ expression_kind::cpp_cast };
+    static constexpr expression_kind expr_kind{ expression_kind::cpp_conversion };
 
-    cpp_cast(expression_position position,
-             local_frame_ptr frame,
-             bool needs_box,
-             jtl::ptr<void> type,
-             jtl::ptr<void> conversion_type,
-             conversion_policy policy,
-             expression_ref value_expr);
+    cpp_conversion(expression_position position,
+                   local_frame_ptr frame,
+                   bool needs_box,
+                   jtl::ptr<void> type,
+                   jtl::ptr<void> conversion_type,
+                   conversion_policy policy,
+                   expression_ref value_expr);
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
     void walk(std::function<void(jtl::ref<expression>)> const &f) override;
+    jtl::ptr<void> get_type() const override;
 
     /* This is the resulting type of the conversion. */
     jtl::ptr<void> type{};

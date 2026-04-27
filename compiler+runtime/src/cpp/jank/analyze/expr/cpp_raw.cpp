@@ -1,3 +1,5 @@
+#include <CppInterOp/CppInterOp.h>
+
 #include <jank/analyze/expr/cpp_raw.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
@@ -23,5 +25,10 @@ namespace jank::analyze::expr
   {
     /* TODO: Fill in. */
     return merge(expression::to_runtime_data(), obj::persistent_array_map::create_unique());
+  }
+
+  jtl::ptr<void> cpp_raw::get_type() const
+  {
+    return Cpp::GetVoidType();
   }
 }

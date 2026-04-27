@@ -16,6 +16,7 @@ namespace jank::analyze::expr
                       runtime::object_ref const data);
 
     runtime::object_ref to_runtime_data() const override;
+    jtl::ptr<void> get_type() const override;
 
     runtime::object_ref data{};
   };

@@ -1,6 +1,11 @@
 #include <jank/analyze/expr/cpp_member_call.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
+namespace CppImpl
+{
+  void *GetFunctionReturnType(void *);
+}
+
 namespace jank::analyze::expr
 {
   using namespace jank::runtime;
@@ -36,5 +41,10 @@ namespace jank::analyze::expr
       f(arg_expr);
     }
     expression::walk(f);
+  }
+
+  jtl::ptr<void> cpp_member_call::get_type() const
+  {
+    return CppImpl::GetFunctionReturnType(fn);
   }
 }

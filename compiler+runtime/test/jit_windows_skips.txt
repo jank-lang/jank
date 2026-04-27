@@ -14,11 +14,13 @@ pass-catch-ordering.jank
 pass-catch-rethrow-alloc.jank
 pass-closure-capture.jank
 pass-finally-behavior.jank
+pass-immediate-throw.jank
 pass-nested-fn-finally.jank
 pass-nested-no-catch.jank
 pass-nested-try-catch.jank
 pass-recur-local-to-catch.jank
 pass-throw-from-finally.jank
+pass-throw-condition.jank
 pass-try-basic.jank
 pass-try-catch-finally-execution.jank
 pass-try-empty-bodies.jank
@@ -30,4 +32,5 @@ fail-non-literal-value.jank
 fail-overlapping-values.jank
 fail-non-symbol.jank
 fail-no-quote.jank
+fail-condition-not-convertible-to-bool.jank
 throw-return-position.jank

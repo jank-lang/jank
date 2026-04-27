@@ -25,7 +25,7 @@
 #include <jank/analyze/expr/cpp_raw.hpp>
 #include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expr/cpp_value.hpp>
-#include <jank/analyze/expr/cpp_cast.hpp>
+#include <jank/analyze/expr/cpp_conversion.hpp>
 #include <jank/analyze/expr/cpp_unsafe_cast.hpp>
 #include <jank/analyze/expr/cpp_call.hpp>
 #include <jank/analyze/expr/cpp_constructor_call.hpp>
@@ -92,8 +92,8 @@ namespace jank::analyze
         return f(jtl::static_ref_cast<expr::cpp_type>(e), std::forward<Args>(args)...);
       case expression_kind::cpp_value:
         return f(jtl::static_ref_cast<expr::cpp_value>(e), std::forward<Args>(args)...);
-      case expression_kind::cpp_cast:
-        return f(jtl::static_ref_cast<expr::cpp_cast>(e), std::forward<Args>(args)...);
+      case expression_kind::cpp_conversion:
+        return f(jtl::static_ref_cast<expr::cpp_conversion>(e), std::forward<Args>(args)...);
       case expression_kind::cpp_unsafe_cast:
         return f(jtl::static_ref_cast<expr::cpp_unsafe_cast>(e), std::forward<Args>(args)...);
       case expression_kind::cpp_call:

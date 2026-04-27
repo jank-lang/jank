@@ -28,8 +28,8 @@
 #include <jank/util/environment.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
-#include <jank/codegen/llvm_processor.hpp>
-#include <jank/codegen/processor.hpp>
+#include <jank/ir/processor.hpp>
+#include <jank/codegen/cpp_processor.hpp>
 #include <jank/codegen/optimize.hpp>
 #include <jank/aot/processor.hpp>
 #include <jank/error/codegen.hpp>
@@ -107,10 +107,10 @@ namespace jank::runtime
 
     push_thread_bindings(obj::persistent_hash_map::create_unique(
                            std::make_pair(current_ns_var, current_ns_var->deref()),
-                           std::make_pair(star1, jank_nil()),
-                           std::make_pair(star2, jank_nil()),
-                           std::make_pair(star3, jank_nil()),
-                           std::make_pair(stare, jank_nil())))
+                           std::make_pair(star1, jank_nil),
+                           std::make_pair(star2, jank_nil),
+                           std::make_pair(star3, jank_nil),
+                           std::make_pair(stare, jank_nil)))
       .expect_ok();
   }
 
@@ -215,6 +215,7 @@ namespace jank::runtime
       return jtl::none;
     }
 
+    /* TODO: Analyze only once so macros are expanded only once. */
     /* When compiling, we analyze twice. This is because eval will modify its expression
      * in order to wrap it in a function. Undoing this is arduous and error prone, so
      * we just don't bother.
@@ -229,7 +230,7 @@ namespace jank::runtime
 
       if(forms.empty())
       {
-        forms.emplace_back(jank_nil());
+        forms.emplace_back(jank_nil);
       }
 
       auto const form{ runtime::conj(
@@ -242,41 +243,33 @@ namespace jank::runtime
         an_prc.analyze(form, analyze::expression_position::statement).expect_ok()));
       auto const fn{ static_box_cast<analyze::expr::function>(expr) };
       fn->unique_name = name;
+      auto const mod{ ir::create(fn, module, codegen::compilation_target::module) };
 
-      if(util::cli::opts.codegen == util::cli::codegen_type::llvm_ir)
+      auto const generated{ codegen::gen_cpp(mod) };
+      auto const &code{ generated.declaration };
+
+      jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_CODEGEN") ?: "" };
+      if(print_settings == "1")
       {
-        codegen::llvm_processor const cg_prc{ fn, module, codegen::compilation_target::module };
-        cg_prc.gen().expect_ok();
-        cg_prc.optimize();
-        write_module(cg_prc.get_module_name(), "", cg_prc.get_module().getModuleUnlocked())
-          .expect_ok();
+        auto const formatted{ util::format_cpp_source(code).expect_ok() };
+        util::println("\n{}\n", formatted);
       }
-      else
+
+      auto const module_name{ runtime::to_string(current_module_var->deref()) };
+      auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
+      if(!parse_res)
       {
-        profile::timer const timer{ "rt compile-module parse + write" };
-        codegen::processor cg_prc{ fn, module, codegen::compilation_target::module };
-        //util::println("{}\n", util::format_cpp_source(cg_prc.declaration_str()).expect_ok());
-        auto const code{ cg_prc.declaration_str() };
-        auto const module_name{ runtime::to_string(current_module_var->deref()) };
-        //aot::processor const aot_prc;
-        //auto const res{ aot_prc.compile_object(module_name, code) };
-        //if(res.is_err())
-        //{
-        //  throw res.expect_err();
-        //}
-        auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
-        if(!parse_res)
-        {
-          /* TODO: Helper to turn an llvm::Error into a string. */
-          jtl::immutable_string const res{ "Unable to compile generated C++ source." };
-          llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
-          throw error::internal_codegen_failure(res);
-        }
-        auto &partial_tu{ parse_res.get() };
+        /* TODO: Helper to turn an llvm::Error into a string. */
+        jtl::immutable_string const res{ "Unable to compile generated C++ source." };
+        llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
+        throw error::internal_codegen_failure(res);
+      }
+      auto &partial_tu{ parse_res.get() };
+      if(util::cli::opts.output_target != util::cli::compilation_target::cpp)
+      {
         codegen::optimize(partial_tu.TheModule.get(), module_name);
-        //auto module_name{ runtime::to_string(current_module_var->deref()) };
-        write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
       }
+      write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
     }
 
     return ret;
@@ -401,7 +394,7 @@ namespace jank::runtime
     /* When reading an arbitrary string, we don't want the last *current-file* to
      * be set as source file, so we need to bind it to nil. */
     binding_scope const preserve{ obj::persistent_hash_map::create_unique(
-      std::make_pair(current_file_var, jank_nil())) };
+      std::make_pair(current_file_var, jank_nil)) };
     read::lex::processor l_prc{ code };
     read::parse::processor p_prc{ l_prc.begin(),
                                   l_prc.end(),

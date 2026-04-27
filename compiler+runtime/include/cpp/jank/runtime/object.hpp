@@ -95,7 +95,6 @@ namespace jank::runtime
     reader_conditional,
   };
 
-  [[gnu::visibility("default")]]
   constexpr char const *object_type_str(object_type const type)
   {
     switch(type)
@@ -252,6 +251,27 @@ namespace jank::runtime
     return "unknown";
   }
 
+  /* The old, closed object model relied on each object having an `object_type`. We would then
+   * visit each object type as a means of dynamic dispatch. This worked well for a closed object
+   * model, but Clojure's object model is inherently open. Using lots of inheritance, as Clojure
+   * does, is prohibitively slow in C++, so we kept the closed object model for a couple of years
+   * while I spent hammock time to consider alternatives.
+   *
+   * This `object_behavior` approach is such an alternative. Instead of having an enum for each
+   * object type, we have an enum for each object behavior. This means we have a closed set of
+   * builtin behaviors, but an open set of object types. Each behavior maps to a bit in a bit set
+   * and each object has a bit set which describes its behaviors. The behaviors map to virtual
+   * calls on the `object` type. Every object has those virtual fns, they generally just throw
+   * by default, saying the object doesn't support that behavior. The way to know if a behavior
+   * is supported is to check the corresponding behavior bit.
+   *
+   * Right now, objects have both an `object_type` and a bit set for object behaviors. This will
+   * be the case until we port all previous concept-based behaviors into virtual functions within
+   * `object` and a corresponding behavior in this enum. When doing so, we also need to update all
+   * `visit` uses for that concept behavior with a bit check and virtual call instead. We need to
+   * be mindful to benchmark as we go, to ensure that the new virtual behaviors are comparable to
+   * the visit-style behavior. If we can't get comparable performance for a behavior, we should
+   * leave it as a `visit` style behavior for now. */
   enum class object_behavior : u8
   {
     none = 0,

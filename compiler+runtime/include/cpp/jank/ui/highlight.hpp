@@ -26,5 +26,9 @@ namespace jank
   {
     std::map<usize, ftxui::Element>
     highlight(runtime::module::file_view const &code, usize line_start, usize line_end);
+
+    jtl::immutable_string highlight_str(runtime::module::file_view const &code);
+    jtl::immutable_string
+    highlight_str(runtime::module::file_view const &code, usize line_start, usize line_end);
   }
 }

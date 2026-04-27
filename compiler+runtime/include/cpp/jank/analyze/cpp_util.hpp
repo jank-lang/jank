@@ -33,6 +33,7 @@ namespace jank::analyze::cpp_util
   void register_rtti(jtl::ptr<void> type);
 
   jtl::ptr<void> expression_type(expression_ref expr);
+  jtl::ptr<void> mutable_type(jtl::ptr<void> const type);
   jtl::ptr<void> non_void_expression_type(expression_ref expr);
   jtl::ptr<void> expression_scope(expression_ref const expr);
 
@@ -62,6 +63,16 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> untyped_object_ptr_type();
   jtl::ptr<void> untyped_object_ref_type();
   jtl::ptr<void> char_type();
+  jtl::ptr<void> bool_type();
+  jtl::ptr<void> var_type();
+  jtl::ptr<void> persistent_list_ref_type();
+  jtl::ptr<void> persistent_vector_ref_type();
+  jtl::ptr<void> persistent_array_map_ref_type();
+  jtl::ptr<void> persistent_hash_map_ref_type();
+  jtl::ptr<void> persistent_hash_set_ref_type();
+  jtl::ptr<void> jit_function_ref_type();
+  jtl::ptr<void> jit_closure_ref_type();
+  jtl::ptr<void> literal_type(runtime::object_ref const o);
 
   usize offset_to_typed_object_base(jtl::ptr<void> type);
 

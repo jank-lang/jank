@@ -180,17 +180,6 @@ namespace jank
       }
     }
 
-    if(opts.output_target == util::cli::compilation_target::cpp
-       && opts.codegen != util::cli::codegen_type::cpp)
-    {
-      /* TODO: Dedicated error. */
-      throw error::internal_failure(
-        util::format("Unable to output C++ when the codegen flag is set to '{}'. Please either "
-                     "output a different target or change the codegen to C++.",
-                     util::cli::codegen_type_str(opts.codegen)));
-    }
-
-
     if(opts.target_module != "clojure.core")
     {
       __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
@@ -256,10 +245,10 @@ namespace jank
     auto const error_var{ __rt_ctx->find_var("clojure.core", "*e") };
 
     context::binding_scope const scope{ obj::persistent_hash_map::create_unique(
-      std::make_pair(first_res_var, jank_nil()),
-      std::make_pair(second_res_var, jank_nil()),
-      std::make_pair(third_res_var, jank_nil()),
-      std::make_pair(error_var, jank_nil())) };
+      std::make_pair(first_res_var, jank_nil),
+      std::make_pair(second_res_var, jank_nil),
+      std::make_pair(third_res_var, jank_nil),
+      std::make_pair(error_var, jank_nil)) };
 
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
@@ -421,12 +410,13 @@ int main(int const argc, char const **argv)
 
     jank_load_clojure_core_native();
 
+    __rt_ctx->module_loader.add_load_fn("jank.compiler-native", &jank_load_jank_compiler_native);
+    __rt_ctx->module_loader.add_load_fn("jank.perf-native", &jank_load_jank_perf_native);
+
 #ifdef JANK_PHASE_2
     __rt_ctx->module_loader.add_load_fn("clojure.core", &jank_load_clojure_core);
     __rt_ctx->module_loader.add_load_fn("clojure.string", &jank_load_clojure_string);
     __rt_ctx->module_loader.add_load_fn("clojure.walk", &jank_load_clojure_walk);
-    __rt_ctx->module_loader.add_load_fn("jank.compiler-native", &jank_load_jank_compiler_native);
-    __rt_ctx->module_loader.add_load_fn("jank.perf-native", &jank_load_jank_perf_native);
     __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.core",
                                         &jank_load_jank_nrepl_server_core);
     __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.inspect",

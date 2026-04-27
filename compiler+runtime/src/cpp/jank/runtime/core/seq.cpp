@@ -656,7 +656,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::associatively_writable<T>)
         {
-          using R = decltype(assoc(typed_m, jank_nil(), jank_nil()));
+          using R = decltype(assoc(typed_m, jank_nil, jank_nil));
 
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
@@ -692,7 +692,7 @@ namespace jank::runtime
         using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
         if constexpr(behavior::associatively_writable_in_place<T>)
         {
-          using R = decltype(assoc_in_place(typed_m, jank_nil(), jank_nil()));
+          using R = decltype(assoc_in_place(typed_m, jank_nil, jank_nil));
 
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {

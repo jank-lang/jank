@@ -1204,8 +1204,9 @@
 ;; Primitives.
 ;;; Arithmetic.
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.add l r))
+    :inline-arities #{2}}
   +
   ([]
    0)
@@ -1220,8 +1221,9 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.sub l r))
+    :inline-arities #{2}}
   -
   ([x]
    (- 0 x))
@@ -1234,8 +1236,9 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.mul l r))
+    :inline-arities #{2}}
   *
   ([]
    1)
@@ -1250,8 +1253,9 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.div l r))
+    :inline-arities #{2}}
   /
   ([x]
    (/ 1 x))
@@ -1342,8 +1346,9 @@
    (not (apply = x y more))))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.lt l r))
+    :inline-arities #{2}}
   <
   ([x]
    true)
@@ -1357,8 +1362,9 @@
      false)))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.lte l r))
+    :inline-arities #{2}}
   <=
   ([x]
    true)
@@ -1372,8 +1378,9 @@
      false)))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.lt r l))
+    :inline-arities #{2}}
   >
   ([x]
    true)
@@ -1387,8 +1394,9 @@
      false)))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.lte r l))
+    :inline-arities #{2}}
   >=
   ([x]
    true)
@@ -1402,8 +1410,9 @@
      false)))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.min l r))
+    :inline-arities #{2}}
   min
   ([x]
    x)
@@ -1416,8 +1425,9 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:arities {2 {:supports-unboxed-input? true
-                 :unboxed-output? true}}}
+  ^{:inline (fn [l r]
+              (list 'cpp/jank.runtime.max l r))
+    :inline-arities #{2}}
   max
   ([x]
    x)
@@ -3203,22 +3213,6 @@
   [coll]
   (when (seq coll)
     coll))
-
-(defn get-in
-  "Returns the value in a nested associative structure,
-   where ks is a sequence of keys. Returns nil if the key
-   is not present, or the not-found value if supplied."
-  ([m ks]
-   (reduce get m ks))
-  ([m ks not-found]
-   (loop [m m
-          ks (seq ks)]
-     (if ks
-       (let [m (get m (first ks) ::none)]
-         (if (identical? ::none m)
-           not-found
-           (recur m (next ks))))
-       m))))
 
 (defn assoc-in
   "Associates a value in a nested associative structure, where ks is a

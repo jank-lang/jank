@@ -322,43 +322,6 @@ namespace jank::environment
                         terminal_style::reset);
   }
 
-  /* This is disabled until IR gen supports ref counting OR we switch back to using a GC. */
-  [[maybe_unused]]
-  static jtl::immutable_string check_ir_jit()
-  {
-    bool error{};
-
-    /* Force IR gen, regardless of CLI flags. We make sure to reset the old value, though. */
-    auto const saved_codegen{ util::cli::opts.codegen };
-    util::cli::opts.codegen = util::cli::codegen_type::llvm_ir;
-    util::scope_exit const finally{ [=] { util::cli::opts.codegen = saved_codegen; } };
-
-    JANK_TRY
-    {
-      auto const res{ runtime::__rt_ctx->eval_string("((fn* [] \"healthy\"))").unwrap() };
-      if(!runtime::equal(res, runtime::make_box("healthy")))
-      {
-        error = true;
-      }
-    }
-    JANK_CATCH([&](auto const &e) {
-      jank::util::print_exception(e);
-      error = true;
-    })
-
-    fatal_error |= error;
-
-    if(error)
-    {
-      return util::format("{}─ ❌{} jank cannot jit compile llvm ir",
-                          terminal_style::red,
-                          terminal_style::reset);
-    }
-    return util::format("{}─ ✅{} jank can jit compile llvm ir",
-                        terminal_style::green,
-                        terminal_style::reset);
-  }
-
   static jtl::immutable_string check_aot()
   {
     if(std::getenv("JANK_SKIP_AOT_CHECK"))
@@ -505,7 +468,6 @@ namespace jank::environment
                       terminal_style::reset);
         util::println("{}", pch_location());
         util::println("{}", check_cpp_jit());
-        //util::println("{}", check_ir_jit());
         util::println("{}", check_aot());
         util::println("");
 

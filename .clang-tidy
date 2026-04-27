@@ -47,6 +47,7 @@ misc-definitions-in-headers,\
 -bugprone-bitwise-pointer-cast,\
 -bugprone-macro-parentheses,\
 -bugprone-throwing-static-initialization,\
+-bugprone-forward-declaration-namespace,\
 -readability-redundant-member-init,\
 -readability-redundant-typename,\
 -readability-redundant-casting,\

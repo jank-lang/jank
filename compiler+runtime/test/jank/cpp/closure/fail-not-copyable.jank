@@ -1,0 +1,17 @@
+(cpp/raw "namespace jank::cpp::closure::fail_not_copyable
+          {
+            struct foo
+            {
+              foo() = default;
+              foo(foo const&) = delete;
+              foo(foo &&) = delete;
+
+              int a{ 55 };
+            };
+          }")
+(let [outer (fn* outer []
+              (let* [foo (cpp/jank.cpp.closure.fail_not_copyable.foo)]
+                ((fn* inner []
+                   (if (= 55 (.-a foo))
+                     :success)))))]
+  (outer))

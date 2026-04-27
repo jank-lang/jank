@@ -1,0 +1,4 @@
+(loop* [a 1]
+  (if (= a 2)
+    :success
+    (recur 2)))

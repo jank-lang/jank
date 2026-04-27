@@ -2,6 +2,7 @@
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/analyze/visit.hpp>
+#include <jank/analyze/cpp_util.hpp>
 
 namespace jank::analyze
 {
@@ -40,5 +41,10 @@ namespace jank::analyze
 
   void expression::walk(std::function<void(jtl::ref<expression>)> const &)
   {
+  }
+
+  jtl::ptr<void> expression::get_type() const
+  {
+    return cpp_util::untyped_object_ref_type();
   }
 }

@@ -73,7 +73,7 @@ namespace jank::analyze
     cpp_raw = cpp_value_min,
     cpp_type,
     cpp_value,
-    cpp_cast,
+    cpp_conversion,
     cpp_unsafe_cast,
     cpp_call,
     cpp_constructor_call,
@@ -141,8 +141,8 @@ namespace jank::analyze
         return "cpp_type";
       case expression_kind::cpp_value:
         return "cpp_value";
-      case expression_kind::cpp_cast:
-        return "cpp_cast";
+      case expression_kind::cpp_conversion:
+        return "cpp_conversion";
       case expression_kind::cpp_unsafe_cast:
         return "cpp_unsafe_cast";
       case expression_kind::cpp_call:
@@ -182,6 +182,7 @@ namespace jank::analyze
     virtual void propagate_position(expression_position const pos);
     virtual runtime::object_ref to_runtime_data() const;
     virtual void walk(std::function<void(jtl::ref<expression>)> const &f);
+    virtual jtl::ptr<void> get_type() const;
 
     expression_kind kind{};
     expression_position position{};

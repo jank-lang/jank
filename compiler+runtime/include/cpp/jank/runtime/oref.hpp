@@ -9,7 +9,15 @@
 
 #include <jank/runtime/object.hpp>
 
-extern "C" void *jank_const_nil();
+/* During AOT codegen, we need to initialize a bunch of lifted constants and globals, but
+ * the jank_nil global may not yet be initialized, since the order of initialization of globals
+ * across C++ translation units is not defined. In the default initialization or oref, we
+ * try to grab the `jank_nil` global, which will be undefined behavior. Instead, we use
+ * this special tag type to initialize our orefs to nullptr, since will later do an in-place
+ * new on them with a proper ctor. */
+struct _jank_null
+{
+};
 
 namespace jank::runtime
 {
@@ -19,6 +27,7 @@ namespace jank::runtime
     struct boolean;
   }
 
+  extern jank::runtime::obj::nil const _jank_nil;
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   extern oref<struct obj::boolean> jank_true;
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
@@ -42,6 +51,11 @@ namespace jank::runtime
 
     oref(nullptr_t) noexcept = delete;
 
+    oref(_jank_null) noexcept
+      : data{ nullptr }
+    {
+    }
+
     oref(value_type * const data) noexcept
       : data{ data }
     {
@@ -52,6 +66,13 @@ namespace jank::runtime
       : data{ const_cast<value_type *>(data) }
     {
       jank_assert(data);
+    }
+
+    /* We use this one during codegen. */
+    oref(void * const data) noexcept
+      : data{ static_cast<value_type *>(data) }
+    {
+      jank_assert(this->data);
     }
 
     template <typename T>
@@ -81,7 +102,7 @@ namespace jank::runtime
 
     void reset() noexcept
     {
-      data = std::bit_cast<object *>(jank_const_nil());
+      data = std::bit_cast<object *>(&_jank_nil);
     }
 
     void reset(object * const o) noexcept
@@ -171,7 +192,7 @@ namespace jank::runtime
       return data->type == object_type::nil;
     }
 
-    value_type *data{ std::bit_cast<object *>(jank_const_nil()) };
+    value_type *data{ std::bit_cast<object *>(&_jank_nil) };
   };
 
   /* This specialization of oref is for fully-typed objects like
@@ -189,6 +210,11 @@ namespace jank::runtime
 
     oref(nullptr_t) = delete;
 
+    oref(_jank_null) noexcept
+      : data{ nullptr }
+    {
+    }
+
     oref(jtl::remove_const_t<T> * const data) noexcept
       : data{ data }
     {
@@ -197,6 +223,13 @@ namespace jank::runtime
 
     oref(T const * const data) noexcept
       : data{ const_cast<T *>(data) }
+    {
+      jank_assert(this->data);
+    }
+
+    /* We use this one during codegen. */
+    oref(void * const data) noexcept
+      : data{ static_cast<T *>(data) }
     {
       jank_assert(this->data);
     }
@@ -219,7 +252,7 @@ namespace jank::runtime
 
     void reset() noexcept
     {
-      data = std::bit_cast<object *>(jank_const_nil());
+      data = std::bit_cast<object *>(&_jank_nil);
     }
 
     void reset(object * const o) noexcept
@@ -317,7 +350,7 @@ namespace jank::runtime
         return *this;
       }
 
-      data = std::bit_cast<void *>(jank_const_nil());
+      data = std::bit_cast<void *>(&_jank_nil);
       return *this;
     }
 
@@ -341,15 +374,15 @@ namespace jank::runtime
 
     bool is_some() const noexcept
     {
-      return data != std::bit_cast<void *>(jank_const_nil());
+      return data != std::bit_cast<void *>(&_jank_nil);
     }
 
     bool is_nil() const noexcept
     {
-      return data == std::bit_cast<void *>(jank_const_nil());
+      return data == std::bit_cast<void *>(&_jank_nil);
     }
 
-    void *data{ std::bit_cast<void *>(jank_const_nil()) };
+    void *data{ std::bit_cast<void *>(&_jank_nil) };
   };
 
   template <>
@@ -363,6 +396,11 @@ namespace jank::runtime
 
     oref(nullptr_t) = delete;
 
+    oref(_jank_null) noexcept
+      : data{ nullptr }
+    {
+    }
+
     oref(value_type * const data) noexcept
       : data{ data }
     {
@@ -371,6 +409,13 @@ namespace jank::runtime
 
     oref(value_type const * const data) noexcept
       : data{ const_cast<value_type *>(data) }
+    {
+      jank_assert(this->data);
+    }
+
+    /* We use this one during codegen. */
+    oref(void * const data) noexcept
+      : data{ static_cast<value_type *>(data) }
     {
       jank_assert(this->data);
     }
@@ -441,7 +486,7 @@ namespace jank::runtime
 
     oref<object> erase() const noexcept
     {
-      return { std::bit_cast<object *>(jank_const_nil()) };
+      return { std::bit_cast<object *>(&_jank_nil) };
     }
 
     bool is_some() const noexcept
@@ -454,7 +499,7 @@ namespace jank::runtime
       return true;
     }
 
-    value_type *data{ std::bit_cast<value_type *>(jank_const_nil()) };
+    value_type *data{ std::bit_cast<value_type *>(&_jank_nil) };
   };
 
   template <typename T>

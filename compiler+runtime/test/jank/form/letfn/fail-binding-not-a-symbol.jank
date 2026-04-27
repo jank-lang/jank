@@ -1,0 +1,2 @@
+(letfn* [(not valid) (fn* foo [])]
+  :success)

@@ -25,4 +25,9 @@ namespace jank::analyze::expr
                                                           make_box("binding"),
                                                           binding->to_runtime_data()));
   }
+
+  jtl::ptr<void> local_reference::get_type() const
+  {
+    return binding->type;
+  }
 }

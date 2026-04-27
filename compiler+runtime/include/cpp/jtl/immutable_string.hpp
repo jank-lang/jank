@@ -32,7 +32,7 @@ namespace jtl
    * 2. Large owned (24 or more characters, with unique ownership over the memory)
    * 3. Large shared (24 or more characters, with shared ownership over the memory)
    *
-   * Shared ownership just relies on jank's garbage collector. No additional bookkeping, such
+   * Shared ownership just relies on jank's garbage collector. No additional bookkeeping, such
    * as reference counting, is done.
    *
    * Within that right-most byte, these three categories are determined by two dedicated bits.
@@ -47,10 +47,9 @@ namespace jtl
    *
    * In the large case, only the two flag bits of the third word are used. Sharing is done by
    * updating the flag bits on both strings to be shared. We share on both copy construction
-   * as well as substring operations. Since share substrings, shared strings may not be
+   * as well as substring operations. Since we share substrings, shared strings may not be
    * null-terminated. We'll lazily own the string if c_str() is called on a shared string, but
-   * data() is not expected to return a null-terminated string.
-   */
+   * data() is not expected to return a null-terminated string. */
   struct immutable_string
   {
     using value_type = char;

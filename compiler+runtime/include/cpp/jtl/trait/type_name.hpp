@@ -4,6 +4,8 @@
 #include <array>
 #include <utility>
 
+#include <jtl/immutable_string_view.hpp>
+
 namespace jtl
 {
   template <std::size_t... Idxs>
@@ -68,7 +70,7 @@ namespace jtl
    *
    * Just do type_name<T>() and there's your string_view. */
   template <typename T>
-  constexpr std::string_view type_name()
+  constexpr jtl::immutable_string_view type_name()
   {
     constexpr auto &value{ type_name_holder<T>::value };
     return { value.data(), value.size() };

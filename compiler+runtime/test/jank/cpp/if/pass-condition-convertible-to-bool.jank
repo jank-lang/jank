@@ -1,0 +1,18 @@
+(cpp/raw "namespace jank::cpp::if_::pass_condition_convertible_to_bool
+          {
+            struct foo
+            {
+              operator bool() const
+              { return i != 0; }
+
+              i64 i{};
+            };
+          }")
+(let* [foo (cpp/jank.cpp.if_.pass_condition_convertible_to_bool.foo #cpp 7)
+       r (if foo
+           :success)
+       _ (cpp/= (.-i foo) #cpp 0)
+       r (if foo
+           :failure
+           r)]
+  r)

@@ -419,10 +419,6 @@ extern "C" void jank_load_clojure_core_native()
   intern_fn("volatile!", &volatile_);
   intern_fn("volatile?", &is_volatile);
   intern_fn("vreset!", &vreset);
-  intern_fn("+", static_cast<object_ref (*)(object_ref const, object_ref const)>(&add));
-  intern_fn("-", static_cast<object_ref (*)(object_ref const, object_ref const)>(&sub));
-  intern_fn("/", static_cast<object_ref (*)(object_ref const, object_ref const)>(&div));
-  intern_fn("*", static_cast<object_ref (*)(object_ref const, object_ref const)>(&mul));
   intern_fn("bit-not", &bit_not);
   intern_fn("bit-and", &bit_and);
   intern_fn("bit-or", &bit_or);
@@ -435,11 +431,7 @@ extern "C" void jank_load_clojure_core_native()
   intern_fn("bit-shift-left", &bit_shift_left);
   intern_fn("bit-shift-right", &bit_shift_right);
   intern_fn("unsigned-bit-shift-right", &bit_unsigned_shift_right);
-  intern_fn("<", static_cast<bool (*)(object_ref const, object_ref const)>(&lt));
-  intern_fn("<=", static_cast<bool (*)(object_ref const, object_ref const)>(&lte));
   intern_fn("compare", &runtime::compare);
-  intern_fn("min", static_cast<object_ref (*)(object_ref const, object_ref const)>(&min));
-  intern_fn("max", static_cast<object_ref (*)(object_ref const, object_ref const)>(&max));
   intern_fn("inc", static_cast<object_ref (*)(object_ref const)>(&inc));
   intern_fn("dec", static_cast<object_ref (*)(object_ref const)>(&dec));
   intern_fn("numerator", &numerator);

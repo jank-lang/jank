@@ -127,8 +127,7 @@ namespace jank::util
                                   JANK_VERSION,
                                   clang::getClangRevision(),
                                   JANK_JIT_FLAGS,
-                                  util::cli::opts.optimization_level,
-                                  static_cast<int>(util::cli::opts.codegen),
+                                  util::cli::opts.codegen_optimization_level,
                                   sb.release()));
     /* TODO: Actual target triple. */
     res = util::format("{}-{}", llvm::sys::getDefaultTargetTriple(), util::sha256(input));

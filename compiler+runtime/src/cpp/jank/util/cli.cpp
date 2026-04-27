@@ -5,24 +5,6 @@
 
 namespace jank::util::cli
 {
-  options::options()
-  {
-    jtl::immutable_string_view const codegen_str{ getenv("JANK_CODEGEN") ?: "" };
-    if(codegen_str == "cpp")
-    {
-      codegen = codegen_type::cpp;
-    }
-    else if(codegen_str == "llvm-ir")
-    {
-      codegen = codegen_type::llvm_ir;
-      eagerness = compilation_eagerness::eager;
-    }
-    else if(!codegen_str.empty())
-    {
-      error::warn(util::format("Unknown value for JANK_CODEGEN: '{}'. Ignoring.", codegen_str));
-    }
-  }
-
   /* NOLINTNEXTLINE */
   options opts;
 
@@ -122,10 +104,11 @@ The jank compiler is used to evaluate and compile jank, Clojure, and C++ sources
 
 COMMANDS
   run                         Load and run a file.
-  compile-module              Compile a module (given its namespace) and its dependencies.
   repl                        Start up a terminal REPL client and server.
   cpp-repl                    Start up a terminal C++ REPL client.
   run-main                    Load and execute -main.
+  compile-module              Ahead of time compile a module (given its namespace) and its
+                              dependencies.
   compile                     Ahead of time compile project with entrypoint module containing
                               -main.
   check-health                Provide a status report on the jank installation.
@@ -144,14 +127,14 @@ OPTIONS
           --direct-call       Elides the dereferencing of vars for improved performance.
   -O,     --optimization <0 - 3>
                               The optimization level to use for AOT compilation.
-          --codegen <llvm-ir, cpp> [default: cpp]
-                              The type of code generation to use.
           --eagerness <lazy, eager> [default: lazy]
                               How eagerly to JIT compile functions.
   -o,     --output <path>
                               The name of the output file.
-          --output-dir <path>
-                              The prefix to use for object files. [default: target]
+          --output-dir <path> [default: target]
+                              The prefix to use for object files.
+          --output-target <cpp, llvm-ir, object> [default: object]
+                              The target of each compiled module artifact.
   -I,     --include-dir <path>
                               Absolute or relative path to the directory for includes
                               resolution. Can be specified multiple times.
@@ -176,8 +159,8 @@ OPTIONS
       {       "run-main",       command::run_main },
       {           "repl",           command::repl },
       {       "cpp-repl",       command::cpp_repl },
-      { "compile-module", command::compile_module },
       {        "compile",        command::compile },
+      { "compile-module", command::compile_module },
       {   "check-health",   command::check_health }
     };
 
@@ -240,38 +223,23 @@ OPTIONS
         {
           if(value == "0")
           {
-            opts.optimization_level = 0;
+            opts.codegen_optimization_level = 0;
           }
           else if(value == "1")
           {
-            opts.optimization_level = 1;
+            opts.codegen_optimization_level = 1;
           }
           else if(value == "2")
           {
-            opts.optimization_level = 2;
+            opts.codegen_optimization_level = 2;
           }
           else if(value == "3")
           {
-            opts.optimization_level = 3;
+            opts.codegen_optimization_level = 3;
           }
           else
           {
             throw util::format("Invalid optimization level '{}'.", value);
-          }
-        }
-        else if(check_flag(it, end, value, "--codegen", true))
-        {
-          if(value == "cpp")
-          {
-            opts.codegen = codegen_type::cpp;
-          }
-          else if(value == "llvm-ir")
-          {
-            opts.codegen = codegen_type::llvm_ir;
-          }
-          else
-          {
-            throw util::format("Invalid codegen type '{}'.", value);
           }
         }
         else if(check_flag(it, end, value, "--eagerness", true))
@@ -408,6 +376,11 @@ OPTIONS
         }
       }
 
+      if(command == "run" || command == "run-main" || command == "repl")
+      {
+        opts.runtime_optimization_level = opts.codegen_optimization_level;
+      }
+
       /* If we have any more pending flags at this point, they don't belong. */
       if(!pending_flags.empty())
       {
@@ -432,14 +405,6 @@ OPTIONS
           util::format_to(sb, " {}", arg);
         }
         throw sb.release();
-      }
-
-      /* Regardless of what's requested, if we're generating IR, we need to force eagerness.
-       * This is because deferred fns only support C++ compilation AND laziness doesn't buy
-       * us very much for IR gen, since we don't have the cost of C++ compilation to pay. */
-      if(opts.codegen == codegen_type::llvm_ir)
-      {
-        opts.eagerness = compilation_eagerness::eager;
       }
     }
     catch(jtl::immutable_string const &msg)

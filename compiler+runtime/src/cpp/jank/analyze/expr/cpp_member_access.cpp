@@ -36,4 +36,9 @@ namespace jank::analyze::expr
     f(obj_expr);
     expression::walk(f);
   }
+
+  jtl::ptr<void> cpp_member_access::get_type() const
+  {
+    return type;
+  }
 }

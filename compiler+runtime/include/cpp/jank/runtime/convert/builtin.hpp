@@ -93,7 +93,7 @@ namespace jank::runtime
   {
     static obj::nil_ref into_object()
     {
-      return jank_nil();
+      return jank_nil;
     }
 
     static void from_object(object_ref const)
@@ -106,7 +106,7 @@ namespace jank::runtime
   {
     static obj::nil_ref into_object(jtl::nullptr_t)
     {
-      return jank_nil();
+      return jank_nil;
     }
 
     static jtl::nullptr_t from_object(object_ref const)
@@ -246,7 +246,7 @@ namespace jank::runtime
     {
       if(o == nullptr)
       {
-        return jank_nil();
+        return jank_nil;
       }
       return make_box(o);
     }

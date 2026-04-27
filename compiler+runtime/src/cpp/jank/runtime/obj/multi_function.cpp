@@ -166,7 +166,7 @@ namespace jank::runtime::obj
   multi_function_ref multi_function::reset()
   {
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
-    cached_hierarchy = jank_nil();
+    cached_hierarchy = jank_nil;
     method_table = prefer_table = method_cache = persistent_hash_map::empty();
     return this;
   }

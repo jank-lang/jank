@@ -15,25 +15,6 @@ namespace jank::util::cli
     check_health
   };
 
-  enum class codegen_type : u8
-  {
-    llvm_ir,
-    cpp
-  };
-
-  constexpr char const *codegen_type_str(codegen_type const type)
-  {
-    switch(type)
-    {
-      case codegen_type::llvm_ir:
-        return "llvm-ir";
-      case codegen_type::cpp:
-        return "cpp";
-      default:
-        return "unknown";
-    }
-  }
-
   enum class compilation_target : u8
   {
     /* The target will be determined based on the extension of the output.
@@ -86,14 +67,12 @@ namespace jank::util::cli
 
   struct options
   {
-    options();
     /* Runtime. */
     jtl::immutable_string module_path;
     jtl::immutable_string profiler_file{ "jank.profile" };
     bool profiler_enabled{};
     bool perf_profiling_enabled{};
     bool gc_incremental{};
-    codegen_type codegen{ codegen_type::cpp };
 
     /* Native dependencies. */
     native_vector<jtl::immutable_string> include_dirs;
@@ -103,7 +82,8 @@ namespace jank::util::cli
 
     /* Compilation. */
     bool debug{};
-    u8 optimization_level{ 1 };
+    u8 runtime_optimization_level{ 0 };
+    u8 codegen_optimization_level{ 0 };
     bool direct_call{};
     compilation_eagerness eagerness{ compilation_eagerness::lazy };
 
