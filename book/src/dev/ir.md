@@ -248,18 +248,6 @@ it. This is analogous to the `#'foo` syntax, in Clojure.
 {:name v1 :op :var-ref :var clojure_core_SLASH_println_82689 :type "jank::runtime::obj::var_ref"}
 ```
 
-### `type-erase`
-The `type-erase` instruction will strip typed object information away from boxed
-jank runtime objects. This is used specifically for mutable values, such as loop
-bindings, since they may be initialized with an empty vector, but we have no
-idea what type of value each iteration will bring, so we need to represent the
-value as a type-erased `object_ref` instead. This instruction is only meant to
-be used on boxed jank objects.
-
-```clojure
-{:name v1 :op :type-erase :value v0 :type "jank::runtime::object_ref"}
-```
-
 ## Control flow
 ### `jump`
 The `jump` instruction is a terminator which will unconditionally jump to a
@@ -401,6 +389,18 @@ working with native values.
 
 ```clojure
 {:name v5 :op :truthy :value v0 :type "bool"}
+```
+
+### `type-erase`
+The `type-erase` instruction will strip typed object information away from boxed
+jank runtime objects. This is used specifically for mutable values, such as loop
+bindings, since they may be initialized with an empty vector, but we have no
+idea what type of value each iteration will bring, so we need to represent the
+value as a type-erased `object_ref` instead. This instruction is only meant to
+be used on boxed jank objects.
+
+```clojure
+{:name v1 :op :type-erase :value v0 :type "jank::runtime::object_ref"}
 ```
 
 ### `letfn`
