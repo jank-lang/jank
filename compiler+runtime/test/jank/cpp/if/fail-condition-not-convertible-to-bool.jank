@@ -5,7 +5,7 @@
               i64 i{};
             };
           }")
-(let* [foo (cpp/jank.cpp.if_.pass_condition_convertible_to_bool.foo #cpp 7)]
+(let* [foo (cpp/jank.cpp.if_.fail_condition_not_convertible_to_bool.foo #cpp 7)]
   (if foo
     :success
     :success))
