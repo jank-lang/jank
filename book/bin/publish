@@ -22,6 +22,7 @@ for file in $(git ls-files);
 do
   rm -rf "${file}";
 done
+rm -rf theme
 mv "${tmp}"/* "${tmp}"/.* .
 git add .
 git commit -m "Automated publish" --allow-empty
