@@ -1,0 +1,3 @@
+(let* [v ^:awesome? [1]]
+  (if (:awesome? (meta v))
+    :success))

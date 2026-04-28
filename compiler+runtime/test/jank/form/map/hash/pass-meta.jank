@@ -1,0 +1,12 @@
+(let* [m ^:awesome? {:foo :bar
+                     (rand) 2
+                     "1" 2
+                     true false
+                     :a :b
+                     :c :d
+                     :e :f
+                     :g :h
+                     :i :j
+                     :k :l}]
+  (if (:awesome? (meta m))
+    :success))

@@ -1,0 +1,11 @@
+(let* [m {:foo :bar
+          1 2
+          "1" 2
+          true false
+          :a :b
+          :c :d
+          :e :f
+          :g :h
+          :i :j
+          :k :l}]
+  :success)

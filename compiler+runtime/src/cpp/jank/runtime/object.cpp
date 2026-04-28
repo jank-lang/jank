@@ -206,6 +206,16 @@ namespace jank::runtime
     return equal(lhs, rhs);
   }
 
+  bool
+  very_equal_to_with_meta::operator()(object_ref const lhs, object_ref const rhs) const noexcept
+  {
+    if(lhs->type != rhs->type)
+    {
+      return false;
+    }
+    return equal(lhs, rhs) && equal(meta(lhs), meta(rhs));
+  }
+
   bool operator==(object const * const lhs, object_ref const rhs)
   {
     return lhs == rhs.data;

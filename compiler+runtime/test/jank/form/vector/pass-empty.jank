@@ -1,0 +1,3 @@
+(let* [v []]
+  (if (= v [])
+    :success))

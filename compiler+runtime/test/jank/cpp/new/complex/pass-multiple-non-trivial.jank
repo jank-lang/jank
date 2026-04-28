@@ -1,0 +1,20 @@
+(cpp/raw "namespace jank::cpp::new_::complex::pass_multiple
+          {
+            struct foo
+            {
+              ~foo()
+              { }
+              int a{}, b{7};
+            };
+            struct bar
+            {
+              ~bar()
+              { }
+              int a{4}, b{1};
+            };
+          }")
+(let* [f (cpp/new cpp/jank.cpp.new_.complex.pass_multiple.foo)
+       b (cpp/new cpp/jank.cpp.new_.complex.pass_multiple.bar)]
+  (if (and (= 0 (cpp/.-a f)) (= 7 (cpp/.-b f))
+           (= 4 (cpp/.-a b)) (= 1 (cpp/.-b b)))
+    :success))
