@@ -16,7 +16,14 @@ namespace jank::ir
 
   identifier builder::next_ident(jtl::immutable_string const &prefix)
   {
-    return util::format("{}{}", prefix, ident_count++);
+    identifier ret;
+    /* NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) */
+    do
+    {
+      ret = util::format("{}{}", prefix, ident_count++);
+    } while(used_identifiers.contains(ret));
+    used_identifiers.emplace(ret);
+    return ret;
   }
 
   identifier builder::next_shadow()
@@ -65,6 +72,7 @@ namespace jank::ir
   {
     auto name{ runtime::munge(value) };
     auto const type{ untyped_object_ref_type() };
+    used_identifiers.emplace(name);
     current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::parameter>(name, type));
     if(pos == analyze::expression_position::tail)

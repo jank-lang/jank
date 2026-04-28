@@ -160,6 +160,7 @@ namespace jank::ir
     native_unordered_map<jtl::immutable_string, identifier> locals{};
     native_unordered_map<jtl::immutable_string, identifier> local_to_loop_shadow{};
     native_set<jtl::immutable_string> allowed_defers{};
+    native_set<identifier> used_identifiers{};
     jtl::option<usize> loop_recur_target{};
     jtl::option<usize> fn_recur_target{};
     native_unordered_map<jtl::immutable_string, identifier> lifted_vars{};
