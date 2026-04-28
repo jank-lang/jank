@@ -1,0 +1,11 @@
+(let* [m ^:awesome? {:foo :bar
+                     1 2
+                     "1" 2
+                     true false}
+       m2 ^:also-awesome? {:foo :bar
+                           1 2
+                           "1" 2
+                           true false}]
+  (if (and (:awesome? (meta m))
+           (:also-awesome? (meta m2)))
+    :success))

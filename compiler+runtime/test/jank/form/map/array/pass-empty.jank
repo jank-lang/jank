@@ -1,0 +1,3 @@
+(let* [m {}]
+  (if (= m {})
+    :success))

@@ -467,6 +467,14 @@ namespace jank::runtime
     bool operator()(object_ref const lhs, object_ref const rhs) const noexcept;
   };
 
+  /* This is the same as `very_equal_to`, but it also compares the meta of each value.
+   * This is important for lifting constants for IR and codegen, since values with different
+   * meta need to be treated differently so that the meta can carry over into codegen. */
+  struct very_equal_to_with_meta
+  {
+    bool operator()(object_ref const lhs, object_ref const rhs) const noexcept;
+  };
+
   bool operator==(object const *, object_ref const);
   bool operator!=(object const *, object_ref const);
 }

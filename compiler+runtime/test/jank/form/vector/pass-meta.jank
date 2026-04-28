@@ -1,0 +1,3 @@
+(let* [v ^:awesome? [(rand)]]
+  (if (:awesome? (meta v))
+    :success))

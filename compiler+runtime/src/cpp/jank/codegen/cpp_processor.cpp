@@ -123,7 +123,7 @@ namespace jank::codegen
 
 
   static folly::Synchronized<
-    native_unordered_map<object_ref, identifier, std::hash<object_ref>, very_equal_to>>
+    native_unordered_map<object_ref, identifier, std::hash<object_ref>, very_equal_to_with_meta>>
     /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
     global_constants;
   static folly::Synchronized<native_unordered_map<jtl::immutable_string, identifier>>
@@ -714,7 +714,7 @@ namespace jank::codegen
         util::format_to(b.body_buffer, ", ");
       }
       need_comma = true;
-      util::format_to(b.body_buffer, "{}, {}", val.first, val.second);
+      util::format_to(b.body_buffer, "std::make_pair({}, {})", val.first, val.second);
     }
     util::format_to(b.body_buffer, "));");
 
