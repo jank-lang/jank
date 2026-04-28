@@ -1748,13 +1748,13 @@ namespace jank::codegen
     if(needs_finalizer)
     {
       util::format_to(b.body_buffer,
-                      "using T = {};\n"
                       "static auto const {}("
                       "[](void * const obj, void *){"
+                      "using T = {};"
                       "reinterpret_cast<T*>(obj)->~T();"
                       "});",
-                      type_name,
-                      finalizer_name);
+                      finalizer_name,
+                      type_name);
     }
 
     util::format_to(b.body_buffer,
@@ -1781,8 +1781,8 @@ namespace jank::codegen
     if(needs_finalizer)
     {
       util::format_to(b.body_buffer,
-                      "using T = {};\n"
-                      "{}->~T();",
+                      "{ using T = {};\n"
+                      "{}->~T(); }",
                       type_name,
                       inst->value);
     }
