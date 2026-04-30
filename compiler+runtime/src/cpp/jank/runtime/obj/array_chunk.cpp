@@ -1,6 +1,7 @@
 #include <jank/runtime/obj/array_chunk.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/math.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -58,9 +59,9 @@ namespace jank::runtime::obj
 
   object_ref array_chunk::nth(object_ref const index) const
   {
-    if(index.get_type() == object_type::integer)
+    if(is_integer(index))
     {
-      auto const i(expect_object<integer>(index)->data);
+      auto const i(to_i64(index));
       if(i < 0 || buffer.size() - offset <= static_cast<size_t>(i))
       {
         throw std::runtime_error{ util::format(
@@ -80,9 +81,9 @@ namespace jank::runtime::obj
 
   object_ref array_chunk::nth(object_ref const index, object_ref const fallback) const
   {
-    if(index.get_type() == object_type::integer)
+    if(is_integer(index))
     {
-      auto const i(expect_object<integer>(index)->data);
+      auto const i(to_i64(index));
       if(i < 0 || buffer.size() - offset <= static_cast<size_t>(i))
       {
         return fallback;

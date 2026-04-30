@@ -96,11 +96,11 @@ namespace jank::runtime
   inline object_ref make_box(T const i)
   {
     /* TODO: Deal with negative values. */
-    //if(0 <= i && i <= detail::max_small_integer)
-    //{
-    //  //util::println("make_box :: eliding for {}", i);
-    //  return detail::as_ptr<object *>(i);
-    //}
+    if(0 <= i && i <= detail::max_small_integer)
+    {
+      //util::println("make_box :: eliding for {}", i);
+      return detail::as_ptr<object *>(i);
+    }
     return make_box<obj::integer>(static_cast<i64>(i));
   }
 

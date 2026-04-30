@@ -31,6 +31,10 @@ namespace jank::runtime::obj
     {
       result = expect_object<integer>(d)->data;
     }
+    else if(d.get_type() == object_type::small_integer)
+    {
+      result = expect_object<small_integer>(d)->data;
+    }
     else
     {
       throw std::runtime_error{

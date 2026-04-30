@@ -4,6 +4,7 @@
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/seq_ext.hpp>
+#include <jank/runtime/core/math.hpp>
 #include <jank/runtime/behavior/sequential.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -209,9 +210,9 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::get(object_ref const key, object_ref const fallback) const
   {
-    if(key.get_type() == object_type::integer)
+    if(is_integer(key))
     {
-      auto const i(expect_object<integer>(key)->data);
+      auto const i(to_i64(key));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         return fallback;
@@ -226,9 +227,9 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::find(object_ref const key) const
   {
-    if(key.get_type() == object_type::integer)
+    if(is_integer(key))
     {
-      auto const i(expect_object<integer>(key)->data);
+      auto const i(to_i64(key));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         return {};
@@ -244,9 +245,9 @@ namespace jank::runtime::obj
 
   bool persistent_vector::contains(object_ref const key) const
   {
-    if(key.get_type() == object_type::integer)
+    if(is_integer(key))
     {
-      auto const i(expect_object<integer>(key)->data);
+      auto const i(to_i64(key));
       return i >= 0 && static_cast<size_t>(i) < data.size();
     }
     else
@@ -257,12 +258,12 @@ namespace jank::runtime::obj
 
   persistent_vector_ref persistent_vector::assoc(object_ref const key, object_ref const val) const
   {
-    if(key.get_type() != object_type::integer)
+    if(!is_integer(key))
     {
       throw std::runtime_error{ "Key must be integer." };
     }
 
-    auto const i(expect_object<integer>(key)->data);
+    auto const i(to_i64(key));
     auto const size(static_cast<i64>(data.size()));
 
     if(i > size || 0 > i)
@@ -307,9 +308,9 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::nth(object_ref const index) const
   {
-    if(index.get_type() == object_type::integer)
+    if(is_integer(index))
     {
-      auto const i(expect_object<integer>(index)->data);
+      auto const i(to_i64(index));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{

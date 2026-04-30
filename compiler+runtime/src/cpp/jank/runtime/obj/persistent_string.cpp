@@ -3,6 +3,7 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/math.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -74,9 +75,9 @@ namespace jank::runtime::obj
 
   object_ref persistent_string::get(object_ref const key, object_ref const fallback) const
   {
-    if(key.get_type() == object_type::integer)
+    if(is_integer(key))
     {
-      auto const i(expect_object<integer>(key)->data);
+      auto const i(to_i64(key));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         return fallback;
@@ -91,9 +92,9 @@ namespace jank::runtime::obj
 
   bool persistent_string::contains(object_ref const key) const
   {
-    if(key.get_type() == object_type::integer)
+    if(is_integer(key))
     {
-      auto const i(expect_object<integer>(key)->data);
+      auto const i(to_i64(key));
       return 0 <= i && static_cast<size_t>(i) < data.size();
     }
     return false;
@@ -101,9 +102,9 @@ namespace jank::runtime::obj
 
   object_ref persistent_string::nth(object_ref const index) const
   {
-    if(index.get_type() == object_type::integer)
+    if(is_integer(index))
     {
-      auto const i(expect_object<integer>(index)->data);
+      auto const i(to_i64(index));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{

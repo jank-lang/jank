@@ -942,9 +942,9 @@ extern "C"
 
   static i64 to_integer_or_hash(object const *o)
   {
-    if(o->type == object_type::integer)
+    if(is_integer(o))
     {
-      return expect_object<obj::integer>(o)->data;
+      return to_i64(o);
     }
 
     return to_hash(o);
