@@ -220,6 +220,10 @@ namespace jank::codegen
           {
             util::format_to(buffer, "_jank_int({})", typed_o->data);
           }
+          else if constexpr(std::same_as<T, obj::small_integer>)
+          {
+            util::format_to(buffer, "_jank_small_int({})", typed_o->data);
+          }
           else if constexpr(std::same_as<T, obj::real>)
           {
             util::format_to(buffer, "_jank_real(");
