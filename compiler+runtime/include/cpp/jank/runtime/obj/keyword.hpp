@@ -10,7 +10,8 @@ namespace jank::runtime::obj
   struct keyword : object
   {
     static constexpr object_type obj_type{ object_type::keyword };
-    static constexpr object_behavior obj_behaviors{ object_behavior::call };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call
+                                                    | object_behavior::compare };
     static constexpr bool pointer_free{ false };
     /* Clojure uses this. No idea. https://github.com/clojure/clojure/blob/master/src/jvm/clojure/lang/Keyword.java */
     static constexpr usize hash_magic{ 0x9e3779b9 };
@@ -29,7 +30,7 @@ namespace jank::runtime::obj
     uhash to_hash() const override;
 
     /* behavior::comparable */
-    i64 compare(object const &) const;
+    i64 compare(object const &) const override;
 
     /* behavior::comparable extended */
     i64 compare(keyword const &) const;
@@ -60,7 +61,7 @@ namespace std
   {
     size_t operator()(jank::runtime::obj::keyword_ref const o) const
     {
-      return o->to_hash();
+      return o.to_hash();
     }
   };
 

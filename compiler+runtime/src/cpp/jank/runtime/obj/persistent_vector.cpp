@@ -209,7 +209,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::get(object_ref const key, object_ref const fallback) const
   {
-    if(key->type == object_type::integer)
+    if(key.get_type() == object_type::integer)
     {
       auto const i(expect_object<integer>(key)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
@@ -226,7 +226,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::find(object_ref const key) const
   {
-    if(key->type == object_type::integer)
+    if(key.get_type() == object_type::integer)
     {
       auto const i(expect_object<integer>(key)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
@@ -244,7 +244,7 @@ namespace jank::runtime::obj
 
   bool persistent_vector::contains(object_ref const key) const
   {
-    if(key->type == object_type::integer)
+    if(key.get_type() == object_type::integer)
     {
       auto const i(expect_object<integer>(key)->data);
       return i >= 0 && static_cast<size_t>(i) < data.size();
@@ -257,7 +257,7 @@ namespace jank::runtime::obj
 
   persistent_vector_ref persistent_vector::assoc(object_ref const key, object_ref const val) const
   {
-    if(key->type != object_type::integer)
+    if(key.get_type() != object_type::integer)
     {
       throw std::runtime_error{ "Key must be integer." };
     }
@@ -307,7 +307,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::nth(object_ref const index) const
   {
-    if(index->type == object_type::integer)
+    if(index.get_type() == object_type::integer)
     {
       auto const i(expect_object<integer>(index)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))

@@ -13,6 +13,7 @@ namespace jank::runtime
 
     boolean,
     integer,
+    small_integer,
     big_integer,
     big_decimal,
     real,
@@ -106,6 +107,8 @@ namespace jank::runtime
         return "boolean";
       case object_type::integer:
         return "integer";
+      case object_type::small_integer:
+        return "small_integer";
       case object_type::big_integer:
         return "big_integer";
       case object_type::big_decimal:
@@ -278,10 +281,10 @@ namespace jank::runtime
     call = 1 << 0,
     get = 1 << 1,
     find = 1 << 2,
+    compare = 1 << 3,
     //associatively_writable,
     //chunkable,
     //collection_like,
-    //comparable,
     //conjable,
     //countable,
     //derefable,
@@ -430,6 +433,19 @@ namespace jank::runtime
     /* behavior::find */
     virtual object_ref find(object_ref key) const;
 
+    /* behavior::compare */
+    /* Returns how this object compares to the specified object. Comparison, unlike equality,
+     * can only be done for objects of the same type. If there's a type mismatch, this function
+     * is expected to throw. There are three cases to handle:
+     *
+     * 1. Comparison should return less than 0 if this object is less than the param
+     * 2. Comparison should return 0 if the objects are equal
+     * 3. Comparison should return greater than 0 if this object is greater than the param
+     *
+     * For sequences, all values need to be considered for comparison.
+     */
+    virtual i64 compare(object const &) const;
+
     object_type type{};
     object_behavior behaviors{ object_behavior::none };
   };
@@ -439,6 +455,8 @@ namespace jank::runtime
     struct nil;
   }
 }
+
+#ifndef JANK_JUST_OBJECT_PLEASE
 
 namespace jank::runtime::behavior
 {
@@ -453,7 +471,7 @@ namespace jank::runtime::behavior
   };
 }
 
-#include <jank/runtime/oref.hpp>
+  #include <jank/runtime/oref.hpp>
 
 namespace jank::runtime
 {
@@ -500,3 +518,5 @@ namespace std
                     jank::runtime::object_ref const rhs) const noexcept;
   };
 }
+
+#endif

@@ -478,7 +478,7 @@ namespace jank::analyze::cpp_util
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(o->type)
+    switch(o.get_type())
     {
       case jank::runtime::object_type::nil:
         {
@@ -496,6 +496,12 @@ namespace jank::analyze::cpp_util
         {
           static auto const type{ Cpp::GetTypeFromScope(
             resolve_scope("jank.runtime.obj.integer_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::small_integer:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.small_integer_ref").expect_ok()) };
           return type;
         }
       case jank::runtime::object_type::character:

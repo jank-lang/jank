@@ -29,7 +29,7 @@ namespace jank::runtime::obj
   struct ratio : object
   {
     static constexpr object_type obj_type{ object_type::ratio };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
     static constexpr bool pointer_free{ true };
 
     ratio(ratio &&) noexcept = default;
@@ -46,7 +46,7 @@ namespace jank::runtime::obj
     uhash to_hash() const override;
 
     /* behavior::comparable */
-    i64 compare(object const &) const;
+    i64 compare(object const &) const override;
 
     /* behavior::comparable extended */
     i64 compare(ratio const &) const;
@@ -60,8 +60,8 @@ namespace jank::runtime::obj
   };
 
   object_ref operator+(ratio_data const &l, ratio_data const &r);
-  ratio_ref operator+(integer_ref const l, ratio_data const &r);
-  ratio_ref operator+(ratio_data const &l, integer_ref const r);
+  ratio_data operator+(integer_ref const l, ratio_data const &r);
+  ratio_data operator+(ratio_data const &l, integer_ref const r);
   f64 operator+(real_ref const l, ratio_data const &r);
   f64 operator+(ratio_data const &l, real_ref const r);
 
@@ -81,21 +81,21 @@ namespace jank::runtime::obj
 
   template <typename T>
   requires std::is_integral_v<T>
-  ratio_ref operator+(T const l, ratio_data const &r)
+  ratio_data operator+(T const l, ratio_data const &r)
   {
-    return make_box<ratio>(ratio_data(r.numerator + (l * r.denominator), r.denominator));
+    return ratio_data(r.numerator + (l * r.denominator), r.denominator);
   }
 
   template <typename T>
   requires std::is_integral_v<T>
-  ratio_ref operator+(ratio_data const &l, T const r)
+  ratio_data operator+(ratio_data const &l, T const r)
   {
-    return make_box<ratio>(ratio_data(l.numerator + (r * l.denominator), l.denominator));
+    return ratio_data(l.numerator + (r * l.denominator), l.denominator);
   }
 
   object_ref operator-(ratio_data const &l, ratio_data const &r);
-  ratio_ref operator-(integer_ref const l, ratio_data const &r);
-  ratio_ref operator-(ratio_data const &l, integer_ref const r);
+  ratio_data operator-(integer_ref const l, ratio_data const &r);
+  ratio_data operator-(ratio_data const &l, integer_ref const r);
   f64 operator-(real_ref const l, ratio_data const &r);
   f64 operator-(ratio_data const &l, real_ref const r);
 
@@ -115,16 +115,16 @@ namespace jank::runtime::obj
 
   template <typename T>
   requires std::is_integral_v<T>
-  ratio_ref operator-(T const l, ratio_data const &r)
+  ratio_data operator-(T const l, ratio_data const &r)
   {
-    return make_box<ratio>(ratio_data((l * r.denominator) - r.numerator, r.denominator));
+    return ratio_data((l * r.denominator) - r.numerator, r.denominator);
   }
 
   template <typename T>
   requires std::is_integral_v<T>
-  ratio_ref operator-(ratio_data const &l, T const r)
+  ratio_data operator-(ratio_data const &l, T const r)
   {
-    return make_box<ratio>(ratio_data(l.numerator - (r * l.denominator), l.denominator));
+    return ratio_data(l.numerator - (r * l.denominator), l.denominator);
   }
 
   object_ref operator*(ratio_data const &l, ratio_data const &r);

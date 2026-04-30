@@ -29,7 +29,7 @@ namespace jank::runtime::obj
 
       auto const pv{ v->assoc_in_place(make_box('9'), make_box('9')) };
 
-      CHECK(pv->type == object_type::transient_hash_map);
+      CHECK(pv.get_type() == object_type::transient_hash_map);
     }
 
     TEST_CASE("promotion to transient_hash_map in conj_in_place")
@@ -53,7 +53,7 @@ namespace jank::runtime::obj
       auto const pv{ v->conj_in_place(
         make_box<persistent_vector>(std::in_place, make_box('9'), make_box('9'))) };
 
-      CHECK(pv->type == object_type::transient_hash_map);
+      CHECK(pv.get_type() == object_type::transient_hash_map);
     }
   }
 }

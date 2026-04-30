@@ -48,7 +48,7 @@ namespace jank::runtime
           throw error::runtime_non_metadatable_value(
             util::format("{} [{}] can't hold any metadata.",
                          typed_o->to_code_string(),
-                         object_type_str(o->type)),
+                         object_type_str(o.get_type())),
             object_source(o));
         }
       },
@@ -103,7 +103,7 @@ namespace jank::runtime
         {
           throw std::runtime_error{ util::format("not metadatable: {} [{}]",
                                                  typed_o->to_code_string(),
-                                                 object_type_str(typed_o->type)) };
+                                                 object_type_str(typed_o.get_type())) };
         }
       },
       o,

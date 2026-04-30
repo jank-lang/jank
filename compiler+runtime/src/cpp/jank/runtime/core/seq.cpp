@@ -44,7 +44,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("cannot check if this is empty: {}",
-                                                 typed_o->to_code_string()) };
+                                                 typed_o.to_code_string()) };
         }
       },
       o);
@@ -94,19 +94,19 @@ namespace jank::runtime
   {
     /* TODO: Visit and use a behavior for this check instead.
      * It should apply to conses and others. */
-    return o->type == object_type::persistent_list;
+    return o.get_type() == object_type::persistent_list;
   }
 
   bool is_vector(object_ref const o)
   {
-    return o->type == object_type::persistent_vector;
+    return o.get_type() == object_type::persistent_vector;
   }
 
   bool is_map(object_ref const o)
   {
-    return (o->type == object_type::persistent_hash_map
-            || o->type == object_type::persistent_array_map
-            || o->type == object_type::persistent_sorted_map);
+    return (o.get_type() == object_type::persistent_hash_map
+            || o.get_type() == object_type::persistent_array_map
+            || o.get_type() == object_type::persistent_sorted_map);
   }
 
   bool is_associative(object_ref const o)
@@ -115,15 +115,15 @@ namespace jank::runtime
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
-        return (typed_o->has_behavior(object_behavior::get) && behavior::associatively_writable<T>);
+        return (typed_o.has_behavior(object_behavior::get) && behavior::associatively_writable<T>);
       },
       o);
   }
 
   bool is_set(object_ref const o)
   {
-    return (o->type == object_type::persistent_hash_set
-            || o->type == object_type::persistent_sorted_set);
+    return (o.get_type() == object_type::persistent_hash_set
+            || o.get_type() == object_type::persistent_sorted_set);
   }
 
   bool is_counted(object_ref const o)
@@ -150,8 +150,8 @@ namespace jank::runtime
 
   bool is_sorted(object_ref const o)
   {
-    return o->type == object_type::persistent_sorted_map
-      || o->type == object_type::persistent_sorted_set;
+    return o.get_type() == object_type::persistent_sorted_map
+      || o.get_type() == object_type::persistent_sorted_set;
   }
 
   object_ref transient(object_ref const o)
@@ -167,7 +167,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not transientable: {}",
-                                                 typed_o->to_code_string()) };
+                                                 typed_o.to_code_string()) };
         }
       },
       o);
@@ -186,7 +186,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not persistentable: {}",
-                                                 typed_o->to_code_string()) };
+                                                 typed_o.to_code_string()) };
         }
       },
       o);
@@ -205,7 +205,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not conjable_in_place: {}",
-                                                 typed_coll->to_code_string()) };
+                                                 typed_coll.to_code_string()) };
         }
       },
       coll,
@@ -215,15 +215,15 @@ namespace jank::runtime
   object_ref disj_in_place(object_ref const coll, object_ref const o)
   {
     /* TODO: disjoinable_in_place */
-    if(coll->type == object_type::transient_hash_set)
+    if(coll.get_type() == object_type::transient_hash_set)
     {
       return expect_object<obj::transient_hash_set>(coll)->disjoin_in_place(o);
     }
-    else if(coll->type == object_type::transient_array_map)
+    else if(coll.get_type() == object_type::transient_array_map)
     {
       return expect_object<obj::transient_array_map>(coll)->dissoc_in_place(o);
     }
-    else if(coll->type == object_type::transient_sorted_set)
+    else if(coll.get_type() == object_type::transient_sorted_set)
     {
       return expect_object<obj::transient_sorted_set>(coll)->disjoin_in_place(o);
     }
@@ -245,7 +245,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not associatively_writable_in_place: {}",
-                                                 typed_coll->to_code_string()) };
+                                                 typed_coll.to_code_string()) };
         }
       },
       coll,
@@ -266,7 +266,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not associatively_writable_in_place: {}",
-                                                 typed_coll->to_code_string()) };
+                                                 typed_coll.to_code_string()) };
         }
       },
       coll,
@@ -301,7 +301,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
         }
       },
       s);
@@ -329,7 +329,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
         }
       },
       s);
@@ -361,7 +361,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
         }
       },
       s);
@@ -398,7 +398,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
         }
       },
       s);
@@ -434,7 +434,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
         }
       },
       s);
@@ -504,7 +504,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not conjable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not conjable: {}", typed_s.to_code_string()) };
         }
       },
       s);
@@ -512,11 +512,11 @@ namespace jank::runtime
 
   object_ref disj(object_ref const s, object_ref const o)
   {
-    if(s->type == object_type::nil)
+    if(s.get_type() == object_type::nil)
     {
       return s;
     }
-    else if(s->type == object_type::persistent_hash_set)
+    else if(s.get_type() == object_type::persistent_hash_set)
     {
       auto const set(expect_object<obj::persistent_hash_set>(s));
       return set->disj(o);
@@ -540,7 +540,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not associatively writable: {}",
-                                                 typed_m->to_code_string()) };
+                                                 typed_m.to_code_string()) };
         }
       },
       m);
@@ -559,7 +559,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not associatively writable: {}",
-                                                 typed_m->to_code_string()) };
+                                                 typed_m.to_code_string()) };
         }
       },
       m);
@@ -567,17 +567,17 @@ namespace jank::runtime
 
   object_ref get(object_ref const m, object_ref const key)
   {
-    return m->get(key);
+    return m.get(key);
   }
 
   object_ref get(object_ref const m, object_ref const key, object_ref const fallback)
   {
-    return m->get(key, fallback);
+    return m.get(key, fallback);
   }
 
   object_ref get_in(object_ref const m, object_ref const keys)
   {
-    if(m->has_behavior(object_behavior::get))
+    if(m.has_behavior(object_behavior::get))
     {
       return visit_seqable(
         [&](auto const typed_keys) -> object_ref {
@@ -598,7 +598,7 @@ namespace jank::runtime
 
   object_ref get_in(object_ref const m, object_ref const keys, object_ref const fallback)
   {
-    if(m->has_behavior(object_behavior::get))
+    if(m.has_behavior(object_behavior::get))
     {
       return visit_seqable(
         [&](auto const typed_keys) -> object_ref {
@@ -624,7 +624,7 @@ namespace jank::runtime
 
   object_ref find(object_ref const s, object_ref const key)
   {
-    return s->find(key);
+    return s.find(key);
   }
 
   bool contains(object_ref const s, object_ref const key)
@@ -634,9 +634,9 @@ namespace jank::runtime
       return false;
     }
 
-    if(s->has_behavior(object_behavior::get))
+    if(s.has_behavior(object_behavior::get))
     {
-      return s->contains(key);
+      return s.contains(key);
     }
     else
     {
@@ -674,7 +674,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not associatively_writable: {}",
-                                                 typed_m->to_string()) };
+                                                 typed_m.to_string()) };
         }
       },
       m,
@@ -710,7 +710,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not associatively_writable_in_place: {}",
-                                                 typed_m->to_string()) };
+                                                 typed_m.to_string()) };
         }
       },
       m,
@@ -719,7 +719,7 @@ namespace jank::runtime
 
   object_ref subvec(object_ref const o, i64 const start, i64 const end)
   {
-    if(o->type != object_type::persistent_vector)
+    if(o.get_type() != object_type::persistent_vector)
     {
       throw std::runtime_error{ "not a vector" };
     }
@@ -773,7 +773,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not indexable: {}", object_type_str(o->type)) };
+          throw std::runtime_error{ util::format("not indexable: {}", object_type_str(o.get_type())) };
         }
       },
       o);
@@ -810,7 +810,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not indexable: {}", object_type_str(o->type)) };
+          throw std::runtime_error{ util::format("not indexable: {}", object_type_str(o.get_type())) };
         }
       },
       o);
@@ -833,7 +833,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not stackable: {}", object_type_str(o->type)) };
+          throw std::runtime_error{ util::format("not stackable: {}", object_type_str(o.get_type())) };
         }
       },
       o);
@@ -856,7 +856,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not stackable: {}", object_type_str(o->type)) };
+          throw std::runtime_error{ util::format("not stackable: {}", object_type_str(o.get_type())) };
         }
       },
       o);
@@ -964,7 +964,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s->to_code_string()) };
+          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
         }
       },
       s);
@@ -1011,7 +1011,7 @@ namespace jank::runtime
         for(auto const &e : make_sequence_range(typed_coll))
         {
           res = dynamic_call(f, res, e);
-          if(res->type == object_type::reduced)
+          if(res.get_type() == object_type::reduced)
           {
             res = expect_object<obj::reduced>(res)->val;
             break;
@@ -1031,7 +1031,7 @@ namespace jank::runtime
 
   bool is_reduced(object_ref const o)
   {
-    return o->type == object_type::reduced;
+    return o.get_type() == object_type::reduced;
   }
 
   object_ref chunk_buffer(object_ref const capacity)
@@ -1063,7 +1063,7 @@ namespace jank::runtime
           return typed_o->chunked_first();
         }
         {
-          throw std::runtime_error{ util::format("not chunkable: {}", typed_o->to_code_string()) };
+          throw std::runtime_error{ util::format("not chunkable: {}", typed_o.to_code_string()) };
         }
       },
       o);
@@ -1080,7 +1080,7 @@ namespace jank::runtime
           return typed_o->chunked_next();
         }
         {
-          throw std::runtime_error{ util::format("not chunkable: {}", typed_o->to_code_string()) };
+          throw std::runtime_error{ util::format("not chunkable: {}", typed_o.to_code_string()) };
         }
       },
       o);
@@ -1102,7 +1102,7 @@ namespace jank::runtime
           return ret;
         }
         {
-          throw std::runtime_error{ util::format("not chunkable: {}", typed_o->to_code_string()) };
+          throw std::runtime_error{ util::format("not chunkable: {}", typed_o.to_code_string()) };
         }
       },
       o);

@@ -1,13 +1,13 @@
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/behavior/comparable.hpp>
 #include <jank/runtime/visit.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime
 {
   bool equal(char const lhs, object_ref const rhs)
   {
-    if(rhs.is_nil() || rhs->type != object_type::character)
+    if(rhs.is_nil() || rhs.get_type() != object_type::character)
     {
       return false;
     }
@@ -27,7 +27,7 @@ namespace jank::runtime
       return false;
     }
 
-    return visit_object([&](auto const typed_lhs) { return typed_lhs->equal(*rhs); }, lhs);
+    return visit_object([&](auto const typed_lhs) { return typed_lhs.equal(rhs); }, lhs);
   }
 
   i64 compare(object_ref const l, object_ref const r)
@@ -44,20 +44,7 @@ namespace jank::runtime
         return 1;
       }
 
-      return visit_object(
-        [](auto const typed_l, auto const &r) -> i64 {
-          using L = typename jtl::decay_t<decltype(typed_l)>::value_type;
-          if constexpr(behavior::comparable<L>)
-          {
-            return typed_l->compare(*r);
-          }
-          else
-          {
-            throw std::runtime_error{ util::format("not comparable: {}", typed_l->to_string()) };
-          }
-        },
-        l,
-        r);
+      return l.compare(r);
     }
 
     return -1;

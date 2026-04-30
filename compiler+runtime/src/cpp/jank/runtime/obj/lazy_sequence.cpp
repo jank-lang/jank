@@ -118,7 +118,7 @@ namespace jank::runtime::obj
     {
       auto ls{ sv };
       sv = jank_nil;
-      if(ls.is_some() && ls->type == object_type::lazy_sequence)
+      if(ls.is_some() && ls.get_type() == object_type::lazy_sequence)
       {
         ls = unwrap(ls);
       }
@@ -153,7 +153,7 @@ namespace jank::runtime::obj
 
   object_ref lazy_sequence::unwrap(object_ref ls) const
   {
-    while(ls.is_some() && ls->type == object_type::lazy_sequence)
+    while(ls.is_some() && ls.get_type() == object_type::lazy_sequence)
     {
       ls = expect_object<lazy_sequence>(ls)->sval();
     }

@@ -12,7 +12,8 @@ namespace jank::runtime::obj
   struct persistent_string : object
   {
     static constexpr object_type obj_type{ object_type::persistent_string };
-    static constexpr object_behavior obj_behaviors{ object_behavior::get };
+    static constexpr object_behavior obj_behaviors{ object_behavior::get
+                                                    | object_behavior::compare };
     static constexpr bool pointer_free{ false };
 
     persistent_string();
@@ -35,7 +36,7 @@ namespace jank::runtime::obj
     uhash to_hash() const override;
 
     /* behavior::comparable */
-    i64 compare(object const &) const;
+    i64 compare(object const &) const override;
 
     /* behavior::comparable extended */
     i64 compare(persistent_string const &) const;

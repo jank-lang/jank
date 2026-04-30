@@ -13,7 +13,8 @@ namespace jank::runtime::obj
   {
     static constexpr object_type obj_type{ object_type::persistent_vector };
     static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
-                                                    | object_behavior::find };
+                                                    | object_behavior::find
+                                                    | object_behavior::compare };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -54,7 +55,7 @@ namespace jank::runtime::obj
     uhash to_hash() const override;
 
     /* behavior::comparable */
-    i64 compare(object const &) const;
+    i64 compare(object const &) const override;
 
     /* behavior::comparable extended */
     i64 compare(persistent_vector const &) const;

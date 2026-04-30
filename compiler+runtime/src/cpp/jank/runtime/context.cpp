@@ -346,7 +346,7 @@ namespace jank::runtime
     {
       throw std::runtime_error{ util::format(
         "The reader options need to be a map. Found a {} instead.",
-        runtime::object_type_str(reader_opts->type)) };
+        runtime::object_type_str(reader_opts.get_type())) };
     }
 
     static auto const read_cond_kw{ __rt_ctx->intern_keyword("", "read-cond").expect_ok() };
@@ -385,7 +385,7 @@ namespace jank::runtime
       {
         throw std::runtime_error{ util::format(
           "The :features reader option needs to be a set. Found a {} instead.",
-          runtime::object_type_str(features->type)) };
+          runtime::object_type_str(features.get_type())) };
       }
 
       extended_features = features;
@@ -1026,7 +1026,7 @@ namespace jank::runtime
 
   jtl::string_result<void> context::push_thread_bindings(object_ref const bindings)
   {
-    if(bindings->type != object_type::persistent_hash_map)
+    if(bindings.get_type() != object_type::persistent_hash_map)
     {
       return err(util::format("invalid thread binding map (must be hash map): {}",
                               runtime::to_code_string(bindings)));
@@ -1062,7 +1062,7 @@ namespace jank::runtime
 
       /* The binding may already be a thread binding if we're just pushing the previous
        * bindings again to give a scratch pad for some upcoming code. */
-      if(entry->data[1]->type == object_type::var_thread_binding)
+      if(entry->data[1].get_type() == object_type::var_thread_binding)
       {
         frame.bindings = frame.bindings->assoc(
           var,

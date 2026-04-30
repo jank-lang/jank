@@ -562,6 +562,7 @@ add_library(
   src/cpp/jank/runtime/detail/native_array_map.cpp
   src/cpp/jank/runtime/detail/native_array_blocking_queue.cpp
   src/cpp/jank/runtime/context.cpp
+  src/cpp/jank/runtime/rtti.cpp
   src/cpp/jank/runtime/ns.cpp
   src/cpp/jank/runtime/var.cpp
   src/cpp/jank/runtime/obj/nil.cpp

@@ -58,7 +58,7 @@ namespace jank::runtime::obj
 
   object_ref array_chunk::nth(object_ref const index) const
   {
-    if(index->type == object_type::integer)
+    if(index.get_type() == object_type::integer)
     {
       auto const i(expect_object<integer>(index)->data);
       if(i < 0 || buffer.size() - offset <= static_cast<size_t>(i))
@@ -80,7 +80,7 @@ namespace jank::runtime::obj
 
   object_ref array_chunk::nth(object_ref const index, object_ref const fallback) const
   {
-    if(index->type == object_type::integer)
+    if(index.get_type() == object_type::integer)
     {
       auto const i(expect_object<integer>(index)->data);
       if(i < 0 || buffer.size() - offset <= static_cast<size_t>(i))

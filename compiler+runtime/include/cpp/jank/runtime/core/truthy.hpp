@@ -1,6 +1,6 @@
 #pragma once
 
-#include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/oref.hpp>
 #include <jank/runtime/obj/nil.hpp>
 
 namespace jank::runtime

@@ -23,18 +23,18 @@ namespace jank::runtime::obj
   static native_big_integer extract_big_integer(object_ref const d)
   {
     native_big_integer result{};
-    if(d->type == object_type::big_integer)
+    if(d.get_type() == object_type::big_integer)
     {
       result = expect_object<big_integer>(d)->data;
     }
-    else if(d->type == object_type::integer)
+    else if(d.get_type() == object_type::integer)
     {
       result = expect_object<integer>(d)->data;
     }
     else
     {
       throw std::runtime_error{
-        util::format("Type {} cannot be used as a ratio numerator or denominator.", d->type)
+        util::format("Type {} cannot be used as a ratio numerator or denominator.", d.get_type())
       };
     }
     return result;
@@ -181,12 +181,12 @@ namespace jank::runtime::obj
     return ratio::create(num, denom);
   }
 
-  ratio_ref operator+(integer_ref const l, ratio_data const &r)
+  ratio_data operator+(integer_ref const l, ratio_data const &r)
   {
     return l->data + r;
   }
 
-  ratio_ref operator+(ratio_data const &l, integer_ref const r)
+  ratio_data operator+(ratio_data const &l, integer_ref const r)
   {
     return r + l;
   }
@@ -208,12 +208,12 @@ namespace jank::runtime::obj
     return ratio::create(num, denom);
   }
 
-  ratio_ref operator-(integer_ref const l, ratio_data const &r)
+  ratio_data operator-(integer_ref const l, ratio_data const &r)
   {
     return l->data - r;
   }
 
-  ratio_ref operator-(ratio_data const &l, integer_ref const r)
+  ratio_data operator-(ratio_data const &l, integer_ref const r)
   {
     return l - r->data;
   }

@@ -17,6 +17,7 @@
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/core/math.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
@@ -1328,7 +1329,7 @@ namespace jank::analyze
     }
 
     auto const sym_obj(l->data.rest().first().unwrap());
-    if(sym_obj->type != runtime::object_type::symbol)
+    if(sym_obj.get_type() != runtime::object_type::symbol)
     {
       return error::analyze_invalid_def("The var name in a 'def' must be a symbol.",
                                         object_source(sym_obj),
@@ -1386,7 +1387,7 @@ namespace jank::analyze
     if(has_docstring)
     {
       auto const docstring_obj(l->data.rest().rest().first().unwrap());
-      if(docstring_obj->type != runtime::object_type::persistent_string)
+      if(docstring_obj.get_type() != runtime::object_type::persistent_string)
       {
         return error::analyze_invalid_def("The doc string for a 'def' must be a string.",
                                           object_source(docstring_obj),
@@ -1451,13 +1452,13 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const shift_obj{ it.first().unwrap() };
-    if(shift_obj.data->type != object_type::integer)
+    if(!runtime::is_integer(shift_obj))
     {
-      return error::analyze_invalid_case("Shift value should be an integer.",
+      return error::analyze_invalid_case("Shift value must be an integer.",
                                          meta_source(o->meta),
                                          latest_expansion(macro_expansions));
     }
-    auto const shift{ runtime::expect_object<runtime::obj::integer>(shift_obj) };
+    auto const shift{ runtime::to_i64(shift_obj) };
 
     it = it.rest();
     if(it.first().is_none())
@@ -1467,13 +1468,13 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const mask_obj{ it.first().unwrap() };
-    if(mask_obj.data->type != object_type::integer)
+    if(!runtime::is_integer(mask_obj))
     {
-      return error::analyze_invalid_case("Mask value should be an integer.",
+      return error::analyze_invalid_case("Mask value must be an integer.",
                                          meta_source(o->meta),
                                          latest_expansion(macro_expansions));
     }
-    auto const mask{ runtime::expect_object<runtime::obj::integer>(mask_obj) };
+    auto const mask{ runtime::to_i64(mask_obj) };
 
     it = it.rest();
     if(it.first().is_none())
@@ -1510,17 +1511,17 @@ namespace jank::analyze
           auto const e{ seq->first() };
           auto const k_obj{ e->data[0] };
           auto const v_obj{ e->data[1] };
-          if(k_obj.data->type != object_type::integer)
+          if(!runtime::is_integer(k_obj))
           {
             return err("Map key for case* is expected to be an integer.");
           }
-          auto const key{ runtime::expect_object<obj::integer>(k_obj) };
+          auto const key{ runtime::to_i64(k_obj) };
           auto const expr{ analyze(v_obj, current_frame, position, fn_ctx, needs_box) };
           if(expr.is_err())
           {
             return err(expr.expect_err()->message);
           }
-          ret.keys.push_back(key->data);
+          ret.keys.push_back(key);
           ret.exprs.push_back(expr.expect_ok());
         }
         return ret;
@@ -1543,8 +1544,8 @@ namespace jank::analyze
                                       current_frame,
                                       needs_box,
                                       value_expr.expect_ok(),
-                                      shift->data,
-                                      mask->data,
+                                      shift,
+                                      mask,
                                       default_expr.expect_ok(),
                                       std::move(pairs.keys),
                                       std::move(pairs.exprs));
@@ -1680,7 +1681,7 @@ namespace jank::analyze
                                                   latest_expansion(macro_expansions));
     }
     auto const &params_obj(first_form.unwrap());
-    if(params_obj->type != runtime::object_type::persistent_vector)
+    if(params_obj.get_type() != runtime::object_type::persistent_vector)
     {
       return error::analyze_invalid_fn_parameters("A function parameter vector must be a vector.",
                                                   object_source(params_obj),
@@ -1704,7 +1705,7 @@ namespace jank::analyze
     for(auto it(params->data.begin()); it != params->data.end(); ++it)
     {
       auto const &p(*it);
-      if(p->type != runtime::object_type::symbol)
+      if(p.get_type() != runtime::object_type::symbol)
       {
         auto const param_idx{ std::distance(params->data.begin(), it) };
         return error::analyze_invalid_fn_parameters("Each function parameter must be a symbol.",
@@ -1860,7 +1861,7 @@ namespace jank::analyze
 
     jtl::immutable_string name, unique_name;
     auto first_elem(list->data.rest().first().unwrap());
-    if(first_elem->type == runtime::object_type::symbol)
+    if(first_elem.get_type() == runtime::object_type::symbol)
     {
       auto const s(runtime::expect_object<runtime::obj::symbol>(first_elem));
       name = s->name;
@@ -1882,7 +1883,7 @@ namespace jank::analyze
 
     native_vector<expr::function_arity> arities;
 
-    if(first_elem->type == runtime::object_type::persistent_vector)
+    if(first_elem.get_type() == runtime::object_type::persistent_vector)
     {
       auto const result(analyze_fn_arity(make_box<runtime::obj::persistent_list>(list->data.rest()),
                                          name,
@@ -2211,7 +2212,7 @@ namespace jank::analyze
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
-    if(bindings_obj->type != runtime::object_type::persistent_vector)
+    if(bindings_obj.get_type() != runtime::object_type::persistent_vector)
     {
       return error::analyze_invalid_let("The bindings of a 'let' must be in a vector.",
                                         object_source(bindings_obj),
@@ -2248,7 +2249,7 @@ namespace jank::analyze
       auto const &sym_obj(bindings->data[i]);
       auto const &val(bindings->data[i + 1]);
 
-      if(sym_obj->type != runtime::object_type::symbol)
+      if(sym_obj.get_type() != runtime::object_type::symbol)
       {
         return error::analyze_invalid_let("The left hand side of a 'let' binding must be a symbol.",
                                           object_source(sym_obj),
@@ -2351,7 +2352,7 @@ namespace jank::analyze
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
-    if(bindings_obj->type != runtime::object_type::persistent_vector)
+    if(bindings_obj.get_type() != runtime::object_type::persistent_vector)
     {
       return error::analyze_invalid_letfn("The bindings of a 'letfn*' must be in a vector.",
                                           meta_source(bindings_obj),
@@ -2387,7 +2388,7 @@ namespace jank::analyze
     {
       auto const &sym_obj(bindings->data[i]);
 
-      if(sym_obj->type != runtime::object_type::symbol)
+      if(sym_obj.get_type() != runtime::object_type::symbol)
       {
         return error::analyze_invalid_letfn(
           "The left hand side of a 'letfn*' binding must be a symbol.",
@@ -2667,7 +2668,7 @@ namespace jank::analyze
     }
 
     auto const arg(o->data.rest().first().unwrap());
-    if(arg->type != runtime::object_type::symbol)
+    if(arg.get_type() != runtime::object_type::symbol)
     {
       return error::analyze_invalid_var_reference("The argument to 'var' must be a symbol.",
                                                   object_source(arg),
@@ -2860,7 +2861,7 @@ namespace jank::analyze
                 ->add_usage(read::parse::reparse_nth(item, 1));
             }
 
-            if(catch_sym_form->type != runtime::object_type::symbol)
+            if(catch_sym_form.get_type() != runtime::object_type::symbol)
             {
               return error::analyze_invalid_try(
                        "A symbol is required after 'catch', which is used as the binding to "
@@ -3206,7 +3207,7 @@ namespace jank::analyze
     bool needs_arg_box{ true };
 
     /* TODO: If this is a recursive call, note that and skip the var lookup. */
-    if(first->type == runtime::object_type::symbol)
+    if(first.get_type() == runtime::object_type::symbol)
     {
       auto const sym(runtime::expect_object<runtime::obj::symbol>(first));
       auto const found_special(specials().find(sym));
@@ -3840,7 +3841,7 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
     auto const obj{ llvm::cast<expr::primitive_literal>(string_expr.data)->data };
-    if(obj->type != runtime::object_type::persistent_string)
+    if(obj.get_type() != runtime::object_type::persistent_string)
     {
       return error::analyze_invalid_cpp_raw(
                "The first and only argument to 'cpp/raw' must be a string of C++ code.",
@@ -3917,13 +3918,17 @@ namespace jank::analyze
     jtl::string_result<cpp_util::literal_value_result> literal_res{ err("unset") };
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(arg->type)
+    switch(arg.get_type())
 #pragma clang diagnostic pop
     {
       case object_type::integer:
         literal_res = cpp_util::resolve_literal_value(
           util::format("static_cast<jtl::i64>({})",
                        expect_object<runtime::obj::integer>(arg)->data));
+        break;
+      case object_type::small_integer:
+        literal_res = cpp_util::resolve_literal_value(
+          util::format("static_cast<jtl::i64>({})", runtime::detail::as_int(arg.data)));
         break;
       case object_type::real:
         literal_res = cpp_util::resolve_literal_value(
@@ -4616,7 +4621,7 @@ namespace jank::analyze
         {
           return error::internal_analyze_failure(
             util::format("Unimplemented analysis for object type '{}'.",
-                         object_type_str(typed_o->type)),
+                         object_type_str(typed_o.get_type())),
             object_source(o),
             latest_expansion(macro_expansions));
         }
@@ -4640,7 +4645,7 @@ namespace jank::analyze
                                   expression_position const position,
                                   jtl::option<expr::function_context_ref> const &fn_ctx)
   {
-    if(o->type == object_type::symbol)
+    if(o.get_type() == object_type::symbol)
     {
       auto const res{ analyze_cpp_symbol(expect_object<obj::symbol>(o),
                                          current_frame,
@@ -4717,7 +4722,7 @@ namespace jank::analyze
         auto const seq{ typed_o->seq() };
         auto const first{ runtime::first(seq) };
 
-        if(first->type == object_type::keyword)
+        if(first.get_type() == object_type::keyword)
         {
           static auto const ptr{ runtime::__rt_ctx->intern_keyword("*").expect_ok() };
           static auto const lref{ runtime::__rt_ctx->intern_keyword("&").expect_ok() };
@@ -4992,21 +4997,22 @@ namespace jank::analyze
                 }
 
                 auto const size_obj{ runtime::second(next(seq)) };
-                if(auto const size{ runtime::dyn_cast<obj::integer>(size_obj) }; size.is_some())
+                if(runtime::is_integer(size_obj))
                 {
-                  if(size->data < 0)
+                  auto const size{ runtime::to_i64(size_obj) };
+                  if(size < 0)
                   {
                     return error::analyze_invalid_cpp_dsl(
                       "Array sizes must be either zero or positive integers.",
                       object_source(o),
                       latest_expansion(macro_expansions));
                   }
-                  return Cpp::GetArrayType(type, size->data);
+                  return Cpp::GetArrayType(type, size);
                 }
 
                 return error::analyze_invalid_cpp_dsl(
                   util::format("Invalid array size. An integer was expected, but a {} was found.",
-                               object_type_str(size_obj->type)),
+                               object_type_str(size_obj.get_type())),
                   object_source(o),
                   latest_expansion(macro_expansions));
               });
@@ -5050,7 +5056,7 @@ namespace jank::analyze
                     return error::analyze_invalid_cpp_dsl(
                       util::format(
                         "A sequence of parameter types was expected, but a {} was found instead.",
-                        object_type_str(params->type)),
+                        object_type_str(params.get_type())),
                       object_source(params),
                       latest_expansion(macro_expansions));
                   },
@@ -5066,7 +5072,7 @@ namespace jank::analyze
             }
 
             auto const member_arg{ runtime::second(runtime::next(seq)) };
-            if(member_arg->type != object_type::symbol)
+            if(member_arg.get_type() != object_type::symbol)
             {
               return error::analyze_invalid_cpp_dsl("Member names need to be symbols.",
                                                     object_source(member_arg),
@@ -5086,7 +5092,7 @@ namespace jank::analyze
             {
               return error::analyze_invalid_cpp_dsl(
                 util::format("There is no '{}' member within '{}'.",
-                             member_arg->to_string(),
+                             member_arg.to_string(),
                              cpp_util::get_qualified_type_name(type)),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
@@ -5099,7 +5105,7 @@ namespace jank::analyze
             {
               return error::analyze_invalid_cpp_dsl(
                 util::format("There is no '{}' member within '{}'.",
-                             member_arg->to_string(),
+                             member_arg.to_string(),
                              cpp_util::get_qualified_type_name(type)),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
@@ -5197,7 +5203,7 @@ namespace jank::analyze
             }
 
             auto const member_arg{ runtime::second(runtime::next(seq)) };
-            if(member_arg->type != object_type::symbol)
+            if(member_arg.get_type() != object_type::symbol)
             {
               return error::analyze_invalid_cpp_dsl("Member names need to be symbols.",
                                                     object_source(member_arg),
@@ -5217,7 +5223,7 @@ namespace jank::analyze
             {
               return error::analyze_invalid_cpp_dsl(
                 util::format("There is no '{}' member within '{}'.",
-                             member_arg->to_string(),
+                             member_arg.to_string(),
                              cpp_util::get_qualified_type_name(type)),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
@@ -5230,7 +5236,7 @@ namespace jank::analyze
             {
               return error::analyze_invalid_cpp_dsl(
                 util::format("There is no '{}' member within '{}'.",
-                             member_arg->to_string(),
+                             member_arg.to_string(),
                              cpp_util::get_qualified_type_name(type)),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
@@ -5241,7 +5247,7 @@ namespace jank::analyze
                 util::format(
                   "A member variable or function was expected here, but '{}::{}' was found.",
                   cpp_util::get_qualified_type_name(type),
-                  member_arg->to_string()),
+                  member_arg.to_string()),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
             }
@@ -5250,7 +5256,7 @@ namespace jank::analyze
               return error::analyze_invalid_cpp_dsl(
                 util::format("A non-static member was expected here, but '{}::{}' is static.",
                              cpp_util::get_qualified_type_name(type),
-                             member_arg->to_string()),
+                             member_arg.to_string()),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
             }
@@ -5280,7 +5286,7 @@ namespace jank::analyze
             object_source(o),
             latest_expansion(macro_expansions));
         }
-        else if(first->type == object_type::symbol)
+        else if(first.get_type() == object_type::symbol)
         {
           static obj::symbol const cpp_type{ "cpp", "dsl" };
           if(expect_object<obj::symbol>(first)->equal(cpp_type))
@@ -5320,11 +5326,12 @@ namespace jank::analyze
           native_vector<Cpp::TemplateArgInfo> args;
           for(auto const arg : make_sequence_range(rest(typed_o)))
           {
-            if(auto const int_arg{ dyn_cast<obj::integer>(arg) }; int_arg.is_some())
+            if(runtime::is_integer(arg))
             {
+              auto const int_arg{ runtime::to_i64(arg) };
               static auto const int_type{ cpp_util::resolve_literal_type("long long").expect_ok() };
               jtl::string_builder sb;
-              sb(int_arg->data);
+              sb(int_arg);
               /* XXX: Safe, due to the GC. */
               args.emplace_back(int_type.data, sb.release().c_str());
               continue;
@@ -5442,7 +5449,7 @@ namespace jank::analyze
 
   bool processor::is_special(runtime::object_ref const form)
   {
-    if(form->type != runtime::object_type::symbol)
+    if(form.get_type() != runtime::object_type::symbol)
     {
       return false;
     }

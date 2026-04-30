@@ -197,9 +197,14 @@ namespace jank::runtime
     return {};
   }
 
+  i64 object::compare(object const &) const
+  {
+    throw error::runtime_unsupported_behavior(type, "compare", object_source(this));
+  }
+
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
-    if(lhs->type != rhs->type)
+    if(lhs.get_type() != rhs.get_type())
     {
       return false;
     }
@@ -209,7 +214,7 @@ namespace jank::runtime
   bool
   very_equal_to_with_meta::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
-    if(lhs->type != rhs->type)
+    if(lhs.get_type() != rhs.get_type())
     {
       return false;
     }

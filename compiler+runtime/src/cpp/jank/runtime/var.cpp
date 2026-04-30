@@ -87,7 +87,7 @@ namespace jank::runtime
 
   bool var::is_bound() const
   {
-    return deref()->type != object_type::var_unbound_root;
+    return deref().get_type() != object_type::var_unbound_root;
   }
 
   object_ref var::get_root() const
@@ -233,7 +233,7 @@ namespace jank::runtime
 
   uhash var_thread_binding::to_hash() const
   {
-    return hash::visit(value.get());
+    return hash::visit(value);
   }
 
   var_unbound_root::var_unbound_root(var_ref const var)

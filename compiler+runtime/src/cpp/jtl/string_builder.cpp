@@ -7,6 +7,8 @@
 #include <jtl/string_builder.hpp>
 #include <jtl/format/style.hpp>
 
+#include <jank/runtime/obj/ratio.hpp>
+
 namespace jtl
 {
   using allocator_type = jank::native_allocator<string_builder::value_type>;
@@ -238,6 +240,13 @@ namespace jtl
   string_builder &string_builder::operator()(jank::native_big_integer const &d) &
   {
     return (*this)(d.str());
+  }
+
+  string_builder &string_builder::operator()(jank::runtime::obj::ratio_data const &r) &
+  {
+    (*this)(r.numerator);
+    (*this)('/');
+    return (*this)(r.denominator);
   }
 
   string_builder &string_builder::operator()(char const d) &

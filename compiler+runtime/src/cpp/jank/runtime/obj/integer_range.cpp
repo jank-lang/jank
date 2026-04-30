@@ -7,12 +7,12 @@
 
 namespace jank::runtime::obj
 {
-  static bool positive_step_bounds_check(integer_ref const val, integer_ref const end)
+  static bool positive_step_bounds_check(object_ref const val, object_ref const end)
   {
     return lte(end, val);
   }
 
-  static bool negative_step_bounds_check(integer_ref const val, integer_ref const end)
+  static bool negative_step_bounds_check(object_ref const val, object_ref const end)
   {
     return lte(val, end);
   }
@@ -22,7 +22,7 @@ namespace jank::runtime::obj
   {
   }
 
-  integer_range::integer_range(integer_ref const end)
+  integer_range::integer_range(object_ref const end)
     : object{ obj_type, obj_behaviors }
     , start{ make_box<integer>(0) }
     , end{ end }
@@ -31,7 +31,7 @@ namespace jank::runtime::obj
   {
   }
 
-  integer_range::integer_range(integer_ref const start, integer_ref const end)
+  integer_range::integer_range(object_ref const start, object_ref const end)
     : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
@@ -40,9 +40,7 @@ namespace jank::runtime::obj
   {
   }
 
-  integer_range::integer_range(integer_ref const start,
-                               integer_ref const end,
-                               integer_ref const step)
+  integer_range::integer_range(object_ref const start, object_ref const end, object_ref const step)
     : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
@@ -53,9 +51,9 @@ namespace jank::runtime::obj
   {
   }
 
-  integer_range::integer_range(integer_ref const start,
-                               integer_ref const end,
-                               integer_ref const step,
+  integer_range::integer_range(object_ref const start,
+                               object_ref const end,
+                               object_ref const step,
                                integer_range::bounds_check_t const bounds_check)
     : object{ obj_type, obj_behaviors }
     , start{ start }
@@ -65,7 +63,7 @@ namespace jank::runtime::obj
   {
   }
 
-  object_ref integer_range::create(integer_ref const end)
+  object_ref integer_range::create(object_ref const end)
   {
     if(is_pos(end))
     {
@@ -77,13 +75,13 @@ namespace jank::runtime::obj
     return persistent_list::empty();
   }
 
-  object_ref integer_range::create(integer_ref const start, integer_ref const end)
+  object_ref integer_range::create(object_ref const start, object_ref const end)
   {
     return create(start, end, make_box<integer>(1));
   }
 
   object_ref
-  integer_range::create(integer_ref const start, integer_ref const end, integer_ref const step)
+  integer_range::create(object_ref const start, object_ref const end, object_ref const step)
   {
     if((is_pos(step) && lt(end, start)) || (is_neg(step) && lt(start, end)) || is_equiv(start, end))
     {
@@ -111,7 +109,7 @@ namespace jank::runtime::obj
     return make_box<integer_range>(start, end, step, bounds_check);
   }
 
-  integer_ref integer_range::first() const
+  object_ref integer_range::first() const
   {
     return start;
   }
@@ -122,7 +120,7 @@ namespace jank::runtime::obj
     {
       return {};
     }
-    return make_box<integer_range>(make_box<integer>(add(start, step)), end, step, bounds_check);
+    return make_box<integer_range>(add(start, step), end, step, bounds_check);
   }
 
   integer_range_ref integer_range::next_in_place()
@@ -131,7 +129,7 @@ namespace jank::runtime::obj
     {
       return {};
     }
-    start = make_box<integer>(add(start, step));
+    start = add(start, step);
     return this;
   }
 
@@ -180,19 +178,19 @@ namespace jank::runtime::obj
 
   usize integer_range::count() const
   {
-    auto const s{ step->data };
+    auto const s{ runtime::to_i64(step) };
     if(s == 0)
     {
-      throw std::runtime_error("[Integer-Range] Step shouldn't be 0");
+      throw std::runtime_error("integer_range step shouldn't be 0.");
     }
 
-    auto const diff{ sub(end, start) };
+    auto const diff{ runtime::to_i64(sub(end, start)) };
     auto const offset{ s > 0 ? -1 : 1 };
 
     if((s > 0 && diff > std::numeric_limits<i64>::max() - s + offset)
        || (s < 0 && diff < std::numeric_limits<i64>::min() - s + offset))
     {
-      throw std::runtime_error("[Integer-Range] Overflow occurred in arithmetic");
+      throw std::runtime_error("integer_range overflow occurred in arithmetic.");
     }
 
     return static_cast<size_t>((diff + offset + s) / s);

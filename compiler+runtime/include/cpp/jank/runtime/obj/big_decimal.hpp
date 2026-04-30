@@ -35,7 +35,7 @@ namespace jank::runtime::obj
   struct big_decimal : object
   {
     static constexpr object_type obj_type{ object_type::big_decimal };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
     static constexpr bool pointer_free{ true };
 
     big_decimal();
@@ -56,7 +56,7 @@ namespace jank::runtime::obj
     uhash to_hash() const override;
 
     /* behavior::comparable */
-    i64 compare(object const &) const;
+    i64 compare(object const &) const override;
 
     /* behavior::number_like */
     i64 to_integer() const;

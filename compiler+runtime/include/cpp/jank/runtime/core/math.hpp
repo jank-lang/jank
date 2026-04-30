@@ -34,6 +34,9 @@ namespace jank::runtime
                                                     obj::ratio_ref>);
   }
 
+  /* Only for fixed integer sizes (i.e. integer and small_integer). */
+  i64 to_i64(object_ref const o);
+
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
   auto add(L const l, R const r)

@@ -1,5 +1,6 @@
 #include <cmath>
 
+#include <jank/runtime/oref.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/util/fmt.hpp>
@@ -86,6 +87,12 @@ namespace jank::runtime::obj
       return data == i->data;
     }
 
+    if(o.type == object_type::small_integer)
+    {
+      auto const i(expect_object<small_integer>(&o));
+      return data == i->data;
+    }
+
     if(o.type != object_type::integer)
     {
       return false;
@@ -137,6 +144,87 @@ namespace jank::runtime::obj
   }
 
   f64 integer::to_real() const
+  {
+    return static_cast<f64>(data);
+  }
+
+  /***** small_integer *****/
+  small_integer::small_integer()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
+  small_integer::small_integer(i64 const d)
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
+  {
+  }
+
+  bool small_integer::equal(object const &o) const
+  {
+    if(o.type == object_type::big_integer)
+    {
+      auto const i(expect_object<big_integer>(&o));
+      return data == i->data;
+    }
+
+    if(o.type == object_type::integer)
+    {
+      auto const i(expect_object<integer>(&o));
+      return data == i->data;
+    }
+
+    if(o.type != object_type::small_integer)
+    {
+      return false;
+    }
+
+    auto const i(expect_object<small_integer>(&o));
+    return data == i->data;
+  }
+
+  jtl::immutable_string small_integer::to_string() const
+  {
+    jtl::string_builder sb;
+    return sb(data).release();
+  }
+
+  void small_integer::to_string(jtl::string_builder &buff) const
+  {
+    buff(data);
+  }
+
+  jtl::immutable_string small_integer::to_code_string() const
+  {
+    return to_string();
+  }
+
+  uhash small_integer::to_hash() const
+  {
+    return hash::integer(data);
+  }
+
+  i64 small_integer::compare(object const &o) const
+  {
+    return visit_number_like(
+      [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
+      [&]() -> i64 {
+        throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
+      },
+      &o);
+  }
+
+  i64 small_integer::compare(small_integer const &o) const
+  {
+    return (o.data < data) - (data < o.data);
+  }
+
+  i64 small_integer::to_integer() const
+  {
+    return data;
+  }
+
+  f64 small_integer::to_real() const
   {
     return static_cast<f64>(data);
   }

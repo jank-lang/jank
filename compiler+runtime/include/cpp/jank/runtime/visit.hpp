@@ -85,7 +85,12 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_object(F const &fn, object_ref const erased, Args &&...args)
   {
-    switch(erased->type)
+    if(detail::is_small_int(erased.data))
+    {
+      return fn(obj::small_integer_ref{ erased.data }, std::forward<Args>(args)...);
+    }
+
+    switch(erased.get_type())
     {
       case object_type::nil:
         return fn(expect_object<obj::nil>(erased), std::forward<Args>(args)...);
@@ -93,6 +98,8 @@ namespace jank::runtime
         return fn(expect_object<obj::boolean>(erased), std::forward<Args>(args)...);
       case object_type::integer:
         return fn(expect_object<obj::integer>(erased), std::forward<Args>(args)...);
+      case object_type::small_integer:
+        return fn(expect_object<obj::small_integer>(erased), std::forward<Args>(args)...);
       case object_type::big_integer:
         return fn(expect_object<obj::big_integer>(erased), std::forward<Args>(args)...);
       case object_type::big_decimal:
@@ -224,8 +231,8 @@ namespace jank::runtime
         return fn(expect_object<obj::reader_conditional>(erased), std::forward<Args>(args)...);
       default:
         jtl::panic("invalid object type: {}, raw value {}",
-                   object_type_str(erased->type),
-                   static_cast<int>(erased->type));
+                   object_type_str(erased.get_type()),
+                   static_cast<int>(erased.get_type()));
     }
   }
 
@@ -234,15 +241,22 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_type(F const &fn, object_ref const erased, Args &&...args)
   {
-    if(erased->type == T::obj_type)
+    if(erased.get_type() == T::obj_type)
     {
+      if constexpr(jtl::is_same<T, obj::integer>)
+      {
+        if(detail::is_small_int(erased.data))
+        {
+          return fn(obj::small_integer_ref{ erased.data }, std::forward<Args>(args)...);
+        }
+      }
       return fn(expect_object<T>(erased), std::forward<Args>(args)...);
     }
     else
     {
       jtl::panic("invalid object type: {}, raw value {}",
-                 object_type_str(erased->type),
-                 static_cast<int>(erased->type));
+                 object_type_str(erased.get_type()),
+                 static_cast<int>(erased.get_type()));
     }
   }
 
@@ -253,7 +267,7 @@ namespace jank::runtime
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(erased->type)
+    switch(erased.get_type())
     {
       case object_type::nil:
         return fn(expect_object<obj::nil>(erased), std::forward<Args>(args)...);
@@ -345,7 +359,7 @@ namespace jank::runtime
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(erased->type)
+    switch(erased.get_type())
     {
       case object_type::persistent_array_map:
         return fn(expect_object<obj::persistent_array_map>(erased), std::forward<Args>(args)...);
@@ -381,7 +395,7 @@ namespace jank::runtime
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(erased->type)
+    switch(erased.get_type())
     {
       case object_type::persistent_hash_set:
         return fn(expect_object<obj::persistent_hash_set>(erased), std::forward<Args>(args)...);
@@ -413,12 +427,19 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_number_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
+    if(detail::is_small_int(erased.data))
+    {
+      return fn(obj::small_integer_ref{ erased.data }, std::forward<Args>(args)...);
+    }
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(erased->type)
+    switch(erased.get_type())
     {
       case object_type::integer:
         return fn(expect_object<obj::integer>(erased), std::forward<Args>(args)...);
+      case object_type::small_integer:
+        return fn(expect_object<obj::small_integer>(erased), std::forward<Args>(args)...);
       case object_type::big_integer:
         return fn(expect_object<obj::big_integer>(erased), std::forward<Args>(args)...);
       case object_type::big_decimal:

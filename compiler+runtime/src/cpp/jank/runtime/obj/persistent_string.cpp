@@ -74,7 +74,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_string::get(object_ref const key, object_ref const fallback) const
   {
-    if(key->type == object_type::integer)
+    if(key.get_type() == object_type::integer)
     {
       auto const i(expect_object<integer>(key)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))
@@ -91,7 +91,7 @@ namespace jank::runtime::obj
 
   bool persistent_string::contains(object_ref const key) const
   {
-    if(key->type == object_type::integer)
+    if(key.get_type() == object_type::integer)
     {
       auto const i(expect_object<integer>(key)->data);
       return 0 <= i && static_cast<size_t>(i) < data.size();
@@ -101,7 +101,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_string::nth(object_ref const index) const
   {
-    if(index->type == object_type::integer)
+    if(index.get_type() == object_type::integer)
     {
       auto const i(expect_object<integer>(index)->data);
       if(i < 0 || data.size() <= static_cast<size_t>(i))

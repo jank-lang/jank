@@ -172,7 +172,7 @@ namespace jank::runtime::obj::detail
       return merge(ret, head);
     }
 
-    if(head->type != object_type::persistent_vector)
+    if(head.get_type() != object_type::persistent_vector)
     {
       throw std::runtime_error{ util::format("invalid map entry: {}",
                                              runtime::to_code_string(head)) };

@@ -18,7 +18,7 @@ namespace jank::runtime
 {
   jtl::immutable_string type(object_ref const o)
   {
-    return object_type_str(o->type);
+    return object_type_str(o.get_type());
   }
 
   bool is_nil(object_ref const o)
@@ -43,27 +43,27 @@ namespace jank::runtime
 
   bool is_string(object_ref const o)
   {
-    return o->type == object_type::persistent_string;
+    return o.get_type() == object_type::persistent_string;
   }
 
   bool is_char(object_ref const o)
   {
-    return o->type == object_type::character;
+    return o.get_type() == object_type::character;
   }
 
   bool is_symbol(object_ref const o)
   {
-    return o->type == object_type::symbol;
+    return o.get_type() == object_type::symbol;
   }
 
   bool is_simple_symbol(object_ref const o)
   {
-    return o->type == object_type::symbol && expect_object<obj::symbol>(o)->ns.empty();
+    return o.get_type() == object_type::symbol && expect_object<obj::symbol>(o)->ns.empty();
   }
 
   bool is_qualified_symbol(object_ref const o)
   {
-    return o->type == object_type::symbol && !expect_object<obj::symbol>(o)->ns.empty();
+    return o.get_type() == object_type::symbol && !expect_object<obj::symbol>(o)->ns.empty();
   }
 
   object_ref to_unqualified_symbol(object_ref const o)
@@ -91,7 +91,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("can't convert {} to a symbol",
-                                                 typed_o->to_code_string()) };
+                                                 typed_o.to_code_string()) };
         }
       },
       o);
@@ -122,7 +122,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("expected a sequence: {}",
-                                                 typed_args->to_string()) };
+                                                 typed_args.to_string()) };
         }
       },
       args);
@@ -154,7 +154,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("expected a sequence: {}",
-                                                 typed_more->to_string()) };
+                                                 typed_more.to_string()) };
         }
       },
       args);
@@ -181,7 +181,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("expected a sequence: {}",
-                                                 typed_args->to_string()) };
+                                                 typed_args.to_string()) };
         }
       },
       args);
@@ -213,7 +213,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("expected a sequence: {}",
-                                                 typed_args->to_string()) };
+                                                 typed_args.to_string()) };
         }
       },
       args);
@@ -284,7 +284,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not nameable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ util::format("not nameable: {}", typed_o.to_string()) };
         }
       },
       o);
@@ -307,7 +307,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not nameable: {}", typed_o->to_string()) };
+          throw std::runtime_error{ util::format("not nameable: {}", typed_o.to_string()) };
         }
       },
       o);
@@ -327,13 +327,13 @@ namespace jank::runtime
 
   object_ref keyword(object_ref const ns, object_ref const name)
   {
-    if(!ns.is_nil() && ns->type != object_type::persistent_string)
+    if(!ns.is_nil() && ns.get_type() != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format(
         "The 'keyword' function expects a namespace to be 'nil' or a 'string', got {} instead.",
         runtime::to_code_string(ns)) };
     }
-    if(name->type != object_type::persistent_string)
+    if(name.get_type() != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format(
         "The 'keyword' function expects the name to be a 'string', got {} instead.",
@@ -350,27 +350,27 @@ namespace jank::runtime
 
   bool is_keyword(object_ref const o)
   {
-    return o->type == object_type::keyword;
+    return o.get_type() == object_type::keyword;
   }
 
   bool is_simple_keyword(object_ref const o)
   {
-    return o->type == object_type::keyword && expect_object<obj::keyword>(o)->sym->ns.empty();
+    return o.get_type() == object_type::keyword && expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
   bool is_qualified_keyword(object_ref const o)
   {
-    return o->type == object_type::keyword && !expect_object<obj::keyword>(o)->sym->ns.empty();
+    return o.get_type() == object_type::keyword && !expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
   bool is_callable(object_ref const o)
   {
-    return (o->behaviors & object_behavior::call) != object_behavior::none;
+    return o.has_behavior(object_behavior::call);
   }
 
   uhash to_hash(object_ref const o)
   {
-    return visit_object([=](auto const typed_o) -> uhash { return typed_o->to_hash(); }, o);
+    return visit_object([=](auto const typed_o) -> uhash { return typed_o.to_hash(); }, o);
   }
 
   object_ref macroexpand1(object_ref const o)
@@ -472,7 +472,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not derefable: {}",
-                                                 object_type_str(typed_o->type)) };
+                                                 object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -491,7 +491,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not realizable: {}",
-                                                 object_type_str(typed_o->type)) };
+                                                 object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -504,7 +504,7 @@ namespace jank::runtime
 
   bool is_volatile(object_ref const o)
   {
-    return o->type == object_type::volatile_;
+    return o.get_type() == object_type::volatile_;
   }
 
   object_ref vswap(object_ref const v, object_ref const fn)
@@ -541,7 +541,7 @@ namespace jank::runtime
 
   object_ref force(object_ref const o)
   {
-    if(o->type == object_type::delay)
+    if(o.get_type() == object_type::delay)
     {
       return expect_object<obj::delay>(o)->deref();
     }
@@ -555,7 +555,7 @@ namespace jank::runtime
 
   bool is_tagged_literal(object_ref const o)
   {
-    return o->type == object_type::tagged_literal;
+    return o.get_type() == object_type::tagged_literal;
   }
 
   object_ref re_pattern(object_ref const o)
@@ -646,7 +646,7 @@ namespace jank::runtime
 
   object_ref parse_uuid(object_ref const o)
   {
-    if(o->type == object_type::persistent_string)
+    if(o.get_type() == object_type::persistent_string)
     {
       try
       {
@@ -659,13 +659,14 @@ namespace jank::runtime
     }
     else
     {
-      throw std::runtime_error{ util::format("expected string, got {}", object_type_str(o->type)) };
+      throw std::runtime_error{ util::format("expected string, got {}",
+                                             object_type_str(o.get_type())) };
     }
   }
 
   bool is_uuid(object_ref const o)
   {
-    return o->type == object_type::uuid;
+    return o.get_type() == object_type::uuid;
   }
 
   object_ref random_uuid()
@@ -675,15 +676,15 @@ namespace jank::runtime
 
   bool is_inst(object_ref const o)
   {
-    return o->type == object_type::inst;
+    return o.get_type() == object_type::inst;
   }
 
   i64 inst_ms(object_ref const o)
   {
-    if(o->type != object_type::inst)
+    if(o.get_type() != object_type::inst)
     {
       throw std::runtime_error{ util::format("The function 'inst-ms' expects an inst, got {}",
-                                             object_type_str(o->type)) };
+                                             object_type_str(o.get_type())) };
     }
 
     return std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -705,7 +706,7 @@ namespace jank::runtime
         {
           throw std::runtime_error{ util::format(
             "Value does not support 'add-watch' because it is not ref_like: {}",
-            typed_reference->to_code_string()) };
+            typed_reference.to_code_string()) };
         }
       },
       reference);
@@ -727,7 +728,7 @@ namespace jank::runtime
         {
           throw std::runtime_error{ util::format(
             "Value does not support 'remove-watch' because it is not ref_like: {}",
-            typed_reference->to_code_string()) };
+            typed_reference.to_code_string()) };
         }
       },
       reference);
@@ -880,11 +881,11 @@ namespace jank::runtime
 
   object_ref read_string(object_ref const form_string, object_ref const opts)
   {
-    if(form_string->type != object_type::persistent_string)
+    if(form_string.get_type() != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format(
         "Argument to `read-string` needs to be a string representing a form. Found a {} instead.",
-        object_type_str(form_string->type)) };
+        object_type_str(form_string.get_type())) };
     }
 
     auto const typed_o{ expect_object<obj::persistent_string>(form_string) };
@@ -893,11 +894,11 @@ namespace jank::runtime
 
   object_ref read_file(object_ref const file_path, object_ref const opts)
   {
-    if(file_path->type != object_type::persistent_string)
+    if(file_path.get_type() != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format("Argument to `read-file` needs to be a string "
                                              "representing a file path. Found a {} instead.",
-                                             object_type_str(file_path->type)) };
+                                             object_type_str(file_path.get_type())) };
     }
 
     auto const typed_o{ expect_object<obj::persistent_string>(file_path) };

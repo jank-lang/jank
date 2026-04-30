@@ -56,7 +56,7 @@ namespace jank::runtime
       SUBCASE("Simplify to integer")
       {
         auto const ratio_ptr{ obj::ratio::create(4, 2) };
-        CHECK_EQ(ratio_ptr->type, object_type::integer);
+        CHECK_EQ(ratio_ptr.get_type(), object_type::integer);
         CHECK_EQ(expect_object<obj::integer>(ratio_ptr)->data, 2);
       }
 
@@ -147,12 +147,12 @@ namespace jank::runtime
       SUBCASE("Addition with native integer")
       {
         i64 const i{ 2ll };
-        auto const result{ *(ratio + i) };
-        auto const result2{ *(i + ratio) };
-        CHECK_EQ(result.data.numerator, 11);
-        CHECK_EQ(result.data.denominator, 4);
-        CHECK_EQ(result2.data.numerator, 11);
-        CHECK_EQ(result2.data.denominator, 4);
+        auto const result{ (ratio + i) };
+        auto const result2{ (i + ratio) };
+        CHECK_EQ(result.numerator, 11);
+        CHECK_EQ(result.denominator, 4);
+        CHECK_EQ(result2.numerator, 11);
+        CHECK_EQ(result2.denominator, 4);
       }
       SUBCASE("Addition with native real")
       {
@@ -165,13 +165,13 @@ namespace jank::runtime
 
       SUBCASE("Subtraction with boxed int")
       {
-        auto const i{ make_box(1) };
+        auto const i{ make_box<obj::integer>(1) };
         auto const result{ ratio - i };
         auto const result2{ i - ratio };
-        CHECK_EQ(result->data.numerator, -1);
-        CHECK_EQ(result->data.denominator, 4);
-        CHECK_EQ(result2->data.numerator, 1);
-        CHECK_EQ(result2->data.denominator, 4);
+        CHECK_EQ(result.numerator, -1);
+        CHECK_EQ(result.denominator, 4);
+        CHECK_EQ(result2.numerator, 1);
+        CHECK_EQ(result2.denominator, 4);
       }
 
       SUBCASE("Subtraction with boxed real")
@@ -185,7 +185,7 @@ namespace jank::runtime
 
       SUBCASE("Multiplication with boxed int")
       {
-        auto const i{ make_box(3) };
+        auto const i{ make_box<obj::integer>(3) };
         auto const result{ *expect_object<obj::ratio>(ratio * i) };
         auto const result2{ *expect_object<obj::ratio>(i * ratio) };
         CHECK_EQ(result.data.numerator, 9);
@@ -225,7 +225,7 @@ namespace jank::runtime
 
       SUBCASE("Comparison with boxed integer")
       {
-        auto const i{ make_box(1ll) };
+        auto const i{ make_box<obj::integer>(1ll) };
         CHECK_LT(ratio, i);
         CHECK_NE(ratio, i);
         CHECK_NE(i, ratio);
@@ -255,14 +255,14 @@ namespace jank::runtime
 
       SUBCASE("Complex arithmetic chain")
       {
-        auto const result{ (ratio + i)->data - r };
+        auto const result{ (ratio + i) - r };
         CHECK_EQ(result, doctest::Approx(3.375));
       }
 
       SUBCASE("Mixed comparison")
       {
         auto const real_ptr{ make_box(1.0) };
-        auto const int_ptr{ make_box(1ll) };
+        auto const int_ptr{ make_box<obj::integer>(1ll) };
 
         CHECK_LT(ratio, real_ptr);
         CHECK_LT(ratio, int_ptr);

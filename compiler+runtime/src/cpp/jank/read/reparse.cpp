@@ -5,7 +5,7 @@
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/module/loader.hpp>
-#include <jank/util/fmt.hpp>
+#include <jank/util/fmt/print.hpp>
 #include <jank/error/parse.hpp>
 
 namespace jank::read::parse

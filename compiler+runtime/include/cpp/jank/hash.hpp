@@ -76,7 +76,7 @@ namespace jank::hash
       }
       else
       {
-        hash += visit((*it).get());
+        hash += visit(*it);
       }
       ++n;
     }

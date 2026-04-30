@@ -35,6 +35,22 @@ namespace jank::runtime
     }
   }
 
+  i64 to_i64(object_ref const o)
+  {
+    if(detail::is_small_int(o.data))
+    {
+      return detail::as_int(o.data);
+    }
+
+    if(auto const i{ dyn_cast<obj::integer>(o) }; i.is_some())
+    {
+      return i->data;
+    }
+
+    throw std::runtime_error{ util::format("An integer was required here, but a {} was provided.",
+                                           object_type_str(o.get_type())) };
+  }
+
   object_ref promoting_add(object_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -45,7 +61,8 @@ namespace jank::runtime
           [](auto const typed_r, auto const &l_val) -> object_ref {
             using RT = typename decltype(typed_r)::value_type;
 
-            if constexpr(std::same_as<LT, obj::integer> && std::same_as<RT, obj::integer>)
+            if constexpr(jtl::is_any_same<LT, obj::integer, obj::small_integer>
+                         && jtl::is_any_same<RT, obj::integer, obj::small_integer>)
             {
               i64 res{};
 
@@ -55,7 +72,7 @@ namespace jank::runtime
                 return make_box<obj::big_integer>(l + typed_r->data);
               }
 
-              return make_box<obj::integer>(res);
+              return make_box(res);
             }
             else
             {
@@ -79,7 +96,8 @@ namespace jank::runtime
           [](auto const typed_r, auto const &l_val) -> object_ref {
             using RT = typename decltype(typed_r)::value_type;
 
-            if constexpr(std::same_as<LT, obj::integer> && std::same_as<RT, obj::integer>)
+            if constexpr(jtl::is_any_same<LT, obj::integer, obj::small_integer>
+                         && jtl::is_any_same<RT, obj::integer, obj::small_integer>)
             {
               i64 res{};
 
@@ -89,7 +107,7 @@ namespace jank::runtime
                 return make_box<obj::big_integer>(l_val - typed_r->data);
               }
 
-              return make_box<obj::integer>(res);
+              return make_box(res);
             }
             else
             {
@@ -298,7 +316,8 @@ namespace jank::runtime
           [](auto const typed_r, auto const &l_val) -> object_ref {
             using RT = typename decltype(typed_r)::value_type;
 
-            if constexpr(std::same_as<LT, obj::integer> && std::same_as<RT, obj::integer>)
+            if constexpr(jtl::is_any_same<LT, obj::integer, obj::small_integer>
+                         && jtl::is_any_same<RT, obj::integer, obj::small_integer>)
             {
               i64 res{};
 
@@ -308,7 +327,7 @@ namespace jank::runtime
                 return make_box<obj::big_integer>(l * typed_r->data);
               }
 
-              return make_box<obj::integer>(res);
+              return make_box(res);
             }
             else
             {
@@ -411,7 +430,7 @@ namespace jank::runtime
       [](auto const typed_l) -> object_ref {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(std::same_as<T, obj::integer>)
+        if constexpr(jtl::is_any_same<T, obj::integer, obj::small_integer>)
         {
           i64 res{};
 
@@ -421,7 +440,7 @@ namespace jank::runtime
             return make_box<obj::big_integer>(v + 1ll);
           }
 
-          return make_box<obj::integer>(res);
+          return make_box(res);
         }
         else
         {
@@ -444,7 +463,7 @@ namespace jank::runtime
       [](auto const typed_l) -> object_ref {
         using T = typename decltype(typed_l)::value_type;
 
-        if constexpr(std::same_as<T, obj::integer>)
+        if constexpr(jtl::is_any_same<T, obj::integer, obj::small_integer>)
         {
           i64 res{};
 
@@ -454,7 +473,7 @@ namespace jank::runtime
             return make_box<obj::big_integer>(v - 1ll);
           }
 
-          return make_box<obj::integer>(res);
+          return make_box(res);
         }
         else
         {
@@ -508,34 +527,22 @@ namespace jank::runtime
 
   bool is_even(object_ref const l)
   {
-    if(l->type == object_type::integer)
-    {
-      return expect_object<obj::integer>(l)->data % 2 == 0;
-    }
-
-    if(l->type == object_type::big_integer)
+    if(l.get_type() == object_type::big_integer)
     {
       return expect_object<obj::big_integer>(l)->data % 2 == 0;
     }
 
-    throw make_box(util::format("Argument must be an integer: {}", object_type_str(l->type)))
-      .erase();
+    return to_i64(l) % 2 == 0;
   }
 
   bool is_odd(object_ref const l)
   {
-    if(l->type == object_type::integer)
-    {
-      return expect_object<obj::integer>(l)->data % 2 != 0;
-    }
-
-    if(l->type == object_type::big_integer)
+    if(l.get_type() == object_type::big_integer)
     {
       return expect_object<obj::big_integer>(l)->data % 2 != 0;
     }
 
-    throw make_box(util::format("Argument must be an integer: {}", object_type_str(l->type)))
-      .erase();
+    return to_i64(l) % 2 != 0;
   }
 
   bool is_equiv(object_ref const l, object_ref const r)
@@ -563,182 +570,96 @@ namespace jank::runtime
 
   i64 bit_not(object_ref const l)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-
-    if(typed_l.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    return ~typed_l->data;
+    auto const l_data{ to_i64(l) };
+    return ~l_data;
   }
 
   i64 bit_and(object_ref const l, object_ref const r)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-    auto const typed_r{ dyn_cast<obj::integer>(r) };
+    auto const l_data{ to_i64(l) };
+    auto const r_data{ to_i64(r) };
 
-    if(typed_l.is_nil() || typed_r.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    return typed_l->data & typed_r->data;
+    return l_data & r_data;
   }
 
   i64 bit_or(object_ref const l, object_ref const r)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-    auto const typed_r{ dyn_cast<obj::integer>(r) };
+    auto const l_data{ to_i64(l) };
+    auto const r_data{ to_i64(r) };
 
-    if(typed_l.is_nil() || typed_r.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    return typed_l->data | typed_r->data;
+    return l_data | r_data;
   }
 
   i64 bit_xor(object_ref const l, object_ref const r)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-    auto const typed_r{ dyn_cast<obj::integer>(r) };
+    auto const l_data{ to_i64(l) };
+    auto const r_data{ to_i64(r) };
 
-    if(typed_l.is_nil() || typed_r.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    return typed_l->data ^ typed_r->data;
+    return l_data ^ r_data;
   }
 
   i64 bit_and_not(object_ref const l, object_ref const r)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-    auto const typed_r{ dyn_cast<obj::integer>(r) };
+    auto const l_data{ to_i64(l) };
+    auto const r_data{ to_i64(r) };
 
-    if(typed_l.is_nil() || typed_r.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    return typed_l->data & (~typed_r->data);
+    return l_data & (~r_data);
   }
 
   i64 bit_clear(object_ref const l, object_ref const r)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-    auto const typed_r{ dyn_cast<obj::integer>(r) };
+    auto const l_data{ to_i64(l) };
+    auto const r_data{ to_i64(r) };
 
-    if(typed_l.is_nil() || typed_r.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    return typed_l->data & ~(static_cast<i64>(1) << typed_r->data);
+    return l_data & ~(static_cast<i64>(1) << r_data);
   }
 
   i64 bit_set(object_ref const l, object_ref const r)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-    auto const typed_r{ dyn_cast<obj::integer>(r) };
+    auto const l_data{ to_i64(l) };
+    auto const r_data{ to_i64(r) };
 
-    if(typed_l.is_nil() || typed_r.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    return typed_l->data | (static_cast<i64>(1) << typed_r->data);
+    return l_data | (static_cast<i64>(1) << r_data);
   }
 
   i64 bit_flip(object_ref const l, object_ref const r)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-    auto const typed_r{ dyn_cast<obj::integer>(r) };
+    auto const l_data{ to_i64(l) };
+    auto const r_data{ to_i64(r) };
 
-    if(typed_l.is_nil() || typed_r.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    return typed_l->data ^ (static_cast<i64>(1) << typed_r->data);
+    return l_data ^ (static_cast<i64>(1) << r_data);
   }
 
   bool bit_test(object_ref const l, object_ref const r)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-    auto const typed_r{ dyn_cast<obj::integer>(r) };
+    auto const l_data{ to_i64(l) };
+    auto const r_data{ to_i64(r) };
 
-    if(typed_l.is_nil() || typed_r.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    return (typed_l->data >> typed_r->data) & static_cast<i64>(1);
+    return (l_data >> r_data) & static_cast<i64>(1);
   }
 
   i64 bit_shift_left(object_ref const l, object_ref const r)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-    auto const typed_r{ dyn_cast<obj::integer>(r) };
+    auto const l_data{ to_i64(l) };
+    auto const r_data{ to_i64(r) };
 
-    if(typed_l.is_nil() || typed_r.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    return typed_l->data << typed_r->data;
+    return l_data << r_data;
   }
 
   i64 bit_shift_right(object_ref const l, object_ref const r)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-    auto const typed_r{ dyn_cast<obj::integer>(r) };
+    auto const l_data{ to_i64(l) };
+    auto const r_data{ to_i64(r) };
 
-    if(typed_l.is_nil() || typed_r.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    return typed_l->data >> typed_r->data;
+    return l_data >> r_data;
   }
 
   i64 bit_unsigned_shift_right(object_ref const l, object_ref const r)
   {
-    auto const typed_l{ dyn_cast<obj::integer>(l) };
-    auto const typed_r{ dyn_cast<obj::integer>(r) };
+    auto const l_data{ to_i64(l) };
+    auto const r_data{ to_i64(r) };
 
-    if(typed_l.is_nil() || typed_r.is_nil())
-    {
-      throw std::runtime_error{
-        "Bitwise operators are only supported for values of type integer."
-      };
-    }
-
-    using uni = std::make_unsigned_t<i64>;
-    return static_cast<i64>(static_cast<uni>(typed_l->data) >> static_cast<uni>(typed_r->data));
+    return static_cast<i64>(static_cast<u64>(l_data) >> static_cast<u64>(r_data));
   }
 
   f64 rand()
@@ -1062,22 +983,22 @@ namespace jank::runtime
 
   bool is_integer(object_ref const o)
   {
-    return o->type == object_type::integer;
+    return detail::is_small_int(o.data) || o.get_type() == object_type::integer;
   }
 
   bool is_real(object_ref const o)
   {
-    return o->type == object_type::real;
+    return o.get_type() == object_type::real;
   }
 
   bool is_ratio(object_ref const o)
   {
-    return o->type == object_type::ratio;
+    return o.get_type() == object_type::ratio;
   }
 
   bool is_boolean(object_ref const o)
   {
-    return o->type == object_type::boolean;
+    return o.get_type() == object_type::boolean;
   }
 
   bool is_nan(object_ref const o)
@@ -1126,7 +1047,8 @@ namespace jank::runtime
     }
     else
     {
-      throw make_box(util::format("Expected string, got {}", object_type_str(o->type))).erase();
+      throw make_box(util::format("Expected string, got {}", object_type_str(o.get_type())))
+        .erase();
     }
   }
 
@@ -1139,13 +1061,14 @@ namespace jank::runtime
     }
     else
     {
-      throw make_box(util::format("Expected string, got {}", object_type_str(o->type))).erase();
+      throw make_box(util::format("Expected string, got {}", object_type_str(o.get_type())))
+        .erase();
     }
   }
 
   bool is_big_integer(object_ref const o)
   {
-    return o->type == object_type::big_integer;
+    return o.get_type() == object_type::big_integer;
   }
 
   obj::big_integer_ref to_big_integer(object_ref const o)
@@ -1158,18 +1081,21 @@ namespace jank::runtime
         {
           return typed_o;
         }
-        else if constexpr(std::same_as<T, obj::integer> || std::same_as<T, obj::persistent_string>)
+        else if constexpr(jtl::is_any_same<T,
+                                           obj::integer,
+                                           obj::small_integer,
+                                           obj::persistent_string>)
         {
           return make_box<obj::big_integer>(typed_o->data);
         }
-        else if constexpr(std::same_as<T, obj::real> || std::same_as<T, obj::ratio>
-                          || std::same_as<T, obj::big_decimal>)
+        else if constexpr(jtl::is_any_same<T, obj::real, obj::ratio, obj::big_decimal>)
         {
           return make_box<obj::big_integer>(typed_o->to_integer());
         }
         else
         {
-          throw make_box(util::format("Expected a numeric value, got {}", object_type_str(o->type)))
+          throw make_box(
+            util::format("Expected a numeric value, got {}", object_type_str(o.get_type())))
             .erase();
         }
       },
@@ -1178,7 +1104,7 @@ namespace jank::runtime
 
   bool is_big_decimal(object_ref const o)
   {
-    return o->type == object_type::big_decimal;
+    return o.get_type() == object_type::big_decimal;
   }
 
   obj::big_decimal_ref to_big_decimal(object_ref const o)
@@ -1187,12 +1113,12 @@ namespace jank::runtime
       [&](auto const typed_o) -> obj::big_decimal_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
-        if constexpr(std::same_as<T, obj::integer>)
+        if constexpr(jtl::is_any_same<T, obj::integer, obj::small_integer>)
         {
           return make_box<obj::big_decimal>(typed_o->to_real());
         }
-        else if constexpr(std::same_as<T, obj::big_integer> || std::same_as<T, obj::real>
-                          || std::same_as<T, obj::ratio> || std::same_as<T, obj::persistent_string>)
+        else if constexpr(
+          jtl::is_any_same<T, obj::big_integer, obj::real, obj::ratio, obj::persistent_string>)
         {
           return make_box<obj::big_decimal>(typed_o->data);
         }
@@ -1202,7 +1128,8 @@ namespace jank::runtime
         }
         else
         {
-          throw make_box(util::format("Expected a numeric value, got {}", object_type_str(o->type)))
+          throw make_box(
+            util::format("Expected a numeric value, got {}", object_type_str(o.get_type())))
             .erase();
         }
       },

@@ -157,19 +157,28 @@ namespace jank::runtime
   requires std::is_enum_v<T>
   struct convert<T>
   {
-    static obj::integer_ref into_object(T const o)
+    static object_ref into_object(T const o)
     {
       return make_box(static_cast<i64>(o));
     }
 
     static T from_object(object_ref const o)
     {
-      return try_object<obj::integer>(o);
+      if(detail::is_small_int(o.data))
+      {
+        return detail::as_int(o.data);
+      }
+      return try_object<obj::integer>(o)->data;
     }
 
     static T from_object(obj::integer_ref const o)
     {
       return o->data;
+    }
+
+    static T from_object(obj::small_integer_ref const o)
+    {
+      return o.data;
     }
   };
 
@@ -179,19 +188,28 @@ namespace jank::runtime
            && !jtl::is_any_same<T, bool, char, char8_t, char16_t, char32_t, wchar_t>)
   struct convert<T>
   {
-    static obj::integer_ref into_object(T const o)
+    static object_ref into_object(T const o)
     {
       return make_box(static_cast<i64>(o));
     }
 
     static T from_object(object_ref const o)
     {
+      if(detail::is_small_int(o.data))
+      {
+        return static_cast<T>(detail::as_int(o.data));
+      }
       return static_cast<T>(try_object<obj::integer>(o)->data);
     }
 
     static T from_object(obj::integer_ref const o)
     {
       return static_cast<T>(o->data);
+    }
+
+    static T from_object(obj::small_integer_ref const o)
+    {
+      return static_cast<T>(o.data);
     }
   };
 

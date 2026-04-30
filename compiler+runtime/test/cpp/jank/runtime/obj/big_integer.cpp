@@ -45,60 +45,60 @@ namespace jank::runtime::obj
 
       SUBCASE("big_integer vs big_integer")
       {
-        CHECK(bi1->equal(*bi2.erase()));
-        CHECK_FALSE(bi1->equal(*bi3.erase()));
-        CHECK_FALSE(bi1->equal(*bi_zero.erase()));
+        CHECK(bi1.equal(bi2));
+        CHECK_FALSE(bi1.equal(bi3));
+        CHECK_FALSE(bi1.equal(bi_zero));
       }
 
       SUBCASE("big_integer vs integer")
       {
-        big_integer const bi_i1(12345LL);
-        big_integer const bi_i3(-12345LL);
-        CHECK(bi_i1.equal(*i1.erase()));
-        CHECK(bi_i1.equal(*i2.erase()));
-        CHECK_FALSE(bi_i1.equal(*i3.erase()));
-        CHECK(bi_i3.equal(*i3.erase()));
-        CHECK_FALSE(bi_i3.equal(*i1.erase()));
+        auto const bi_i1(make_box<big_integer>(12345LL));
+        auto const bi_i3(make_box<big_integer>(-12345LL));
+        CHECK(bi_i1.equal(i1));
+        CHECK(bi_i1.equal(i2));
+        CHECK_FALSE(bi_i1.equal(i3));
+        CHECK(bi_i3.equal(i3));
+        CHECK_FALSE(bi_i3.equal(i1));
       }
 
       SUBCASE("big_integer vs real (epsilon comparison)")
       {
-        big_integer const bi_r1(12345LL);
-        big_integer const bi_r_large(nbi("123456789012345"));
+        auto const bi_r1(make_box<big_integer>(12345LL));
+        auto const bi_r_large(make_box(nbi("123456789012345")));
 
-        CHECK(bi_r1.equal(*r1.erase()));
-        CHECK_FALSE(bi_r1.equal(*r2.erase()));
-        CHECK(bi_r1.equal(*r3.erase()));
+        CHECK(bi_r1.equal(r1));
+        CHECK_FALSE(bi_r1.equal(r2));
+        CHECK(bi_r1.equal(r3));
 
 
-        CHECK(bi_r_large.equal(*r_large_exact.erase()));
-        CHECK(bi_r_large.equal(*r_large_approx.erase()));
+        CHECK(bi_r_large.equal(r_large_exact));
+        CHECK(bi_r_large.equal(r_large_approx));
 
         /* Numbers that cause overflow during conversion in `equal`. */
         /* Create a BI larger than double can represent. */
         native_big_integer const huge_val{ nbi("1") << 1024 };
-        big_integer const bi_huge_pos(huge_val);
-        big_integer const bi_huge_neg(-huge_val);
+        auto const bi_huge_pos(make_box<big_integer>(huge_val));
+        auto const bi_huge_neg(make_box<big_integer>(-huge_val));
         auto r_inf_pos{ make_box<real>(std::numeric_limits<f64>::infinity()) };
         auto r_inf_neg{ make_box<real>(-std::numeric_limits<f64>::infinity()) };
 
         /* Conversion works, but comparison should use epsilon logic which fails for inf. */
-        CHECK_FALSE(bi_huge_pos.equal(*r_inf_pos.erase()));
-        CHECK_FALSE(bi_huge_neg.equal(*r_inf_neg.erase()));
-        CHECK_FALSE(bi_huge_pos.equal(*r1.erase()));
+        CHECK_FALSE(bi_huge_pos.equal(r_inf_pos));
+        CHECK_FALSE(bi_huge_neg.equal(r_inf_neg));
+        CHECK_FALSE(bi_huge_pos.equal(r1));
       }
 
       SUBCASE("big_integer vs other type")
       {
-        CHECK_FALSE(bi1->equal(*ratio1.erase()));
+        CHECK_FALSE(bi1.equal(ratio1));
       }
     }
 
     TEST_CASE("String conversions")
     {
-      big_integer const bi_pos(nbi("1234567890987654321"));
-      big_integer const bi_neg(nbi("-9876543210123456789"));
-      big_integer const bi_zero(0);
+      auto const bi_pos(make_box<big_integer>(nbi("1234567890987654321")));
+      auto const bi_neg(make_box<big_integer>(nbi("-9876543210123456789")));
+      auto const bi_zero(make_box<big_integer>(0));
 
       SUBCASE("to_string()")
       {
@@ -182,40 +182,40 @@ namespace jank::runtime::obj
 
       SUBCASE("big_integer vs big_integer")
       {
-        CHECK_LT(bi_10->compare(*bi_20.erase()), 0);
-        CHECK_GT(bi_20->compare(*bi_10.erase()), 0);
-        CHECK_EQ(bi_10->compare(*make_box<big_integer>(10).erase()), 0);
-        CHECK_GT(bi_10->compare(*bi_10_neg.erase()), 0);
-        CHECK_LT(bi_10_neg->compare(*bi_10.erase()), 0);
-        CHECK_GT(bi_large->compare(*bi_20.erase()), 0);
+        CHECK_LT(bi_10.compare(bi_20), 0);
+        CHECK_GT(bi_20.compare(bi_10), 0);
+        CHECK_EQ(bi_10.compare(make_box<big_integer>(10)), 0);
+        CHECK_GT(bi_10.compare(bi_10_neg), 0);
+        CHECK_LT(bi_10_neg.compare(bi_10), 0);
+        CHECK_GT(bi_large.compare(bi_20), 0);
       }
 
       SUBCASE("big_integer vs integer")
       {
-        CHECK_LT(bi_10->compare(*i_15.erase()), 0);
-        CHECK_EQ(bi_10->compare(*i_10.erase()), 0);
-        CHECK_GT(bi_10->compare(*i_10_neg.erase()), 0);
-        CHECK_GT(bi_large->compare(*make_box<integer>(LLONG_MAX).erase()), 0);
+        CHECK_LT(bi_10.compare(i_15), 0);
+        CHECK_EQ(bi_10.compare(i_10), 0);
+        CHECK_GT(bi_10.compare(i_10_neg), 0);
+        CHECK_GT(bi_large.compare(make_box<integer>(LLONG_MAX)), 0);
       }
 
       SUBCASE("big_integer vs real")
       {
-        CHECK_LT(bi_10->compare(*r_10_5.erase()), 0);
-        CHECK_EQ(bi_10->compare(*r_10.erase()), 0);
-        CHECK_GT(bi_10->compare(*r_neg_10.erase()), 0);
-        CHECK_LT(bi_10_neg->compare(*r_neg_9_5.erase()), 0);
-        CHECK_GT(bi_large->compare(*make_box<real>(static_cast<f64>(LLONG_MAX)).erase()), 0);
+        CHECK_LT(bi_10.compare(r_10_5), 0);
+        CHECK_EQ(bi_10.compare(r_10), 0);
+        CHECK_GT(bi_10.compare(r_neg_10), 0);
+        CHECK_LT(bi_10_neg.compare(r_neg_9_5), 0);
+        CHECK_GT(bi_large.compare(make_box<real>(static_cast<f64>(LLONG_MAX))), 0);
       }
 
       SUBCASE("big_integer vs ratio")
       {
-        CHECK_GT(bi_10->compare(*ratio_half.erase()), 0);
-        CHECK_EQ(make_box<big_integer>(0)->compare(*ratio_half.erase()), -1);
+        CHECK_GT(bi_10.compare(ratio_half), 0);
+        CHECK_EQ(make_box<big_integer>(0).compare(ratio_half), -1);
       }
 
       SUBCASE("big_integer vs incompatible")
       {
-        CHECK_THROWS_AS(bi_10->compare(*bool_true.erase()), std::runtime_error);
+        CHECK_THROWS_AS(bi_10.compare(bool_true), std::runtime_error);
       }
     }
 

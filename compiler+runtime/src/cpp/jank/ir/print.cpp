@@ -54,7 +54,7 @@ namespace jank::ir
     util::format_to(sb,
                     "{:name {} :op :literal :value {} :type \"{}\"}",
                     name,
-                    obj->to_code_string(),
+                    obj.to_code_string(),
                     get_qualified_type_name(type));
   }
 
@@ -681,7 +681,7 @@ namespace jank::ir
           print_indent(sb, indent);
         }
         needs_indent = true;
-        util::format_to(sb, "{} {}", c.first, c.second->to_code_string());
+        util::format_to(sb, "{} {}", c.first, c.second.to_code_string());
       }
     }
     util::format_to(sb, "}\n");

@@ -320,7 +320,7 @@ namespace jank::evaluate
   object_ref eval(expr::call_ref const expr)
   {
     auto source(eval(expr->source_expr));
-    while(source->type == object_type::var)
+    while(source.get_type() == object_type::var)
     {
       source = deref(source);
     }
@@ -431,7 +431,7 @@ namespace jank::evaluate
 
   object_ref eval(expr::primitive_literal_ref const expr)
   {
-    if(expr->data->type == object_type::keyword)
+    if(expr->data.get_type() == object_type::keyword)
     {
       auto const d(expect_object<obj::keyword>(expr->data));
       return __rt_ctx->intern_keyword(d->sym->ns, d->sym->name).expect_ok();

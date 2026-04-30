@@ -30,11 +30,11 @@ namespace jank::runtime::obj
 
   void jit_function::to_string(jtl::string_builder &buff) const
   {
-    auto const name(meta->get(__rt_ctx->intern_keyword("name").expect_ok()));
+    auto const name(meta.get(__rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
       "#object [{} {} {}]",
-      (name->type == object_type::nil ? "unknown" : try_object<persistent_string>(name)->data),
+      (name.get_type() == object_type::nil ? "unknown" : try_object<persistent_string>(name)->data),
       object_type_str(type),
       this);
   }

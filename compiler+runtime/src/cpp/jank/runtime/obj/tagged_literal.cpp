@@ -54,7 +54,7 @@ namespace jank::runtime::obj
 
   uhash tagged_literal::to_hash() const
   {
-    return hash::combine(hash::visit(tag.get()), hash::visit(form.get()));
+    return hash::combine(hash::visit(tag), hash::visit(form));
   }
 
   object_ref tagged_literal::get(object_ref const key, object_ref const fallback) const

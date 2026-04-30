@@ -80,7 +80,7 @@
 (def ^{:arglists '([o])}
   type
   (fn* type [o]
-    (cpp/jank.runtime.object_type_str (cpp/.-type (cpp/* o)))))
+    (cpp/jank.runtime.object_type_str (cpp/.get_type o))))
 
 ; Exceptions
 (def ^{:arglists '([msg map] [msg map cause])
@@ -120,7 +120,7 @@
        :doc "Returns true if x is nil, false otherwise."}
   nil?
   (fn* nil? [o]
-    (cpp/== (cpp/.-type (cpp/* o)) cpp/jank.runtime.object_type.nil)))
+    (cpp/== (cpp/.get_type o) cpp/jank.runtime.object_type.nil)))
 
 (def ^{:arglists '([lhs rhs])
        :doc "Tests if 2 arguments are the same object, meaning the same pointer address."}
@@ -2987,7 +2987,7 @@
                  (symbol? b) (-> bvec (conj b) (conj v))
                  (vector? b) (pvec bvec b v)
                  (map? b) (pmap bvec b v)
-                 :else (throw (str "Unsupported binding form: " b)))))
+                 :else (throw (str "Unsupported binding form: " b (type b))))))
         process-entry (fn process-entry [bvec b]
                         (pb bvec (first b) (second b)))]
     (if (every? symbol? (map first bents))

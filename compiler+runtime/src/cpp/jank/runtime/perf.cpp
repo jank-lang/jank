@@ -28,7 +28,7 @@ namespace jank::runtime::perf
     //config.mWarmup = 1000;
 
     ankerl::nanobench::Bench().config(config).run(static_cast<std::string>(label_str), [&] {
-      auto const res(f->call());
+      auto const res(f.call());
       ankerl::nanobench::doNotOptimizeAway(res);
     });
     return {};
