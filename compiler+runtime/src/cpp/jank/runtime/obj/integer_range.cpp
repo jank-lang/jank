@@ -7,14 +7,14 @@
 
 namespace jank::runtime::obj
 {
-  static bool positive_step_bounds_check(object_ref const val, object_ref const end)
+  static bool positive_step_bounds_check(i64 const val, i64 const end)
   {
-    return lte(end, val);
+    return end <= val;
   }
 
-  static bool negative_step_bounds_check(object_ref const val, object_ref const end)
+  static bool negative_step_bounds_check(i64 const val, i64 const end)
   {
-    return lte(val, end);
+    return val <= end;
   }
 
   integer_range::integer_range()
@@ -22,38 +22,37 @@ namespace jank::runtime::obj
   {
   }
 
-  integer_range::integer_range(object_ref const end)
+  integer_range::integer_range(i64 const end)
     : object{ obj_type, obj_behaviors }
-    , start{ make_box<integer>(0) }
+    , start{ 0 }
     , end{ end }
-    , step{ make_box<integer>(1) }
+    , step{ 1 }
     , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
   {
   }
 
-  integer_range::integer_range(object_ref const start, object_ref const end)
+  integer_range::integer_range(i64 const start, i64 const end)
     : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
-    , step{ make_box<integer>(1) }
+    , step{ 1 }
     , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
   {
   }
 
-  integer_range::integer_range(object_ref const start, object_ref const end, object_ref const step)
+  integer_range::integer_range(i64 const start, i64 const end, i64 const step)
     : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
     , step{ step }
-    , bounds_check{ lt(static_cast<i64>(0), step.erase())
-                      ? static_cast<bounds_check_t>(positive_step_bounds_check)
-                      : static_cast<bounds_check_t>(negative_step_bounds_check) }
+    , bounds_check{ 0 < step ? static_cast<bounds_check_t>(positive_step_bounds_check)
+                             : static_cast<bounds_check_t>(negative_step_bounds_check) }
   {
   }
 
-  integer_range::integer_range(object_ref const start,
-                               object_ref const end,
-                               object_ref const step,
+  integer_range::integer_range(i64 const start,
+                               i64 const end,
+                               i64 const step,
                                integer_range::bounds_check_t const bounds_check)
     : object{ obj_type, obj_behaviors }
     , start{ start }
@@ -63,38 +62,38 @@ namespace jank::runtime::obj
   {
   }
 
-  object_ref integer_range::create(object_ref const end)
+  object_ref integer_range::create(i64 const end)
   {
-    if(is_pos(end))
+    if(0 < end)
     {
-      return make_box<integer_range>(make_box<integer>(0),
+      return make_box<integer_range>(0,
                                      end,
-                                     make_box<integer>(1),
+                                     1,
                                      static_cast<bounds_check_t>(positive_step_bounds_check));
     }
     return persistent_list::empty();
   }
 
-  object_ref integer_range::create(object_ref const start, object_ref const end)
+  object_ref integer_range::create(i64 const start, i64 const end)
   {
-    return create(start, end, make_box<integer>(1));
+    return create(start, end, 1);
   }
 
-  object_ref
-  integer_range::create(object_ref const start, object_ref const end, object_ref const step)
+  object_ref integer_range::create(i64 const start, i64 const end, i64 const step)
   {
-    if((is_pos(step) && lt(end, start)) || (is_neg(step) && lt(start, end)) || is_equiv(start, end))
+    if(((0 < step) && (end < start)) || ((step < 0) && (start < end)) || (start == end))
     {
       return persistent_list::empty();
     }
-    else if(is_zero(step))
+
+    else if(step == 0)
     {
-      return repeat::create(start);
+      return repeat::create(make_box(start));
     }
     return make_box<integer_range>(start,
                                    end,
                                    step,
-                                   is_pos(step)
+                                   0 < step
                                      ? static_cast<bounds_check_t>(positive_step_bounds_check)
                                      : static_cast<bounds_check_t>(negative_step_bounds_check));
   }
@@ -111,7 +110,7 @@ namespace jank::runtime::obj
 
   object_ref integer_range::first() const
   {
-    return start;
+    return make_box(start);
   }
 
   integer_range_ref integer_range::next() const
@@ -120,7 +119,7 @@ namespace jank::runtime::obj
     {
       return {};
     }
-    return make_box<integer_range>(add(start, step), end, step, bounds_check);
+    return make_box<integer_range>(start + step, end, step, bounds_check);
   }
 
   integer_range_ref integer_range::next_in_place()
@@ -129,7 +128,7 @@ namespace jank::runtime::obj
     {
       return {};
     }
-    start = add(start, step);
+    start += step;
     return this;
   }
 
@@ -178,13 +177,13 @@ namespace jank::runtime::obj
 
   usize integer_range::count() const
   {
-    auto const s{ runtime::to_i64(step) };
+    auto const s{ step };
     if(s == 0)
     {
       throw std::runtime_error("integer_range step shouldn't be 0.");
     }
 
-    auto const diff{ runtime::to_i64(sub(end, start)) };
+    auto const diff{ end - start };
     auto const offset{ s > 0 ? -1 : 1 };
 
     if((s > 0 && diff > std::numeric_limits<i64>::max() - s + offset)
