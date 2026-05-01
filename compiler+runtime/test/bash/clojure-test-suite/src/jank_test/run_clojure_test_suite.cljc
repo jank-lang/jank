@@ -9,6 +9,7 @@
     ; clojure.core-test.ancestors ; analyze/unresolved-symbol error: Unable to resolve symbol 'Object'.
     clojure.core-test.and
     clojure.core-test.any-qmark
+    clojure.core-test.apply
     clojure.core-test.assoc
     clojure.core-test.assoc-bang
     ; clojure.core-test.associative-qmark ; TODO: port to-array
@@ -65,6 +66,7 @@
     ; clojure.core-test.empty ; FIXME: Failing tests.
     clojure.core-test.empty-qmark
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
+    ; clojure.core-test.eval ; libc++abi: terminating due to uncaught exception of type jtl::ref<jank::error::base>
     clojure.core-test.even-qmark
     clojure.core-test.false-qmark
     clojure.core-test.ffirst
@@ -79,6 +81,7 @@
     ; clojure.core-test.get ; TODO: port to-array
     ; clojure.core-test.get-in ; FIXME: Failing tests. 
     clojure.core-test.gt
+    clojure.core-test.gt-eq
     clojure.core-test.hash-map
     clojure.core-test.hash-set
     clojure.core-test.ident-qmark
@@ -141,6 +144,7 @@
     clojure.core-test.persistent-bang
     ; clojure.core-test.plus ; FIXME: Failing tests.
     ; clojure.core-test.plus-squote ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.BigInt'.
+    clojure.core-test.pop
     clojure.core-test.pop-bang
     clojure.core-test.pos-int-qmark
     clojure.core-test.pos-qmark
@@ -203,6 +207,7 @@
     ; clojure.core-test.take-nth ; FIXME: Failing tests.
     clojure.core-test.take-while
     ; clojure.core-test.taps ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.IPending'.
+    ; clojure.core-test.transient ; analyze/macro-expansion-exception error: invalid call to #object [unknown jit_function 0x104434c80] with 3 args provided
     clojure.core-test.true-qmark
     clojure.core-test.underive
     clojure.core-test.unsigned-bit-shift-right
