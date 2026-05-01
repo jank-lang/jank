@@ -845,7 +845,7 @@ namespace jank::runtime
         [](auto const typed_l, auto const r) -> object_ref {
           return visit_number_like(
             [](auto const typed_r, auto const typed_l) -> object_ref {
-              return typed_r->data < typed_l->data ? typed_r.erase() : typed_l.erase();
+              return typed_l->data < typed_r->data ? typed_r.erase() : typed_l.erase();
             },
             r,
             typed_l);
@@ -857,7 +857,7 @@ namespace jank::runtime
     {
       return visit_number_like(
         [](auto const typed_l, auto const r) -> object_ref {
-          return r->data < typed_l->data ? r.erase() : typed_l.erase();
+          return typed_l->data < r->data ? r.erase() : typed_l.erase();
         },
         l,
         r);
@@ -866,7 +866,7 @@ namespace jank::runtime
     {
       return visit_number_like(
         [](auto const typed_r, auto const l) {
-          return typed_r->data < l->data ? typed_r.erase() : l.erase();
+          return l->data < typed_r->data ? typed_r.erase() : l.erase();
         },
         r,
         l);
@@ -893,7 +893,7 @@ namespace jank::runtime
     {
       return visit_number_like(
         [](auto const typed_r, L const l) -> object_ref {
-          return typed_r->data < l ? typed_r.erase() : make_box(l).erase();
+          return l < typed_r->data ? typed_r.erase() : make_box(l).erase();
         },
         r,
         l);
@@ -924,7 +924,7 @@ namespace jank::runtime
     {
       return visit_number_like(
         [](auto const typed_l, R const r) -> object_ref {
-          return r < typed_l ? make_box(r).erase() : typed_l.erase();
+          return typed_l < r ? make_box(r).erase() : typed_l.erase();
         },
         l,
         r);
