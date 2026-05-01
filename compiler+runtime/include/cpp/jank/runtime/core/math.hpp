@@ -36,6 +36,8 @@ namespace jank::runtime
 
   /* Only for fixed integer sizes (i.e. integer and small_integer). */
   i64 to_i64(object_ref const o);
+  /* Only for fixed real sizes (i.e. real and small_real). */
+  f64 to_f64(object_ref const o);
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)

@@ -101,7 +101,7 @@ namespace jank::runtime
     if(detail::min_small_integer <= i && i <= detail::max_small_integer)
 #pragma clang diagnostic pop
     {
-      return detail::as_ptr<object *>(i);
+      return detail::tag(static_cast<i32>(i));
     }
     return make_box<obj::integer>(static_cast<i64>(i));
   }

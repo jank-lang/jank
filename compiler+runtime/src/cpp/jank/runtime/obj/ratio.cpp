@@ -143,9 +143,19 @@ namespace jank::runtime::obj
       return data == expect_object<integer>(&o)->data;
     }
 
+    if(o.type == object_type::small_integer)
+    {
+      return data == expect_object<small_integer>(&o)->data;
+    }
+
     if(o.type == object_type::real)
     {
       return data == expect_object<real>(&o)->data;
+    }
+
+    if(o.type == object_type::small_real)
+    {
+      return data == expect_object<small_real>(&o)->data;
     }
 
     if(o.type == object_type::ratio)

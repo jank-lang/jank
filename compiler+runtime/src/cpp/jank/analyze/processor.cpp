@@ -3928,11 +3928,15 @@ namespace jank::analyze
         break;
       case object_type::small_integer:
         literal_res = cpp_util::resolve_literal_value(
-          util::format("static_cast<jtl::i64>({})", runtime::detail::as_int(arg.data)));
+          util::format("static_cast<jtl::i32>({})", runtime::detail::as_integer(arg.raw())));
         break;
       case object_type::real:
         literal_res = cpp_util::resolve_literal_value(
           util::format("static_cast<jtl::f64>({})", expect_object<runtime::obj::real>(arg)->data));
+        break;
+      case object_type::small_real:
+        literal_res = cpp_util::resolve_literal_value(
+          util::format("static_cast<jtl::f64>({})", runtime::detail::as_real(arg.raw())));
         break;
       case object_type::boolean:
         literal_res = cpp_util::resolve_literal_value(

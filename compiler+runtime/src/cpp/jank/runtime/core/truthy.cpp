@@ -10,7 +10,11 @@ namespace jank::runtime
       return false;
     }
 
-    if(detail::is_small_int(o.data))
+    if(detail::is_small_int(o.raw()))
+    {
+      return true;
+    }
+    if(detail::is_small_real(o.raw()))
     {
       return true;
     }

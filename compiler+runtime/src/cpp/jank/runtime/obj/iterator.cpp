@@ -42,7 +42,7 @@ namespace jank::runtime::obj
 
     auto const next(dynamic_call(fn, current));
     auto const ret(make_box<iterator>(fn, next));
-    cached_next.store(reinterpret_cast<iterator *>(ret.data));
+    cached_next.store(reinterpret_cast<iterator *>(ret.raw()));
 
     return ret;
   }
@@ -53,7 +53,7 @@ namespace jank::runtime::obj
     if(n.is_some())
     {
       current = n->first();
-      cached_next.store(reinterpret_cast<iterator *>(jank_nil.data));
+      cached_next.store(reinterpret_cast<iterator *>(jank_nil.raw()));
     }
     else
     {

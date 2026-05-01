@@ -102,7 +102,7 @@ namespace jank::runtime::obj
     {
       return 1;
     }
-    return hash::ordered(s.erase().data);
+    return hash::ordered(s.erase());
   }
 
   cons_ref lazy_sequence::conj(object_ref const head) const

@@ -42,7 +42,7 @@ namespace jank::detail
   object_ref to_runtime_data(oref<T> const &d)
   {
     jtl::string_builder sb;
-    return make_box(sb("oref(")(d.data)(")").release());
+    return make_box(sb("oref(")(d.raw())(")").release());
   }
 
   template <typename T>

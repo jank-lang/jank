@@ -29,7 +29,7 @@ jank::runtime::obj::integer_ref _jank_int(jtl::i64 const i)
   return jank::runtime::make_box<jank::runtime::obj::integer>(i);
 }
 
-jank::runtime::obj::small_integer_ref _jank_small_int(jtl::i64 const i)
+jank::runtime::obj::small_integer_ref _jank_small_int(jtl::i32 const i)
 {
   return i;
 }
@@ -37,6 +37,11 @@ jank::runtime::obj::small_integer_ref _jank_small_int(jtl::i64 const i)
 jank::runtime::obj::real_ref _jank_real(jtl::f64 const r)
 {
   return jank::runtime::make_box<jank::runtime::obj::real>(r);
+}
+
+jank::runtime::obj::small_real_ref _jank_small_real(jtl::f64 const r)
+{
+  return r;
 }
 
 jank::runtime::obj::symbol_ref

@@ -31,6 +31,7 @@ namespace jank::runtime
     using integer_ref = oref<integer>;
     using small_integer_ref = oref<small_integer>;
     using real_ref = oref<real>;
+    using small_real_ref = oref<small_real>;
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
@@ -61,31 +62,108 @@ namespace jank::runtime
    * is used when we visit an `object_ref` which holds an inline integer and we need a fully typed
    * object. */
 
-  /* TODO: Support inline doubles. */
+  struct object;
 
   namespace detail
   {
-    constexpr char integer_tag{ 0b1 };
-    constexpr char integer_tag_mask{ 0b1 };
-    constexpr char integer_shift{ 1 };
-    constexpr i64 max_small_integer{ std::numeric_limits<i64>::max() >> integer_shift };
-    constexpr i64 min_small_integer{ std::numeric_limits<i64>::min() >> integer_shift };
+    // All NaN-space values have the top 13 bits set (IEEE quiet-NaN envelope).
+    constexpr u64 nan_bits{ 0xFFF0'0000'0000'0000ull };
 
-    inline bool is_small_int(void const *data)
+    // Integers: one extra tag bit above the pointer region.
+    // High 16 bits = 0xFFF1 distinguishes ints from pointers (0xFFFF...).
+    constexpr u64 integer_nan_tag{ 0xFFF1'0000'0000'0000ull };
+    constexpr u64 integer_value_mask{ 0x0000'0000'FFFF'FFFFull };
+
+    // Pointers: 0xFFFE'xxxx'xxxx'xxxx — NaN space, no low bits set, distinct from ints
+    constexpr u64 pointer_nan_tag{ 0xFFFC'0000'0000'0000ull };
+    constexpr u64 pointer_addr_mask{ 0x0000'FFFF'FFFF'FFFFull };
+
+    // Doubles: biased so their bit patterns never overlap NaN space.
+    // Adding the offset pushes all doubles (including infinities) below nan_bits.
+    constexpr u64 double_bias{ 0x0001'0000'0000'0000ull };
+
+    constexpr i32 min_small_integer{ std::numeric_limits<i32>::min() };
+    constexpr i32 max_small_integer{ std::numeric_limits<i32>::max() };
+
+    inline bool is_small_real(void * const val)
     {
-      return (reinterpret_cast<int64_t>(data) & integer_tag_mask) == integer_tag;
+      return (reinterpret_cast<u64>(val) >> 48) == 0xFFFE;
     }
 
-    inline i64 as_int(void const *data)
+    inline bool is_small_int(void * const val)
     {
-      /* NOLINTNEXTLINE(cppcoreguidelines-narrowing-conversions, bugprone-narrowing-conversions) */
-      return reinterpret_cast<i64>(data) >> integer_shift;
+      return (reinterpret_cast<u64>(val) & ~integer_value_mask) == integer_nan_tag;
+    }
+
+    inline bool is_pointer(void * const val)
+    {
+      return (reinterpret_cast<u64>(val) >> 48) == 0xFFFC;
+    }
+
+    inline f64 as_real(void * const val)
+    {
+      jank_debug_assert(is_small_real(val));
+      u64 bits{ reinterpret_cast<u64>(val) - double_bias };
+      double result;
+      std::memcpy(&result, &bits, sizeof(result));
+      return result;
+    }
+
+    inline i32 as_integer(void * const val)
+    {
+      jank_debug_assert(is_small_int(val));
+      // Mask the low 32 bits and sign-extend to i32.
+      return static_cast<i32>(reinterpret_cast<u64>(val) & integer_value_mask);
     }
 
     template <typename T>
-    T as_ptr(i64 const data)
+    T *as_pointer(T * const val)
     {
-      return reinterpret_cast<T>((data << integer_shift) | integer_tag_mask);
+      jank_debug_assert(is_pointer(val));
+      return reinterpret_cast<T *>(reinterpret_cast<u64>(val) & pointer_addr_mask);
+    }
+
+    struct tagged_ptr
+    {
+      tagged_ptr() = default;
+
+      tagged_ptr(object *data)
+        : data{ data }
+      {
+      }
+
+      tagged_ptr(void *data)
+        : data{ reinterpret_cast<object *>(data) }
+      {
+      }
+
+      object *data{};
+    };
+
+    inline tagged_ptr tag(f64 const d)
+    {
+      u64 bits;
+      std::memcpy(&bits, &d, sizeof(bits));
+      // Raw NaNs would corrupt the tagging space — normalise them.
+      if((bits & nan_bits) == nan_bits)
+      {
+        bits = nan_bits; // collapse to a single canonical NaN
+      }
+      return { reinterpret_cast<object *>(bits + double_bias) };
+    }
+
+    inline tagged_ptr tag(i32 const val)
+    {
+      return { reinterpret_cast<object *>(
+        integer_nan_tag | (static_cast<u64>(static_cast<u32>(val)) & integer_value_mask)) };
+    }
+
+    inline tagged_ptr tag(void * const ptr)
+    {
+      u64 val = reinterpret_cast<u64>(ptr);
+      jank_debug_assert((val & ~pointer_addr_mask) == 0); // must fit in 48 bits
+      jank_debug_assert((val & 0b111) == 0); // GC requires alignment
+      return { reinterpret_cast<object *>(pointer_nan_tag | val) };
     }
   }
 
@@ -114,51 +192,64 @@ namespace jank::runtime
     }
 
     oref(value_type * const data) noexcept
-      : data{ data }
+      : data{ detail::tag(data).data }
     {
-      jank_assert(data);
+      jank_debug_assert(data);
     }
 
     oref(value_type const * const data) noexcept
-      : data{ const_cast<value_type *>(data) }
+      : data{ detail::tag(const_cast<value_type *>(data)).data }
     {
-      jank_assert(data);
+      jank_debug_assert(data);
     }
 
     /* We use this one during codegen. */
     oref(void * const data) noexcept
-      : data{ static_cast<value_type *>(data) }
+      : data{ detail::tag(static_cast<value_type *>(data)).data }
     {
-      jank_assert(this->data);
+      jank_debug_assert(this->data);
     }
 
     template <typename T>
     requires behavior::object_like<T>
     oref(T * const typed_data) noexcept
-      : data{ typed_data }
+      : data{ detail::tag(typed_data).data }
     {
-      jank_assert(this->data);
+      jank_debug_assert(this->data);
+    }
+
+    oref(detail::tagged_ptr const p) noexcept
+      : data{ p.data }
+    {
+      jank_debug_assert(this->data);
     }
 
     template <typename T>
     requires behavior::object_like<T>
     oref(T const * const typed_data) noexcept
-      : data{ const_cast<T *>(typed_data) }
+      : data{ detail::tag(const_cast<T *>(typed_data)).data }
     {
-      jank_assert(this->data);
+      jank_debug_assert(this->data);
     }
 
     template <typename T>
-    requires(behavior::object_like<T> && !jtl::is_same<T, obj::small_integer>)
+    requires(behavior::object_like<T> && !jtl::is_any_same<T, obj::small_integer, obj::small_real>)
     oref(oref<T> const &typed_data) noexcept
-      : data{ typed_data.erase().data }
+      : data{ typed_data.erase().raw() }
     {
     }
 
     template <typename T>
     requires(jtl::is_same<T, obj::small_integer>)
     oref(oref<T> const &typed_data) noexcept
-      : data{ detail::as_ptr<object *>(typed_data.data) }
+      : data{ detail::tag(typed_data.raw()).data }
+    {
+    }
+
+    template <typename T>
+    requires(jtl::is_same<T, obj::small_real>)
+    oref(oref<T> const &typed_data) noexcept
+      : data{ detail::tag(typed_data.raw()).data }
     {
     }
 
@@ -166,17 +257,17 @@ namespace jank::runtime
 
     void reset() noexcept
     {
-      data = std::bit_cast<object *>(&_jank_nil);
+      data = detail::tag(std::bit_cast<object *>(&_jank_nil)).data;
     }
 
     void reset(object * const o) noexcept
     {
-      data = o;
+      data = detail::tag(o).data;
     }
 
     void reset(oref<object> const &o) noexcept
     {
-      data = o.data;
+      data = o.raw();
     }
 
     oref &operator=(oref const &rhs) noexcept = default;
@@ -186,37 +277,37 @@ namespace jank::runtime
     requires behavior::object_like<T>
     oref &operator=(oref<T> const &rhs) noexcept
     {
-      if(data == rhs.data)
+      if(data == rhs.erase().raw())
       {
         return *this;
       }
 
-      data = rhs.get();
+      data = rhs.erase().raw();
       return *this;
     }
 
     bool operator==(oref const &rhs) const noexcept
     {
-      return data == rhs.data;
+      return data == rhs.raw();
     }
 
     template <typename T>
     requires behavior::object_like<T>
     bool operator==(oref<T> const &rhs) const noexcept
     {
-      return data == rhs.erase().data;
+      return data == rhs.erase().raw();
     }
 
     bool operator!=(oref const &rhs) const noexcept
     {
-      return data != rhs.data;
+      return data != rhs.raw();
     }
 
     template <typename T>
     requires behavior::object_like<T>
     bool operator!=(oref<T> const &rhs) const noexcept
     {
-      return data != rhs.erase().data;
+      return data != rhs.erase().raw();
     }
 
     oref &operator=(jtl::nullptr_t) noexcept = delete;
@@ -234,9 +325,13 @@ namespace jank::runtime
       {
         return true;
       }
+      if(detail::is_small_real(data))
+      {
+        return true;
+      }
 
       /* NOLINTNEXTLINE(clang-analyzer-core.NullDereference): I cannot see how this can happen. We initialize to non-null and always ensure non-null on mutation. That's the whole point of this type. */
-      return data->type != object_type::nil;
+      return ptr()->type != object_type::nil;
     }
 
     bool is_nil() const noexcept
@@ -245,8 +340,12 @@ namespace jank::runtime
       {
         return false;
       }
+      if(detail::is_small_real(data))
+      {
+        return false;
+      }
 
-      return data->type == object_type::nil;
+      return ptr()->type == object_type::nil;
     }
 
     /* object_like */
@@ -256,130 +355,188 @@ namespace jank::runtime
       {
         return object_type::small_integer;
       }
-      return data->type;
+      if(detail::is_small_real(data))
+      {
+        return object_type::small_real;
+      }
+
+      return ptr()->type;
     }
 
     bool equal(object_ref const o) const
     {
       if(detail::is_small_int(data))
       {
-        if(detail::is_small_int(o.data))
+        if(detail::is_small_int(o.raw()))
         {
-          return detail::as_int(data) == detail::as_int(o.data);
+          return detail::as_integer(data) == detail::as_integer(o.raw());
         }
 
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return o.equal(&i);
       }
-      else if(detail::is_small_int(o.data))
+      else if(detail::is_small_int(o.raw()))
       {
-        obj::small_integer const i{ detail::as_int(o.data) };
-        return data->equal(i);
+        obj::small_integer const i{ detail::as_integer(o.raw()) };
+        return ptr()->equal(i);
       }
-      return data->equal(*o.data);
+
+      if(detail::is_small_real(data))
+      {
+        if(detail::is_small_real(o.raw()))
+        {
+          return detail::as_real(data) == detail::as_real(o.raw());
+        }
+
+        obj::small_real i{ detail::as_real(data) };
+        return o.equal(&i);
+      }
+      else if(detail::is_small_real(o.raw()))
+      {
+        obj::small_real i{ detail::as_real(o.raw()) };
+        return ptr()->equal(i);
+      }
+
+      return ptr()->equal(*o.ptr());
     }
 
     jtl::immutable_string to_string() const
     {
       if(detail::is_small_int(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.to_string();
       }
-      return data->to_string();
+      if(detail::is_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.to_string();
+      }
+
+      return ptr()->to_string();
     }
 
     void to_string(jtl::string_builder &sb) const
     {
       if(detail::is_small_int(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         i.to_string(sb);
         return;
       }
-      data->to_string(sb);
+      if(detail::is_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        i.to_string(sb);
+        return;
+      }
+
+      ptr()->to_string(sb);
     }
 
     jtl::immutable_string to_code_string() const
     {
       if(detail::is_small_int(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.to_code_string();
       }
-      return data->to_code_string();
+      if(detail::is_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.to_code_string();
+      }
+
+      return ptr()->to_code_string();
     }
 
     uhash to_hash() const
     {
       if(detail::is_small_int(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.to_hash();
       }
-      return data->to_hash();
+      if(detail::is_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.to_hash();
+      }
+
+      return ptr()->to_hash();
     }
 
     bool has_behavior(object_behavior const b) const
     {
       if(detail::is_small_int(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.has_behavior(b);
       }
-      return data->has_behavior(b);
+      if(detail::is_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.has_behavior(b);
+      }
+
+      return ptr()->has_behavior(b);
     }
 
     /* behavior::call */
     object_ref call() const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.call();
       }
-      return data->call();
+
+      return ptr()->call();
     }
 
     object_ref call(object_ref const a1) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1);
       }
-      return data->call(a1);
+
+      return ptr()->call(a1);
     }
 
     object_ref call(object_ref const a1, object_ref const a2) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2);
       }
-      return data->call(a1, a2);
+
+      return ptr()->call(a1, a2);
     }
 
     object_ref call(object_ref const a1, object_ref const a2, object_ref const a3) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3);
       }
-      return data->call(a1, a2, a3);
+
+      return ptr()->call(a1, a2, a3);
     }
 
     object_ref
     call(object_ref const a1, object_ref const a2, object_ref const a3, object_ref const a4) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4);
       }
-      return data->call(a1, a2, a3, a4);
+
+      return ptr()->call(a1, a2, a3, a4);
     }
 
     object_ref call(object_ref const a1,
@@ -388,12 +545,13 @@ namespace jank::runtime
                     object_ref const a4,
                     object_ref const a5) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5);
       }
-      return data->call(a1, a2, a3, a4, a5);
+
+      return ptr()->call(a1, a2, a3, a4, a5);
     }
 
     object_ref call(object_ref const a1,
@@ -403,12 +561,13 @@ namespace jank::runtime
                     object_ref const a5,
                     object_ref const a6) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5, a6);
       }
-      return data->call(a1, a2, a3, a4, a5, a6);
+
+      return ptr()->call(a1, a2, a3, a4, a5, a6);
     }
 
     object_ref call(object_ref const a1,
@@ -419,12 +578,13 @@ namespace jank::runtime
                     object_ref const a6,
                     object_ref const a7) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7);
       }
-      return data->call(a1, a2, a3, a4, a5, a6, a7);
+
+      return ptr()->call(a1, a2, a3, a4, a5, a6, a7);
     }
 
     object_ref call(object_ref const a1,
@@ -436,12 +596,13 @@ namespace jank::runtime
                     object_ref const a7,
                     object_ref const a8) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8);
       }
-      return data->call(a1, a2, a3, a4, a5, a6, a7, a8);
+
+      return ptr()->call(a1, a2, a3, a4, a5, a6, a7, a8);
     }
 
     object_ref call(object_ref const a1,
@@ -454,12 +615,13 @@ namespace jank::runtime
                     object_ref const a8,
                     object_ref const a9) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
       }
-      return data->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+
+      return ptr()->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
 
     object_ref call(object_ref const a1,
@@ -473,63 +635,69 @@ namespace jank::runtime
                     object_ref const a9,
                     object_ref const a10) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
       }
-      return data->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+
+      return ptr()->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
     callable_arity_flags get_arity_flags() const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
         return 0;
       }
-      return data->get_arity_flags();
+
+      return ptr()->get_arity_flags();
     }
 
     /* behavior::get */
     object_ref get(object_ref const key) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.get(key);
       }
-      return data->get(key);
+
+      return ptr()->get(key);
     }
 
     object_ref get(object_ref const key, object_ref const fallback) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.get(key, fallback);
       }
-      return data->get(key, fallback);
+
+      return ptr()->get(key, fallback);
     }
 
     bool contains(object_ref const key) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.contains(key);
       }
-      return data->contains(key);
+
+      return ptr()->contains(key);
     }
 
     /* behavior::find */
     object_ref find(object_ref key) const
     {
-      if(detail::is_small_int(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.find(key);
       }
-      return data->find(key);
+
+      return ptr()->find(key);
     }
 
     /* behavior::compare */
@@ -537,25 +705,55 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        if(detail::is_small_int(o.data))
+        if(detail::is_small_int(o.raw()))
         {
-          auto const l{ detail::as_int(data) };
-          auto const r{ detail::as_int(o.data) };
+          auto const l{ detail::as_integer(data) };
+          auto const r{ detail::as_integer(o.raw()) };
           return (r < l) - (l < r);
         }
 
-        obj::small_integer const i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return o.compare(&i);
       }
-      else if(detail::is_small_int(o.data))
+      else if(detail::is_small_int(o.raw()))
       {
-        obj::small_integer const i{ detail::as_int(o.data) };
-        return data->compare(i);
+        obj::small_integer const i{ detail::as_integer(o.raw()) };
+        return ptr()->compare(i);
       }
-      return data->compare(*o.data);
+
+      if(detail::is_small_real(data))
+      {
+        if(detail::is_small_real(o.raw()))
+        {
+          auto const l{ detail::as_real(data) };
+          auto const r{ detail::as_real(o.raw()) };
+          return (r < l) - (l < r);
+        }
+
+        obj::small_real i{ detail::as_real(data) };
+        return o.compare(&i);
+      }
+      else if(detail::is_small_real(o.raw()))
+      {
+        obj::small_real i{ detail::as_real(o.raw()) };
+        return ptr()->compare(i);
+      }
+
+      return ptr()->compare(*o.ptr());
     }
 
-    value_type *data{ std::bit_cast<object *>(&_jank_nil) };
+    value_type *raw() const
+    {
+      return data;
+    }
+
+    value_type *ptr() const
+    {
+      return detail::as_pointer(data);
+    }
+
+  private:
+    value_type *data{ detail::tag(std::bit_cast<object *>(&_jank_nil)).data };
   };
 
   /* This specialization of oref is for fully-typed objects like
@@ -581,33 +779,39 @@ namespace jank::runtime
     oref(jtl::remove_const_t<T> * const data) noexcept
       : data{ data }
     {
-      jank_assert(this->data);
+      jank_debug_assert(this->data);
     }
 
     oref(T const * const data) noexcept
       : data{ const_cast<T *>(data) }
     {
-      jank_assert(this->data);
+      jank_debug_assert(this->data);
     }
 
     /* We use this one during codegen. */
     oref(void * const data) noexcept
       : data{ static_cast<T *>(data) }
     {
-      jank_assert(this->data);
+      jank_debug_assert(this->data);
+    }
+
+    oref(detail::tagged_ptr const p) noexcept
+      : data{ p.data }
+    {
+      jank_debug_assert(this->data);
     }
 
     template <typename C>
     requires jtl::is_convertible<C *, T *>
     oref(oref<C> const &data) noexcept
-      : data{ data.data }
+      : data{ data.ptr() }
     {
     }
 
     template <typename C>
     requires(C::obj_type == object_type::nil)
     oref(oref<C> const &data) noexcept
-      : data{ data.data }
+      : data{ data.ptr() }
     {
     }
 
@@ -625,7 +829,7 @@ namespace jank::runtime
 
     void reset(oref<object> const &o) noexcept
     {
-      data = o.data;
+      data = o.ptr();
     }
 
     void reset(T * const o) noexcept
@@ -635,54 +839,48 @@ namespace jank::runtime
 
     void reset(oref<T> const &o) noexcept
     {
-      data = o.data;
+      data = o.ptr();
     }
 
     T *operator->() const noexcept
     {
       /* TODO: Add type name. */
-      //jank_assert_fmt(*this, "Null reference on oref<{}>", jtl::type_name<T>());
-      jank_assert(is_some());
-
-      static_assert(!jtl::is_same<T, obj::small_integer>,
-                    "operator-> is not supported for small_integer_ref");
+      //jank_debug_assert_fmt(*this, "Null reference on oref<{}>", jtl::type_name<T>());
+      jank_debug_assert(is_some());
 
       return reinterpret_cast<T *>(data);
     }
 
     T &operator*() const noexcept
     {
-      //jank_assert_fmt(*this, "Null reference on oref<{}>", jtl::type_name<T>());
-      jank_assert(is_some());
-
-      static_assert(!jtl::is_same<T, obj::small_integer>,
-                    "operator* is not supported for small_integer_ref");
+      //jank_debug_assert_fmt(*this, "Null reference on oref<{}>", jtl::type_name<T>());
+      jank_debug_assert(is_some());
 
       return *reinterpret_cast<T *>(data);
     }
 
     bool operator==(oref<object> const &rhs) const
     {
-      return erase().data == rhs;
+      return erase() == rhs;
     }
 
     bool operator!=(oref<object> const &rhs) const
     {
-      return erase().data != rhs;
+      return erase() != rhs;
     }
 
     template <typename C>
     requires behavior::object_like<C>
     bool operator==(oref<C> const &rhs) const
     {
-      return data == rhs.data;
+      return data == rhs.ptr();
     }
 
     template <typename C>
     requires behavior::object_like<C>
     bool operator!=(oref<C> const &rhs) const
     {
-      return data != rhs.data;
+      return data != rhs.ptr();
     }
 
     oref &operator=(oref const &rhs) noexcept = default;
@@ -696,7 +894,7 @@ namespace jank::runtime
       }
 
       data = rhs;
-      jank_assert(data);
+      jank_debug_assert(data);
       return *this;
     }
 
@@ -708,7 +906,7 @@ namespace jank::runtime
       }
 
       data = const_cast<T *>(rhs);
-      jank_assert(data);
+      jank_debug_assert(data);
       return *this;
     }
 
@@ -729,6 +927,7 @@ namespace jank::runtime
     bool operator==(jtl::nullptr_t) noexcept = delete;
     bool operator!=(jtl::nullptr_t) noexcept = delete;
 
+    /* TODO: Remove these get() fns. */
     object *get() const noexcept
     {
       return static_cast<object *>(static_cast<T *>(data));
@@ -769,12 +968,17 @@ namespace jank::runtime
       {
         return o.is_nil();
       }
-      if(detail::is_small_int(o.data))
+      if(detail::is_small_int(o.raw()))
       {
-        obj::small_integer const i{ detail::as_int(o.data) };
+        obj::small_integer const i{ detail::as_integer(o.raw()) };
         return static_cast<T *>(data)->equal(i);
       }
-      return static_cast<T *>(data)->equal(*o.data);
+      if(detail::is_small_real(o.raw()))
+      {
+        obj::small_real i{ detail::as_real(o.raw()) };
+        return static_cast<T *>(data)->equal(i);
+      }
+      return static_cast<T *>(data)->equal(*o.ptr());
     }
 
     jtl::immutable_string to_string() const
@@ -1015,16 +1219,31 @@ namespace jank::runtime
     {
       if(is_nil())
       {
-        return _jank_nil.compare(*o.data);
+        return _jank_nil.compare(*o.ptr());
       }
-      if(detail::is_small_int(o.data))
+      if(detail::is_small_int(o.raw()))
       {
-        obj::small_integer const i{ detail::as_int(o.data) };
+        obj::small_integer const i{ detail::as_integer(o.raw()) };
         return static_cast<T *>(data)->compare(i);
       }
-      return static_cast<T *>(data)->compare(*o.data);
+      return static_cast<T *>(data)->compare(*o.ptr());
     }
 
+    void *raw() const
+    {
+      if(is_nil())
+      {
+        return reinterpret_cast<void *>(const_cast<obj::nil *>(&_jank_nil));
+      }
+      return data;
+    }
+
+    value_type *ptr() const
+    {
+      return reinterpret_cast<value_type *>(data);
+    }
+
+  private:
     void *data{ std::bit_cast<void *>(&_jank_nil) };
   };
 
@@ -1045,12 +1264,22 @@ namespace jank::runtime
     }
 
     oref(void * const data) noexcept
-      : data{ detail::as_int(data) }
+      : data{ detail::as_integer(data) }
+    {
+    }
+
+    oref(detail::tagged_ptr const p) noexcept
+      : data{ detail::as_integer(p.data) }
+    {
+    }
+
+    oref(i32 const data) noexcept
+      : data{ data }
     {
     }
 
     oref(i64 const data) noexcept
-      : data{ data }
+      : data{ static_cast<i32>(data) }
     {
     }
 
@@ -1058,18 +1287,18 @@ namespace jank::runtime
 
     bool operator==(oref<object> const &rhs) const
     {
-      if(detail::is_small_int(rhs.data))
+      if(detail::is_small_int(rhs.raw()))
       {
-        return data == detail::as_int(rhs.data);
+        return data == detail::as_integer(rhs.raw());
       }
       return false;
     }
 
     bool operator!=(oref<object> const &rhs) const
     {
-      if(detail::is_small_int(rhs.data))
+      if(detail::is_small_int(rhs.raw()))
       {
-        return data != detail::as_int(rhs.data);
+        return data != detail::as_integer(rhs.raw());
       }
       return true;
     }
@@ -1083,7 +1312,7 @@ namespace jank::runtime
 
     oref<object> erase() const noexcept
     {
-      return detail::as_ptr<object *>(data);
+      return detail::tag(data);
     }
 
     bool is_some() const noexcept
@@ -1114,9 +1343,9 @@ namespace jank::runtime
 
     bool equal(object_ref const o) const
     {
-      if(detail::is_small_int(o.data))
+      if(detail::is_small_int(o.raw()))
       {
-        return data == detail::as_int(o.data);
+        return data == detail::as_integer(o.raw());
       }
 
       obj::small_integer const i{ data };
@@ -1294,15 +1523,15 @@ namespace jank::runtime
     /* behavior::compare */
     i64 compare(object_ref const o) const
     {
-      if(detail::is_small_int(o.data))
+      if(detail::is_small_int(o.raw()))
       {
         auto const l{ data };
-        auto const r{ detail::as_int(o.data) };
+        auto const r{ detail::as_integer(o.raw()) };
         return (r < l) - (l < r);
       }
 
       obj::small_integer const i{ data };
-      return i.compare(*o.data);
+      return i.compare(*o.ptr());
     }
 
     /* behavior::number_like */
@@ -1316,7 +1545,314 @@ namespace jank::runtime
       return static_cast<f64>(data);
     }
 
-    i64 data{};
+    i32 raw() const
+    {
+      return data;
+    }
+
+    i32 data{};
+  };
+
+  template <>
+  struct oref<obj::small_real>
+  {
+    using T = obj::small_real;
+    using value_type = T;
+
+    oref() = default;
+    oref(oref const &rhs) noexcept = default;
+    oref(oref &&rhs) noexcept = default;
+
+    oref(nullptr_t) = delete;
+
+    oref(_jank_null) noexcept
+    {
+    }
+
+    oref(void * const data) noexcept
+      : data{ detail::as_real(data) }
+    {
+    }
+
+    oref(detail::tagged_ptr const p) noexcept
+      : data{ detail::as_real(p.data) }
+    {
+      jank_debug_assert(this->data);
+    }
+
+    oref(f64 const data) noexcept
+      : data{ data }
+    {
+    }
+
+    ~oref() = default;
+
+    bool operator==(oref<object> const &rhs) const
+    {
+      if(detail::is_small_real(rhs.raw()))
+      {
+        return data == detail::as_real(rhs.raw());
+      }
+      return false;
+    }
+
+    bool operator!=(oref<object> const &rhs) const
+    {
+      if(detail::is_small_real(rhs.raw()))
+      {
+        return data != detail::as_real(rhs.raw());
+      }
+      return true;
+    }
+
+    oref &operator=(oref const &rhs) noexcept = default;
+    oref &operator=(oref &&rhs) noexcept = default;
+
+    oref &operator=(jtl::nullptr_t) noexcept = delete;
+    bool operator==(jtl::nullptr_t) noexcept = delete;
+    bool operator!=(jtl::nullptr_t) noexcept = delete;
+
+    oref<object> erase() const noexcept
+    {
+      return detail::tag(data);
+    }
+
+    bool is_some() const noexcept
+    {
+      return true;
+    }
+
+    bool is_nil() const noexcept
+    {
+      return false;
+    }
+
+    oref const *operator->() const noexcept
+    {
+      return this;
+    }
+
+    oref const &operator*() const noexcept
+    {
+      return *this;
+    }
+
+    /* object_like */
+    object_type get_type() const
+    {
+      return object_type::small_real;
+    }
+
+    bool equal(object_ref const o) const
+    {
+      if(detail::is_small_real(o.raw()))
+      {
+        return data == detail::as_real(o.raw());
+      }
+
+      obj::small_real i{ data };
+      return o.equal(&i);
+    }
+
+    jtl::immutable_string to_string() const
+    {
+      obj::small_real i{ data };
+      return i.to_string();
+    }
+
+    void to_string(jtl::string_builder &sb) const
+    {
+      obj::small_real i{ data };
+      i.to_string(sb);
+    }
+
+    jtl::immutable_string to_code_string() const
+    {
+      obj::small_real i{ data };
+      return i.to_code_string();
+    }
+
+    uhash to_hash() const
+    {
+      obj::small_real i{ data };
+      return i.to_hash();
+    }
+
+    bool has_behavior(object_behavior const b) const
+    {
+      obj::small_real i{ data };
+      return i.has_behavior(b);
+    }
+
+    /* behavior::call */
+    object_ref call() const
+    {
+      obj::small_real i{ data };
+      return i.call();
+    }
+
+    object_ref call(object_ref const a1) const
+    {
+      obj::small_real i{ data };
+      return i.call(a1);
+    }
+
+    object_ref call(object_ref const a1, object_ref const a2) const
+    {
+      obj::small_real i{ data };
+      return i.call(a1, a2);
+    }
+
+    object_ref call(object_ref const a1, object_ref const a2, object_ref const a3) const
+    {
+      obj::small_real i{ data };
+      return i.call(a1, a2, a3);
+    }
+
+    object_ref
+    call(object_ref const a1, object_ref const a2, object_ref const a3, object_ref const a4) const
+    {
+      obj::small_real i{ data };
+      return i.call(a1, a2, a3, a4);
+    }
+
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5) const
+    {
+      obj::small_real i{ data };
+      return i.call(a1, a2, a3, a4, a5);
+    }
+
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6) const
+    {
+      obj::small_real i{ data };
+      return i.call(a1, a2, a3, a4, a5, a6);
+    }
+
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7) const
+    {
+      obj::small_real i{ data };
+      return i.call(a1, a2, a3, a4, a5, a6, a7);
+    }
+
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8) const
+    {
+      obj::small_real i{ data };
+      return i.call(a1, a2, a3, a4, a5, a6, a7, a8);
+    }
+
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9) const
+    {
+      obj::small_real i{ data };
+      return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    }
+
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10) const
+    {
+      obj::small_real i{ data };
+      return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    }
+
+    callable_arity_flags get_arity_flags() const
+    {
+      return 0;
+    }
+
+    /* behavior::get */
+    object_ref get(object_ref const key) const
+    {
+      obj::small_real i{ data };
+      return i.get(key);
+    }
+
+    object_ref get(object_ref const key, object_ref const fallback) const
+    {
+      obj::small_real i{ data };
+      return i.get(key, fallback);
+    }
+
+    bool contains(object_ref const key) const
+    {
+      obj::small_real i{ data };
+      return i.contains(key);
+    }
+
+    /* behavior::find */
+    object_ref find(object_ref key) const
+    {
+      obj::small_real i{ data };
+      return i.find(key);
+    }
+
+    /* behavior::compare */
+    i64 compare(object_ref const o) const
+    {
+      if(detail::is_small_real(o.raw()))
+      {
+        auto const l{ data };
+        auto const r{ detail::as_real(o.raw()) };
+        return (r < l) - (l < r);
+      }
+
+      obj::small_real i{ data };
+      return i.compare(*o.ptr());
+    }
+
+    /* behavior::number_like */
+    i64 to_integer() const
+    {
+      return static_cast<i64>(data);
+    }
+
+    f64 to_real() const
+    {
+      return data;
+    }
+
+    f64 raw() const
+    {
+      return data;
+    }
+
+    f64 data{};
   };
 
   template <>
@@ -1338,33 +1874,39 @@ namespace jank::runtime
     oref(value_type * const data) noexcept
       : data{ data }
     {
-      jank_assert(this->data);
+      jank_debug_assert(this->data);
     }
 
     oref(value_type const * const data) noexcept
       : data{ const_cast<value_type *>(data) }
     {
-      jank_assert(this->data);
+      jank_debug_assert(this->data);
     }
 
     /* We use this one during codegen. */
     oref(void * const data) noexcept
       : data{ static_cast<value_type *>(data) }
     {
-      jank_assert(this->data);
+      jank_debug_assert(this->data);
+    }
+
+    oref(detail::tagged_ptr const p) noexcept
+      : data{ reinterpret_cast<value_type *>(p.data) }
+    {
+      jank_debug_assert(this->data);
     }
 
     template <typename C>
     requires jtl::is_convertible<C *, value_type *>
     oref(oref<C> const &data) noexcept
-      : data{ data.data }
+      : data{ data.raw() }
     {
     }
 
     template <typename C>
     requires(C::obj_type == object_type::nil)
     oref(oref<C> const &data) noexcept
-      : data{ data.data }
+      : data{ data.raw() }
     {
     }
 
@@ -1595,14 +2137,25 @@ namespace jank::runtime
     /* behavior::compare */
     i64 compare(object_ref const o) const
     {
-      if(detail::is_small_int(o.data))
+      if(detail::is_small_int(o.raw()))
       {
-        obj::small_integer const i{ detail::as_int(o.data) };
+        obj::small_integer const i{ detail::as_integer(o.raw()) };
         return _jank_nil.compare(i);
       }
-      return _jank_nil.compare(*o.data);
+      return _jank_nil.compare(*o.ptr());
     }
 
+    value_type *raw() const
+    {
+      return data;
+    }
+
+    value_type *ptr() const
+    {
+      return data;
+    }
+
+  private:
     value_type *data{ std::bit_cast<value_type *>(&_jank_nil) };
   };
 

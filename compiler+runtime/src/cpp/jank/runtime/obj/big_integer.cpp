@@ -137,6 +137,18 @@ namespace jank::runtime::obj
         return false;
       }
     }
+    if(o.type == object_type::small_real)
+    {
+      try
+      {
+        return std::fabs(this->to_real() - expect_object<small_real>(&o)->data)
+          < std::numeric_limits<f64>::epsilon();
+      }
+      catch(...)
+      {
+        return false;
+      }
+    }
 
     return false;
   }

@@ -154,9 +154,15 @@ namespace jank::runtime::obj
   {
   }
 
-  small_integer::small_integer(i64 const d)
+  small_integer::small_integer(i32 const d)
     : object{ obj_type, obj_behaviors }
     , data{ d }
+  {
+  }
+
+  small_integer::small_integer(i64 const d)
+    : object{ obj_type, obj_behaviors }
+    , data{ static_cast<i32>(d) }
   {
   }
 
@@ -201,7 +207,7 @@ namespace jank::runtime::obj
 
   uhash small_integer::to_hash() const
   {
-    return hash::integer(data);
+    return hash::integer(static_cast<i64>(data));
   }
 
   i64 small_integer::compare(object const &o) const
@@ -243,13 +249,26 @@ namespace jank::runtime::obj
 
   bool real::equal(object const &o) const
   {
+    if(o.type == object_type::big_decimal)
+    {
+      auto const i(expect_object<big_decimal>(&o));
+      return data == i->data;
+    }
+
+    std::hash<f64> const hasher{};
+
+    if(o.type == object_type::small_real)
+    {
+      auto const i(expect_object<small_real>(&o));
+      return hasher(data) == hasher(i->data);
+    }
+
     if(o.type != object_type::real)
     {
       return false;
     }
 
     auto const r(expect_object<real>(&o));
-    std::hash<f64> const hasher{};
     return hasher(data) == hasher(r->data);
   }
 
@@ -314,6 +333,108 @@ namespace jank::runtime::obj
   }
 
   f64 real::to_real() const
+  {
+    return data;
+  }
+
+  /***** small_real *****/
+  small_real::small_real()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
+  small_real::small_real(f64 const d)
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
+  {
+  }
+
+  bool small_real::equal(object const &o) const
+  {
+    std::hash<f64> const hasher{};
+
+    if(o.type == object_type::big_decimal)
+    {
+      auto const i(expect_object<big_decimal>(&o));
+      return data == i->data;
+    }
+
+    if(o.type == object_type::real)
+    {
+      auto const i(expect_object<real>(&o));
+      return hasher(data) == hasher(i->data);
+    }
+
+    if(o.type != object_type::small_real)
+    {
+      return false;
+    }
+
+    auto const r(expect_object<small_real>(&o));
+    return hasher(data) == hasher(r->data);
+  }
+
+  jtl::immutable_string small_real::to_string() const
+  {
+    jtl::string_builder sb;
+    to_string(sb);
+    return sb.release();
+  }
+
+  void small_real::to_string(jtl::string_builder &buff) const
+  {
+    if(std::isinf(data))
+    {
+      if(data < 0)
+      {
+        buff("##-Inf");
+      }
+      else
+      {
+        buff("##Inf");
+      }
+    }
+    else if(std::isnan(data))
+    {
+      buff("##NaN");
+    }
+    else
+    {
+      buff(data);
+    }
+  }
+
+  jtl::immutable_string small_real::to_code_string() const
+  {
+    return to_string();
+  }
+
+  uhash small_real::to_hash() const
+  {
+    return hash::real(data);
+  }
+
+  i64 small_real::compare(object const &o) const
+  {
+    return visit_number_like(
+      [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
+      [&]() -> i64 {
+        throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
+      },
+      &o);
+  }
+
+  i64 small_real::compare(small_real const &o) const
+  {
+    return (o.data < data) - (data < o.data);
+  }
+
+  i64 small_real::to_integer() const
+  {
+    return static_cast<i64>(data);
+  }
+
+  f64 small_real::to_real() const
   {
     return data;
   }

@@ -315,7 +315,7 @@ namespace clojure::core_native
 
   object_ref hash_unordered(object_ref const coll)
   {
-    return make_box(hash::unordered(coll.data)).erase();
+    return make_box(hash::unordered(coll)).erase();
   }
 
   object_ref jank_version()

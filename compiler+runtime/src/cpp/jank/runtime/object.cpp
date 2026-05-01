@@ -223,12 +223,12 @@ namespace jank::runtime
 
   bool operator==(object const * const lhs, object_ref const rhs)
   {
-    return lhs == rhs.data;
+    return lhs == rhs.raw();
   }
 
   bool operator!=(object const * const lhs, object_ref const rhs)
   {
-    return lhs != rhs.data;
+    return lhs != rhs.raw();
   }
 }
 
@@ -237,7 +237,7 @@ namespace std
   size_t
   hash<jank::runtime::object_ref>::operator()(jank::runtime::object_ref const o) const noexcept
   {
-    return jank::hash::visit(o.data);
+    return jank::hash::visit(o);
   }
 
   size_t hash<jank::runtime::object>::operator()(jank::runtime::object const &o) const noexcept

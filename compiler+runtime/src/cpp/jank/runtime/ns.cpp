@@ -179,7 +179,7 @@ namespace jank::runtime
     {
       if(found->get_type() == object_type::var)
       {
-        auto const found_var(expect_object<runtime::var>(found->data));
+        auto const found_var(expect_object<runtime::var>(*found));
         auto const clojure_core(__rt_ctx->find_ns(make_box<obj::symbol>("clojure.core")));
         if(var->n != found_var->n && (found_var->n != clojure_core))
         {
