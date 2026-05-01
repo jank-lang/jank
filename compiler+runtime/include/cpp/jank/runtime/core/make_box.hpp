@@ -95,10 +95,11 @@ namespace jank::runtime
   [[gnu::flatten, gnu::hot]]
   inline object_ref make_box(T const i)
   {
-    /* TODO: Deal with negative values. */
-    if(0 <= i && i <= detail::max_small_integer)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-compare"
+    if(detail::min_small_integer <= i && i <= detail::max_small_integer)
+#pragma clang diagnostic pop
     {
-      //util::println("make_box :: eliding for {}", i);
       return detail::as_ptr<object *>(i);
     }
     return make_box<obj::integer>(static_cast<i64>(i));

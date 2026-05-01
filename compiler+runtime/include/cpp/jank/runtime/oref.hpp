@@ -43,7 +43,8 @@ namespace jank::runtime
     constexpr char integer_tag{ 0b1 };
     constexpr char integer_tag_mask{ 0b1 };
     constexpr char integer_shift{ 1 };
-    constexpr i64 max_small_integer{ std::numeric_limits<i64>::max() & ~(1ll << 63) };
+    constexpr i64 max_small_integer{ std::numeric_limits<i64>::max() >> integer_shift };
+    constexpr i64 min_small_integer{ std::numeric_limits<i64>::min() >> integer_shift };
 
     inline bool is_small_int(void const *data)
     {
@@ -59,7 +60,7 @@ namespace jank::runtime
     template <typename T>
     T as_ptr(i64 const data)
     {
-      return reinterpret_cast<T>((static_cast<u64>(data) << integer_shift) | integer_tag_mask);
+      return reinterpret_cast<T>((data << integer_shift) | integer_tag_mask);
     }
   }
 
