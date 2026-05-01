@@ -2,8 +2,6 @@
 #include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/obj/nil.hpp>
-#include <jank/runtime/obj/number.hpp>
-#include <jank/runtime/rtti.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj

@@ -529,9 +529,8 @@ namespace jank::runtime
     }
     else
     {
-      throw std::runtime_error{ util::format("not disjoinable: {} - {}",
-                                             object_type_str(s.get_type()),
-                                             runtime::to_code_string(s)) };
+      throw std::runtime_error{ util::format("not disjoinable: {}",
+                                             object_type_str(s.get_type())) };
     }
   }
 
