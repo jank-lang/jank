@@ -38,6 +38,31 @@ namespace jank::runtime
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   extern oref<struct obj::boolean> jank_false;
 
+  /* `oref` is jank's pointer wrapper for boxed runtime objects. It is only used for objects
+   * which inherit from `jank::runtime::object` and implement the necessary behaviors. It's
+   * formidable, though, since it serves a few very important roles in the jank runtime.
+   *
+   * 1. It provides a type-erased `object_ref`, which can represent any runtime object
+   *    (like Java's `Object`)
+   * 2. It provides typed refs, like `integer_ref`, `persistent_string_ref`, and so on, for
+   *    every runtime object type
+   * 3. It allows any of these refs to be `nil` and provides helpers for querying that
+   * 4. It supports inline values for certain tagged pointers
+   *
+   * To expand on the inline values and tagged pointers, `object_ref` (the type-erased `oref`)
+   * can either hold a pointer value or an inline integer. The integer is case indicated by the
+   * lowest bit of the pointer value being 1, in which case a 63 bit integer exists instead of
+   * a pointer value. This is an incredible performance win for integer-heavy jank programs, since
+   * it allows us to skip GC allocations for those integers. However, it means that we need to
+   * treat `object_ref` specially, since it isn't just a simple pointer wrapper.
+   *
+   * Similarly, there is a specialization of `oref` for `small_integer`, which simulates a pointer
+   * to a typed integral object like `integer_ref`, but it stores the integer value inline. This
+   * is used when we visit an `object_ref` which holds an inline integer and we need a fully typed
+   * object. */
+
+  /* TODO: Support inline doubles. */
+
   namespace detail
   {
     constexpr char integer_tag{ 0b1 };
@@ -154,34 +179,6 @@ namespace jank::runtime
       data = o.data;
     }
 
-    //value_type *operator->() const noexcept
-    //{
-    //  jank_assert(data);
-
-    //  if(detail::is_small_int(data))
-    //  {
-    //    static obj::integer scratch{ 0 };
-    //    scratch.data = detail::as_int(data);
-    //    return &scratch;
-    //  }
-
-    //  return data;
-    //}
-
-    //value_type &operator*() const noexcept
-    //{
-    //  jank_assert(data);
-
-    //  if(detail::is_small_int(data))
-    //  {
-    //    static obj::integer scratch{ 0 };
-    //    scratch.data = detail::as_int(data);
-    //    return scratch;
-    //  }
-
-    //  return *data;
-    //}
-
     oref &operator=(oref const &rhs) noexcept = default;
     oref &operator=(oref &&rhs) noexcept = default;
 
@@ -225,19 +222,6 @@ namespace jank::runtime
     oref &operator=(jtl::nullptr_t) noexcept = delete;
     bool operator==(jtl::nullptr_t) noexcept = delete;
     bool operator!=(jtl::nullptr_t) noexcept = delete;
-
-    /* TODO: Remove this. */
-    //value_type *get() const noexcept
-    //{
-    //  if(detail::is_small_int(data))
-    //  {
-    //    static obj::integer scratch{ 0 };
-    //    scratch.data = detail::as_int(data);
-    //    return &scratch;
-    //  }
-
-    //  return data;
-    //}
 
     object_ref const &erase() const noexcept
     {
