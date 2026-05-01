@@ -75,7 +75,7 @@ namespace jank::runtime::obj
     /*** XXX: Everything here is immutable after initialization. ***/
     i64 start{};
     i64 end{};
-    i64 step{};
+    i64 step{ 1 };
     bounds_check_t bounds_check{};
 
     /* TODO: behavior::chunkable */

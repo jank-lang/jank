@@ -24,9 +24,7 @@ namespace jank::runtime::obj
 
   integer_range::integer_range(i64 const end)
     : object{ obj_type, obj_behaviors }
-    , start{ 0 }
     , end{ end }
-    , step{ 1 }
     , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
   {
   }
@@ -35,7 +33,6 @@ namespace jank::runtime::obj
     : object{ obj_type, obj_behaviors }
     , start{ start }
     , end{ end }
-    , step{ 1 }
     , bounds_check{ static_cast<bounds_check_t>(positive_step_bounds_check) }
   {
   }
