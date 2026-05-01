@@ -39,6 +39,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto add(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
@@ -84,6 +85,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto add(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
@@ -112,6 +114,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto add(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
@@ -140,6 +143,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto add(L const l, R const r)
   {
     return l + r;
@@ -149,6 +153,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto sub(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
@@ -194,6 +199,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto sub(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
@@ -222,6 +228,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto sub(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
@@ -250,6 +257,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto sub(L const l, R const r)
   {
     return l - r;
@@ -259,6 +267,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto div(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
@@ -304,6 +313,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto div(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
@@ -332,6 +342,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto div(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
@@ -360,6 +371,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto div(L const l, R const r)
   {
     return l / r;
@@ -367,6 +379,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto mul(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
@@ -412,6 +425,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto mul(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
@@ -440,6 +454,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto mul(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
@@ -468,6 +483,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto mul(L const l, R const r)
   {
     return l * r;
@@ -477,6 +493,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lt(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
@@ -520,6 +537,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lt(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
@@ -547,6 +565,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lt(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
@@ -574,6 +593,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lt(L const l, R const r)
   {
     return l < r;
@@ -581,6 +601,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lte(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
@@ -624,6 +645,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lte(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
@@ -651,6 +673,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lte(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
@@ -678,6 +701,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lte(L const l, R const r)
   {
     return l <= r;
@@ -685,6 +709,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto min(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
@@ -734,6 +759,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto min(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
@@ -764,6 +790,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto min(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
@@ -794,6 +821,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto min(L const l, R const r)
   {
     return std::min(l, r);
@@ -801,6 +829,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto max(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
@@ -850,6 +879,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto max(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
@@ -880,6 +910,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto max(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
@@ -910,6 +941,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto max(L const l, R const r)
   {
     return std::max(l, r);

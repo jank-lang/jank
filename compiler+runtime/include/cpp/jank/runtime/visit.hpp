@@ -424,7 +424,7 @@ namespace jank::runtime
 
   template <typename F1, typename F2, typename... Args>
   requires(!std::convertible_to<F2, object_ref>)
-  [[gnu::hot]]
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto visit_number_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
     if(detail::is_small_int(erased.data))
@@ -456,7 +456,7 @@ namespace jank::runtime
 
   /* Throws if the object isn't number-like. */
   template <typename F1, typename... Args>
-  [[gnu::hot]]
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto visit_number_like(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_number_like(
