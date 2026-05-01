@@ -268,12 +268,12 @@ namespace jank::runtime
           return detail::as_int(data) == detail::as_int(o.data);
         }
 
-        obj::small_integer i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_int(data) };
         return o.equal(&i);
       }
       else if(detail::is_small_int(o.data))
       {
-        obj::small_integer i{ detail::as_int(o.data) };
+        obj::small_integer const i{ detail::as_int(o.data) };
         return data->equal(i);
       }
       return data->equal(*o.data);
@@ -283,7 +283,7 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        obj::small_integer i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_int(data) };
         return i.to_string();
       }
       return data->to_string();
@@ -293,7 +293,7 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        obj::small_integer i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_int(data) };
         i.to_string(sb);
         return;
       }
@@ -304,7 +304,7 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        obj::small_integer i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_int(data) };
         return i.to_code_string();
       }
       return data->to_code_string();
@@ -314,7 +314,7 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        obj::small_integer i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_int(data) };
         return i.to_hash();
       }
       return data->to_hash();
@@ -324,7 +324,7 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        obj::small_integer i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_int(data) };
         return i.has_behavior(b);
       }
       return data->has_behavior(b);
@@ -335,8 +335,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.call();
       }
       return data->call();
     }
@@ -345,8 +345,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.call(a1);
       }
       return data->call(a1);
     }
@@ -355,8 +355,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.call(a1, a2);
       }
       return data->call(a1, a2);
     }
@@ -365,8 +365,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.call(a1, a2, a3);
       }
       return data->call(a1, a2, a3);
     }
@@ -376,8 +376,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.call(a1, a2, a3, a4);
       }
       return data->call(a1, a2, a3, a4);
     }
@@ -390,8 +390,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.call(a1, a2, a3, a4, a5);
       }
       return data->call(a1, a2, a3, a4, a5);
     }
@@ -405,8 +405,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.call(a1, a2, a3, a4, a5, a6);
       }
       return data->call(a1, a2, a3, a4, a5, a6);
     }
@@ -421,8 +421,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7);
       }
       return data->call(a1, a2, a3, a4, a5, a6, a7);
     }
@@ -438,8 +438,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7, a8);
       }
       return data->call(a1, a2, a3, a4, a5, a6, a7, a8);
     }
@@ -456,8 +456,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
       }
       return data->call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
@@ -475,8 +475,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
       }
       return data->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
@@ -495,8 +495,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.get(key);
       }
       return data->get(key);
     }
@@ -505,8 +505,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.get(key, fallback);
       }
       return data->get(key, fallback);
     }
@@ -515,8 +515,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return false;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.contains(key);
       }
       return data->contains(key);
     }
@@ -526,8 +526,8 @@ namespace jank::runtime
     {
       if(detail::is_small_int(data))
       {
-        /* TODO */
-        return &_jank_nil;
+        obj::small_integer const i{ detail::as_int(data) };
+        return i.find(key);
       }
       return data->find(key);
     }
@@ -544,12 +544,12 @@ namespace jank::runtime
           return (r < l) - (l < r);
         }
 
-        obj::small_integer i{ detail::as_int(data) };
+        obj::small_integer const i{ detail::as_int(data) };
         return o.compare(&i);
       }
       else if(detail::is_small_int(o.data))
       {
-        obj::small_integer i{ detail::as_int(o.data) };
+        obj::small_integer const i{ detail::as_int(o.data) };
         return data->compare(i);
       }
       return data->compare(*o.data);
@@ -771,7 +771,7 @@ namespace jank::runtime
       }
       if(detail::is_small_int(o.data))
       {
-        obj::small_integer i{ detail::as_int(o.data) };
+        obj::small_integer const i{ detail::as_int(o.data) };
         return static_cast<T *>(data)->equal(i);
       }
       return static_cast<T *>(data)->equal(*o.data);
@@ -1013,10 +1013,14 @@ namespace jank::runtime
     /* behavior::compare */
     i64 compare(object_ref const o) const
     {
-      /* TODO: Handle o being small int. */
       if(is_nil())
       {
         return _jank_nil.compare(*o.data);
+      }
+      if(detail::is_small_int(o.data))
+      {
+        obj::small_integer const i{ detail::as_int(o.data) };
+        return static_cast<T *>(data)->compare(i);
       }
       return static_cast<T *>(data)->compare(*o.data);
     }
@@ -1037,7 +1041,6 @@ namespace jank::runtime
     oref(nullptr_t) = delete;
 
     oref(_jank_null) noexcept
-      : data{}
     {
     }
 
@@ -1116,69 +1119,69 @@ namespace jank::runtime
         return data == detail::as_int(o.data);
       }
 
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return o.equal(&i);
     }
 
     jtl::immutable_string to_string() const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.to_string();
     }
 
     void to_string(jtl::string_builder &sb) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       i.to_string(sb);
     }
 
     jtl::immutable_string to_code_string() const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.to_code_string();
     }
 
     uhash to_hash() const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.to_hash();
     }
 
     bool has_behavior(object_behavior const b) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.has_behavior(b);
     }
 
     /* behavior::call */
     object_ref call() const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.call();
     }
 
     object_ref call(object_ref const a1) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.call(a1);
     }
 
     object_ref call(object_ref const a1, object_ref const a2) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.call(a1, a2);
     }
 
     object_ref call(object_ref const a1, object_ref const a2, object_ref const a3) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.call(a1, a2, a3);
     }
 
     object_ref
     call(object_ref const a1, object_ref const a2, object_ref const a3, object_ref const a4) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.call(a1, a2, a3, a4);
     }
 
@@ -1188,7 +1191,7 @@ namespace jank::runtime
                     object_ref const a4,
                     object_ref const a5) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.call(a1, a2, a3, a4, a5);
     }
 
@@ -1199,7 +1202,7 @@ namespace jank::runtime
                     object_ref const a5,
                     object_ref const a6) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.call(a1, a2, a3, a4, a5, a6);
     }
 
@@ -1211,7 +1214,7 @@ namespace jank::runtime
                     object_ref const a6,
                     object_ref const a7) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.call(a1, a2, a3, a4, a5, a6, a7);
     }
 
@@ -1224,7 +1227,7 @@ namespace jank::runtime
                     object_ref const a7,
                     object_ref const a8) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.call(a1, a2, a3, a4, a5, a6, a7, a8);
     }
 
@@ -1238,7 +1241,7 @@ namespace jank::runtime
                     object_ref const a8,
                     object_ref const a9) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
 
@@ -1253,7 +1256,7 @@ namespace jank::runtime
                     object_ref const a9,
                     object_ref const a10) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
@@ -1265,26 +1268,26 @@ namespace jank::runtime
     /* behavior::get */
     object_ref get(object_ref const key) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.get(key);
     }
 
     object_ref get(object_ref const key, object_ref const fallback) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.get(key, fallback);
     }
 
     bool contains(object_ref const key) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.contains(key);
     }
 
     /* behavior::find */
     object_ref find(object_ref key) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.find(key);
     }
 
@@ -1298,7 +1301,7 @@ namespace jank::runtime
         return (r < l) - (l < r);
       }
 
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.compare(*o.data);
     }
 
@@ -1310,7 +1313,7 @@ namespace jank::runtime
 
     f64 to_real() const
     {
-      return data;
+      return static_cast<f64>(data);
     }
 
     i64 data{};
@@ -1594,7 +1597,7 @@ namespace jank::runtime
     {
       if(detail::is_small_int(o.data))
       {
-        obj::small_integer i{ detail::as_int(o.data) };
+        obj::small_integer const i{ detail::as_int(o.data) };
         return _jank_nil.compare(i);
       }
       return _jank_nil.compare(*o.data);

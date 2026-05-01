@@ -2987,7 +2987,7 @@
                  (symbol? b) (-> bvec (conj b) (conj v))
                  (vector? b) (pvec bvec b v)
                  (map? b) (pmap bvec b v)
-                 :else (throw (str "Unsupported binding form: " b (type b))))))
+                 :else (throw (str "Unsupported binding form: " (pr-str b) " (" (type b) ")")))))
         process-entry (fn process-entry [bvec b]
                         (pb bvec (first b) (second b)))]
     (if (every? symbol? (map first bents))

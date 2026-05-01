@@ -97,6 +97,7 @@ namespace jank::runtime
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wsign-compare"
+    /* NOLINTNEXTLINE(misc-redundant-expression) */
     if(detail::min_small_integer <= i && i <= detail::max_small_integer)
 #pragma clang diagnostic pop
     {
