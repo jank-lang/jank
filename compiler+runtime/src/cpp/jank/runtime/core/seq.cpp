@@ -773,7 +773,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not indexable: {}", object_type_str(o.get_type())) };
+          throw std::runtime_error{ util::format("not indexable: {}",
+                                                 object_type_str(o.get_type())) };
         }
       },
       o);
@@ -810,7 +811,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not indexable: {}", object_type_str(o.get_type())) };
+          throw std::runtime_error{ util::format("not indexable: {}",
+                                                 object_type_str(o.get_type())) };
         }
       },
       o);
@@ -833,7 +835,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not stackable: {}", object_type_str(o.get_type())) };
+          throw std::runtime_error{ util::format("not stackable: {}",
+                                                 object_type_str(o.get_type())) };
         }
       },
       o);
@@ -856,7 +859,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not stackable: {}", object_type_str(o.get_type())) };
+          throw std::runtime_error{ util::format("not stackable: {}",
+                                                 object_type_str(o.get_type())) };
         }
       },
       o);
