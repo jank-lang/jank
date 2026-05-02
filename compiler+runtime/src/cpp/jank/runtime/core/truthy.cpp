@@ -3,16 +3,16 @@
 
 namespace jank::runtime
 {
-  bool truthy(object const *o)
+  bool truthy(object_ref const o)
   {
-    if(!o)
+    if(o.is_nil())
     {
       return false;
     }
 
-    if(o->type == object_type::nil)
+    if(detail::is_small_int(o.data))
     {
-      return false;
+      return true;
     }
 
     auto const b{ dyn_cast<obj::boolean>(o) };
@@ -22,11 +22,6 @@ namespace jank::runtime
     }
 
     return true;
-  }
-
-  bool truthy(object_ref const o)
-  {
-    return truthy(o.data);
   }
 
   bool truthy(obj::nil_ref const)

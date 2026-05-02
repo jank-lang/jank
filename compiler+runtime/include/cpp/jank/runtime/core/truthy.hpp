@@ -5,7 +5,6 @@
 
 namespace jank::runtime
 {
-  bool truthy(object const *o);
   bool truthy(object_ref const o);
   bool truthy(obj::nil_ref const);
   bool truthy(obj::boolean_ref const o);
@@ -14,7 +13,7 @@ namespace jank::runtime
   template <typename T>
   requires runtime::behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto truthy(T const * const d)
+  inline auto truthy(oref<T> const &d)
   {
     if constexpr(std::same_as<T, obj::nil>)
     {
@@ -28,13 +27,5 @@ namespace jank::runtime
     {
       return true;
     }
-  }
-
-  template <typename T>
-  requires runtime::behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  inline auto truthy(oref<T> const &d)
-  {
-    return truthy(d.erase());
   }
 }
