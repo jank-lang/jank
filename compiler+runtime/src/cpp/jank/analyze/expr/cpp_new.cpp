@@ -1,10 +1,7 @@
+#include <CppInterOp/CppInterOp.h>
+
 #include <jank/analyze/expr/cpp_new.hpp>
 #include <jank/detail/to_runtime_data.hpp>
-
-namespace CppImpl
-{
-  void *GetPointerType(void *type);
-}
 
 namespace jank::analyze::expr
 {
@@ -40,6 +37,6 @@ namespace jank::analyze::expr
 
   jtl::ptr<void> cpp_new::get_type() const
   {
-    return CppImpl::GetPointerType(type);
+    return Cpp::GetPointerType(type);
   }
 }
