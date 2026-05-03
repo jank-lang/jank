@@ -233,10 +233,7 @@
 
 (defn -main []
   (if windows?
-    ;; Exception unwinding from JIT compiled code does not currently work on Windows.
-    ;; This will cause failures in essentially all tests that include negative cases
-    ;; which are expected to throw exceptions.
-    ;; TODO: Enable once exception unwinding across JIT compiled frames support is
+    ;; TODO: Enable once support for exception unwinding across JIT compiled frames is
     ;; added for Windows.
     (println :skip-clojure-test-suite-windows)
     (do
