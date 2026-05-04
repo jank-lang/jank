@@ -85,9 +85,9 @@ namespace jank::runtime
   template <typename T>
   requires std::is_floating_point_v<T>
   [[gnu::flatten, gnu::hot]]
-  inline auto make_box(T const d)
+  inline obj::small_real_ref make_box(T const d)
   {
-    return make_box<obj::real>(d);
+    return detail::tag<object *>(static_cast<f64>(d));
   }
 
   template <typename T>
