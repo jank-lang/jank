@@ -136,7 +136,7 @@ namespace jank::runtime::obj
 
   bool integer_range::equal(object const &o) const
   {
-    return runtime::sequence_equal(this, &o);
+    return runtime::sequence_equal(this, runtime::detail::untagged(&o));
   }
 
   void integer_range::to_string(jtl::string_builder &buff) const

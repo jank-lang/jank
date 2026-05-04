@@ -100,11 +100,16 @@ namespace jank::runtime
       return (reinterpret_cast<u64>(val) >> 48) == 0xFFFC;
     }
 
+    inline bool is_tagged(void * const val)
+    {
+      return is_pointer(val) || is_small_int(val) || is_small_real(val);
+    }
+
     inline f64 as_real(void * const val)
     {
       jank_debug_assert(is_small_real(val));
       u64 bits{ reinterpret_cast<u64>(val) - double_bias };
-      double result;
+      double result{};
       std::memcpy(&result, &bits, sizeof(result));
       return result;
     }
@@ -123,16 +128,16 @@ namespace jank::runtime
       return reinterpret_cast<T *>(reinterpret_cast<u64>(val) & pointer_addr_mask);
     }
 
-    struct tagged_ptr
+    struct untagged_ptr
     {
-      tagged_ptr() = default;
+      untagged_ptr() = default;
 
-      tagged_ptr(object *data)
+      untagged_ptr(object *data)
         : data{ data }
       {
       }
 
-      tagged_ptr(void *data)
+      untagged_ptr(void *data)
         : data{ reinterpret_cast<object *>(data) }
       {
       }
@@ -140,30 +145,50 @@ namespace jank::runtime
       object *data{};
     };
 
-    inline tagged_ptr tag(f64 const d)
+    inline untagged_ptr untagged(object const *data)
     {
-      u64 bits;
+      return const_cast<object *>(data);
+    }
+
+    inline untagged_ptr untagged(void *data)
+    {
+      return data;
+    }
+
+    template <typename T>
+    requires behavior::object_like<T>
+    untagged_ptr untagged(T *data)
+    {
+      return { static_cast<object *>(const_cast<jtl::remove_const_t<T> *>(data)) };
+    }
+
+    template <typename T>
+    T tag(f64 const d)
+    {
+      u64 bits{};
       std::memcpy(&bits, &d, sizeof(bits));
       // Raw NaNs would corrupt the tagging space — normalise them.
       if((bits & nan_bits) == nan_bits)
       {
         bits = nan_bits; // collapse to a single canonical NaN
       }
-      return { reinterpret_cast<object *>(bits + double_bias) };
+      return reinterpret_cast<T>(bits + double_bias);
     }
 
-    inline tagged_ptr tag(i32 const val)
+    template <typename T>
+    T tag(i32 const val)
     {
-      return { reinterpret_cast<object *>(
-        integer_nan_tag | (static_cast<u64>(static_cast<u32>(val)) & integer_value_mask)) };
+      return reinterpret_cast<T>(integer_nan_tag
+                                 | (static_cast<u64>(static_cast<u32>(val)) & integer_value_mask));
     }
 
-    inline tagged_ptr tag(void * const ptr)
+    template <typename T>
+    T tag(untagged_ptr const ptr)
     {
-      u64 val = reinterpret_cast<u64>(ptr);
+      auto val{ reinterpret_cast<u64>(ptr.data) };
       jank_debug_assert((val & ~pointer_addr_mask) == 0); // must fit in 48 bits
       jank_debug_assert((val & 0b111) == 0); // GC requires alignment
-      return { reinterpret_cast<object *>(pointer_nan_tag | val) };
+      return reinterpret_cast<T>(pointer_nan_tag | val);
     }
   }
 
@@ -192,44 +217,44 @@ namespace jank::runtime
     }
 
     oref(value_type * const data) noexcept
-      : data{ detail::tag(data).data }
+      : data{ data }
     {
-      jank_debug_assert(data);
+      jank_debug_assert(detail::is_tagged(data));
     }
 
     oref(value_type const * const data) noexcept
-      : data{ detail::tag(const_cast<value_type *>(data)).data }
+      : data{ const_cast<value_type *>(data) }
     {
-      jank_debug_assert(data);
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     /* We use this one during codegen. */
     oref(void * const data) noexcept
-      : data{ detail::tag(static_cast<value_type *>(data)).data }
+      : data{ static_cast<value_type *>(data) }
     {
-      jank_debug_assert(this->data);
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename T>
     requires behavior::object_like<T>
     oref(T * const typed_data) noexcept
-      : data{ detail::tag(typed_data).data }
+      : data{ typed_data }
     {
-      jank_debug_assert(this->data);
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
-    oref(detail::tagged_ptr const p) noexcept
-      : data{ p.data }
+    oref(detail::untagged_ptr const p) noexcept
+      : data{ detail::tag<object *>(p.data) }
     {
-      jank_debug_assert(this->data);
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename T>
     requires behavior::object_like<T>
     oref(T const * const typed_data) noexcept
-      : data{ detail::tag(const_cast<T *>(typed_data)).data }
+      : data{ const_cast<T *>(typed_data) }
     {
-      jank_debug_assert(this->data);
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename T>
@@ -237,37 +262,49 @@ namespace jank::runtime
     oref(oref<T> const &typed_data) noexcept
       : data{ typed_data.erase().raw() }
     {
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename T>
     requires(jtl::is_same<T, obj::small_integer>)
     oref(oref<T> const &typed_data) noexcept
-      : data{ detail::tag(typed_data.raw()).data }
+      : data{ detail::tag<object *>(typed_data.data) }
     {
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename T>
     requires(jtl::is_same<T, obj::small_real>)
     oref(oref<T> const &typed_data) noexcept
-      : data{ detail::tag(typed_data.raw()).data }
+      : data{ detail::tag<object *>(typed_data.data) }
     {
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     ~oref() = default;
 
     void reset() noexcept
     {
-      data = detail::tag(std::bit_cast<object *>(&_jank_nil)).data;
+      data = detail::tag<object *>(std::bit_cast<object *>(&_jank_nil));
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(object * const o) noexcept
     {
-      data = detail::tag(o).data;
+      data = o;
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
+    }
+
+    void reset(detail::untagged_ptr const o) noexcept
+    {
+      data = detail::tag<object *>(o.data);
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(oref<object> const &o) noexcept
     {
       data = o.raw();
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     oref &operator=(oref const &rhs) noexcept = default;
@@ -283,6 +320,7 @@ namespace jank::runtime
       }
 
       data = rhs.erase().raw();
+      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
       return *this;
     }
 
@@ -753,7 +791,7 @@ namespace jank::runtime
     }
 
   private:
-    value_type *data{ detail::tag(std::bit_cast<object *>(&_jank_nil)).data };
+    value_type *data{ detail::tag<object *>(std::bit_cast<object *>(&_jank_nil)) };
   };
 
   /* This specialization of oref is for fully-typed objects like
@@ -780,12 +818,14 @@ namespace jank::runtime
       : data{ data }
     {
       jank_debug_assert(this->data);
+      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     oref(T const * const data) noexcept
       : data{ const_cast<T *>(data) }
     {
       jank_debug_assert(this->data);
+      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     /* We use this one during codegen. */
@@ -793,12 +833,14 @@ namespace jank::runtime
       : data{ static_cast<T *>(data) }
     {
       jank_debug_assert(this->data);
+      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
-    oref(detail::tagged_ptr const p) noexcept
+    oref(detail::untagged_ptr const p) noexcept
       : data{ p.data }
     {
       jank_debug_assert(this->data);
+      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename C>
@@ -806,6 +848,7 @@ namespace jank::runtime
     oref(oref<C> const &data) noexcept
       : data{ data.ptr() }
     {
+      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename C>
@@ -813,6 +856,7 @@ namespace jank::runtime
     oref(oref<C> const &data) noexcept
       : data{ data.ptr() }
     {
+      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     ~oref() = default;
@@ -820,26 +864,31 @@ namespace jank::runtime
     void reset() noexcept
     {
       data = std::bit_cast<object *>(&_jank_nil);
+      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(object * const o) noexcept
     {
       data = o;
+      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(oref<object> const &o) noexcept
     {
       data = o.ptr();
+      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(T * const o) noexcept
     {
       data = o;
+      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(oref<T> const &o) noexcept
     {
       data = o.ptr();
+      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     T *operator->() const noexcept
@@ -939,7 +988,7 @@ namespace jank::runtime
       {
         return {};
       }
-      return static_cast<object *>(static_cast<T *>(data));
+      return detail::untagged(static_cast<object *>(static_cast<T *>(data)));
     }
 
     bool is_some() const noexcept
@@ -1231,10 +1280,6 @@ namespace jank::runtime
 
     void *raw() const
     {
-      if(is_nil())
-      {
-        return reinterpret_cast<void *>(const_cast<obj::nil *>(&_jank_nil));
-      }
       return data;
     }
 
@@ -1265,11 +1310,6 @@ namespace jank::runtime
 
     oref(void * const data) noexcept
       : data{ detail::as_integer(data) }
-    {
-    }
-
-    oref(detail::tagged_ptr const p) noexcept
-      : data{ detail::as_integer(p.data) }
     {
     }
 
@@ -1312,7 +1352,7 @@ namespace jank::runtime
 
     oref<object> erase() const noexcept
     {
-      return detail::tag(data);
+      return detail::tag<object *>(data);
     }
 
     bool is_some() const noexcept
@@ -1574,12 +1614,6 @@ namespace jank::runtime
     {
     }
 
-    oref(detail::tagged_ptr const p) noexcept
-      : data{ detail::as_real(p.data) }
-    {
-      jank_debug_assert(this->data);
-    }
-
     oref(f64 const data) noexcept
       : data{ data }
     {
@@ -1614,7 +1648,7 @@ namespace jank::runtime
 
     oref<object> erase() const noexcept
     {
-      return detail::tag(data);
+      return detail::tag<object *>(data);
     }
 
     bool is_some() const noexcept
@@ -1875,12 +1909,14 @@ namespace jank::runtime
       : data{ data }
     {
       jank_debug_assert(this->data);
+      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
     oref(value_type const * const data) noexcept
       : data{ const_cast<value_type *>(data) }
     {
       jank_debug_assert(this->data);
+      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
     /* We use this one during codegen. */
@@ -1888,12 +1924,14 @@ namespace jank::runtime
       : data{ static_cast<value_type *>(data) }
     {
       jank_debug_assert(this->data);
+      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
-    oref(detail::tagged_ptr const p) noexcept
+    oref(detail::untagged_ptr const p) noexcept
       : data{ reinterpret_cast<value_type *>(p.data) }
     {
       jank_debug_assert(this->data);
+      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
     template <typename C>
@@ -1901,6 +1939,7 @@ namespace jank::runtime
     oref(oref<C> const &data) noexcept
       : data{ data.raw() }
     {
+      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
     template <typename C>
@@ -1908,6 +1947,7 @@ namespace jank::runtime
     oref(oref<C> const &data) noexcept
       : data{ data.raw() }
     {
+      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
     void reset()
@@ -1962,7 +2002,7 @@ namespace jank::runtime
 
     oref<object> erase() const noexcept
     {
-      return { std::bit_cast<object *>(&_jank_nil) };
+      return detail::untagged(std::bit_cast<object *>(&_jank_nil));
     }
 
     bool is_some() const noexcept
@@ -2213,23 +2253,21 @@ namespace jank::runtime
   oref<T> make_box(Args &&...args)
   {
     static_assert(sizeof(oref<T>) == sizeof(T *));
-    oref<T> ret;
     if constexpr(requires { T::pointer_free; })
     {
       if constexpr(T::pointer_free)
       {
-        ret = new(PointerFreeGC) T{ std::forward<Args>(args)... };
+        return detail::untagged(new(PointerFreeGC) T{ std::forward<Args>(args)... });
       }
       else
       {
-        ret = new(UseGC) T{ std::forward<Args>(args)... };
+        return detail::untagged(new(UseGC) T{ std::forward<Args>(args)... });
       }
     }
     else
     {
-      ret = new(UseGC) T{ std::forward<Args>(args)... };
+      return detail::untagged(new(UseGC) T{ std::forward<Args>(args)... });
     }
-    return ret;
   }
 
   template <typename T, usize N>

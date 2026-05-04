@@ -115,7 +115,7 @@ namespace jank::runtime::obj
 
   range_ref range::seq() const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   range_ref range::fresh_seq() const
@@ -193,7 +193,7 @@ namespace jank::runtime::obj
     {
       chunk = chunk->chunk_next_in_place();
       start = chunk->nth(make_box(0));
-      return this;
+      return runtime::detail::untagged(this);
     }
     return chunk_next;
   }
@@ -218,12 +218,12 @@ namespace jank::runtime::obj
 
   cons_ref range::conj(object_ref const head) const
   {
-    return make_box<cons>(head, this);
+    return make_box<cons>(head, runtime::detail::untagged(this));
   }
 
   bool range::equal(object const &o) const
   {
-    return runtime::sequence_equal(this, &o);
+    return runtime::sequence_equal(runtime::detail::untagged(this), runtime::detail::untagged(&o));
   }
 
   void range::to_string(jtl::string_builder &buff) const
@@ -243,7 +243,7 @@ namespace jank::runtime::obj
 
   uhash range::to_hash() const
   {
-    return hash::ordered(this);
+    return hash::ordered(runtime::detail::untagged(this));
   }
 
   range_ref range::with_meta(object_ref const m) const

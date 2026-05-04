@@ -148,10 +148,40 @@ namespace jank::codegen
        * our object. */
       [[maybe_unused]]
       auto * const root{ new(NoGC) object *{ o.raw() } };
+      auto const type{ literal_type(o) };
+      auto const ptr{ static_cast<void *>(o.raw()) };
+      jtl::immutable_string fmt_str;
+      if(o.is_nil())
+      {
+        fmt_str = "jank::runtime::jank_nil";
+      }
+      else if(is_typed_object(type))
+      {
+        if(runtime::detail::is_pointer(ptr))
+        {
+          fmt_str = util::format("{}{ (void*){} }",
+                                 get_qualified_type_name(type),
+                                 runtime::detail::as_pointer(ptr));
+        }
+        else if(runtime::detail::is_small_int(ptr))
+        {
+          fmt_str = util::format("{}{ {} }",
+                                 get_qualified_type_name(type),
+                                 runtime::detail::as_integer(ptr));
+        }
+        else if(runtime::detail::is_small_real(ptr))
+        {
+          fmt_str = util::format("{}{ {} }",
+                                 get_qualified_type_name(type),
+                                 runtime::detail::as_real(ptr));
+        }
+      }
+      else
+      {
+        fmt_str = util::format("{}{ (void*){} }", get_qualified_type_name(type), ptr);
+      }
+
       /* TODO: Not a fan of this. Move into global? Init with uncollectable ptr. */
-      auto const fmt_str{ util::format("{}{ jank::runtime::detail::tagged_ptr{ (void*){} } }",
-                                       get_qualified_type_name(literal_type(o)),
-                                       static_cast<void *>(o.raw())) };
       locked_global_constants->emplace(o, fmt_str);
       return fmt_str;
     }
@@ -178,8 +208,9 @@ namespace jank::codegen
        * our object. */
       [[maybe_unused]]
       auto const root{ new(NoGC) runtime::var *{ reinterpret_cast<runtime::var *>(var.ptr()) } };
-      auto const fmt_str{ util::format("reinterpret_cast<jank::runtime::var*>({})",
-                                       static_cast<void *>(var.ptr())) };
+      auto const fmt_str{ util::format(
+        "jank::runtime::var_ref{ reinterpret_cast<jank::runtime::var*>({}) }",
+        static_cast<void *>(var.ptr())) };
       locked_global_vars->emplace(qualified_name, fmt_str);
       return fmt_str;
     }
@@ -1126,7 +1157,7 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer,
                     "switch(jank_shift_mask_case_integer(static_cast<jank::runtime::object*>({}."
-                    "data), {}, {})) {",
+                    "raw()), {}, {})) {",
                     inst->value,
                     inst->shift,
                     inst->mask);

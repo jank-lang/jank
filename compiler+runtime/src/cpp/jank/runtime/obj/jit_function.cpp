@@ -56,36 +56,36 @@ namespace jank::runtime::obj
   {
     if(!arity_0)
     {
-      throw invalid_arity<0>{ runtime::to_code_string(this) };
+      throw invalid_arity<0>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
-    return arity_0(const_cast<jit_function *>(this));
+    return arity_0(runtime::detail::untagged(this));
   }
 
   object_ref jit_function::call(object_ref const a1) const
   {
     if(!arity_1)
     {
-      throw invalid_arity<1>{ runtime::to_code_string(this) };
+      throw invalid_arity<1>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
-    return arity_1(const_cast<jit_function *>(this), a1);
+    return arity_1(runtime::detail::untagged(this), a1);
   }
 
   object_ref jit_function::call(object_ref const a1, object_ref const a2) const
   {
     if(!arity_2)
     {
-      throw invalid_arity<2>{ runtime::to_code_string(this) };
+      throw invalid_arity<2>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
-    return arity_2(const_cast<jit_function *>(this), a1, a2);
+    return arity_2(runtime::detail::untagged(this), a1, a2);
   }
 
   object_ref jit_function::call(object_ref const a1, object_ref const a2, object_ref const a3) const
   {
     if(!arity_3)
     {
-      throw invalid_arity<3>{ runtime::to_code_string(this) };
+      throw invalid_arity<3>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
-    return arity_3(const_cast<jit_function *>(this), a1, a2, a3);
+    return arity_3(runtime::detail::untagged(this), a1, a2, a3);
   }
 
   object_ref jit_function::call(object_ref const a1,
@@ -95,9 +95,9 @@ namespace jank::runtime::obj
   {
     if(!arity_4)
     {
-      throw invalid_arity<4>{ runtime::to_code_string(this) };
+      throw invalid_arity<4>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
-    return arity_4(const_cast<jit_function *>(this), a1, a2, a3, a4);
+    return arity_4(runtime::detail::untagged(this), a1, a2, a3, a4);
   }
 
   object_ref jit_function::call(object_ref const a1,
@@ -108,9 +108,9 @@ namespace jank::runtime::obj
   {
     if(!arity_5)
     {
-      throw invalid_arity<5>{ runtime::to_code_string(this) };
+      throw invalid_arity<5>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
-    return arity_5(const_cast<jit_function *>(this), a1, a2, a3, a4, a5);
+    return arity_5(runtime::detail::untagged(this), a1, a2, a3, a4, a5);
   }
 
   object_ref jit_function::call(object_ref const a1,
@@ -122,9 +122,9 @@ namespace jank::runtime::obj
   {
     if(!arity_6)
     {
-      throw invalid_arity<6>{ runtime::to_code_string(this) };
+      throw invalid_arity<6>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
-    return arity_6(const_cast<jit_function *>(this), a1, a2, a3, a4, a5, a6);
+    return arity_6(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6);
   }
 
   object_ref jit_function::call(object_ref const a1,
@@ -137,9 +137,9 @@ namespace jank::runtime::obj
   {
     if(!arity_7)
     {
-      throw invalid_arity<7>{ runtime::to_code_string(this) };
+      throw invalid_arity<7>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
-    return arity_7(const_cast<jit_function *>(this), a1, a2, a3, a4, a5, a6, a7);
+    return arity_7(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6, a7);
   }
 
   object_ref jit_function::call(object_ref const a1,
@@ -153,9 +153,9 @@ namespace jank::runtime::obj
   {
     if(!arity_8)
     {
-      throw invalid_arity<8>{ runtime::to_code_string(this) };
+      throw invalid_arity<8>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
-    return arity_8(const_cast<jit_function *>(this), a1, a2, a3, a4, a5, a6, a7, a8);
+    return arity_8(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6, a7, a8);
   }
 
   object_ref jit_function::call(object_ref const a1,
@@ -170,9 +170,9 @@ namespace jank::runtime::obj
   {
     if(!arity_9)
     {
-      throw invalid_arity<9>{ runtime::to_code_string(this) };
+      throw invalid_arity<9>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
-    return arity_9(const_cast<jit_function *>(this), a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    return arity_9(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6, a7, a8, a9);
   }
 
   object_ref jit_function::call(object_ref const a1,
@@ -188,9 +188,9 @@ namespace jank::runtime::obj
   {
     if(!arity_10)
     {
-      throw invalid_arity<10>{ runtime::to_code_string(this) };
+      throw invalid_arity<10>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
-    return arity_10(const_cast<jit_function *>(this), a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    return arity_10(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
   }
 
   callable_arity_flags jit_function::get_arity_flags() const

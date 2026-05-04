@@ -73,7 +73,7 @@ namespace jank::runtime::obj
   /* behavior::seqable */
   native_vector_sequence_ref native_vector_sequence::seq()
   {
-    return data.empty() ? native_vector_sequence_ref{} : this;
+    return data.empty() ? native_vector_sequence_ref{} : runtime::detail::untagged(this);
   }
 
   native_vector_sequence_ref native_vector_sequence::fresh_seq() const
@@ -117,12 +117,12 @@ namespace jank::runtime::obj
       return {};
     }
 
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   cons_ref native_vector_sequence::conj(object_ref const head)
   {
-    return make_box<cons>(head, data.empty() ? nullptr : this);
+    return make_box<cons>(head, data.empty() ? object_ref{} : runtime::detail::untagged(this));
   }
 
   native_vector_sequence_ref native_vector_sequence::with_meta(object_ref const m) const

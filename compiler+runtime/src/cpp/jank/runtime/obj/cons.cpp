@@ -19,7 +19,7 @@ namespace jank::runtime::obj
 
   cons_ref cons::seq() const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   cons_ref cons::fresh_seq() const
@@ -44,7 +44,7 @@ namespace jank::runtime::obj
 
   bool cons::equal(object const &o) const
   {
-    return runtime::sequence_equal(this, &o);
+    return runtime::sequence_equal(runtime::detail::untagged(this), runtime::detail::untagged(&o));
   }
 
   void cons::to_string(jtl::string_builder &buff) const
@@ -70,14 +70,14 @@ namespace jank::runtime::obj
       return h;
     }
 
-    h = hash::ordered(this);
+    h = hash::ordered(runtime::detail::untagged(this));
     hash.store(h);
     return h;
   }
 
   cons_ref cons::conj(object_ref const head) const
   {
-    return make_box<cons>(head, this);
+    return make_box<cons>(head, runtime::detail::untagged(this));
   }
 
   cons_ref cons::with_meta(object_ref const m) const

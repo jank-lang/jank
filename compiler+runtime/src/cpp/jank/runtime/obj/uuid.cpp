@@ -47,7 +47,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const s(expect_object<uuid>(&o));
+    auto const s(expect_object<uuid>(runtime::detail::untagged(&o)));
     return *s->value == *value;
   }
 

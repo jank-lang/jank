@@ -150,7 +150,7 @@ namespace jank::runtime::obj
         return abs(data - typed_o->data) < std::numeric_limits<f64>::epsilon();
       },
       [&]() -> bool { return false; },
-      &o);
+      runtime::detail::untagged(&o));
   }
 
   jtl::immutable_string big_decimal::to_string() const
@@ -178,9 +178,10 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
+        throw std::runtime_error{ util::format("not comparable: {}",
+                                               runtime::to_string(runtime::detail::untagged(&o))) };
       },
-      &o);
+      runtime::detail::untagged(&o));
   }
 
   i64 big_decimal::to_integer() const

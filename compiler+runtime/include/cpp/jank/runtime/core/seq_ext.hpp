@@ -38,7 +38,7 @@ namespace jank::runtime
         }
       },
       []() { return false; },
-      &o,
+      runtime::detail::untagged(&o),
       begin,
       end);
   }

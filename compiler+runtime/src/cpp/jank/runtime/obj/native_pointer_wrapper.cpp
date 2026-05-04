@@ -22,7 +22,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const c(expect_object<native_pointer_wrapper>(&o));
+    auto const c(expect_object<native_pointer_wrapper>(runtime::detail::untagged(&o)));
     return data == c->data;
   }
 }

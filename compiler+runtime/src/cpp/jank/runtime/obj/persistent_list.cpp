@@ -155,7 +155,7 @@ namespace jank::runtime::obj
     }
 
     data = data.rest();
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   persistent_list_ref persistent_list::with_meta(object_ref const m) const

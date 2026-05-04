@@ -19,7 +19,7 @@ namespace jank::runtime::obj
 
   iterator_ref iterator::seq() const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   iterator_ref iterator::fresh_seq() const
@@ -61,12 +61,12 @@ namespace jank::runtime::obj
       current = next;
     }
 
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   bool iterator::equal(object const &o) const
   {
-    return runtime::sequence_equal(this, &o);
+    return runtime::sequence_equal(runtime::detail::untagged(this), runtime::detail::untagged(&o));
   }
 
   void iterator::to_string(jtl::string_builder &buff) const
@@ -86,11 +86,11 @@ namespace jank::runtime::obj
 
   uhash iterator::to_hash() const
   {
-    return hash::ordered(this);
+    return hash::ordered(runtime::detail::untagged(this));
   }
 
   cons_ref iterator::conj(object_ref const head) const
   {
-    return make_box<cons>(head, this);
+    return make_box<cons>(head, runtime::detail::untagged(this));
   }
 }

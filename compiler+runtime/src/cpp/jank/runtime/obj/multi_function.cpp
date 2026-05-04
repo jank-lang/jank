@@ -168,7 +168,7 @@ namespace jank::runtime::obj
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
     cached_hierarchy = jank_nil;
     method_table = prefer_table = method_cache = persistent_hash_map::empty();
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   persistent_hash_map_ref multi_function::reset_cache()
@@ -186,7 +186,7 @@ namespace jank::runtime::obj
 
     method_table = method_table->assoc(dispatch_val, method);
     reset_cache();
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   multi_function_ref multi_function::remove_method(object_ref const dispatch_val)
@@ -194,7 +194,7 @@ namespace jank::runtime::obj
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
     method_table = method_table->dissoc(dispatch_val);
     reset_cache();
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   multi_function_ref multi_function::prefer_method(object_ref const x, object_ref const y)
@@ -214,7 +214,7 @@ namespace jank::runtime::obj
       x,
       runtime::conj(runtime::get(prefer_table, x, persistent_hash_set::empty()), y));
     reset_cache();
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   bool multi_function::is_preferred(object_ref const hierarchy,

@@ -36,7 +36,8 @@ namespace jank::runtime::obj::detail
   template <typename Derived, typename It>
   bool iterator_sequence<Derived, It>::equal(object const &o) const
   {
-    return runtime::sequence_equal(static_cast<Derived const *>(this), &o);
+    return runtime::sequence_equal(static_cast<Derived const *>(this),
+                                   runtime::detail::untagged(&o));
   }
 
   template <typename Derived, typename It>

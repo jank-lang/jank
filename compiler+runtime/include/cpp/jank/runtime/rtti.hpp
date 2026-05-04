@@ -68,6 +68,14 @@ namespace jank::runtime
     return static_cast<T *>(o.ptr());
   }
 
+  /* TODO: Inline once we have LLVM 23. */
+  template <>
+  obj::small_integer_ref expect_object<obj::small_integer>(object_ref const o);
+
+  /* TODO: Inline once we have LLVM 23. */
+  template <>
+  obj::small_real_ref expect_object<obj::small_real>(object_ref const o);
+
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
