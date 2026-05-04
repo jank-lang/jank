@@ -79,28 +79,28 @@ namespace jank::runtime
   /* callable */
   object_ref object::call() const
   {
-    throw invalid_arity<0>{ runtime::to_code_string(this) };
+    throw invalid_arity<0>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
   object_ref object::call(object_ref const) const
   {
-    throw invalid_arity<1>{ runtime::to_code_string(this) };
+    throw invalid_arity<1>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
   object_ref object::call(object_ref const, object_ref const) const
   {
-    throw invalid_arity<2>{ runtime::to_code_string(this) };
+    throw invalid_arity<2>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
   object_ref object::call(object_ref const, object_ref const, object_ref const) const
   {
-    throw invalid_arity<3>{ runtime::to_code_string(this) };
+    throw invalid_arity<3>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
   object_ref
   object::call(object_ref const, object_ref const, object_ref const, object_ref const) const
   {
-    throw invalid_arity<4>{ runtime::to_code_string(this) };
+    throw invalid_arity<4>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
   object_ref object::call(object_ref const,
@@ -109,7 +109,7 @@ namespace jank::runtime
                           object_ref const,
                           object_ref const) const
   {
-    throw invalid_arity<5>{ runtime::to_code_string(this) };
+    throw invalid_arity<5>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
   object_ref object::call(object_ref const,
@@ -119,7 +119,7 @@ namespace jank::runtime
                           object_ref const,
                           object_ref const) const
   {
-    throw invalid_arity<6>{ runtime::to_code_string(this) };
+    throw invalid_arity<6>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
   object_ref object::call(object_ref const,
@@ -130,19 +130,7 @@ namespace jank::runtime
                           object_ref const,
                           object_ref const) const
   {
-    throw invalid_arity<7>{ runtime::to_code_string(this) };
-  }
-
-  object_ref object::call(object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const) const
-  {
-    throw invalid_arity<8>{ runtime::to_code_string(this) };
+    throw invalid_arity<7>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
   object_ref object::call(object_ref const,
@@ -152,10 +140,9 @@ namespace jank::runtime
                           object_ref const,
                           object_ref const,
                           object_ref const,
-                          object_ref const,
                           object_ref const) const
   {
-    throw invalid_arity<9>{ runtime::to_code_string(this) };
+    throw invalid_arity<8>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
   object_ref object::call(object_ref const,
@@ -166,10 +153,23 @@ namespace jank::runtime
                           object_ref const,
                           object_ref const,
                           object_ref const,
+                          object_ref const) const
+  {
+    throw invalid_arity<9>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+  }
+
+  object_ref object::call(object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
                           object_ref const,
                           object_ref const) const
   {
-    throw invalid_arity<10>{ runtime::to_code_string(this) };
+    throw invalid_arity<10>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
   callable_arity_flags object::get_arity_flags() const
@@ -189,7 +189,9 @@ namespace jank::runtime
 
   bool object::contains(object_ref const) const
   {
-    throw error::runtime_unsupported_behavior(type, "get", object_source(this));
+    throw error::runtime_unsupported_behavior(type,
+                                              "get",
+                                              object_source(runtime::detail::untagged(this)));
   }
 
   object_ref object::find(object_ref const) const
@@ -199,7 +201,9 @@ namespace jank::runtime
 
   i64 object::compare(object const &) const
   {
-    throw error::runtime_unsupported_behavior(type, "compare", object_source(this));
+    throw error::runtime_unsupported_behavior(type,
+                                              "compare",
+                                              object_source(runtime::detail::untagged(this)));
   }
 
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept

@@ -97,7 +97,7 @@ namespace jank::runtime::obj
 
   integer_range_ref integer_range::seq() const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   integer_range_ref integer_range::fresh_seq() const
@@ -126,17 +126,17 @@ namespace jank::runtime::obj
       return {};
     }
     start += step;
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   cons_ref integer_range::conj(object_ref const head) const
   {
-    return make_box<cons>(head, this);
+    return make_box<cons>(head, runtime::detail::untagged(this));
   }
 
   bool integer_range::equal(object const &o) const
   {
-    return runtime::sequence_equal(this, runtime::detail::untagged(&o));
+    return runtime::sequence_equal(runtime::detail::untagged(this), runtime::detail::untagged(&o));
   }
 
   void integer_range::to_string(jtl::string_builder &buff) const
@@ -156,7 +156,7 @@ namespace jank::runtime::obj
 
   uhash integer_range::to_hash() const
   {
-    return hash::ordered(this);
+    return hash::ordered(runtime::detail::untagged(this));
   }
 
   integer_range_ref integer_range::with_meta(object_ref const m) const

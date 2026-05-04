@@ -965,7 +965,7 @@ extern "C"
     auto integer{ to_integer_or_hash(o_obj) };
     if(mask != 0)
     {
-      if(o_obj->type == object_type::integer)
+      if(is_integer(o_obj))
       {
         /* We don't hash the integer if it's within an i32 value.
          * This is to be consistent with how keys are hashed in jank's case macro. */

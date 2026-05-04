@@ -1157,7 +1157,7 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer,
                     "switch(jank_shift_mask_case_integer(static_cast<jank::runtime::object*>({}."
-                    "raw()), {}, {})) {",
+                    "erase().raw()), {}, {})) {",
                     inst->value,
                     inst->shift,
                     inst->mask);
@@ -1363,7 +1363,7 @@ namespace jank::codegen
 
         if(param_type && Cpp::IsPointerType(param_type) && is_any_object(arg_type))
         {
-          util::format_to(b.body_buffer, ".raw())");
+          util::format_to(b.body_buffer, ".erase().raw())");
         }
         need_comma = true;
       }
@@ -1775,14 +1775,15 @@ namespace jank::codegen
   {
     b.next_instruction();
     auto const type_name{ get_qualified_type_name(Cpp::GetCanonicalType(inst->expr->type)) };
-    util::format_to(b.body_buffer,
-                    "auto {}{ "
-                    "static_cast<{}>(jank_unbox_with_source(\"{}\", {}.raw(), {}.raw())) };",
-                    inst->name,
-                    type_name,
-                    type_name,
-                    inst->value,
-                    inst->meta);
+    util::format_to(
+      b.body_buffer,
+      "auto {}{ "
+      "static_cast<{}>(jank_unbox_with_source(\"{}\", {}.erase().raw(), {}.erase().raw())) };",
+      inst->name,
+      type_name,
+      type_name,
+      inst->value,
+      inst->meta);
 
     return inst->name;
   }

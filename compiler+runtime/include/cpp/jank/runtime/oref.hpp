@@ -411,7 +411,7 @@ namespace jank::runtime
         }
 
         obj::small_integer const i{ detail::as_integer(data) };
-        return o.equal(&i);
+        return o.equal(detail::untagged(&i));
       }
       else if(detail::is_small_int(o.raw()))
       {
@@ -427,7 +427,7 @@ namespace jank::runtime
         }
 
         obj::small_real i{ detail::as_real(data) };
-        return o.equal(&i);
+        return o.equal(detail::untagged(&i));
       }
       else if(detail::is_small_real(o.raw()))
       {
@@ -751,7 +751,7 @@ namespace jank::runtime
         }
 
         obj::small_integer const i{ detail::as_integer(data) };
-        return o.compare(&i);
+        return o.compare(detail::untagged(&i));
       }
       else if(detail::is_small_int(o.raw()))
       {
@@ -769,7 +769,7 @@ namespace jank::runtime
         }
 
         obj::small_real i{ detail::as_real(data) };
-        return o.compare(&i);
+        return o.compare(detail::untagged(&i));
       }
       else if(detail::is_small_real(o.raw()))
       {
@@ -1389,7 +1389,7 @@ namespace jank::runtime
       }
 
       obj::small_integer const i{ data };
-      return o.equal(&i);
+      return o.equal(detail::untagged(&i));
     }
 
     jtl::immutable_string to_string() const
@@ -1685,7 +1685,7 @@ namespace jank::runtime
       }
 
       obj::small_real i{ data };
-      return o.equal(&i);
+      return o.equal(detail::untagged(&i));
     }
 
     jtl::immutable_string to_string() const
