@@ -28,7 +28,9 @@ namespace jank::runtime
     concept valid_boxed_math = (jtl::is_same<T, object_ref>
                                 || jtl::is_any_same<T,
                                                     obj::integer_ref,
+                                                    obj::small_integer_ref,
                                                     obj::real_ref,
+                                                    obj::small_real_ref,
                                                     obj::big_integer_ref,
                                                     obj::big_decimal_ref,
                                                     obj::ratio_ref>);
@@ -46,9 +48,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't add a {} to {}.", object_type_str(l->type), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't add a {} to {}.",
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -93,7 +95,7 @@ namespace jank::runtime
     if constexpr(!detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{
-        util::format("Can't add a {} to {}.", jtl::type_name<L>(), object_type_str(r->type))
+        util::format("Can't add a {} to {}.", jtl::type_name<L>(), object_type_str(r.get_type()))
       };
       return object_ref{};
     }
@@ -122,7 +124,7 @@ namespace jank::runtime
     if constexpr(!detail::valid_boxed_math<L>)
     {
       throw std::runtime_error{
-        util::format("Can't add a {} to {}.", object_type_str(l->type), jtl::type_name<R>())
+        util::format("Can't add a {} to {}.", object_type_str(l.get_type()), jtl::type_name<R>())
       };
       return object_ref{};
     }
@@ -161,8 +163,8 @@ namespace jank::runtime
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't subtract a {} from a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -208,7 +210,7 @@ namespace jank::runtime
     {
       throw std::runtime_error{ util::format("Can't subtract a {} from a {}.",
                                              jtl::type_name<L>(),
-                                             object_type_str(r->type)) };
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -236,7 +238,7 @@ namespace jank::runtime
     if constexpr(!detail::valid_boxed_math<L>)
     {
       throw std::runtime_error{ util::format("Can't subtract a {} from a {}.",
-                                             object_type_str(l->type),
+                                             object_type_str(l.get_type()),
                                              jtl::type_name<R>()) };
       return object_ref{};
     }
@@ -275,8 +277,8 @@ namespace jank::runtime
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't divide a {} by a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -320,9 +322,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't divide a {} by a {}.", jtl::type_name<L>(), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't divide a {} by a {}.",
+                                             jtl::type_name<L>(),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -349,9 +351,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{
-        util::format("Can't divide a {} by a {}.", object_type_str(l->type), jtl::type_name<R>())
-      };
+      throw std::runtime_error{ util::format("Can't divide a {} by a {}.",
+                                             object_type_str(l.get_type()),
+                                             jtl::type_name<R>()) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref>)
@@ -387,8 +389,8 @@ namespace jank::runtime
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't multiply a {} with a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -434,7 +436,7 @@ namespace jank::runtime
     {
       throw std::runtime_error{ util::format("Can't multiply a {} with a {}.",
                                              jtl::type_name<L>(),
-                                             object_type_str(r->type)) };
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -462,7 +464,7 @@ namespace jank::runtime
     if constexpr(!detail::valid_boxed_math<L>)
     {
       throw std::runtime_error{ util::format("Can't multiply a {} with a {}.",
-                                             object_type_str(l->type),
+                                             object_type_str(l.get_type()),
                                              jtl::type_name<R>()) };
       return object_ref{};
     }
@@ -501,8 +503,8 @@ namespace jank::runtime
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return false;
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -544,9 +546,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", jtl::type_name<L>(), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             jtl::type_name<L>(),
+                                             object_type_str(r.get_type())) };
       return false;
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -572,9 +574,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", object_type_str(l->type), jtl::type_name<R>())
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             object_type_str(l.get_type()),
+                                             jtl::type_name<R>()) };
       return false;
     }
     else if constexpr(jtl::is_same<L, object_ref>)
@@ -609,8 +611,8 @@ namespace jank::runtime
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return false;
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -652,9 +654,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", jtl::type_name<L>(), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             jtl::type_name<L>(),
+                                             object_type_str(r.get_type())) };
       return false;
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -680,9 +682,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", object_type_str(l->type), jtl::type_name<R>())
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             object_type_str(l.get_type()),
+                                             jtl::type_name<R>()) };
       return false;
     }
     if constexpr(jtl::is_same<L, object_ref>)
@@ -717,8 +719,8 @@ namespace jank::runtime
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -766,9 +768,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", jtl::type_name<L>(), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             jtl::type_name<L>(),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -797,9 +799,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", object_type_str(l->type), jtl::type_name<R>())
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             object_type_str(l.get_type()),
+                                             jtl::type_name<R>()) };
       return object_ref{};
     }
     if constexpr(jtl::is_same<L, object_ref>)
@@ -837,8 +839,8 @@ namespace jank::runtime
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -886,9 +888,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", jtl::type_name<L>(), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             jtl::type_name<L>(),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -917,9 +919,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", object_type_str(l->type), jtl::type_name<R>())
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             object_type_str(l.get_type()),
+                                             jtl::type_name<R>()) };
       return object_ref{};
     }
     if constexpr(jtl::is_same<L, object_ref>)

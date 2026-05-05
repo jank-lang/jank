@@ -242,6 +242,16 @@ namespace jank::runtime::obj
     return l.to_real() - r->data;
   }
 
+  f64 operator-(small_real_ref const l, ratio_data const &r)
+  {
+    return l->data - r.to_real();
+  }
+
+  f64 operator-(ratio_data const &l, small_real_ref const r)
+  {
+    return l.to_real() - r->data;
+  }
+
   object_ref operator*(ratio_data const &l, ratio_data const &r)
   {
     return ratio::create(l.numerator * r.numerator, l.denominator * r.denominator);
@@ -263,6 +273,16 @@ namespace jank::runtime::obj
   }
 
   f64 operator*(ratio_data const &l, real_ref const r)
+  {
+    return l.to_real() * r->data;
+  }
+
+  f64 operator*(small_real_ref const l, ratio_data const &r)
+  {
+    return l->data * r.to_real();
+  }
+
+  f64 operator*(ratio_data const &l, small_real_ref const r)
   {
     return l.to_real() * r->data;
   }
@@ -292,6 +312,16 @@ namespace jank::runtime::obj
     return l.to_real() / r->data;
   }
 
+  f64 operator/(small_real_ref const l, ratio_data const &r)
+  {
+    return l->data / r.to_real();
+  }
+
+  f64 operator/(ratio_data const &l, small_real_ref const r)
+  {
+    return l.to_real() / r->data;
+  }
+
   bool operator==(ratio_data const &l, ratio_data const &r)
   {
     return l.numerator == r.numerator && l.denominator == r.denominator;
@@ -313,6 +343,16 @@ namespace jank::runtime::obj
   }
 
   bool operator==(ratio_data const &l, real_ref const r)
+  {
+    return r == l;
+  }
+
+  bool operator==(small_real_ref const l, ratio_data const &r)
+  {
+    return std::fabs(l->data - r) < epsilon;
+  }
+
+  bool operator==(ratio_data const &l, small_real_ref const r)
   {
     return r == l;
   }
@@ -357,12 +397,32 @@ namespace jank::runtime::obj
     return l.to_real() < r->data;
   }
 
+  bool operator<(small_real_ref const l, ratio_data const &r)
+  {
+    return l->data < r.to_real();
+  }
+
+  bool operator<(ratio_data const &l, small_real_ref const r)
+  {
+    return l.to_real() < r->data;
+  }
+
   bool operator<=(real_ref const l, ratio_data const &r)
   {
     return l->data <= r.to_real();
   }
 
   bool operator<=(ratio_data const &l, real_ref const r)
+  {
+    return l.to_real() <= r->data;
+  }
+
+  bool operator<=(small_real_ref const l, ratio_data const &r)
+  {
+    return l->data <= r.to_real();
+  }
+
+  bool operator<=(ratio_data const &l, small_real_ref const r)
   {
     return l.to_real() <= r->data;
   }

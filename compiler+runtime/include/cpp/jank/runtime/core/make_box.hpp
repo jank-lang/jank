@@ -45,12 +45,6 @@ namespace jank::runtime
   }
 
   [[gnu::flatten, gnu::hot]]
-  inline obj::real_ref make_box(f64 const r)
-  {
-    return make_box<obj::real>(r);
-  }
-
-  [[gnu::flatten, gnu::hot]]
   inline auto make_box(obj::ratio_data const &r)
   {
     return make_box<obj::ratio>(r);
@@ -87,7 +81,7 @@ namespace jank::runtime
   [[gnu::flatten, gnu::hot]]
   inline obj::small_real_ref make_box(T const d)
   {
-    return detail::tag<object *>(static_cast<f64>(d));
+    return static_cast<f64>(d);
   }
 
   template <typename T>

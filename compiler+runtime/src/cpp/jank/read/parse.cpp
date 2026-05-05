@@ -1852,7 +1852,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::integer>(std::get<i64>(token.data)), token, token };
+    return object_source_info{ make_box(std::get<i64>(token.data)), token, token };
   }
 
   processor::object_result processor::parse_big_integer()
@@ -1901,7 +1901,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::real>(std::get<f64>(token.data)), token, token };
+    return object_source_info{ make_box(std::get<f64>(token.data)), token, token };
   }
 
   processor::object_result processor::parse_string()

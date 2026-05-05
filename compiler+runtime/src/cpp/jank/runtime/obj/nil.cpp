@@ -110,5 +110,5 @@ namespace jank::runtime
   }
 
   obj::nil const _jank_nil;
-  obj::nil_ref const jank_nil{ &_jank_nil };
+  obj::nil_ref const jank_nil{ runtime::detail::untagged(&_jank_nil) };
 }
