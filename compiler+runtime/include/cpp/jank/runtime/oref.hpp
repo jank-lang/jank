@@ -420,12 +420,12 @@ namespace jank::runtime
           return detail::as_real(data) == detail::as_real(o.raw());
         }
 
-        obj::small_real i{ detail::as_real(data) };
+        obj::small_real const i{ detail::as_real(data) };
         return o.equal(detail::untagged(&i));
       }
       else if(detail::is_small_real(o.raw()))
       {
-        obj::small_real i{ detail::as_real(o.raw()) };
+        obj::small_real const i{ detail::as_real(o.raw()) };
         return ptr()->equal(i);
       }
 
@@ -441,7 +441,7 @@ namespace jank::runtime
       }
       if(detail::is_small_real(data))
       {
-        obj::small_real i{ detail::as_real(data) };
+        obj::small_real const i{ detail::as_real(data) };
         return i.to_string();
       }
 
@@ -458,7 +458,7 @@ namespace jank::runtime
       }
       if(detail::is_small_real(data))
       {
-        obj::small_real i{ detail::as_real(data) };
+        obj::small_real const i{ detail::as_real(data) };
         i.to_string(sb);
         return;
       }
@@ -475,7 +475,7 @@ namespace jank::runtime
       }
       if(detail::is_small_real(data))
       {
-        obj::small_real i{ detail::as_real(data) };
+        obj::small_real const i{ detail::as_real(data) };
         return i.to_code_string();
       }
 
@@ -491,7 +491,7 @@ namespace jank::runtime
       }
       if(detail::is_small_real(data))
       {
-        obj::small_real i{ detail::as_real(data) };
+        obj::small_real const i{ detail::as_real(data) };
         return i.to_hash();
       }
 
@@ -507,7 +507,7 @@ namespace jank::runtime
       }
       if(detail::is_small_real(data))
       {
-        obj::small_real i{ detail::as_real(data) };
+        obj::small_real const i{ detail::as_real(data) };
         return i.has_behavior(b);
       }
 
@@ -762,12 +762,12 @@ namespace jank::runtime
           return (r < l) - (l < r);
         }
 
-        obj::small_real i{ detail::as_real(data) };
+        obj::small_real const i{ detail::as_real(data) };
         return o.compare(detail::untagged(&i));
       }
       else if(detail::is_small_real(o.raw()))
       {
-        obj::small_real i{ detail::as_real(o.raw()) };
+        obj::small_real const i{ detail::as_real(o.raw()) };
         return ptr()->compare(i);
       }
 
@@ -1018,7 +1018,7 @@ namespace jank::runtime
       }
       if(detail::is_small_real(o.raw()))
       {
-        obj::small_real i{ detail::as_real(o.raw()) };
+        obj::small_real const i{ detail::as_real(o.raw()) };
         return static_cast<T *>(data)->equal(i);
       }
       return static_cast<T *>(data)->equal(*o.ptr());
@@ -1678,69 +1678,69 @@ namespace jank::runtime
         return data == detail::as_real(o.raw());
       }
 
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return o.equal(detail::untagged(&i));
     }
 
     jtl::immutable_string to_string() const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.to_string();
     }
 
     void to_string(jtl::string_builder &sb) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       i.to_string(sb);
     }
 
     jtl::immutable_string to_code_string() const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.to_code_string();
     }
 
     uhash to_hash() const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.to_hash();
     }
 
     bool has_behavior(object_behavior const b) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.has_behavior(b);
     }
 
     /* behavior::call */
     object_ref call() const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.call();
     }
 
     object_ref call(object_ref const a1) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.call(a1);
     }
 
     object_ref call(object_ref const a1, object_ref const a2) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.call(a1, a2);
     }
 
     object_ref call(object_ref const a1, object_ref const a2, object_ref const a3) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.call(a1, a2, a3);
     }
 
     object_ref
     call(object_ref const a1, object_ref const a2, object_ref const a3, object_ref const a4) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.call(a1, a2, a3, a4);
     }
 
@@ -1750,7 +1750,7 @@ namespace jank::runtime
                     object_ref const a4,
                     object_ref const a5) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.call(a1, a2, a3, a4, a5);
     }
 
@@ -1761,7 +1761,7 @@ namespace jank::runtime
                     object_ref const a5,
                     object_ref const a6) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.call(a1, a2, a3, a4, a5, a6);
     }
 
@@ -1773,7 +1773,7 @@ namespace jank::runtime
                     object_ref const a6,
                     object_ref const a7) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.call(a1, a2, a3, a4, a5, a6, a7);
     }
 
@@ -1786,7 +1786,7 @@ namespace jank::runtime
                     object_ref const a7,
                     object_ref const a8) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.call(a1, a2, a3, a4, a5, a6, a7, a8);
     }
 
@@ -1800,7 +1800,7 @@ namespace jank::runtime
                     object_ref const a8,
                     object_ref const a9) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
     }
 
@@ -1815,7 +1815,7 @@ namespace jank::runtime
                     object_ref const a9,
                     object_ref const a10) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
@@ -1827,26 +1827,26 @@ namespace jank::runtime
     /* behavior::get */
     object_ref get(object_ref const key) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.get(key);
     }
 
     object_ref get(object_ref const key, object_ref const fallback) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.get(key, fallback);
     }
 
     bool contains(object_ref const key) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.contains(key);
     }
 
     /* behavior::find */
     object_ref find(object_ref key) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.find(key);
     }
 
@@ -1860,7 +1860,7 @@ namespace jank::runtime
         return (r < l) - (l < r);
       }
 
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.compare(*o.ptr());
     }
 
