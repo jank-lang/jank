@@ -381,6 +381,12 @@ OPTIONS
         opts.runtime_optimization_level = opts.codegen_optimization_level;
       }
 
+      /* Direct-call needs eager compilation so var roots are resolved, not deferred. */
+      if(opts.direct_call && opts.eagerness == compilation_eagerness::lazy)
+      {
+        opts.eagerness = compilation_eagerness::eager;
+      }
+
       /* If we have any more pending flags at this point, they don't belong. */
       if(!pending_flags.empty())
       {

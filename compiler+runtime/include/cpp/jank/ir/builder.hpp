@@ -90,6 +90,10 @@ namespace jank::ir
     identifier dynamic_call(analyze::expression_position const pos,
                             identifier const &fn,
                             native_vector<identifier> &&args);
+    identifier static_call(analyze::expression_position const pos,
+                           jtl::immutable_string const &qualified_var,
+                           identifier const &var,
+                           native_vector<identifier> &&args);
     identifier named_recursion(analyze::expression_position const pos,
                                identifier const &fn,
                                jtl::immutable_string const &fn_base_name,

@@ -166,6 +166,18 @@ namespace jank::ir::inst
   {
   }
 
+  static_call::static_call(identifier const &name,
+                           jtl::ptr<void> const type,
+                           jtl::immutable_string const &qualified_var,
+                           identifier const &var,
+                           native_vector<identifier> &&args)
+    : instruction{ instruction_kind::static_call, name, type }
+    , qualified_var{ qualified_var }
+    , var{ var }
+    , args{ jtl::move(args) }
+  {
+  }
+
   named_recursion::named_recursion(identifier const &name,
                                    jtl::ptr<void> const type,
                                    identifier const &fn,

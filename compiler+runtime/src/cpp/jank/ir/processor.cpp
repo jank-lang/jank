@@ -19,6 +19,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/error/codegen.hpp>
+#include <jank/util/cli.hpp>
 
 namespace jank::ir
 {
@@ -94,6 +95,19 @@ namespace jank::ir
     for(auto const arg_expr : expr->arg_exprs)
     {
       arg_idents.emplace_back(gen(arg_expr, b).unwrap());
+    }
+
+    if(util::cli::opts.direct_call)
+    {
+      auto const *vd{ dynamic_cast<analyze::expr::var_deref *>(expr->source_expr.data) };
+      if(vd != nullptr && !vd->var->dynamic.load())
+      {
+        auto const qualified_name{
+          util::format("{}/{}", vd->var->n->name->name, vd->var->name->name)
+        };
+        auto const var_ident{ b.var_deref(analyze::expression_position::value, qualified_name) };
+        return b.static_call(expr->position, qualified_name, var_ident, jtl::move(arg_idents));
+      }
     }
 
     auto const fn_ident{ gen(expr->source_expr, b).unwrap() };

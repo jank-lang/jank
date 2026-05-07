@@ -261,6 +261,23 @@ namespace jank::ir
     util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
   }
 
+  void inst::static_call::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :static-call :var {} :qualified-var {} :args [",
+                    name, var, qualified_var);
+    bool needs_space{};
+    for(auto const &arg : args)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      sb(arg);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+  }
+
   void inst::named_recursion::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb, "{:name {} :op :named-recursion :fn {} :args [", name, fn);

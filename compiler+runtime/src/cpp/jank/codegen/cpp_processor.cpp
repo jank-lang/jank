@@ -12,6 +12,8 @@
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/sequence_range.hpp>
+#include <jank/runtime/obj/jit_function.hpp>
+#include <jank/util/cli.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/clang_format.hpp>
@@ -601,6 +603,81 @@ namespace jank::codegen
       util::format_to(b.body_buffer, ", {}", arg);
     }
 
+    util::format_to(b.body_buffer, "));");
+    return inst->name;
+  }
+
+  jtl::option<identifier> gen(ir::inst::static_call_ref const &inst, builder &b)
+  {
+    b.next_instruction();
+
+    auto const var{ __rt_ctx->intern_var(inst->qualified_var).expect_ok() };
+
+    if(b.module->target == compilation_target::eval)
+    {
+      /* Embed the function pointer directly. */
+      auto const root_val{ var->get_root() };
+      auto const *jit_fn{ dynamic_cast<runtime::obj::jit_function *>(root_val.data) };
+      if(jit_fn != nullptr)
+      {
+        auto const arity{ inst->args.size() };
+        void *fn_ptr{};
+        switch(arity)
+        {
+          case 0: fn_ptr = reinterpret_cast<void *>(jit_fn->arity_0); break;
+          case 1: fn_ptr = reinterpret_cast<void *>(jit_fn->arity_1); break;
+          case 2: fn_ptr = reinterpret_cast<void *>(jit_fn->arity_2); break;
+          case 3: fn_ptr = reinterpret_cast<void *>(jit_fn->arity_3); break;
+          case 4: fn_ptr = reinterpret_cast<void *>(jit_fn->arity_4); break;
+          case 5: fn_ptr = reinterpret_cast<void *>(jit_fn->arity_5); break;
+          case 6: fn_ptr = reinterpret_cast<void *>(jit_fn->arity_6); break;
+          case 7: fn_ptr = reinterpret_cast<void *>(jit_fn->arity_7); break;
+          case 8: fn_ptr = reinterpret_cast<void *>(jit_fn->arity_8); break;
+          case 9: fn_ptr = reinterpret_cast<void *>(jit_fn->arity_9); break;
+          case 10: fn_ptr = reinterpret_cast<void *>(jit_fn->arity_10); break;
+          default: break;
+        }
+
+        if(fn_ptr != nullptr)
+        {
+          /* reinterpret_cast<object_ref(*)(object_ref, ...)>(ptr)(self, args...) */
+          util::format_to(b.body_buffer,
+                          "auto const {}(reinterpret_cast<jank::runtime::object_ref(*)(jank::runtime::object_ref",
+                          inst->name);
+          for(usize i{}; i < arity; ++i)
+          {
+            util::format_to(b.body_buffer, ", jank::runtime::object_ref");
+          }
+          util::format_to(b.body_buffer, ")>({})({}",
+                          reinterpret_cast<uintptr_t>(fn_ptr),
+                          inst->var);
+          for(auto const &arg : inst->args)
+          {
+            util::format_to(b.body_buffer, ", {}", arg);
+          }
+          util::format_to(b.body_buffer, "));");
+          return inst->name;
+        }
+      }
+
+      /* Fallback: variadic, closure, or not yet compiled. */
+      util::format_to(b.body_buffer, "auto const {}(jank::runtime::dynamic_call({}",
+                      inst->name, inst->var);
+      for(auto const &arg : inst->args)
+      {
+        util::format_to(b.body_buffer, ", {}", arg);
+      }
+      util::format_to(b.body_buffer, "));");
+      return inst->name;
+    }
+
+    /* AOT direct calls require deterministic naming, which is not yet implemented. */
+    util::format_to(b.body_buffer, "auto const {}(jank::runtime::dynamic_call({}",
+                    inst->name, inst->var);
+    for(auto const &arg : inst->args)
+    {
+      util::format_to(b.body_buffer, ", {}", arg);
+    }
     util::format_to(b.body_buffer, "));");
     return inst->name;
   }

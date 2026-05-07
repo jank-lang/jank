@@ -328,6 +328,22 @@ namespace jank::ir
     return name;
   }
 
+  identifier builder::static_call(analyze::expression_position const pos,
+                                   jtl::immutable_string const &qualified_var,
+                                   identifier const &var,
+                                   native_vector<identifier> &&args)
+  {
+    auto name{ next_ident() };
+    auto const type{ untyped_object_ref_type() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::static_call>(name, type, qualified_var, var, jtl::move(args)));
+    if(pos == analyze::expression_position::tail)
+    {
+      return ret(name, type);
+    }
+    return name;
+  }
+
   identifier builder::named_recursion(analyze::expression_position const pos,
                                       identifier const &fn,
                                       jtl::immutable_string const &fn_base_name,

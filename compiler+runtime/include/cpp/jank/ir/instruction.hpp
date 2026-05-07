@@ -49,6 +49,7 @@ namespace jank::ir
     var_ref,
     type_erase,
     dynamic_call,
+    static_call,
     named_recursion,
     recursion_reference,
     truthy,
@@ -323,6 +324,25 @@ namespace jank::ir
     };
 
     using dynamic_call_ref = jtl::ref<dynamic_call>;
+
+    /* A call to a known, non-dynamic var. Codegen can use the qualified var name
+     * to emit a direct call instead of going through dynamic_call. */
+    struct static_call : instruction
+    {
+      static_call(identifier const &name,
+                  jtl::ptr<void> const type,
+                  jtl::immutable_string const &qualified_var,
+                  identifier const &var,
+                  native_vector<identifier> &&args);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      jtl::immutable_string qualified_var;
+      identifier var;
+      native_vector<identifier> args;
+    };
+
+    using static_call_ref = jtl::ref<static_call>;
 
     struct named_recursion : instruction
     {
