@@ -3286,9 +3286,12 @@ namespace jank::analyze
             runtime::get(var_deref->var->get_meta(),
                          __rt_ctx->intern_keyword("", "inline", true).expect_ok()));
           /* TODO: Once we're evaluating meta, we can remove this eval. */
-          context::binding_scope const _{ runtime::obj::persistent_hash_map::create_unique(
-            std::make_pair(__rt_ctx->current_ns_var, var_deref->var->n)) };
-          auto const actual_fn{ __rt_ctx->eval(inline_fn) };
+          object_ref actual_fn;
+          {
+            context::binding_scope const _{ runtime::obj::persistent_hash_map::create_unique(
+              std::make_pair(__rt_ctx->current_ns_var, var_deref->var->n)) };
+            actual_fn = __rt_ctx->eval(inline_fn);
+          }
           auto const expanded{ apply_to(actual_fn, o->next()) };
           return analyze(expanded, current_frame, position, fn_ctx, needs_box);
         }
