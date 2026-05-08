@@ -879,6 +879,11 @@ namespace jank::runtime
 #endif
   }
 
+  object_ref promise()
+  {
+    return make_box<obj::promise>();
+  }
+
   object_ref read_string(object_ref const form_string, object_ref const opts)
   {
     if(form_string.get_type() != object_type::persistent_string)

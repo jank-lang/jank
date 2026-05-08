@@ -123,6 +123,8 @@ namespace jank::runtime
   void cancel_future(object_ref const future);
   bool is_future_cancelled(object_ref const future);
 
+  object_ref promise();
+
   object_ref read_string(object_ref const form_string, object_ref const opts);
   object_ref read_file(object_ref const file_path, object_ref const opts);
 }
