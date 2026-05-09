@@ -462,4 +462,10 @@ namespace jank::ir::inst
     , expr{ expr }
   {
   }
+
+  source_location::source_location(identifier const &name, read::source const &location)
+    : instruction{ instruction_kind::source_location, name, Cpp::GetVoidType() }
+    , location{ location }
+  {
+  }
 }

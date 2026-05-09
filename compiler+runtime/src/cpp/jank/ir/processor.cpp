@@ -24,6 +24,21 @@ namespace jank::ir
 {
   using namespace analyze::cpp_util;
 
+  void update_source_location(analyze::expression_ref const expr, builder &b)
+  {
+    if(util::cli::opts.debug)
+    {
+      auto const expr_location(runtime::object_source(expr->form));
+      if(expr_location != read::source::unknown()
+         && (expr_location.file != b.location.file
+             || expr_location.start.line != b.location.start.line))
+      {
+        b.location = expr_location;
+        b.source_location(b.location);
+      }
+    }
+  }
+
   usize function::add_block(identifier const &name)
   {
     auto const index{ blocks.size() };
@@ -857,6 +872,7 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expression_ref const expr, builder &b)
   {
+    update_source_location(expr, b);
     jtl::option<identifier> name;
     visit_expr([&](auto const typed_ex) { name = gen(typed_ex, b); }, expr);
     return name;

@@ -666,4 +666,12 @@ namespace jank::ir
     }
     return name;
   }
+
+  identifier builder::source_location(read::source const &location)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::source_location>(name, location));
+    return name;
+  }
 }

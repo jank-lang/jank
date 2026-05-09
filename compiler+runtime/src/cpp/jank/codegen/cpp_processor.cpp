@@ -1814,6 +1814,20 @@ namespace jank::codegen
     return inst->name;
   }
 
+  jtl::option<identifier> gen(ir::inst::source_location_ref const &inst, builder &b)
+  {
+    b.next_instruction();
+
+    auto const &location{ inst->location };
+
+    if(location.file != read::no_source_path && location.start.line > 0)
+    {
+      util::format_to(b.body_buffer, "\n#line {} \"{}\"\n", location.start.line, location.file);
+    }
+
+    return "jank::runtime::jank_nil";
+  }
+
   jtl::option<identifier> gen(ir::inst::cpp_delete_ref const &inst, builder &b)
   {
     b.next_instruction();

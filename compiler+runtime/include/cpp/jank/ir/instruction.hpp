@@ -3,6 +3,7 @@
 #include <jtl/ref.hpp>
 #include <jtl/option.hpp>
 
+#include <jank/read/source.hpp>
 #include <jank/runtime/object.hpp>
 
 namespace jank::analyze
@@ -76,7 +77,8 @@ namespace jank::ir
     cpp_box,
     cpp_unbox,
     cpp_new,
-    cpp_delete
+    cpp_delete,
+    source_location,
   };
 
   struct instruction
@@ -753,5 +755,16 @@ namespace jank::ir
     };
 
     using cpp_delete_ref = jtl::ref<cpp_delete>;
+
+    struct source_location : instruction
+    {
+      source_location(identifier const &name, read::source const &location);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      read::source location;
+    };
+
+    using source_location_ref = jtl::ref<source_location>;
   }
 }

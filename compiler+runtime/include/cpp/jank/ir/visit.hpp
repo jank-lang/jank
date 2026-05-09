@@ -98,6 +98,8 @@ namespace jank::ir
         return f(jtl::static_ref_cast<inst::cpp_new>(i), std::forward<Args>(args)...);
       case instruction_kind::cpp_delete:
         return f(jtl::static_ref_cast<inst::cpp_delete>(i), std::forward<Args>(args)...);
+      case instruction_kind::source_location:
+        return f(jtl::static_ref_cast<inst::source_location>(i), std::forward<Args>(args)...);
       default:
         break;
     }
