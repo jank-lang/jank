@@ -115,7 +115,7 @@
     ; clojure.core-test.mod ; FIXME: Failing tests.
     clojure.core-test.name
     clojure.core-test.namespace
-    ; clojure.core-test.nan-qmark ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/244
+    clojure.core-test.nan-qmark
     ; clojure.core-test.neg-int-qmark ; FIXME: Failing test.
     clojure.core-test.neg-qmark
     clojure.core-test.next
