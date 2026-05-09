@@ -1670,12 +1670,14 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_member_access_ref const &inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer,
-                    "auto &&{}({}{}{});",
-                    inst->name,
-                    inst->value,
-                    (Cpp::IsPointerType(expression_type(inst->expr->obj_expr)) ? "->" : "."),
-                    inst->expr->name);
+    util::format_to(
+      b.body_buffer,
+      "auto &&{}({}{}{});",
+      inst->name,
+      inst->value,
+      (Cpp::IsPointerType(Cpp::GetNonReferenceType(expression_type(inst->expr->obj_expr))) ? "->"
+                                                                                           : "."),
+      inst->expr->name);
 
     return inst->name;
   }
