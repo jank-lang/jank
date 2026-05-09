@@ -879,7 +879,7 @@ namespace jank::runtime
 #endif
   }
 
-  object_ref promise()
+  obj::promise_ref promise()
   {
     return make_box<obj::promise>();
   }

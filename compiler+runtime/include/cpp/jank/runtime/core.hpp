@@ -15,6 +15,7 @@ namespace jank::runtime
   namespace obj
   {
     using native_vector_sequence_ref = oref<struct native_vector_sequence>;
+    using promise_ref = oref<struct promise>;
   }
 
   jtl::immutable_string type(object_ref const o);
@@ -123,7 +124,7 @@ namespace jank::runtime
   void cancel_future(object_ref const future);
   bool is_future_cancelled(object_ref const future);
 
-  object_ref promise();
+  obj::promise_ref promise();
 
   object_ref read_string(object_ref const form_string, object_ref const opts);
   object_ref read_file(object_ref const file_path, object_ref const opts);
