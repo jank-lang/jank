@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include <jank/runtime/object.hpp>
 
 namespace jank::runtime::obj
