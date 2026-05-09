@@ -35,11 +35,16 @@ namespace jank::runtime::obj
 
     struct mutable_state
     {
+      /*** XXX: Val is immutable after initialization. ***/
       object_ref val;
       promise_status status{ promise_status::pending };
     };
 
+    /*** XXX: Everything here is thread-safe. ***/
+
     mutable folly::Synchronized<mutable_state> state;
+    /* sync.wait() is thread safe for multiple concurrent blocking derefs
+     * sync.notify_all() is also thread safe, but will only actually be called during a state.wlock() */
     mutable std::condition_variable_any sync;
   };
 }
