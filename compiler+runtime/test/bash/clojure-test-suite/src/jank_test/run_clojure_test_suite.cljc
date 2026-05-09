@@ -143,7 +143,7 @@
     clojure.core-test.peek
     clojure.core-test.persistent-bang
     ; clojure.core-test.plus ; FIXME: Failing tests.
-    ; clojure.core-test.plus-squote ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.BigInt'.
+    clojure.core-test.plus-squote
     clojure.core-test.pop
     clojure.core-test.pop-bang
     clojure.core-test.pos-int-qmark
@@ -195,7 +195,7 @@
     ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?
     ; clojure.core-test.star ; FIXME: Failing tests.
-    ; clojure.core-test.star-squote ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.BigInt'.
+    clojure.core-test.star-squote
     ; clojure.core-test.str ; FIXME: Failing tests.
     clojure.core-test.string-qmark
     ; clojure.core-test.subs ; FIXME: Failing tests.
