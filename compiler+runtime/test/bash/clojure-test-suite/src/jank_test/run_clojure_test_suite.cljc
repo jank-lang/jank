@@ -48,7 +48,7 @@
     clojure.core-test.count
     ; clojure.core-test.counted-qmark ; TODO: port array-map, TODO: port object-array
     ; clojure.core-test.cycle ; Program hangs.
-    ; clojure.core-test.dec ; TODO: underflow.
+    clojure.core-test.dec
     clojure.core-test.decimal-qmark
     clojure.core-test.denominator
     ; clojure.core-test.derive ; analyze/unresolved-symbol error: Unable to resolve symbol 'String'.
@@ -87,7 +87,7 @@
     clojure.core-test.ident-qmark
     clojure.core-test.identical-qmark
     ; clojure.core-test.ifn-qmark ; TODO: port promise
-    ; clojure.core-test.inc ; overflow untested,
+    clojure.core-test.inc
     ; clojure.core-test.int ; FIXME: Failing tests.
     ; clojure.core-test.int-qmark ; FIXME: Failing tests.
     ; clojure.core-test.integer-qmark ; FIXME: Failing tests.

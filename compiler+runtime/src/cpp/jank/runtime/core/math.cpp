@@ -406,9 +406,23 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l) -> object_ref {
-        auto const ret{ make_box(typed_l->data + 1ll) };
-        object_ref r{ ret };
-        return r;
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(jtl::is_any_same<T, obj::integer, obj::small_integer>)
+        {
+          i64 res{};
+
+          if(__builtin_add_overflow(typed_l->data, 1ll, &res))
+          {
+            throw make_box("Overflow on increment.").erase();
+          }
+
+          return make_box<obj::integer>(res);
+        }
+        else
+        {
+          return make_box(typed_l->data + 1ll);
+        }
       },
       l);
   }
@@ -442,7 +456,25 @@ namespace jank::runtime
   object_ref dec(object_ref const l)
   {
     return visit_number_like(
-      [](auto const typed_l) -> object_ref { return make_box(typed_l->data - 1ll).erase(); },
+      [](auto const typed_l) -> object_ref {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(jtl::is_any_same<T, obj::integer, obj::small_integer>)
+        {
+          i64 res{};
+
+          if(__builtin_sub_overflow(typed_l->data, 1ll, &res))
+          {
+            throw make_box("Underflow on decrement.").erase();
+          }
+
+          return make_box<obj::integer>(res);
+        }
+        else
+        {
+          return make_box(typed_l->data - 1ll);
+        }
+      },
       l);
   }
 
