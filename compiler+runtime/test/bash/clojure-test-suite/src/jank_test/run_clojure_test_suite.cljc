@@ -136,8 +136,8 @@
     clojure.core-test.or
     ; clojure.core-test.parents ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
     clojure.core-test.parse-boolean
-    ; clojure.core-test.parse-double ; libc++abi: terminating due to uncaught exception of type std::invalid_argument: stod: no conversio.
-    ; clojure.core-test.parse-long ; libc++abi: terminating due to uncaught exception of type std::invalid_argument: stoll: no conversion.
+    clojure.core-test.parse-double
+    clojure.core-test.parse-long
     clojure.core-test.parse-uuid
     clojure.core-test.partial
     clojure.core-test.peek

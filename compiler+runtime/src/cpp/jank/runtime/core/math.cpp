@@ -1017,12 +1017,42 @@ namespace jank::runtime
   }
 
   /* TODO: Rename these to match the type name. */
-  i64 parse_long(object_ref const o)
+  object_ref parse_long(object_ref const o)
   {
     auto const typed_o{ dyn_cast<obj::persistent_string>(o) };
     if(typed_o.is_some())
     {
-      return std::stoll(typed_o->data);
+      auto const str_size{ static_cast<size_t>(typed_o->data.size()) };
+      auto const max_limit{ std::numeric_limits<size_t>::max() };
+
+      if(max_limit < str_size)
+      {
+        throw make_box(
+          util::format(
+            "String size ({}) exceeds the maximum allowed size ({}) for parsing to integer.",
+            str_size,
+            max_limit))
+          .erase();
+      }
+
+      size_t parsed_upto{};
+      i64 parsed_long{};
+
+      try
+      {
+        parsed_long = std::stoll(typed_o->data, &parsed_upto);
+      }
+      catch(...)
+      {
+        return jank_nil;
+      }
+
+      if(parsed_upto != str_size)
+      {
+        return jank_nil;
+      }
+
+      return make_box<obj::integer>(parsed_long);
     }
     else
     {
@@ -1031,12 +1061,42 @@ namespace jank::runtime
     }
   }
 
-  f64 parse_double(object_ref const o)
+  object_ref parse_double(object_ref const o)
   {
     auto const typed_o{ dyn_cast<obj::persistent_string>(o) };
     if(typed_o.is_some())
     {
-      return std::stod(typed_o->data);
+      auto const str_size{ static_cast<size_t>(typed_o->data.size()) };
+      auto const max_limit{ std::numeric_limits<size_t>::max() };
+
+      if(max_limit < str_size)
+      {
+        throw make_box(
+          util::format(
+            "String size ({}) exceeds the maximum allowed size ({}) for parsing to double.",
+            str_size,
+            max_limit))
+          .erase();
+      }
+
+      size_t parsed_upto{};
+      f64 parsed_double{};
+
+      try
+      {
+        parsed_double = std::stod(typed_o->data, &parsed_upto);
+      }
+      catch(...)
+      {
+        return jank_nil;
+      }
+
+      if(parsed_upto != str_size)
+      {
+        return jank_nil;
+      }
+
+      return make_box<obj::real>(parsed_double);
     }
     else
     {
