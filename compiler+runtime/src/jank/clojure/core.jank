@@ -5744,8 +5744,7 @@
 (defn long
   "Coerce to long"
   [#_Number x]
-  ;; (clojure.lang.RT/longCast x)
-  (throw "TODO: port long"))
+  (cpp/jank.runtime.to_long x))
 
 (defn double
   "Coerce to double"

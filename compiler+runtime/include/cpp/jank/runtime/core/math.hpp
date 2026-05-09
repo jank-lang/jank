@@ -1062,6 +1062,13 @@ namespace jank::runtime
     return static_cast<i64>(l);
   }
 
+  i64 to_long(object_ref const l);
+  i64 to_long(obj::nil_ref const l);
+  i64 to_long(obj::integer_ref const l);
+  i64 to_long(obj::real_ref const l);
+  i64 to_long(i64 l);
+  i64 to_long(f64 l);
+
   f64 to_real(object_ref const o);
 
   template <typename T>

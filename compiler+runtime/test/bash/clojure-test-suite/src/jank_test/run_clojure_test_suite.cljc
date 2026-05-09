@@ -101,7 +101,7 @@
     clojure.core-test.keyword-qmark
     clojure.core-test.last
     ; clojure.core-test.list-qmark ; TODO: port array-map, TODO: port object-array
-    ; clojure.core-test.long ; TODO: port long
+    clojure.core-test.long
     clojure.core-test.lt
     clojure.core-test.lt-eq
     clojure.core-test.make-hierarchy
