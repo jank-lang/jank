@@ -13,6 +13,7 @@ namespace jank::analyze::expr
     cpp_member_access(expression_position position,
                       local_frame_ptr frame,
                       bool needs_box,
+                      runtime::object_ref form,
                       jtl::ptr<void> type,
                       jtl::ptr<void> scope,
                       jtl::immutable_string const &name,

@@ -13,6 +13,7 @@ namespace jank::analyze::expr
     throw_(expression_position position,
            local_frame_ptr frame,
            bool needs_box,
+           runtime::object_ref form,
            expression_ref value);
 
     runtime::object_ref to_runtime_data() const override;

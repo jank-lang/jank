@@ -24,6 +24,19 @@ namespace jank::analyze
   {
   }
 
+  expression::expression(expression_kind const kind,
+                         expression_position const position,
+                         local_frame_ptr const frame,
+                         bool const needs_box,
+                         runtime::object_ref const form)
+    : kind{ kind }
+    , position{ position }
+    , frame{ frame }
+    , needs_box{ needs_box }
+    , form{ form }
+  {
+  }
+
   void expression::propagate_position(expression_position const pos)
   {
     position = pos;

@@ -18,6 +18,7 @@ namespace jank::analyze::expr
     cpp_raw(expression_position position,
             local_frame_ptr frame,
             bool needs_box,
+            runtime::object_ref form,
             jtl::immutable_string const &code);
 
     void propagate_position(expression_position const pos) override;

@@ -13,6 +13,7 @@ namespace jank::analyze::expr
     cpp_member_call(expression_position position,
                     local_frame_ptr frame,
                     bool needs_box,
+                    runtime::object_ref form,
                     jtl::ptr<void> type,
                     jtl::ptr<void> fn,
                     native_vector<expression_ref> &&arg_exprs);

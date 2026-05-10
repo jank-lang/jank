@@ -149,10 +149,12 @@ namespace jank::evaluate
     auto const frame{ jtl::make_ref<local_frame>(local_frame::frame_type::fn,
                                                  expr->frame->parent) };
     auto const fn_ctx{ jtl::make_ref<expr::function_context>() };
-    expr::function_arity arity{ jtl::move(params),
-                                jtl::make_ref<expr::do_>(expression_position::tail, frame, true),
-                                frame,
-                                fn_ctx };
+    expr::function_arity arity{
+      jtl::move(params),
+      jtl::make_ref<expr::do_>(expression_position::tail, frame, true, jank_nil),
+      frame,
+      fn_ctx
+    };
     expr->frame->parent = arity.frame;
     ret->frame = arity.frame->parent.unwrap_or(arity.frame);
     fn_ctx->name = ret->name;
@@ -175,6 +177,7 @@ namespace jank::evaluate
       expr_to_add = jtl::make_ref<expr::cpp_conversion>(expr->position,
                                                         expr->frame,
                                                         expr->needs_box,
+                                                        expr->form,
                                                         cpp_util::untyped_object_ref_type(),
                                                         expr_type,
                                                         conversion_policy::into_object,
@@ -220,6 +223,7 @@ namespace jank::evaluate
       return wrap_expression(jtl::make_ref<expr::primitive_literal>(expression_position::tail,
                                                                     an_prc.root_frame,
                                                                     true,
+                                                                    jank_nil,
                                                                     jank_nil),
                              name,
                              {});

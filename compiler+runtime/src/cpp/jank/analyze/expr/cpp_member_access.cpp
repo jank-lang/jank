@@ -8,11 +8,12 @@ namespace jank::analyze::expr
   cpp_member_access::cpp_member_access(expression_position const position,
                                        local_frame_ptr const frame,
                                        bool const needs_box,
+                                       object_ref const form,
                                        jtl::ptr<void> const type,
                                        jtl::ptr<void> const scope,
                                        jtl::immutable_string const &name,
                                        expression_ref const obj_expr)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , type{ type }
     , scope{ scope }
     , name{ name }

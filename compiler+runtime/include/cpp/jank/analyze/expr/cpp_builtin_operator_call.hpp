@@ -18,6 +18,7 @@ namespace jank::analyze::expr
     cpp_builtin_operator_call(expression_position position,
                               local_frame_ptr frame,
                               bool needs_box,
+                              runtime::object_ref form,
                               int op,
                               native_vector<expression_ref> &&arg_exprs,
                               jtl::ptr<void> type);

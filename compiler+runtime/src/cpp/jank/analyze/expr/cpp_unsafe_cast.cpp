@@ -8,9 +8,10 @@ namespace jank::analyze::expr
   cpp_unsafe_cast::cpp_unsafe_cast(expression_position const position,
                                    local_frame_ptr const frame,
                                    bool const needs_box,
+                                   object_ref const form,
                                    jtl::ptr<void> const type,
                                    expression_ref const value_expr)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , type{ type }
     , value_expr{ value_expr }
   {
