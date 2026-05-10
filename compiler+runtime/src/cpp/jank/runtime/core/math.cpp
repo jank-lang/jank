@@ -992,12 +992,12 @@ namespace jank::runtime
     return to_int(l);
   }
 
-  i64 to_long(i64 l)
+  i64 to_long(i64 const l)
   {
     return to_int(l);
   }
 
-  i64 to_long(f64 l)
+  i64 to_long(f64 const l)
   {
     return to_int(l);
   }
