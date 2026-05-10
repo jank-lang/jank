@@ -114,7 +114,7 @@ If you'd like your name, company, or logo here, you can
 <!-- pete23 -->
 <p align="center">
   <a href="https://pete23.com">
-    Pete TwentyThree of pete23.com
+    pete23
   </a>
 </p>
 
