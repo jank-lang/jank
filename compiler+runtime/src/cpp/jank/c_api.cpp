@@ -61,7 +61,7 @@ extern "C"
 {
   jank_object_ref jank_eval(jank_object_ref const o)
   {
-    auto const o_obj(reinterpret_cast<object *>(o));
+    object_ref const o_obj(reinterpret_cast<object *>(o));
     return __rt_ctx->eval(o_obj).erase().data;
   }
 
@@ -111,21 +111,21 @@ extern "C"
   jank_object_ref jank_var_bind_root(jank_object_ref const var, jank_object_ref const val)
   {
     auto const var_obj(try_object<runtime::var>(reinterpret_cast<object *>(var)));
-    auto const val_obj(reinterpret_cast<object *>(val));
+    object_ref const val_obj(reinterpret_cast<object *>(val));
     return var_obj->bind_root(val_obj).erase().data;
   }
 
   jank_object_ref jank_var_set_dynamic(jank_object_ref const var, jank_object_ref const dynamic)
   {
     auto const var_obj(try_object<runtime::var>(reinterpret_cast<object *>(var)));
-    auto const dynamic_obj(reinterpret_cast<object *>(dynamic));
+    object_ref const dynamic_obj(reinterpret_cast<object *>(dynamic));
     return var_obj->set_dynamic(truthy(dynamic_obj)).erase().data;
   }
 
   jank_object_ref jank_keyword_intern(jank_object_ref const ns, jank_object_ref const name)
   {
-    auto const ns_obj(reinterpret_cast<object *>(ns));
-    auto const name_obj(reinterpret_cast<object *>(name));
+    object_ref const ns_obj(reinterpret_cast<object *>(ns));
+    object_ref const name_obj(reinterpret_cast<object *>(name));
     return __rt_ctx->intern_keyword(to_string(ns_obj), to_string(name_obj))
       .expect_ok()
       .erase()
@@ -134,29 +134,29 @@ extern "C"
 
   jank_object_ref jank_deref(jank_object_ref const o)
   {
-    auto const o_obj(reinterpret_cast<object *>(o));
+    object_ref const o_obj(reinterpret_cast<object *>(o));
     return deref(o_obj).erase().data;
   }
 
   jank_object_ref jank_call0(jank_object_ref const f)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
     return dynamic_call(f_obj).erase().data;
   }
 
   jank_object_ref jank_call1(jank_object_ref const f, jank_object_ref const a1)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
-    auto const a1_obj(reinterpret_cast<object *>(a1));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
+    object_ref const a1_obj(reinterpret_cast<object *>(a1));
     return dynamic_call(f_obj, a1_obj).erase().data;
   }
 
   jank_object_ref
   jank_call2(jank_object_ref const f, jank_object_ref const a1, jank_object_ref const a2)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
-    auto const a1_obj(reinterpret_cast<object *>(a1));
-    auto const a2_obj(reinterpret_cast<object *>(a2));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
+    object_ref const a1_obj(reinterpret_cast<object *>(a1));
+    object_ref const a2_obj(reinterpret_cast<object *>(a2));
     return dynamic_call(f_obj, a1_obj, a2_obj).erase().data;
   }
 
@@ -165,10 +165,10 @@ extern "C"
                              jank_object_ref const a2,
                              jank_object_ref const a3)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
-    auto const a1_obj(reinterpret_cast<object *>(a1));
-    auto const a2_obj(reinterpret_cast<object *>(a2));
-    auto const a3_obj(reinterpret_cast<object *>(a3));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
+    object_ref const a1_obj(reinterpret_cast<object *>(a1));
+    object_ref const a2_obj(reinterpret_cast<object *>(a2));
+    object_ref const a3_obj(reinterpret_cast<object *>(a3));
     return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj).erase().data;
   }
 
@@ -178,11 +178,11 @@ extern "C"
                              jank_object_ref const a3,
                              jank_object_ref const a4)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
-    auto const a1_obj(reinterpret_cast<object *>(a1));
-    auto const a2_obj(reinterpret_cast<object *>(a2));
-    auto const a3_obj(reinterpret_cast<object *>(a3));
-    auto const a4_obj(reinterpret_cast<object *>(a4));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
+    object_ref const a1_obj(reinterpret_cast<object *>(a1));
+    object_ref const a2_obj(reinterpret_cast<object *>(a2));
+    object_ref const a3_obj(reinterpret_cast<object *>(a3));
+    object_ref const a4_obj(reinterpret_cast<object *>(a4));
     return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj).erase().data;
   }
 
@@ -193,12 +193,12 @@ extern "C"
                              jank_object_ref const a4,
                              jank_object_ref const a5)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
-    auto const a1_obj(reinterpret_cast<object *>(a1));
-    auto const a2_obj(reinterpret_cast<object *>(a2));
-    auto const a3_obj(reinterpret_cast<object *>(a3));
-    auto const a4_obj(reinterpret_cast<object *>(a4));
-    auto const a5_obj(reinterpret_cast<object *>(a5));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
+    object_ref const a1_obj(reinterpret_cast<object *>(a1));
+    object_ref const a2_obj(reinterpret_cast<object *>(a2));
+    object_ref const a3_obj(reinterpret_cast<object *>(a3));
+    object_ref const a4_obj(reinterpret_cast<object *>(a4));
+    object_ref const a5_obj(reinterpret_cast<object *>(a5));
     return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj).erase().data;
   }
 
@@ -210,13 +210,13 @@ extern "C"
                              jank_object_ref const a5,
                              jank_object_ref const a6)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
-    auto const a1_obj(reinterpret_cast<object *>(a1));
-    auto const a2_obj(reinterpret_cast<object *>(a2));
-    auto const a3_obj(reinterpret_cast<object *>(a3));
-    auto const a4_obj(reinterpret_cast<object *>(a4));
-    auto const a5_obj(reinterpret_cast<object *>(a5));
-    auto const a6_obj(reinterpret_cast<object *>(a6));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
+    object_ref const a1_obj(reinterpret_cast<object *>(a1));
+    object_ref const a2_obj(reinterpret_cast<object *>(a2));
+    object_ref const a3_obj(reinterpret_cast<object *>(a3));
+    object_ref const a4_obj(reinterpret_cast<object *>(a4));
+    object_ref const a5_obj(reinterpret_cast<object *>(a5));
+    object_ref const a6_obj(reinterpret_cast<object *>(a6));
     return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj).erase().data;
   }
 
@@ -229,14 +229,14 @@ extern "C"
                              jank_object_ref const a6,
                              jank_object_ref const a7)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
-    auto const a1_obj(reinterpret_cast<object *>(a1));
-    auto const a2_obj(reinterpret_cast<object *>(a2));
-    auto const a3_obj(reinterpret_cast<object *>(a3));
-    auto const a4_obj(reinterpret_cast<object *>(a4));
-    auto const a5_obj(reinterpret_cast<object *>(a5));
-    auto const a6_obj(reinterpret_cast<object *>(a6));
-    auto const a7_obj(reinterpret_cast<object *>(a7));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
+    object_ref const a1_obj(reinterpret_cast<object *>(a1));
+    object_ref const a2_obj(reinterpret_cast<object *>(a2));
+    object_ref const a3_obj(reinterpret_cast<object *>(a3));
+    object_ref const a4_obj(reinterpret_cast<object *>(a4));
+    object_ref const a5_obj(reinterpret_cast<object *>(a5));
+    object_ref const a6_obj(reinterpret_cast<object *>(a6));
+    object_ref const a7_obj(reinterpret_cast<object *>(a7));
     return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj).erase().data;
   }
 
@@ -250,15 +250,15 @@ extern "C"
                              jank_object_ref const a7,
                              jank_object_ref const a8)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
-    auto const a1_obj(reinterpret_cast<object *>(a1));
-    auto const a2_obj(reinterpret_cast<object *>(a2));
-    auto const a3_obj(reinterpret_cast<object *>(a3));
-    auto const a4_obj(reinterpret_cast<object *>(a4));
-    auto const a5_obj(reinterpret_cast<object *>(a5));
-    auto const a6_obj(reinterpret_cast<object *>(a6));
-    auto const a7_obj(reinterpret_cast<object *>(a7));
-    auto const a8_obj(reinterpret_cast<object *>(a8));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
+    object_ref const a1_obj(reinterpret_cast<object *>(a1));
+    object_ref const a2_obj(reinterpret_cast<object *>(a2));
+    object_ref const a3_obj(reinterpret_cast<object *>(a3));
+    object_ref const a4_obj(reinterpret_cast<object *>(a4));
+    object_ref const a5_obj(reinterpret_cast<object *>(a5));
+    object_ref const a6_obj(reinterpret_cast<object *>(a6));
+    object_ref const a7_obj(reinterpret_cast<object *>(a7));
+    object_ref const a8_obj(reinterpret_cast<object *>(a8));
     return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj)
       .erase()
       .data;
@@ -275,16 +275,16 @@ extern "C"
                              jank_object_ref const a8,
                              jank_object_ref const a9)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
-    auto const a1_obj(reinterpret_cast<object *>(a1));
-    auto const a2_obj(reinterpret_cast<object *>(a2));
-    auto const a3_obj(reinterpret_cast<object *>(a3));
-    auto const a4_obj(reinterpret_cast<object *>(a4));
-    auto const a5_obj(reinterpret_cast<object *>(a5));
-    auto const a6_obj(reinterpret_cast<object *>(a6));
-    auto const a7_obj(reinterpret_cast<object *>(a7));
-    auto const a8_obj(reinterpret_cast<object *>(a8));
-    auto const a9_obj(reinterpret_cast<object *>(a9));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
+    object_ref const a1_obj(reinterpret_cast<object *>(a1));
+    object_ref const a2_obj(reinterpret_cast<object *>(a2));
+    object_ref const a3_obj(reinterpret_cast<object *>(a3));
+    object_ref const a4_obj(reinterpret_cast<object *>(a4));
+    object_ref const a5_obj(reinterpret_cast<object *>(a5));
+    object_ref const a6_obj(reinterpret_cast<object *>(a6));
+    object_ref const a7_obj(reinterpret_cast<object *>(a7));
+    object_ref const a8_obj(reinterpret_cast<object *>(a8));
+    object_ref const a9_obj(reinterpret_cast<object *>(a9));
     return dynamic_call(f_obj,
                         a1_obj,
                         a2_obj,
@@ -311,17 +311,17 @@ extern "C"
                               jank_object_ref const a9,
                               jank_object_ref const a10)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
-    auto const a1_obj(reinterpret_cast<object *>(a1));
-    auto const a2_obj(reinterpret_cast<object *>(a2));
-    auto const a3_obj(reinterpret_cast<object *>(a3));
-    auto const a4_obj(reinterpret_cast<object *>(a4));
-    auto const a5_obj(reinterpret_cast<object *>(a5));
-    auto const a6_obj(reinterpret_cast<object *>(a6));
-    auto const a7_obj(reinterpret_cast<object *>(a7));
-    auto const a8_obj(reinterpret_cast<object *>(a8));
-    auto const a9_obj(reinterpret_cast<object *>(a9));
-    auto const a10_obj(reinterpret_cast<object *>(a10));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
+    object_ref const a1_obj(reinterpret_cast<object *>(a1));
+    object_ref const a2_obj(reinterpret_cast<object *>(a2));
+    object_ref const a3_obj(reinterpret_cast<object *>(a3));
+    object_ref const a4_obj(reinterpret_cast<object *>(a4));
+    object_ref const a5_obj(reinterpret_cast<object *>(a5));
+    object_ref const a6_obj(reinterpret_cast<object *>(a6));
+    object_ref const a7_obj(reinterpret_cast<object *>(a7));
+    object_ref const a8_obj(reinterpret_cast<object *>(a8));
+    object_ref const a9_obj(reinterpret_cast<object *>(a9));
+    object_ref const a10_obj(reinterpret_cast<object *>(a10));
     return dynamic_call(f_obj,
                         a1_obj,
                         a2_obj,
@@ -350,18 +350,18 @@ extern "C"
                               jank_object_ref const a10,
                               jank_object_ref const rest)
   {
-    auto const f_obj(reinterpret_cast<object *>(f));
-    auto const a1_obj(reinterpret_cast<object *>(a1));
-    auto const a2_obj(reinterpret_cast<object *>(a2));
-    auto const a3_obj(reinterpret_cast<object *>(a3));
-    auto const a4_obj(reinterpret_cast<object *>(a4));
-    auto const a5_obj(reinterpret_cast<object *>(a5));
-    auto const a6_obj(reinterpret_cast<object *>(a6));
-    auto const a7_obj(reinterpret_cast<object *>(a7));
-    auto const a8_obj(reinterpret_cast<object *>(a8));
-    auto const a9_obj(reinterpret_cast<object *>(a9));
-    auto const a10_obj(reinterpret_cast<object *>(a10));
-    auto const rest_obj(reinterpret_cast<object *>(rest));
+    object_ref const f_obj(reinterpret_cast<object *>(f));
+    object_ref const a1_obj(reinterpret_cast<object *>(a1));
+    object_ref const a2_obj(reinterpret_cast<object *>(a2));
+    object_ref const a3_obj(reinterpret_cast<object *>(a3));
+    object_ref const a4_obj(reinterpret_cast<object *>(a4));
+    object_ref const a5_obj(reinterpret_cast<object *>(a5));
+    object_ref const a6_obj(reinterpret_cast<object *>(a6));
+    object_ref const a7_obj(reinterpret_cast<object *>(a7));
+    object_ref const a8_obj(reinterpret_cast<object *>(a8));
+    object_ref const a9_obj(reinterpret_cast<object *>(a9));
+    object_ref const a10_obj(reinterpret_cast<object *>(a10));
+    object_ref const rest_obj(reinterpret_cast<object *>(rest));
     return dynamic_call(f_obj,
                         a1_obj,
                         a2_obj,
@@ -432,8 +432,8 @@ extern "C"
 
   jank_object_ref jank_symbol_create(jank_object_ref const ns, jank_object_ref const name)
   {
-    auto const ns_obj(reinterpret_cast<object *>(ns));
-    auto const name_obj(reinterpret_cast<object *>(name));
+    object_ref const ns_obj(reinterpret_cast<object *>(ns));
+    object_ref const name_obj(reinterpret_cast<object *>(name));
     return make_box<obj::symbol>(ns_obj, name_obj).erase().data;
   }
 
@@ -546,7 +546,7 @@ extern "C"
 
   void *jank_unbox(char const * const type, jank_object_ref const o)
   {
-    auto const box_obj(reinterpret_cast<object *>(o));
+    object_ref const box_obj(reinterpret_cast<object *>(o));
     auto const op_box{ try_object<obj::opaque_box>(box_obj) };
     if(!op_box->canonical_type.empty() && op_box->canonical_type != type)
     {
@@ -564,8 +564,8 @@ extern "C"
                                jank_object_ref const o,
                                jank_object_ref const source)
   {
-    auto const box_obj(reinterpret_cast<object *>(o));
-    auto const source_obj(reinterpret_cast<object *>(source));
+    object_ref const box_obj(reinterpret_cast<object *>(o));
+    object_ref const source_obj(reinterpret_cast<object *>(source));
     auto const op_box{ try_object<obj::opaque_box>(box_obj) };
     if(!op_box->canonical_type.empty() && op_box->canonical_type != type)
     {
@@ -597,7 +597,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_0 = reinterpret_cast<function_arity<0>>(f);
 #pragma clang diagnostic pop
   }
@@ -607,7 +607,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_1 = reinterpret_cast<function_arity<1>>(f);
 #pragma clang diagnostic pop
   }
@@ -619,7 +619,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_2 = reinterpret_cast<function_arity<2>>(f);
 #pragma clang diagnostic pop
   }
@@ -630,7 +630,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_3 = reinterpret_cast<function_arity<3>>(f);
 #pragma clang diagnostic pop
   }
@@ -644,7 +644,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_4 = reinterpret_cast<function_arity<4>>(f);
 #pragma clang diagnostic pop
   }
@@ -659,7 +659,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_5 = reinterpret_cast<function_arity<5>>(f);
 #pragma clang diagnostic pop
   }
@@ -675,7 +675,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_6 = reinterpret_cast<function_arity<6>>(f);
 #pragma clang diagnostic pop
   }
@@ -692,7 +692,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_7 = reinterpret_cast<function_arity<7>>(f);
 #pragma clang diagnostic pop
   }
@@ -710,7 +710,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_8 = reinterpret_cast<function_arity<8>>(f);
 #pragma clang diagnostic pop
   }
@@ -729,7 +729,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_9 = reinterpret_cast<function_arity<9>>(f);
 #pragma clang diagnostic pop
   }
@@ -749,7 +749,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_function>(fn_obj)->arity_10 = reinterpret_cast<function_arity<10>>(f);
 #pragma clang diagnostic pop
   }
@@ -764,7 +764,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_0 = reinterpret_cast<function_arity<0>>(f);
 #pragma clang diagnostic pop
   }
@@ -774,7 +774,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_1 = reinterpret_cast<function_arity<1>>(f);
 #pragma clang diagnostic pop
   }
@@ -786,7 +786,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_2 = reinterpret_cast<function_arity<2>>(f);
 #pragma clang diagnostic pop
   }
@@ -797,7 +797,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_3 = reinterpret_cast<function_arity<3>>(f);
 #pragma clang diagnostic pop
   }
@@ -811,7 +811,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_4 = reinterpret_cast<function_arity<4>>(f);
 #pragma clang diagnostic pop
   }
@@ -826,7 +826,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_5 = reinterpret_cast<function_arity<5>>(f);
 #pragma clang diagnostic pop
   }
@@ -842,7 +842,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_6 = reinterpret_cast<function_arity<6>>(f);
 #pragma clang diagnostic pop
   }
@@ -859,7 +859,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_7 = reinterpret_cast<function_arity<7>>(f);
 #pragma clang diagnostic pop
   }
@@ -877,7 +877,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_8 = reinterpret_cast<function_arity<8>>(f);
 #pragma clang diagnostic pop
   }
@@ -896,7 +896,7 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_9 = reinterpret_cast<function_arity<9>>(f);
 #pragma clang diagnostic pop
   }
@@ -916,31 +916,31 @@ extern "C"
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcast-function-type-mismatch"
-    auto const fn_obj(reinterpret_cast<object *>(fn));
+    object_ref const fn_obj(reinterpret_cast<object *>(fn));
     try_object<obj::jit_closure>(fn_obj)->arity_10 = reinterpret_cast<function_arity<10>>(f);
 #pragma clang diagnostic pop
   }
 
   jank_bool jank_truthy(jank_object_ref const o)
   {
-    auto const o_obj(reinterpret_cast<object *>(o));
-    return static_cast<jank_bool>(truthy(o_obj));
+    object_ref const o_ref{ reinterpret_cast<object *>(o) };
+    return static_cast<jank_bool>(truthy(o_ref));
   }
 
   jank_bool jank_equal(jank_object_ref const l, jank_object_ref const r)
   {
-    auto const l_obj(reinterpret_cast<object *>(l));
-    auto const r_obj(reinterpret_cast<object *>(r));
+    object_ref const l_obj(reinterpret_cast<object *>(l));
+    object_ref const r_obj(reinterpret_cast<object *>(r));
     return static_cast<jank_bool>(equal(l_obj, r_obj));
   }
 
   jank_uhash jank_to_hash(jank_object_ref const o)
   {
-    auto const o_obj(reinterpret_cast<object *>(o));
+    object_ref const o_obj(reinterpret_cast<object *>(o));
     return to_hash(o_obj);
   }
 
-  static i64 to_integer_or_hash(object const *o)
+  static i64 to_integer_or_hash(object_ref const o)
   {
     if(is_integer(o))
     {
@@ -952,18 +952,18 @@ extern "C"
 
   jank_i64 jank_to_integer(jank_object_ref const o)
   {
-    auto const o_obj(reinterpret_cast<object *>(o));
+    object_ref const o_obj(reinterpret_cast<object *>(o));
     return to_integer_or_hash(o_obj);
   }
 
   jank_i64
   jank_shift_mask_case_integer(jank_object_ref const o, jank_i64 const shift, jank_i64 const mask)
   {
-    auto const o_obj(reinterpret_cast<object *>(o));
+    object_ref const o_obj(reinterpret_cast<object *>(o));
     auto integer{ to_integer_or_hash(o_obj) };
     if(mask != 0)
     {
-      if(o_obj->type == object_type::integer)
+      if(o_obj.get_type() == object_type::integer)
       {
         /* We don't hash the integer if it's within an i32 value.
          * This is to be consistent with how keys are hashed in jank's case macro. */
@@ -979,8 +979,8 @@ extern "C"
 
   void jank_set_meta(jank_object_ref const o, jank_object_ref const meta)
   {
-    auto const o_obj(reinterpret_cast<object *>(o));
-    auto const meta_obj(reinterpret_cast<object *>(meta));
+    object_ref const o_obj(reinterpret_cast<object *>(o));
+    object_ref const meta_obj(reinterpret_cast<object *>(meta));
     runtime::reset_meta(o_obj, meta_obj);
   }
 
