@@ -417,7 +417,7 @@ namespace jank::runtime
             throw make_box("Overflow on increment.").erase();
           }
 
-          return make_box<obj::integer>(res);
+          return make_box(res);
         }
         else
         {
@@ -468,7 +468,7 @@ namespace jank::runtime
             throw make_box("Underflow on decrement.").erase();
           }
 
-          return make_box<obj::integer>(res);
+          return make_box(res);
         }
         else
         {
@@ -1114,7 +1114,7 @@ namespace jank::runtime
         return jank_nil;
       }
 
-      return make_box<obj::integer>(parsed_long);
+      return make_box(parsed_long);
     }
     else
     {
@@ -1158,7 +1158,7 @@ namespace jank::runtime
         return jank_nil;
       }
 
-      return make_box<obj::real>(parsed_double);
+      return make_box(parsed_double);
     }
     else
     {
