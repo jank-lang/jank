@@ -923,8 +923,7 @@ extern "C"
 
   jank_bool jank_truthy(jank_object_ref const o)
   {
-    auto const o_obj(reinterpret_cast<object *>(o));
-    auto const o_ref(object_ref{ o_obj });
+    object_ref const o_ref{ reinterpret_cast<object *>(o) };
     return static_cast<jank_bool>(truthy(o_ref));
   }
 
