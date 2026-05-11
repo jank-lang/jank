@@ -120,3 +120,39 @@ def jank_pretty_print(val):
         return jank_runtime_oref(val)
 
 gdb.pretty_printers.append(jank_pretty_print)
+
+class JankFrameFilter:
+    def __init__(self):
+        self.name = "jank"
+        self.priority = 100
+        self.enabled = True
+        gdb.frame_filters[self.name] = self
+    def filter(self, frame_iter):
+        return (JankFrameDecorator(f) for f in frame_iter)
+
+class JankFrameDecorator(gdb.FrameDecorator.FrameDecorator):
+    def __init__(self, fobj):
+        super().__init__(fobj)
+
+    def filename(self):
+        frame = self.inferior_frame()
+        if frame:
+            sal = frame.find_sal()
+            if sal and sal.symtab:
+                return sal.symtab.fullname()
+        return super().filename()
+
+    def frame_locals(self):
+        orig = self.inferior_frame()
+        if orig is None:
+            return iter([])
+        try:
+            block = orig.block()
+        except RuntimeError:
+            return iter([])
+
+        return ((sym, sym.value(orig)) for sym in block
+                if sym.is_variable and not re.match(r'^v\d+$', sym.name))
+
+
+JankFrameFilter()
