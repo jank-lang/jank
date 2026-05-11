@@ -100,8 +100,31 @@ class jank_print_seq:
         except Exception as e:
             yield str(repr(e))
 
+class jank_print_opaque_box:
+    def __init__(self, val):
+        self.val = val
+    def to_string(self):
+        return jank_pr_str(self.val)
+    def children(self):
+        try:
+            address = jank_address(self.val)
+            canonical_type = gdb.parse_and_eval(f"((jank::runtime::obj::opaque_box*){address})->canonical_type.c_str()")
+            match = re.search("0x([0-9a-fA-F]{12}) (.*)", str(canonical_type))
+            type_name = match.group(2)[1:-1].replace('\\"', '"').rstrip()
+            if type_name.endswith('*'):
+                inner_type = gdb.lookup_type(type_name[:-1].rstrip()).pointer()
+            else:
+                inner_type = gdb.lookup_type(type_name).pointer()
+            box = gdb.parse_and_eval(f"((jank::runtime::obj::opaque_box*){address})")
+            yield "data", box["data"].cast(inner_type).dereference()
+        except Exception as e:
+            yield str(repr(e)), self.val["data"]
+
 def jank_runtime_oref(val):
     try:
+        t = jank_type(val)
+        if t == "opaque_box":
+            return jank_print_opaque_box(val)
         if jank_map(val):
             return jank_print_map(val)
         if jank_seqable(val):
