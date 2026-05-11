@@ -13,6 +13,7 @@
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/util/cli.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -618,7 +619,8 @@ namespace jank::codegen
       /* Embed the function pointer directly. */
       auto const root_val{ var->get_root() };
       auto const *jit_fn{ dynamic_cast<runtime::obj::jit_function *>(root_val.data) };
-      if(jit_fn != nullptr)
+      /* Variadic fns need rest-arg packing, which only dynamic_call does. */
+      if(jit_fn != nullptr && !runtime::is_variadic(jit_fn->arity_flags))
       {
         auto const arity{ inst->args.size() };
         void *fn_ptr{};
@@ -660,7 +662,7 @@ namespace jank::codegen
         }
       }
 
-      /* Fallback: variadic, closure, or not yet compiled. */
+      /* Fallback: variadic, closure, or arity slot not populated. */
       util::format_to(b.body_buffer, "auto const {}(jank::runtime::dynamic_call({}",
                       inst->name, inst->var);
       for(auto const &arg : inst->args)

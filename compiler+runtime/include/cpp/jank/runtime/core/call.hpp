@@ -108,6 +108,11 @@ namespace jank::runtime
     return (arity_flags & 0b10001111);
   }
 
+  static constexpr bool is_variadic(callable_arity_flags const arity_flags)
+  {
+    return (arity_flags & 0b10000000);
+  }
+
   static constexpr bool is_variadic_ambiguous(callable_arity_flags const arity_flags)
   {
     return (arity_flags & 0b01000000);
