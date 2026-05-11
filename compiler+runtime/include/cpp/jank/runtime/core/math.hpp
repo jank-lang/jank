@@ -757,7 +757,9 @@ namespace jank::runtime
     }
     else
     {
-      return std::min(l->data, r->data);
+      using C
+        = std::common_type_t<jtl::decay_t<decltype(l->data)>, jtl::decay_t<decltype(r->data)>>;
+      return std::min(static_cast<C>(l->data), static_cast<C>(r->data));
     }
   }
 
@@ -784,11 +786,13 @@ namespace jank::runtime
     }
     else if constexpr(detail::typed_object<R>)
     {
-      return std::min(l, r->data);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r->data)>>;
+      return std::min(static_cast<C>(l), static_cast<C>(r->data));
     }
     else
     {
-      return std::min(l, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+      return std::min(static_cast<C>(l), static_cast<C>(r));
     }
   }
 
@@ -815,11 +819,13 @@ namespace jank::runtime
     }
     else if constexpr(detail::typed_object<L>)
     {
-      return std::min(l->data, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l->data)>, jtl::decay_t<decltype(r)>>;
+      return std::min(static_cast<C>(l->data), static_cast<C>(r));
     }
     else
     {
-      return std::min(l, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+      return std::min(static_cast<C>(l), static_cast<C>(r));
     }
   }
 
@@ -828,7 +834,8 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto min(L const l, R const r)
   {
-    return std::min(l, r);
+    using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+    return std::min(static_cast<C>(l), static_cast<C>(r));
   }
 
   template <typename L, typename R>
@@ -877,7 +884,9 @@ namespace jank::runtime
     }
     else
     {
-      return std::max(l->data, r->data);
+      using C
+        = std::common_type_t<jtl::decay_t<decltype(l->data)>, jtl::decay_t<decltype(r->data)>>;
+      return std::max(static_cast<C>(l->data), static_cast<C>(r->data));
     }
   }
 
@@ -904,11 +913,13 @@ namespace jank::runtime
     }
     else if constexpr(detail::typed_object<R>)
     {
-      return std::max(l, r->data);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r->data)>>;
+      return std::max(static_cast<C>(l), static_cast<C>(r->data));
     }
     else
     {
-      return std::max(l, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+      return std::max(static_cast<C>(l), static_cast<C>(r));
     }
   }
 
@@ -935,11 +946,13 @@ namespace jank::runtime
     }
     else if constexpr(detail::typed_object<L>)
     {
-      return std::max(l->data, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l->data)>, jtl::decay_t<decltype(r)>>;
+      return std::max(static_cast<C>(l->data), static_cast<C>(r));
     }
     else
     {
-      return std::max(l, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+      return std::max(static_cast<C>(l), static_cast<C>(r));
     }
   }
 
@@ -948,7 +961,8 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto max(L const l, R const r)
   {
-    return std::max(l, r);
+    using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+    return std::max(static_cast<C>(l), static_cast<C>(r));
   }
 
   object_ref abs(object_ref const l);

@@ -111,6 +111,13 @@ If you'd like your name, company, or logo here, you can
   </a>
 </p>
 
+<!-- pete23 -->
+<p align="center">
+  <a href="https://pete23.com">
+    pete23
+  </a>
+</p>
+
 ## In the news
 <div align="center">
 

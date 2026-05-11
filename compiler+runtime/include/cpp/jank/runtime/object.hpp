@@ -79,6 +79,7 @@ namespace jank::runtime
     reduced,
     delay,
     future,
+    promise,
     ns,
 
     var,
@@ -226,6 +227,8 @@ namespace jank::runtime
         return "delay";
       case object_type::future:
         return "future";
+      case object_type::promise:
+        return "promise";
       case object_type::ns:
         return "ns";
 
