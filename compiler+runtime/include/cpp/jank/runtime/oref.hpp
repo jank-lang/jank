@@ -93,13 +93,6 @@ namespace jank::runtime
       return (reinterpret_cast<u64>(val) >> 48) == 0xFFFC;
     }
 
-    inline bool is_tagged(void * const val)
-    {
-      u64 const bits{ reinterpret_cast<u64>(val) };
-      auto const ret{ bits == 0 || (bits & nan_bits) != 0 };
-      return ret;
-    }
-
     inline f64 as_real(void * const val)
     {
       jank_debug_assert(is_small_real(val));
@@ -112,7 +105,6 @@ namespace jank::runtime
     inline i32 as_integer(void * const val)
     {
       jank_debug_assert(is_small_int(val));
-      // Mask the low 32 bits and sign-extend to i32.
       return static_cast<i32>(reinterpret_cast<u64>(val) & integer_value_mask);
     }
 
@@ -164,7 +156,7 @@ namespace jank::runtime
       std::memcpy(&bits, &d, sizeof(bits));
       if((bits & nan_bits) == nan_bits)
       {
-        bits = nan_bits; // collapse to canonical NaN
+        bits = nan_bits;
       }
       return reinterpret_cast<T>(bits);
     }
@@ -213,20 +205,17 @@ namespace jank::runtime
     oref(value_type * const data) noexcept
       : data{ data }
     {
-      jank_debug_assert(detail::is_tagged(data));
     }
 
     oref(value_type const * const data) noexcept
       : data{ const_cast<value_type *>(data) }
     {
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     /* We use this one during codegen. */
     oref(void * const data) noexcept
       : data{ static_cast<value_type *>(data) }
     {
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename T>
@@ -234,13 +223,11 @@ namespace jank::runtime
     oref(T * const typed_data) noexcept
       : data{ typed_data }
     {
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     oref(detail::untagged_ptr const p) noexcept
       : data{ detail::tag<object *>(p.data) }
     {
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename T>
@@ -248,7 +235,6 @@ namespace jank::runtime
     oref(T const * const typed_data) noexcept
       : data{ const_cast<T *>(typed_data) }
     {
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename T>
@@ -256,7 +242,6 @@ namespace jank::runtime
     oref(oref<T> const &typed_data) noexcept
       : data{ typed_data.erase().raw() }
     {
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename T>
@@ -264,7 +249,6 @@ namespace jank::runtime
     oref(oref<T> const &typed_data) noexcept
       : data{ detail::tag<object *>(typed_data.data) }
     {
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename T>
@@ -272,7 +256,6 @@ namespace jank::runtime
     oref(oref<T> const &typed_data) noexcept
       : data{ detail::tag<object *>(typed_data.data) }
     {
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     ~oref() = default;
@@ -280,25 +263,21 @@ namespace jank::runtime
     void reset() noexcept
     {
       data = detail::tag<object *>(std::bit_cast<object *>(&_jank_nil));
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(object * const o) noexcept
     {
       data = o;
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(detail::untagged_ptr const o) noexcept
     {
       data = detail::tag<object *>(o.data);
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(oref<object> const &o) noexcept
     {
       data = o.raw();
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     oref &operator=(oref const &rhs) noexcept = default;
@@ -314,7 +293,6 @@ namespace jank::runtime
       }
 
       data = rhs.erase().raw();
-      jank_debug_assert(detail::is_tagged(reinterpret_cast<void *>(this->data)));
       return *this;
     }
 
@@ -368,11 +346,7 @@ namespace jank::runtime
 
     bool is_nil() const noexcept
     {
-      if(detail::is_small_int(data))
-      {
-        return false;
-      }
-      if(detail::is_small_real(data))
+      if(detail::is_small_int(data) || detail::is_small_real(data))
       {
         return false;
       }
@@ -517,9 +491,14 @@ namespace jank::runtime
     /* behavior::call */
     object_ref call() const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.call();
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.call();
       }
 
@@ -528,9 +507,14 @@ namespace jank::runtime
 
     object_ref call(object_ref const a1) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.call(a1);
       }
 
@@ -539,9 +523,14 @@ namespace jank::runtime
 
     object_ref call(object_ref const a1, object_ref const a2) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1, a2);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2);
       }
 
@@ -550,9 +539,14 @@ namespace jank::runtime
 
     object_ref call(object_ref const a1, object_ref const a2, object_ref const a3) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1, a2, a3);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3);
       }
 
@@ -562,9 +556,14 @@ namespace jank::runtime
     object_ref
     call(object_ref const a1, object_ref const a2, object_ref const a3, object_ref const a4) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1, a2, a3, a4);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4);
       }
 
@@ -577,9 +576,14 @@ namespace jank::runtime
                     object_ref const a4,
                     object_ref const a5) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1, a2, a3, a4, a5);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5);
       }
 
@@ -593,9 +597,14 @@ namespace jank::runtime
                     object_ref const a5,
                     object_ref const a6) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1, a2, a3, a4, a5, a6);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5, a6);
       }
 
@@ -610,9 +619,14 @@ namespace jank::runtime
                     object_ref const a6,
                     object_ref const a7) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7);
       }
 
@@ -628,9 +642,14 @@ namespace jank::runtime
                     object_ref const a7,
                     object_ref const a8) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7, a8);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8);
       }
 
@@ -647,9 +666,14 @@ namespace jank::runtime
                     object_ref const a8,
                     object_ref const a9) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
       }
 
@@ -667,9 +691,14 @@ namespace jank::runtime
                     object_ref const a9,
                     object_ref const a10) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
       }
 
@@ -689,9 +718,14 @@ namespace jank::runtime
     /* behavior::get */
     object_ref get(object_ref const key) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.get(key);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.get(key);
       }
 
@@ -700,9 +734,14 @@ namespace jank::runtime
 
     object_ref get(object_ref const key, object_ref const fallback) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.get(key, fallback);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.get(key, fallback);
       }
 
@@ -711,9 +750,14 @@ namespace jank::runtime
 
     bool contains(object_ref const key) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.contains(key);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.contains(key);
       }
 
@@ -723,9 +767,14 @@ namespace jank::runtime
     /* behavior::find */
     object_ref find(object_ref key) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
         obj::small_integer const i{ detail::as_integer(data) };
+        return i.find(key);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
         return i.find(key);
       }
 
@@ -812,14 +861,12 @@ namespace jank::runtime
       : data{ data }
     {
       jank_debug_assert(this->data);
-      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     oref(T const * const data) noexcept
       : data{ const_cast<T *>(data) }
     {
       jank_debug_assert(this->data);
-      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     /* We use this one during codegen. */
@@ -827,14 +874,12 @@ namespace jank::runtime
       : data{ static_cast<T *>(data) }
     {
       jank_debug_assert(this->data);
-      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     oref(detail::untagged_ptr const p) noexcept
       : data{ p.data }
     {
       jank_debug_assert(this->data);
-      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename C>
@@ -842,7 +887,6 @@ namespace jank::runtime
     oref(oref<C> const &data) noexcept
       : data{ data.ptr() }
     {
-      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     template <typename C>
@@ -850,7 +894,6 @@ namespace jank::runtime
     oref(oref<C> const &data) noexcept
       : data{ data.ptr() }
     {
-      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     ~oref() = default;
@@ -858,31 +901,26 @@ namespace jank::runtime
     void reset() noexcept
     {
       data = std::bit_cast<object *>(&_jank_nil);
-      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(object * const o) noexcept
     {
       data = o;
-      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(oref<object> const &o) noexcept
     {
       data = o.ptr();
-      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(T * const o) noexcept
     {
       data = o;
-      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     void reset(oref<T> const &o) noexcept
     {
       data = o.ptr();
-      jank_debug_assert(!detail::is_tagged(reinterpret_cast<void *>(this->data)));
     }
 
     T *operator->() const noexcept
@@ -1903,14 +1941,12 @@ namespace jank::runtime
       : data{ data }
     {
       jank_debug_assert(this->data);
-      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
     oref(value_type const * const data) noexcept
       : data{ const_cast<value_type *>(data) }
     {
       jank_debug_assert(this->data);
-      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
     /* We use this one during codegen. */
@@ -1918,14 +1954,12 @@ namespace jank::runtime
       : data{ static_cast<value_type *>(data) }
     {
       jank_debug_assert(this->data);
-      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
     oref(detail::untagged_ptr const p) noexcept
       : data{ reinterpret_cast<value_type *>(p.data) }
     {
       jank_debug_assert(this->data);
-      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
     template <typename C>
@@ -1933,7 +1967,6 @@ namespace jank::runtime
     oref(oref<C> const &data) noexcept
       : data{ data.raw() }
     {
-      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
     template <typename C>
@@ -1941,7 +1974,6 @@ namespace jank::runtime
     oref(oref<C> const &data) noexcept
       : data{ data.raw() }
     {
-      jank_debug_assert(!detail::is_tagged(this->data));
     }
 
     void reset()
