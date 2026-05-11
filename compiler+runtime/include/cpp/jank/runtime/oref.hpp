@@ -51,16 +51,26 @@ namespace jank::runtime
    * 4. It supports inline values for certain tagged pointers
    *
    * To expand on the inline values and tagged pointers, `object_ref` (the type-erased `oref`)
-   * can either hold a pointer value or an inline integer. The integer is case indicated by the
-   * lowest bit of the pointer value being 1, in which case a 63 bit integer exists instead of
-   * a pointer value. This is an incredible performance win for integer-heavy jank programs, since
-   * it allows us to skip GC allocations for those integers. However, it means that we need to
+   * can either hold a pointer value, an inline integer, or an inline real. This is done via a
+   * common strategy called NaN boxing, which allows us to avoid allocations for these values.
+   * NaN boxing applies to all floating point values, but only for integers up to 32 bits. Larger
+   * integers will be heap allocated.
+   *
+   * This is an incredible performance win for numeric-heavy jank programs, since
+   * it allows us to skip GC allocations for those values. However, it means that we need to
    * treat `object_ref` specially, since it isn't just a simple pointer wrapper.
    *
-   * Similarly, there is a specialization of `oref` for `small_integer`, which simulates a pointer
-   * to a typed integral object like `integer_ref`, but it stores the integer value inline. This
-   * is used when we visit an `object_ref` which holds an inline integer and we need a fully typed
-   * object. */
+   * There is an excellent, detailed explanation of NaN boxing here:
+   * https://www.npopov.com/2012/02/02/Pointer-magic-for-efficient-dynamic-value-representations.html
+   *
+   * There is a specialization of `oref` for `small_integer` and `small_real`,
+   * both of which simulate a pointer to a typed object like `integer_ref` or `real_ref`, but they
+   * stores the numeric value inline. This is used when we visit an `object_ref` which holds an
+   * inline integer or real and we need a fully typed object.
+   *
+   * It's important to note that every pointer within an `oref` is expected to be in NaN space.
+   * If you try to create an `oref` with a normal pointer, you will end up with undefined
+   * behavior. To mark your normal pointers as needing shifting, use the `untagged` helper. */
 
   struct object;
 
@@ -68,10 +78,18 @@ namespace jank::runtime
   {
     constexpr u64 nan_bits{ 0xFFF0'0000'0000'0000ull };
 
-    constexpr u64 integer_nan_tag{ 0xFFF1'0000'0000'0000ull };
+    /* Integers are tagged with the high bits being 0xFFF9. The lower 32 bits store the integer.
+     *                     seeeeeee|eeeemmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm
+     * 0xfff9000000000000: 11111111|11111001|00000000|00000000|iiiiiiii|iiiiiiii|iiiiiiii|iiiiiiii
+     */
+    constexpr u64 integer_nan_tag{ 0xFFF9'0000'0000'0000ull };
     constexpr u64 integer_value_mask{ 0x0000'0000'FFFF'FFFFull };
 
-    constexpr u64 pointer_nan_tag{ 0xFFFC'0000'0000'0000ull };
+    /* Pointers are tagged with the high bits being 0xFFFa. The lower 48 bits store the pointer.
+     *                     seeeeeee|eeeemmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm
+     * 0xfffa000000000000: 11111111|11111010|pppppppp|pppppppp|pppppppp|pppppppp|pppppppp|pppppppp
+     */
+    constexpr u64 pointer_nan_tag{ 0xFFFa'0000'0000'0000ull };
     constexpr u64 pointer_addr_mask{ 0x0000'FFFF'FFFF'FFFFull };
 
     constexpr i32 min_small_integer{ std::numeric_limits<i32>::min() };
@@ -79,7 +97,7 @@ namespace jank::runtime
 
     inline bool is_small_real(void * const val)
     {
-      u64 const bits{ reinterpret_cast<u64>(val) };
+      auto const bits{ reinterpret_cast<u64>(val) };
       return bits == nan_bits || (bits & nan_bits) != nan_bits;
     }
 
@@ -90,16 +108,14 @@ namespace jank::runtime
 
     inline bool is_pointer(void * const val)
     {
-      return (reinterpret_cast<u64>(val) >> 48) == 0xFFFC;
+      return (reinterpret_cast<u64>(val) >> 48) == 0xFFFa;
     }
 
     inline f64 as_real(void * const val)
     {
       jank_debug_assert(is_small_real(val));
-      u64 bits{ reinterpret_cast<u64>(val) };
-      f64 result{};
-      std::memcpy(&result, &bits, sizeof(result));
-      return result;
+      auto const bits{ reinterpret_cast<u64>(val) };
+      return std::bit_cast<f64>(bits);
     }
 
     inline i32 as_integer(void * const val)
@@ -115,6 +131,10 @@ namespace jank::runtime
       return reinterpret_cast<T *>(reinterpret_cast<u64>(val) & pointer_addr_mask);
     }
 
+    /* This type, and the `untagged` helper functions, are used when constructing an `oref` from
+     * a pointer which is not yet shifted into NaN space. This is especially common when using
+     * `this` to get back to an `oref`. The type information of `untagged_ptr` will select an
+     * `oref` constructor which will do the necessary NaN space shifting. */
     struct untagged_ptr
     {
       untagged_ptr() = default;
@@ -152,8 +172,8 @@ namespace jank::runtime
     template <typename T>
     T tag(f64 const d)
     {
-      u64 bits{};
-      std::memcpy(&bits, &d, sizeof(bits));
+      auto bits{ std::bit_cast<u64>(d) };
+      /* NaN can be represented many ways. Canonicalize it to avoid ambiguities. */
       if((bits & nan_bits) == nan_bits)
       {
         bits = nan_bits;
@@ -171,9 +191,11 @@ namespace jank::runtime
     template <typename T>
     T tag(untagged_ptr const ptr)
     {
-      auto val{ reinterpret_cast<u64>(ptr.data) };
-      jank_debug_assert((val & ~pointer_addr_mask) == 0); // must fit in 48 bits
-      jank_debug_assert((val & 0b111) == 0); // GC requires alignment
+      auto const val{ reinterpret_cast<u64>(ptr.data) };
+      /* Our pointers are expected to fit within 48 bits. */
+      jank_debug_assert((val & ~pointer_addr_mask) == 0);
+      /* Our pointers are expected to have all low bits unset. */
+      jank_debug_assert((val & 0b111) == 0);
       return reinterpret_cast<T>(pointer_nan_tag | val);
     }
   }
