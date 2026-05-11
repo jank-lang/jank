@@ -209,7 +209,7 @@ namespace jank::ir
     fn.add_block("entry");
     builder b{ &mod, mod.functions.size() - 1 };
 
-    b.locals[fn_expr->name]
+    b.locals[runtime::munge(fn_expr->name)]
       = b.parameter(analyze::expression_position::value, runtime::munge(fn_expr->name));
     for(auto const &param : arity.params)
     {
@@ -340,8 +340,7 @@ namespace jank::ir
         analyze::expr::local_reference const local_ref{ analyze::expression_position::value,
                                                         expr->frame,
                                                         expr->needs_box,
-                                                        runtime::make_box<runtime::obj::symbol>(
-                                                          name),
+                                                        capture.first,
                                                         capture.second };
         captured_idents[name] = { gen(analyze::expr::local_reference_ref{ &local_ref }, b).unwrap(),
                                   mutable_type(capture.second->type) };
@@ -423,7 +422,7 @@ namespace jank::ir
     identifier fn;
     if(expr->recursion_ref.fn_ctx != b.current_function()->arity->fn_ctx)
     {
-      fn = runtime::munge(b.locals[expr->recursion_ref.fn_ctx->name]);
+      fn = runtime::munge(b.locals[runtime::munge(expr->recursion_ref.fn_ctx->name)]);
     }
     else
     {
