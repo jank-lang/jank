@@ -100,7 +100,7 @@ namespace jank::runtime
 
     static obj::small_real_ref from_object(object_ref const o)
     {
-      if(detail::is_small_int(o.raw()))
+      if(detail::is_small_real(o.raw()))
       {
         return detail::as_real(o.raw());
       }

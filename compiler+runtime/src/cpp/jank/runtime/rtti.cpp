@@ -3,21 +3,21 @@
 namespace jank::runtime
 {
   template <>
-  obj::small_integer_ref expect_object(object_ref const o)
+  obj::small_integer_ref expect_object<obj::small_integer>(object_ref const o)
   {
     jank_debug_assert(o.is_some());
     jank_debug_assert(o.get_type() == object_type::small_integer);
 
-    return static_cast<obj::small_integer *>(o.ptr())->data;
+    return detail::as_integer(o.raw());
   }
 
   template <>
-  obj::small_real_ref expect_object(object_ref const o)
+  obj::small_real_ref expect_object<obj::small_real>(object_ref const o)
   {
     jank_debug_assert(o.is_some());
     jank_debug_assert(o.get_type() == object_type::small_real);
 
-    return static_cast<obj::small_real *>(o.ptr())->data;
+    return detail::as_real(o.raw());
   }
 
   template <>
@@ -33,7 +33,7 @@ namespace jank::runtime
       sb(")");
       throw std::runtime_error{ sb.str() };
     }
-    return static_cast<obj::small_integer *>(o.ptr())->data;
+    return detail::as_integer(o.raw());
   }
 
   template <>
@@ -49,7 +49,7 @@ namespace jank::runtime
       sb(")");
       throw std::runtime_error{ sb.str() };
     }
-    return static_cast<obj::small_real *>(o.ptr())->data;
+    return detail::as_real(o.raw());
   }
 
   template <>

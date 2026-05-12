@@ -266,20 +266,7 @@ namespace jank::codegen
               util::format_to(buffer, "_jank_small_real(");
             }
 
-            if(std::isinf(typed_o->data))
-            {
-              util::format_to(buffer, "INFINITY");
-            }
-            else if(std::isnan(typed_o->data))
-            {
-              util::format_to(buffer, "NAN");
-            }
-            else
-            {
-              util::format_to(buffer, "{}", typed_o->data);
-            }
-
-            util::format_to(buffer, ")");
+            util::format_to(buffer, "{})", typed_o->data);
           }
           else if constexpr(std::same_as<T, obj::big_integer>)
           {

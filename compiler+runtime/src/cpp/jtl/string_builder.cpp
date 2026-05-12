@@ -130,13 +130,30 @@ namespace jtl
 
   string_builder &string_builder::operator()(double const d) &
   {
-    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    auto const required{ snprintf(nullptr, 0, "%f", d) };
-    maybe_realloc(*this, required);
+    if(std::isinf(d))
+    {
+      constexpr jtl::immutable_string_view const infinity{ "INFINITY" };
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+      snprintf(buffer + pos, capacity - pos, infinity.data());
+      pos += infinity.size();
+    }
+    else if(std::isnan(d))
+    {
+      constexpr jtl::immutable_string_view const nan{ "NAN" };
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+      snprintf(buffer + pos, capacity - pos, nan.data());
+      pos += nan.size();
+    }
+    else
+    {
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+      auto const required{ snprintf(nullptr, 0, "%f", d) };
+      maybe_realloc(*this, required);
 
-    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    snprintf(buffer + pos, capacity - pos, "%f", d);
-    pos += required;
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+      snprintf(buffer + pos, capacity - pos, "%f", d);
+      pos += required;
+    }
 
     return *this;
   }
