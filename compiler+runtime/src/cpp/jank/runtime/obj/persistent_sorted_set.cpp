@@ -75,7 +75,7 @@ namespace jank::runtime::obj
         return true;
       },
       []() { return false; },
-      &o);
+      runtime::detail::untagged(&o));
   }
 
   void persistent_sorted_set::to_string(jtl::string_builder &buff) const
@@ -114,7 +114,10 @@ namespace jank::runtime::obj
     {
       return {};
     }
-    return make_box<persistent_sorted_set_sequence>(this, data.begin(), data.end(), data.size());
+    return make_box<persistent_sorted_set_sequence>(runtime::detail::untagged(this),
+                                                    data.begin(),
+                                                    data.end(),
+                                                    data.size());
   }
 
   usize persistent_sorted_set::count() const

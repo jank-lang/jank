@@ -58,7 +58,7 @@ namespace jank::runtime::obj
   /* behavior::seqable */
   native_array_sequence_ref native_array_sequence::seq()
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   native_array_sequence_ref native_array_sequence::fresh_seq()
@@ -101,11 +101,11 @@ namespace jank::runtime::obj
       return {};
     }
 
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   cons_ref native_array_sequence::conj(object_ref const head)
   {
-    return make_box<cons>(head, this);
+    return make_box<cons>(head, runtime::detail::untagged(this));
   }
 }

@@ -98,6 +98,8 @@ namespace jank::runtime::obj
   ratio_data operator-(ratio_data const &l, integer_ref const r);
   f64 operator-(real_ref const l, ratio_data const &r);
   f64 operator-(ratio_data const &l, real_ref const r);
+  f64 operator-(small_real_ref const l, ratio_data const &r);
+  f64 operator-(ratio_data const &l, small_real_ref const r);
 
   template <typename T>
   requires std::is_floating_point_v<T>
@@ -132,6 +134,8 @@ namespace jank::runtime::obj
   object_ref operator*(ratio_data const &l, integer_ref const r);
   f64 operator*(real_ref const l, ratio_data const &r);
   f64 operator*(ratio_data const &l, real_ref const r);
+  f64 operator*(small_real_ref const l, ratio_data const &r);
+  f64 operator*(ratio_data const &l, small_real_ref const r);
 
   template <typename T>
   requires std::is_floating_point_v<T>
@@ -166,6 +170,8 @@ namespace jank::runtime::obj
   ratio_ref operator/(ratio_data const &l, integer_ref const r);
   f64 operator/(real_ref const l, ratio_data const &r);
   f64 operator/(ratio_data const &l, real_ref const r);
+  f64 operator/(small_real_ref const l, ratio_data const &r);
+  f64 operator/(ratio_data const &l, small_real_ref const r);
 
   template <typename T>
   requires std::is_floating_point_v<T>
@@ -200,6 +206,8 @@ namespace jank::runtime::obj
   bool operator==(ratio_data const &l, integer_ref const r);
   bool operator==(real_ref const l, ratio_data const &r);
   bool operator==(ratio_data const &l, real_ref const r);
+  bool operator==(small_real_ref const l, ratio_data const &r);
+  bool operator==(ratio_data const &l, small_real_ref const r);
 
   template <typename T>
   requires std::is_floating_point_v<T>
@@ -234,6 +242,8 @@ namespace jank::runtime::obj
   bool operator<(ratio_data const &l, integer_ref const r);
   bool operator<(real_ref const l, ratio_data const &r);
   bool operator<(ratio_data const &l, real_ref const r);
+  bool operator<(small_real_ref const l, ratio_data const &r);
+  bool operator<(ratio_data const &l, small_real_ref const r);
 
   template <typename T>
   requires std::is_floating_point_v<T>
@@ -268,6 +278,8 @@ namespace jank::runtime::obj
   bool operator<=(ratio_data const &l, integer_ref const r);
   bool operator<=(real_ref const l, ratio_data const &r);
   bool operator<=(ratio_data const &l, real_ref const r);
+  bool operator<=(small_real_ref const l, ratio_data const &r);
+  bool operator<=(ratio_data const &l, small_real_ref const r);
 
   template <typename T>
   requires std::is_floating_point_v<T>

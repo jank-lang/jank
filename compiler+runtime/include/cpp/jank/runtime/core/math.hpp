@@ -28,7 +28,9 @@ namespace jank::runtime
     concept valid_boxed_math = (jtl::is_same<T, object_ref>
                                 || jtl::is_any_same<T,
                                                     obj::integer_ref,
+                                                    obj::small_integer_ref,
                                                     obj::real_ref,
+                                                    obj::small_real_ref,
                                                     obj::big_integer_ref,
                                                     obj::big_decimal_ref,
                                                     obj::ratio_ref>);
@@ -36,6 +38,8 @@ namespace jank::runtime
 
   /* Only for fixed integer sizes (i.e. integer and small_integer). */
   i64 to_i64(object_ref const o);
+  /* Only for fixed real sizes (i.e. real and small_real). */
+  f64 to_f64(object_ref const o);
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)

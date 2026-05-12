@@ -79,6 +79,7 @@ namespace jank::runtime::obj
     small_integer();
     small_integer(small_integer &&) noexcept = default;
     small_integer(small_integer const &) = default;
+    small_integer(i32 const d);
     small_integer(i64 const d);
 
     /* behavior::object_like */
@@ -99,7 +100,7 @@ namespace jank::runtime::obj
     f64 to_real() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    i64 data{};
+    i32 data{};
   };
 
   struct real : object
@@ -125,6 +126,38 @@ namespace jank::runtime::obj
 
     /* behavior::comparable extended */
     i64 compare(real const &) const;
+
+    /* behavior::number_like */
+    i64 to_integer() const;
+    f64 to_real() const;
+
+    /*** XXX: Everything here is immutable after initialization. ***/
+    f64 data{};
+  };
+
+  struct small_real : object
+  {
+    static constexpr object_type obj_type{ object_type::small_real };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
+    static constexpr bool pointer_free{ true };
+
+    small_real();
+    small_real(small_real &&) noexcept = default;
+    small_real(small_real const &) = default;
+    small_real(f64 const d);
+
+    /* behavior::object_like */
+    bool equal(object const &) const override;
+    jtl::immutable_string to_string() const override;
+    void to_string(jtl::string_builder &buff) const override;
+    jtl::immutable_string to_code_string() const override;
+    uhash to_hash() const override;
+
+    /* behavior::comparable */
+    i64 compare(object const &) const override;
+
+    /* behavior::comparable extended */
+    i64 compare(small_real const &) const;
 
     /* behavior::number_like */
     i64 to_integer() const;

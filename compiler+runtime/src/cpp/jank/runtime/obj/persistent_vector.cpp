@@ -76,7 +76,7 @@ namespace jank::runtime::obj
     }
 
     /* TODO: Optimize this to use iterators. They're faster for immer vectors. */
-    auto const v{ dyn_cast<persistent_vector>(&o) };
+    auto const v{ dyn_cast<persistent_vector>(runtime::detail::untagged(&o)) };
     if(v.is_some())
     {
       if(data.size() != v->data.size())
@@ -94,7 +94,8 @@ namespace jank::runtime::obj
     }
     else
     {
-      return runtime::sequence_equal(this, &o);
+      return runtime::sequence_equal(runtime::detail::untagged(this),
+                                     runtime::detail::untagged(&o));
     }
   }
 
@@ -125,7 +126,7 @@ namespace jank::runtime::obj
   i64 persistent_vector::compare(object const &o) const
   {
     return visit_type<persistent_vector>([this](auto const typed_o) { return compare(*typed_o); },
-                                         &o);
+                                         runtime::detail::untagged(&o));
   }
 
   i64 persistent_vector::compare(persistent_vector const &v) const
@@ -165,7 +166,7 @@ namespace jank::runtime::obj
     {
       return {};
     }
-    return make_box<persistent_vector_sequence>(const_cast<persistent_vector *>(this));
+    return make_box<persistent_vector_sequence>(runtime::detail::untagged(this));
   }
 
   usize persistent_vector::count() const

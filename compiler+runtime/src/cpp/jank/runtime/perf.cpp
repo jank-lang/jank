@@ -19,6 +19,7 @@ namespace jank::runtime::perf
     config.mTimeUnitName = "ms";
     config.mTimeUnit = std::chrono::milliseconds{ 1 };
     config.mNumEpochs = 20;
+    config.mMinEpochIterations = 10;
     config.mWarmup = 10;
 
     /* Smaller things. */

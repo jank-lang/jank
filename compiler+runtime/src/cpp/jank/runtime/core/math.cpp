@@ -11,7 +11,7 @@ namespace jank::runtime
   template <typename T>
   static f64 to_real(T const &val)
   {
-    if constexpr(std::is_same_v<T, i64>)
+    if constexpr(jtl::is_any_same<T, i32, i64>)
     {
       return static_cast<f64>(val);
     }
@@ -37,9 +37,9 @@ namespace jank::runtime
 
   i64 to_i64(object_ref const o)
   {
-    if(detail::is_small_int(o.data))
+    if(detail::is_small_int(o.raw()))
     {
-      return detail::as_int(o.data);
+      return detail::as_integer(o.raw());
     }
 
     if(auto const i{ dyn_cast<obj::integer>(o) }; i.is_some())
@@ -48,6 +48,22 @@ namespace jank::runtime
     }
 
     throw std::runtime_error{ util::format("An integer was required here, but a {} was provided.",
+                                           object_type_str(o.get_type())) };
+  }
+
+  f64 to_f64(object_ref const o)
+  {
+    if(detail::is_small_real(o.raw()))
+    {
+      return detail::as_real(o.raw());
+    }
+
+    if(auto const i{ dyn_cast<obj::real>(o) }; i.is_some())
+    {
+      return i->data;
+    }
+
+    throw std::runtime_error{ util::format("A real was required here, but a {} was provided.",
                                            object_type_str(o.get_type())) };
   }
 
@@ -983,12 +999,12 @@ namespace jank::runtime
 
   bool is_integer(object_ref const o)
   {
-    return detail::is_small_int(o.data) || o.get_type() == object_type::integer;
+    return detail::is_small_int(o.raw()) || o.get_type() == object_type::integer;
   }
 
   bool is_real(object_ref const o)
   {
-    return o.get_type() == object_type::real;
+    return detail::is_small_real(o.raw()) || o.get_type() == object_type::real;
   }
 
   bool is_ratio(object_ref const o)
@@ -1007,7 +1023,7 @@ namespace jank::runtime
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
-        if constexpr(std::same_as<T, obj::real>)
+        if constexpr(jtl::is_any_same<T, obj::real, obj::small_real>)
         {
           return std::isnan(typed_o->data);
         }
@@ -1025,7 +1041,7 @@ namespace jank::runtime
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
-        if constexpr(std::same_as<T, obj::real>)
+        if constexpr(jtl::is_any_same<T, obj::real, obj::small_real>)
         {
           return std::isinf(typed_o->data);
         }
@@ -1088,7 +1104,8 @@ namespace jank::runtime
         {
           return make_box<obj::big_integer>(typed_o->data);
         }
-        else if constexpr(jtl::is_any_same<T, obj::real, obj::ratio, obj::big_decimal>)
+        else if constexpr(
+          jtl::is_any_same<T, obj::real, obj::small_real, obj::ratio, obj::big_decimal>)
         {
           return make_box<obj::big_integer>(typed_o->to_integer());
         }
@@ -1117,8 +1134,12 @@ namespace jank::runtime
         {
           return make_box<obj::big_decimal>(typed_o->to_real());
         }
-        else if constexpr(
-          jtl::is_any_same<T, obj::big_integer, obj::real, obj::ratio, obj::persistent_string>)
+        else if constexpr(jtl::is_any_same<T,
+                                           obj::big_integer,
+                                           obj::real,
+                                           obj::small_real,
+                                           obj::ratio,
+                                           obj::persistent_string>)
         {
           return make_box<obj::big_decimal>(typed_o->data);
         }

@@ -147,11 +147,41 @@ namespace jank::codegen
        * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
        * our object. */
       [[maybe_unused]]
-      auto * const root{ new(NoGC) object *{ o.data } };
+      auto * const root{ new(NoGC) object *{ o.raw() } };
+      auto const type{ literal_type(o) };
+      auto const ptr{ static_cast<void *>(o.raw()) };
+      jtl::immutable_string fmt_str;
+      if(o.is_nil())
+      {
+        fmt_str = "jank::runtime::jank_nil";
+      }
+      else if(is_typed_object(type))
+      {
+        if(runtime::detail::is_pointer(ptr))
+        {
+          fmt_str = util::format("{}{ (void*){} }",
+                                 get_qualified_type_name(type),
+                                 runtime::detail::as_pointer(ptr));
+        }
+        else if(runtime::detail::is_small_int(ptr))
+        {
+          fmt_str = util::format("{}{ {} }",
+                                 get_qualified_type_name(type),
+                                 runtime::detail::as_integer(ptr));
+        }
+        else if(runtime::detail::is_small_real(ptr))
+        {
+          fmt_str = util::format("{}{ {} }",
+                                 get_qualified_type_name(type),
+                                 runtime::detail::as_real(ptr));
+        }
+      }
+      else
+      {
+        fmt_str = util::format("{}{ (void*){} }", get_qualified_type_name(type), ptr);
+      }
+
       /* TODO: Not a fan of this. Move into global? Init with uncollectable ptr. */
-      auto const fmt_str{ util::format("{}{ (void*){} }",
-                                       get_qualified_type_name(literal_type(o)),
-                                       static_cast<void *>(o.data)) };
       locked_global_constants->emplace(o, fmt_str);
       return fmt_str;
     }
@@ -177,9 +207,10 @@ namespace jank::codegen
        * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
        * our object. */
       [[maybe_unused]]
-      auto const root{ new(NoGC) runtime::var *{ reinterpret_cast<runtime::var *>(var.data) } };
-      auto const fmt_str{ util::format("reinterpret_cast<jank::runtime::var*>({})",
-                                       static_cast<void *>(var.data)) };
+      auto const root{ new(NoGC) runtime::var *{ reinterpret_cast<runtime::var *>(var.ptr()) } };
+      auto const fmt_str{ util::format(
+        "jank::runtime::var_ref{ reinterpret_cast<jank::runtime::var*>({}) }",
+        static_cast<void *>(var.ptr())) };
       locked_global_vars->emplace(qualified_name, fmt_str);
       return fmt_str;
     }
@@ -224,24 +255,18 @@ namespace jank::codegen
           {
             util::format_to(buffer, "_jank_small_int({})", typed_o->data);
           }
-          else if constexpr(std::same_as<T, obj::real>)
+          else if constexpr(jtl::is_any_same<T, obj::real, obj::small_real>)
           {
-            util::format_to(buffer, "_jank_real(");
-
-            if(std::isinf(typed_o->data))
+            if constexpr(std::same_as<T, obj::real>)
             {
-              util::format_to(buffer, "INFINITY");
-            }
-            else if(std::isnan(typed_o->data))
-            {
-              util::format_to(buffer, "NAN");
+              util::format_to(buffer, "_jank_real(");
             }
             else
             {
-              util::format_to(buffer, "{}", typed_o->data);
+              util::format_to(buffer, "_jank_small_real(");
             }
 
-            util::format_to(buffer, ")");
+            util::format_to(buffer, "{})", typed_o->data);
           }
           else if constexpr(std::same_as<T, obj::big_integer>)
           {
@@ -1119,7 +1144,7 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer,
                     "switch(jank_shift_mask_case_integer(static_cast<jank::runtime::object*>({}."
-                    "data), {}, {})) {",
+                    "erase().raw()), {}, {})) {",
                     inst->value,
                     inst->shift,
                     inst->mask);
@@ -1325,7 +1350,7 @@ namespace jank::codegen
 
         if(param_type && Cpp::IsPointerType(param_type) && is_any_object(arg_type))
         {
-          util::format_to(b.body_buffer, ".data)");
+          util::format_to(b.body_buffer, ".erase().raw())");
         }
         need_comma = true;
       }
@@ -1739,14 +1764,15 @@ namespace jank::codegen
   {
     b.next_instruction();
     auto const type_name{ get_qualified_type_name(Cpp::GetCanonicalType(inst->expr->type)) };
-    util::format_to(b.body_buffer,
-                    "auto {}{ "
-                    "static_cast<{}>(jank_unbox_with_source(\"{}\", {}.data, {}.data)) };",
-                    inst->name,
-                    type_name,
-                    type_name,
-                    inst->value,
-                    inst->meta);
+    util::format_to(
+      b.body_buffer,
+      "auto {}{ "
+      "static_cast<{}>(jank_unbox_with_source(\"{}\", {}.erase().raw(), {}.erase().raw())) };",
+      inst->name,
+      type_name,
+      type_name,
+      inst->value,
+      inst->meta);
 
     return inst->name;
   }
@@ -1849,7 +1875,7 @@ namespace jank::codegen
       util::format_to(b.body_buffer,
                       "auto const * const {}{ "
                       "static_cast<struct {}*>(static_cast<jank::runtime::obj::jit_"
-                      "closure*>({}.data)->context) };",
+                      "closure*>({}.ptr())->context) };",
                       closure_ctx,
                       closure_ctx,
                       munged_fn_name);

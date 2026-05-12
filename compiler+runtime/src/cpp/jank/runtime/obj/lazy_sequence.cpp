@@ -77,7 +77,7 @@ namespace jank::runtime::obj
 
   bool lazy_sequence::equal(object const &o) const
   {
-    return sequence_equal(this, &o);
+    return sequence_equal(runtime::detail::untagged(this), runtime::detail::untagged(&o));
   }
 
   void lazy_sequence::to_string(jtl::string_builder &buff) const
@@ -102,7 +102,7 @@ namespace jank::runtime::obj
     {
       return 1;
     }
-    return hash::ordered(s.erase().data);
+    return hash::ordered(s.erase());
   }
 
   cons_ref lazy_sequence::conj(object_ref const head) const

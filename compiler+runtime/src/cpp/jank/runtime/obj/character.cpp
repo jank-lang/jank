@@ -57,7 +57,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const c(expect_object<character>(&o));
+    auto const c(expect_object<character>(runtime::detail::untagged(&o)));
     return data == c->data;
   }
 

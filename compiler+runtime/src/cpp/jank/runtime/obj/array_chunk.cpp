@@ -49,7 +49,7 @@ namespace jank::runtime::obj
       throw std::runtime_error{ "no more chunk remaining to chunk_next" };
     }
     ++offset;
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   usize array_chunk::count() const

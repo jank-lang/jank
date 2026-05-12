@@ -49,7 +49,7 @@ namespace jank::runtime::obj
 
   i64 keyword::compare(object const &o) const
   {
-    return compare(*expect_object<keyword>(&o));
+    return compare(*expect_object<keyword>(runtime::detail::untagged(&o)));
   }
 
   i64 keyword::compare(keyword const &s) const
@@ -69,12 +69,12 @@ namespace jank::runtime::obj
 
   object_ref keyword::call(object_ref const m) const
   {
-    return runtime::get(m, this);
+    return runtime::get(m, runtime::detail::untagged(this));
   }
 
   object_ref keyword::call(object_ref const m, object_ref const fallback) const
   {
-    return runtime::get(m, this, fallback);
+    return runtime::get(m, runtime::detail::untagged(this), fallback);
   }
 
   bool keyword::operator==(keyword const &rhs) const

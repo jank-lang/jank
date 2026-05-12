@@ -43,7 +43,7 @@ namespace jank::runtime
       return expect_object<var>(*found_var);
     }
 
-    auto const new_var(make_box<var>(this, unqualified_sym));
+    auto const new_var(make_box<var>(runtime::detail::untagged(this), unqualified_sym));
     *locked_vars
       = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(unqualified_sym, new_var));
     return new_var;
@@ -80,7 +80,7 @@ namespace jank::runtime
     if(found_var && found_var->is_some())
     {
       auto const v{ expect_object<var>(*found_var) };
-      if(v->n == this)
+      if(v->n == runtime::detail::untagged(this))
       {
         return v;
       }
@@ -88,7 +88,7 @@ namespace jank::runtime
       redefined = true;
     }
 
-    auto const new_var(make_box<var>(this, unqualified_sym));
+    auto const new_var(make_box<var>(runtime::detail::untagged(this), unqualified_sym));
     if(redefined)
     {
       auto const v{ expect_object<var>(*found_var) };
@@ -179,7 +179,7 @@ namespace jank::runtime
     {
       if(found->get_type() == object_type::var)
       {
-        auto const found_var(expect_object<runtime::var>(found->data));
+        auto const found_var(expect_object<runtime::var>(*found));
         auto const clojure_core(__rt_ctx->find_ns(make_box<obj::symbol>("clojure.core")));
         if(var->n != found_var->n && (found_var->n != clojure_core))
         {

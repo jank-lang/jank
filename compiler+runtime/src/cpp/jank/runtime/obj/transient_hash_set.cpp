@@ -44,7 +44,7 @@ namespace jank::runtime::obj
   {
     assert_active();
     data.insert(elem);
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   transient_hash_set::persistent_type_ref transient_hash_set::to_persistent()
@@ -96,7 +96,7 @@ namespace jank::runtime::obj
   {
     assert_active();
     data.erase(elem);
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   void transient_hash_set::assert_active() const

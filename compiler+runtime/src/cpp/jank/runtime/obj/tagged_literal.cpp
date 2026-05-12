@@ -23,7 +23,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const s(expect_object<tagged_literal>(&o));
+    auto const s(expect_object<tagged_literal>(runtime::detail::untagged(&o)));
     return runtime::equal(tag, s->tag) && runtime::equal(form, s->form);
   }
 
