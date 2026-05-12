@@ -258,12 +258,10 @@ namespace jank::runtime::obj
       return data == i->data;
     }
 
-    std::hash<f64> const hasher{};
-
     if(o.type == object_type::small_real)
     {
       auto const i(expect_object<small_real>(runtime::detail::untagged(&o)));
-      return hasher(data) == hasher(i->data);
+      return data == i->data;
     }
 
     if(o.type != object_type::real)
@@ -272,7 +270,7 @@ namespace jank::runtime::obj
     }
 
     auto const r(expect_object<real>(runtime::detail::untagged(&o)));
-    return hasher(data) == hasher(r->data);
+    return data == r->data;
   }
 
   jtl::immutable_string real::to_string() const
@@ -355,8 +353,6 @@ namespace jank::runtime::obj
 
   bool small_real::equal(object const &o) const
   {
-    std::hash<f64> const hasher{};
-
     if(o.type == object_type::big_decimal)
     {
       auto const i(expect_object<big_decimal>(runtime::detail::untagged(&o)));
@@ -366,7 +362,7 @@ namespace jank::runtime::obj
     if(o.type == object_type::real)
     {
       auto const i(expect_object<real>(runtime::detail::untagged(&o)));
-      return hasher(data) == hasher(i->data);
+      return data == i->data;
     }
 
     if(o.type != object_type::small_real)
@@ -375,7 +371,7 @@ namespace jank::runtime::obj
     }
 
     auto const r(expect_object<small_real>(runtime::detail::untagged(&o)));
-    return hasher(data) == hasher(r->data);
+    return data == r->data;
   }
 
   jtl::immutable_string small_real::to_string() const
