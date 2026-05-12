@@ -2,6 +2,9 @@
 
 namespace jank::runtime
 {
+  /* These RTTI specializations for small integers and small reals are specifically for
+   * actual small_integer_ref and small_real_ref objects. So we end up grabbing the
+   * pointer out of these and casting, rather than pulling out tagged numbers. */
   template <>
   obj::small_integer_ref expect_object<obj::small_integer>(object_ref const o)
   {
