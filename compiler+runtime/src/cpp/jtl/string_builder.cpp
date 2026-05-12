@@ -133,15 +133,19 @@ namespace jtl
     if(std::isinf(d))
     {
       constexpr jtl::immutable_string_view const infinity{ "INFINITY" };
+      maybe_realloc(*this, infinity.size());
+
       /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-      snprintf(buffer + pos, capacity - pos, infinity.data());
+      snprintf(buffer + pos, capacity - pos, "%s", infinity.data());
       pos += infinity.size();
     }
     else if(std::isnan(d))
     {
       constexpr jtl::immutable_string_view const nan{ "NAN" };
+      maybe_realloc(*this, nan.size());
+
       /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-      snprintf(buffer + pos, capacity - pos, nan.data());
+      snprintf(buffer + pos, capacity - pos, "%s", nan.data());
       pos += nan.size();
     }
     else

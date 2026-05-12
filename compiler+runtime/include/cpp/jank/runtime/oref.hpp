@@ -68,6 +68,9 @@ namespace jank::runtime
    * stores the numeric value inline. This is used when we visit an `object_ref` which holds an
    * inline integer or real and we need a fully typed object.
    *
+   * The GC has been configured to mask pointers such that the top 0xFFFF is ignored. This allows
+   * us to keep our pointers in NaN space while still having conservative scanning work.
+   *
    * It's important to note that every pointer within an `oref` is expected to be in NaN space.
    * If you try to create an `oref` with a normal pointer, you will end up with undefined
    * behavior. To mark your normal pointers as needing shifting, use the `untagged` helper. */
@@ -76,7 +79,8 @@ namespace jank::runtime
 
   namespace detail
   {
-    constexpr u64 nan_bits{ 0xFFF0'0000'0000'0000ull };
+    /* Anything below this is an encoded real value. Anything equal to or above this is NaN. */
+    constexpr u64 max_real{ 0xFFF8'0000'0000'0000ull };
 
     /* Integers are tagged with the high bits being 0xFFF9. The lower 32 bits store the integer.
      *                     seeeeeee|eeeemmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm|mmmmmmmm
@@ -90,45 +94,44 @@ namespace jank::runtime
      * 0xfffa000000000000: 11111111|11111010|pppppppp|pppppppp|pppppppp|pppppppp|pppppppp|pppppppp
      */
     constexpr u64 pointer_nan_tag{ 0xFFFa'0000'0000'0000ull };
-    constexpr u64 pointer_addr_mask{ 0x0000'FFFF'FFFF'FFFFull };
+    constexpr u64 pointer_value_mask{ 0x0000'FFFF'FFFF'FFFFull };
 
     constexpr i32 min_small_integer{ std::numeric_limits<i32>::min() };
     constexpr i32 max_small_integer{ std::numeric_limits<i32>::max() };
 
     inline bool is_small_real(void * const val)
     {
-      auto const bits{ reinterpret_cast<u64>(val) };
-      return bits == nan_bits || (bits & nan_bits) != nan_bits;
+      auto const bits{ std::bit_cast<u64>(val) };
+      return bits < max_real;
     }
 
     inline bool is_small_int(void * const val)
     {
-      return (reinterpret_cast<u64>(val) & ~integer_value_mask) == integer_nan_tag;
+      return (std::bit_cast<u64>(val) & ~integer_value_mask) == integer_nan_tag;
     }
 
     inline bool is_pointer(void * const val)
     {
-      return (reinterpret_cast<u64>(val) >> 48) == 0xFFFa;
+      return (std::bit_cast<u64>(val) & ~pointer_value_mask) == pointer_nan_tag;
     }
 
     inline f64 as_real(void * const val)
     {
       jank_debug_assert(is_small_real(val));
-      auto const bits{ reinterpret_cast<u64>(val) };
-      return std::bit_cast<f64>(bits);
+      return std::bit_cast<f64>(val);
     }
 
     inline i32 as_integer(void * const val)
     {
       jank_debug_assert(is_small_int(val));
-      return static_cast<i32>(reinterpret_cast<u64>(val) & integer_value_mask);
+      return static_cast<i32>(std::bit_cast<u64>(val) & integer_value_mask);
     }
 
     template <typename T>
     T *as_pointer(T * const val)
     {
       jank_debug_assert(is_pointer(val));
-      return reinterpret_cast<T *>(reinterpret_cast<u64>(val) & pointer_addr_mask);
+      return std::bit_cast<T *>(std::bit_cast<u64>(val) & pointer_value_mask);
     }
 
     /* This type, and the `untagged` helper functions, are used when constructing an `oref` from
@@ -170,22 +173,16 @@ namespace jank::runtime
     }
 
     template <typename T>
-    T tag(f64 const d)
+    T tag(i32 const val)
     {
-      auto bits{ std::bit_cast<u64>(d) };
-      /* NaN can be represented many ways. Canonicalize it to avoid ambiguities. */
-      if((bits & nan_bits) == nan_bits)
-      {
-        bits = nan_bits;
-      }
-      return reinterpret_cast<T>(bits);
+      return std::bit_cast<T>(integer_nan_tag
+                              | (static_cast<u64>(static_cast<u32>(val)) & integer_value_mask));
     }
 
     template <typename T>
-    T tag(i32 const val)
+    T tag(f64 const d)
     {
-      return reinterpret_cast<T>(integer_nan_tag
-                                 | (static_cast<u64>(static_cast<u32>(val)) & integer_value_mask));
+      return std::bit_cast<T>(d);
     }
 
     template <typename T>
@@ -193,7 +190,7 @@ namespace jank::runtime
     {
       auto const val{ reinterpret_cast<u64>(ptr.data) };
       /* Our pointers are expected to fit within 48 bits. */
-      jank_debug_assert((val & ~pointer_addr_mask) == 0);
+      jank_debug_assert((val & ~pointer_value_mask) == 0);
       /* Our pointers are expected to have all low bits unset. */
       jank_debug_assert((val & 0b111) == 0);
       return reinterpret_cast<T>(pointer_nan_tag | val);
