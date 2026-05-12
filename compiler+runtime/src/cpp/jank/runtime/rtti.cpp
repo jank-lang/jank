@@ -8,7 +8,7 @@ namespace jank::runtime
     jank_debug_assert(o.is_some());
     jank_debug_assert(o.get_type() == object_type::small_integer);
 
-    return detail::as_integer(o.raw());
+    return static_cast<obj::small_integer *>(o.ptr())->data;
   }
 
   template <>
@@ -17,7 +17,7 @@ namespace jank::runtime
     jank_debug_assert(o.is_some());
     jank_debug_assert(o.get_type() == object_type::small_real);
 
-    return detail::as_real(o.raw());
+    return static_cast<obj::small_real *>(o.ptr())->data;
   }
 
   template <>
@@ -33,7 +33,7 @@ namespace jank::runtime
       sb(")");
       throw std::runtime_error{ sb.str() };
     }
-    return detail::as_integer(o.raw());
+    return static_cast<obj::small_integer *>(o.ptr())->data;
   }
 
   template <>
@@ -49,7 +49,7 @@ namespace jank::runtime
       sb(")");
       throw std::runtime_error{ sb.str() };
     }
-    return detail::as_real(o.raw());
+    return static_cast<obj::small_real *>(o.ptr())->data;
   }
 
   template <>
