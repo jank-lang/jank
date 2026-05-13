@@ -1055,18 +1055,6 @@ namespace jank::runtime
     if(typed_o.is_some())
     {
       auto const str_size{ static_cast<size_t>(typed_o->data.size()) };
-      auto const max_limit{ std::numeric_limits<size_t>::max() };
-
-      if(max_limit < str_size)
-      {
-        throw make_box(
-          util::format(
-            "String size ({}) exceeds the maximum allowed size ({}) for parsing to integer.",
-            str_size,
-            max_limit))
-          .erase();
-      }
-
       size_t parsed_upto{};
       i64 parsed_long{};
 
@@ -1099,18 +1087,6 @@ namespace jank::runtime
     if(typed_o.is_some())
     {
       auto const str_size{ static_cast<size_t>(typed_o->data.size()) };
-      auto const max_limit{ std::numeric_limits<size_t>::max() };
-
-      if(max_limit < str_size)
-      {
-        throw make_box(
-          util::format(
-            "String size ({}) exceeds the maximum allowed size ({}) for parsing to double.",
-            str_size,
-            max_limit))
-          .erase();
-      }
-
       size_t parsed_upto{};
       f64 parsed_double{};
 
