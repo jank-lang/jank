@@ -61,11 +61,22 @@
 (cpp/raw "#include <sstream>")
 (cpp/raw "#include <filesystem>")
 
-(cpp/raw "#include <clojure/core_native.hpp>")
 (cpp/raw "#include <jank/runtime/core/equal.hpp>")
 (cpp/raw "#include <jank/runtime/core/meta.hpp>")
 (cpp/raw "#include <jank/runtime/obj/repeat.hpp>")
 (cpp/raw "#include <jank/runtime/detail/native_array_blocking_queue.hpp>")
+
+; Lists.
+(def ^{:arglists '([x])
+       :doc "Returns true if x implements IPersistentList"}
+  list?
+  (fn* list? [o]
+    (cpp/jank.runtime.is_list o)))
+(def ^{:arglists '([& items])
+       :doc "Creates a new list containing the items."}
+  list
+  (fn* list [& args]
+    (cpp/jank.runtime.list args)))
 
 ; Syntax quoting.
 (def ^{:arglists '([_])}
@@ -81,6 +92,13 @@
   type
   (fn* type [o]
     (cpp/jank.runtime.object_type_str (cpp/.get_type o))))
+
+(def ^{:arglists '([obj m])
+       :doc "Returns an object of the same type and value as obj, with
+   map m as its metadata."}
+  with-meta
+  (fn* with-meta [obj m]
+    (cpp/jank.runtime.with_meta obj m)))
 
 ; Exceptions
 (def ^{:arglists '([msg map] [msg map cause])
@@ -117,48 +135,64 @@
 ; Relations.
 ;; Miscellaneous.
 (def ^{:arglists '([o])
-       :doc "Returns true if x is nil, false otherwise."}
+       :doc "Returns true if x is nil, false otherwise."
+       :inline (fn* [x]
+                 (list 'cpp/jank.runtime.is_nil x))}
   nil?
   (fn* nil? [o]
-    (cpp/== (cpp/.get_type o) cpp/jank.runtime.object_type.nil)))
+    (.is_nil o)))
 
 (def ^{:arglists '([lhs rhs])
-       :doc "Tests if 2 arguments are the same object, meaning the same pointer address."}
+       :doc "Tests if 2 arguments are the same object, meaning the same pointer address."
+       :inline (fn* [lhs rhs]
+                 (list 'cpp/== lhs rhs))}
   identical?
   (fn* identical? [lhs rhs]
     (cpp/== lhs rhs)))
 
 ; Collections.
 (def ^{:arglists '([coll])
-       :doc "Returns true if coll has no items - same as (not (seq coll))."}
+       :doc "Returns true if coll has no items - same as (not (seq coll))."
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.is_empty o))}
   empty?
   (fn* empty? [o]
     (cpp/jank.runtime.is_empty o)))
 (def ^{:arglists '([coll])
-       :doc "Returns an empty collection of the same category as coll, or nil"}
+       :doc "Returns an empty collection of the same category as coll, or nil"
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.empty o))}
   empty
   (fn* empty [o]
     (cpp/jank.runtime.empty o)))
 (def ^{:arglists '([coll])
        :doc "Returns the number of items in the collection. (count nil) returns
-   0.  Also works on strings, arrays, and Java Collections and Maps"}
+       0.  Also works on strings, arrays, and Java Collections and Maps"
+       :inline (fn* [coll]
+                 (list 'cpp/jank.runtime.sequence_length coll))}
   count
   (fn* [coll]
     (cpp/jank.runtime.sequence_length coll)))
 
 ; Numbers.
 (def ^{:arglists '([x])
-       :doc "Coerce to boolean"}
+       :doc "Coerce to boolean"
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.truthy o))}
   boolean
   (fn* boolean [o]
     (cpp/jank.runtime.truthy o)))
 (def ^{:arglists '([x])
-       :doc "Coerce to int"}
+       :doc "Coerce to int"
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.to_int o))}
   int
   (fn* int [o]
     (cpp/jank.runtime.to_int o)))
 (def ^{:arglists '([x])
-       :doc "Coerce to float"}
+       :doc "Coerce to float"
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.to_real o))}
   float
   (fn* real [o]
     (cpp/jank.runtime.to_real o)))
@@ -166,73 +200,107 @@
 ;; Sequences.
 (def ^{:arglists '([coll])
        :doc "Returns a seq on the collection. If the collection is
-   empty, returns nil.  (seq nil) returns nil. seq also works on
-   Strings, native Java arrays (of reference types) and any objects
-   that implement Iterable. Note that seqs cache values, thus seq
-   should not be used on any Iterable whose iterator repeatedly
-   returns the same mutable object."}
+       empty, returns nil.  (seq nil) returns nil. seq also works on
+       Strings, native Java arrays (of reference types) and any objects
+       that implement Iterable. Note that seqs cache values, thus seq
+       should not be used on any Iterable whose iterator repeatedly
+       returns the same mutable object."
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.seq o))}
   seq
   (fn* seq [o]
     (cpp/jank.runtime.seq o)))
-(def ^{:arglists '([coll])}
+
+(def ^{:arglists '([coll])
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.fresh_seq o))}
   fresh-seq
   (fn* fresh-seq [o]
     (cpp/jank.runtime.fresh_seq o)))
+
 (def ^{:arglists '([coll])
        :doc "Returns the first item in the collection. Calls seq on its
-   argument. If coll is nil, returns nil."}
+       argument. If coll is nil, returns nil."
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.first o))}
   first
   (fn* first [o]
     (cpp/jank.runtime.first o)))
+
 (def ^{:arglists '([x])
        :doc "Same as (first (first x))"}
   ffirst
   (fn* ffirst [o]
     (first (first o))))
+
 (def ^{:arglists '([coll])
        :doc "Returns a seq of the items after the first. Calls seq on its
-   argument.  If there are no more items, returns nil."}
+   argument.  If there are no more items, returns nil."
+   :inline (fn* [o]
+                 (list 'cpp/jank.runtime.next o))}
   next
   (fn* next [o]
     (cpp/jank.runtime.next o)))
-(def ^{:arglists '([coll])}
+
+(def ^{:arglists '([coll])
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.next_in_place o))}
   next-in-place
   (fn* next-in-place [o]
     (cpp/jank.runtime.next_in_place o)))
+
 (def ^{:arglists '([x])
        :doc "Same as (next (next x))"}
   nnext
   (fn* nnext [o]
     (next (next o))))
+
 (def ^{:arglists '([x])
-       :doc "Same as (first (next x))"}
+       :doc "Same as (first (next x))"
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.second o))}
   second
   (fn* second [o]
     (cpp/jank.runtime.second o)))
+
 (def ^{:arglists '([coll])
        :doc "Returns a possibly empty seq of the items after the first. Calls seq on its
-   argument."}
+   argument."
+   :inline (fn* [o]
+                 (list 'cpp/jank.runtime.rest o))}
   rest
   (fn* rest [o]
     (cpp/jank.runtime.rest o)))
+
 (def ^{:arglists '([x seq])
        :doc "Returns a new seq where x is the first element and seq is
-   the rest."}
+   the rest."
+   :inline (fn* [head tail]
+                 (list 'cpp/jank.runtime.cons head tail))}
   cons
   (fn* cons [head tail]
     (cpp/jank.runtime.cons head tail)))
+
 (def ^{:arglists '([x])
-       :doc "Returns true if x implements IPersistentCollection"}
+       :doc "Returns true if x implements IPersistentCollection"
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.is_collection o))}
   coll?
   (fn* coll? [o]
     (cpp/jank.runtime.is_collection o)))
+
 (def ^{:arglists '([x])
-       :doc "Return true if x implements ISeq"}
+       :doc "Return true if x implements ISeq"
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.is_seq o))}
   seq?
   (fn* seq? [o]
     (cpp/jank.runtime.is_seq o)))
+
 (def ^{:arglists '([x])
-       :doc "Return true if the seq function is supported for x"}
+       :doc "Return true if the seq function is supported for x"
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.is_seqable o))}
   seqable?
   (fn* seqable? [o]
     (cpp/jank.runtime.is_seqable o)))
@@ -266,27 +334,20 @@
          r
          (recur r (first zs) (rest zs)))))))
 
-; Lists.
-(def ^{:arglists '([x])
-       :doc "Returns true if x implements IPersistentList"}
-  list?
-  (fn* list? [o]
-    (cpp/jank.runtime.is_list o)))
-(def ^{:arglists '([& items])
-       :doc "Creates a new list containing the items."}
-  list
-  (fn* list [& args]
-    (cpp/jank.runtime.list args)))
-
 ;; Vectors.
 (def ^{:arglists '([x])
-       :doc "Return true if x implements IPersistentVector"}
+       :doc "Return true if x implements IPersistentVector"
+       :inline (fn* [o]
+                 (list 'cpp/jank.runtime.is_vector o))}
   vector?
   (fn* vector? [o]
     (cpp/jank.runtime.is_vector o)))
+
 (def ^{:arglists '([coll])
        :doc "Creates a new vector containing the contents of coll. Java arrays
-   will be aliased and should not be modified."}
+   will be aliased and should not be modified."
+   :inline (fn* [o]
+             (list 'cpp/jank.runtime.vec o))}
   vec
   (fn* vec [o]
     (cpp/jank.runtime.vec o)))
@@ -309,7 +370,10 @@
    'added'. (conj nil item) returns (item).
    (conj coll) returns coll. (conj) returns [].
    The 'addition' may happen at different 'places' depending
-   on the concrete type."}
+   on the concrete type."
+   :inline (fn* [coll x]
+             (list 'cpp/jank.runtime.conj coll x))
+   :inline-arities #{2}}
   conj
   (fn* conj
     ([]
@@ -377,9 +441,12 @@
 
 (def ^{:arglists '([map key val] [map key val & kvs])
        :doc "assoc[iate]. When applied to a map, returns a new map of the
-   same (hashed/sorted) type, that contains the mapping of key(s) to
-   val(s). When applied to a vector, returns a new vector that
-   contains val at index. Note - index must be <= (count vector)."}
+       same (hashed/sorted) type, that contains the mapping of key(s) to
+       val(s). When applied to a vector, returns a new vector that
+       contains val at index. Note - index must be <= (count vector)."
+       :inline (fn* [map key val]
+                 (list 'cpp/jank.runtime.assoc map key val))
+       :inline-arities #{2}}
   assoc
   (fn* assoc
     ([map key val]
@@ -407,8 +474,8 @@
 
 (def ^{:arglists '([] [x] [x & ys])
        :doc "With no args, returns the empty string. With one arg x, returns
-   x.toString().  (str nil) returns the empty string. With more than
-   one arg, returns the concatenation of the str values of the args."}
+       x.toString().  (str nil) returns the empty string. With more than
+       one arg, returns the concatenation of the str values of the args."}
   str
   (fn* str
     ([]
@@ -426,6 +493,7 @@
   symbol?
   (fn* symbol? [o]
     (cpp/jank.runtime.is_symbol o)))
+
 (def ^{:arglists '([name] [ns name])
        :doc "Returns a Symbol with the given namespace and name. Arity-1 works
    on strings, keywords, and vars."}
@@ -437,11 +505,13 @@
      (if (nil? ns)
        (symbol o)
        (cpp/jank.runtime.to_qualified_symbol ns o)))))
+
 (def ^{:arglists '([x])
        :doc "Return true if x is a symbol without a namespace"}
   simple-symbol?
   (fn* simple-symbol? [x]
     (cpp/jank.runtime.is_simple_symbol x)))
+
 (def ^{:arglists '([x])
        :doc "Return true if x is a symbol with a namespace"}
   qualified-symbol?
@@ -451,22 +521,33 @@
 ; Relations.
 ;; Miscellaneous.
 (def ^{:arglists '([x])
-       :doc "Returns true if x is the value true, false otherwise."}
+       :doc "Returns true if x is the value true, false otherwise."
+       :inline (fn* [x]
+                 (list 'cpp/jank.runtime.is_true x))}
   true?
   (fn* true? [x]
     (cpp/jank.runtime.is_true x)))
+
 (def ^{:arglists '([x])
-       :doc "Returns true if x is the value false, false otherwise."}
+       :doc "Returns true if x is the value false, false otherwise."
+       :inline (fn* [x]
+                 (list 'cpp/jank.runtime.is_false x))}
   false?
   (fn* false? [x]
     (cpp/jank.runtime.is_false x)))
+
 (def ^{:arglists '([x])
-       :doc "Returns true if x is logical false, false otherwise."}
+       :doc "Returns true if x is logical false, false otherwise."
+       :inline (fn* [x]
+                 (list 'cpp/clojure.core_native.not_ x))}
   not
   (fn* not [x]
     (cpp/clojure.core_native.not_ x)))
+
 (def ^{:arglists '([x])
-       :doc "Returns true if x is not nil, false otherwise."}
+       :doc "Returns true if x is not nil, false otherwise."
+       :inline (fn* [x]
+                 (list 'cpp/jank.runtime.is_some x))}
   some?
   (fn* some? [x]
     (cpp/jank.runtime.is_some x)))
@@ -477,12 +558,7 @@
   meta
   (fn* meta [obj]
     (cpp/jank.runtime.meta obj)))
-(def ^{:arglists '([obj m])
-       :doc "Returns an object of the same type and value as obj, with
-   map m as its metadata."}
-  with-meta
-  (fn* with-meta [obj m]
-    (cpp/jank.runtime.with_meta obj m)))
+
 (def ^{:arglists '([iref metadata-map])
        :doc "Atomically resets the metadata for a namespace/var/ref/agent/atom"}
   reset-meta!
@@ -496,11 +572,13 @@
   print
   (fn* print [& more]
     (cpp/jank.runtime.print more)))
+
 (def ^{:arglists '([& more])
        :doc "Same as print followed by (newline)"}
   println
   (fn* println [& more]
     (cpp/jank.runtime.println more)))
+
 (def ^{:arglists '([& more])
        :doc "Prints the object(s) to the output stream that is the current value
    of *out*.  Prints the object(s), separated by spaces if there is
@@ -509,11 +587,13 @@
   pr
   (fn* pr [& more]
     (cpp/jank.runtime.pr more)))
+
 (def ^{:arglists '([& more])
        :doc "Same as pr followed by (newline). Observes *flush-on-newline*"}
   prn
   (fn* prn [& more]
     (cpp/jank.runtime.prn more)))
+
 (def ^{:arglists '([x])
        :doc "pr to a string, returning it"}
   pr-str
@@ -544,9 +624,14 @@
 
 (def ^{:arglists '([x] [x y] [x y & more])
        :doc "Equality. Returns true if x equals y, false if not. It also works
-   for nil and compares numbers and collections in a type-independent
-   manner. Clojure's immutable data structures define equals() (and
-   thus =) as a value, not an identity, comparison."}
+       for nil and compares numbers and collections in a type-independent
+       manner. Clojure's immutable data structures define equals() (and
+       thus =) as a value, not an identity, comparison."
+       ; TODO: Add template to support this.
+       ;:inline (fn* [x y]
+       ;          (list 'cpp/jank.runtime.equal x y))
+       ;:inline-arities #{2}
+       }
   =
   (fn* =
     ([x] true)
@@ -561,7 +646,10 @@
 
 (def ^{:arglists '([x] [x y] [x y & more])
        :doc "Returns non-nil if nums all have the equivalent
-   value (type-independent), otherwise false"}
+       value (type-independent), otherwise false"
+       :inline (fn* [x y]
+                 (list 'cpp/jank.runtime.is_equiv x y))
+       :inline-arities #{2}}
   ==
   (fn* ==
     ([x] true)
@@ -655,6 +743,7 @@
    else returns form."
   [form]
   (cpp/jank.runtime.macroexpand1 form))
+
 (defn macroexpand
   "Repeatedly calls macroexpand-1 on form until it no longer
    represents a macro form, then returns it.  Note neither
@@ -805,24 +894,37 @@
   [& body])
 
 ;; Transients.
-(defn- transientable?
+(defn-
+  ^{:inline (fn* [o]
+             (list 'cpp/jank.runtime.is_transientable o))}
+  transientable?
   "Returns a whether the collection can be made transient."
   [coll]
   (cpp/jank.runtime.is_transientable coll))
 
-(defn transient
+(defn
+  ^{:inline (fn* [o]
+             (list 'cpp/jank.runtime.transient o))}
+  transient
   "Returns a new, transient version of the collection, in constant time."
   [coll]
   (cpp/jank.runtime.transient coll))
 
-(defn persistent!
+(defn
+  ^{:inline (fn* [o]
+             (list 'cpp/jank.runtime.persistent o))}
+  persistent!
   "Returns a new, persistent version of the transient collection, in
    constant time. The transient collection cannot be used after this
    call, any such use will throw an exception."
   [coll]
   (cpp/jank.runtime.persistent coll))
 
-(defn conj!
+(defn
+  ^{:inline (fn* [coll o]
+             (list 'cpp/jank.runtime.conj_in_place coll o))
+   :inline-arities #{2}}
+  conj!
   "Adds x to the transient collection, and return coll. The 'addition'
    may happen at different 'places' depending on the concrete type."
   ([]
@@ -832,7 +934,11 @@
   ([coll x]
    (cpp/jank.runtime.conj_in_place coll x)))
 
-(defn assoc!
+(defn
+  ^{:inline (fn* [coll k v]
+             (list 'cpp/jank.runtime.assoc_in_place coll k v))
+   :inline-arities #{3}}
+  assoc!
   "When applied to a transient map, adds mapping of key(s) to
    val(s). When applied to a transient vector, sets the val at index.
    Note - index must be <= (count vector). Returns coll."
@@ -844,7 +950,11 @@
        (recur ret (first kvs) (second kvs) (nnext kvs))
        ret))))
 
-(defn dissoc!
+(defn
+  ^{:inline (fn* [coll o]
+             (list 'cpp/jank.runtime.dissoc_in_place coll o))
+   :inline-arities #{2}}
+  dissoc!
   "Returns a transient map that doesn't contain a mapping for key(s)."
   ([coll k]
    (cpp/jank.runtime.dissoc_in_place coll k))
@@ -1160,19 +1270,29 @@
   (cpp/jank.runtime.reset_vals atom newval))
 
 ;; Volatiles.
-(defn volatile!
+(defn
+  ^{:inline (fn* [o]
+             (list 'cpp/jank.runtime.volatile_ o))}
+  volatile!
   "Creates and returns a volatile with an initial value of val."
   [val]
   (cpp/jank.runtime.volatile_ val))
 
-(defn vreset!
+(defn
+  ^{:inline (fn* [vol newval]
+             (list 'cpp/jank.runtime.vreset vol newval))}
+  vreset!
   "Sets the value of volatile to newval without regard for the
    current value. Returns newval."
   [vol newval]
   (cpp/jank.runtime.vreset vol newval))
 
 ; TODO: In Clojure, this is a macro (for perf reasons).
-(defn vswap!
+(defn
+  ^{:inline (fn* [vol f]
+             (list 'cpp/jank.runtime.vswap vol f))
+   :inline-arities #{2}}
+  vswap!
   "Non-atomically swaps the value of the volatile as if:
    (apply f current-value-of-vol args). Returns the value that
    was swapped in."
@@ -1204,7 +1324,7 @@
 ;; Primitives.
 ;;; Arithmetic.
 (defn
-  ^{:inline (fn [l r]
+  ^{:inline (fn* [l r]
               (list 'cpp/jank.runtime.add l r))
     :inline-arities #{2}}
   +
@@ -1221,7 +1341,7 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:inline (fn [l r]
+  ^{:inline (fn* [l r]
               (list 'cpp/jank.runtime.sub l r))
     :inline-arities #{2}}
   -
@@ -1236,7 +1356,7 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:inline (fn [l r]
+  ^{:inline (fn* [l r]
               (list 'cpp/jank.runtime.mul l r))
     :inline-arities #{2}}
   *
@@ -1253,7 +1373,7 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:inline (fn [l r]
+  ^{:inline (fn* [l r]
               (list 'cpp/jank.runtime.div l r))
     :inline-arities #{2}}
   /
@@ -1268,71 +1388,109 @@
        (recur res (first args) (next args))))))
 
 ;; Bit operations.
-; TODO: Unboxing and inlining for these.
 (defn bit-not
   "Bitwise complement"
+  {:inline (fn* [o]
+             (list 'cpp/jank.runtime.bit_not o))}
   [x]
   (cpp/jank.runtime.bit_not x))
 
-(defn bit-and
+(defn
+  ^{:inline (fn* [x y]
+             (list 'cpp/jank.runtime.bit_and x y))
+   :inline-arities #{2}}
+  bit-and
   "Bitwise and"
   ([x y]
    (cpp/jank.runtime.bit_and x y))
   ([x y & more]
    (reduce bit-and (bit-and x y) more)))
 
-(defn bit-or
+(defn
+  ^{:inline (fn* [x y]
+             (list 'cpp/jank.runtime.bit_or x y))
+   :inline-arities #{2}}
+  bit-or
   "Bitwise or"
   ([x y]
    (cpp/jank.runtime.bit_or x y))
   ([x y & more]
    (reduce bit-or (bit-or x y) more)))
 
-(defn bit-xor
+(defn
+  ^{:inline (fn* [x y]
+             (list 'cpp/jank.runtime.bit_xor x y))
+   :inline-arities #{2}}
+  bit-xor
   "Bitwise exclusive or"
   ([x y]
    (cpp/jank.runtime.bit_xor x y))
   ([x y & more]
    (reduce bit-xor (bit-xor x y) more)))
 
-(defn bit-and-not
+(defn
+  ^{:inline (fn* [x y]
+             (list 'cpp/jank.runtime.bit_and_not x y))
+   :inline-arities #{2}}
+  bit-and-not
   "Bitwise and with complement"
   ([x y]
    (cpp/jank.runtime.bit_and_not x y))
   ([x y & more]
    (reduce bit-and-not (bit-and-not x y) more)))
 
-(defn bit-clear
+(defn
+  ^{:inline (fn* [x y]
+             (list 'cpp/jank.runtime.bit_clear x y))}
+  bit-clear
   "Clear bit at index n"
   [x n]
   (cpp/jank.runtime.bit_clear x n))
 
-(defn bit-set
+(defn
+  ^{:inline (fn* [x y]
+             (list 'cpp/jank.runtime.bit_set x y))}
+  bit-set
   "Set bit at index n"
   [x n]
   (cpp/jank.runtime.bit_set x n))
 
-(defn bit-flip
+(defn
+  ^{:inline (fn* [x y]
+             (list 'cpp/jank.runtime.bit_flip x y))}
+  bit-flip
   "Flip bit at index n"
   [x n]
   (cpp/jank.runtime.bit_flip x n))
 
-(defn bit-test
+(defn
+  ^{:inline (fn* [x y]
+             (list 'cpp/jank.runtime.bit_test x y))}
+  bit-test
   "Test bit at index n"
   [x n]
   (cpp/jank.runtime.bit_test x n))
 
-(defn bit-shift-left
+(defn
+  ^{:inline (fn* [x y]
+             (list 'cpp/jank.runtime.bit_shift_left x y))}
+  bit-shift-left
   "Bitwise shift left"
   [x n]
   (cpp/jank.runtime.bit_shift_left x n))
 
-(defn bit-shift-right
+(defn
+  ^{:inline (fn* [x y]
+             (list 'cpp/jank.runtime.bit_shift_right x y))}
+  bit-shift-right
   "Bitwise shift right"
   [x n]
   (cpp/jank.runtime.bit_shift_right x n))
 
-(defn unsigned-bit-shift-right
+(defn
+  ^{:inline (fn* [x y]
+             (list 'cpp/jank.runtime.bit_unsigned_shift_right x y))}
+  unsigned-bit-shift-right
   "Bitwise shift right, without sign-extension."
   [x n]
   (cpp/jank.runtime.bit_unsigned_shift_right x n))
@@ -1346,7 +1504,7 @@
    (not (apply = x y more))))
 
 (defn
-  ^{:inline (fn [l r]
+  ^{:inline (fn* [l r]
               (list 'cpp/jank.runtime.lt l r))
     :inline-arities #{2}}
   <
@@ -1362,7 +1520,7 @@
      false)))
 
 (defn
-  ^{:inline (fn [l r]
+  ^{:inline (fn* [l r]
               (list 'cpp/jank.runtime.lte l r))
     :inline-arities #{2}}
   <=
@@ -1378,7 +1536,7 @@
      false)))
 
 (defn
-  ^{:inline (fn [l r]
+  ^{:inline (fn* [l r]
               (list 'cpp/jank.runtime.lt r l))
     :inline-arities #{2}}
   >
@@ -1394,7 +1552,7 @@
      false)))
 
 (defn
-  ^{:inline (fn [l r]
+  ^{:inline (fn* [l r]
               (list 'cpp/jank.runtime.lte r l))
     :inline-arities #{2}}
   >=
@@ -1410,7 +1568,7 @@
      false)))
 
 (defn
-  ^{:inline (fn [l r]
+  ^{:inline (fn* [l r]
               (list 'cpp/jank.runtime.min l r))
     :inline-arities #{2}}
   min
@@ -1425,7 +1583,7 @@
        (recur res (first args) (next args))))))
 
 (defn
-  ^{:inline (fn [l r]
+  ^{:inline (fn* [l r]
               (list 'cpp/jank.runtime.max l r))
     :inline-arities #{2}}
   max
@@ -1439,35 +1597,60 @@
        res
        (recur res (first args) (next args))))))
 
-(defn inc
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.inc x))}
+  inc
   "Returns a number one greater than num. Does not auto-promote
    longs, will throw on overflow. See also: inc'"
   [x]
   (cpp/jank.runtime.inc x))
-(defn dec
+
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.dec x))}
+  dec
   "Returns a number one less than num. Does not auto-promote
    longs, will throw on overflow. See also: dec"
   [x]
   (cpp/jank.runtime.dec x))
 
-(defn pos?
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.is_pos x))}
+  pos?
   "Returns true if num is greater than zero, else false"
   [num]
   (cpp/jank.runtime.is_pos num))
-(defn neg?
+
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.is_neg x))}
+  neg?
   "Returns true if num is less than zero, else false"
   [num]
   (cpp/jank.runtime.is_neg num))
-(defn zero?
+
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.is_zero x))}
+  zero?
   "Returns true if num is zero, else false"
   [num]
   (cpp/jank.runtime.is_zero num))
 
-(defn rem
+(defn
+  ^{:inline (fn* [num div]
+             (list 'cpp/jank.runtime.rem num div))}
+  rem
   "Returns the remainder of dividing numerator by denominator."
   [num div]
   (cpp/jank.runtime.rem num div))
-(defn quot
+
+(defn
+  ^{:inline (fn* [num div]
+             (list 'cpp/jank.runtime.quot num div))}
+  quot
   "quot[ient] of dividing numerator by denominator."
   [num div]
   (cpp/jank.runtime.quot num div))
@@ -1481,34 +1664,60 @@
       (+ m div))))
 
 ;; Numbers.
-(defn integer?
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.is_integer x))}
+  integer?
   "Returns true if n is an integer"
   [n]
   (cpp/jank.runtime.is_integer n))
-(defn float?
+
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.is_real x))}
+  float?
   "Returns true if n is a floating point number"
   [n]
   (cpp/jank.runtime.is_real n))
-(defn boolean?
+
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.is_boolean x))}
+  boolean?
   "Returns true if x is a boolean"
   [x]
   (cpp/jank.runtime.is_boolean x))
-(defn number?
+
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.is_number x))}
+  number?
   "Returns true if x is a number"
   [x]
   (cpp/jank.runtime.is_number x))
 
-(defn even?
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.is_even x))}
+  even?
   "Returns true if n is even, throws an exception if n is not an integer"
   [n]
   (cpp/jank.runtime.is_even n))
-(defn odd?
+
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.is_odd x))}
+  odd?
   "Returns true if n is odd, throws an exception if n is not an integer"
   [n]
   (cpp/jank.runtime.is_odd n))
 
 ;; Random.
-(defn rand
+(defn
+   ^{:inline (fn* []
+              (list 'cpp/jank.runtime.rand))
+    :inline-arities #{0}}
+  rand
   "Returns a random floating point number between 0 (inclusive) and
    n (default 1) (exclusive)."
   ([]
@@ -1874,14 +2083,23 @@
           []
           m))
 
-(defn get
+(defn
+  ^{:inline (fn* [map key & more]
+             `(cpp/jank.runtime.get ~map ~key ~@more))
+   :inline-arities #{2 3}}
+  get
   "Returns the value mapped to key, not-found or nil if key not present
    in associative collection, set, string, array, or ILookup instance."
   ([map key]
    (cpp/jank.runtime.get map key))
   ([map key not-found]
    (cpp/jank.runtime.get map key not-found)))
-(defn get-in
+
+(defn
+  ^{:inline (fn* [map key & more]
+             `(cpp/jank.runtime.get_in ~map ~key ~@more))
+   :inline-arities #{2 3}}
+  get-in
   "Returns the value in a nested associative structure,
    where ks is a sequence of keys. Returns nil if the key
    is not present, or the not-found value if supplied."
@@ -1890,7 +2108,11 @@
   ([m ks not-found]
    (cpp/jank.runtime.get_in m ks not-found)))
 
-(defn dissoc
+(defn
+  ^{:inline (fn* [m k]
+             (list 'cpp/jank.runtime.dissoc m k))
+   :inline-arities #{2}}
+  dissoc
   "dissoc[iate]. Returns a new map of the same (hashed/sorted) type,
    that does not contain a mapping for key(s)."
   ([m]
@@ -1903,7 +2125,10 @@
        (recur ret (first ks) (next ks))
        ret))))
 
-(defn contains?
+(defn
+  ^{:inline (fn* [m k]
+             (list 'cpp/jank.runtime.contains m k))}
+  contains?
   "Returns true if key is present in the given collection, otherwise
    returns false.  Note that for numerically indexed collections like
    vectors and Java arrays, this tests if the numeric key is within the
@@ -1912,7 +2137,10 @@
   [coll key]
   (cpp/jank.runtime.contains coll key))
 
-(defn find
+(defn
+  ^{:inline (fn* [m k]
+             (list 'cpp/jank.runtime.find m k))}
+  find
   "Returns the map entry for key, or nil if key not present."
   [map key]
   (cpp/jank.runtime.find map key))
@@ -1962,7 +2190,11 @@
   ([comparator & keys]
    (throw "not yet implemented: sorted-set-by")))
 
-(defn disj
+(defn
+  ^{:inline (fn* [m k]
+             (list 'cpp/jank.runtime.disj m k))
+   :inline-arities #{2}}
+  disj
   "disj[oin]. Returns a new set of the same (hashed/sorted) type, that
    does not contain key(s)."
   ([set]
@@ -1991,7 +2223,10 @@
                          coll))))
 
 ;; Other.
-(defn hash
+(defn
+  ^{:inline (fn* [x]
+             (list 'cpp/jank.runtime.to_hash x))}
+  hash
   "Returns the hash code of its argument. Note this is the hash code
    consistent with =, and thus is different than .hashCode for Integer,
    Short, Byte and Clojure collections."
@@ -2093,7 +2328,10 @@
   (boolean (and (ident? x) (namespace x) true)))
 
 ;; Pre-macro sequences.
-(defn nth
+(defn
+  ^{:inline (fn* [coll index & more]
+             `(cpp/jank.runtime.nth ~coll ~index ~@more))}
+  nth
   "Returns the value at the index. get returns nil if index out of
    bounds, nth throws an exception unless not-found is supplied.  nth
    also works for strings, Java arrays, regex Matchers and Lists, and,

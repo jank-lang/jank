@@ -66,7 +66,7 @@ _jank_closure(jank::runtime::callable_arity_flags const flags, void * const ctx)
   return jank::runtime::make_box<jank::runtime::obj::jit_closure>(flags, ctx);
 }
 
-jank::runtime::object_ref _jank_read(char const *edn)
+jank::runtime::object_ref _jank_eval_str(char const *edn)
 {
-  return jank::runtime::__rt_ctx->forcefully_read_string(edn);
+  return jank::runtime::__rt_ctx->eval(jank::runtime::__rt_ctx->forcefully_read_string(edn));
 }

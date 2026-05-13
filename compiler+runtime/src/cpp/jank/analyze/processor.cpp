@@ -120,6 +120,11 @@ namespace jank::analyze
     return expansions.back();
   }
 
+  static jtl::result<expression_ref, error_ref>
+  apply_implicit_conversion(expression_ref const expr,
+                            jtl::ptr<void> expr_type,
+                            jtl::ptr<void> const expected_type,
+                            native_vector<runtime::object_ref> const &macro_expansions);
   static jtl::result<void, error_ref>
   apply_implicit_conversions(jtl::ptr<void> const fn,
                              /* Out param. */
@@ -664,6 +669,7 @@ namespace jank::analyze
 
       if(always_use_builtin || cpp_util::is_primitive(obj_type))
       {
+        /* Handle primitive on primitive action. */
         if(always_use_builtin
            || (arg_types.size() == 1
                || cpp_util::is_primitive(Cpp::GetNonReferenceType(arg_types[1].m_Type))))
@@ -677,6 +683,50 @@ namespace jank::analyze
                                              needs_box,
                                              macro_expansions);
         }
+        /* Handle assigning to a primitive from a jank object. */
+        else if(cpp_util::is_trait_convertible(obj_type)
+                && cpp_util::is_any_object(Cpp::GetNonReferenceType(arg_types[1].m_Type)))
+        {
+          auto const conversion_res{
+            apply_implicit_conversion(arg_exprs[1], arg_types[1].m_Type, obj_type, macro_expansions)
+          };
+          if(conversion_res.is_err())
+          {
+            return conversion_res.expect_err();
+          }
+          arg_exprs[1] = conversion_res.expect_ok();
+          arg_types[1].m_Type = obj_type;
+          return build_builtin_operator_call(val,
+                                             op,
+                                             std::move(arg_exprs),
+                                             arg_types,
+                                             current_frame,
+                                             position,
+                                             needs_box,
+                                             macro_expansions);
+        }
+      }
+      /* Handle assigning to a jank object from a primitive. */
+      else if(arg_types.size() == 2 && cpp_util::is_trait_convertible(arg_types[1].m_Type)
+              && cpp_util::is_any_object(Cpp::GetNonReferenceType(obj_type)))
+      {
+        auto const conversion_res{
+          apply_implicit_conversion(arg_exprs[1], arg_types[1].m_Type, obj_type, macro_expansions)
+        };
+        if(conversion_res.is_err())
+        {
+          return conversion_res.expect_err();
+        }
+        arg_exprs[1] = conversion_res.expect_ok();
+        arg_types[1].m_Type = obj_type;
+        return build_builtin_operator_call(val,
+                                           op,
+                                           std::move(arg_exprs),
+                                           arg_types,
+                                           current_frame,
+                                           position,
+                                           needs_box,
+                                           macro_expansions);
       }
 
       auto const arity{ arg_count == 1 ? Cpp::kUnary : Cpp::kBinary };
@@ -2106,7 +2156,7 @@ namespace jank::analyze
           expression_position::statement,
           fn_ctx,
           false) };
-        if(op_equal_call.is_err())
+        if(op_equal_call.is_err() && !cpp_util::is_trait_convertible(expected_type))
         {
           /* TODO: Improve error to reference let binding and provide a custom recur message
            * instead of operator = stuff. */
@@ -3283,20 +3333,16 @@ namespace jank::analyze
           runtime::get(var_deref->var->get_meta(),
                        __rt_ctx->intern_keyword("", "inline-arities", true).expect_ok()));
 
-        if(runtime::contains(inline_arities, make_box(arg_count)))
+        if(inline_arities.is_nil() || runtime::contains(inline_arities, make_box(arg_count)))
         {
           auto const inline_fn(
             runtime::get(var_deref->var->get_meta(),
                          __rt_ctx->intern_keyword("", "inline", true).expect_ok()));
-          /* TODO: Once we're evaluating meta, we can remove this eval. */
-          object_ref actual_fn;
+          if(inline_fn.is_some())
           {
-            context::binding_scope const _{ runtime::obj::persistent_hash_map::create_unique(
-              std::make_pair(__rt_ctx->current_ns_var, var_deref->var->n)) };
-            actual_fn = __rt_ctx->eval(inline_fn);
+            auto const expanded{ apply_to(inline_fn, o->next()) };
+            return analyze(expanded, current_frame, position, fn_ctx, needs_box);
           }
-          auto const expanded{ apply_to(actual_fn, o->next()) };
-          return analyze(expanded, current_frame, position, fn_ctx, needs_box);
         }
       }
     }

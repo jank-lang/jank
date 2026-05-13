@@ -488,7 +488,7 @@ namespace jank::codegen
                 util::format_to(buffer, "jank::runtime::with_meta(");
               }
               util::format_to(buffer,
-                              "_jank_read(\"{}\")",
+                              "_jank_eval_str(\"{}\")",
                               util::escape(typed_o->to_code_string()));
               if(has_meta)
               {
@@ -688,13 +688,15 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::persistent_array_map_ref const &inst, builder &b)
   {
     b.next_instruction();
+    bool need_comma{};
     if(inst->meta.is_some())
     {
       util::format_to(
         b.body_buffer,
-        "auto const {}(jank::runtime::obj::persistent_array_map::create_unique_with_meta({},",
+        "auto const {}(jank::runtime::obj::persistent_array_map::create_unique_with_meta({}",
         inst->name,
         inst->meta.unwrap());
+      need_comma = true;
     }
     else
     {
@@ -703,7 +705,6 @@ namespace jank::codegen
                       inst->name);
     }
 
-    bool need_comma{};
     for(auto const &val : inst->values)
     {
       if(need_comma)
@@ -1753,7 +1754,7 @@ namespace jank::codegen
 
     auto const meta{ source_to_meta(inst->expr->source) };
     util::format_to(b.body_buffer,
-                    "jank::runtime::reset_meta({}, _jank_read(\"{}\"));",
+                    "jank::runtime::reset_meta({}, _jank_eval_str(\"{}\"));",
                     inst->name,
                     util::escape(to_code_string(meta)));
 

@@ -14,3 +14,4 @@
 #include <jank/codegen/api.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/c_api.h>
+#include <clojure/core_native.hpp>
