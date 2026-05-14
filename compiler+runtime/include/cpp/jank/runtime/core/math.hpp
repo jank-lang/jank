@@ -1085,6 +1085,14 @@ namespace jank::runtime
     {
       return val.to_real();
     }
+    else if constexpr(jtl::is_any_same<T,
+                                       obj::integer_ref,
+                                       obj::small_integer_ref,
+                                       obj::real_ref,
+                                       obj::small_real_ref>)
+    {
+      return val->to_real();
+    }
     else
     {
       static_assert(!sizeof(T *), "Unsupported type for to_real conversion.");
