@@ -1,7 +1,10 @@
+#include <llvm/Support/Casting.h>
+
 #include <jank/ir/print.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
+#include <jank/analyze/cpp_util.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::ir
@@ -494,7 +497,25 @@ namespace jank::ir
 
   void inst::cpp_call::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb, "{:name {} :op :cpp/call :value {} :args [", name, value.unwrap_or("nil"));
+    util::format_to(sb, "{:name {} :op :cpp/call :value ", name);
+    if(value.is_some())
+    {
+      util::format_to(sb, "{}", value.unwrap());
+    }
+    else
+    {
+      auto const cpp_value{ dynamic_cast<analyze::expr::cpp_value *>(expr->source_expr.data) };
+      if(cpp_value && cpp_value->scope)
+      {
+        util::format_to(sb, "\"{}\"", analyze::cpp_util::get_qualified_name(cpp_value->scope));
+      }
+      else
+      {
+        util::format_to(sb, "nil");
+      }
+    }
+
+    util::format_to(sb, " :args [", name, value.unwrap_or("nil"));
     bool needs_space{};
     for(auto const &arg : args)
     {
