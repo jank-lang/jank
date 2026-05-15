@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::auto_box::pass_unnamed_enum
+          {
+            enum : unsigned char
+            {
+              FOO_ZERO,
+              FOO_ONE
+            };
+          }")
+(let* [z cpp/jank.cpp.auto_box.pass_unnamed_enum.FOO_ZERO
+       o cpp/jank.cpp.auto_box.pass_unnamed_enum.FOO_ONE]
+  (if (and (= 0 z) (= 1 o))
+    :success))
