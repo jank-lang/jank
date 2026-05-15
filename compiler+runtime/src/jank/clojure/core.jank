@@ -721,19 +721,30 @@
            fdecl (if (map? (last fdecl))
                    (butlast fdecl)
                    fdecl)
-           m (conj {:arglists (list 'quote (sigs fdecl))} m)
+           arities (sigs fdecl)
+           m (conj {:arglists (list 'quote arities)} m)
+           ; If we have an inline function, give it a helpful name, if it doesn't have one.
            m (let* [inline (:inline m)
                     ifn (first inline)
                     iname (second inline)]
-               ;; same as: (if (and (= 'fn ifn) (not (symbol? iname))) ...)
-               (if (if (= 'fn ifn)
-                     (if (symbol? iname)
-                       false
-                       true))
-                 ;; inserts the same fn name to the inline fn if it does not have one
-                 (assoc m :inline (cons ifn (cons (symbol (str iname "__inliner"))
+               (if (if (cpp/jank.runtime.contains #{'fn 'fn*} ifn)
+                     (not (symbol? iname)))
+                 (assoc m :inline (cons ifn (cons (symbol (str name "__inline"))
                                                   (next inline))))
                  m))
+           ; Also, if :inline-arities isn't specified, default it to the number of arities
+           ; we have.
+           m (if (:inline m)
+               (if (:inline-arities m)
+                 m
+                 (let* [counts (loop* [counts #{}
+                                       arities arities]
+                                      (if (empty? arities)
+                                        counts
+                                        (recur (conj counts (count (first arities)))
+                                               (next arities))))]
+                   (assoc m :inline-arities counts)))
+               m)
            m (conj (if (meta name) (meta name) {}) m)]
       `(def ~(with-meta name m)
          ~(with-meta `(fn ~name ~@fdecl) {:rettag (:tag m)})))))

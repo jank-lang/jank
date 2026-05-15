@@ -514,7 +514,7 @@ namespace jank::ir
       }
     }
 
-    util::format_to(sb, " :args [", name, value.unwrap_or("nil"));
+    util::format_to(sb, " :args [");
     bool needs_space{};
     for(auto const &arg : args)
     {

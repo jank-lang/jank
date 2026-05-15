@@ -1090,8 +1090,7 @@ namespace jank::read::parse
     {
       return error::parse_invalid_reader_symbolic_value(
         util::format("This '{}' reader tag is not supported. '#uuid', '#inst' and '#cpp' are the "
-                     "only default tags "
-                     "currently supported.",
+                     "only currently recognized tags.",
                      sym->to_code_string()),
         { start_token.start, sym_end.end });
     }
