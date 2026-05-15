@@ -69,15 +69,19 @@ namespace jank::ir
     analyze::expr::function_ref root_fn_expr;
     native_vector<jtl::immutable_string> entry_points{};
     native_vector<function> functions{};
-    native_unordered_map<identifier, runtime::object_ref> lifted_constants{};
+    native_unordered_map<runtime::object_ref,
+                         identifier,
+                         std::hash<runtime::object_ref>,
+                         runtime::very_equal_to_with_meta>
+      lifted_constants{};
 
     struct lifted_var
     {
-      jtl::immutable_string qualified_var;
+      identifier name;
       bool owned{};
     };
 
-    native_unordered_map<identifier, lifted_var> lifted_vars{};
+    native_unordered_map<jtl::immutable_string, lifted_var> lifted_vars{};
   };
 
   module create(analyze::expr::function_ref,

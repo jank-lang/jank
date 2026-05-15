@@ -1053,10 +1053,52 @@ namespace jank::runtime
   i64 to_int(obj::nil_ref const l);
   i64 to_int(obj::integer_ref const l);
   i64 to_int(obj::real_ref const l);
-  i64 to_int(i64 l);
-  i64 to_int(f64 l);
+
+  template <typename T>
+  requires detail::primitive_number<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  i64 to_int(T const l)
+  {
+    return static_cast<i64>(l);
+  }
 
   f64 to_real(object_ref const o);
+
+  template <typename T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  static f64 to_real(T const &val)
+  {
+    if constexpr(jtl::is_any_same<T, i32, i64>)
+    {
+      return static_cast<f64>(val);
+    }
+    else if constexpr(std::is_same_v<T, native_big_integer>
+                      || std::is_same_v<T, native_big_decimal>)
+    {
+      return val.template convert_to<f64>();
+    }
+    else if constexpr(std::is_same_v<T, f64>)
+    {
+      return val;
+    }
+    else if constexpr(std::is_same_v<T, obj::ratio_data>)
+    {
+      return val.to_real();
+    }
+    else if constexpr(jtl::is_any_same<T,
+                                       obj::integer_ref,
+                                       obj::small_integer_ref,
+                                       obj::real_ref,
+                                       obj::small_real_ref>)
+    {
+      return val->to_real();
+    }
+    else
+    {
+      static_assert(!sizeof(T *), "Unsupported type for to_real conversion.");
+      return 0.0;
+    }
+  }
 
   bool is_number(object_ref const o);
   object_ref number(object_ref const o);

@@ -39,8 +39,7 @@ C++ interop. As an example of some jank IR, here's a simple jank function
 and its corresponding IR.
 
 ```clojure
-(defn greet
-  [name]
+(defn greet [name]
   (if (= "jeaye" name)
     (println "Are you me?!")
     (println (str "Hello, " name "!"))))
@@ -50,34 +49,34 @@ We can get the IR printed for each compiled function by setting
 `JANK_PRINT_IR=1` when we invoke jank.
 
 ```clojure
-{:name user_greet_82687
- :lifted-vars {clojure_core_SLASH_str_82694 clojure.core/str
-               clojure_core_SLASH_println_82691 clojure.core/println
-               clojure_core_SLASH__EQ__82689 clojure.core/=}
- :lifted-constants {const_82693 "!"
-                    const_82692 "Hello, "
-                    const_82690 "Are you me?!"
-                    const_82688 "jeaye"}
- :functions [{:name user_greet_82687_1
+{:name user_greet_1
+ :lifted-vars {clojure.core/println clojure_core_SLASH_println_5
+               clojure.core/str clojure_core_SLASH_str_8
+               clojure.core/= clojure_core_SLASH__EQ__3}
+ :lifted-constants {"!" const_7
+                    "Are you me?!" const_4
+                    "Hello, " const_6
+                    "jeaye" const_2}
+ :functions [{:name user_greet_1_1
               :blocks [{:name entry
                         :instructions [{:name greet :op :parameter :type "jank::runtime::object_ref"}
                                        {:name name :op :parameter :type "jank::runtime::object_ref"}
                                        {:name v3 :op :literal :value "jeaye" :type "jank::runtime::obj::persistent_string_ref"}
-                                       {:name v4 :op :var-deref :var clojure_core_SLASH__EQ__82689 :type "jank::runtime::object_ref"}
+                                       {:name v4 :op :var-deref :var clojure.core/= :type "jank::runtime::object_ref"}
                                        {:name v5 :op :dynamic-call :fn v4 :args [v3 name] :type "jank::runtime::object_ref"}
                                        {:name v7 :op :truthy :value v5 :type "bool"}
                                        {:name v8 :op :branch :condition v7 :then if0 :else else1 :merge nil :shadow nil :type "void"}]}
                        {:name if0
                         :instructions [{:name v9 :op :literal :value "Are you me?!" :type "jank::runtime::obj::persistent_string_ref"}
-                                       {:name v10 :op :var-deref :var clojure_core_SLASH_println_82691 :type "jank::runtime::object_ref"}
+                                       {:name v10 :op :var-deref :var clojure.core/println :type "jank::runtime::object_ref"}
                                        {:name v11 :op :dynamic-call :fn v10 :args [v9] :type "jank::runtime::object_ref"}
                                        {:name v12 :op :ret :value v11 :type "jank::runtime::object_ref"}]}
                        {:name else1
                         :instructions [{:name v13 :op :literal :value "Hello, " :type "jank::runtime::obj::persistent_string_ref"}
                                        {:name v14 :op :literal :value "!" :type "jank::runtime::obj::persistent_string_ref"}
-                                       {:name v15 :op :var-deref :var clojure_core_SLASH_str_82694 :type "jank::runtime::object_ref"}
+                                       {:name v15 :op :var-deref :var clojure.core/str :type "jank::runtime::object_ref"}
                                        {:name v16 :op :dynamic-call :fn v15 :args [v13 name v14] :type "jank::runtime::object_ref"}
-                                       {:name v17 :op :var-deref :var clojure_core_SLASH_println_82691 :type "jank::runtime::object_ref"}
+                                       {:name v17 :op :var-deref :var clojure.core/println :type "jank::runtime::object_ref"}
                                        {:name v18 :op :dynamic-call :fn v17 :args [v16] :type "jank::runtime::object_ref"}
                                        {:name v19 :op :ret :value v18 :type "jank::runtime::object_ref"}]}]}]}
 ```
@@ -237,7 +236,7 @@ its name. For example, `(println :meow)` implicitly derefs
 `clojure.core/println`.
 
 ```clojure
-{:name v1 :op :var-deref :var clojure_core_SLASH_println_82689 :type "jank::runtime::object_ref"}
+{:name v1 :op :var-deref :var clojure.core/println :type "jank::runtime::object_ref"}
 ```
 
 ### `var-ref`
@@ -245,7 +244,7 @@ The `var-ref` instruction grabs an interned var directly, without dereferencing
 it. This is analogous to the `#'foo` syntax, in Clojure.
 
 ```clojure
-{:name v1 :op :var-ref :var clojure_core_SLASH_println_82689 :type "jank::runtime::obj::var_ref"}
+{:name v1 :op :var-ref :var clojure.core/println :type "jank::runtime::obj::var_ref"}
 ```
 
 ## Control flow

@@ -23,4 +23,4 @@ jank::runtime::obj::persistent_string_ref _jank_string(char const * const s);
 jank::runtime::obj::jit_function_ref _jank_fn(jank::runtime::callable_arity_flags const flags);
 jank::runtime::obj::jit_closure_ref
 _jank_closure(jank::runtime::callable_arity_flags const flags, void * const ctx);
-jank::runtime::object_ref _jank_read(char const *edn);
+jank::runtime::object_ref _jank_eval_str(char const *edn);

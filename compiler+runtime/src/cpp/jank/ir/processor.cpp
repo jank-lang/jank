@@ -887,8 +887,8 @@ namespace jank::ir
     jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
     if(print_settings == "1")
     {
-      //util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
-      util::println("{}", print(mod));
+      //util::println("{}\n", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
+      util::println("{}\n", print(mod));
     }
 
     return mod;

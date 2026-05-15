@@ -61,8 +61,12 @@ namespace jank::runtime
 
   template <typename T>
   requires behavior::sequenceable<T>
-  auto first(oref<T> const &s)
+  auto first(oref<T> const &s) -> decltype(s->first())
   {
+    if(s.is_nil())
+    {
+      return {};
+    }
     return s->first();
   }
 

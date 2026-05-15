@@ -1049,6 +1049,12 @@ extern "C"
        * Usage of the local locale allows better localization.
        * Notably, this might make text encoding become more platform dependent. */
       std::locale::global(std::locale(""));
+
+      /* Number parsing needs to remain as the US default of decimal separators so that folks
+       * in other locales can have their numbers parsed properly. Otherwise, someone with a
+       * locale which uses comma as the decimal point might input 3.14 in some jank source
+       * and not have it parse properly. */
+      std::setlocale(LC_NUMERIC, "C");
 #endif
 
       /* The GC needs to initialized even before arg parsing, since our native types,

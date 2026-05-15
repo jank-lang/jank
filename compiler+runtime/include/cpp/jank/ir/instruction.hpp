@@ -276,22 +276,24 @@ namespace jank::ir
 
     struct var_deref : instruction
     {
-      var_deref(identifier const &name, identifier const &var);
+      var_deref(identifier const &name, jtl::immutable_string const &qualified_var);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
-      identifier var;
+      jtl::immutable_string qualified_var;
     };
 
     using var_deref_ref = jtl::ref<var_deref>;
 
     struct var_ref : instruction
     {
-      var_ref(identifier const &name, jtl::ptr<void> const type, identifier const &var);
+      var_ref(identifier const &name,
+              jtl::ptr<void> const type,
+              jtl::immutable_string const &qualified_var);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
-      identifier var;
+      jtl::immutable_string qualified_var;
     };
 
     using var_ref_ref = jtl::ref<var_ref>;
