@@ -4,7 +4,6 @@
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
-#include <jank/analyze/cpp_util.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::ir
