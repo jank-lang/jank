@@ -101,12 +101,11 @@ namespace jank::ir
   {
     auto const type{ literal_type(value) };
     jtl::immutable_string lifted_literal_name;
-    auto const found{ lifted_constants.find(value) };
-    if(found == lifted_constants.end())
+    auto const found{ mod->lifted_constants.find(value) };
+    if(found == mod->lifted_constants.end())
     {
       lifted_literal_name = runtime::munge(runtime::__rt_ctx->unique_string("const"));
-      mod->lifted_constants.emplace(lifted_literal_name, value);
-      lifted_constants.emplace(value, lifted_literal_name);
+      mod->lifted_constants.emplace(value, lifted_literal_name);
     }
     else
     {
@@ -261,20 +260,19 @@ namespace jank::ir
     static jtl::immutable_string const dot{ "\\." };
     auto const us{ runtime::__rt_ctx->unique_string(qualified_var) };
     jtl::immutable_string lifted_var_name;
-    auto const found{ lifted_vars.find(qualified_var) };
-    if(found == lifted_vars.end())
+    auto const found{ mod->lifted_vars.find(qualified_var) };
+    if(found == mod->lifted_vars.end())
     {
       lifted_var_name = runtime::munge_and_replace(us, dot, "_");
-      mod->lifted_vars.emplace(lifted_var_name, qualified_var);
-      lifted_vars.emplace(qualified_var, lifted_var_name);
+      mod->lifted_vars.emplace(qualified_var, module::lifted_var{ lifted_var_name, false });
     }
     else
     {
-      lifted_var_name = found->second;
+      lifted_var_name = found->second.name;
     }
 
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::var_deref>(name, lifted_var_name));
+      jtl::make_ref<inst::var_deref>(name, qualified_var));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, untyped_object_ref_type());
@@ -288,11 +286,11 @@ namespace jank::ir
     static jtl::immutable_string const dot{ "\\." };
     auto const us{ runtime::__rt_ctx->unique_string(qualified_var) };
     auto var_name{ runtime::munge_and_replace(us, dot, "_") };
-    mod->lifted_vars.emplace(var_name, module::lifted_var{ qualified_var, false });
+    mod->lifted_vars.emplace(qualified_var, module::lifted_var{ var_name, false });
     auto const type{ var_type() };
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::var_ref>(name, type, var_name));
+      jtl::make_ref<inst::var_ref>(name, type, qualified_var));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);

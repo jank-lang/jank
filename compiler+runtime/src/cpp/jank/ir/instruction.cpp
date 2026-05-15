@@ -138,15 +138,17 @@ namespace jank::ir::inst
   {
   }
 
-  var_deref::var_deref(identifier const &name, identifier const &var)
+  var_deref::var_deref(identifier const &name, jtl::immutable_string const &qualified_var)
     : instruction{ instruction_kind::var_deref, name, untyped_object_ref_type() }
-    , var{ var }
+    , qualified_var{ qualified_var }
   {
   }
 
-  var_ref::var_ref(identifier const &name, jtl::ptr<void> const type, identifier const &var)
+  var_ref::var_ref(identifier const &name,
+                   jtl::ptr<void> const type,
+                   jtl::immutable_string const &qualified_var)
     : instruction{ instruction_kind::var_ref, name, type }
-    , var{ var }
+    , qualified_var{ qualified_var }
   {
   }
 

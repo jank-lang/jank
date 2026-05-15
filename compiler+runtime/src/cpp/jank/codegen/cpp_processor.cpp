@@ -130,10 +130,8 @@ namespace jank::codegen
     /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
     global_vars;
 
-  /* TODO: integer_ref codegen needs to handle small integers. */
-  static identifier lift_constant(identifier const &name, builder &b)
+  static identifier lift_constant(identifier const &name, object_ref const o, builder &b)
   {
-    auto const o{ b.module->lifted_constants.at(name) };
     if(b.module->target == compilation_target::eval)
     {
       auto locked_global_constants{ global_constants.wlock() };
@@ -188,20 +186,18 @@ namespace jank::codegen
     return name;
   }
 
-  static jtl::immutable_string lift_var(identifier const &name, builder &b)
+  static jtl::immutable_string lift_var(jtl::immutable_string const &qualified_var, builder &b)
   {
-    auto const &module_var{ b.module->lifted_vars.at(name) };
-    auto const qualified_name{ module_var.qualified_var };
     if(b.module->target == compilation_target::eval)
     {
       auto locked_global_vars{ global_vars.wlock() };
-      auto const found{ locked_global_vars->find(qualified_name) };
+      auto const found{ locked_global_vars->find(qualified_var) };
       if(found != locked_global_vars->end())
       {
         return found->second;
       }
 
-      auto const var{ __rt_ctx->intern_var(qualified_name).expect_ok() };
+      auto const var{ __rt_ctx->intern_var(qualified_var).expect_ok() };
 
       /* We want to use this global directly, since it's already in memory. We need the
        * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
@@ -211,10 +207,11 @@ namespace jank::codegen
       auto const fmt_str{ util::format(
         "jank::runtime::var_ref{ reinterpret_cast<jank::runtime::var*>({}) }",
         static_cast<void *>(var.ptr())) };
-      locked_global_vars->emplace(qualified_name, fmt_str);
+      locked_global_vars->emplace(qualified_var, fmt_str);
       return fmt_str;
     }
-    return name;
+
+    return b.module->lifted_vars.at(qualified_var).name;
   }
 
   void gen(ir::function const &fn, builder &b);
@@ -594,7 +591,7 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::var_deref_ref const &inst, builder &b)
   {
     b.next_instruction();
-    auto const lifted{ lift_var(inst->var, b) };
+    auto const lifted{ lift_var(inst->qualified_var, b) };
     util::format_to(b.body_buffer, "auto const {}({}->deref());", inst->name, lifted);
     return inst->name;
   }
@@ -603,7 +600,7 @@ namespace jank::codegen
   {
     b.next_instruction();
 
-    auto const lifted{ lift_var(inst->var, b) };
+    auto const lifted{ lift_var(inst->qualified_var, b) };
     util::format_to(b.body_buffer, "auto const {}({});", inst->name, lifted);
     return inst->name;
   }
@@ -638,7 +635,7 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::literal_ref const &inst, builder &b)
   {
     b.next_instruction();
-    auto const lifted{ lift_constant(inst->value, b) };
+    auto const lifted{ lift_constant(inst->value, inst->obj, b) };
     util::format_to(b.body_buffer, "auto const {}({});", inst->name, lifted);
     return inst->name;
   }
@@ -1930,8 +1927,8 @@ namespace jank::codegen
       {
         util::format_to(b.module_header_buffer,
                         "{} {}{ _jank_null{ } };",
-                        get_qualified_type_name(literal_type(v.second)),
-                        v.first);
+                        get_qualified_type_name(literal_type(v.first)),
+                        v.second);
       }
       for(auto const &v : b.module->lifted_vars)
       {
@@ -1996,16 +1993,16 @@ namespace jank::codegen
           util::format_to(b.footer_buffer,
                           R"(new (&{}::{}) auto(_jank_var_owned("{}"));)",
                           native_ns,
-                          v.first,
-                          v.second.qualified_var);
+                          v.second.name,
+                          v.first);
         }
         else
         {
           util::format_to(b.footer_buffer,
                           R"(new (&{}::{}) auto(_jank_var("{}"));)",
                           native_ns,
-                          v.first,
-                          v.second.qualified_var);
+                          v.second.name,
+                          v.first);
         }
       }
 
@@ -2017,17 +2014,17 @@ namespace jank::codegen
         util::format_to(b.footer_buffer,
                         R"(GC_add_roots(&{}::{}, (&{}::{} + 1));)",
                         native_ns,
-                        first.first,
+                        first.second,
                         native_ns,
-                        last->first,
+                        last->second,
                         native_ns,
-                        last->first);
+                        last->second);
       }
 
       for(auto const &v : b.module->lifted_constants)
       {
-        util::format_to(b.footer_buffer, "new (&{}::{}) auto(", native_ns, v.first);
-        detail::gen_constant(v.second, b.footer_buffer);
+        util::format_to(b.footer_buffer, "new (&{}::{}) auto(", native_ns, v.second);
+        detail::gen_constant(v.first, b.footer_buffer);
         util::format_to(b.footer_buffer, ");");
       }
 
