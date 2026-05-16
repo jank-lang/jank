@@ -628,10 +628,6 @@ namespace jank::ir
                     get_qualified_type_name(type));
   }
 
-  void inst::source_location::print(jtl::string_builder & /*sb*/, usize const) const
-  {
-  }
-
   void print(block const &b, jtl::string_builder &sb, usize indent)
   {
     util::format_to(sb, "{:name {}\n", b.name);
