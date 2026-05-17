@@ -1,0 +1,1100 @@
+(cpp/raw "#include <cstddef>
+          #include <functional>
+          #include <immer/algorithm.hpp>
+          #include <immer/atom.hpp>
+          #include <immer/array.hpp>
+          #include <immer/array_transient.hpp>
+          #include <immer/box.hpp>
+          #include <immer/experimental/dvektor.hpp>
+          #include <immer/flex_vector.hpp>
+          #include <immer/flex_vector_transient.hpp>
+          #include <immer/map.hpp>
+          #include <immer/map_transient.hpp>
+          #include <immer/set.hpp>
+          #include <immer/set_transient.hpp>
+          #include <immer/table.hpp>
+          #include <immer/table_transient.hpp>
+          #include <immer/vector.hpp>
+          #include <immer/vector_transient.hpp>
+
+          namespace jank::cpp::cppinterop::pass_immer_persistent_values
+          {
+            using vector = ::immer::vector<int, ::jank::memory_policy>;
+            using boxed_vector = ::immer::box<vector, ::jank::memory_policy>;
+            using atom_vector = ::immer::atom<vector, ::jank::memory_policy>;
+            using nested_vector = ::immer::vector<vector, ::jank::memory_policy>;
+            using transient_vector = ::immer::vector_transient<int, ::jank::memory_policy>;
+            using flex_vector = ::immer::flex_vector<int, ::jank::memory_policy>;
+            using transient_flex_vector
+              = ::immer::flex_vector_transient<int, ::jank::memory_policy>;
+            using dvektor = ::immer::dvektor<int, 5, ::jank::memory_policy>;
+            using array = ::immer::array<int, ::jank::memory_policy>;
+            using transient_array = ::immer::array_transient<int, ::jank::memory_policy>;
+            using boxed_int = ::immer::box<int, ::jank::memory_policy>;
+            using map = ::immer::map<int,
+                                    int,
+                                    std::hash<int>,
+                                    std::equal_to<int>,
+                                    ::jank::memory_policy>;
+            using map_of_vectors = ::immer::map<int,
+                                                vector,
+                                                std::hash<int>,
+                                                std::equal_to<int>,
+                                                ::jank::memory_policy>;
+            using object_map = ::immer::map<::jank::runtime::object_ref,
+                                            ::jank::runtime::object_ref,
+                                            std::hash<::jank::runtime::object_ref>,
+                                            std::equal_to<::jank::runtime::object_ref>,
+                                            ::jank::memory_policy>;
+            using transient_map = ::immer::map_transient<int,
+                                                        int,
+                                                        std::hash<int>,
+                                                        std::equal_to<int>,
+                                                        ::jank::memory_policy>;
+            using set = ::immer::set<int,
+                                    std::hash<int>,
+                                    std::equal_to<int>,
+                                    ::jank::memory_policy>;
+            using transient_set = ::immer::set_transient<int,
+                                                        std::hash<int>,
+                                                        std::equal_to<int>,
+                                                        ::jank::memory_policy>;
+            struct row
+            {
+              int id{};
+              int score{};
+
+              bool operator==(row const &rhs) const
+              {
+                return id == rhs.id && score == rhs.score;
+              }
+
+              static ::jank::runtime::obj::persistent_vector_ref into_object(row const &r)
+              {
+                ::jank::runtime::detail::native_transient_vector trans;
+                trans.push_back(::jank::runtime::convert<int>::into_object(r.id));
+                trans.push_back(::jank::runtime::convert<int>::into_object(r.score));
+                return ::jank::runtime::make_box<::jank::runtime::obj::persistent_vector>(
+                  trans.persistent());
+              }
+
+              static row from_object(::jank::runtime::object_ref const o)
+              {
+                return from_object(
+                  ::jank::runtime::try_object<::jank::runtime::obj::persistent_vector>(o));
+              }
+
+              static row from_object(::jank::runtime::obj::persistent_vector_ref const o)
+              {
+                return { ::jank::runtime::convert<int>::from_object(o->data[0]),
+                         ::jank::runtime::convert<int>::from_object(o->data[1]) };
+              }
+            };
+            struct row_key_fn
+            {
+              int operator()(row const &r) const
+              {
+                return r.id;
+              }
+
+              row operator()(row r, int const key) const
+              {
+                r.id = key;
+                return r;
+              }
+            };
+            using table = ::immer::table<row,
+                                         row_key_fn,
+                                         std::hash<int>,
+                                         std::equal_to<int>,
+                                         ::jank::memory_policy>;
+            using transient_table = ::immer::table_transient<row,
+                                                            row_key_fn,
+                                                            std::hash<int>,
+                                                            std::equal_to<int>,
+                                                            ::jank::memory_policy,
+                                                            ::immer::default_bits>;
+            struct vector_cursor
+            {
+              vector_cursor() = default;
+              vector_cursor(vector values, std::size_t const index)
+                : values{values}
+                , index{index}
+              {
+              }
+              vector_cursor(vector_cursor const &) = default;
+              vector_cursor &operator=(vector_cursor const &) = default;
+
+              vector values{};
+              std::size_t index{};
+
+              int operator*() const
+              {
+                return values[index];
+              }
+
+              vector_cursor operator++()
+              {
+                ++index;
+                return *this;
+              }
+
+              bool operator==(vector_cursor const &rhs) const
+              {
+                return index == rhs.index;
+              }
+            };
+
+            vector make_vector()
+            {
+              return vector{}.push_back(13).push_back(42);
+            }
+
+            vector const &stable_vector_ref()
+            {
+              static vector const ret{ vector{}.push_back(8).push_back(13) };
+              return ret;
+            }
+
+            vector const *stable_vector_ptr()
+            {
+              return &stable_vector_ref();
+            }
+
+            vector replace_first(vector const &v)
+            {
+              return v.set(0, 99);
+            }
+
+            int sum(vector const &v)
+            {
+              int ret{};
+              for(auto const i : v)
+              {
+                ret += i;
+              }
+              return ret;
+            }
+
+            int vector_size(vector const &v)
+            {
+              return static_cast<int>(v.size());
+            }
+
+            int sum_vector_ptr(vector const *v)
+            {
+              return sum(*v);
+            }
+
+            struct atom_vector_holder
+            {
+              explicit atom_vector_holder(vector const &initial)
+                : value{ boxed_vector{ initial } }
+              {
+              }
+
+              atom_vector_holder(atom_vector_holder const &) = delete;
+              atom_vector_holder(atom_vector_holder &&) = delete;
+              atom_vector_holder &operator=(atom_vector_holder const &) = delete;
+              atom_vector_holder &operator=(atom_vector_holder &&) = delete;
+
+              atom_vector value;
+            };
+
+            void finalize_atom_vector_holder(void * const obj, void *)
+            {
+              reinterpret_cast<atom_vector_holder *>(obj)->~atom_vector_holder();
+            }
+
+            atom_vector_holder *make_atom_vector_holder(vector const &initial)
+            {
+              return new (UseGC, finalize_atom_vector_holder) atom_vector_holder{ initial };
+            }
+
+            void atom_conj(atom_vector_holder *holder, int const i)
+            {
+              holder->value.update([=](vector const &current) { return current.push_back(i); });
+            }
+
+            vector atom_snapshot(atom_vector_holder const *holder)
+            {
+              return holder->value.load().get();
+            }
+
+            int atom_exchange_sum(atom_vector_holder *holder, vector const &next)
+            {
+              auto const previous{ holder->value.exchange(boxed_vector{ next }) };
+              return sum(previous.get());
+            }
+
+            nested_vector make_nested_vector()
+            {
+              return nested_vector{}.push_back(vector{}.push_back(1).push_back(2))
+                                    .push_back(vector{}.push_back(3).push_back(4));
+            }
+
+            int sum_nested_vector(nested_vector const &v)
+            {
+              int ret{};
+              for(auto const &inner : v)
+              {
+                for(auto const i : inner)
+                {
+                  ret += i;
+                }
+              }
+              return ret;
+            }
+
+            int sum_with_immer_accumulate(vector const &v)
+            {
+              return ::immer::accumulate(v, 0);
+            }
+
+            int sum_with_immer_chunks(vector const &v)
+            {
+              int ret{};
+              ::immer::for_each_chunk(v, [&](auto first, auto last) {
+                for(auto it{ first }; it != last; ++it)
+                {
+                  ret += *it;
+                }
+              });
+              return ret;
+            }
+
+            int all_positive(vector const &v)
+            {
+              return static_cast<int>(::immer::all_of(v, [](int const i) {
+                return 0 < i;
+              }));
+            }
+
+            vector_cursor cursor_begin(vector const &v)
+            {
+              return {v, 0};
+            }
+
+            transient_vector make_transient_vector()
+            {
+              transient_vector ret;
+              ret.push_back(1);
+              ret.push_back(2);
+              return ret;
+            }
+
+            transient_vector append_transient_vector(transient_vector ret)
+            {
+              ret.push_back(3);
+              return ret;
+            }
+
+            int sum_transient_vector(transient_vector const &v)
+            {
+              int ret{};
+              for(auto const i : v)
+              {
+                ret += i;
+              }
+              return ret;
+            }
+
+            int transient_vector_size(transient_vector const &v)
+            {
+              return static_cast<int>(v.size());
+            }
+
+            flex_vector make_flex_vector()
+            {
+              return flex_vector{}.push_back(3).push_back(5).push_back(8).push_back(13);
+            }
+
+            flex_vector flex_slice_concat(flex_vector const &v)
+            {
+              return v.drop(1).take(2) + flex_vector{}.push_back(21);
+            }
+
+            flex_vector flex_insert_erase(flex_vector const &v)
+            {
+              return v.insert(2, 99).erase(0);
+            }
+
+            int sum_flex(flex_vector const &v)
+            {
+              int ret{};
+              for(auto const i : v)
+              {
+                ret += i;
+              }
+              return ret;
+            }
+
+            int flex_size(flex_vector const &v)
+            {
+              return static_cast<int>(v.size());
+            }
+
+            transient_flex_vector make_transient_flex_vector()
+            {
+              transient_flex_vector ret;
+              ret.push_back(2);
+              ret.push_back(4);
+              return ret;
+            }
+
+            transient_flex_vector set_transient_flex_vector(transient_flex_vector ret)
+            {
+              ret.set(1, 8);
+              return ret;
+            }
+
+            int sum_transient_flex_vector(transient_flex_vector const &v)
+            {
+              int ret{};
+              for(auto const i : v)
+              {
+                ret += i;
+              }
+              return ret;
+            }
+
+            int transient_flex_size(transient_flex_vector const &v)
+            {
+              return static_cast<int>(v.size());
+            }
+
+            dvektor make_dvektor()
+            {
+              return dvektor{}.push_back(5).push_back(8).push_back(13);
+            }
+
+            dvektor append_dvektor(dvektor const &v)
+            {
+              return v.push_back(21);
+            }
+
+            dvektor replace_dvektor_second(dvektor const &v)
+            {
+              return v.assoc(1, 99);
+            }
+
+            int sum_dvektor(dvektor const &v)
+            {
+              int ret{};
+              for(auto const i : v)
+              {
+                ret += i;
+              }
+              return ret;
+            }
+
+            int dvektor_size(dvektor const &v)
+            {
+              return static_cast<int>(v.size());
+            }
+
+            array make_array()
+            {
+              return array{}.push_back(2).push_back(4).push_back(6);
+            }
+
+            array replace_array_second(array const &a)
+            {
+              return a.set(1, 99);
+            }
+
+            array take_array(array const &a)
+            {
+              return a.take(2);
+            }
+
+            int sum_array(array const &a)
+            {
+              int ret{};
+              for(auto const i : a)
+              {
+                ret += i;
+              }
+              return ret;
+            }
+
+            int array_size(array const &a)
+            {
+              return static_cast<int>(a.size());
+            }
+
+            transient_array make_transient_array()
+            {
+              transient_array ret;
+              ret.push_back(3);
+              ret.push_back(6);
+              return ret;
+            }
+
+            transient_array append_transient_array(transient_array ret)
+            {
+              ret.push_back(9);
+              return ret;
+            }
+
+            int sum_transient_array(transient_array const &a)
+            {
+              int ret{};
+              for(auto const i : a)
+              {
+                ret += i;
+              }
+              return ret;
+            }
+
+            int transient_array_size(transient_array const &a)
+            {
+              return static_cast<int>(a.size());
+            }
+
+            boxed_int make_boxed_int()
+            {
+              return boxed_int{42};
+            }
+
+            boxed_int increment_box(boxed_int const &b)
+            {
+              return b.update([](auto const i) { return i + 1; });
+            }
+
+            int unbox(boxed_int const &b)
+            {
+              return b.get();
+            }
+
+            map make_map()
+            {
+              return map{}.set(1, 13).set(2, 42);
+            }
+
+            map replace_second(map const &m)
+            {
+              return m.set(2, 99);
+            }
+
+            int lookup(map const &m, int const key)
+            {
+              return m.at(key);
+            }
+
+            int map_size(map const &m)
+            {
+              return static_cast<int>(m.size());
+            }
+
+            map_of_vectors make_map_of_vectors()
+            {
+              return map_of_vectors{}.set(1, vector{}.push_back(2).push_back(3))
+                                     .set(2, vector{}.push_back(5).push_back(7));
+            }
+
+            int lookup_vector_sum(map_of_vectors const &m, int const key)
+            {
+              int ret{};
+              for(auto const i : m.at(key))
+              {
+                ret += i;
+              }
+              return ret;
+            }
+
+            ::jank::runtime::object_ref lookup_object(object_map const &m,
+                                                      ::jank::runtime::object_ref const key)
+            {
+              return m.at(key);
+            }
+
+            int lookup_object_int(object_map const &m, ::jank::runtime::object_ref const key)
+            {
+              return ::jank::runtime::convert<int>::from_object(lookup_object(m, key));
+            }
+
+            object_map assoc_object(object_map const &m,
+                                    ::jank::runtime::object_ref const key,
+                                    ::jank::runtime::object_ref const value)
+            {
+              return m.set(key, value);
+            }
+
+            int object_map_size(object_map const &m)
+            {
+              return static_cast<int>(m.size());
+            }
+
+            transient_map make_transient_map()
+            {
+              transient_map ret;
+              ret.set(1, 10);
+              ret.set(2, 20);
+              return ret;
+            }
+
+            transient_map put_transient_map(transient_map ret)
+            {
+              ret.set(2, 99);
+              ret.set(3, 30);
+              return ret;
+            }
+
+            int lookup_transient_map(transient_map const &m, int const key)
+            {
+              return m.at(key);
+            }
+
+            int transient_map_size(transient_map const &m)
+            {
+              return static_cast<int>(m.size());
+            }
+
+            set make_set()
+            {
+              return set{}.insert(13).insert(42);
+            }
+
+            set add_value(set const &s)
+            {
+              return s.insert(99);
+            }
+
+            set erase_value(set const &s)
+            {
+              return s.erase(42);
+            }
+
+            int contains(set const &s, int const value)
+            {
+              return static_cast<int>(s.count(value));
+            }
+
+            int sum_set(set const &s)
+            {
+              int ret{};
+              for(auto const i : s)
+              {
+                ret += i;
+              }
+              return ret;
+            }
+
+            int set_size(set const &s)
+            {
+              return static_cast<int>(s.size());
+            }
+
+            transient_set make_transient_set()
+            {
+              transient_set ret;
+              ret.insert(4);
+              ret.insert(8);
+              return ret;
+            }
+
+            transient_set insert_transient_set(transient_set ret)
+            {
+              ret.insert(12);
+              return ret;
+            }
+
+            transient_set erase_transient_set(transient_set ret)
+            {
+              ret.erase(8);
+              return ret;
+            }
+
+            int contains_transient_set(transient_set const &s, int const value)
+            {
+              return static_cast<int>(s.count(value));
+            }
+
+            int transient_set_size(transient_set const &s)
+            {
+              return static_cast<int>(s.size());
+            }
+
+            table make_table()
+            {
+              return table{}.insert({1, 10}).insert({2, 20});
+            }
+
+            table boost_table(table const &t)
+            {
+              return t.update(2,
+                              [](row r) {
+                                r.score = 99;
+                                return r;
+                              })
+                .insert({3, 30});
+            }
+
+            int lookup_table(table const &t, int const key)
+            {
+              auto const found{ t.find(key) };
+              return found == nullptr ? -1 : found->score;
+            }
+
+            int table_size(table const &t)
+            {
+              return static_cast<int>(t.size());
+            }
+
+            transient_table make_transient_table()
+            {
+              transient_table ret;
+              ret.insert({1, 10});
+              ret.insert({2, 20});
+              return ret;
+            }
+
+            transient_table boost_transient_table(transient_table ret)
+            {
+              ret.update(2, [](row r) {
+                r.score = 99;
+                return r;
+              });
+              ret.insert({3, 30});
+              return ret;
+            }
+
+            int lookup_transient_table(transient_table const &t, int const key)
+            {
+              auto const found{ t.find(key) };
+              return found == nullptr ? -1 : found->score;
+            }
+
+            int transient_table_size(transient_table const &t)
+            {
+              return static_cast<int>(t.size());
+            }
+
+            int vector_persistence_score()
+            {
+              auto const v{ make_vector() };
+              auto const replaced{ v.set(0, 99) };
+
+              int original_sum{};
+              for(auto const i : v)
+              {
+                original_sum += i;
+              }
+
+              int replaced_sum{};
+              for(auto const i : replaced)
+              {
+                replaced_sum += i;
+              }
+
+              return static_cast<int>(v.size() == 2)
+                + static_cast<int>(original_sum == 55)
+                + static_cast<int>(replaced_sum == 141)
+                + static_cast<int>(v[0] == 13)
+                + static_cast<int>(replaced[0] == 99);
+            }
+
+            int flex_persistence_score()
+            {
+              auto const v{ make_flex_vector() };
+              auto const sliced{ v.drop(1).take(2) };
+              auto const edited{ v.insert(2, 99).erase(0) };
+
+              return static_cast<int>(v.size() == 4)
+                + static_cast<int>(sliced.size() == 2)
+                + static_cast<int>(sliced[0] == 5)
+                + static_cast<int>(sliced[1] == 8)
+                + static_cast<int>(edited[0] == 5)
+                + static_cast<int>(edited[1] == 99)
+                + static_cast<int>(v[2] == 8);
+            }
+
+            int array_persistence_score()
+            {
+              auto const a{ make_array() };
+              auto const replaced{ a.set(1, 99) };
+              auto const taken{ a.take(2) };
+
+              return static_cast<int>(a.size() == 3)
+                + static_cast<int>(a[1] == 4)
+                + static_cast<int>(replaced[1] == 99)
+                + static_cast<int>(taken.size() == 2)
+                + static_cast<int>(taken[0] == 2)
+                + static_cast<int>(taken[1] == 4);
+            }
+
+            int dvektor_persistence_score()
+            {
+              auto const v{ make_dvektor() };
+              auto const appended{ append_dvektor(v) };
+              auto const replaced{ replace_dvektor_second(v) };
+
+              return static_cast<int>(v.size() == 3)
+                + static_cast<int>(appended.size() == 4)
+                + static_cast<int>(appended[3] == 21)
+                + static_cast<int>(replaced[1] == 99)
+                + static_cast<int>(v[1] == 8);
+            }
+
+            int box_persistence_score()
+            {
+              auto const b{ boxed_int{10} };
+              auto const updated{ b.update([](auto const i) { return i + 5; }) };
+
+              return static_cast<int>(b.get() == 10)
+                + static_cast<int>(updated.get() == 15)
+                + static_cast<int>(b.get() == 10);
+            }
+
+            int map_lookup_score()
+            {
+              auto const m{ make_map() };
+              auto const replaced{ m.set(2, 99) };
+
+              return static_cast<int>(m.at(1) == 13)
+                + static_cast<int>(m.at(2) == 42)
+                + static_cast<int>(replaced.at(2) == 99)
+                + static_cast<int>(m.at(2) == 42);
+            }
+
+            int set_persistence_score()
+            {
+              auto const s{ make_set() };
+              auto const added{ s.insert(99) };
+              auto const erased{ added.erase(42) };
+
+              return static_cast<int>(s.count(13) == 1)
+                + static_cast<int>(s.count(42) == 1)
+                + static_cast<int>(s.count(99) == 0)
+                + static_cast<int>(added.count(99) == 1)
+                + static_cast<int>(erased.count(42) == 0)
+                + static_cast<int>(added.count(42) == 1);
+            }
+          }")
+
+(cpp/raw "namespace demo
+          {
+            using ints = ::immer::vector<int, ::jank::memory_policy>;
+
+            ints conj_answer(ints const &xs)
+            { return xs.push_back(42); }
+          }")
+
+(let* [v (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_vector)
+       replaced (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.replace_first v)
+       _ (assert (= [13 42] v))
+       _ (assert (= [99 42] replaced))
+       _ (assert (= [13 42] v))
+       stable-ref (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.stable_vector_ref)
+       stable-ptr (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.stable_vector_ptr)
+       _ (assert (= [8 13] stable-ref))
+       _ (assert (= [8 13] (cpp/* stable-ptr)))
+       _ (assert (= 21 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_vector_ptr stable-ptr)))
+       atom-holder (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_atom_vector_holder [10])
+       _ (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.atom_conj atom-holder 32)
+       _ (assert (= [10 32] (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.atom_snapshot atom-holder)))
+       _ (assert (= 42 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.atom_exchange_sum atom-holder [7 8])))
+       _ (assert (= [7 8] (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.atom_snapshot atom-holder)))
+       _ (cpp/delete atom-holder)
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum [1 2 3])))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum '(1 2 3))))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum nil)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.vector_size nil)))
+       nested-vector (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_nested_vector)
+       _ (assert (= [[1 2] [3 4]] nested-vector))
+       _ (assert (= 15 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_nested_vector [[2 3] [4 6]])))
+       _ (assert (= 10 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_with_immer_accumulate [1 2 3 4])))
+       _ (assert (= 10 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_with_immer_chunks [1 2 3 4])))
+       _ (assert (= 1 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.all_positive [1 2 3])))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.all_positive [1 -2 3])))
+       direct-vector (#cpp (immer.vector int jank.memory_policy))
+       cast-direct-vector (cpp/cast #cpp (immer.vector int jank.memory_policy) [2 3 5])
+       cast-direct-flex-vector (cpp/cast #cpp (immer.flex_vector int jank.memory_policy) [4 6])
+       cast-direct-dvektor (cpp/cast #cpp (immer.dvektor int 5 jank.memory_policy) [4 6 10])
+       cast-direct-array (cpp/cast #cpp (immer.array int jank.memory_policy) [7 8])
+       cast-direct-box (#cpp (immer.box int jank.memory_policy) #cpp 9)
+       cast-direct-map (cpp/cast #cpp (immer.map int int (std.hash int) (std.equal_to int) jank.memory_policy) [[4 7] [5 9]])
+       cast-direct-set (cpp/cast #cpp (immer.set int (std.hash int) (std.equal_to int) jank.memory_policy) [1 2 2 3])
+       cast-direct-transient-vector (cpp/cast #cpp (immer.vector_transient int jank.memory_policy) [3 4])
+       cast-direct-transient-flex-vector (cpp/cast #cpp (immer.flex_vector_transient int jank.memory_policy) [5 7])
+       cast-direct-transient-array (cpp/cast #cpp (immer.array_transient int jank.memory_policy) [8 9])
+       cast-direct-transient-map (cpp/cast #cpp (immer.map_transient int int (std.hash int) (std.equal_to int) jank.memory_policy) [[4 7] [5 9]])
+       cast-direct-transient-set (cpp/cast #cpp (immer.set_transient int (std.hash int) (std.equal_to int) jank.memory_policy) [1 2 2 3])
+       cast-direct-table (cpp/cast #cpp (immer.table
+                                          jank.cpp.cppinterop.pass_immer_persistent_values.row
+                                          jank.cpp.cppinterop.pass_immer_persistent_values.row_key_fn
+                                          (std.hash int)
+                                          (std.equal_to int)
+                                          jank.memory_policy)
+                              [[4 [0 7]] [5 [0 9]]])
+       cast-direct-transient-table (cpp/cast #cpp (immer.table_transient
+                                                    jank.cpp.cppinterop.pass_immer_persistent_values.row
+                                                    jank.cpp.cppinterop.pass_immer_persistent_values.row_key_fn
+                                                    (std.hash int)
+                                                    (std.equal_to int)
+                                                    jank.memory_policy
+                                                    immer.default_bits)
+                                      [[4 [0 7]] [5 [0 9]]])
+       _ (assert (.empty direct-vector))
+       _ (assert (= 3 (.size cast-direct-vector)))
+       _ (assert (= 10 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum cast-direct-vector)))
+       _ (assert (= 10 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_flex cast-direct-flex-vector)))
+       _ (assert (= 20 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_dvektor cast-direct-dvektor)))
+       _ (assert (= 15 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_array cast-direct-array)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.unbox cast-direct-box)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup cast-direct-map 5)))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_set cast-direct-set)))
+       _ (assert (= 7 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_vector cast-direct-transient-vector)))
+       _ (assert (= 12 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_flex_vector cast-direct-transient-flex-vector)))
+       _ (assert (= 17 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_array cast-direct-transient-array)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_map cast-direct-transient-map 5)))
+       _ (assert (= 1 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.contains_transient_set cast-direct-transient-set 2)))
+       _ (assert (= 3 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.transient_set_size cast-direct-transient-set)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_table cast-direct-table 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_table cast-direct-transient-table 5)))
+       cursor (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.cursor_begin [13 42 99])
+       walked (loop [it cursor]
+                (if (cpp/== #cpp 42 (cpp/* it))
+                  (cpp/* (cpp/++ it))
+                  (recur (cpp/++ it))))
+       _ (assert (= 99 walked))
+       tv (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_transient_vector)
+       transient-appended (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.append_transient_vector tv)
+       _ (assert (= [1 2] tv))
+       _ (assert (= [1 2 3] transient-appended))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_vector [1 2 3])))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_vector '(1 2 3))))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_vector nil)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.transient_vector_size nil)))
+       fv (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_flex_vector)
+       flex-sliced (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.flex_slice_concat fv)
+       flex-edited (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.flex_insert_erase fv)
+       _ (assert (= [3 5 8 13] fv))
+       _ (assert (= [5 8 21] flex-sliced))
+       _ (assert (= [5 99 8 13] flex-edited))
+       _ (assert (= [3 5 8 13] fv))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_flex [1 2 3])))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_flex '(1 2 3))))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_flex nil)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.flex_size nil)))
+       tfv (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_transient_flex_vector)
+       transient-flex-edited (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.set_transient_flex_vector tfv)
+       _ (assert (= [2 4] tfv))
+       _ (assert (= [2 8] transient-flex-edited))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_flex_vector [1 2 3])))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_flex_vector '(1 2 3))))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_flex_vector nil)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.transient_flex_size nil)))
+       dv (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_dvektor)
+       appended-dvektor (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.append_dvektor dv)
+       replaced-dvektor (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.replace_dvektor_second dv)
+       _ (assert (= [5 8 13] dv))
+       _ (assert (= [5 8 13 21] appended-dvektor))
+       _ (assert (= [5 99 13] replaced-dvektor))
+       _ (assert (= [5 8 13] dv))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_dvektor [1 2 3])))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_dvektor '(1 2 3))))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_dvektor nil)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.dvektor_size nil)))
+       a (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_array)
+       replaced-array (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.replace_array_second a)
+       taken-array (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.take_array a)
+       _ (assert (= [2 4 6] a))
+       _ (assert (= [2 99 6] replaced-array))
+       _ (assert (= [2 4] taken-array))
+       _ (assert (= [2 4 6] a))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_array [1 2 3])))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_array '(1 2 3))))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_array nil)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.array_size nil)))
+       ta (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_transient_array)
+       transient-array-appended (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.append_transient_array ta)
+       _ (assert (= [3 6] ta))
+       _ (assert (= [3 6 9] transient-array-appended))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_array [1 2 3])))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_array '(1 2 3))))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_transient_array nil)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.transient_array_size nil)))
+       boxed (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_boxed_int)
+       incremented-box (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.increment_box boxed)
+       _ (assert (= 42 boxed))
+       _ (assert (= 43 incremented-box))
+       _ (assert (= 42 boxed))
+       _ (assert (= 41 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.unbox 41)))
+       _ (assert (= 42 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.increment_box 41)))
+       m (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_map)
+       replaced-map (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.replace_second m)
+       _ (assert (= {1 13 2 42} m))
+       _ (assert (= {1 13 2 99} replaced-map))
+       _ (assert (= {1 13 2 42} m))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup {4 7 5 9} 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup (sorted-map 4 7 5 9) 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup [[4 7] [5 9]] 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup '([4 7] [5 9]) 5)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.map_size nil)))
+       invalid-map-entry-message (try
+                                   (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup [[4]] 4)
+                                   (catch cpp/std.runtime_error e
+                                     (cpp/.what e)))
+       invalid-map-entry-extra-message (try
+                                         (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup [[4 7 9]] 4)
+                                         (catch cpp/std.runtime_error e
+                                           (cpp/.what e)))
+       invalid-map-entry-bad-key-message (try
+                                            (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup [["bad-key"]] 4)
+                                            (catch cpp/std.runtime_error e
+                                              (cpp/.what e)))
+       invalid-map-entry-bad-value-extra-message (try
+                                                   (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup [[4 "bad-value" 9]] 4)
+                                                   (catch cpp/std.runtime_error e
+                                                     (cpp/.what e)))
+       invalid-map-scalar-entry-message (try
+                                          (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup [4] 4)
+                                          (catch cpp/std.runtime_error e
+                                            (cpp/.what e)))
+       invalid-transient-map-entry-message (try
+                                             (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_map [[4]] 4)
+                                             (catch cpp/std.runtime_error e
+                                               (cpp/.what e)))
+       invalid-transient-map-entry-extra-message (try
+                                                   (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_map [[4 7 9]] 4)
+                                                   (catch cpp/std.runtime_error e
+                                                     (cpp/.what e)))
+       invalid-transient-map-scalar-entry-message (try
+                                                   (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_map [4] 4)
+                                                   (catch cpp/std.runtime_error e
+                                                     (cpp/.what e)))
+       _ (assert (= "map entry must contain exactly two values" invalid-map-entry-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-map-entry-extra-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-map-entry-bad-key-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-map-entry-bad-value-extra-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-map-scalar-entry-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-transient-map-entry-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-transient-map-entry-extra-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-transient-map-scalar-entry-message))
+       map-of-vectors (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_map_of_vectors)
+       _ (assert (= {1 [2 3] 2 [5 7]} map-of-vectors))
+       _ (assert (= 15 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_vector_sum {4 [7 8]} 4)))
+       object-map-updated (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.assoc_object
+                            {:answer [1 2]}
+                            :extra
+                            {:nested 7})
+       _ (assert (= 42 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_object_int
+                         {:answer 42}
+                         :answer)))
+       _ (assert (= :ok (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_object
+                          {["compound" 1] :ok}
+                          ["compound" 1])))
+       _ (assert (= {:answer [1 2] :extra {:nested 7}} object-map-updated))
+       _ (assert (= {:nested 7}
+                    (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_object
+                      object-map-updated
+                      :extra)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.object_map_size nil)))
+       tm (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_transient_map)
+       transient-map-edited (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.put_transient_map tm)
+       _ (assert (= {1 10 2 20} tm))
+       _ (assert (= {1 10 2 99 3 30} transient-map-edited))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_map {4 7 5 9} 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_map (sorted-map 4 7 5 9) 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_map [[4 7] [5 9]] 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_map '([4 7] [5 9]) 5)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.transient_map_size nil)))
+       s (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_set)
+       added-set (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.add_value s)
+       erased-set (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.erase_value added-set)
+       _ (assert (= #{13 42} s))
+       _ (assert (= #{13 42 99} added-set))
+       _ (assert (= #{13 99} erased-set))
+       _ (assert (= #{13 42} s))
+       _ (assert (= 1 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.contains #{4 7 9} 7)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.contains #{4 7 9} 5)))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_set #{1 2 3})))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_set (sorted-set 1 2 3))))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_set [1 2 2 3])))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_set '(1 2 2 3))))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.sum_set nil)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.set_size nil)))
+       ts (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_transient_set)
+       transient-set-inserted (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.insert_transient_set ts)
+       transient-set-erased (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.erase_transient_set transient-set-inserted)
+       _ (assert (= #{4 8} ts))
+       _ (assert (= #{4 8 12} transient-set-inserted))
+       _ (assert (= #{4 12} transient-set-erased))
+       _ (assert (= 1 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.contains_transient_set #{4 7 9} 7)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.contains_transient_set #{4 7 9} 5)))
+       _ (assert (= 1 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.contains_transient_set (sorted-set 4 7 9) 7)))
+       _ (assert (= 1 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.contains_transient_set [4 7 7 9] 7)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.contains_transient_set '(4 7 7 9) 5)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.transient_set_size nil)))
+       t (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_table)
+       boosted-table (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.boost_table t)
+       _ (assert (= {1 [1 10] 2 [2 20]} t))
+       _ (assert (= {1 [1 10] 2 [2 99] 3 [3 30]} boosted-table))
+       _ (assert (= {1 [1 10] 2 [2 20]} t))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_table {4 [4 7] 5 [5 9]} 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_table (sorted-map 4 [4 7] 5 [5 9]) 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_table [[4 [0 7]] [5 [0 9]]] 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_table '([4 [0 7]] [5 [0 9]]) 5)))
+       _ (assert (= -1 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_table {4 [4 7] 5 [5 9]} 6)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.table_size nil)))
+       invalid-table-entry-message (try
+                                     (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_table [[4]] 4)
+                                     (catch cpp/std.runtime_error e
+                                       (cpp/.what e)))
+       invalid-table-entry-extra-message (try
+                                           (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_table [[4 [0 7] [0 9]]] 4)
+                                           (catch cpp/std.runtime_error e
+                                             (cpp/.what e)))
+       invalid-table-entry-bad-key-message (try
+                                             (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_table [["bad-key"]] 4)
+                                             (catch cpp/std.runtime_error e
+                                               (cpp/.what e)))
+       invalid-table-entry-bad-value-extra-message (try
+                                                    (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_table [[4 "bad-row" [0 9]]] 4)
+                                                    (catch cpp/std.runtime_error e
+                                                      (cpp/.what e)))
+       invalid-table-scalar-entry-message (try
+                                            (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_table [4] 4)
+                                            (catch cpp/std.runtime_error e
+                                              (cpp/.what e)))
+       _ (assert (= "map entry must contain exactly two values" invalid-table-entry-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-table-entry-extra-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-table-entry-bad-key-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-table-entry-bad-value-extra-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-table-scalar-entry-message))
+       tt (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.make_transient_table)
+       boosted-transient-table (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.boost_transient_table tt)
+       _ (assert (= {1 [1 10] 2 [2 20]} tt))
+       _ (assert (= {1 [1 10] 2 [2 99] 3 [3 30]} boosted-transient-table))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_table {4 [4 7] 5 [5 9]} 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_table (sorted-map 4 [4 7] 5 [5 9]) 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_table [[4 [0 7]] [5 [0 9]]] 5)))
+       _ (assert (= 9 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_table '([4 [0 7]] [5 [0 9]]) 5)))
+       _ (assert (= -1 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_table {4 [4 7] 5 [5 9]} 6)))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.transient_table_size nil)))
+       invalid-transient-table-entry-message (try
+                                               (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_table [[4]] 4)
+                                               (catch cpp/std.runtime_error e
+                                                 (cpp/.what e)))
+       invalid-transient-table-entry-extra-message (try
+                                                     (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_table [[4 [0 7] [0 9]]] 4)
+                                                     (catch cpp/std.runtime_error e
+                                                       (cpp/.what e)))
+       invalid-transient-table-scalar-entry-message (try
+                                                     (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.lookup_transient_table [4] 4)
+                                                     (catch cpp/std.runtime_error e
+                                                       (cpp/.what e)))
+       _ (assert (= "map entry must contain exactly two values" invalid-transient-table-entry-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-transient-table-entry-extra-message))
+       _ (assert (= "map entry must contain exactly two values" invalid-transient-table-scalar-entry-message))
+       _ (assert (= 5 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.vector_persistence_score)))
+       _ (assert (= 7 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.flex_persistence_score)))
+       _ (assert (= 5 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.dvektor_persistence_score)))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.array_persistence_score)))
+       _ (assert (= 3 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.box_persistence_score)))
+       _ (assert (= 4 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.map_lookup_score)))
+       _ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_persistent_values.set_persistence_score)))
+       _ (assert (= [13 42] (cpp/demo.conj_answer [13])))]
+  :success)

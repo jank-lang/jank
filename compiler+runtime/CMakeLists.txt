@@ -163,6 +163,7 @@ else()
 endif()
 
 set(jank_clojure_core_sources "${CMAKE_SOURCE_DIR}/src/jank/clojure/core.jank")
+set(jank_source_module_path "${CMAKE_SOURCE_DIR}/src/jank")
 set(
   jank_other_core_sources
   "${CMAKE_SOURCE_DIR}/src/jank/clojure/string.jank"
@@ -504,8 +505,10 @@ find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 # a CMake-provided FindBoost script. The new behavior relies on locating
 # a BoostConfig.cmake on the system. Without explicitly setting this, we'll
 # get a warning from CMake.
+# Keep CMake's bundled FindBoost fallback available for distros which ship
+# Boost headers without BoostConfig.
 if(POLICY CMP0167)
-  cmake_policy(SET CMP0167 NEW)
+  cmake_policy(SET CMP0167 OLD)
 endif()
 find_package(Boost REQUIRED)
 # ---- Other dependencies ----
@@ -898,6 +901,10 @@ if(WIN32)
   )
 endif()
 
+if(UNIX AND NOT APPLE)
+  target_link_libraries(jank_exe_phase_1 PUBLIC zstd)
+endif()
+
 jank_hook_llvm(jank_exe_phase_1)
 
 add_dependencies(jank_exe_phase_1 jank_lib_standalone_phase_1)
@@ -967,6 +974,7 @@ if(jank_test)
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/runtime/behavior/call.cpp
+    test/cpp/jank/runtime/convert/immer.cpp
     test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
     test/cpp/jank/runtime/obj/big_integer.cpp
@@ -1023,6 +1031,10 @@ if(jank_test)
     )
   endif()
 
+  if(UNIX AND NOT APPLE)
+    target_link_libraries(jank_test_exe PUBLIC zstd)
+  endif()
+
   jank_hook_llvm(jank_test_exe)
 
   # Symbol exporting for JIT.
@@ -1041,6 +1053,15 @@ endif()
 
 # Build a string of all of our AOT compilation flags so we can share them with our incremental PCH.
 set(jank_incremental_pch_flag ${CMAKE_BINARY_DIR}/incremental.pch)
+file(
+  GLOB_RECURSE jank_incremental_pch_header_deps
+  CONFIGURE_DEPENDS
+  LIST_DIRECTORIES false
+  "${PROJECT_SOURCE_DIR}/include/cpp/*.h"
+  "${PROJECT_SOURCE_DIR}/include/cpp/*.hpp"
+  "${PROJECT_SOURCE_DIR}/third-party/immer/immer/*.hpp"
+  "${PROJECT_SOURCE_DIR}/third-party/immer/immer/**/*.hpp"
+)
 
 # On macOS, we need the SDK root in order to properly compile anything.
 # Generally, this is set in the SDKROOT variable, but it users may forget
@@ -1059,7 +1080,9 @@ endif()
 separate_arguments(jank_incremental_pch_cxx_flags UNIX_COMMAND ${CMAKE_CXX_FLAGS})
 list(REMOVE_ITEM jank_incremental_pch_cxx_flags -fPIC)
 add_custom_command(
-  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX}
+  # prelude.hpp pulls in the runtime surface transitively; custom PCH commands
+  # do not infer those nested header dependencies for us.
+  DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_incremental_pch_header_deps}
   OUTPUT ${jank_incremental_pch_flag}
   COMMAND_EXPAND_LISTS
   VERBATIM
@@ -1098,9 +1121,9 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_clojure_core_sources} ${jank_other_core_sources} ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output} ${jank_nrepl_server_outputs}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} clojure.core
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 --module-path ${jank_source_module_path} compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 --module-path ${jank_source_module_path} compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 --module-path ${jank_source_module_path} compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(

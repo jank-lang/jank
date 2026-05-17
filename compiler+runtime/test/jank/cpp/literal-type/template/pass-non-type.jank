@@ -1,3 +1,37 @@
-(let* [a (#cpp (std.array char 10))]
-  (if (= 10 (.size a))
+(cpp/raw "#include <cstddef>
+
+          namespace jank::cpp::literal_type::template_::pass_non_type
+          {
+            constexpr int array_size{ 10 };
+            constexpr std::size_t size_t_array_size{ 12 };
+
+            enum array_bound
+            {
+              enum_array_size = 11
+            };
+
+            struct holder
+            {
+              static constexpr int static_array_size{ 13 };
+              static constexpr bool static_bool{ true };
+            };
+
+            template <bool B>
+            struct bool_tag
+            {
+              bool value{ B };
+            };
+          }")
+
+(let* [a (#cpp (std.array char jank.cpp.literal_type.template_.pass_non_type.array_size))
+       b (#cpp (std.array char jank.cpp.literal_type.template_.pass_non_type.enum_array_size))
+       c (#cpp (std.array char jank.cpp.literal_type.template_.pass_non_type.size_t_array_size))
+       d (#cpp (std.array char jank.cpp.literal_type.template_.pass_non_type.holder.static_array_size))
+       e (#cpp (jank.cpp.literal_type.template_.pass_non_type.bool_tag
+                 jank.cpp.literal_type.template_.pass_non_type.holder.static_bool))]
+  (if (and (= 10 (.size a))
+           (= 11 (.size b))
+           (= 12 (.size c))
+           (= 13 (.size d))
+           (true? (cpp/.-value e)))
     :success))

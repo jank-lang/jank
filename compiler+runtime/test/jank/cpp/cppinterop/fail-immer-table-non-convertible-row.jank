@@ -1,0 +1,31 @@
+(cpp/raw "namespace jank::cpp::cppinterop::fail_immer_table_non_convertible_row
+          {
+            struct row
+            {
+              int id{};
+              int score{};
+            };
+
+            struct row_key_fn
+            {
+              int operator()(row const &r) const
+              {
+                return r.id;
+              }
+
+              row operator()(row r, int const key) const
+              {
+                r.id = key;
+                return r;
+              }
+            };
+          }")
+
+(let* [_ (cpp/cast #cpp (immer.table
+                          jank.cpp.cppinterop.fail_immer_table_non_convertible_row.row
+                          jank.cpp.cppinterop.fail_immer_table_non_convertible_row.row_key_fn
+                          (std.hash int)
+                          (std.equal_to int)
+                          jank.memory_policy)
+                   {})]
+  :success)

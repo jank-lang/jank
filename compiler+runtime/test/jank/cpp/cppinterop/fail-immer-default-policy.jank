@@ -1,0 +1,2 @@
+(let* [_ (cpp/cast #cpp (immer.vector int) [1 2 3])]
+  :success)

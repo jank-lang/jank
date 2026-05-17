@@ -1,0 +1,266 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+compiler_runtime_dir="$(cd "${here}/../../.." && pwd)"
+build_dir="$(mktemp -d)"
+trap 'rm -rf "${build_dir}"' EXIT
+fetchcontent_base="${compiler_runtime_dir}/build/_deps"
+fetchcontent_args=()
+if [[ -d "${fetchcontent_base}" ]]; then
+  fetchcontent_args=(
+    -DFETCHCONTENT_BASE_DIR="${fetchcontent_base}"
+    -DFETCHCONTENT_UPDATES_DISCONNECTED=ON
+  )
+fi
+
+export CC="${CC:-clang}"
+export CXX="${CXX:-clang++}"
+
+cmake \
+  -S "${compiler_runtime_dir}" \
+  -B "${build_dir}" \
+  -GNinja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -Djank_test=OFF \
+  -Djank_install_local_clang=OFF \
+  "${fetchcontent_args[@]}" \
+  >/dev/null
+
+install_script="${build_dir}/cmake_install.cmake"
+cmake_source_dir="$(
+  grep -F 'CMAKE_HOME_DIRECTORY:INTERNAL=' "${build_dir}/CMakeCache.txt" \
+    | cut -d '=' -f 2-
+)"
+
+require_line() {
+  local needle="${1}"
+  local path="${2}"
+
+  if ! grep -F -- "${needle}" "${path}" >/dev/null; then
+    echo "Missing expected install contract line: ${needle}" >&2
+    exit 1
+  fi
+}
+
+require_line 'include/cpp/jank/prelude.hpp' "${install_script}"
+require_line 'include/cpp/jank/runtime/convert/immer.hpp' "${install_script}"
+require_line 'third-party/immer/immer/algorithm.hpp' "${install_script}"
+require_line 'third-party/immer/immer/vector.hpp' "${install_script}"
+require_line 'third-party/immer/immer/experimental/dvektor.hpp' "${install_script}"
+require_line 'third-party/immer/immer/experimental/detail/dvektor_impl.hpp' "${install_script}"
+require_line 'third-party/immer/immer/table_transient.hpp' "${install_script}"
+
+ninja -C "${build_dir}" -t commands classes/core-libraries \
+  | tee "${build_dir}/core-library-commands.txt" >/dev/null
+
+require_line \
+  "--module-path ${cmake_source_dir}/src/jank" \
+  "${build_dir}/core-library-commands.txt"
+
+ninja -C "${build_dir}" -t query incremental.pch \
+  | tee "${build_dir}/incremental-pch-query.txt" >/dev/null
+
+require_line \
+  "third-party/immer/immer/experimental/detail/dvektor_impl.hpp" \
+  "${build_dir}/incremental-pch-query.txt"
+
+installed_include_root="${build_dir}/installed-header-consumer/include"
+mkdir -p "${installed_include_root}"
+
+cp -R "${compiler_runtime_dir}/include/cpp/." "${installed_include_root}/"
+cp -R "${compiler_runtime_dir}/third-party/bdwgc/include/." "${installed_include_root}/"
+cp -R "${compiler_runtime_dir}/third-party/nanobench/include/." "${installed_include_root}/"
+cp -R "${compiler_runtime_dir}/third-party/folly/folly" "${installed_include_root}/folly"
+cp -R "${compiler_runtime_dir}/third-party/immer/immer" "${installed_include_root}/immer"
+cp -R "${compiler_runtime_dir}/third-party/ftxui/include/." "${installed_include_root}/"
+cp -R "${compiler_runtime_dir}/third-party/cpptrace/include/." "${installed_include_root}/"
+cp -R "${compiler_runtime_dir}/third-party/cppinterop/include/." "${installed_include_root}/"
+cp -R "${compiler_runtime_dir}/third-party/cppinterop/lib/CppInterOp" \
+  "${installed_include_root}/CppInterOp"
+cp -R "${compiler_runtime_dir}/third-party/boost-preprocessor/include/." \
+  "${installed_include_root}/"
+cp -R "${compiler_runtime_dir}/third-party/boost-multiprecision/include/." \
+  "${installed_include_root}/"
+
+consumer_cpp="${build_dir}/installed-header-consumer.cpp"
+cat >"${consumer_cpp}" <<'CPP'
+#include <jank/prelude.hpp>
+
+#include <immer/algorithm.hpp>
+
+#include <functional>
+#include <type_traits>
+#include <utility>
+
+namespace rt = ::jank::runtime;
+
+using ints = ::immer::vector<int, ::jank::memory_policy>;
+using transient_ints = ::immer::vector_transient<int, ::jank::memory_policy>;
+using flex_ints = ::immer::flex_vector<int, ::jank::memory_policy>;
+using transient_flex_ints = ::immer::flex_vector_transient<int, ::jank::memory_policy>;
+using dvektor_ints = ::immer::dvektor<int, 5, ::jank::memory_policy>;
+using array_ints = ::immer::array<int, ::jank::memory_policy>;
+using transient_array_ints = ::immer::array_transient<int, ::jank::memory_policy>;
+using boxed_int = ::immer::box<int, ::jank::memory_policy>;
+using int_map = ::immer::map<int, int, std::hash<int>, std::equal_to<int>, ::jank::memory_policy>;
+using transient_int_map =
+  ::immer::map_transient<int, int, std::hash<int>, std::equal_to<int>, ::jank::memory_policy>;
+using object_map = ::immer::map<rt::object_ref,
+                                rt::object_ref,
+                                std::hash<rt::object_ref>,
+                                std::equal_to<rt::object_ref>,
+                                ::jank::memory_policy>;
+using int_set = ::immer::set<int, std::hash<int>, std::equal_to<int>, ::jank::memory_policy>;
+using transient_int_set =
+  ::immer::set_transient<int, std::hash<int>, std::equal_to<int>, ::jank::memory_policy>;
+
+struct int_key_fn
+{
+  int operator()(int const value) const
+  {
+    return value;
+  }
+
+  int operator()(int, int const key) const
+  {
+    return key;
+  }
+};
+
+struct getter_only_int_key_fn
+{
+  int operator()(int const value) const
+  {
+    return value;
+  }
+};
+
+using int_table =
+  ::immer::table<int, int_key_fn, std::hash<int>, std::equal_to<int>, ::jank::memory_policy>;
+using transient_int_table = ::immer::table_transient<int,
+                                                    int_key_fn,
+                                                    std::hash<int>,
+                                                    std::equal_to<int>,
+                                                    ::jank::memory_policy,
+                                                    ::immer::default_bits>;
+using default_policy_ints = ::immer::vector<int>;
+using default_policy_int_map = ::immer::map<int, int>;
+using getter_only_int_table = ::immer::table<int,
+                                             getter_only_int_key_fn,
+                                             std::hash<int>,
+                                             std::equal_to<int>,
+                                             ::jank::memory_policy>;
+
+static_assert(rt::convertible<ints>);
+static_assert(rt::convertible<transient_ints>);
+static_assert(rt::convertible<flex_ints>);
+static_assert(rt::convertible<transient_flex_ints>);
+static_assert(rt::convertible<dvektor_ints>);
+static_assert(rt::convertible<array_ints>);
+static_assert(rt::convertible<transient_array_ints>);
+static_assert(rt::convertible<boxed_int>);
+static_assert(rt::convertible<int_map>);
+static_assert(rt::convertible<transient_int_map>);
+static_assert(rt::convertible<object_map>);
+static_assert(rt::convertible<int_set>);
+static_assert(rt::convertible<transient_int_set>);
+static_assert(rt::convertible<int_table>);
+static_assert(rt::convertible<transient_int_table>);
+static_assert(!rt::convertible<default_policy_ints>);
+static_assert(!rt::convertible<default_policy_int_map>);
+static_assert(!rt::convertible<getter_only_int_table>);
+static_assert(std::same_as<decltype(rt::convert<ints>::into_object(std::declval<ints const &>())),
+                           rt::obj::persistent_vector_ref>);
+static_assert(
+  std::same_as<decltype(rt::convert<int_map>::into_object(std::declval<int_map const &>())),
+               rt::obj::persistent_hash_map_ref>);
+
+inline auto as_jank_vector(ints const &xs)
+{
+  return rt::convert<ints>::into_object(xs);
+}
+
+inline ints as_immer_vector(rt::object_ref const o)
+{
+  return rt::convert<ints>::from_object(o);
+}
+
+inline transient_ints as_transient_immer_vector(rt::object_ref const o)
+{
+  return rt::convert<transient_ints>::from_object(o);
+}
+
+inline flex_ints as_immer_flex_vector(rt::object_ref const o)
+{
+  return rt::convert<flex_ints>::from_object(o);
+}
+
+inline transient_flex_ints as_transient_immer_flex_vector(rt::object_ref const o)
+{
+  return rt::convert<transient_flex_ints>::from_object(o);
+}
+
+inline dvektor_ints as_immer_dvektor(rt::object_ref const o)
+{
+  return rt::convert<dvektor_ints>::from_object(o);
+}
+
+inline array_ints as_immer_array(rt::object_ref const o)
+{
+  return rt::convert<array_ints>::from_object(o);
+}
+
+inline transient_array_ints as_transient_immer_array(rt::object_ref const o)
+{
+  return rt::convert<transient_array_ints>::from_object(o);
+}
+
+inline boxed_int as_immer_box(rt::object_ref const o)
+{
+  return rt::convert<boxed_int>::from_object(o);
+}
+
+inline transient_int_map as_transient_immer_map(rt::object_ref const o)
+{
+  return rt::convert<transient_int_map>::from_object(o);
+}
+
+inline object_map as_object_immer_map(rt::object_ref const o)
+{
+  return rt::convert<object_map>::from_object(o);
+}
+
+inline int_set as_immer_set(rt::object_ref const o)
+{
+  return rt::convert<int_set>::from_object(o);
+}
+
+inline transient_int_set as_transient_immer_set(rt::object_ref const o)
+{
+  return rt::convert<transient_int_set>::from_object(o);
+}
+
+inline int_table as_immer_table(rt::object_ref const o)
+{
+  return rt::convert<int_table>::from_object(o);
+}
+
+inline transient_int_table as_transient_immer_table(rt::object_ref const o)
+{
+  return rt::convert<transient_int_table>::from_object(o);
+}
+CPP
+
+"${CXX}" \
+  -std=c++20 \
+  -fsyntax-only \
+  -w \
+  -DGC_THREADS \
+  -DPOINTER_MASK=0x0000FFFFFFFFFFFF \
+  -DIMMER_HAS_LIBGC=1 \
+  -DIMMER_TAGGED_NODE=0 \
+  -DHAVE_CXX14=1 \
+  -I "${installed_include_root}" \
+  "${consumer_cpp}"

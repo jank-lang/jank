@@ -1,0 +1,133 @@
+(cpp/raw "#include <functional>
+          #include <immer/array.hpp>
+          #include <immer/array_transient.hpp>
+          #include <immer/box.hpp>
+          #include <immer/experimental/dvektor.hpp>
+          #include <immer/flex_vector.hpp>
+          #include <immer/flex_vector_transient.hpp>
+          #include <immer/map.hpp>
+          #include <immer/map_transient.hpp>
+          #include <immer/set.hpp>
+          #include <immer/set_transient.hpp>
+          #include <immer/table.hpp>
+          #include <immer/table_transient.hpp>
+          #include <immer/vector.hpp>
+          #include <immer/vector_transient.hpp>
+
+          namespace jank::cpp::cppinterop::pass_immer_type_dsl
+          {
+            struct row
+            {
+              int id{};
+              int score{};
+
+              static ::jank::runtime::obj::persistent_vector_ref into_object(row const &r)
+              {
+                ::jank::runtime::detail::native_transient_vector trans;
+                trans.push_back(::jank::runtime::convert<int>::into_object(r.id));
+                trans.push_back(::jank::runtime::convert<int>::into_object(r.score));
+                return ::jank::runtime::make_box<::jank::runtime::obj::persistent_vector>(
+                  trans.persistent());
+              }
+
+              static row from_object(::jank::runtime::object_ref const o)
+              {
+                return from_object(
+                  ::jank::runtime::try_object<::jank::runtime::obj::persistent_vector>(o));
+              }
+
+              static row from_object(::jank::runtime::obj::persistent_vector_ref const o)
+              {
+                return { ::jank::runtime::convert<int>::from_object(o->data[0]),
+                         ::jank::runtime::convert<int>::from_object(o->data[1]) };
+              }
+            };
+
+            struct row_key_fn
+            {
+              int operator()(row const &r) const
+              {
+                return r.id;
+              }
+
+              row operator()(row r, int const key) const
+              {
+                r.id = key;
+                return r;
+              }
+            };
+
+            using dvektor = ::immer::dvektor<int, 5, ::jank::memory_policy>;
+
+            dvektor make_empty_dvektor()
+            {
+              return {};
+            }
+
+            int sum_dvektor(dvektor const &v)
+            {
+              int ret{};
+              for(auto const i : v)
+              {
+                ret += i;
+              }
+              return ret;
+            }
+          }")
+
+(let* [empty-vector (#cpp (immer.vector int jank.memory_policy))
+       typed-empty-vector ((cpp/type (immer.vector int jank.memory_policy)))
+       empty-dvektor (#cpp (immer.dvektor int 5 jank.memory_policy))
+       returned-empty-dvektor (cpp/jank.cpp.cppinterop.pass_immer_type_dsl.make_empty_dvektor)
+       typed-vector-value (cpp/cast (cpp/type (immer.vector int jank.memory_policy)) [9 10])
+       vector-value (cpp/cast #cpp (immer.vector int jank.memory_policy) [1 2])
+       flex-vector-value (cpp/cast #cpp (immer.flex_vector int jank.memory_policy) [3 4 5])
+       dvektor-value (cpp/cast #cpp (immer.dvektor int 5 jank.memory_policy) [13 14])
+       typed-dvektor-value (cpp/cast (cpp/type (immer.dvektor int 5 jank.memory_policy)) [21 22])
+       array-value (cpp/cast #cpp (immer.array int jank.memory_policy) [6 7])
+       boxed-value (#cpp (immer.box int jank.memory_policy) #cpp 8)
+       map-value (cpp/cast #cpp (immer.map int int (std.hash int) (std.equal_to int) jank.memory_policy) [[1 10] [2 20]])
+       set-value (cpp/cast #cpp (immer.set int (std.hash int) (std.equal_to int) jank.memory_policy) [1 2 2])
+       vector-transient-value (cpp/cast #cpp (immer.vector_transient int jank.memory_policy) [1 2])
+       flex-vector-transient-value (cpp/cast #cpp (immer.flex_vector_transient int jank.memory_policy) [1 2 3])
+       array-transient-value (cpp/cast #cpp (immer.array_transient int jank.memory_policy) [1])
+       map-transient-value (cpp/cast #cpp (immer.map_transient int int (std.hash int) (std.equal_to int) jank.memory_policy) [[1 10]])
+       set-transient-value (cpp/cast #cpp (immer.set_transient int (std.hash int) (std.equal_to int) jank.memory_policy) [1 1 2])
+       table-value (cpp/cast #cpp (immer.table
+                                    jank.cpp.cppinterop.pass_immer_type_dsl.row
+                                    jank.cpp.cppinterop.pass_immer_type_dsl.row_key_fn
+                                    (std.hash int)
+                                    (std.equal_to int)
+                                    jank.memory_policy)
+                     [[4 [0 40]]])
+       table-transient-value (cpp/cast #cpp (immer.table_transient
+                                             jank.cpp.cppinterop.pass_immer_type_dsl.row
+                                             jank.cpp.cppinterop.pass_immer_type_dsl.row_key_fn
+                                             (std.hash int)
+                                             (std.equal_to int)
+                                             jank.memory_policy
+                                             immer.default_bits)
+                              [[5 [0 50]]])
+       _ (assert (.empty empty-vector))
+       _ (assert (.empty typed-empty-vector))
+       _ (assert (.empty empty-dvektor))
+       _ (assert (= [] returned-empty-dvektor))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_type_dsl.sum_dvektor nil)))
+       _ (assert (= 2 (.size typed-vector-value)))
+       _ (assert (= 10 (cpp/.at typed-vector-value #cpp 1)))
+       _ (assert (= 2 (.size vector-value)))
+       _ (assert (= 3 (.size flex-vector-value)))
+       _ (assert (= 14 (cpp/aget dvektor-value #cpp 1)))
+       _ (assert (= 22 (cpp/aget typed-dvektor-value #cpp 1)))
+       _ (assert (= 2 (.size array-value)))
+       _ (assert (= 8 (.get boxed-value)))
+       _ (assert (= 20 (cpp/.at map-value #cpp 2)))
+       _ (assert (= 1 (cpp/.count set-value #cpp 2)))
+       _ (assert (= 2 (.size vector-transient-value)))
+       _ (assert (= 3 (.size flex-vector-transient-value)))
+       _ (assert (= 1 (.size array-transient-value)))
+       _ (assert (= 10 (cpp/.at map-transient-value #cpp 1)))
+       _ (assert (= 1 (cpp/.count set-transient-value #cpp 2)))
+       _ (assert (= 40 (cpp/.-score (cpp/.at table-value #cpp 4))))
+       _ (assert (= 50 (cpp/.-score (cpp/.at table-transient-value #cpp 5))))]
+  :success)

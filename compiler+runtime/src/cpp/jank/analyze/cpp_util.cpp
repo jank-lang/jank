@@ -279,6 +279,43 @@ namespace jank::analyze::cpp_util
     return literal_value_result{ f_decl, ret_type, code };
   }
 
+  jtl::string_result<integral_template_arg_result>
+  resolve_integral_template_arg(jtl::immutable_string const &sym)
+  {
+    auto const scope_res{ resolve_scope(sym) };
+    if(scope_res.is_err())
+    {
+      return scope_res.expect_err();
+    }
+
+    auto const scope{ scope_res.expect_ok() };
+    if(Cpp::IsEnumConstant(scope))
+    {
+      return integral_template_arg_result{ Cpp::GetEnumConstantType(scope),
+                                           util::format("{}", Cpp::GetEnumConstantValue(scope)) };
+    }
+
+    if(!Cpp::IsVariable(scope))
+    {
+      return err(util::format("'{}' is not an integral constant.", sym));
+    }
+
+    auto const variable_type{ Cpp::RemoveTypeQualifier(Cpp::GetVariableType(scope), Cpp::Const) };
+    if(!Cpp::IsConstVariable(scope) || !Cpp::IsIntegral(variable_type))
+    {
+      return err(util::format("'{}' is not an integral constant.", sym));
+    }
+
+    bool had_error{};
+    auto const value{ Cpp::Evaluate(get_qualified_name(scope).c_str(), &had_error) };
+    if(had_error)
+    {
+      return err(util::format("Unable to evaluate '{}' as an integral constant.", sym));
+    }
+
+    return integral_template_arg_result{ variable_type, util::format("{}", value) };
+  }
+
   /* When we're looking up operator usage, for example, we need to look in the scopes for
    * all of the arguments, including their parent scopes, all the way up to the gobal scope.
    * The operator could be defined in any of those scopes. This function, given some starting

@@ -1312,6 +1312,7 @@ namespace jank::analyze
       {           make_box<symbol>("case*"),            &processor::analyze_case },
       {         make_box<symbol>("cpp/raw"),         &processor::analyze_cpp_raw },
       {         make_box<symbol>("cpp/dsl"),         &processor::analyze_cpp_dsl },
+      {        make_box<symbol>("cpp/type"),        &processor::analyze_cpp_type },
       {       make_box<symbol>("cpp/value"),       &processor::analyze_cpp_value },
       {        make_box<symbol>("cpp/cast"),        &processor::analyze_cpp_cast },
       { make_box<symbol>("cpp/unsafe-cast"), &processor::analyze_cpp_unsafe_cast },
@@ -3938,7 +3939,7 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
-    auto const type_res{ analyze_type(l, current_frame, fn_ctx) };
+    auto const type_res{ analyze_type(runtime::second(l), current_frame, fn_ctx) };
     if(type_res.is_err())
     {
       return type_res.expect_err();
@@ -5347,12 +5348,14 @@ namespace jank::analyze
         else if(first.get_type() == object_type::symbol)
         {
           static obj::symbol const cpp_type{ "cpp", "dsl" };
-          if(expect_object<obj::symbol>(first)->equal(cpp_type))
+          static obj::symbol const cpp_type_alias{ "cpp", "type" };
+          auto const first_sym{ expect_object<obj::symbol>(first) };
+          if(first_sym->equal(cpp_type) || first_sym->equal(cpp_type_alias))
           {
             return analyze_cpp_dsl_impl(runtime::second(seq), current_frame, position, fn_ctx);
           }
 
-          auto const sym{ expect_object<obj::symbol>(first) };
+          auto const sym{ first_sym };
           auto const type{ Cpp::GetType(sym->name) };
           if(type)
           {
@@ -5382,17 +5385,40 @@ namespace jank::analyze
           }
 
           native_vector<Cpp::TemplateArgInfo> args;
+          native_vector<jtl::immutable_string> integral_arg_values;
+          args.reserve(runtime::sequence_length(rest(typed_o)));
+          integral_arg_values.reserve(args.capacity());
+          auto const push_integral_arg{ [&](jtl::ptr<void> const type,
+                                            jtl::immutable_string const &value) {
+            integral_arg_values.emplace_back(value);
+            args.emplace_back(type, integral_arg_values.back().c_str());
+          } };
           for(auto const arg : make_sequence_range(rest(typed_o)))
           {
             if(runtime::is_integer(arg))
             {
               auto const int_arg{ runtime::to_i64(arg) };
               static auto const int_type{ cpp_util::resolve_literal_type("long long").expect_ok() };
-              jtl::string_builder sb;
-              sb(int_arg);
-              /* XXX: Safe, due to the GC. */
-              args.emplace_back(int_type.data, sb.release().c_str());
+              push_integral_arg(int_type.data, util::format("{}", int_arg));
               continue;
+            }
+            if(arg.get_type() == object_type::symbol)
+            {
+              auto const sym_arg{ expect_object<obj::symbol>(arg) };
+              auto const integral_arg{ cpp_util::resolve_integral_template_arg(sym_arg->name) };
+              if(integral_arg.is_ok())
+              {
+                auto const &result{ integral_arg.expect_ok() };
+                push_integral_arg(result.type, result.value);
+                continue;
+              }
+              auto const arg_scope{ cpp_util::resolve_scope(sym_arg->name) };
+              if(arg_scope.is_ok() && Cpp::IsVariable(arg_scope.expect_ok()))
+              {
+                return error::analyze_invalid_cpp_dsl(integral_arg.expect_err(),
+                                                      object_source(arg),
+                                                      latest_expansion(macro_expansions));
+              }
             }
 
             auto const arg_type{ analyze_type(arg, current_frame, fn_ctx) };

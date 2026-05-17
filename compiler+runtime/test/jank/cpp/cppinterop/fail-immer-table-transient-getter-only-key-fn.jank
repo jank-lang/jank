@@ -1,0 +1,44 @@
+(cpp/raw "namespace jank::cpp::cppinterop::fail_immer_table_transient_getter_only_key_fn
+          {
+            struct row
+            {
+              int id{};
+              int score{};
+
+              static ::jank::runtime::obj::persistent_vector_ref into_object(row const &r)
+              {
+                ::jank::runtime::detail::native_transient_vector trans;
+                trans.push_back(::jank::runtime::convert<int>::into_object(r.id));
+                trans.push_back(::jank::runtime::convert<int>::into_object(r.score));
+                return ::jank::runtime::make_box<::jank::runtime::obj::persistent_vector>(
+                  trans.persistent());
+              }
+
+              static row from_object(::jank::runtime::object_ref const o)
+              {
+                auto const v{
+                  ::jank::runtime::try_object<::jank::runtime::obj::persistent_vector>(o)
+                };
+                return { ::jank::runtime::convert<int>::from_object(v->data[0]),
+                         ::jank::runtime::convert<int>::from_object(v->data[1]) };
+              }
+            };
+
+            struct getter_only_row_key_fn
+            {
+              int operator()(row const &r) const
+              {
+                return r.id;
+              }
+            };
+          }")
+
+(let* [_ (cpp/cast #cpp (immer.table_transient
+                          jank.cpp.cppinterop.fail_immer_table_transient_getter_only_key_fn.row
+                          jank.cpp.cppinterop.fail_immer_table_transient_getter_only_key_fn.getter_only_row_key_fn
+                          (std.hash int)
+                          (std.equal_to int)
+                          jank.memory_policy
+                          immer.default_bits)
+                   [[4 [0 40]]])]
+  :success)

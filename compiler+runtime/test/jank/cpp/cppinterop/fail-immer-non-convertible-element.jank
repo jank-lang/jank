@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::cppinterop::fail_immer_non_convertible_element
+          {
+            struct foo
+            {
+            };
+          }")
+
+(let* [_ (cpp/cast #cpp (immer.vector
+                          jank.cpp.cppinterop.fail_immer_non_convertible_element.foo
+                          jank.memory_policy)
+                   [])]
+  :success)

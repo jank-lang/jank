@@ -1,0 +1,33 @@
+(cpp/raw "#include <cstddef>
+
+          namespace jank::cpp::cppinterop::fail_immer_non_convertible_map_key
+          {
+            struct foo
+            {
+            };
+
+            struct foo_hash
+            {
+              std::size_t operator()(foo const &) const
+              {
+                return 0;
+              }
+            };
+
+            struct foo_equal
+            {
+              bool operator()(foo const &, foo const &) const
+              {
+                return true;
+              }
+            };
+          }")
+
+(let* [_ (cpp/cast #cpp (immer.map
+                          jank.cpp.cppinterop.fail_immer_non_convertible_map_key.foo
+                          int
+                          jank.cpp.cppinterop.fail_immer_non_convertible_map_key.foo_hash
+                          jank.cpp.cppinterop.fail_immer_non_convertible_map_key.foo_equal
+                          jank.memory_policy)
+                   {})]
+  :success)

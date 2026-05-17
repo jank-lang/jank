@@ -2,7 +2,7 @@
 jank has a domain specific language (DSL) for acessing arbitrary C++ types and
 values. This DSL is automatically enabled when the jank compiler is expecting a
 type, such as the first argument to `cpp/new`, `cpp/unbox`, or `cpp/cast`. The
-DSL can also be explicitly enabled using the `#cpp` tag.
+DSL can also be explicitly enabled using the `#cpp` tag or `cpp/type`.
 
 ## DSL overview
 The C++ DSL can be used to look up both types and values. The jank compiler will
@@ -17,7 +17,9 @@ value.
 * `(:long t)` and `(:short t)` add the corresponding C++ qualification
 * `(:array t s?)` turns a type into a sized (or unsized) array
 * `(:fn ret [a1 a2...])` builds a function type
-* `(t a1 a2...)` builds a template instantiation
+* `(t a1 a2...)` builds a template instantiation; non-type template arguments
+  can be integer literals, named integral constants, static integral data
+  members, or enum constants
 * `(:member t name)` nests into a type
 * `(:member* t mt)` builds a pointer to member type
 * `(:&member t mt)` builds a pointer to member value

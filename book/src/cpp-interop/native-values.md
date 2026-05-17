@@ -88,6 +88,143 @@ result of `to_upper`. However, when we return it from the `let`, the jank
 compiler sees that it can implicitly create an `object_ref` for us, so there's
 nothing we need to do.
 
+## Persistent C++ values
+jank also provides trait conversions for a small set of immutable containers
+from [immer](https://github.com/arximboldi/immer). These conversions are meant
+for C++ APIs which already model data as persistent values and should feel
+natural from jank.
+No custom `convert` specialization is needed for the supported immer shapes.
+The conversion header is included by jank's runtime prelude; C++ extension
+headers which use these traits outside the prelude can include
+`<jank/runtime/convert/immer.hpp>` directly.
+
+```clojure
+(cpp/raw "#include <immer/vector.hpp>
+
+          namespace demo
+          {
+            using ints = ::immer::vector<int, ::jank::memory_policy>;
+
+            ints conj_answer(ints const &xs)
+            { return xs.push_back(42); }
+          }")
+
+(defn add-answer [xs]
+  (cpp/demo.conj_answer xs))
+
+(add-answer [13])
+```
+
+`add-answer` receives and returns ordinary jank vectors, while the native C++
+function receives and returns `immer::vector<int, ::jank::memory_policy>`.
+The conversion happens in the same way as the `std::string` example above.
+When you need to spell the native type directly in jank's C++ DSL, use the same
+template shape. These built-in immer type names come from the runtime prelude,
+so this direct cast form does not need a `cpp/raw` include:
+
+```clojure
+(cpp/cast #cpp (immer.vector int jank.memory_policy) [1 2 3])
+```
+
+The same type can be made explicit with `cpp/type` when the type needs to appear
+inside another form:
+
+```clojure
+(cpp/cast (cpp/type (immer.vector int jank.memory_policy)) [1 2 3])
+```
+
+For immer types where `MemoryPolicy` appears after other defaulted template
+arguments, spell those arguments too:
+
+```clojure
+(cpp/cast #cpp (immer.map
+                 int
+                 int
+                 (std.hash int)
+                 (std.equal_to int)
+                 jank.memory_policy)
+  [[1 2] [3 4]])
+```
+
+Optional immer bit parameters are supported as well. If you want to spell them
+explicitly, use the same non-type template argument syntax as any other native
+constant:
+
+```clojure
+(cpp/cast #cpp (immer.vector
+                 int
+                 jank.memory_policy
+                 immer.default_bits
+                 immer.default_bits)
+  [1 2 3])
+```
+
+The built-in persistent conversions are:
+
+| C++ type | jank value |
+| --- | --- |
+| `immer::vector<T, ::jank::memory_policy>` | vector |
+| `immer::vector_transient<T, ::jank::memory_policy>` | vector |
+| `immer::flex_vector<T, ::jank::memory_policy>` | vector |
+| `immer::flex_vector_transient<T, ::jank::memory_policy>` | vector |
+| `immer::dvektor<T, B, ::jank::memory_policy>` | vector |
+| `immer::array<T, ::jank::memory_policy>` | vector |
+| `immer::array_transient<T, ::jank::memory_policy>` | vector |
+| `immer::map<K, V, Hash, Equal, ::jank::memory_policy>` | map |
+| `immer::map_transient<K, V, Hash, Equal, ::jank::memory_policy>` | map |
+| `immer::set<T, Hash, Equal, ::jank::memory_policy>` | set |
+| `immer::set_transient<T, Hash, Equal, ::jank::memory_policy>` | set |
+| `immer::table<T, KeyFn, Hash, Equal, ::jank::memory_policy, B>` | map of table key to `T` |
+| `immer::table_transient<T, KeyFn, Hash, Equal, ::jank::memory_policy, B>` | map of table key to `T` |
+| `immer::box<T, ::jank::memory_policy>` | the boxed `T` value |
+
+The element, key, and value types also need to be trait-convertible, and those
+conversions compose for nested persistent values. For runtime and JIT interop,
+use `::jank::memory_policy` when spelling the native immer type; the built-in
+conversions intentionally target that specialization. Omitting it selects
+immer's default memory policy, which is a different native type and will not use
+these trait conversions.
+Use `jank::runtime::object_ref` as the element, key, or value type when native
+code needs to preserve arbitrary jank values directly. For example,
+`immer::map<object_ref, object_ref, std::hash<object_ref>,
+std::equal_to<object_ref>, ::jank::memory_policy>` can round-trip keywords,
+vectors, maps, and other jank objects through Immer while using jank's normal
+hash and equality semantics.
+Vector-like and set-like immer values accept any seqable jank input, including
+sorted sets, though they still return jank vectors and sets respectively. The
+`dvektor` support follows Immer's experimental header, but it uses the same
+vector-like jank boundary as the stable vector families. Maps and tables accept
+either jank maps, including sorted maps, or seqable inputs of two-item entries,
+such as `[[k v] ...]`; malformed entries throw `std::runtime_error`. Tables use
+`KeyFn` to expose each native row under its table key; when passing jank entries
+back to C++, the entry key is written into each converted row through `KeyFn`,
+so the key function must also provide the two-argument setter overload. A
+`cpp/raw` block may still be useful for defining the table row and key function,
+but the built-in immer table headers are already available from the prelude.
+Passing `nil` into vector-like, map-like, set-like, or table-like immer
+arguments produces an empty native value. Once converted, the C++ side can use
+the normal immer APIs and algorithms, including persistent updates, transient
+builders, and chunk-aware algorithms from `immer/algorithm.hpp`.
+Optional immer headers such as `immer/algorithm.hpp` can be pulled in with an
+`ns` `:include` clause or a `cpp/raw` include block when native helpers need
+them.
+`immer::atom` is intentionally not a built-in trait conversion, since it is a
+non-copyable state holder rather than a persistent value. You can still include
+`immer/atom.hpp` and use ordinary C++ constructors or methods for native atom
+locals, but jank will not automatically convert an atom itself back into a jank
+value. If native code needs atom identity across calls, expose a C++ wrapper type
+and methods for that state instead; those methods can still receive and return
+persistent immer snapshots through the conversions above.
+Native C++ values which wrap or cursor over these immer containers can also be
+used in native loop bindings, as long as they provide the same copy,
+assignment, and operator support any other native loop binding needs.
+Native APIs returning persistent immer values by `const &` convert the same way
+as value returns. Pointers remain native C++ values; dereference or pass them to
+other native APIs before crossing back into jank values.
+When jank passes a value into an immer transient type, C++ receives a fresh
+transient builder. When C++ returns a transient, jank reads its current contents
+as the matching persistent jank value.
+
 ## Non-trait-convertible
 Aside from the built-in supported trait conversions, every other C++ type will
 not be convertible. If you try to pass such a value as a jank function argument

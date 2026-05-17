@@ -1,9 +1,45 @@
 (cpp/raw "namespace jank::cpp::auto_box::pass_native_vector
           {
             std::vector<int> vec{1, 2, 3, 4, 5};
+
+            int sum(std::vector<int> const &v)
+            {
+              int ret{};
+              for(auto const i : v)
+              {
+                ret += i;
+              }
+              return ret;
+            }
+
+            int native_sum(::jank::native_vector<int> const &v)
+            {
+              int ret{};
+              for(auto const i : v)
+              {
+                ret += i;
+              }
+              return ret;
+            }
+
+            int size(std::vector<int> const &v)
+            {
+              return static_cast<int>(v.size());
+            }
+
+            int native_size(::jank::native_vector<int> const &v)
+            {
+              return static_cast<int>(v.size());
+            }
           }")
 (let [v ((fn []
            (let [v cpp/jank.cpp.auto_box.pass_native_vector.vec]
              v)))]
-  (if (= [1 2 3 4 5] v)
+  (if (and (= [1 2 3 4 5] v)
+           (= 6 (cpp/jank.cpp.auto_box.pass_native_vector.sum [1 2 3]))
+           (= 6 (cpp/jank.cpp.auto_box.pass_native_vector.sum '(1 2 3)))
+           (= 0 (cpp/jank.cpp.auto_box.pass_native_vector.size nil))
+           (= 6 (cpp/jank.cpp.auto_box.pass_native_vector.native_sum [1 2 3]))
+           (= 6 (cpp/jank.cpp.auto_box.pass_native_vector.native_sum '(1 2 3)))
+           (= 0 (cpp/jank.cpp.auto_box.pass_native_vector.native_size nil)))
     :success))

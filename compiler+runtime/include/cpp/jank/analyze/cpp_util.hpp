@@ -17,6 +17,12 @@ namespace jank::analyze::cpp_util
     jtl::immutable_string function_code{};
   };
 
+  struct integral_template_arg_result
+  {
+    jtl::ptr<void> type{};
+    jtl::immutable_string value{};
+  };
+
   jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> const scope);
   jtl::string_result<jtl::ptr<void>>
   instantiate(jtl::ptr<void> const scope, native_vector<Cpp::TemplateArgInfo> const &args);
@@ -26,6 +32,8 @@ namespace jank::analyze::cpp_util
   jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal);
   jtl::string_result<literal_value_result>
   resolve_literal_value(jtl::immutable_string const &literal);
+  jtl::string_result<integral_template_arg_result>
+  resolve_integral_template_arg(jtl::immutable_string const &sym);
   native_vector<jtl::ptr<void>> find_adl_scopes(native_vector<jtl::ptr<void>> const &starters);
 
   jtl::immutable_string get_qualified_name(jtl::ptr<void> scope);

@@ -4,10 +4,14 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/detail/type.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/runtime/sequence_range.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/core/make_box.hpp>
+
+#include <utility>
 
 namespace jank::runtime
 {
@@ -341,6 +345,34 @@ namespace jank::runtime
     }
   };
 
+  namespace detail
+  {
+    template <typename T, typename Seqable>
+    native_vector<T> collect_seqable_values(oref<Seqable> const o)
+    {
+      native_vector<T> ret;
+      for(auto const e : make_sequence_range(o))
+      {
+        object_ref const value_object{ e };
+        ret.emplace_back(convert<T>::from_object(value_object));
+      }
+      return ret;
+    }
+
+    template <typename T, typename PushBackable, typename Seqable>
+    PushBackable convert_seqable_to_push_backable(oref<Seqable> const o)
+    {
+      auto values(collect_seqable_values<T>(o));
+
+      PushBackable ret;
+      for(auto &value : values)
+      {
+        ret.push_back(std::move(value));
+      }
+      return ret;
+    }
+  }
+
   /* Support for both native_vector and std::vector of anything which itself is convertible. */
   template <template <typename, typename> typename V, typename T, typename A>
   requires(convertible<T>
@@ -359,17 +391,13 @@ namespace jank::runtime
 
     static V<T, A> from_object(object_ref const o)
     {
-      return from_object(try_object<obj::persistent_vector>(o));
+      return visit_seqable([](auto const typed_o) { return from_object(typed_o); }, o);
     }
 
-    static V<T, A> from_object(obj::persistent_vector_ref const o)
+    template <typename Seqable>
+    static V<T, A> from_object(oref<Seqable> const o)
     {
-      V<T, A> ret;
-      for(auto const &e : o->data)
-      {
-        ret.push_back(convert<T>::from_object(e));
-      }
-      return ret;
+      return detail::convert_seqable_to_push_backable<T, V<T, A>>(o);
     }
   };
 }

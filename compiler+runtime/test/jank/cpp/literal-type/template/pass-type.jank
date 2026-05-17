@@ -1,3 +1,4 @@
-(let* [v (#cpp (std.vector char))]
-  (if (.empty v)
+(let* [v (#cpp (std.vector char))
+       explicit-v ((cpp/type (std.vector char)))]
+  (if (and (.empty v) (.empty explicit-v))
     :success))

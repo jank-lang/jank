@@ -1,0 +1,41 @@
+(cpp/raw "#include <cstddef>
+          #include <immer/atom.hpp>
+
+          namespace jank::cpp::cppinterop::pass_immer_atom_native_state
+          {
+            using vector = ::immer::vector<int, ::jank::memory_policy>;
+            using box = ::immer::box<vector, ::jank::memory_policy>;
+            using atom_vector = ::immer::atom<vector, ::jank::memory_policy>;
+
+            std::size_t atom_size(atom_vector const &value)
+            {
+              return value.load().get().size();
+            }
+
+            int atom_at(atom_vector const &value, std::size_t const index)
+            {
+              return value.load().get()[index];
+            }
+
+            void atom_store(atom_vector &value, vector const &next)
+            {
+              value.store(box{ next });
+            }
+          }")
+
+(let* [atom-value (cpp/cast #cpp (immer.atom
+                                    (immer.vector int jank.memory_policy)
+                                    jank.memory_policy)
+                             [1 2 3])
+       _ (assert (= 3 (cpp/jank.cpp.cppinterop.pass_immer_atom_native_state.atom_size
+                       atom-value)))
+       _ (assert (= 2 (cpp/jank.cpp.cppinterop.pass_immer_atom_native_state.atom_at
+                       atom-value
+                       #cpp 1)))
+       _ (cpp/jank.cpp.cppinterop.pass_immer_atom_native_state.atom_store atom-value [4 5])
+       _ (assert (= 2 (cpp/jank.cpp.cppinterop.pass_immer_atom_native_state.atom_size
+                       atom-value)))
+       _ (assert (= 5 (cpp/jank.cpp.cppinterop.pass_immer_atom_native_state.atom_at
+                       atom-value
+                       #cpp 1)))]
+  :success)

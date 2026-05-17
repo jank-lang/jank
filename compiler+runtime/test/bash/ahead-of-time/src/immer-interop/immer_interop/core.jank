@@ -1,0 +1,45 @@
+(ns immer-interop.core)
+
+(cpp/raw "#include <functional>
+          #include <immer/algorithm.hpp>
+          #include <immer/map.hpp>
+          #include <immer/vector.hpp>
+
+          namespace jank::test::aot_immer
+          {
+            using ints = ::immer::vector<int, ::jank::memory_policy>;
+            using int_map = ::immer::map<int,
+                                         int,
+                                         std::hash<int>,
+                                         std::equal_to<int>,
+                                         ::jank::memory_policy>;
+
+            inline ints conj_answer(ints const &xs)
+            {
+              return xs.push_back(42);
+            }
+
+            inline int sum(ints const &xs)
+            {
+              return ::immer::accumulate(xs, 0);
+            }
+
+            inline int lookup(int_map const &m, int const key)
+            {
+              return m.at(key);
+            }
+          }")
+
+(defn -main []
+  (let [conj-result (cpp/jank.test.aot_immer.conj_answer [1 2])
+        typed-result (cpp/cast (cpp/type (immer.vector int jank.memory_policy)) [4 5])
+        direct-map (cpp/cast #cpp (immer.map
+                                    int
+                                    int
+                                    (std.hash int)
+                                    (std.equal_to int)
+                                    jank.memory_policy)
+                     [[1 10] [2 20]])]
+    (println (cpp/jank.test.aot_immer.sum conj-result))
+    (println (cpp/jank.test.aot_immer.sum typed-result))
+    (println (cpp/jank.test.aot_immer.lookup direct-map 2))))

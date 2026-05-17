@@ -1,0 +1,17 @@
+(ns jank.cpp.cppinterop.pass-immer-ns-include
+  (:include "immer/algorithm.hpp"))
+
+(cpp/raw "namespace jank::cpp::cppinterop::pass_immer_ns_include
+          {
+            using ints = ::immer::vector<int, ::jank::memory_policy>;
+
+            int algorithm_sum(ints const &xs)
+            {
+              return ::immer::accumulate(xs, 0);
+            }
+          }")
+
+(let* [_ (assert (= 6 (cpp/jank.cpp.cppinterop.pass_immer_ns_include.algorithm_sum [1 2 3])))
+       _ (assert (= 0 (cpp/jank.cpp.cppinterop.pass_immer_ns_include.algorithm_sum nil)))
+       _ (in-ns 'clojure.core)]
+  :success)

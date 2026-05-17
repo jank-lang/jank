@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::cpp::literal_type::template_::fail_non_const_non_type
+          {
+            int array_size{ 10 };
+          }")
+
+(let* [_ (#cpp (std.array
+                 char
+                 jank.cpp.literal_type.template_.fail_non_const_non_type.array_size))]
+  :success)

@@ -1,0 +1,15 @@
+(cpp/raw "namespace jank::cpp::cppinterop::fail_immer_non_convertible_map_value
+          {
+            struct foo
+            {
+            };
+          }")
+
+(let* [_ (cpp/cast #cpp (immer.map
+                          int
+                          jank.cpp.cppinterop.fail_immer_non_convertible_map_value.foo
+                          (std.hash int)
+                          (std.equal_to int)
+                          jank.memory_policy)
+                   {})]
+  :success)

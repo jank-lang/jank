@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::cpp::literal_type::template_::fail_non_integral_non_type
+          {
+            constexpr double array_size{ 10.0 };
+          }")
+
+(let* [_ (#cpp (std.array
+                 char
+                 jank.cpp.literal_type.template_.fail_non_integral_non_type.array_size))]
+  :success)

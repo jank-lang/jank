@@ -108,6 +108,19 @@
                     :exit)))
       (is (string= expected-output (-> default-output-file proc/sh :out))))))
 
+(deftest aot-immer-interop
+  (let [alias-name "immer-interop"
+        module-path (module-path alias-name)
+        module "immer-interop.core"
+        expected-output (slurp (str "expected-output/" alias-name "/core"))
+        compile-command (compile-command module-path module {})]
+    (testing (str alias-name " & core")
+      (is (= 0 (->> compile-command
+                    (proc/sh {:out *out*
+                              :err *out*})
+                    :exit)))
+      (is (string= expected-output (-> default-output-file proc/sh :out))))))
+
 (defn -main []
   (when (empty? (System/getenv "JANK_SKIP_AOT_CHECK"))
     (proc/sh {:out *out* :err *out*} "jank check-health")

@@ -1,0 +1,67 @@
+(cpp/raw "#include <cstddef>
+
+          namespace jank::cpp::cppinterop::fail_immer_table_non_convertible_key
+          {
+            struct key
+            {
+            };
+
+            struct key_hash
+            {
+              std::size_t operator()(key const &) const
+              {
+                return 0;
+              }
+            };
+
+            struct key_equal
+            {
+              bool operator()(key const &, key const &) const
+              {
+                return true;
+              }
+            };
+
+            struct row
+            {
+              int score{};
+
+              static ::jank::runtime::obj::persistent_vector_ref into_object(row const &r)
+              {
+                ::jank::runtime::detail::native_transient_vector trans;
+                trans.push_back(::jank::runtime::convert<int>::into_object(r.score));
+                return ::jank::runtime::make_box<::jank::runtime::obj::persistent_vector>(
+                  trans.persistent());
+              }
+
+              static row from_object(::jank::runtime::object_ref const o)
+              {
+                auto const v{
+                  ::jank::runtime::try_object<::jank::runtime::obj::persistent_vector>(o)
+                };
+                return { ::jank::runtime::convert<int>::from_object(v->data[0]) };
+              }
+            };
+
+            struct row_key_fn
+            {
+              key operator()(row const &) const
+              {
+                return {};
+              }
+
+              row operator()(row r, key const &) const
+              {
+                return r;
+              }
+            };
+          }")
+
+(let* [_ (cpp/cast #cpp (immer.table
+                          jank.cpp.cppinterop.fail_immer_table_non_convertible_key.row
+                          jank.cpp.cppinterop.fail_immer_table_non_convertible_key.row_key_fn
+                          jank.cpp.cppinterop.fail_immer_table_non_convertible_key.key_hash
+                          jank.cpp.cppinterop.fail_immer_table_non_convertible_key.key_equal
+                          jank.memory_policy)
+                   {})]
+  :success)
