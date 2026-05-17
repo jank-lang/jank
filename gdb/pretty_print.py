@@ -100,11 +100,13 @@ class jank_print_seq:
         except Exception as e:
             yield str(repr(e))
 
-def jank_opaque_box_type(val):
+def jank_box_canonical_type(val):
     address = jank_address(val)
-    canonical_type = gdb.parse_and_eval(f"((jank::runtime::obj::opaque_box*){address})->canonical_type.c_str()")
+    canonical_type = gdb.parse_and_eval(f"jank_box_canonical_type((jank_object_ref){address})")
     match = re.search("0x([0-9a-fA-F]{12}) (.*)", str(canonical_type))
-    type_name = match.group(2)[1:-1].replace('\\"', '"').rstrip()
+    return match.group(2)[1:-1].replace('\\"', '"').rstrip()
+
+def gdb_lookup_type(type_name):
     if type_name.endswith('*'):
         return gdb.lookup_type(type_name[:-1].rstrip()).pointer()
     else:
@@ -118,8 +120,9 @@ class jank_print_opaque_box:
     def children(self):
         try:
             address = jank_address(self.val)
-            box = gdb.parse_and_eval(f"((jank::runtime::obj::opaque_box*){address})")
-            yield "data", box["data"].cast(jank_opaque_box_type(self.val)).dereference()
+            canonical_type = jank_box_canonical_type(self.val)
+            value = gdb.parse_and_eval(f'jank_unbox("{canonical_type}", (jank_object_ref){address})')
+            yield "data", value.cast(gdb_lookup_type(canonical_type)).dereference()
         except Exception as e:
             yield str(repr(e)), self.val["data"]
 

@@ -160,6 +160,7 @@ extern "C"
   jank_object_ref jank_box(char const *type, void const *o);
   void *jank_unbox(char const *type, jank_object_ref o);
   void *jank_unbox_with_source(char const *type, jank_object_ref o, jank_object_ref source);
+  char const *jank_box_canonical_type(jank_object_ref o);
 
   jank_arity_flags jank_function_build_arity_flags(jank_u8 highest_fixed_arity,
                                                    jank_bool is_variadic,

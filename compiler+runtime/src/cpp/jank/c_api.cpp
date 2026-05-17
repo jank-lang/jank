@@ -586,6 +586,13 @@ extern "C"
     return op_box->data;
   }
 
+  char const *jank_box_canonical_type(jank_object_ref o)
+  {
+    object_ref const box_obj(reinterpret_cast<object *>(o));
+    auto const op_box{ try_object<obj::opaque_box>(box_obj) };
+    return op_box->canonical_type.c_str();
+  }
+
   jank_arity_flags jank_function_build_arity_flags(jank_u8 const highest_fixed_arity,
                                                    jank_bool const is_variadic,
                                                    jank_bool const is_variadic_ambiguous)
