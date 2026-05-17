@@ -8,7 +8,7 @@ def jank_address(oref):
 
 def to_py_string(val):
     address = jank_address(val)
-    eval_result = gdb.parse_and_eval(f"((jank::runtime::obj::persistent_string*){address})->data.c_str()")
+    eval_result = gdb.parse_and_eval(f"jank_to_string((jank_object_ref){address})")
     match = re.search("0x([0-9a-fA-F]{12}) (.*)", str(eval_result))
     edn_str = match.group(2)
     return edn_str[1:-1].replace('\\"', '"')

@@ -48,6 +48,7 @@ extern "C"
   jank_object_ref jank_eval(jank_object_ref o);
   jank_object_ref jank_read_string(jank_object_ref s);
   jank_object_ref jank_read_string_c(char const * const s);
+  char const *jank_to_string(jank_object_ref o);
 
   jank_object_ref jank_ns_intern(jank_object_ref sym);
   jank_object_ref jank_ns_intern_c(char const * const sym);
