@@ -382,10 +382,7 @@ namespace jank::ir
     /* Truthy converts a jank object into a bool by calling `jank::runtime::truthy`. */
     struct truthy : instruction
     {
-      truthy(identifier const &name,
-
-             read::source const &location,
-             identifier const &value);
+      truthy(identifier const &name, read::source const &location, identifier const &value);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
