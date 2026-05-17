@@ -97,6 +97,11 @@ jank_glob_install_without_prefix(
   PATTERN "${CMAKE_SOURCE_DIR}/third-party/boost-multiprecision/include/*"
 )
 
+jank_glob_install_without_prefix(
+  INPUT_PREFIX "${CMAKE_SOURCE_DIR}/third-party/boost-process/"
+  PATTERN "${CMAKE_SOURCE_DIR}/third-party/boost-process/include/*"
+)
+
 # This is used for formatting C++ code at runtime.
 install(FILES ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION share)
 
