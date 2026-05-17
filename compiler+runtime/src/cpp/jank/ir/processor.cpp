@@ -857,13 +857,12 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expression_ref const expr, builder &b)
   {
-    auto const location(runtime::object_source(expr->form));
-    if(location != read::source::unknown())
-    {
-      b.location = location;
-    }
+    auto const prev_location(b.location);
+    auto const expr_location(runtime::object_source(expr->form));
+    b.location = expr_location;
     jtl::option<identifier> name;
     visit_expr([&](auto const typed_ex) { name = gen(typed_ex, b); }, expr);
+    b.location = prev_location;
     return name;
   }
 
