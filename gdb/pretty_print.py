@@ -150,6 +150,16 @@ def jank_pretty_print(val):
 
 gdb.pretty_printers.append(jank_pretty_print)
 
+jank_internal_frames = (
+    "jank::analyze",
+    "jank::evaluate",
+    "jank::runtime::apply_to",
+    "jank::runtime::dynamic_call",
+    "jank::runtime::obj",
+    "jank::runtime::oref",
+    "jank::runtime::visit_seqable",
+)
+
 class JankFrameFilter:
     def __init__(self):
         self.name = "jank"
@@ -157,7 +167,12 @@ class JankFrameFilter:
         self.enabled = True
         gdb.frame_filters[self.name] = self
     def filter(self, frame_iter):
-        return (JankFrameDecorator(f) for f in frame_iter)
+        for f in frame_iter:
+            frame = f.inferior_frame()
+            name = frame.name() if frame else None
+            if name and name.startswith(jank_internal_frames):
+                continue
+            yield JankFrameDecorator(f)
 
 class JankFrameDecorator(gdb.FrameDecorator.FrameDecorator):
     def __init__(self, fobj):
