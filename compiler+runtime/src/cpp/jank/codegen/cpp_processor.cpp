@@ -1848,7 +1848,10 @@ namespace jank::codegen
 
       if(location != read::source::unknown())
       {
-        util::format_to(b.body_buffer, "\n#line {} \"{}\"\n", location.start.line, location.file);
+        util::format_to(b.body_buffer,
+                        "\n#line {} \"{}\"\n",
+                        location.start.line,
+                        util::escape(location.file));
       }
     }
     jtl::option<identifier> name;
