@@ -546,6 +546,13 @@ extern "C"
     return make_box<obj::opaque_box>(o, type).erase().raw();
   }
 
+  char const *jank_box_type(jank_object_ref const o)
+  {
+    object_ref const box_obj(reinterpret_cast<object *>(o));
+    auto const op_box{ try_object<obj::opaque_box>(box_obj) };
+    return op_box->canonical_type.c_str();
+  }
+
   void *jank_unbox(char const * const type, jank_object_ref const o)
   {
     object_ref const box_obj(reinterpret_cast<object *>(o));
@@ -942,6 +949,18 @@ extern "C"
     return to_hash(o_obj);
   }
 
+  char const *jank_to_string(jank_object_ref const o)
+  {
+    object_ref const o_obj(reinterpret_cast<object *>(o));
+    return o_obj.to_string().c_str();
+  }
+
+  char const *jank_to_code_string(jank_object_ref const o)
+  {
+    object_ref const o_obj(reinterpret_cast<object *>(o));
+    return o_obj.to_code_string().c_str();
+  }
+
   static i64 to_integer_or_hash(object_ref const o)
   {
     if(is_integer(o))
@@ -984,6 +1003,11 @@ extern "C"
     object_ref const o_obj(reinterpret_cast<object *>(o));
     object_ref const meta_obj(reinterpret_cast<object *>(meta));
     runtime::reset_meta(o_obj, meta_obj);
+  }
+
+  jank_object_ref jank_tag_pointer(void * const ptr)
+  {
+    return runtime::object_ref{ runtime::detail::untagged(ptr) }.raw();
   }
 
   void jank_throw(jank_object_ref const o)

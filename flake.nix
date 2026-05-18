@@ -65,6 +65,7 @@
               root = ./.;
               fileset = lib.fileset.unions [
                 ./.clang-format
+                ./gdb
                 ./compiler+runtime
               ];
             });
