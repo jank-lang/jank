@@ -101,7 +101,7 @@ jank_glob_install_without_prefix(
 install(FILES ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION share)
 
 # This can be used to improve debugging in GDB.
-install(FILES ${CMAKE_SOURCE_DIR}/../gdb/jank.py DESTINATION share/gdb)
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/../gdb DESTINATION share)
 
 # If we've built jank with a local Clang/LLVM, we can't reasonably expect the target system
 # to have our custom Clang. In this case, the default behavior is to install Clang alongside
