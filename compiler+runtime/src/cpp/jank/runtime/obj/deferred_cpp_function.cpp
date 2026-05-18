@@ -61,7 +61,11 @@ namespace jank::runtime::obj
     __rt_ctx->jit_prc.eval_string(declaration_code);
     compiled_fn = __rt_ctx->jit_prc.create_function(arity_flags, base_name, arities);
     compiled_fn->meta = meta;
-    var->bind_root(compiled_fn);
+
+    if(var.is_some())
+    {
+      var->bind_root(compiled_fn);
+    }
 
     /* Clear these just to free up some memory. */
     declaration_code = "";

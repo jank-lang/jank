@@ -26,7 +26,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const b(expect_object<boolean>(&o));
+    auto const b(expect_object<boolean>(runtime::detail::untagged(&o)));
     return data == b->data;
   }
 
@@ -57,9 +57,10 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
+        throw std::runtime_error{ util::format("not comparable: {}",
+                                               runtime::to_string(runtime::detail::untagged(&o))) };
       },
-      &o);
+      runtime::detail::untagged(&o));
   }
 
   i64 boolean::compare(boolean const &o) const
@@ -83,13 +84,13 @@ namespace jank::runtime::obj
   {
     if(o.type == object_type::big_integer)
     {
-      auto const i(expect_object<big_integer>(&o));
+      auto const i(expect_object<big_integer>(runtime::detail::untagged(&o)));
       return data == i->data;
     }
 
     if(o.type == object_type::small_integer)
     {
-      auto const i(expect_object<small_integer>(&o));
+      auto const i(expect_object<small_integer>(runtime::detail::untagged(&o)));
       return data == i->data;
     }
 
@@ -98,7 +99,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const i(expect_object<integer>(&o));
+    auto const i(expect_object<integer>(runtime::detail::untagged(&o)));
     return data == i->data;
   }
 
@@ -128,9 +129,10 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
+        throw std::runtime_error{ util::format("not comparable: {}",
+                                               runtime::to_string(runtime::detail::untagged(&o))) };
       },
-      &o);
+      runtime::detail::untagged(&o));
   }
 
   i64 integer::compare(integer const &o) const
@@ -154,9 +156,15 @@ namespace jank::runtime::obj
   {
   }
 
-  small_integer::small_integer(i64 const d)
+  small_integer::small_integer(i32 const d)
     : object{ obj_type, obj_behaviors }
     , data{ d }
+  {
+  }
+
+  small_integer::small_integer(i64 const d)
+    : object{ obj_type, obj_behaviors }
+    , data{ static_cast<i32>(d) }
   {
   }
 
@@ -164,13 +172,13 @@ namespace jank::runtime::obj
   {
     if(o.type == object_type::big_integer)
     {
-      auto const i(expect_object<big_integer>(&o));
+      auto const i(expect_object<big_integer>(runtime::detail::untagged(&o)));
       return data == i->data;
     }
 
     if(o.type == object_type::integer)
     {
-      auto const i(expect_object<integer>(&o));
+      auto const i(expect_object<integer>(runtime::detail::untagged(&o)));
       return data == i->data;
     }
 
@@ -179,7 +187,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const i(expect_object<small_integer>(&o));
+    auto const i(expect_object<small_integer>(runtime::detail::untagged(&o)));
     return data == i->data;
   }
 
@@ -201,7 +209,7 @@ namespace jank::runtime::obj
 
   uhash small_integer::to_hash() const
   {
-    return hash::integer(data);
+    return hash::integer(static_cast<i64>(data));
   }
 
   i64 small_integer::compare(object const &o) const
@@ -209,9 +217,10 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
+        throw std::runtime_error{ util::format("not comparable: {}",
+                                               runtime::to_string(runtime::detail::untagged(&o))) };
       },
-      &o);
+      runtime::detail::untagged(&o));
   }
 
   i64 small_integer::compare(small_integer const &o) const
@@ -243,14 +252,25 @@ namespace jank::runtime::obj
 
   bool real::equal(object const &o) const
   {
+    if(o.type == object_type::big_decimal)
+    {
+      auto const i(expect_object<big_decimal>(runtime::detail::untagged(&o)));
+      return data == i->data;
+    }
+
+    if(o.type == object_type::small_real)
+    {
+      auto const i(expect_object<small_real>(runtime::detail::untagged(&o)));
+      return data == i->data;
+    }
+
     if(o.type != object_type::real)
     {
       return false;
     }
 
-    auto const r(expect_object<real>(&o));
-    std::hash<f64> const hasher{};
-    return hasher(data) == hasher(r->data);
+    auto const r(expect_object<real>(runtime::detail::untagged(&o)));
+    return data == r->data;
   }
 
   jtl::immutable_string real::to_string() const
@@ -298,9 +318,10 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
+        throw std::runtime_error{ util::format("not comparable: {}",
+                                               runtime::to_string(runtime::detail::untagged(&o))) };
       },
-      &o);
+      runtime::detail::untagged(&o));
   }
 
   i64 real::compare(real const &o) const
@@ -314,6 +335,107 @@ namespace jank::runtime::obj
   }
 
   f64 real::to_real() const
+  {
+    return data;
+  }
+
+  /***** small_real *****/
+  small_real::small_real()
+    : object{ obj_type, obj_behaviors }
+  {
+  }
+
+  small_real::small_real(f64 const d)
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
+  {
+  }
+
+  bool small_real::equal(object const &o) const
+  {
+    if(o.type == object_type::big_decimal)
+    {
+      auto const i(expect_object<big_decimal>(runtime::detail::untagged(&o)));
+      return data == i->data;
+    }
+
+    if(o.type == object_type::real)
+    {
+      auto const i(expect_object<real>(runtime::detail::untagged(&o)));
+      return data == i->data;
+    }
+
+    if(o.type != object_type::small_real)
+    {
+      return false;
+    }
+
+    auto const r(expect_object<small_real>(runtime::detail::untagged(&o)));
+    return data == r->data;
+  }
+
+  jtl::immutable_string small_real::to_string() const
+  {
+    jtl::string_builder sb;
+    to_string(sb);
+    return sb.release();
+  }
+
+  void small_real::to_string(jtl::string_builder &buff) const
+  {
+    if(std::isinf(data))
+    {
+      if(data < 0)
+      {
+        buff("##-Inf");
+      }
+      else
+      {
+        buff("##Inf");
+      }
+    }
+    else if(std::isnan(data))
+    {
+      buff("##NaN");
+    }
+    else
+    {
+      buff(data);
+    }
+  }
+
+  jtl::immutable_string small_real::to_code_string() const
+  {
+    return to_string();
+  }
+
+  uhash small_real::to_hash() const
+  {
+    return hash::real(data);
+  }
+
+  i64 small_real::compare(object const &o) const
+  {
+    return visit_number_like(
+      [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
+      [&]() -> i64 {
+        throw std::runtime_error{ util::format("not comparable: {}",
+                                               runtime::to_string(runtime::detail::untagged(&o))) };
+      },
+      runtime::detail::untagged(&o));
+  }
+
+  i64 small_real::compare(small_real const &o) const
+  {
+    return (o.data < data) - (data < o.data);
+  }
+
+  i64 small_real::to_integer() const
+  {
+    return static_cast<i64>(data);
+  }
+
+  f64 small_real::to_real() const
   {
     return data;
   }

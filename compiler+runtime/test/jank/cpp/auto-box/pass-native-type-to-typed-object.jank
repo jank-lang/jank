@@ -1,6 +1,6 @@
 (cpp/raw "namespace jank::cpp::auto_box::pass_native_type_to_typed_object
           {
-            runtime::obj::real_ref foo(runtime::obj::real_ref const o)
+            runtime::obj::small_real_ref foo(runtime::obj::small_real_ref const o)
             { return o; }
           }")
 (let* [f (cpp/jank.cpp.auto_box.pass_native_type_to_typed_object.foo (cpp/float 555.0))]

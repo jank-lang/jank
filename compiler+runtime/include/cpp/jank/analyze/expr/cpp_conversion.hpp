@@ -39,6 +39,7 @@ namespace jank::analyze::expr
     cpp_conversion(expression_position position,
                    local_frame_ptr frame,
                    bool needs_box,
+                   runtime::object_ref form,
                    jtl::ptr<void> type,
                    jtl::ptr<void> conversion_type,
                    conversion_policy policy,

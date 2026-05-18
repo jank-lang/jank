@@ -11,7 +11,7 @@ namespace jank::analyze::expr
                    bool const needs_box,
                    runtime::obj::symbol_ref const qualified_name,
                    runtime::var_ref const var)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, qualified_name }
     , qualified_name{ qualified_name }
     , var{ var }
   {

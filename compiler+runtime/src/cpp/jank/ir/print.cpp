@@ -1,3 +1,5 @@
+#include <llvm/Support/Casting.h>
+
 #include <jank/ir/print.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/analyze/cpp_util.hpp>
@@ -223,7 +225,7 @@ namespace jank::ir
     util::format_to(sb,
                     "{:name {} :op :var-deref :var {} :type \"{}\"}",
                     name,
-                    var,
+                    qualified_var,
                     get_qualified_type_name(type));
   }
 
@@ -232,7 +234,7 @@ namespace jank::ir
     util::format_to(sb,
                     "{:name {} :op :var-ref :var {} :type \"{}\"}",
                     name,
-                    var,
+                    qualified_var,
                     get_qualified_type_name(type));
   }
 
@@ -494,7 +496,25 @@ namespace jank::ir
 
   void inst::cpp_call::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb, "{:name {} :op :cpp/call :value {} :args [", name, value.unwrap_or("nil"));
+    util::format_to(sb, "{:name {} :op :cpp/call :value ", name);
+    if(value.is_some())
+    {
+      util::format_to(sb, "{}", value.unwrap());
+    }
+    else
+    {
+      auto const cpp_value{ dynamic_cast<analyze::expr::cpp_value *>(expr->source_expr.data) };
+      if(cpp_value && cpp_value->scope)
+      {
+        util::format_to(sb, "\"{}\"", analyze::cpp_util::get_qualified_name(cpp_value->scope));
+      }
+      else
+      {
+        util::format_to(sb, "nil");
+      }
+    }
+
+    util::format_to(sb, " :args [");
     bool needs_space{};
     for(auto const &arg : args)
     {
@@ -664,7 +684,7 @@ namespace jank::ir
           print_indent(sb, indent);
         }
         needs_indent = true;
-        util::format_to(sb, "{} {}", v.first, v.second.qualified_var);
+        util::format_to(sb, "{} {}", v.first, v.second.name);
       }
     }
     util::format_to(sb, "}\n");
@@ -681,7 +701,7 @@ namespace jank::ir
           print_indent(sb, indent);
         }
         needs_indent = true;
-        util::format_to(sb, "{} {}", c.first, c.second.to_code_string());
+        util::format_to(sb, "{} {}", c.first.to_code_string(), c.second);
       }
     }
     util::format_to(sb, "}\n");

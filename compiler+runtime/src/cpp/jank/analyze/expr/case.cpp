@@ -9,13 +9,14 @@ namespace jank::analyze::expr
   case_::case_(expression_position const position,
                local_frame_ptr const frame,
                bool const needs_box,
+               object_ref const form,
                expression_ref const value_expr,
                i64 const shift,
                i64 const mask,
                expression_ref const default_expr,
                native_vector<i64> &&keys,
                native_vector<expression_ref> &&exprs)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , value_expr{ value_expr }
     , shift{ shift }
     , mask{ mask }

@@ -41,8 +41,8 @@ namespace jank::hash
   u32 visit(runtime::oref<runtime::object> const o);
   u32 visit(char const ch);
 
-  u32 ordered(runtime::object const * const sequence);
-  u32 unordered(runtime::object const * const sequence);
+  u32 ordered(runtime::oref<runtime::object> const sequence);
+  u32 unordered(runtime::oref<runtime::object> const sequence);
 
   template <typename It>
   u32 ordered(It const &begin, It const &end)

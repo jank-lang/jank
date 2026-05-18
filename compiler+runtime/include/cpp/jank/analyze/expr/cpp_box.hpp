@@ -19,6 +19,7 @@ namespace jank::analyze::expr
     cpp_box(expression_position position,
             local_frame_ptr frame,
             bool needs_box,
+            runtime::object_ref form,
             expression_ref value_expr,
             read::source const &source);
 

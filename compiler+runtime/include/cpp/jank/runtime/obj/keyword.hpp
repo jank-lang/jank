@@ -81,7 +81,7 @@ namespace std
     bool operator()(jank::runtime::obj::keyword_ref const lhs,
                     jank::runtime::obj::keyword_ref const rhs) const noexcept
     {
-      return lhs.data == rhs.data;
+      return lhs.raw() == rhs.raw();
     }
   };
 }

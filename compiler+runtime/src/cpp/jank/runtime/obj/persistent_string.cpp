@@ -33,7 +33,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const s(expect_object<persistent_string>(&o));
+    auto const s(expect_object<persistent_string>(runtime::detail::untagged(&o)));
     return data == s->data;
   }
 
@@ -60,7 +60,7 @@ namespace jank::runtime::obj
 
   i64 persistent_string::compare(object const &o) const
   {
-    return compare(*try_object<persistent_string>(&o));
+    return compare(*try_object<persistent_string>(runtime::detail::untagged(&o)));
   }
 
   i64 persistent_string::compare(persistent_string const &s) const
@@ -187,6 +187,6 @@ namespace jank::runtime::obj
     {
       return {};
     }
-    return make_box<persistent_string_sequence>(const_cast<persistent_string *>(this));
+    return make_box<persistent_string_sequence>(runtime::detail::untagged(this));
   }
 }

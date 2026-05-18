@@ -25,7 +25,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const typed_o{ expect_object<obj::reader_conditional>(&o) };
+    auto const typed_o{ expect_object<obj::reader_conditional>(runtime::detail::untagged(&o)) };
     return runtime::equal(splicing, typed_o->splicing) && runtime::equal(form, typed_o->form);
   }
 

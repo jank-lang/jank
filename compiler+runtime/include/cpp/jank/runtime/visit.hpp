@@ -75,7 +75,7 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_object(F const &fn, oref<T const> const not_erased, Args &&...args)
   {
-    return fn(const_cast<T *>(not_erased.data), std::forward<Args>(args)...);
+    return fn(const_cast<T *>(not_erased.raw()), std::forward<Args>(args)...);
   }
 
   template <typename F, typename... Args>
@@ -86,9 +86,13 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_object(F const &fn, object_ref const erased, Args &&...args)
   {
-    if(detail::is_small_int(erased.data))
+    if(detail::is_small_int(erased.raw()))
     {
-      return fn(obj::small_integer_ref{ erased.data }, std::forward<Args>(args)...);
+      return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
+    }
+    if(detail::is_small_real(erased.raw()))
+    {
+      return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
     }
 
     switch(erased.get_type())
@@ -107,6 +111,8 @@ namespace jank::runtime
         return fn(expect_object<obj::big_decimal>(erased), std::forward<Args>(args)...);
       case object_type::real:
         return fn(expect_object<obj::real>(erased), std::forward<Args>(args)...);
+      case object_type::small_real:
+        return fn(expect_object<obj::small_real>(erased), std::forward<Args>(args)...);
       case object_type::persistent_string:
         return fn(expect_object<obj::persistent_string>(erased), std::forward<Args>(args)...);
       case object_type::keyword:
@@ -246,13 +252,6 @@ namespace jank::runtime
   {
     if(erased.get_type() == T::obj_type)
     {
-      if constexpr(jtl::is_same<T, obj::integer>)
-      {
-        if(detail::is_small_int(erased.data))
-        {
-          return fn(obj::small_integer_ref{ erased.data }, std::forward<Args>(args)...);
-        }
-      }
       return fn(expect_object<T>(erased), std::forward<Args>(args)...);
     }
     else
@@ -430,9 +429,13 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto visit_number_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
-    if(detail::is_small_int(erased.data))
+    if(detail::is_small_int(erased.raw()))
     {
-      return fn(obj::small_integer_ref{ erased.data }, std::forward<Args>(args)...);
+      return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
+    }
+    if(detail::is_small_real(erased.raw()))
+    {
+      return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
     }
 
 #pragma clang diagnostic push
@@ -449,6 +452,8 @@ namespace jank::runtime
         return fn(expect_object<obj::big_decimal>(erased), std::forward<Args>(args)...);
       case object_type::real:
         return fn(expect_object<obj::real>(erased), std::forward<Args>(args)...);
+      case object_type::small_real:
+        return fn(expect_object<obj::small_real>(erased), std::forward<Args>(args)...);
       case object_type::ratio:
         return fn(expect_object<obj::ratio>(erased), std::forward<Args>(args)...);
       default:

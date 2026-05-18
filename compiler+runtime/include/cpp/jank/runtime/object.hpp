@@ -17,6 +17,7 @@ namespace jank::runtime
     big_integer,
     big_decimal,
     real,
+    small_real,
     ratio,
 
     persistent_string,
@@ -116,6 +117,8 @@ namespace jank::runtime
         return "big_decimal";
       case object_type::real:
         return "real";
+      case object_type::small_real:
+        return "small_real";
       case object_type::ratio:
         return "ratio";
 

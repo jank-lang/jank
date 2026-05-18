@@ -8,9 +8,10 @@ namespace jank::analyze::expr
   map::map(expression_position const position,
            local_frame_ptr const frame,
            bool const needs_box,
+           object_ref const form,
            native_vector<std::pair<expression_ref, expression_ref>> &&data_exprs,
            runtime::object_ref const meta)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , data_exprs{ std::move(data_exprs) }
     , meta{ meta }
   {

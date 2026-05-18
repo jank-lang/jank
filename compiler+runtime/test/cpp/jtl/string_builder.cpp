@@ -93,9 +93,9 @@ namespace jtl
     {
       string_builder sb;
       sb(INFINITY);
-      CHECK_EQ(3, sb.pos);
+      CHECK_EQ(8, sb.pos);
       CHECK_EQ(initial_capacity, sb.capacity);
-      CHECK_EQ("inf", sb.view());
+      CHECK_EQ("INFINITY", sb.view());
     }
 
     TEST_CASE("nan")
@@ -104,7 +104,7 @@ namespace jtl
       sb(NAN);
       CHECK_EQ(3, sb.pos);
       CHECK_EQ(initial_capacity, sb.capacity);
-      CHECK_EQ("nan", sb.view());
+      CHECK_EQ("NAN", sb.view());
     }
 
     TEST_CASE("char32_t")

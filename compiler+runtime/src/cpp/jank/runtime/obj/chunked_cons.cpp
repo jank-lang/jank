@@ -32,7 +32,7 @@ namespace jank::runtime::obj
 
   chunked_cons_ref chunked_cons::seq() const
   {
-    return const_cast<chunked_cons *>(this);
+    return runtime::detail::untagged(this);
   }
 
   chunked_cons_ref chunked_cons::fresh_seq() const
@@ -118,13 +118,13 @@ namespace jank::runtime::obj
           if(1 < typed_head->count())
           {
             head = typed_head->chunk_next();
-            return this;
+            return runtime::detail::untagged(this);
           }
-          return next_in_place_non_chunked(this);
+          return next_in_place_non_chunked(runtime::detail::untagged(this));
         }
         else
         {
-          return next_in_place_non_chunked(this);
+          return next_in_place_non_chunked(runtime::detail::untagged(this));
         }
       },
       head);
@@ -157,7 +157,7 @@ namespace jank::runtime::obj
 
   bool chunked_cons::equal(object const &o) const
   {
-    return runtime::sequence_equal(this, &o);
+    return runtime::sequence_equal(runtime::detail::untagged(this), runtime::detail::untagged(&o));
   }
 
   void chunked_cons::to_string(jtl::string_builder &buff) const
@@ -177,12 +177,12 @@ namespace jank::runtime::obj
 
   uhash chunked_cons::to_hash() const
   {
-    return hash::ordered(this);
+    return hash::ordered(runtime::detail::untagged(this));
   }
 
   cons_ref chunked_cons::conj(object_ref const head) const
   {
-    return make_box<cons>(head, this);
+    return make_box<cons>(head, runtime::detail::untagged(this));
   }
 
   chunked_cons_ref chunked_cons::with_meta(object_ref const m) const

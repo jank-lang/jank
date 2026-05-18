@@ -8,9 +8,10 @@ namespace jank::analyze::expr
   def::def(expression_position const position,
            local_frame_ptr const frame,
            bool const needs_box,
+           object_ref const form,
            runtime::obj::symbol_ref const name,
            jtl::option<expression_ref> const &value)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , name{ name }
     , value{ value }
   {

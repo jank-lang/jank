@@ -19,7 +19,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const b{ expect_object<opaque_box>(&o) };
+    auto const b{ expect_object<opaque_box>(runtime::detail::untagged(&o)) };
     return b->data == data;
   }
 

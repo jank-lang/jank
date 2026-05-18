@@ -631,6 +631,8 @@ namespace jank::read::parse
       return meta_result;
     }
 
+    auto const meta{ meta_result.expect_ok().unwrap().ptr };
+
     auto target_val_result(next());
 
     if(target_val_result.is_err())
@@ -648,9 +650,7 @@ namespace jank::read::parse
         using T = typename jtl::decay_t<decltype(typed_val)>::value_type;
         if constexpr(behavior::metadatable<T>)
         {
-          return object_source_info{ typed_val->with_meta(
-                                       merge(typed_val->get_meta(),
-                                             meta_result.expect_ok().unwrap().ptr)),
+          return object_source_info{ typed_val->with_meta(merge(typed_val->get_meta(), meta)),
                                      start_token,
                                      latest_token };
         }
@@ -1089,8 +1089,9 @@ namespace jank::read::parse
     else
     {
       return error::parse_invalid_reader_symbolic_value(
-        "This reader tag is not supported. '#uuid', '#inst' and '#cpp' are the only default tags "
-        "currently supported.",
+        util::format("This '{}' reader tag is not supported. '#uuid', '#inst' and '#cpp' are the "
+                     "only currently recognized tags.",
+                     sym->to_code_string()),
         { start_token.start, sym_end.end });
     }
   }
@@ -1852,7 +1853,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::integer>(std::get<i64>(token.data)), token, token };
+    return object_source_info{ make_box(std::get<i64>(token.data)), token, token };
   }
 
   processor::object_result processor::parse_big_integer()
@@ -1901,7 +1902,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::real>(std::get<f64>(token.data)), token, token };
+    return object_source_info{ make_box(std::get<f64>(token.data)), token, token };
   }
 
   processor::object_result processor::parse_string()

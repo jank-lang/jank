@@ -4,6 +4,7 @@
 
 namespace jank::runtime
 {
+  /* TODO: Remove. */
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
@@ -22,7 +23,7 @@ namespace jank::runtime
     {
       return {};
     }
-    return static_cast<T *>(o.data);
+    return static_cast<T *>(o.ptr());
   }
 
   template <typename T>
@@ -40,8 +41,13 @@ namespace jank::runtime
       sb(")");
       throw std::runtime_error{ sb.str() };
     }
-    return static_cast<T *>(o.data);
+    return static_cast<T *>(o.ptr());
   }
+
+  template <>
+  obj::small_integer_ref try_object<obj::small_integer>(object_ref const o);
+  template <>
+  obj::small_real_ref try_object<obj::small_real>(object_ref const o);
 
   /* This is dangerous. You probably don't want it. Just use `try_object` or `visit_object`.
    * However, if you're absolutely certain you know the type of an erased object, I guess
@@ -59,8 +65,16 @@ namespace jank::runtime
     }
     jank_debug_assert(o.get_type() == T::obj_type);
 
-    return static_cast<T *>(o.data);
+    return static_cast<T *>(o.ptr());
   }
+
+  /* TODO: Inline once we have LLVM 23. */
+  template <>
+  obj::small_integer_ref expect_object<obj::small_integer>(object_ref const o);
+
+  /* TODO: Inline once we have LLVM 23. */
+  template <>
+  obj::small_real_ref expect_object<obj::small_real>(object_ref const o);
 
   template <typename T>
   requires behavior::object_like<T>
@@ -76,4 +90,8 @@ namespace jank::runtime
   /* TODO: Inline once we have LLVM 23. */
   template <>
   obj::small_integer_ref expect_object<obj::small_integer>(object const * const o);
+
+  /* TODO: Inline once we have LLVM 23. */
+  template <>
+  obj::small_real_ref expect_object<obj::small_real>(object const * const o);
 }

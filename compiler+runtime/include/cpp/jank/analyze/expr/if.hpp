@@ -15,6 +15,7 @@ namespace jank::analyze::expr
     if_(expression_position position,
         local_frame_ptr frame,
         bool needs_box,
+        runtime::object_ref form,
         expression_ref condition,
         expression_ref then,
         jtl::option<expression_ref> const &else_);

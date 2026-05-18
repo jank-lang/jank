@@ -85,7 +85,7 @@ endif()
 set(
   jank_aot_compiler_flags
   -Wall -Wextra -Wpedantic
-  -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
+  -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor -Wno-float-equal
   -Wold-style-cast -Wno-gnu-case-range -Wno-c99-designator -Wno-c2y-extensions
   -Wno-gnu-conditional-omitted-operand
   -Wno-implicit-fallthrough
@@ -106,7 +106,7 @@ set(
   -std=gnu++20
   # https://groups.google.com/g/llvm-dev/c/W-OweiAjDcU?pli=1
   -femulated-tls
-  -DGC_THREADS
+  -DGC_THREADS -DPOINTER_MASK=0x0000FFFFFFFFFFFF
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
   -DCPPINTEROP_USE_REPL
   -DFOLLY_HAVE_JEMALLOC=0 -DFOLLY_HAVE_TCMALLOC=0 -DFOLLY_ASSUME_NO_JEMALLOC=1 -DFOLLY_ASSUME_NO_TCMALLOC=1
@@ -550,7 +550,6 @@ add_library(
   src/cpp/jank/runtime/core/equal.cpp
   src/cpp/jank/runtime/core/to_string.cpp
   src/cpp/jank/runtime/core/seq.cpp
-  src/cpp/jank/runtime/core/truthy.cpp
   src/cpp/jank/runtime/core/munge.cpp
   src/cpp/jank/runtime/core/math.cpp
   src/cpp/jank/runtime/core/meta.cpp

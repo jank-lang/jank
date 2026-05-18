@@ -70,7 +70,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const s(expect_object<inst>(&o));
+    auto const s(expect_object<inst>(runtime::detail::untagged(&o)));
     return s->value == value;
   }
 

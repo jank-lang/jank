@@ -29,7 +29,7 @@ jank::runtime::obj::integer_ref _jank_int(jtl::i64 const i)
   return jank::runtime::make_box<jank::runtime::obj::integer>(i);
 }
 
-jank::runtime::obj::small_integer_ref _jank_small_int(jtl::i64 const i)
+jank::runtime::obj::small_integer_ref _jank_small_int(jtl::i32 const i)
 {
   return i;
 }
@@ -37,6 +37,11 @@ jank::runtime::obj::small_integer_ref _jank_small_int(jtl::i64 const i)
 jank::runtime::obj::real_ref _jank_real(jtl::f64 const r)
 {
   return jank::runtime::make_box<jank::runtime::obj::real>(r);
+}
+
+jank::runtime::obj::small_real_ref _jank_small_real(jtl::f64 const r)
+{
+  return r;
 }
 
 jank::runtime::obj::symbol_ref
@@ -61,7 +66,7 @@ _jank_closure(jank::runtime::callable_arity_flags const flags, void * const ctx)
   return jank::runtime::make_box<jank::runtime::obj::jit_closure>(flags, ctx);
 }
 
-jank::runtime::object_ref _jank_read(char const *edn)
+jank::runtime::object_ref _jank_eval_str(char const *edn)
 {
-  return jank::runtime::__rt_ctx->forcefully_read_string(edn);
+  return jank::runtime::__rt_ctx->eval(jank::runtime::__rt_ctx->forcefully_read_string(edn));
 }

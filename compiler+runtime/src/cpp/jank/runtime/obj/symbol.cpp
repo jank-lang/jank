@@ -74,7 +74,7 @@ namespace jank::runtime::obj
       return false;
     }
 
-    auto const s(expect_object<symbol>(&o));
+    auto const s(expect_object<symbol>(runtime::detail::untagged(&o)));
     return ns == s->ns && name == s->name;
   }
 
@@ -85,7 +85,8 @@ namespace jank::runtime::obj
 
   i64 symbol::compare(object const &o) const
   {
-    return visit_type<symbol>([this](auto const typed_o) { return compare(*typed_o); }, &o);
+    return visit_type<symbol>([this](auto const typed_o) { return compare(*typed_o); },
+                              runtime::detail::untagged(&o));
   }
 
   i64 symbol::compare(symbol const &s) const
