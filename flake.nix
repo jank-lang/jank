@@ -95,7 +95,6 @@
               ]);
 
             checkInputs = with pkgs; [
-              doctest
               glibcLocales
             ];
 
@@ -180,9 +179,6 @@
             gdb
             clangbuildanalyzer
             openjdk
-
-            ## Dev libs.
-            doctest
 
             ## Book.
             mdbook

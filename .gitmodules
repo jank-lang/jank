@@ -31,3 +31,6 @@
 [submodule "compiler+runtime/third-party/zip"]
 	path = compiler+runtime/third-party/zip
 	url = https://github.com/jank-lang/zip.git
+[submodule "compiler+runtime/third-party/doctest"]
+	path = compiler+runtime/third-party/doctest
+	url = https://github.com/jank-lang/doctest.git

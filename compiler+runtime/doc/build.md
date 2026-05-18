@@ -10,13 +10,13 @@ compile it from source. See the section on compiling Clang/LLVM below.
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libbz2-dev doctest-dev gcc g++ libboost-all-dev
+sudo apt-get install -y curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libbz2-dev gcc g++ libboost-all-dev
 ```
 
 For Arch:
 
 ```bash
-sudo pacman -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr doctest libxml2 libedit
+sudo pacman -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr libxml2 libedit
 ```
 
 For Nix:
@@ -33,7 +33,7 @@ This will automatically compile Clang/LLVM, so you can skip directly to compilin
 For macOS:
 
 ```bash
-brew install curl git git-lfs entr openssl double-conversion pkg-config ninja python cmake gnupg zlib doctest boost
+brew install curl git git-lfs entr openssl double-conversion pkg-config ninja python cmake gnupg zlib boost
 
 # Ensure you have this set up in your shell.
 export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)
@@ -51,7 +51,7 @@ Building is supported via [MSYS2](https://www.msys2.org/) using the **CLANG64** 
 Install MSYS2, open the **CLANG64** shell, and install dependencies:
 
 ```bash
-pacman -S mingw-w64-clang-x86_64-git-lfs mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-doctest mingw-w64-clang-x86_64-libzip mingw-w64-clang-x86_64-boost
+pacman -S mingw-w64-clang-x86_64-git-lfs mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-libzip mingw-w64-clang-x86_64-boost
 ```
 > Note: The CLANG64 shell is required, all commands should be run within it.
 

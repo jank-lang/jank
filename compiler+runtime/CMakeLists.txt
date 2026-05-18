@@ -498,6 +498,10 @@ include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
 
+if(jank_test)
+  include(cmake/dependency/doctest.cmake)
+endif()
+
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 
 # CMake changed its mechanism for finding Boost. The old behavior uses
@@ -1001,7 +1005,6 @@ if(jank_test)
   target_link_directories(jank_test_exe PRIVATE "$<TARGET_PROPERTY:jank_lib,LINK_DIRECTORIES>")
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags} -L ${CMAKE_BINARY_DIR})
 
-  find_package(doctest REQUIRED)
   target_link_libraries(
     jank_test_exe PUBLIC
     ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-standalone-phase-1.a ${jank_link_whole_end}
