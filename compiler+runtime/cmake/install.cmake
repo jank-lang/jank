@@ -100,6 +100,9 @@ jank_glob_install_without_prefix(
 # This is used for formatting C++ code at runtime.
 install(FILES ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION share)
 
+# This can be used to improve debugging in GDB.
+install(FILES ${CMAKE_SOURCE_DIR}/../gdb/jank.py DESTINATION share/gdb)
+
 # If we've built jank with a local Clang/LLVM, we can't reasonably expect the target system
 # to have our custom Clang. In this case, the default behavior is to install Clang alongside
 # jank, within jank's resource dir. We copy Clang as well as Clang's resource dir and jank

@@ -8,7 +8,7 @@ def jank_address(oref):
 
 def to_py_string(val):
     address = jank_address(val)
-    eval_result = gdb.parse_and_eval(f"jank_to_string((jank_object_ref){address})")
+    eval_result = gdb.parse_and_eval(f"jank_to_code_string((jank_object_ref){address})")
     match = re.search("0x([0-9a-fA-F]{12}) (.*)", str(eval_result))
     edn_str = match.group(2)
     return edn_str[1:-1].replace('\\"', '"')
@@ -100,9 +100,9 @@ class jank_print_seq:
         except Exception as e:
             yield str(repr(e))
 
-def jank_box_canonical_type(val):
+def jank_box_type(val):
     address = jank_address(val)
-    canonical_type = gdb.parse_and_eval(f"jank_box_canonical_type((jank_object_ref){address})")
+    canonical_type = gdb.parse_and_eval(f"jank_box_type((jank_object_ref){address})")
     match = re.search("0x([0-9a-fA-F]{12}) (.*)", str(canonical_type))
     return match.group(2)[1:-1].replace('\\"', '"').rstrip()
 
@@ -120,7 +120,7 @@ class jank_print_opaque_box:
     def children(self):
         try:
             address = jank_address(self.val)
-            canonical_type = jank_box_canonical_type(self.val)
+            canonical_type = jank_box_type(self.val)
             value = gdb.parse_and_eval(f'jank_unbox("{canonical_type}", (jank_object_ref){address})')
             yield "data", value.cast(gdb_lookup_type(canonical_type)).dereference()
         except Exception as e:

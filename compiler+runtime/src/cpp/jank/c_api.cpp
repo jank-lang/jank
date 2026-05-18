@@ -71,12 +71,6 @@ extern "C"
     return __rt_ctx->read_string(s_obj->data).erase().data;
   }
 
-  char const *jank_to_string(jank_object_ref const o)
-  {
-    auto const str(try_object<obj::persistent_string>(reinterpret_cast<object *>(o)));
-    return str->data.c_str();
-  }
-
   jank_object_ref jank_read_string_c(char const * const s)
   {
     return __rt_ctx->read_string(s).erase().data;
@@ -951,6 +945,12 @@ extern "C"
   {
     object_ref const o_obj(reinterpret_cast<object *>(o));
     return to_hash(o_obj);
+  }
+
+  char const *jank_to_string(jank_object_ref const o)
+  {
+    object_ref const o_obj(reinterpret_cast<object *>(o));
+    return o_obj.to_string().c_str();
   }
 
   char const *jank_to_code_string(jank_object_ref const o)

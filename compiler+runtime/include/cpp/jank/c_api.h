@@ -48,7 +48,6 @@ extern "C"
   jank_object_ref jank_eval(jank_object_ref o);
   jank_object_ref jank_read_string(jank_object_ref s);
   jank_object_ref jank_read_string_c(char const * const s);
-  char const *jank_to_string(jank_object_ref o);
 
   jank_object_ref jank_ns_intern(jank_object_ref sym);
   jank_object_ref jank_ns_intern_c(char const * const sym);
@@ -316,6 +315,7 @@ extern "C"
   jank_bool jank_truthy(jank_object_ref o);
   jank_bool jank_equal(jank_object_ref l, jank_object_ref r);
   jank_uhash jank_to_hash(jank_object_ref o);
+  char const *jank_to_string(jank_object_ref o);
   char const *jank_to_code_string(jank_object_ref o);
   jank_i64 jank_to_integer(jank_object_ref o);
   jank_i64 jank_shift_mask_case_integer(jank_object_ref o, jank_i64 shift, jank_i64 mask);
