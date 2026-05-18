@@ -15,6 +15,7 @@ namespace jank::analyze::expr
     case_(expression_position position,
           local_frame_ptr frame,
           bool needs_box,
+          runtime::object_ref form,
           expression_ref value_expr,
           i64 shift,
           i64 mask,

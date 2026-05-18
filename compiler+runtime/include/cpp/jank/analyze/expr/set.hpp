@@ -13,6 +13,7 @@ namespace jank::analyze::expr
     set(expression_position position,
         local_frame_ptr frame,
         bool needs_box,
+        runtime::object_ref form,
         native_vector<expression_ref> &&data_exprs,
         runtime::object_ref const meta);
 

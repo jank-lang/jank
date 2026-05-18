@@ -58,6 +58,7 @@ namespace jank::analyze::expr
     function(expression_position position,
              local_frame_ptr frame,
              bool needs_box,
+             runtime::object_ref form,
              jtl::immutable_string const &name,
              jtl::immutable_string const &unique_name,
              native_vector<function_arity> &&arities,

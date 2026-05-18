@@ -8,8 +8,9 @@ namespace jank::analyze::expr
   throw_::throw_(expression_position const position,
                  local_frame_ptr const frame,
                  bool const needs_box,
+                 object_ref const form,
                  expression_ref const value)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , value{ value }
   {
   }

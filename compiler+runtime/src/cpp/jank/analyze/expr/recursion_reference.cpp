@@ -8,8 +8,9 @@ namespace jank::analyze::expr
   recursion_reference::recursion_reference(expression_position const position,
                                            local_frame_ptr const frame,
                                            bool const needs_box,
+                                           object_ref const form,
                                            function_context_ref const fn_ctx)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , fn_ctx{ fn_ctx }
   {
   }

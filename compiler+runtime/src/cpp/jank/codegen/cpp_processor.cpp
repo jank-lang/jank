@@ -1282,7 +1282,7 @@ namespace jank::codegen
 
   jtl::option<identifier> gen(ir::inst::cpp_from_object_ref const &inst, builder &b)
   {
-    ir::inst::cpp_into_object from{ inst->name, inst->value, inst->expr };
+    ir::inst::cpp_into_object from{ inst->name, inst->location, inst->value, inst->expr };
     return gen(ir::inst::cpp_into_object_ref{ &from }, b);
   }
 
@@ -1842,6 +1842,18 @@ namespace jank::codegen
     jtl::string_builder sb;
     inst->print(sb, 0);
     //util::println("gen {}", sb.release());
+    if(util::cli::opts.debug)
+    {
+      auto const &location{ inst->location };
+
+      if(location != read::source::unknown())
+      {
+        util::format_to(b.body_buffer,
+                        "\n#line {} \"{}\"\n",
+                        location.start.line,
+                        util::escape(location.file));
+      }
+    }
     jtl::option<identifier> name;
     ir::visit_inst([&](auto const typed_inst) { name = gen(typed_inst, b); }, inst);
     return name;

@@ -13,10 +13,11 @@ namespace jank::analyze::expr
   cpp_member_call::cpp_member_call(expression_position const position,
                                    local_frame_ptr const frame,
                                    bool const needs_box,
+                                   object_ref const form,
                                    jtl::ptr<void> const type,
                                    jtl::ptr<void> const fn,
                                    native_vector<expression_ref> &&arg_exprs)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , parent_type{ type }
     , fn{ fn }
     , arg_exprs{ jtl::move(arg_exprs) }

@@ -8,11 +8,12 @@ namespace jank::analyze::expr
   recur::recur(expression_position const position,
                local_frame_ptr const frame,
                bool const needs_box,
+               object_ref const form,
                runtime::obj::persistent_list_ref const args,
                native_vector<expression_ref> &&arg_exprs,
                native_vector<expression_ref> &&op_equal_exprs,
                jtl::option<let_ref> const &loop_target)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , args{ args }
     , arg_exprs{ std::move(arg_exprs) }
     , op_equal_exprs{ std::move(op_equal_exprs) }

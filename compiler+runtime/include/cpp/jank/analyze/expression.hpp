@@ -177,6 +177,11 @@ namespace jank::analyze
                expression_position position,
                local_frame_ptr frame,
                bool needs_box);
+    expression(expression_kind kind,
+               expression_position position,
+               local_frame_ptr frame,
+               bool needs_box,
+               runtime::object_ref form);
     virtual ~expression() = default;
 
     virtual void propagate_position(expression_position const pos);
@@ -188,6 +193,7 @@ namespace jank::analyze
     expression_position position{};
     local_frame_ptr frame;
     bool needs_box{ true };
+    runtime::object_ref form{};
   };
 
   using expression_ref = jtl::ref<expression>;

@@ -10,7 +10,7 @@ namespace jank::analyze::expr
                      bool const needs_box,
                      runtime::obj::symbol_ref const sym,
                      jtl::ptr<void> const type)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, sym }
     , sym{ sym }
     , type{ type }
   {

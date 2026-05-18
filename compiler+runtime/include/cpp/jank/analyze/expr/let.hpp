@@ -30,7 +30,11 @@ namespace jank::analyze::expr
       loop_without_recur
     };
 
-    let(expression_position position, local_frame_ptr frame, bool needs_box, do_ref body);
+    let(expression_position position,
+        local_frame_ptr frame,
+        bool needs_box,
+        runtime::object_ref form,
+        do_ref body);
 
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
