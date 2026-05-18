@@ -150,14 +150,15 @@ def jank_pretty_print(val):
 
 gdb.pretty_printers.append(jank_pretty_print)
 
+# We could filter these, if we want, but they're quite helpful.
 jank_internal_frames = (
-    "jank::analyze",
-    "jank::evaluate",
-    "jank::runtime::apply_to",
-    "jank::runtime::dynamic_call",
-    "jank::runtime::obj",
-    "jank::runtime::oref",
-    "jank::runtime::visit_seqable",
+#    "jank::analyze",
+#    "jank::evaluate",
+#    "jank::runtime::apply_to",
+#    "jank::runtime::dynamic_call",
+#    "jank::runtime::obj",
+#    "jank::runtime::oref",
+#    "jank::runtime::visit_seqable",
 )
 
 class JankFrameFilter:
