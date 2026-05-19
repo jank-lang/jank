@@ -1,0 +1,3 @@
+((fn [o] (cpp/== :foo o)) [])
+((fn [o] (identical? :foo o)) [])
+:success
