@@ -263,13 +263,20 @@ namespace jank::ir
       {
         b.branch_set(recur_shadow, body_res.unwrap());
         b.jump(merge_blk);
-      }
 
-      b.enter_block(merge_blk);
-      for(auto const param : arity.params)
+        b.enter_block(merge_blk);
+        for(auto const param : arity.params)
+        {
+          auto const &name{ runtime::munge(param->get_name()) };
+          b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
+        }
+      }
+      /* If we already have a terminator for the current block, there's no need for our merge
+       * block. */
+      else
       {
-        auto const &name{ runtime::munge(param->get_name()) };
-        b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
+        fn.remove_block(merge_blk);
+        dynamic_cast<inst::loop &>(*fn.blocks[0].instructions.back()).merge_block = none;
       }
     }
     else
