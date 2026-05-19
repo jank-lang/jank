@@ -688,8 +688,8 @@ namespace jank::analyze
                                              form,
                                              macro_expansions);
         }
-        /* Handle assigning to a primitive from a jank object. */
-        else if(op == CppImpl::OP_Equal && cpp_util::is_trait_convertible(obj_type)
+        /* Handle binary ops: <primitive> op <object> */
+        else if(!cpp_util::is_any_object(obj_type) && cpp_util::is_trait_convertible(obj_type)
                 && cpp_util::is_any_object(Cpp::GetNonReferenceType(arg_types[1].m_Type)))
         {
           auto const conversion_res{
@@ -712,8 +712,8 @@ namespace jank::analyze
                                              macro_expansions);
         }
       }
-      /* Handle assigning to a jank object from a primitive. */
-      else if(op == CppImpl::OP_Equal && arg_types.size() == 2
+      /* Handle binary ops: <object> op <primitive> */
+      else if(arg_types.size() == 2 && !cpp_util::is_any_object(arg_types[1].m_Type)
               && cpp_util::is_trait_convertible(arg_types[1].m_Type)
               && cpp_util::is_any_object(Cpp::GetNonReferenceType(obj_type)))
       {

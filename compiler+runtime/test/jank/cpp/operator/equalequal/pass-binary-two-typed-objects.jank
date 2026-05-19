@@ -1,0 +1,6 @@
+(let* [v []
+       m {}]
+  (if (and (cpp/== v v)
+           (cpp/== m m)
+           (= false (cpp/== v m)))
+    :success))
