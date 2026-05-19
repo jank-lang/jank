@@ -253,11 +253,6 @@ namespace jank::runtime::obj
 
   bool real::equal(object const &o) const
   {
-    if(is_nan(this) || is_nan(&o))
-    {
-      return false;
-    }
-
     if(o.type == object_type::big_decimal)
     {
       auto const i(expect_object<big_decimal>(runtime::detail::untagged(&o)));
@@ -359,11 +354,6 @@ namespace jank::runtime::obj
 
   bool small_real::equal(object const &o) const
   {
-    if(is_nan(this) || is_nan(&o))
-    {
-      return false;
-    }
-
     if(o.type == object_type::big_decimal)
     {
       auto const i(expect_object<big_decimal>(runtime::detail::untagged(&o)));
