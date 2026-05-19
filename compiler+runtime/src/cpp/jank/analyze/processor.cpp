@@ -714,7 +714,9 @@ namespace jank::analyze
       }
       /* Handle assigning to a jank object from a primitive. */
       else if(arg_types.size() == 2 && cpp_util::is_trait_convertible(arg_types[1].m_Type)
-              && cpp_util::is_any_object(Cpp::GetNonReferenceType(obj_type)))
+              && cpp_util::is_any_object(Cpp::GetNonReferenceType(obj_type))
+              && !(cpp_util::is_any_object(Cpp::GetNonReferenceType(arg_types[1].m_Type))
+                   && (op == Cpp::OP_EqualEqual || op == Cpp::OP_ExclaimEqual)))
       {
         auto const conversion_res{
           apply_implicit_conversion(arg_exprs[1], arg_types[1].m_Type, obj_type, macro_expansions)
