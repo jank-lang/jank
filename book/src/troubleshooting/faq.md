@@ -72,3 +72,36 @@ However, any C++ interop uses normal C++ idioms, including RAII. For example, if
 you stack allocate a C++ value which has a destructor, jank will ensure that
 destructor runs at the end of the object's scope. Also, you can use `cpp/new`
 and `cpp/delete` or `cpp/malloc` and `cpp/free`, if you so desire.
+
+## Why does jank compile to C++?
+jank is both a Clojure dialect and a C++ dialect, which is unique among most
+programming languages. In order for us to consider jank a C++ dialect, we must
+have exellent interop with C++, such as:
+
+* Including C++ headers
+* Instantiating templates
+* Calling virtual member functions
+* Throwing and catching exceptions
+* Providing the same RAII destructor guarantees as C++
+* In general being able to handle any normal C++ library
+
+If we were to not target C++ for code generation and instead target something
+like LLVM IR directly, we would need to duplicate thousands upon thousands of
+lines of code from Clang in order to properly encode C++ semantics and ABI
+nuances in LLVM IR. We know, since we have done this. It was not worth it.
+Even when it worked, we would need to keep up with Clang as C++ evolved, we
+would need to deal with more portability issues, and, in general, we would need
+to build no only a Clojure compiler but a C++ compiler.
+
+Clang is already a C++ compiler and it's a better C++ compiler than we're going
+to build, so instead we generate C++ and let Clang do what it does best. This
+same some huge benefits:
+
+1. The jank compiler is significantly simpler
+2. It's possible to compile entire jank projects to just `.cpp` files and then
+   feed that into a normal C++ build system. At that point, it's just a C++
+   project
+3. Inspecting the generated code is a breeze
+
+The only real downside is worse compilation performance. This is a trade off we
+accept.
