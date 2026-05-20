@@ -43,9 +43,19 @@ namespace jank::ir
     void remove_block(usize const index);
     usize find_block(identifier const &name) const;
 
+    usize index{};
     jtl::ref<analyze::expr::function_arity> arity;
     identifier name{};
     native_vector<block> blocks{};
+
+    /***** Optimization info. *****/
+    /* This will be empty if we've not done any optimization passes on the function. */
+    native_unordered_map<identifier, identifier> immediate_dominators{};
+    /* Reverse post order for the CFG. */
+    native_deque<identifier> rpo;
+    /* Mapping of block to reverse post order index, which is used as a depth. Lower
+     * values are higher in the graph. */
+    native_unordered_map<identifier, size_t> block_rpo_index;
   };
 
   /* An IR module corresponds to a single compilation, which could mean one top-level

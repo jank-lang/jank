@@ -1,5 +1,7 @@
 #include <jank/ir/processor.hpp>
 #include <jank/ir/print.hpp>
+#include <jank/ir/dominance.hpp>
+#include <jank/ir/opt/hoist_literals.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/to_string.hpp>
@@ -203,7 +205,7 @@ namespace jank::ir
                                   analyze::expr::function_ref const fn_expr,
                                   analyze::expr::function_arity const &arity)
   {
-    auto &fn{ mod.functions.emplace_back(&arity) };
+    auto &fn{ mod.functions.emplace_back(mod.functions.size(), &arity) };
     auto name{ runtime::munge(util::format("{}_{}", fn_expr->unique_name, arity.params.size())) };
     fn.name = name;
     fn.add_block("entry");
@@ -893,6 +895,12 @@ namespace jank::ir
     for(auto const &arity : fn_expr->arities)
     {
       gen_arity(mod, fn_expr, arity);
+    }
+
+    for(auto &fn : mod.functions)
+    {
+      build_dominance(fn);
+      hoist_literals(mod, fn);
     }
 
     jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };

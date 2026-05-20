@@ -37,6 +37,11 @@ namespace jank::ir::inst
 {
   using namespace analyze::cpp_util;
 
+  nop::nop(identifier const &name)
+    : instruction{ instruction_kind::nop, name, Cpp::GetVoidType() }
+  {
+  }
+
   parameter::parameter(identifier const &name,
                        jtl::ptr<void> const type,
                        read::source const &location)

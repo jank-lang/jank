@@ -849,6 +849,12 @@ namespace jank::codegen
     return inst->name;
   }
 
+  jtl::option<identifier> gen(ir::inst::nop_ref const &, builder &b)
+  {
+    b.next_instruction();
+    return none;
+  }
+
   jtl::option<identifier> gen(ir::inst::parameter_ref const &inst, builder &b)
   {
     b.next_instruction();

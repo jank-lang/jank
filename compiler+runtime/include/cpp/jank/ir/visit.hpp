@@ -9,6 +9,8 @@ namespace jank::ir
   {
     switch(i->kind)
     {
+      case instruction_kind::nop:
+        return f(jtl::static_ref_cast<inst::nop>(i), std::forward<Args>(args)...);
       case instruction_kind::parameter:
         return f(jtl::static_ref_cast<inst::parameter>(i), std::forward<Args>(args)...);
       case instruction_kind::capture:

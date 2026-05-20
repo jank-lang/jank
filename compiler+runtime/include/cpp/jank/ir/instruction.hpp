@@ -34,6 +34,7 @@ namespace jank::ir
 
   enum class instruction_kind : u8
   {
+    nop,
     parameter,
     capture,
     literal,
@@ -111,6 +112,15 @@ namespace jank::ir
 
   namespace inst
   {
+    struct nop : instruction
+    {
+      nop(identifier const &name);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+    };
+
+    using nop_ref = jtl::ref<nop>;
+
     struct parameter : instruction
     {
       parameter(identifier const &name, jtl::ptr<void> const type, read::source const &location);
