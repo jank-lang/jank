@@ -48,7 +48,7 @@
     clojure.core-test.count
     ; clojure.core-test.counted-qmark ; TODO: port array-map, TODO: port object-array
     ; clojure.core-test.cycle ; Program hangs.
-    ; clojure.core-test.dec ; TODO: underflow.
+    clojure.core-test.dec
     clojure.core-test.decimal-qmark
     clojure.core-test.denominator
     ; clojure.core-test.derive ; analyze/unresolved-symbol error: Unable to resolve symbol 'String'.
@@ -87,7 +87,7 @@
     clojure.core-test.ident-qmark
     clojure.core-test.identical-qmark
     ; clojure.core-test.ifn-qmark ; TODO: port promise
-    ; clojure.core-test.inc ; overflow untested,
+    clojure.core-test.inc
     ; clojure.core-test.int ; FIXME: Failing tests.
     ; clojure.core-test.int-qmark ; FIXME: Failing tests.
     ; clojure.core-test.integer-qmark ; FIXME: Failing tests.
@@ -101,7 +101,7 @@
     clojure.core-test.keyword-qmark
     clojure.core-test.last
     ; clojure.core-test.list-qmark ; TODO: port array-map, TODO: port object-array
-    ; clojure.core-test.long ; TODO: port long
+    clojure.core-test.long
     clojure.core-test.lt
     clojure.core-test.lt-eq
     clojure.core-test.make-hierarchy
@@ -115,7 +115,7 @@
     ; clojure.core-test.mod ; FIXME: Failing tests.
     clojure.core-test.name
     clojure.core-test.namespace
-    ; clojure.core-test.nan-qmark ; Uncaught exception: not a number: nil, https://github.com/jank-lang/jank/issues/244
+    clojure.core-test.nan-qmark
     ; clojure.core-test.neg-int-qmark ; FIXME: Failing test.
     clojure.core-test.neg-qmark
     clojure.core-test.next
@@ -136,14 +136,14 @@
     clojure.core-test.or
     ; clojure.core-test.parents ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
     clojure.core-test.parse-boolean
-    ; clojure.core-test.parse-double ; libc++abi: terminating due to uncaught exception of type std::invalid_argument: stod: no conversio.
-    ; clojure.core-test.parse-long ; libc++abi: terminating due to uncaught exception of type std::invalid_argument: stoll: no conversion.
+    clojure.core-test.parse-double
+    clojure.core-test.parse-long
     clojure.core-test.parse-uuid
     clojure.core-test.partial
     clojure.core-test.peek
     clojure.core-test.persistent-bang
     ; clojure.core-test.plus ; FIXME: Failing tests.
-    ; clojure.core-test.plus-squote ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.BigInt'.
+    clojure.core-test.plus-squote
     clojure.core-test.pop
     clojure.core-test.pop-bang
     clojure.core-test.pos-int-qmark
@@ -195,7 +195,7 @@
     ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?
     ; clojure.core-test.star ; FIXME: Failing tests.
-    ; clojure.core-test.star-squote ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.BigInt'.
+    clojure.core-test.star-squote
     ; clojure.core-test.str ; FIXME: Failing tests.
     clojure.core-test.string-qmark
     ; clojure.core-test.subs ; FIXME: Failing tests.

@@ -406,9 +406,23 @@ namespace jank::runtime
   {
     return visit_number_like(
       [](auto const typed_l) -> object_ref {
-        auto const ret{ make_box(typed_l->data + 1ll) };
-        object_ref r{ ret };
-        return r;
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(jtl::is_any_same<T, obj::integer, obj::small_integer>)
+        {
+          i64 res{};
+
+          if(__builtin_add_overflow(typed_l->data, 1ll, &res))
+          {
+            throw make_box("Overflow on increment.").erase();
+          }
+
+          return make_box(res);
+        }
+        else
+        {
+          return make_box(typed_l->data + 1ll);
+        }
       },
       l);
   }
@@ -442,7 +456,25 @@ namespace jank::runtime
   object_ref dec(object_ref const l)
   {
     return visit_number_like(
-      [](auto const typed_l) -> object_ref { return make_box(typed_l->data - 1ll).erase(); },
+      [](auto const typed_l) -> object_ref {
+        using T = typename decltype(typed_l)::value_type;
+
+        if constexpr(jtl::is_any_same<T, obj::integer, obj::small_integer>)
+        {
+          i64 res{};
+
+          if(__builtin_sub_overflow(typed_l->data, 1ll, &res))
+          {
+            throw make_box("Underflow on decrement.").erase();
+          }
+
+          return make_box(res);
+        }
+        else
+        {
+          return make_box(typed_l->data - 1ll);
+        }
+      },
       l);
   }
 
@@ -1017,12 +1049,30 @@ namespace jank::runtime
   }
 
   /* TODO: Rename these to match the type name. */
-  i64 parse_long(object_ref const o)
+  object_ref parse_long(object_ref const o)
   {
     auto const typed_o{ dyn_cast<obj::persistent_string>(o) };
     if(typed_o.is_some())
     {
-      return std::stoll(typed_o->data);
+      auto const str_size{ static_cast<size_t>(typed_o->data.size()) };
+      size_t parsed_upto{};
+      i64 parsed_long{};
+
+      try
+      {
+        parsed_long = std::stoll(typed_o->data, &parsed_upto);
+      }
+      catch(...)
+      {
+        return jank_nil;
+      }
+
+      if(parsed_upto != str_size)
+      {
+        return jank_nil;
+      }
+
+      return make_box(parsed_long);
     }
     else
     {
@@ -1031,12 +1081,30 @@ namespace jank::runtime
     }
   }
 
-  f64 parse_double(object_ref const o)
+  object_ref parse_double(object_ref const o)
   {
     auto const typed_o{ dyn_cast<obj::persistent_string>(o) };
     if(typed_o.is_some())
     {
-      return std::stod(typed_o->data);
+      auto const str_size{ static_cast<size_t>(typed_o->data.size()) };
+      size_t parsed_upto{};
+      f64 parsed_double{};
+
+      try
+      {
+        parsed_double = std::stod(typed_o->data, &parsed_upto);
+      }
+      catch(...)
+      {
+        return jank_nil;
+      }
+
+      if(parsed_upto != str_size)
+      {
+        return jank_nil;
+      }
+
+      return make_box(parsed_double);
     }
     else
     {
