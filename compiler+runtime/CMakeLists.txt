@@ -104,6 +104,7 @@ set(
 set(
   jank_common_compiler_flags
   -std=gnu++20
+  -DJANK_VERSION="${jank_version}"
   # https://groups.google.com/g/llvm-dev/c/W-OweiAjDcU?pli=1
   -femulated-tls
   -DGC_THREADS -DPOINTER_MASK=0x0000FFFFFFFFFFFF
@@ -779,7 +780,6 @@ string(REPLACE "\"" "\\\"" jank_jit_compile_flags_str "${jank_jit_compile_flags_
 target_compile_options(
   jank_lib
   PUBLIC
-  -DJANK_VERSION="${jank_version}"
   -DJANK_CLANG_PREFIX="${CLANG_INSTALL_PREFIX}"
   -DJANK_JIT_FLAGS="${jank_jit_compile_flags_str}"
   -DJANK_AOT_FLAGS="${jank_lib_linker_flags_str}"
