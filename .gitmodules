@@ -34,3 +34,6 @@
 [submodule "compiler+runtime/third-party/doctest"]
 	path = compiler+runtime/third-party/doctest
 	url = https://github.com/jank-lang/doctest.git
+[submodule "compiler+runtime/third-party/boost-process"]
+	path = compiler+runtime/third-party/boost-process
+	url = https://github.com/jank-lang/boost-process.git
