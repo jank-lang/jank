@@ -10,7 +10,7 @@
  ^{:author "Chris Houser, Stuart Halloway",
    :doc "Conveniently launch a sub-process providing its stdin and
 collecting its stdout"}
- clojure.jank.shell
+ jank.shell
   (:require [clojure.string :as str])
   (:include
    "boost/process/v1/child.hpp"
@@ -45,7 +45,7 @@ collecting its stdout"}
         [cmd opts] (split-with string? args)]
     [cmd (merge default-opts (apply hash-map opts))]))
 
-(cpp/raw "namespace clojure::jank::shell
+(cpp/raw "namespace jank::shell
 {
   struct result {
     int exit{};
@@ -101,7 +101,7 @@ collecting its stdout"}
   {:added "1.2"}
   [& args]
   (let [[cmd opts] (parse-args args)
-        result (cpp/clojure.jank.shell.sh
+        result (cpp/jank.shell.sh
                 (cpp/cast std.string (str/join " " (map shell-escape cmd)))
                 (cpp/cast std.string (or (:dir opts) "."))
                 (cpp/cast std.string (or (:in opts) ""))
