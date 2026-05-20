@@ -1,6 +1,5 @@
 #include <cmath>
 
-#include <jank/runtime/core/math.hpp>
 #include <jank/runtime/oref.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/visit.hpp>
