@@ -897,14 +897,20 @@ namespace jank::ir
       gen_arity(mod, fn_expr, arity);
     }
 
+    jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
+    if(print_settings == "1")
+    {
+      //util::println("{}\n", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
+      util::println("{}\n", print(mod));
+    }
+
     for(auto &fn : mod.functions)
     {
       build_dominance(fn);
-      hoist_literals(mod, fn);
+      hoist_literals(fn);
     }
 
-    jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
-    if(print_settings == "1")
+    if(print_settings == "2")
     {
       //util::println("{}\n", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
       util::println("{}\n", print(mod));

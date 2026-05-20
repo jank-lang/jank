@@ -109,7 +109,7 @@ namespace jank::ir
         break;
       case instruction_kind::type_erase:
         {
-          auto &i{ static_cast<inst::def &>(*inst.data) };
+          auto &i{ static_cast<inst::type_erase &>(*inst.data) };
           rewrite(i.value, old_name, new_name);
         }
         break;

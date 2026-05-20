@@ -5,6 +5,7 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/ir/instruction.hpp>
+#include <jank/ir/dominance.hpp>
 
 namespace jtl
 {
@@ -50,12 +51,12 @@ namespace jank::ir
 
     /***** Optimization info. *****/
     /* This will be empty if we've not done any optimization passes on the function. */
-    native_unordered_map<identifier, identifier> immediate_dominators{};
+    dominance_map immediate_dominators{};
     /* Reverse post order for the CFG. */
     native_deque<identifier> rpo;
     /* Mapping of block to reverse post order index, which is used as a depth. Lower
      * values are higher in the graph. */
-    native_unordered_map<identifier, size_t> block_rpo_index;
+    rpo_index_map block_rpo_index;
   };
 
   /* An IR module corresponds to a single compilation, which could mean one top-level

@@ -3,7 +3,6 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/ir/processor.hpp>
-#include <jank/ir/builder.hpp>
 #include <jank/ir/rewrite.hpp>
 #include <jank/util/fmt/print.hpp>
 
@@ -11,10 +10,16 @@ namespace jank::ir
 {
   /* Collect all literal instructions in the function, grouped by their value.
    * Returns a map of: literal value to list of (block name, instruction name) */
-  static native_unordered_map<runtime::object_ref, native_vector<std::pair<identifier, identifier>>>
+  static native_unordered_map<runtime::object_ref,
+                              native_vector<std::pair<identifier, identifier>>,
+                              std::hash<runtime::object_ref>,
+                              runtime::very_equal_to_with_meta>
   collect_literals(function const &fn)
   {
-    native_unordered_map<runtime::object_ref, native_vector<std::pair<identifier, identifier>>>
+    native_unordered_map<runtime::object_ref,
+                         native_vector<std::pair<identifier, identifier>>,
+                         std::hash<runtime::object_ref>,
+                         runtime::very_equal_to_with_meta>
       result;
 
     for(auto const &block : fn.blocks)
@@ -33,39 +38,6 @@ namespace jank::ir
     return result;
   }
 
-  /* Given a set of block names, find their lowest common dominator using the
-   * idom map. We fold lcd() over the set, which is correct since LCA is
-   * associative and commutative. */
-  static identifier lcd_of_blocks(native_vector<identifier> const &blocks,
-                                  native_unordered_map<identifier, identifier> const &idom,
-                                  native_unordered_map<identifier, size_t> const &rpo_index)
-  {
-    jank_debug_assert(!blocks.empty());
-
-    /* TODO: Combine this with lcd used for dominance. */
-    auto const lcd{ [&](identifier a, identifier b) -> identifier {
-      while(a != b)
-      {
-        while(rpo_index.at(a) > rpo_index.at(b))
-        {
-          a = idom.at(a);
-        }
-        while(rpo_index.at(b) > rpo_index.at(a))
-        {
-          b = idom.at(b);
-        }
-      }
-      return a;
-    } };
-
-    identifier result{ blocks[0] };
-    for(size_t i{ 1 }; i < blocks.size(); ++i)
-    {
-      result = lcd(result, blocks[i]);
-    }
-    return result;
-  }
-
   /* Hoist and deduplicate literal instructions across the function.
    *
    * For each unique literal value:
@@ -77,11 +49,9 @@ namespace jank::ir
    *   5. Replace the duplicate :literal instructions with :nop
    *
    * This pass requires dominance to already be built on `fn`. */
-  void hoist_literals(module &mod, function &fn)
+  void hoist_literals(function &fn)
   {
     jank_debug_assert(!fn.immediate_dominators.empty());
-
-    builder b{ &mod, mod.functions.size() - 1 };
 
     auto const &idom{ fn.immediate_dominators };
     auto const literals{ collect_literals(fn) };
@@ -94,7 +64,7 @@ namespace jank::ir
         continue;
       }
 
-      /* Collect just the block names for lcd_of_blocks. */
+      /* Collect just the block names for lcd. */
       native_vector<identifier> owning_blocks;
       owning_blocks.reserve(occurrences.size());
       for(auto const &[block_name, _] : occurrences)
@@ -102,7 +72,7 @@ namespace jank::ir
         owning_blocks.push_back(block_name);
       }
 
-      auto const target_block_name{ lcd_of_blocks(owning_blocks, idom, fn.block_rpo_index) };
+      auto const target_block_name{ lcd(idom, fn.block_rpo_index, owning_blocks) };
       auto &target_block{ fn.blocks[fn.find_block(target_block_name)] };
 
       /* Check whether the target block already has a canonical literal for
