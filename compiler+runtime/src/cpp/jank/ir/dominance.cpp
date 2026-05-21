@@ -309,18 +309,18 @@ namespace jank::ir
     build_rpo(fn, fn.blocks[0], rpo, seen);
     build_idom(fn, rpo);
 
-    util::print("{} RPO: ", fn.name);
-    for(auto const &v : rpo)
-    {
-      util::print("{} ", v);
-    }
-    util::println("");
+    //util::print("{} RPO: ", fn.name);
+    //for(auto const &v : rpo)
+    //{
+    //  util::print("{} ", v);
+    //}
+    //util::println("");
 
-    util::println("{} idom: ", fn.name);
-    for(auto const &v : fn.immediate_dominators)
-    {
-      util::println("  {} -> {}", v.first, v.second);
-    }
-    util::println("");
+    //util::println("{} idom: ", fn.name);
+    //for(auto const &v : fn.immediate_dominators)
+    //{
+    //  util::println("  {} -> {}", v.first, v.second);
+    //}
+    //util::println("");
   }
 }

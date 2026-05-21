@@ -8,57 +8,71 @@
 
 namespace jank::ir
 {
-  /* Collect all literal instructions in the function, grouped by their value.
-   * Returns a map of: literal value to list of (block name, instruction name) */
-  static native_unordered_map<runtime::object_ref,
-                              native_vector<std::pair<identifier, identifier>>,
-                              std::hash<runtime::object_ref>,
-                              runtime::very_equal_to_with_meta>
-  collect_literals(function const &fn)
+  struct var_deref_info
   {
-    native_unordered_map<runtime::object_ref,
-                         native_vector<std::pair<identifier, identifier>>,
-                         std::hash<runtime::object_ref>,
-                         runtime::very_equal_to_with_meta>
-      result;
+    native_unordered_map<jtl::immutable_string, native_vector<std::pair<identifier, identifier>>>
+      derefs;
+    bool has_loop{};
+  };
+
+  /* Build a map from qualified var to (block name, instruction name). */
+  static var_deref_info collect_var_derefs(function const &fn)
+  {
+    var_deref_info result;
 
     for(auto const &block : fn.blocks)
     {
       for(auto const &instr : block.instructions)
       {
-        if(instr->kind != instruction_kind::literal)
+        if(instr->kind == instruction_kind::loop)
+        {
+          /* Loops invalidate this optimization, so we're done collecting. */
+          result.has_loop = true;
+          return result;
+        }
+
+        if(instr->kind != instruction_kind::var_deref)
         {
           continue;
         }
-        auto const &lit{ static_cast<inst::literal &>(*instr.data) };
-        result[lit.obj].emplace_back(block.name, instr->name);
+
+        auto const &lit{ static_cast<inst::var_deref &>(*instr.data) };
+
+        /* Dynamic vars need to be handled more carefully, so we don't hoist them. */
+        if(runtime::__rt_ctx->intern_var(lit.qualified_var).expect_ok()->dynamic.load())
+        {
+          continue;
+        }
+
+        result.derefs[lit.qualified_var].emplace_back(block.name, instr->name);
       }
     }
 
     return result;
   }
 
-  /* Hoist and deduplicate literal instructions across the function.
-   *
-   * For each unique literal value:
-   *   1. Collect all blocks containing a :literal for that value
-   *   2. Find the LCD of those blocks in the dominator tree
-   *   3. Ensure exactly one canonical :literal lives in the LCD block,
-   *      prepended before any non-parameter instructions
-   *   4. Rewrite all uses of the duplicate literals to the canonical name
-   *   5. Replace the duplicate :literal instructions with :nop
-   *
-   * This pass requires dominance to already be built on `fn`. */
-  void hoist_literals(function &fn)
+  void hoist_var_derefs(function &fn)
   {
     jank_debug_assert(!fn.immediate_dominators.empty());
 
-    auto const &idom{ fn.immediate_dominators };
-    auto const literals{ collect_literals(fn) };
-
-    for(auto const &[value, occurrences] : literals)
+    if(fn.name.starts_with("jank_load_"))
     {
-      /* Nothing to deduplicate for a unique literal. */
+      return;
+    }
+
+    auto const &idom{ fn.immediate_dominators };
+    auto const var_derefs{ collect_var_derefs(fn) };
+
+    /* TODO: If a loop is present, hoist within the loop. Change collection to work on a set
+     * of blocks, rather than a fn. Hoist within each loop. */
+    if(var_derefs.has_loop)
+    {
+      return;
+    }
+
+    for(auto const &[qualified_var, occurrences] : var_derefs.derefs)
+    {
+      /* Nothing to deduplicate for a unique occurrence. */
       if(occurrences.size() == 1)
       {
         continue;
@@ -111,13 +125,11 @@ namespace jank::ir
           [&](auto const &i) { return i->name == existing_instr_name; }) };
         jank_debug_assert(existing_it != existing_block.instructions.end());
 
-        auto const &existing_lit{ dynamic_cast<inst::literal &>(*(*existing_it).data) };
+        auto const &existing{ dynamic_cast<inst::var_deref &>(*(*existing_it).data) };
 
-        auto const new_instr{ jtl::make_ref<inst::literal>(canonical_name,
-                                                           existing_lit.type,
-                                                           existing_lit.location,
-                                                           existing_lit.obj,
-                                                           existing_lit.value) };
+        auto const new_instr{
+          jtl::make_ref<inst::var_deref>(canonical_name, existing.location, existing.qualified_var)
+        };
 
         target_block.instructions.insert(insert_pos, new_instr);
       }

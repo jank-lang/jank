@@ -2,6 +2,8 @@
 #include <jank/ir/print.hpp>
 #include <jank/ir/dominance.hpp>
 #include <jank/ir/opt/hoist_literals.hpp>
+#include <jank/ir/opt/hoist_var_derefs.hpp>
+#include <jank/ir/opt/remove_nops.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/to_string.hpp>
@@ -379,7 +381,14 @@ namespace jank::ir
       for(usize i{}; i < loop->pairs.size(); ++i)
       {
         auto const &name{ runtime::munge(loop->pairs[i].first->name->get_name()) };
-        b.branch_set(b.local_to_loop_shadow[name], arg_idents[i]);
+        auto const &shadow{ b.local_to_loop_shadow[name] };
+        auto const &new_val{ arg_idents[i] };
+
+        /* There's no need to generate self-assignment instructions. */
+        if(shadow != new_val)
+        {
+          b.branch_set(shadow, new_val);
+        }
       }
       return b.jump(b.loop_recur_target.unwrap(), true);
     }
@@ -908,6 +917,8 @@ namespace jank::ir
     {
       build_dominance(fn);
       hoist_literals(fn);
+      hoist_var_derefs(fn);
+      remove_nops(fn);
     }
 
     if(print_settings == "2")

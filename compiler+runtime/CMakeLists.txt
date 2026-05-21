@@ -677,6 +677,8 @@ add_library(
   src/cpp/jank/ir/dominance.cpp
   src/cpp/jank/ir/rewrite.cpp
   src/cpp/jank/ir/opt/hoist_literals.cpp
+  src/cpp/jank/ir/opt/hoist_var_derefs.cpp
+  src/cpp/jank/ir/opt/remove_nops.cpp
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/cpp_processor.cpp
   src/cpp/jank/codegen/api.cpp
