@@ -4889,7 +4889,9 @@
   ([x y & more]
    (reduce -' (-' x y) more)))
 
-(defn abs
+(defn ^{:inline (fn* [x]
+                 (list 'cpp/jank.runtime.abs x))}
+              abs
   "Returns the absolute value of a.
   If a is Long/MIN_VALUE => Long/MIN_VALUE
   If a is a double and zero => +0.0
