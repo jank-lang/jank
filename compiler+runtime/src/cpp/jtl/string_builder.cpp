@@ -1,4 +1,5 @@
 #include <bit>
+#include <charconv>
 #include <codecvt>
 #include <locale>
 
@@ -150,12 +151,13 @@ namespace jtl
     }
     else
     {
-      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-      auto const required{ snprintf(nullptr, 0, "%f", d) };
+      /* 32 bytes is enough to hold any double. */
+      char tmp[32];
+      auto const [ptr, _]{ std::to_chars(tmp, tmp + sizeof(tmp), d) };
+      auto const required{ ptr - tmp };
       maybe_realloc(*this, required);
 
-      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-      snprintf(buffer + pos, capacity - pos, "%f", d);
+      std::memcpy(buffer + pos, tmp, required);
       pos += required;
     }
 
