@@ -133,10 +133,10 @@
 (defn print-summary [report]
   (print-timing report)
 
-  (let [{:keys [min max samples]} report]
+  (let [{:keys [min max p99 samples]} report]
     (println)
     (-> samples
-        (hist1d min max 60)
+        (hist1d min (or p99 max) 60)
         (print-hist1d report {})))
 
   (println)

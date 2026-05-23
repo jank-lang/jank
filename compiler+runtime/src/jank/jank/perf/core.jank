@@ -31,7 +31,8 @@ auto make_callable(jank::runtime::object_ref const f) {
      :sum      (.sum result elapsed-measure)
      :median   (.median result elapsed-measure)
      :mean     (.average result elapsed-measure)
-     :variance (stats/variance samples (.average result elapsed-measure))}))
+     :variance (stats/variance samples (.average result elapsed-measure))
+     :p99      (stats/quantile-lite samples 0.99)}))
 
 (defn run-benchmark [{:keys [label warmups epochs]} f]
   (let [f*    (cpp/jank.perf.impl.make_callable #(blackbox (f)))

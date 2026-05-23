@@ -8,7 +8,6 @@
 ;; - Finalize API
 ;; - Support a target benchmark duration rather than epoch count
 ;; - Display a log histogram, either automatically or by flag
-;; - Show 99% quantile data with break in plot to reduce outlier influence
 ;; - Compute time spent in GC as a percentage of execution time
 ;; - Catch errors in benchmark body code instead of swallowing them and
 ;;   reporting incorrect timings

@@ -31,3 +31,16 @@
                   (assoc! acc k (inc (get acc k)))))
               (transient (vec (repeat nbins 0)))
               xs))}))
+
+(defn quantile-lite
+  "Computes the q-th quantile of xs.
+
+  If the q-th quantile does not line up exactly with a point in `xs` then this
+  returns the nearest point to the left of the quantile. Note that a more
+  sophisticated method would perform linear interpolation between the
+  neighboring points."
+  [xs q]
+  (assert (<= 0.0 q 1.0))
+  (let [xs* (sort xs)
+        i   (int (* q (inc (count xs))))]
+    (nth xs* i nil)))
