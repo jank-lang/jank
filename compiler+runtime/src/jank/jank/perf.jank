@@ -12,7 +12,6 @@
 ;; - Compute time spent in GC as a percentage of execution time
 ;; - Catch errors in benchmark body code instead of swallowing them and
 ;;   reporting incorrect timings
-;; - Use transient collections to speed up the larger stats operations
 ;; - Clean up as more jank features come online
 
 (def default-bench-config

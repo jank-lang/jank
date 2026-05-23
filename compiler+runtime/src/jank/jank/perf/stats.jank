@@ -8,7 +8,7 @@
 (defn variance
   "Compute the population variance of `xs`."
   [xs mean]
-  (/ (apply + (map #(cpp/pow (- % mean) #cpp 2) xs))
+  (/ (reduce (fn [acc x] (+ acc (cpp/pow (- x mean) #cpp 2))) 0.0 xs)
      (count xs)))
 
 (defn standard-deviation
@@ -22,11 +22,12 @@
     {:min   min
      :max   max
      :width width
-     :bins  (reduce
-             (fn [acc x]
-               ;; Make sure the max value goes into the last bin rather than out
-               ;; of bounds.
-               (let [k (clamp (int (/ (- x min) width)) 0 (dec nbins))]
-                 (update acc k inc)))
-             (into [] (repeat nbins 0))
-             xs)}))
+     :bins  (persistent!
+             (reduce
+              (fn [acc x]
+                ;; Make sure the max value goes into the last bin rather than out
+                ;; of bounds.
+                (let [k (clojure.core/min (int (/ (- x min) width)) (dec nbins))]
+                  (assoc! acc k (inc (get acc k)))))
+              (transient (vec (repeat nbins 0)))
+              xs))}))
