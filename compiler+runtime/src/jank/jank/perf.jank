@@ -41,7 +41,7 @@
   Options:
     :label   string shown in the report to identify the benchmark
     :epochs  number of evaluations of the body which will be recorded
-    :warmups number of batches of `:epochs` which will be run before the main
+    :warmups number of evaluations of the body which will be run before the main
              benchmark execution and thrown away"
   [opts & body]
   `(core/run-benchmark
