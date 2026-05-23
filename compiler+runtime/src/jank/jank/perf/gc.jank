@@ -1,0 +1,34 @@
+(ns jank.perf.gc
+  (:include "gc/gc.h"))
+
+(defn force-collect
+  "Explicitly trigger a full collection."
+  []
+  (cpp/GC_gcollect))
+
+(defn total-bytes
+  "Return the total number of bytes allocated in the GC."
+  []
+  (cpp/GC_get_total_bytes))
+
+(defn collection-count
+  "Return the total number of garbage collections performed."
+  []
+  (cpp/GC_get_gc_no))
+
+(defn start-performance-measurement
+  "Start collecting GC timing metrics. Required for `total-time`.
+
+  NOTE: There is no way to disable the metrics once they are enabled."
+  []
+  (cpp/GC_start_performance_measurement))
+
+(defn total-time
+  "Returns the total seconds (as a double) spent in garbage collection since
+  `start-performance-measurement`."
+  []
+  (let [ms (cpp/GC_get_full_gc_total_time)
+        ;; TODO: depends on https://github.com/bdwgc/bdwgc/pull/930
+        ;; ns (cpp/GC_get_full_gc_total_time_ns_frac)
+        ns 0]
+    (+ (/ ms 1e3) (/ ns 1e9))))

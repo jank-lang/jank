@@ -1,0 +1,32 @@
+(ns jank.perf.stats)
+
+(defn clamp
+  "Clamp x such that lb ≤ x ≤ ub."
+  [x lb ub]
+  (-> x (min ub) (max lb)))
+
+(defn variance
+  "Compute the population variance of `xs`."
+  [xs mean]
+  (/ (apply + (map #(cpp/pow (- % mean) #cpp 2) xs))
+     (count xs)))
+
+(defn standard-deviation
+  [variance]
+  (cpp/sqrt variance))
+
+(defn hist1d
+  "Compute bins of an equal-width histogram."
+  [xs min max nbins]
+  (let [width (/ (- max min) nbins)]
+    {:min   min
+     :max   max
+     :width width
+     :bins  (reduce
+             (fn [acc x]
+               ;; Make sure the max value goes into the last bin rather than out
+               ;; of bounds.
+               (let [k (clamp (int (/ (- x min) width)) 0 (dec nbins))]
+                 (update acc k inc)))
+             (into [] (repeat nbins 0))
+             xs)}))
