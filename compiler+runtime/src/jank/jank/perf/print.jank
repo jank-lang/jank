@@ -1,7 +1,8 @@
 (ns jank.perf.print
   (:require [jank.perf.stats :refer [clamp standard-deviation hist1d]])
-  (:include "sstream")
-  (:include "iomanip"))
+  (:include
+   "iomanip"
+   "sstream"))
 
 (defn format-size
   "Format a byte size given in whole bytes as a human-readable string with
