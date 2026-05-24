@@ -6274,7 +6274,7 @@
        ~@body
        (cpp/fflush out#)
        (cpp/fclose out#)
-       (cpp/std.string. buff# size#))))
+       (cpp/jtl.immutable_string. buff# size#))))
 
 (defmacro with-in-str
   "Evaluates body in a context in which *in* is bound to a fresh
