@@ -57,6 +57,7 @@
   ^{:doc "Bound to true in a repl thread"}
   *repl* false)
 
+(cpp/raw "#include <stdio.h>")
 (cpp/raw "#include <fstream>")
 (cpp/raw "#include <sstream>")
 (cpp/raw "#include <filesystem>")
@@ -6266,10 +6267,14 @@
   StringWriter.  Returns the string created by any nested printing
   calls."
   [& body]
-  `(let [s# (cpp/std.stringstream.)]
-     (binding [*out* (cpp/box (cpp/& s#))]
+  `(let [buff# (cpp/cast (:* char) cpp/nullptr)
+         size# (cpp/size_t. 0)
+         out#  (cpp/open_memstream (cpp/& buff#) (cpp/& size#))]
+     (binding [*out* (cpp/box out#)]
        ~@body
-       (cpp/.str s#))))
+       (cpp/fflush out#)
+       (cpp/fclose out#)
+       (cpp/std.string. buff# size#))))
 
 (defmacro with-in-str
   "Evaluates body in a context in which *in* is bound to a fresh

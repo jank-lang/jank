@@ -134,14 +134,13 @@ namespace jank::runtime
     auto const out_val{ __rt_ctx->current_out_var->deref() };
     auto const out_box{ try_object<obj::opaque_box>(out_val) };
 
-    if(out_box->canonical_type != "std::ostream*" && out_box->canonical_type != "std::stringstream*"
-       && out_box->canonical_type != "std::basic_stringstream<char>*")
+    if(out_box->canonical_type != "FILE*" && out_box->canonical_type != "_IO_FILE*")
     {
       throw std::runtime_error{ util::format("Invalid binding for *out*: {}",
                                              out_box->canonical_type) };
     }
 
-    auto const out{ reinterpret_cast<std::ostream *>(out_box->data.data) };
+    auto const out{ reinterpret_cast<FILE *>(out_box->data.data) };
 
     visit_object(
       [&](auto const typed_more) {
@@ -149,7 +148,7 @@ namespace jank::runtime
 
         if constexpr(std::same_as<T, obj::nil>)
         {
-          *out << '\n';
+          std::putc('\n', out);
         }
         else if constexpr(behavior::sequenceable<T>)
         {
@@ -160,7 +159,8 @@ namespace jank::runtime
             buff(' ');
             runtime::to_string(e.erase(), buff);
           }
-          *out << buff.data() << '\n';
+          std::fwrite(buff.data(), 1, buff.size(), out);
+          std::putc('\n', out);
         }
         else
         {
