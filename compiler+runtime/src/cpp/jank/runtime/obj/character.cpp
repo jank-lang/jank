@@ -1,3 +1,5 @@
+#include <cwchar>
+
 #include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/escape.hpp>
@@ -47,6 +49,38 @@ namespace jank::runtime::obj
   character::character(char const ch)
     : object{ obj_type, obj_behaviors }
     , data{ 1, ch }
+  {
+  }
+
+  static jtl::immutable_string to_char(i64 const ch)
+  {
+    if(ch > 0x10FFFF)
+    {
+      throw std::runtime_error{ util::format("Value out of range for char: {}", ch) };
+    }
+
+    std::mbstate_t state{};
+    wchar_t const wc{ static_cast<wchar_t>(ch) };
+    std::string str(MB_CUR_MAX, '\0');
+    auto const len{ std::wcrtomb(&str[0], wc, &state) };
+
+    if(std::cmp_equal(len, static_cast<size_t>(-1)))
+    {
+      throw std::runtime_error{ util::format("Unfinished character: {}", ch) };
+    }
+    else if(std::cmp_equal(len, static_cast<size_t>(-2)))
+    {
+      throw std::runtime_error{ util::format("Invalid Unicode character: {}", ch) };
+    }
+
+    str.resize(len);
+
+    return str;
+  }
+
+  character::character(i64 const ch)
+    : object{ obj_type, obj_behaviors }
+    , data{ to_char(ch) }
   {
   }
 
