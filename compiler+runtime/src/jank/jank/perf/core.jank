@@ -20,19 +20,20 @@ auto make_callable(jank::runtime::object_ref const f) {
   (cpp/ankerl.nanobench.doNotOptimizeAway x))
 
 (def elapsed-measure cpp/ankerl.nanobench.Result.Measure.elapsed)
+(def iterations-measure cpp/ankerl.nanobench.Result.Measure.iterations)
 
 (defn summarize [result*]
   (let [result  (cpp/unbox (:* cpp/ankerl.nanobench.Result) result*)
         samples (mapv #(.get result (cpp/size_t %) elapsed-measure) (range (.size result)))]
-    {:samples  samples
-     :count    (.size result)
-     :min      (.minimum result elapsed-measure)
-     :max      (.maximum result elapsed-measure)
-     :sum      (.sum result elapsed-measure)
-     :median   (.median result elapsed-measure)
-     :mean     (.average result elapsed-measure)
-     :variance (stats/variance samples (.average result elapsed-measure))
-     :p99      (stats/quantile-lite samples 0.99)}))
+    {:samples     samples
+     :evaluations (long (.sum result iterations-measure))
+     :min         (.minimum result elapsed-measure)
+     :max         (.maximum result elapsed-measure)
+     :sum         (.sumProduct result iterations-measure elapsed-measure)
+     :median      (.median result elapsed-measure)
+     :mean        (.average result elapsed-measure)
+     :variance    (stats/variance samples (.average result elapsed-measure))
+     :p99         (stats/quantile-lite samples 0.99)}))
 
 (defn run-benchmark [{:keys [label warmups epochs]} f]
   (let [f*    (cpp/jank.perf.impl.make_callable #(blackbox (f)))
@@ -41,9 +42,6 @@ auto make_callable(jank::runtime::object_ref const f) {
       (.name (cpp/cast cpp/std.string label))
       (.output cpp/nullptr)
       (.epochs epochs)
-      ;; TODO: perhaps revise or expose this once I understand how epoch/epoch
-      ;; iterations work together.
-      (.epochIterations 1)
       ;; TODO: not used yet
       (.performanceCounters false)
       (.warmup warmups))

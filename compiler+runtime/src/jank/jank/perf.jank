@@ -39,9 +39,12 @@
 
   Options:
     :label   string shown in the report to identify the benchmark
-    :epochs  number of evaluations of the body which will be recorded
-    :warmups number of evaluations of the body which will be run before the main
-             benchmark execution and thrown away"
+    :epochs  number of measurements to be recorded. Note that this is not the
+             same as the number of evaluations of the body, as for very short
+             duration bodies multiple evaluations will be performed per
+             measurement in order to obtain accurate timings.
+    :warmups number of evaluations which will be run and thrown away before the
+             main benchmark execution"
   [opts & body]
   `(core/run-benchmark
     (merge default-bench-config ~opts)

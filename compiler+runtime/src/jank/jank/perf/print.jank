@@ -116,7 +116,7 @@
         stddev  (color :green (format-duration (standard-deviation (:variance report))))
         min     (bold :cyan (format-duration (:min report)))
         max     (color :magenta (format-duration (:max report)))]
-    (println (str label ": " (:count report) " samples collected in " sum))
+    (println (str label ": " (count samples) " samples from " (:evaluations report) " evaluations collected in " sum))
     (println (str " Time  (" (bold :blue "median") ")   : " median))
     (println (str " Time  (" (bold :green "mean") " ± " (color :green "σ") ") : " mean " ± " stddev))
     (println (str " Range (" (bold :cyan "min") " … " (color :magenta "max") "): " min " … " max))))
