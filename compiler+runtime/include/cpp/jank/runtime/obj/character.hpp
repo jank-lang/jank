@@ -26,6 +26,8 @@ namespace jank::runtime::obj
     jtl::immutable_string to_code_string() const override;
     uhash to_hash() const override;
 
+    i64 to_integer() const;
+
     /*** XXX: Everything here is immutable after initialization. ***/
 
     /* Holds the raw form of the character bytes. Supports Unicode. */

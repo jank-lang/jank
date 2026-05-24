@@ -954,6 +954,11 @@ namespace jank::runtime
 
   i64 to_int(object_ref const l)
   {
+    if(l.get_type() == object_type::character)
+    {
+      return expect_object<obj::character>(l)->to_integer();
+    }
+
     return visit_number_like([](auto const typed_l) -> i64 { return typed_l->to_integer(); }, l);
   }
 
