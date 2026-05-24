@@ -1185,7 +1185,7 @@ namespace jank::runtime
         std::shuffle(vec.begin(), vec.end(), g);
 
         return make_box<obj::persistent_vector>(
-          runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+          runtime::detail::native_persistent_vector(vec.begin(), vec.end()));
       },
       coll);
   }

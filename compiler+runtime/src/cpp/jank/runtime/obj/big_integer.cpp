@@ -156,7 +156,7 @@ namespace jank::runtime::obj
 
   jtl::immutable_string big_integer::to_string() const
   {
-    return data.str() + 'N';
+    return data.str();
   }
 
   void big_integer::to_string(jtl::string_builder &buff) const
@@ -166,7 +166,7 @@ namespace jank::runtime::obj
 
   jtl::immutable_string big_integer::to_code_string() const
   {
-    return to_string();
+    return to_string() + 'N';
   }
 
   template <class T>

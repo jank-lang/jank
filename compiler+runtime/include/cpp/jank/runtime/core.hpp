@@ -128,4 +128,6 @@ namespace jank::runtime
 
   object_ref read_string(object_ref const form_string, object_ref const opts);
   object_ref read_file(object_ref const file_path, object_ref const opts);
+
+  obj::character_ref to_char(object_ref const x);
 }

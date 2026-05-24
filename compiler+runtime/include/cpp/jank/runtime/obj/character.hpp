@@ -17,6 +17,7 @@ namespace jank::runtime::obj
     character(character const &) = default;
     character(jtl::immutable_string const &);
     character(char);
+    character(i64);
 
     /* behavior::object_like */
     bool equal(object const &) const override;
@@ -24,6 +25,9 @@ namespace jank::runtime::obj
     void to_string(jtl::string_builder &buff) const override;
     jtl::immutable_string to_code_string() const override;
     uhash to_hash() const override;
+
+    /* Character does not fully support `behavior::number_like`, but can be converted to an integer. */
+    i64 to_integer() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
 

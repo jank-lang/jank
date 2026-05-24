@@ -591,7 +591,7 @@ namespace jank::runtime
           }
 
           return make_box<obj::persistent_vector>(
-            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+            runtime::detail::native_persistent_vector(vec.begin(), vec.end()));
         }
     }
   }
@@ -908,5 +908,15 @@ namespace jank::runtime
 
     auto const typed_o{ expect_object<obj::persistent_string>(file_path) };
     return __rt_ctx->read_file(typed_o->data, opts);
+  }
+
+  obj::character_ref to_char(object_ref const x)
+  {
+    if(x.get_type() == object_type::character)
+    {
+      return expect_object<obj::character>(x);
+    }
+
+    return make_box<obj::character>(to_int(x));
   }
 }

@@ -529,8 +529,6 @@ extern "C" void jank_load_clojure_core_native()
   intern_fn("eval", &core_native::eval);
   intern_fn("hash-unordered-coll", &core_native::hash_unordered);
   intern_fn("jank-version", &core_native::jank_version);
-  intern_fn("parse-long", &parse_long);
-  intern_fn("parse-double", &parse_double);
   intern_fn("tagged-literal", &tagged_literal);
   intern_fn("tagged-literal?", &is_tagged_literal);
   intern_fn("sorted?", &is_sorted);

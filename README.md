@@ -118,6 +118,13 @@ If you'd like your name, company, or logo here, you can
   </a>
 </p>
 
+<!-- ArikRahman -->
+<p align="center">
+  <a href="https://arik.zip/">
+    Arik Rahman
+  </a>
+</p>
+
 ## In the news
 <div align="center">
 

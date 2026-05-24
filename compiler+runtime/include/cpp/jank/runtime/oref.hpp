@@ -1665,6 +1665,12 @@ namespace jank::runtime
     {
     }
 
+    /* This is used during codegen, when a floating point value can be rendered as an int. */
+    oref(int const data) noexcept
+      : data{ static_cast<f64>(data) }
+    {
+    }
+
     oref(f64 const data) noexcept
       : data{ data }
     {

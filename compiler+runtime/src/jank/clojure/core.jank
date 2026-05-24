@@ -5746,8 +5746,7 @@
 (defn long
   "Coerce to long"
   [#_Number x]
-  ;; (clojure.lang.RT/longCast x)
-  (throw "TODO: port long"))
+  (cpp/jank.runtime.to_int x))
 
 (defn double
   "Coerce to double"
@@ -5769,8 +5768,7 @@
 (defn char
   "Coerce to char"
   [x]
-  ;; (. clojure.lang.RT (charCast x))
-  (throw "TODO: port char"))
+  (cpp/jank.runtime.to_char x))
 
 (defn unchecked-byte
   "Coerce to byte. Subject to rounding or truncation."

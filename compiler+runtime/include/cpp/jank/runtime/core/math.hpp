@@ -1284,8 +1284,8 @@ namespace jank::runtime
   bool is_nan(object_ref const o);
   bool is_infinite(object_ref const o);
 
-  i64 parse_long(object_ref const o);
-  f64 parse_double(object_ref const o);
+  object_ref parse_long(object_ref const o);
+  object_ref parse_double(object_ref const o);
 
   bool is_big_integer(object_ref const o);
   obj::big_integer_ref to_big_integer(object_ref const o);
