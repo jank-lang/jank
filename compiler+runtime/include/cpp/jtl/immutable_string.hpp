@@ -74,7 +74,7 @@ namespace jtl
     }
 
     // Taken from imgui.cpp (ImTextCharToUtf8)
-    explicit constexpr immutable_string(i32 code_point) noexcept
+    explicit constexpr immutable_string(u32 const code_point) noexcept
     {
       if(code_point < 0x80)
       {

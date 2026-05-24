@@ -924,7 +924,7 @@ namespace jank::runtime
       throw std::runtime_error{ util::format("Value out of range for char: {}", n) };
     }
 
-    jtl::immutable_string c(n);
+    jtl::immutable_string const c(static_cast<u32>(n));
     return make_box<obj::character>(c);
   }
 }
