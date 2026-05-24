@@ -591,7 +591,7 @@ namespace jank::runtime
           }
 
           return make_box<obj::persistent_vector>(
-            runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+            runtime::detail::native_persistent_vector(vec.begin(), vec.end()));
         }
     }
   }
