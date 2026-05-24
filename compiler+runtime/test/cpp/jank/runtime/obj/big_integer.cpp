@@ -102,9 +102,9 @@ namespace jank::runtime::obj
 
       SUBCASE("to_string()")
       {
-        CHECK_EQ(bi_pos.to_string(), "1234567890987654321N");
-        CHECK_EQ(bi_neg.to_string(), "-9876543210123456789N");
-        CHECK_EQ(bi_zero.to_string(), "0N");
+        CHECK_EQ(bi_pos.to_string(), "1234567890987654321");
+        CHECK_EQ(bi_neg.to_string(), "-9876543210123456789");
+        CHECK_EQ(bi_zero.to_string(), "0");
       }
 
       SUBCASE("to_code_string()")
@@ -118,15 +118,15 @@ namespace jank::runtime::obj
       {
         jtl::string_builder sb1;
         bi_pos.to_string(sb1);
-        CHECK_EQ(sb1.view(), "1234567890987654321N");
+        CHECK_EQ(sb1.view(), "1234567890987654321");
 
         jtl::string_builder sb2;
         bi_neg.to_string(sb2);
-        CHECK_EQ(sb2.view(), "-9876543210123456789N");
+        CHECK_EQ(sb2.view(), "-9876543210123456789");
 
         jtl::string_builder sb3;
         bi_zero.to_string(sb3);
-        CHECK_EQ(sb3.view(), "0N");
+        CHECK_EQ(sb3.view(), "0");
       }
     }
 
