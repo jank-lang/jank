@@ -17,6 +17,7 @@ namespace jank::runtime::obj
     character(character const &) = default;
     character(jtl::immutable_string const &);
     character(char);
+    character(i64);
 
     /* behavior::object_like */
     bool equal(object const &) const override;
