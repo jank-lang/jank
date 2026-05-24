@@ -26,6 +26,7 @@ namespace jank::runtime::obj
     jtl::immutable_string to_code_string() const override;
     uhash to_hash() const override;
 
+    /* Character does not fully support `behavior::number_like`, but can be converted to an integer. */
     i64 to_integer() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
