@@ -13,7 +13,7 @@ namespace jank::runtime
     }
 
     obj::character_ref const typed_rhs{ expect_object<obj::character>(rhs) };
-    return typed_rhs->data[0] == lhs;
+    return typed_rhs->data.size() == 1 && typed_rhs->data[0] == lhs;
   }
 
   bool equal(object_ref const lhs, object_ref const rhs)
