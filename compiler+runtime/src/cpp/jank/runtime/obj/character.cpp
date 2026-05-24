@@ -114,4 +114,12 @@ namespace jank::runtime::obj
   {
     return data.to_hash();
   }
+
+  i64 character::to_integer() const
+  {
+    std::mbstate_t state{};
+    wchar_t wc{};
+    std::mbrtowc(&wc, data.c_str(), data.size(), &state);
+    return static_cast<i64>(wc);
+  }
 }
