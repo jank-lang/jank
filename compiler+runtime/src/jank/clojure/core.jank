@@ -23,14 +23,14 @@
 (def ^:dynamic *assert*)
 (def ^:dynamic *compile-files*)
 (def ^:dynamic *file*)
+(def ^:dynamic *out*)
+(def ^:dynamic *err*)
 
 (def ^:dynamic *in* nil)
-(def ^:dynamic *out* nil)
 (def ^:dynamic *warn-on-reflection* nil)
 (def ^:dynamic *compile-path* nil)
 (def ^:dynamic *unchecked-math* nil)
 (def ^:dynamic *compiler-options* nil)
-(def ^:dynamic *err* nil)
 (def ^:dynamic *flush-on-newline* nil)
 (def ^:dynamic *print-meta* nil)
 (def ^:dynamic *print-dup* nil)
@@ -6266,11 +6266,10 @@
   StringWriter.  Returns the string created by any nested printing
   calls."
   [& body]
-  ;; `(let [s# (new java.io.StringWriter)]
-  ;;    (binding [*out* s#]
-  ;;      ~@body
-  ;;      (str s#)))
-  (throw "TODO: port with-out-str"))
+  `(let [s# (cpp/std.stringstream.)]
+     (binding [*out* (cpp/box (cpp/& s#))]
+       ~@body
+       (cpp/.str s#))))
 
 (defmacro with-in-str
   "Evaluates body in a context in which *in* is bound to a fresh
@@ -6283,24 +6282,21 @@
 (defn prn-str
   "prn to a string, returning it"
   [& xs]
-  ;; (with-out-str
-  ;;  (apply prn xs))
-  (throw "TODO: port prn-str"))
+  (with-out-str
+   (apply prn xs)))
 
 
 (defn print-str
   "print to a string, returning it"
   [& xs]
-    ;; (with-out-str
-    ;;  (apply print xs))
-  (throw "TODO: port print-str"))
+  (with-out-str
+    (apply print xs)))
 
 (defn println-str
   "println to a string, returning it"
   [& xs]
-    ;; (with-out-str
-    ;;  (apply println xs))
-  (throw "TODO: port println-str"))
+  (with-out-str
+    (apply println xs)))
 
 (defn ^:private elide-top-frames
   [#_Throwable ex class-name]
