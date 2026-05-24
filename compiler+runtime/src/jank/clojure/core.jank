@@ -5766,8 +5766,7 @@
 (defn char
   "Coerce to char"
   [x]
-  ;; (. clojure.lang.RT (charCast x))
-  (throw "TODO: port char"))
+  (cpp/jank.runtime.to_char x))
 
 (defn unchecked-byte
   "Coerce to byte. Subject to rounding or truncation."

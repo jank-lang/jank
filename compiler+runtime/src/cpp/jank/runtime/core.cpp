@@ -909,4 +909,15 @@ namespace jank::runtime
     auto const typed_o{ expect_object<obj::persistent_string>(file_path) };
     return __rt_ctx->read_file(typed_o->data, opts);
   }
+
+  obj::character_ref to_char(object_ref const x)
+  {
+    if(x.get_type() == object_type::character)
+    {
+      return expect_object<obj::character>(x);
+    }
+
+    jtl::immutable_string c(1, to_int(x));
+    return make_box<obj::character>(c);
+  }
 }
