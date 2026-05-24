@@ -78,13 +78,13 @@
                      :or   {reverse? false legend? true}}]
   (let [height     2
         nbins      (count bins)
-        max-bin    (apply max bins)
+        max-count  (apply max bins)
         mean-bin   (int (/ (- (:mean report) (:min hist)) width))
         median-bin (int (/ (- (:median report) (:min hist)) width))]
     (doseq [baseline (if reverse? (range height) (reverse (range height)))]
       (print " ")
       (doseq [[idx bin] (map-indexed vector bins)]
-        (let [norm         (/ (double bin) (double max-bin))
+        (let [norm         (/ (double bin) (double max-count))
               bar-height   (- (* height norm) baseline)
               bar-char-idx (clamp (int (* bar-height (count hist-bars))) 0 (dec (count hist-bars)))
               bar-char     (if reverse?
