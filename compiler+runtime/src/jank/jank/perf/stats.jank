@@ -25,10 +25,17 @@
      :bins  (persistent!
              (reduce
               (fn [acc x]
-                ;; Make sure the max value goes into the last bin rather than out
-                ;; of bounds.
-                (let [k (clojure.core/min (int (/ (- x min) width)) (dec nbins))]
-                  (assoc! acc k (inc (get acc k)))))
+                ;; Only include samples which belong in one of the bins. The
+                ;; input min/max can be arbitrary, so could be smaller than the
+                ;; overall dataset min/max.
+                ;;
+                ;; Each bin contains samples which satisfy lb <= x < ub, so we
+                ;; drop the sample which is equal to the final bind max (if
+                ;; there is one).
+                (if (and (<= min x) (< x max))
+                  (let [k (int (/ (- x min) width))]
+                    (assoc! acc k (inc (get acc k))))
+                  acc))
               (transient (vec (repeat nbins 0)))
               xs))}))
 
