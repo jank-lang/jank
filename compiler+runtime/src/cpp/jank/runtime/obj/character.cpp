@@ -62,7 +62,7 @@ namespace jank::runtime::obj
     std::mbstate_t state{};
     wchar_t const wc{ static_cast<wchar_t>(ch) };
     std::string str(MB_CUR_MAX, '\0');
-    auto const len{ std::wcrtomb(&str[0], wc, &state) };
+    auto const len{ std::wcrtomb(str.data(), wc, &state) };
 
     if(std::cmp_equal(len, static_cast<size_t>(-1)))
     {
