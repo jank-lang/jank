@@ -134,7 +134,7 @@ namespace jank::runtime
     auto const out_val{ __rt_ctx->current_out_var->deref() };
     auto const out_box{ try_object<obj::opaque_box>(out_val) };
 
-    if(out_box->canonical_type != "FILE*" && out_box->canonical_type != "_IO_FILE*")
+    if(out_box->canonical_type != "_IO_FILE*")
     {
       throw std::runtime_error{ util::format("Invalid binding for *out*: {}",
                                              out_box->canonical_type) };

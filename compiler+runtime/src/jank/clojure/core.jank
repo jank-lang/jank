@@ -23,8 +23,8 @@
 (def ^:dynamic *assert*)
 (def ^:dynamic *compile-files*)
 (def ^:dynamic *file*)
-(def ^:dynamic *out*)
-(def ^:dynamic *err*)
+(def ^:dynamic *out* (cpp/box cpp/stdout))
+(def ^:dynamic *err* (cpp/box cpp/stderr))
 
 (def ^:dynamic *in* nil)
 (def ^:dynamic *warn-on-reflection* nil)

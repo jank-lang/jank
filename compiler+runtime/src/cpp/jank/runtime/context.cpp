@@ -61,12 +61,10 @@ namespace jank::runtime
 
     auto const out_sym(make_box<obj::symbol>("*out*"));
     current_out_var = core->intern_var(out_sym);
-    current_out_var->bind_root(make_box<obj::opaque_box>(stdout, "FILE*"));
     current_out_var->dynamic.store(true);
 
     auto const err_sym(make_box<obj::symbol>("*err*"));
     current_err_var = core->intern_var(err_sym);
-    current_err_var->bind_root(make_box<obj::opaque_box>(stderr, "FILE*"));
     current_err_var->dynamic.store(true);
 
     auto const compile_files_sym(make_box<obj::symbol>("*compile-files*"));
