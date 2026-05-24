@@ -12,7 +12,7 @@ namespace jank::runtime
       return false;
     }
 
-    obj::character_ref const typed_rhs{ expect_object<obj::character>(rhs) };
+    auto const typed_rhs{ expect_object<obj::character>(rhs) };
     return typed_rhs->data.size() == 1 && typed_rhs->data[0] == lhs;
   }
 
