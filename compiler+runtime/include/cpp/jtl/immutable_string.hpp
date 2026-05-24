@@ -64,11 +64,44 @@ namespace jtl
 
     static constexpr size_type npos{ std::numeric_limits<size_type>::max() };
 
+    static constexpr i64 max_unicode_value{ 0x10FFFF };
+
     friend struct jtl::string_builder;
 
     constexpr immutable_string() noexcept
     {
       set_small_size(0);
+    }
+
+    // Taken from imgui.cpp (ImTextCharToUtf8)
+    explicit constexpr immutable_string(i32 code_point) noexcept
+    {
+      if(code_point < 0x80)
+      {
+        init_small_fill(0, 1);
+        store.small[0] = static_cast<value_type>(code_point);
+      }
+      else if(code_point < 0x800)
+      {
+        init_small_fill(0, 2);
+        store.small[0] = static_cast<value_type>(0xc0 + (code_point >> 6));
+        store.small[1] = static_cast<value_type>(0x80 + (code_point & 0x3f));
+      }
+      else if(code_point < 0x10000)
+      {
+        init_small_fill(0, 3);
+        store.small[0] = static_cast<value_type>(0xe0 + (code_point >> 12));
+        store.small[1] = static_cast<value_type>(0x80 + ((code_point >> 6) & 0x3f));
+        store.small[2] = static_cast<value_type>(0x80 + (code_point & 0x3f));
+      }
+      else if(code_point <= 0x10FFFF)
+      {
+        init_small_fill(0, 4);
+        store.small[0] = static_cast<value_type>(0xf0 + (code_point >> 18));
+        store.small[1] = static_cast<value_type>(0x80 + ((code_point >> 12) & 0x3f));
+        store.small[2] = static_cast<value_type>(0x80 + ((code_point >> 6) & 0x3f));
+        store.small[3] = static_cast<value_type>(0x80 + (code_point & 0x3f));
+      }
     }
 
     constexpr immutable_string(immutable_string const &s) noexcept

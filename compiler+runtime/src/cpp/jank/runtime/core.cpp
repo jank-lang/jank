@@ -917,7 +917,14 @@ namespace jank::runtime
       return expect_object<obj::character>(x);
     }
 
-    jtl::immutable_string c(1, to_int(x));
+    auto const n(to_int(x));
+
+    if(n < 0 || n > jtl::immutable_string::max_unicode_value)
+    {
+      throw std::runtime_error{ util::format("Value out of range for char: {}", n) };
+    }
+
+    jtl::immutable_string c(n);
     return make_box<obj::character>(c);
   }
 }
