@@ -100,8 +100,8 @@
       ;; TODO: without clojure.core/format we have to resort to some ugly printf
       ;; calls.
       (print " ")
-      (let [min-str    (format-duration (:min hist))
-            max-str    (format-duration (:max hist))
+      (let [min-str    (format-duration (:min hist) {:pad false})
+            max-str    (format-duration (:max hist) {:pad false})
             half-width (cpp/int (/ nbins 2))]
         (cpp/printf #cpp "%-*s" half-width (.c_str (cpp/cast cpp/std.string min-str)))
         (cpp/printf #cpp "%*s" half-width (.c_str (cpp/cast cpp/std.string max-str))))
@@ -122,13 +122,16 @@
     (println (str " Range (" (bold :cyan "min") " … " (color :magenta "max") "): " min " … " max))))
 
 (defn print-gc [report]
-  (let [{:keys [allocated-bytes collections collection-time]} (:gc report)]
+  (let [{:keys [allocated-bytes collections collection-time]} (:gc report)
+        gc-percent (int (* 100 (/ collection-time (:sum report))))]
     (println (str " Memory estimate: "
                   (color :yellow (str (format-size allocated-bytes)))
                   " with "
                   (color :yellow (str collections " garbage collections"))
                   " in "
-                  (color :yellow (format-duration collection-time {:pad false}))))))
+                  (color :yellow (format-duration collection-time {:pad false}))
+                  " (" (color :yellow (str gc-percent "%"))
+                  " of total runtime)"))))
 
 (defn print-summary [report]
   (print-timing report)
