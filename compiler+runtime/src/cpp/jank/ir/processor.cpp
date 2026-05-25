@@ -360,10 +360,11 @@ namespace jank::ir
                        runtime::munge(expr->unique_name + "_ctx"),
                        jtl::move(arities),
                        jtl::move(captured_idents),
-                       flags);
+                       flags,
+                       expr->is_variadic);
     }
 
-    return b.function(expr->position, jtl::move(arities), flags);
+    return b.function(expr->position, jtl::move(arities), flags, expr->is_variadic);
   }
 
   jtl::option<identifier> gen(analyze::expr::recur_ref const expr, builder &b)

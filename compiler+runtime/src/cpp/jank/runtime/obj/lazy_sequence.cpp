@@ -132,7 +132,7 @@ namespace jank::runtime::obj
   {
     if(fn.is_some())
     {
-      sv = dynamic_call(fn);
+      sv = fn.call();
       fn = jank_nil;
     }
   }

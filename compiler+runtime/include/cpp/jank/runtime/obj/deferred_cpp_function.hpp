@@ -39,7 +39,8 @@ namespace jank::runtime::obj
                           jtl::immutable_string const &declaration_code,
                           callable_arity_flags const arity_flags,
                           jtl::immutable_string const &base_name,
-                          native_vector<u8> const &arities);
+                          native_vector<u8> const &arities,
+                          bool const is_variadic);
 
     /* behavior::object_like */
     using object::to_string;
@@ -48,7 +49,6 @@ namespace jank::runtime::obj
     /* behavior::callable */
     using object::call;
     object_ref call(object_ref const) const override;
-    callable_arity_flags get_arity_flags() const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     object_ref meta;
@@ -56,10 +56,11 @@ namespace jank::runtime::obj
 
     /*** XXX: Everything here is thread-safe. ***/
     mutable std::recursive_mutex compilation_mutex;
-    mutable jit_function_ref compiled_fn;
+    mutable object_ref compiled_fn;
     mutable jtl::immutable_string declaration_code;
     mutable callable_arity_flags arity_flags{};
     mutable jtl::immutable_string base_name;
     mutable native_vector<u8> arities;
+    mutable bool is_variadic{};
   };
 }

@@ -10,517 +10,6 @@ namespace jank::runtime
 {
   using namespace behavior;
 
-  object_ref dynamic_call(object_ref const source)
-  {
-    auto const arity_flags(source.get_arity_flags());
-
-    switch(arity_flags)
-    {
-      case mask_variadic_arity(0):
-        return source.call({});
-      default:
-        return source.call();
-    }
-  }
-
-  object_ref dynamic_call(object_ref const source, object_ref const a1)
-  {
-    auto const arity_flags(source.get_arity_flags());
-    auto const mask(extract_variadic_arity_mask(arity_flags));
-
-    switch(mask)
-    {
-      case mask_variadic_arity(0):
-        return source.call(make_box<obj::native_array_sequence>(a1));
-      case mask_variadic_arity(1):
-        if(!is_variadic_ambiguous(arity_flags))
-        {
-          return source.call(a1, {});
-        }
-      default:
-        return source.call(a1);
-    }
-  }
-
-  object_ref dynamic_call(object_ref const source, object_ref const a1, object_ref const a2)
-  {
-    auto const arity_flags(source.get_arity_flags());
-    auto const mask(extract_variadic_arity_mask(arity_flags));
-
-    switch(mask)
-    {
-      case mask_variadic_arity(0):
-        return source.call(make_box<obj::native_array_sequence>(a1, a2));
-      case mask_variadic_arity(1):
-        return source.call(a1, make_box<obj::native_array_sequence>(a2));
-      case mask_variadic_arity(2):
-        if(!is_variadic_ambiguous(arity_flags))
-        {
-          return source.call(a1, a2, {});
-        }
-      default:
-        return source.call(a1, a2);
-    }
-  }
-
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const a1,
-                          object_ref const a2,
-                          object_ref const a3)
-  {
-    auto const arity_flags(source.get_arity_flags());
-    auto const mask(extract_variadic_arity_mask(arity_flags));
-
-    switch(mask)
-    {
-      case mask_variadic_arity(0):
-        return source.call(make_box<obj::native_array_sequence>(a1, a2, a3));
-      case mask_variadic_arity(1):
-        return source.call(a1, make_box<obj::native_array_sequence>(a2, a3));
-      case mask_variadic_arity(2):
-        return source.call(a1, a2, make_box<obj::native_array_sequence>(a3));
-      case mask_variadic_arity(3):
-        if(!is_variadic_ambiguous(arity_flags))
-        {
-          return source.call(a1, a2, a3, {});
-        }
-      default:
-        return source.call(a1, a2, a3);
-    }
-  }
-
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const a1,
-                          object_ref const a2,
-                          object_ref const a3,
-                          object_ref const a4)
-  {
-    auto const arity_flags(source.get_arity_flags());
-    auto const mask(extract_variadic_arity_mask(arity_flags));
-
-    switch(mask)
-    {
-      case mask_variadic_arity(0):
-        return source.call(make_box<obj::native_array_sequence>(a1, a2, a3, a4));
-      case mask_variadic_arity(1):
-        return source.call(a1, make_box<obj::native_array_sequence>(a2, a3, a4));
-      case mask_variadic_arity(2):
-        return source.call(a1, a2, make_box<obj::native_array_sequence>(a3, a4));
-      case mask_variadic_arity(3):
-        return source.call(a1, a2, a3, make_box<obj::native_array_sequence>(a4));
-      case mask_variadic_arity(4):
-        if(!is_variadic_ambiguous(arity_flags))
-        {
-          return source.call(a1, a2, a3, a4, {});
-        }
-      default:
-        return source.call(a1, a2, a3, a4);
-    }
-  }
-
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const a1,
-                          object_ref const a2,
-                          object_ref const a3,
-                          object_ref const a4,
-                          object_ref const a5)
-  {
-    auto const arity_flags(source.get_arity_flags());
-    auto const mask(extract_variadic_arity_mask(arity_flags));
-
-    switch(mask)
-    {
-      case mask_variadic_arity(0):
-        return source.call(make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5));
-      case mask_variadic_arity(1):
-        return source.call(a1, make_box<obj::native_array_sequence>(a2, a3, a4, a5));
-      case mask_variadic_arity(2):
-        return source.call(a1, a2, make_box<obj::native_array_sequence>(a3, a4, a5));
-      case mask_variadic_arity(3):
-        return source.call(a1, a2, a3, make_box<obj::native_array_sequence>(a4, a5));
-      case mask_variadic_arity(4):
-        return source.call(a1, a2, a3, a4, make_box<obj::native_array_sequence>(a5));
-      case mask_variadic_arity(5):
-        if(!is_variadic_ambiguous(arity_flags))
-        {
-          return source.call(a1, a2, a3, a4, a5, {});
-        }
-      default:
-        return source.call(a1, a2, a3, a4, a5);
-    }
-  }
-
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const a1,
-                          object_ref const a2,
-                          object_ref const a3,
-                          object_ref const a4,
-                          object_ref const a5,
-                          object_ref const a6)
-  {
-    auto const arity_flags(source.get_arity_flags());
-    auto const mask(extract_variadic_arity_mask(arity_flags));
-
-    switch(mask)
-    {
-      case mask_variadic_arity(0):
-        return source.call(make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6));
-      case mask_variadic_arity(1):
-        return source.call(a1, make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6));
-      case mask_variadic_arity(2):
-        return source.call(a1, a2, make_box<obj::native_array_sequence>(a3, a4, a5, a6));
-      case mask_variadic_arity(3):
-        return source.call(a1, a2, a3, make_box<obj::native_array_sequence>(a4, a5, a6));
-      case mask_variadic_arity(4):
-        return source.call(a1, a2, a3, a4, make_box<obj::native_array_sequence>(a5, a6));
-      case mask_variadic_arity(5):
-        return source.call(a1, a2, a3, a4, a5, make_box<obj::native_array_sequence>(a6));
-      case mask_variadic_arity(6):
-        if(!is_variadic_ambiguous(arity_flags))
-        {
-          return source.call(a1, a2, a3, a4, a5, a6, {});
-        }
-      default:
-        return source.call(a1, a2, a3, a4, a5, a6);
-    }
-  }
-
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const a1,
-                          object_ref const a2,
-                          object_ref const a3,
-                          object_ref const a4,
-                          object_ref const a5,
-                          object_ref const a6,
-                          object_ref const a7)
-  {
-    auto const arity_flags(source.get_arity_flags());
-    auto const mask(extract_variadic_arity_mask(arity_flags));
-
-    switch(mask)
-    {
-      case mask_variadic_arity(0):
-        return source.call(make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7));
-      case mask_variadic_arity(1):
-        return source.call(a1, make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7));
-      case mask_variadic_arity(2):
-        return source.call(a1, a2, make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7));
-      case mask_variadic_arity(3):
-        return source.call(a1, a2, a3, make_box<obj::native_array_sequence>(a4, a5, a6, a7));
-      case mask_variadic_arity(4):
-        return source.call(a1, a2, a3, a4, make_box<obj::native_array_sequence>(a5, a6, a7));
-      case mask_variadic_arity(5):
-        return source.call(a1, a2, a3, a4, a5, make_box<obj::native_array_sequence>(a6, a7));
-      case mask_variadic_arity(6):
-        return source.call(a1, a2, a3, a4, a5, a6, make_box<obj::native_array_sequence>(a7));
-      case mask_variadic_arity(7):
-        if(!is_variadic_ambiguous(arity_flags))
-        {
-          return source.call(a1, a2, a3, a4, a5, a6, a7, {});
-        }
-      default:
-        return source.call(a1, a2, a3, a4, a5, a6, a7);
-    }
-  }
-
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const a1,
-                          object_ref const a2,
-                          object_ref const a3,
-                          object_ref const a4,
-                          object_ref const a5,
-                          object_ref const a6,
-                          object_ref const a7,
-                          object_ref const a8)
-  {
-    auto const arity_flags(source.get_arity_flags());
-    auto const mask(extract_variadic_arity_mask(arity_flags));
-
-    switch(mask)
-    {
-      case mask_variadic_arity(0):
-        return source.call(make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7, a8));
-      case mask_variadic_arity(1):
-        return source.call(a1, make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7, a8));
-      case mask_variadic_arity(2):
-        return source.call(a1, a2, make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7, a8));
-      case mask_variadic_arity(3):
-        return source.call(a1, a2, a3, make_box<obj::native_array_sequence>(a4, a5, a6, a7, a8));
-      case mask_variadic_arity(4):
-        return source.call(a1, a2, a3, a4, make_box<obj::native_array_sequence>(a5, a6, a7, a8));
-      case mask_variadic_arity(5):
-        return source.call(a1, a2, a3, a4, a5, make_box<obj::native_array_sequence>(a6, a7, a8));
-      case mask_variadic_arity(6):
-        return source.call(a1, a2, a3, a4, a5, a6, make_box<obj::native_array_sequence>(a7, a8));
-      case mask_variadic_arity(7):
-        return source.call(a1, a2, a3, a4, a5, a6, a7, make_box<obj::native_array_sequence>(a8));
-      case mask_variadic_arity(8):
-        if(!is_variadic_ambiguous(arity_flags))
-        {
-          return source.call(a1, a2, a3, a4, a5, a6, a7, a8, {});
-        }
-      default:
-        return source.call(a1, a2, a3, a4, a5, a6, a7, a8);
-    }
-  }
-
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const a1,
-                          object_ref const a2,
-                          object_ref const a3,
-                          object_ref const a4,
-                          object_ref const a5,
-                          object_ref const a6,
-                          object_ref const a7,
-                          object_ref const a8,
-                          object_ref const a9)
-  {
-    auto const arity_flags(source.get_arity_flags());
-    auto const mask(extract_variadic_arity_mask(arity_flags));
-
-    switch(mask)
-    {
-      case mask_variadic_arity(0):
-        return source.call(
-          make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7, a8, a9));
-      case mask_variadic_arity(1):
-        return source.call(a1,
-                           make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7, a8, a9));
-      case mask_variadic_arity(2):
-        return source.call(a1,
-                           a2,
-                           make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7, a8, a9));
-      case mask_variadic_arity(3):
-        return source.call(a1,
-                           a2,
-                           a3,
-                           make_box<obj::native_array_sequence>(a4, a5, a6, a7, a8, a9));
-      case mask_variadic_arity(4):
-        return source.call(a1,
-                           a2,
-                           a3,
-                           a4,
-                           make_box<obj::native_array_sequence>(a5, a6, a7, a8, a9));
-      case mask_variadic_arity(5):
-        return source
-          .call(a1, a2, a3, a4, a5, make_box<obj::native_array_sequence>(a6, a7, a8, a9));
-      case mask_variadic_arity(6):
-        return source
-          .call(a1, a2, a3, a4, a5, a6, make_box<obj::native_array_sequence>(a7, a8, a9));
-      case mask_variadic_arity(7):
-        return source
-          .call(a1, a2, a3, a4, a5, a6, a7, make_box<obj::native_array_sequence>(a8, a9));
-      case mask_variadic_arity(8):
-        return source
-          .call(a1, a2, a3, a4, a5, a6, a7, a8, make_box<obj::native_array_sequence>(a9));
-      case mask_variadic_arity(9):
-        if(!is_variadic_ambiguous(arity_flags))
-        {
-          return source.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, {});
-        }
-      default:
-        return source.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
-    }
-  }
-
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const a1,
-                          object_ref const a2,
-                          object_ref const a3,
-                          object_ref const a4,
-                          object_ref const a5,
-                          object_ref const a6,
-                          object_ref const a7,
-                          object_ref const a8,
-                          object_ref const a9,
-                          object_ref const a10)
-  {
-    auto const arity_flags(source.get_arity_flags());
-    auto const mask(extract_variadic_arity_mask(arity_flags));
-
-    switch(mask)
-    {
-      case mask_variadic_arity(0):
-        return source.call(
-          make_box<obj::native_array_sequence>(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10));
-      case mask_variadic_arity(1):
-        return source.call(
-          a1,
-          make_box<obj::native_array_sequence>(a2, a3, a4, a5, a6, a7, a8, a9, a10));
-      case mask_variadic_arity(2):
-        return source.call(a1,
-                           a2,
-                           make_box<obj::native_array_sequence>(a3, a4, a5, a6, a7, a8, a9, a10));
-      case mask_variadic_arity(3):
-        return source.call(a1,
-                           a2,
-                           a3,
-                           make_box<obj::native_array_sequence>(a4, a5, a6, a7, a8, a9, a10));
-      case mask_variadic_arity(4):
-        return source.call(a1,
-                           a2,
-                           a3,
-                           a4,
-                           make_box<obj::native_array_sequence>(a5, a6, a7, a8, a9, a10));
-      case mask_variadic_arity(5):
-        return source
-          .call(a1, a2, a3, a4, a5, make_box<obj::native_array_sequence>(a6, a7, a8, a9, a10));
-      case mask_variadic_arity(6):
-        return source
-          .call(a1, a2, a3, a4, a5, a6, make_box<obj::native_array_sequence>(a7, a8, a9, a10));
-      case mask_variadic_arity(7):
-        return source
-          .call(a1, a2, a3, a4, a5, a6, a7, make_box<obj::native_array_sequence>(a8, a9, a10));
-      case mask_variadic_arity(8):
-        return source
-          .call(a1, a2, a3, a4, a5, a6, a7, a8, make_box<obj::native_array_sequence>(a9, a10));
-      case mask_variadic_arity(9):
-        return source
-          .call(a1, a2, a3, a4, a5, a6, a7, a8, a9, make_box<obj::native_array_sequence>(a10));
-      case mask_variadic_arity(10):
-        if(!is_variadic_ambiguous(arity_flags))
-        {
-          return source
-            .call(a1, a2, a3, a4, a5, a6, a7, a8, a9, make_box<obj::native_array_sequence>(a10));
-        }
-      default:
-        return source.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-    }
-  }
-
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const a1,
-                          object_ref const a2,
-                          object_ref const a3,
-                          object_ref const a4,
-                          object_ref const a5,
-                          object_ref const a6,
-                          object_ref const a7,
-                          object_ref const a8,
-                          object_ref const a9,
-                          object_ref const a10,
-                          obj::persistent_list_ref const rest)
-  {
-    auto const arity_flags(source.get_arity_flags());
-    auto const mask(extract_variadic_arity_mask(arity_flags));
-    switch(mask)
-    {
-      /* TODO: Optimize this with a faster seq? */
-      case mask_variadic_arity(0):
-        {
-          native_vector<object_ref> packed;
-          packed.reserve(10 + rest->count());
-          packed.insert(packed.end(), { a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 });
-          std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
-          return source.call(make_box<obj::native_vector_sequence>(std::move(packed)));
-        }
-      case mask_variadic_arity(1):
-        {
-          native_vector<object_ref> packed;
-          packed.reserve(9 + rest->count());
-          packed.insert(packed.end(), { a2, a3, a4, a5, a6, a7, a8, a9, a10 });
-          std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
-          return source.call(a1, make_box<obj::native_vector_sequence>(std::move(packed)));
-        }
-      case mask_variadic_arity(2):
-        {
-          native_vector<object_ref> packed;
-          packed.reserve(8 + rest->count());
-          packed.insert(packed.end(), { a3, a4, a5, a6, a7, a8, a9, a10 });
-          std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
-          return source.call(a1, a2, make_box<obj::native_vector_sequence>(std::move(packed)));
-        }
-      case mask_variadic_arity(3):
-        {
-          native_vector<object_ref> packed;
-          packed.reserve(7 + rest->count());
-          packed.insert(packed.end(), { a4, a5, a6, a7, a8, a9, a10 });
-          std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
-          return source.call(a1, a2, a3, make_box<obj::native_vector_sequence>(std::move(packed)));
-        }
-      case mask_variadic_arity(4):
-        {
-          native_vector<object_ref> packed;
-          packed.reserve(6 + rest->count());
-          packed.insert(packed.end(), { a5, a6, a7, a8, a9, a10 });
-          std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
-          return source.call(a1,
-                             a2,
-                             a3,
-                             a4,
-                             make_box<obj::native_vector_sequence>(std::move(packed)));
-        }
-      case mask_variadic_arity(5):
-        {
-          native_vector<object_ref> packed;
-          packed.reserve(5 + rest->count());
-          packed.insert(packed.end(), { a6, a7, a8, a9, a10 });
-          std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
-          return source
-            .call(a1, a2, a3, a4, a5, make_box<obj::native_vector_sequence>(std::move(packed)));
-        }
-      case mask_variadic_arity(6):
-        {
-          native_vector<object_ref> packed;
-          packed.reserve(4 + rest->count());
-          packed.insert(packed.end(), { a7, a8, a9, a10 });
-          std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
-          return source
-            .call(a1, a2, a3, a4, a5, a6, make_box<obj::native_vector_sequence>(std::move(packed)));
-        }
-      case mask_variadic_arity(7):
-        {
-          native_vector<object_ref> packed;
-          packed.reserve(3 + rest->count());
-          packed.insert(packed.end(), { a8, a9, a10 });
-          std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
-          return source.call(a1,
-                             a2,
-                             a3,
-                             a4,
-                             a5,
-                             a6,
-                             a7,
-                             make_box<obj::native_vector_sequence>(std::move(packed)));
-        }
-      case mask_variadic_arity(8):
-        {
-          native_vector<object_ref> packed;
-          packed.reserve(2 + rest->count());
-          packed.insert(packed.end(), { a9, a10 });
-          std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
-          return source.call(a1,
-                             a2,
-                             a3,
-                             a4,
-                             a5,
-                             a6,
-                             a7,
-                             a8,
-                             make_box<obj::native_vector_sequence>(std::move(packed)));
-        }
-      case mask_variadic_arity(9):
-        {
-          native_vector<object_ref> packed;
-          packed.reserve(1 + rest->count());
-          packed.insert(packed.end(), { a10 });
-          std::copy(rest->data.begin(), rest->data.end(), std::back_inserter(packed));
-          return source.call(a1,
-                             a2,
-                             a3,
-                             a4,
-                             a5,
-                             a6,
-                             a7,
-                             a8,
-                             a9,
-                             make_box<obj::native_vector_sequence>(std::move(packed)));
-        }
-      default:
-        throw std::runtime_error{ util::format("unsupported arity: {}", 10 + rest->count()) };
-    }
-  }
-
   object_ref apply_to(object_ref const source, object_ref const args)
   {
     return visit_seqable(
@@ -536,24 +25,24 @@ namespace jank::runtime
         switch(length)
         {
           case 0:
-            return dynamic_call(source);
+            return source.call();
           case 1:
             {
               auto const a1{ *it };
-              return dynamic_call(source, a1);
+              return source.call(a1);
             }
           case 2:
             {
               auto const a1{ *it };
               auto const a2{ *(++it) };
-              return dynamic_call(source, a1, a2);
+              return source.call(a1, a2);
             }
           case 3:
             {
               auto const a1{ *it };
               auto const a2{ *(++it) };
               auto const a3{ *(++it) };
-              return dynamic_call(source, a1, a2, a3);
+              return source.call(a1, a2, a3);
             }
           case 4:
             {
@@ -561,7 +50,7 @@ namespace jank::runtime
               auto const a2{ *(++it) };
               auto const a3{ *(++it) };
               auto const a4{ *(++it) };
-              return dynamic_call(source, a1, a2, a3, a4);
+              return source.call(a1, a2, a3, a4);
             }
           case 5:
             {
@@ -570,7 +59,7 @@ namespace jank::runtime
               auto const a3{ *(++it) };
               auto const a4{ *(++it) };
               auto const a5{ *(++it) };
-              return dynamic_call(source, a1, a2, a3, a4, a5);
+              return source.call(a1, a2, a3, a4, a5);
             }
           case 6:
             {
@@ -580,7 +69,7 @@ namespace jank::runtime
               auto const a4{ *(++it) };
               auto const a5{ *(++it) };
               auto const a6{ *(++it) };
-              return dynamic_call(source, a1, a2, a3, a4, a5, a6);
+              return source.call(a1, a2, a3, a4, a5, a6);
             }
           case 7:
             {
@@ -591,7 +80,7 @@ namespace jank::runtime
               auto const a5{ *(++it) };
               auto const a6{ *(++it) };
               auto const a7{ *(++it) };
-              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7);
+              return source.call(a1, a2, a3, a4, a5, a6, a7);
             }
           case 8:
             {
@@ -603,7 +92,7 @@ namespace jank::runtime
               auto const a6{ *(++it) };
               auto const a7{ *(++it) };
               auto const a8{ *(++it) };
-              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7, a8);
+              return source.call(a1, a2, a3, a4, a5, a6, a7, a8);
             }
           case 9:
             {
@@ -616,7 +105,7 @@ namespace jank::runtime
               auto const a7{ *(++it) };
               auto const a8{ *(++it) };
               auto const a9{ *(++it) };
-              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+              return source.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
             }
           case 10:
             {
@@ -630,7 +119,7 @@ namespace jank::runtime
               auto const a8{ *(++it) };
               auto const a9{ *(++it) };
               auto const a10{ *(++it) };
-              return dynamic_call(source, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+              return source.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
             }
           default:
             {
@@ -644,18 +133,17 @@ namespace jank::runtime
               auto const a8{ *(++it) };
               auto const a9{ *(++it) };
               auto const a10{ *(++it) };
-              return dynamic_call(source,
-                                  a1,
-                                  a2,
-                                  a3,
-                                  a4,
-                                  a5,
-                                  a6,
-                                  a7,
-                                  a8,
-                                  a9,
-                                  a10,
-                                  obj::persistent_list::create((++it).data));
+              return source.call(a1,
+                                 a2,
+                                 a3,
+                                 a4,
+                                 a5,
+                                 a6,
+                                 a7,
+                                 a8,
+                                 a9,
+                                 a10,
+                                 obj::persistent_list::create((++it).data));
             }
         }
       },

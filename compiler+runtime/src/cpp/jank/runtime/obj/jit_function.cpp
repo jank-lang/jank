@@ -192,9 +192,4 @@ namespace jank::runtime::obj
     }
     return arity_10(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
   }
-
-  callable_arity_flags jit_function::get_arity_flags() const
-  {
-    return arity_flags;
-  }
 }

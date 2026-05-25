@@ -4,61 +4,53 @@
 
 namespace jank::runtime::obj
 {
-  using jit_closure_ref = oref<struct jit_closure>;
+  using jit_variadic_closure_ref = oref<struct jit_variadic_closure>;
 
-  struct jit_closure : object
+  struct jit_variadic_closure : object
   {
-    static constexpr object_type obj_type{ object_type::jit_closure };
+    static constexpr object_type obj_type{ object_type::jit_variadic_closure };
     static constexpr object_behavior obj_behaviors{ object_behavior::call };
     static constexpr bool pointer_free{ false };
 
-    jit_closure();
-    jit_closure(jit_closure &&) noexcept = default;
-    jit_closure(jit_closure const &) = default;
-    jit_closure(callable_arity_flags arity_flags, void *context);
-    jit_closure(object_ref const meta);
+    jit_variadic_closure();
+    jit_variadic_closure(jit_variadic_closure &&) noexcept = default;
+    jit_variadic_closure(jit_variadic_closure const &) = default;
+    jit_variadic_closure(callable_arity_flags arity_flags, void *context);
+    jit_variadic_closure(object_ref const meta);
 
     /* behavior::object_like */
     using object::to_string;
     void to_string(jtl::string_builder &buff) const override;
 
     /* behavior::metadatable */
-    jit_closure_ref with_meta(object_ref const m);
+    jit_variadic_closure_ref with_meta(object_ref const m);
     object_ref get_meta() const;
 
     /* behavior::callable */
-    object_ref call() const final;
-    object_ref call(object_ref const) const final;
-    object_ref call(object_ref const, object_ref const) const final;
-    object_ref call(object_ref const, object_ref const, object_ref const) const final;
+    object_ref call() const override;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
+    object_ref call(object_ref const, object_ref const, object_ref const) const override;
     object_ref
-    call(object_ref const, object_ref const, object_ref const, object_ref const) const final;
+    call(object_ref const, object_ref const, object_ref const, object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const) const final;
-    object_ref call(object_ref const,
-                    object_ref const,
-                    object_ref const,
-                    object_ref const,
-                    object_ref const,
-                    object_ref const) const final;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const,
-                    object_ref const) const final;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const,
-                    object_ref const) const final;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
@@ -66,8 +58,7 @@ namespace jank::runtime::obj
                     object_ref const,
                     object_ref const,
                     object_ref const,
-                    object_ref const,
-                    object_ref const) const final;
+                    object_ref const) const override;
     object_ref call(object_ref const,
                     object_ref const,
                     object_ref const,
@@ -76,8 +67,28 @@ namespace jank::runtime::obj
                     object_ref const,
                     object_ref const,
                     object_ref const,
+                    object_ref const) const override;
+    object_ref call(object_ref const,
                     object_ref const,
-                    object_ref const) const final;
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) const override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     void *context{};

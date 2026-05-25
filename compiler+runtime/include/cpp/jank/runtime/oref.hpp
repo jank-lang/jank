@@ -724,14 +724,30 @@ namespace jank::runtime
       return ptr()->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    callable_arity_flags get_arity_flags() const
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10,
+                    object_ref const more) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
-        return 0;
+        obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
       }
 
-      return ptr()->get_arity_flags();
+      return ptr()->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
     }
 
     /* behavior::get */
@@ -1267,13 +1283,23 @@ namespace jank::runtime
       return static_cast<T *>(data)->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    callable_arity_flags get_arity_flags() const
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10,
+                    object_ref const more) const
     {
       if(is_nil())
       {
-        return _jank_nil.get_arity_flags();
+        return _jank_nil.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
       }
-      return static_cast<T *>(data)->get_arity_flags();
+      return static_cast<T *>(data)->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
     }
 
     /* behavior::get */
@@ -1580,9 +1606,20 @@ namespace jank::runtime
       return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    callable_arity_flags get_arity_flags() const
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10,
+                    object_ref const more) const
     {
-      return 0;
+      obj::small_integer const i{ data };
+      return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
     }
 
     /* behavior::get */
@@ -1882,9 +1919,20 @@ namespace jank::runtime
       return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    callable_arity_flags get_arity_flags() const
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10,
+                    object_ref const more) const
     {
-      return 0;
+      obj::small_real const i{ data };
+      return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
     }
 
     /* behavior::get */
@@ -2198,9 +2246,19 @@ namespace jank::runtime
       return _jank_nil.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    callable_arity_flags get_arity_flags() const
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10,
+                    object_ref const more) const
     {
-      return _jank_nil.get_arity_flags();
+      return _jank_nil.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
     }
 
     /* behavior::get */

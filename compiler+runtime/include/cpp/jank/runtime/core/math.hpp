@@ -989,28 +989,27 @@ namespace jank::runtime
     {
       return visit_number_like(
         [](auto const typed_l) -> object_ref {
-          if(jtl::decay_t<decltype(typed_l)>::value_type::obj_type == object_type::integer
-             || jtl::decay_t<decltype(typed_l)>::value_type::obj_type == object_type::small_integer)
-          {
-            return make_box(std::abs(typed_l->to_integer())).erase();
-          }
-          else
-          {
-            return make_box(std::abs(typed_l->to_real())).erase();
-          }
+          return typed_l->data < 0ll ? make_box(-1ll * typed_l->data).erase()
+                                     : make_box(typed_l->data).erase();
         },
         l);
     }
     else
     {
-      if(jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::integer
-         || jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::small_integer)
+      if constexpr(jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::integer
+                   || jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::small_integer)
       {
         return std::abs(l->to_integer());
       }
-      else
+      else if constexpr(jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::real
+                        || jtl::decay_t<decltype(l)>::value_type::obj_type
+                          == object_type::small_real)
       {
         return std::abs(l->to_real());
+      }
+      else
+      {
+        return l->data < 0ll ? make_box(-1ll * l->data).erase() : make_box(l->data).erase();
       }
     }
   }

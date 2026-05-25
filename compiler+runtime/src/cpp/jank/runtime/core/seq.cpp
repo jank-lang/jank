@@ -1013,7 +1013,7 @@ namespace jank::runtime
         object_ref res{ init };
         for(auto const &e : make_sequence_range(typed_coll))
         {
-          res = dynamic_call(f, res, e);
+          res = f.call(res, e);
           if(res.get_type() == object_type::reduced)
           {
             res = expect_object<obj::reduced>(res)->val;

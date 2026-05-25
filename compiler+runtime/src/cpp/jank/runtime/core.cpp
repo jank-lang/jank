@@ -510,7 +510,7 @@ namespace jank::runtime
   object_ref vswap(object_ref const v, object_ref const fn)
   {
     auto const v_obj(try_object<obj::volatile_>(v));
-    return v_obj->reset(dynamic_call(fn, v_obj->deref()));
+    return v_obj->reset(fn.call(v_obj->deref()));
   }
 
   object_ref vswap(object_ref const v, object_ref const fn, object_ref const args)
@@ -753,7 +753,7 @@ namespace jank::runtime
 
       try
       {
-        auto const res{ dynamic_call(fn) };
+        auto const res{ fn.call() };
         {
           auto const locked_state{ ret->state.wlock() };
           locked_state->status = obj::future_status::done;

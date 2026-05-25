@@ -9,6 +9,7 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/call.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime::obj
@@ -18,7 +19,8 @@ namespace jank::runtime::obj
                                                jtl::immutable_string const &declaration_code,
                                                callable_arity_flags const arity_flags,
                                                jtl::immutable_string const &base_name,
-                                               native_vector<u8> const &arities)
+                                               native_vector<u8> const &arities,
+                                               bool const is_variadic)
     : object{ obj_type, obj_behaviors }
     , meta{ meta }
     , var{ var }
@@ -26,6 +28,7 @@ namespace jank::runtime::obj
     , arity_flags{ arity_flags }
     , base_name{ base_name }
     , arities{ arities }
+    , is_variadic{ is_variadic }
   {
   }
 
@@ -40,6 +43,7 @@ namespace jank::runtime::obj
       this);
   }
 
+  /* TODO: This won't work anymore. We need to handle every arity. */
   object_ref deferred_cpp_function::call(object_ref const args) const
   {
     std::lock_guard<std::recursive_mutex> const lock{ compilation_mutex };
@@ -59,8 +63,8 @@ namespace jank::runtime::obj
     /* On the first invocation, we don't have a compiled_fn. We compile our C++ code, get a fn,
      * rebind the root of the var, and then apply our args to the new fn.*/
     __rt_ctx->jit_prc.eval_string(declaration_code);
-    compiled_fn = __rt_ctx->jit_prc.create_function(arity_flags, base_name, arities);
-    compiled_fn->meta = meta;
+    compiled_fn = __rt_ctx->jit_prc.create_function(arity_flags, base_name, arities, is_variadic);
+    reset_meta(compiled_fn, meta);
 
     if(var.is_some())
     {
@@ -71,11 +75,5 @@ namespace jank::runtime::obj
     declaration_code = "";
 
     return apply_to(compiled_fn, args);
-  }
-
-  callable_arity_flags deferred_cpp_function::get_arity_flags() const
-  {
-    /* Deferred fns are always [& args], which they then apply to the proxied fn. */
-    return build_arity_flags(0, true, false);
   }
 }

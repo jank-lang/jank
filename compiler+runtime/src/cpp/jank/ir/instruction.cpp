@@ -136,10 +136,12 @@ namespace jank::ir::inst
   function::function(identifier const &name,
                      read::source const &location,
                      native_unordered_map<u8, jtl::immutable_string> &&arities,
-                     runtime::callable_arity_flags const arity_flags)
+                     runtime::callable_arity_flags const arity_flags,
+                     bool const is_variadic)
     : instruction{ instruction_kind::function, name, jit_function_ref_type(), location }
     , arities{ jtl::move(arities) }
     , arity_flags{ arity_flags }
+    , is_variadic{ is_variadic }
   {
   }
 
@@ -148,12 +150,14 @@ namespace jank::ir::inst
                    jtl::immutable_string const &context,
                    native_unordered_map<u8, jtl::immutable_string> &&arities,
                    native_unordered_map<jtl::immutable_string, detail::typed_identifier> &&captures,
-                   runtime::callable_arity_flags const arity_flags)
+                   runtime::callable_arity_flags const arity_flags,
+                   bool const is_variadic)
     : instruction{ instruction_kind::closure, name, jit_closure_ref_type(), location }
     , context{ context }
     , arities{ jtl::move(arities) }
     , captures{ jtl::move(captures) }
     , arity_flags{ arity_flags }
+    , is_variadic{ is_variadic }
   {
   }
 

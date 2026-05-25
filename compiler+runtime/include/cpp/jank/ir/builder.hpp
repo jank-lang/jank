@@ -69,13 +69,15 @@ namespace jank::ir
                                    jtl::option<identifier> const &meta);
     identifier function(analyze::expression_position const pos,
                         native_unordered_map<u8, jtl::immutable_string> &&arities,
-                        runtime::callable_arity_flags const arity_flags);
+                        runtime::callable_arity_flags const arity_flags,
+                        bool const is_variadic);
     identifier
     closure(analyze::expression_position const pos,
             jtl::immutable_string const &context,
             native_unordered_map<u8, jtl::immutable_string> &&arities,
             native_unordered_map<jtl::immutable_string, detail::typed_identifier> &&captures,
-            runtime::callable_arity_flags const arity_flags);
+            runtime::callable_arity_flags const arity_flags,
+            bool const is_variadic);
     identifier letfn(native_vector<jtl::immutable_string> &&bindings);
     identifier def(analyze::expression_position const pos,
                    jtl::immutable_string const &qualified_var,

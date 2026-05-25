@@ -2087,6 +2087,7 @@ namespace jank::analyze
     }
 
     static_ref_cast<expr::function>(ret)->arities = std::move(arities);
+    static_ref_cast<expr::function>(ret)->is_variadic = found_variadic != 0;
 
     return ret;
   }
@@ -3447,9 +3448,9 @@ namespace jank::analyze
     /* If we have more args than a fn allows, we need to pack all of the extras
      * into a single list and tack that on at the end. So, if max_params is 10, and
      * we pass 15 args, we'll pass 10 normally and then we'll have a special 11th
-     * arg which is a list containing the 5 remaining params. We rely on dynamic_call
-     * to do the hard work of packing that in the shape the function actually wants,
-     * based on its highest fixed arity flag. */
+     * arg which is a list containing the 5 remaining params. We rely on the object's
+     * call function to do the hard work of packing that in the shape the function
+     * actually wants, based on its highest fixed arity flag. */
     if(runtime::max_params < arg_count)
     {
       native_vector<expression_ref> packed_arg_exprs;

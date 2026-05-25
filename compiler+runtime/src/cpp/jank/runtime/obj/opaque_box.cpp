@@ -23,6 +23,17 @@ namespace jank::runtime::obj
     return b->data == data;
   }
 
+  jtl::immutable_string opaque_box::to_code_string() const
+  {
+    jtl::string_builder buff;
+    util::format_to(buff,
+                    "#object [{} {} holding {}]",
+                    object_type_str(type),
+                    this,
+                    canonical_type.empty() ? "<nothing>" : canonical_type);
+    return buff.release();
+  }
+
   uhash opaque_box::to_hash() const
   {
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(data.data));

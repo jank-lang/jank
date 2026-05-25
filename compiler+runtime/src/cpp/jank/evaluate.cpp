@@ -331,97 +331,20 @@ namespace jank::evaluate
 
     try
     {
-      native_vector<object_ref> arg_vals;
-      arg_vals.reserve(expr->arg_exprs.size());
-      for(auto const &arg_expr : expr->arg_exprs)
+      if(expr->arg_exprs.empty())
       {
-        arg_vals.emplace_back(eval(arg_expr));
+        return source.call();
       }
-
-      switch(arg_vals.size())
+      else
       {
-        case 0:
-          return dynamic_call(source);
-        case 1:
-          return dynamic_call(source, arg_vals[0]);
-        case 2:
-          return dynamic_call(source, arg_vals[0], arg_vals[1]);
-        case 3:
-          return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2]);
-        case 4:
-          return dynamic_call(source, arg_vals[0], arg_vals[1], arg_vals[2], arg_vals[3]);
-        case 5:
-          return dynamic_call(source,
-                              arg_vals[0],
-                              arg_vals[1],
-                              arg_vals[2],
-                              arg_vals[3],
-                              arg_vals[4]);
-        case 6:
-          return dynamic_call(source,
-                              arg_vals[0],
-                              arg_vals[1],
-                              arg_vals[2],
-                              arg_vals[3],
-                              arg_vals[4],
-                              arg_vals[5]);
-        case 7:
-          return dynamic_call(source,
-                              arg_vals[0],
-                              arg_vals[1],
-                              arg_vals[2],
-                              arg_vals[3],
-                              arg_vals[4],
-                              arg_vals[5],
-                              arg_vals[6]);
-        case 8:
-          return dynamic_call(source,
-                              arg_vals[0],
-                              arg_vals[1],
-                              arg_vals[2],
-                              arg_vals[3],
-                              arg_vals[4],
-                              arg_vals[5],
-                              arg_vals[6],
-                              arg_vals[7]);
-        case 9:
-          return dynamic_call(source,
-                              arg_vals[0],
-                              arg_vals[1],
-                              arg_vals[2],
-                              arg_vals[3],
-                              arg_vals[4],
-                              arg_vals[5],
-                              arg_vals[6],
-                              arg_vals[7],
-                              arg_vals[8]);
-        case 10:
-          return dynamic_call(source,
-                              arg_vals[0],
-                              arg_vals[1],
-                              arg_vals[2],
-                              arg_vals[3],
-                              arg_vals[4],
-                              arg_vals[5],
-                              arg_vals[6],
-                              arg_vals[7],
-                              arg_vals[8],
-                              arg_vals[9]);
-        default:
-          {
-            return dynamic_call(source,
-                                arg_vals[0],
-                                arg_vals[1],
-                                arg_vals[2],
-                                arg_vals[3],
-                                arg_vals[4],
-                                arg_vals[5],
-                                arg_vals[6],
-                                arg_vals[7],
-                                arg_vals[8],
-                                arg_vals[9],
-                                try_object<obj::persistent_list>(arg_vals[10]));
-          }
+        native_vector<object_ref> arg_vals;
+        arg_vals.reserve(expr->arg_exprs.size());
+        for(auto const &arg_expr : expr->arg_exprs)
+        {
+          arg_vals.emplace_back(eval(arg_expr));
+        }
+
+        return apply_to(source, make_box<obj::native_vector_sequence>(jtl::move(arg_vals)));
       }
     }
     catch(error_ref const e)
@@ -560,7 +483,7 @@ namespace jank::evaluate
     auto const module{ munge(expr->unique_name) };
     auto const mod{ ir::create(expr, module, codegen::compilation_target::eval) };
 
-    if(util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
+    if(false && util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
     {
       auto const generated{ codegen::gen_cpp(mod) };
       native_vector<u8> arities;
@@ -575,7 +498,8 @@ namespace jank::evaluate
                                                            generated.declaration,
                                                            mod.arity_flags,
                                                            mod.name,
-                                                           arities) };
+                                                           arities,
+                                                           mod.root_fn_expr->is_variadic) };
       current_def_var = jank_nil;
       return ret;
     }
@@ -615,12 +539,12 @@ namespace jank::evaluate
 
   object_ref eval(expr::let_ref const expr)
   {
-    return dynamic_call(eval(wrap_expression(expr, "let", {})));
+    return eval(wrap_expression(expr, "let", {})).call();
   }
 
   object_ref eval(expr::letfn_ref const expr)
   {
-    return dynamic_call(eval(wrap_expression(expr, "letfn", {})));
+    return eval(wrap_expression(expr, "letfn", {})).call();
   }
 
   object_ref eval(expr::if_ref const expr)
@@ -648,12 +572,12 @@ namespace jank::evaluate
 
   object_ref eval(expr::try_ref const expr)
   {
-    return dynamic_call(eval(wrap_expression(expr, "try", {})));
+    return eval(wrap_expression(expr, "try", {})).call();
   }
 
   object_ref eval(expr::case_ref const expr)
   {
-    return dynamic_call(eval(wrap_expression(expr, "case", {})));
+    return eval(wrap_expression(expr, "case", {})).call();
   }
 
   object_ref eval(expr::cpp_raw_ref const expr)
@@ -671,83 +595,83 @@ namespace jank::evaluate
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_value", {})));
+    return eval(wrap_expression(expr, "cpp_value", {})).call();
   }
 
   object_ref eval(expr::cpp_conversion_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_conversion", {})));
+    return eval(wrap_expression(expr, "cpp_conversion", {})).call();
   }
 
   object_ref eval(expr::cpp_unsafe_cast_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_unsafe_cast", {})));
+    return eval(wrap_expression(expr, "cpp_unsafe_cast", {})).call();
   }
 
   object_ref eval(expr::cpp_call_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_call", {})));
+    return eval(wrap_expression(expr, "cpp_call", {})).call();
   }
 
   object_ref eval(expr::cpp_constructor_call_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_constructor_call", {})));
+    return eval(wrap_expression(expr, "cpp_constructor_call", {})).call();
   }
 
   object_ref eval(expr::cpp_member_call_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_member_call", {})));
+    return eval(wrap_expression(expr, "cpp_member_call", {})).call();
   }
 
   object_ref eval(expr::cpp_member_access_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_member_access", {})));
+    return eval(wrap_expression(expr, "cpp_member_access", {})).call();
   }
 
   object_ref eval(expr::cpp_builtin_operator_call_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_builtin_operator_call", {})));
+    return eval(wrap_expression(expr, "cpp_builtin_operator_call", {})).call();
   }
 
   object_ref eval(expr::cpp_box_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_box", {})));
+    return eval(wrap_expression(expr, "cpp_box", {})).call();
   }
 
   object_ref eval(expr::cpp_unbox_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_unbox", {})));
+    return eval(wrap_expression(expr, "cpp_unbox", {})).call();
   }
 
   object_ref eval(expr::cpp_new_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_new", {})));
+    return eval(wrap_expression(expr, "cpp_new", {})).call();
   }
 
   object_ref eval(expr::cpp_delete_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return dynamic_call(eval(wrap_expression(expr, "cpp_delete", {})));
+    return eval(wrap_expression(expr, "cpp_delete", {})).call();
   }
 }

@@ -208,17 +208,18 @@ namespace jank
     auto const repl_main{
       __rt_ctx->intern_var("jank.nrepl.server.core", "background-main").expect_ok()
     };
-    dynamic_call(repl_main);
+    repl_main.call();
 
-    dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>("user"));
-    dynamic_call(__rt_ctx->intern_var("clojure.core", "refer").expect_ok(),
-                 make_box<obj::symbol>("clojure.core"));
+    __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>("user"));
+    __rt_ctx->intern_var("clojure.core", "refer")
+      .expect_ok()
+      .call(make_box<obj::symbol>("clojure.core"));
 
     if(!opts.target_module.empty())
     {
       profile::timer const timer{ "load main" };
       __rt_ctx->load_module(opts.target_module, module::origin::latest).expect_ok();
-      dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
+      __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>(opts.target_module));
     }
 
     auto const get_prompt([](jtl::immutable_string const &suffix) {
@@ -314,7 +315,7 @@ namespace jank
     {
       profile::timer const timer{ "load main" };
       __rt_ctx->load_module(opts.target_module, module::origin::latest).expect_ok();
-      dynamic_call(__rt_ctx->in_ns_var->deref(), make_box<obj::symbol>(opts.target_module));
+      __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>(opts.target_module));
     }
 
     llvm::LineEditor le("jank-native", ".jank-native-repl-history");

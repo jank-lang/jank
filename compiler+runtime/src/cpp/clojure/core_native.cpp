@@ -119,7 +119,9 @@ namespace clojure::core_native
   {
     return make_box(o.get_type() == object_type::native_function_wrapper
                     || o.get_type() == object_type::jit_function
+                    || o.get_type() == object_type::jit_variadic_function
                     || o.get_type() == object_type::jit_closure
+                    || o.get_type() == object_type::jit_variadic_closure
                     || o.get_type() == object_type::deferred_cpp_function);
   }
 
