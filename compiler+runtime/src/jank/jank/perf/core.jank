@@ -52,9 +52,6 @@ namespace jank::perf::core
     ;; triggering an unnecessary automatic GC during the benchmark run.
     (gc/force-collect)
 
-    ;; Start collecting GC timing metrics, or no-op if we are already doing so.
-    (gc/start-performance-measurement)
-
     ;; Make sure these GC stat functions are as close to the benchmark run call
     ;; site as possible so we don't pick up any GC activity from the benchmark
     ;; setup code.
@@ -74,7 +71,11 @@ namespace jank::perf::core
                   :collections     (- final-gc-count init-gc-count)
                   :collection-time (- final-gc-time init-gc-time)}})))))
 
-(defn run-benchmark [{:keys [label epochs warmups]} f]
+(defn run-benchmark [{:keys [label epochs warmups gc-stats]} f]
+  ;; Start collecting GC timing metrics, or no-op if we are already doing so.
+  (when gc-stats
+    (gc/start-performance-measurement))
+
   ;; Move control of the warmups out of nanobench. Run a dummy benchmark with
   ;; only the warmup iteration count first. This prevents our measured GC stats
   ;; in the main run from pollution by the warmup iterations.

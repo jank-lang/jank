@@ -17,14 +17,16 @@
 ;;   for whatever instructions executed with the altered control flow.
 
 (def default-bench-config
-  {:label   "bench"
-   :warmups 1
-   :epochs  1000})
+  {:label    "bench"
+   :warmups  1
+   :epochs   1000
+   :gc-stats true})
 
 (def default-quick-bench-config
-  {:label   "quick-bench"
-   :warmups 1
-   :epochs  100})
+  {:label    "quick-bench"
+   :warmups  1
+   :epochs   100
+   :gc-stats true})
 
 (defn blackbox
   "Prevents the result `x` from being optimized away by the compiler."
@@ -40,15 +42,22 @@
 (defmacro bench-to-data
   "Evaluates `body` repeatedly based on `opts` and return the results as data.
 
+  NOTE: Running this function will enable a GC performance measurement flag
+  which cannot be disabled for the remainder of the process. This may result in
+  slight additional overhead for all future garbage collections. You can disable
+  this by setting the `:gc-stats` option to false, but GC timing information
+  will not be available.
+
   Options:
-    :label   string shown in the report to identify the benchmark
-    :epochs  number of measurements to be recorded. Note that this is not the
-             same as the number of evaluations of the body, as for very short
-             duration bodies multiple evaluations may be performed per
-             measurement in order to obtain accurate timings.
-    :warmups number of evaluations which will be run and thrown away before the
-             main benchmark execution. A minimum of 1 warmups is always
-             recommended to ensure the body is JIT compiled."
+    :label     string shown in the report to identify the benchmark
+    :epochs    number of measurements to be recorded. Note that this is not the
+               same as the number of evaluations of the body, as for very short
+               duration bodies multiple evaluations may be performed per
+               measurement in order to obtain accurate timings.
+    :warmups   number of evaluations which will be run and thrown away before
+               the main benchmark execution. A minimum of 1 warmups is always
+               recommended to ensure the body is JIT compiled.
+    :gc-stats  enable GC total collection timing measurement"
   [opts & body]
   `(core/run-benchmark
     (merge default-bench-config ~opts)
