@@ -8,6 +8,7 @@
   "Format a byte size given in whole bytes as a human-readable string with
   reasonable units."
   [s & {:keys [precision] :or {precision 1}}]
+  ;; TODO: Use clojure.core/format once it's ready...
   (let [[v unit] (cond
                    (> s 1e12) [(/ s 1e12) "TB"]
                    (> s 1e9)  [(/ s 1e9) "GB"]
@@ -97,8 +98,7 @@
                          :else              bar-char)))))
       (println))
     (when legend?
-      ;; TODO: without clojure.core/format we have to resort to some ugly printf
-      ;; calls.
+      ;; TODO: Use clojure.core/format once it's ready...
       (print " ")
       (let [min-str    (format-duration (:min hist) {:pad false})
             max-str    (format-duration (:max hist) {:pad false})

@@ -30,8 +30,8 @@
                 ;; overall dataset min/max.
                 ;;
                 ;; Each bin contains samples which satisfy lb <= x < ub, so we
-                ;; drop the sample which is equal to the final bind max (if
-                ;; there is one).
+                ;; drop the sample which is equal to the final bin max (if there
+                ;; is one).
                 (if (and (<= min x) (< x max))
                   (let [k (int (/ (- x min) width))]
                     (assoc! acc k (inc (get acc k))))

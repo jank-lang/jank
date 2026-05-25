@@ -4,12 +4,17 @@
    [jank.perf.print :as print]))
 
 ;; TODO:
-;; - Finalize API
-;; - Support a target benchmark duration rather than epoch count
-;; - Display a log histogram, either automatically or by flag
-;; - Catch errors in benchmark body code instead of swallowing them and
-;;   reporting incorrect timings
-;; - Clean up as more jank features come online
+;; - Support a target duration parameter. The benchmark runner should estimate
+;;   the function runtime, and then choose an epoch count which is likely to
+;;   complete in that amount of time. This is convenient for users to avoid
+;;   having to manually derive the epoch count for their quick benchmark. See
+;;   `tune!` in BenchmarkTools.jl.
+;; - Display a logarithmic instead of linear histogram when the data fits. Note
+;;   that this can be confusing to users, so evaluate whether or not this is
+;;   worth it.
+;; - Catch thrown exceptions in the benchmark body and notify the user.
+;;   Currently nanobench swallows exceptions and then reports the timing only
+;;   for whatever instructions executed with the altered control flow.
 
 (def default-bench-config
   {:label   "bench"
