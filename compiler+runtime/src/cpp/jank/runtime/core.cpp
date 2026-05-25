@@ -104,8 +104,8 @@ namespace jank::runtime
 
   static FILE *get_stdout()
   {
-    auto const stream_val{ __rt_ctx->stream_var->deref() };
-    auto const stream_box{ try_object<obj::opaque_box>(stream_val) };
+    static auto const stream_val{ __rt_ctx->stream_var->deref() };
+    static auto const stream_box{ try_object<obj::opaque_box>(stream_val) };
 
     auto const out_val{ __rt_ctx->current_out_var->deref() };
     auto const out_box{ try_object<obj::opaque_box>(out_val) };
