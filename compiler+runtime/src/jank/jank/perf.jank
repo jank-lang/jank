@@ -4,7 +4,6 @@
    [jank.perf.print :as print]))
 
 ;; TODO:
-;; - Documentation
 ;; - Finalize API
 ;; - Support a target benchmark duration rather than epoch count
 ;; - Display a log histogram, either automatically or by flag
@@ -19,7 +18,7 @@
 
 (def default-quick-bench-config
   {:label   "quick-bench"
-   :warmups 0
+   :warmups 1
    :epochs  100})
 
 (defn blackbox
@@ -34,16 +33,17 @@
   (print/print-compare-summary result-a result-b))
 
 (defmacro bench-to-data
-  "Executes `body` repeatedly based on `opts` and return the results as data.
+  "Evaluates `body` repeatedly based on `opts` and return the results as data.
 
   Options:
     :label   string shown in the report to identify the benchmark
     :epochs  number of measurements to be recorded. Note that this is not the
              same as the number of evaluations of the body, as for very short
-             duration bodies multiple evaluations will be performed per
+             duration bodies multiple evaluations may be performed per
              measurement in order to obtain accurate timings.
     :warmups number of evaluations which will be run and thrown away before the
-             main benchmark execution"
+             main benchmark execution. A minimum of 1 warmups is always
+             recommended to ensure the body is JIT compiled."
   [opts & body]
   `(core/run-benchmark
     (merge default-bench-config ~opts)

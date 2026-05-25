@@ -37,20 +37,16 @@ namespace jank::perf::core
      :variance    (stats/variance samples (.average result elapsed-measure))
      :p99         (stats/quantile-lite samples 0.99)}))
 
-(defn run-benchmark [{:keys [label warmups epochs]} f]
+(defn run-benchmark* [label epochs f summarize?]
   (let [f*    (cpp/jank.perf.core.make_callable #(blackbox (f)))
         bench (cpp/ankerl.nanobench.Bench)]
     (doto bench
       (.name (cpp/cast cpp/std.string label))
       (.output cpp/nullptr)
       (.epochs epochs)
+      (.warmup 0)
       ;; TODO: not used yet
-      (.performanceCounters false)
-      (.warmup warmups))
-
-    ;; Execute the function once to make sure any deferred compilation happens
-    ;; before we start measurements.
-    (f*)
+      (.performanceCounters false))
 
     ;; Force a GC collection before running to avoid any leftover garbage
     ;; triggering an unnecessary automatic GC during the benchmark run.
@@ -59,20 +55,32 @@ namespace jank::perf::core
     ;; Start collecting GC timing metrics, or no-op if we are already doing so.
     (gc/start-performance-measurement)
 
+    ;; Make sure these GC stat functions are as close to the benchmark run call
+    ;; site as possible so we don't pick up any GC activity from the benchmark
+    ;; setup code.
     (let [init-gc-count  (gc/collection-count)
           init-gc-time   (gc/total-time)
           init-gc-bytes  (gc/total-bytes)
-          ;; run
-          ;; TODO: these GC stats will include data from the warmup phase, if
-          ;; warmups > 0 is specified.
           _              (.run bench f*)
           final-gc-bytes (gc/total-bytes)
           final-gc-time  (gc/total-time)
           final-gc-count (gc/collection-count)
           result         (-> (.results bench) (.front))]
-      (merge
-       (summarize (cpp/box (cpp/& result)))
-       {:label label
-        :gc    {:allocated-bytes (- final-gc-bytes init-gc-bytes)
-                :collections     (- final-gc-count init-gc-count)
-                :collection-time (- final-gc-time init-gc-time)}}))))
+      (when summarize?
+        (merge
+         (summarize (cpp/box (cpp/& result)))
+         {:label label
+          :gc    {:allocated-bytes (- final-gc-bytes init-gc-bytes)
+                  :collections     (- final-gc-count init-gc-count)
+                  :collection-time (- final-gc-time init-gc-time)}})))))
+
+(defn run-benchmark [{:keys [label epochs warmups]} f]
+  ;; Move control of the warmups out of nanobench. Run a dummy benchmark with
+  ;; only the warmup iteration count first. This prevents our measured GC stats
+  ;; in the main run from pollution by the warmup iterations.
+  (when (pos? warmups)
+    (run-benchmark* label warmups f false))
+
+  ;; Do the real benchmark run with 0 warmups (since they have already been run
+  ;; above) and return the results.
+  (run-benchmark* label epochs f true))
