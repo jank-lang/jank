@@ -1,4 +1,25 @@
 (ns jank.perf
+  "A benchmark framework for jank.
+
+  Terminology:
+  - evaluation: a single execution of the benchmark function
+  - epoch: a single statistical sample measured from one or more evaluations
+
+  To run a quick benchmark, perhaps in the REPL, use the `quick-bench` macro. To
+  tune the benchmark parameters, perhaps for a fixed benchmark suite, use the
+  regular `bench` macro which accepts benchmark parameters.
+
+  Each of these has a `*-to-data` variant which return the benchmark result as a
+  map instead of printing. The data can be printed, just as in the
+  non-`*-to-data` variants, using the `report` function.
+
+  To compare relative performance between two expressions, use the
+  `quick-bench-compare` or `bench-compare` macros.
+
+  All benchmark macros automatically wrap the result in a `blackbox` to prevent
+  the compiler from optimizing the computation away. If the body does additional
+  computation which is not returned, then you can use the `blackbox` function on
+  those values yourself."
   (:require
    [jank.perf.core :as core]
    [jank.perf.print :as print]))
@@ -33,11 +54,12 @@
   [x]
   (core/blackbox x))
 
-(defn report [result]
-  (print/print-summary result))
-
-(defn report-compare [result-a result-b]
-  (print/print-compare-summary result-a result-b))
+(defn report
+  "Prints the data returned by a benchmark or comparison function to stdout."
+  [result-or-results]
+  (if (sequential? result-or-results)
+    (apply print/print-compare-summary result-or-results)
+    (print/print-summary result-or-results)))
 
 (defmacro bench-to-data
   "Evaluates `body` repeatedly based on `opts` and return the results as data.
@@ -66,7 +88,7 @@
 (defmacro bench
   "Like `bench-to-data` but prints a result summary to stdout.
 
-  Options: see `bench-to-data`"
+  Options: see `bench-to-data` (for defaults see `default-bench-config`)"
   [opts & body]
   `(report (bench-to-data ~opts ~@body)))
 
@@ -74,10 +96,10 @@
   "Compare benchmark results from `expr-a` to those from `expr-b`, printing a
   report to stdout.
 
-  Options: see `bench-to-data`"
+  Options: see `bench-to-data` (for defaults see `default-bench-config`)"
   [opts expr-a expr-b]
-  `(report-compare (bench-to-data ~opts ~expr-a)
-                   (bench-to-data ~opts ~expr-b)))
+  `(report [(bench-to-data ~opts ~expr-a)
+            (bench-to-data ~opts ~expr-b)]))
 
 (defmacro quick-bench-to-data
   "A simpler alternative to `bench-to-data` which takes no options and runs
@@ -96,5 +118,5 @@
   "A simpler alternative to `bench-compare` which takes no options and runs
   fewer epochs."
   [expr-a expr-b]
-  `(report-compare (quick-bench-to-data ~expr-a)
-                   (quick-bench-to-data ~expr-b)))
+  `(report [(quick-bench-to-data ~expr-a)
+            (quick-bench-to-data ~expr-b)]))
