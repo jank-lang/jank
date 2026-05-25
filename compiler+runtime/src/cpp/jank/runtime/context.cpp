@@ -59,6 +59,9 @@ namespace jank::runtime
     current_ns_var->bind_root(core);
     current_ns_var->dynamic.store(true);
 
+    auto const stream_sym(make_box<obj::symbol>("stream*"));
+    stream_var = core->intern_var(stream_sym);
+
     auto const out_sym(make_box<obj::symbol>("*out*"));
     current_out_var = core->intern_var(out_sym);
     current_out_var->dynamic.store(true);

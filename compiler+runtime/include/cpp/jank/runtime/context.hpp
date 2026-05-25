@@ -162,8 +162,11 @@ namespace jank::runtime
     var_ref assert_var;
     var_ref no_recur_var;
     var_ref gensym_env_var;
+
     var_ref current_out_var;
     var_ref current_err_var;
+    /* A static box to a FILE* to get the platform specific canonical-type. */
+    var_ref stream_var;
 
     /*** XXX: Everything here is thread-safe. ***/
     folly::Synchronized<native_unordered_map<obj::symbol_ref, ns_ref>> namespaces;

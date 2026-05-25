@@ -23,8 +23,12 @@
 (def ^:dynamic *assert*)
 (def ^:dynamic *compile-files*)
 (def ^:dynamic *file*)
+
 (def ^:dynamic *out* (cpp/box cpp/stdout))
 (def ^:dynamic *err* (cpp/box cpp/stderr))
+(def ^:private stream*
+  "A static box to a FILE* to get the platform specific canonical-type."
+  (cpp/box cpp/stdout))
 
 (def ^:dynamic *in* nil)
 (def ^:dynamic *warn-on-reflection* nil)
