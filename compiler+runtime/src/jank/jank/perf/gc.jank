@@ -1,4 +1,5 @@
 (ns jank.perf.gc
+  "Functions for interacting with jank's garbage collector."
   (:include "gc/gc.h"))
 
 (defn force-collect
@@ -23,12 +24,29 @@
   []
   (cpp/GC_start_performance_measurement))
 
+(cpp/raw "
+namespace jank::perf::gc
+{
+  void* get_full_gc_total_time_cb(void *client_data)
+  {
+    double* total_time = (double*)client_data;
+    *total_time = 1e-3 * GC_get_full_gc_total_time()
+                + 1e-9 * GC_get_full_gc_total_ns_frac();
+
+    return nullptr;
+  }
+
+  double get_full_gc_total_time()
+  {
+    double total_time{0.0};
+    GC_call_with_reader_lock(&get_full_gc_total_time_cb, (void*)&total_time, 0);
+    return total_time;
+  }
+}
+")
+
 (defn total-time
   "Returns the total seconds (as a double) spent in garbage collection since
   `start-performance-measurement`."
   []
-  (let [ms (cpp/GC_get_full_gc_total_time)
-        ;; TODO: depends on https://github.com/bdwgc/bdwgc/pull/930
-        ;; ns (cpp/GC_get_full_gc_total_time_ns_frac)
-        ns 0]
-    (+ (/ ms 1e3) (/ ns 1e9))))
+  (cpp/jank.perf.gc.get_full_gc_total_time))
