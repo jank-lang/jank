@@ -19,7 +19,17 @@
   All benchmark macros automatically wrap the result in a `blackbox` to prevent
   the compiler from optimizing the computation away. If the body does additional
   computation which is not returned, then you can use the `blackbox` function on
-  those values yourself."
+  those values yourself.
+
+  Example usage:
+  ```
+  (defn fib [n]
+    (if (<= n 1) n
+        (+ (fib (- n 1))
+           (fib (- n 2)))))
+
+  (quick-bench (fib 20))
+  ```"
   (:require
    [jank.perf.core :as core]
    [jank.perf.print :as print]))
