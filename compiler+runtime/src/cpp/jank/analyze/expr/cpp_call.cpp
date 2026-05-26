@@ -1,11 +1,6 @@
 #include <jank/analyze/expr/cpp_call.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
-namespace Cpp
-{
-  std::string GetName(void *);
-}
-
 namespace jank::analyze::expr
 {
   using namespace jank::runtime;
