@@ -1,0 +1,52 @@
+(ns jank.perf.gc
+  "Functions for interacting with jank's garbage collector."
+  (:include "gc/gc.h"))
+
+(defn force-collect
+  "Explicitly trigger a full collection."
+  []
+  (cpp/GC_gcollect))
+
+(defn total-bytes
+  "Return the total number of bytes allocated in the GC."
+  []
+  (cpp/GC_get_total_bytes))
+
+(defn collection-count
+  "Return the total number of garbage collections performed."
+  []
+  (cpp/GC_get_gc_no))
+
+(defn start-performance-measurement
+  "Start collecting GC timing metrics. Required for `total-time`.
+
+  NOTE: There is no way to disable the metrics once they are enabled."
+  []
+  (cpp/GC_start_performance_measurement))
+
+(cpp/raw "
+namespace jank::perf::gc
+{
+  void* get_full_gc_total_time_cb(void *client_data)
+  {
+    double* total_time = (double*)client_data;
+    *total_time = 1e-3 * GC_get_full_gc_total_time()
+                + 1e-9 * GC_get_full_gc_total_ns_frac();
+
+    return nullptr;
+  }
+
+  double get_full_gc_total_time()
+  {
+    double total_time{0.0};
+    GC_call_with_reader_lock(&get_full_gc_total_time_cb, (void*)&total_time, 0);
+    return total_time;
+  }
+}
+")
+
+(defn total-time
+  "Returns the total seconds (as a double) spent in garbage collection since
+  `start-performance-measurement`."
+  []
+  (cpp/jank.perf.gc.get_full_gc_total_time))
