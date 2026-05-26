@@ -10,6 +10,7 @@ namespace jank::runtime
   {
     using persistent_list_ref = oref<struct persistent_list>;
     using persistent_vector_ref = oref<struct persistent_vector>;
+    using keyword_ref = oref<struct keyword>;
   }
 
   template <typename T>
@@ -124,8 +125,22 @@ namespace jank::runtime
 
   object_ref assoc(object_ref const m, object_ref const k, object_ref const v);
   object_ref dissoc(object_ref const m, object_ref const k);
-  object_ref get(object_ref const m, object_ref const key);
-  object_ref get(object_ref const m, object_ref const key, object_ref const fallback);
+
+  inline object_ref get(object_ref const m, object_ref const key)
+  {
+    return m.get(key);
+  }
+
+  inline object_ref get(object_ref const m, obj::keyword_ref const key)
+  {
+    return m.get(*key);
+  }
+
+  inline object_ref get(object_ref const m, object_ref const key, object_ref const fallback)
+  {
+    return m.get(key, fallback);
+  }
+
   object_ref get_in(object_ref const m, object_ref const keys);
   object_ref get_in(object_ref const m, object_ref const keys, object_ref const fallback);
   object_ref find(object_ref const s, object_ref const key);

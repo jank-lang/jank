@@ -70,8 +70,21 @@ namespace jank::runtime::obj
     }
 
     /* behavior::get */
-    object_ref get(object_ref const key) const override;
-    object_ref get(object_ref const key, object_ref const fallback) const override;
+    object_ref get(object_ref const key) const override
+    {
+      return data.find(key).unwrap_or(jank_nil);
+    }
+
+    object_ref get(obj::keyword const &key) const override
+    {
+      return data.find(key).unwrap_or(jank_nil);
+    }
+
+    object_ref get(object_ref const key, object_ref const fallback) const override
+    {
+      return data.find(key).unwrap_or(fallback);
+    }
+
     bool contains(object_ref const key) const override;
 
     /* behavior::find */

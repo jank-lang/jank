@@ -10,6 +10,7 @@ namespace jank::runtime
   namespace obj
   {
     struct persistent_list;
+    struct keyword;
   }
 
   enum class object_type : u8
@@ -424,6 +425,7 @@ namespace jank::runtime
 
     /* behavior::get */
     virtual object_ref get(object_ref key) const;
+    virtual object_ref get(obj::keyword const &key) const;
     virtual object_ref get(object_ref key, object_ref fallback) const;
     virtual bool contains(object_ref key) const;
 

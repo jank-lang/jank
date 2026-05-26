@@ -564,16 +564,6 @@ namespace jank::runtime
       m);
   }
 
-  object_ref get(object_ref const m, object_ref const key)
-  {
-    return m.get(key);
-  }
-
-  object_ref get(object_ref const m, object_ref const key, object_ref const fallback)
-  {
-    return m.get(key, fallback);
-  }
-
   object_ref get_in(object_ref const m, object_ref const keys)
   {
     if(m.has_behavior(object_behavior::get))
@@ -583,7 +573,7 @@ namespace jank::runtime
           object_ref ret{ m };
           for(auto const &e : make_sequence_range(typed_keys))
           {
-            ret = get(ret, e);
+            ret = get(ret, e.erase());
           }
           return ret;
         },
@@ -604,7 +594,7 @@ namespace jank::runtime
           object_ref ret{ m };
           for(auto const &e : make_sequence_range(typed_keys))
           {
-            ret = get(ret, e);
+            ret = get(ret, e.erase());
           }
 
           if(ret.is_nil())

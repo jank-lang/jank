@@ -44,6 +44,7 @@ namespace jank::runtime::detail
     void erase(object_ref const key);
 
     jtl::option<object_ref> find(object_ref const key) const;
+    jtl::option<object_ref> find(obj::keyword const &key) const;
 
     uhash to_hash() const;
 

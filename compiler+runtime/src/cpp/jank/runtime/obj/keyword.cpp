@@ -69,12 +69,12 @@ namespace jank::runtime::obj
 
   object_ref keyword::call(object_ref const m) const
   {
-    return runtime::get(m, runtime::detail::untagged(this));
+    return runtime::get(m, keyword_ref{ runtime::detail::untagged(this) });
   }
 
   object_ref keyword::call(object_ref const m, object_ref const fallback) const
   {
-    return runtime::get(m, runtime::detail::untagged(this), fallback);
+    return runtime::get(m, keyword_ref{ runtime::detail::untagged(this) }, fallback);
   }
 
   bool keyword::operator==(keyword const &rhs) const

@@ -1,6 +1,7 @@
 #include <jank/runtime/detail/native_array_map.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::detail
@@ -184,6 +185,19 @@ namespace jank::runtime::detail
         {
           return data[i + 1];
         }
+      }
+    }
+    return {};
+  }
+
+  jtl::option<object_ref> native_array_map::find(obj::keyword const &key) const
+  {
+    object_ref const kw{ detail::untagged(&key) };
+    for(u8 i{}; i < length; i += 2)
+    {
+      if(data[i] == kw)
+      {
+        return data[i + 1];
       }
     }
     return {};

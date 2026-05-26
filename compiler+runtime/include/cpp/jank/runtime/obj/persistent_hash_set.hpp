@@ -73,6 +73,7 @@ namespace jank::runtime::obj
     obj::transient_hash_set_ref to_transient() const;
 
     /* behavior::get */
+    using object::get;
     object_ref get(object_ref const key) const override;
     object_ref get(object_ref const key, object_ref const fallback) const override;
     bool contains(object_ref const o) const override;
