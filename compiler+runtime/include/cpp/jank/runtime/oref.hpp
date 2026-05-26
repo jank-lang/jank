@@ -2328,7 +2328,12 @@ namespace jank::runtime
   {
     static_assert(sizeof(jtl::ref<T>) == sizeof(T *));
     T *ret{};
-    if constexpr(requires { T::pointer_free; })
+    if constexpr(requires { T::gc_descriptor; })
+    {
+      ret = reinterpret_cast<T *>(GC_malloc_explicitly_typed(sizeof(T), T::gc_descriptor));
+      new(ret) T{ std::forward<Args>(args)... };
+    }
+    else if constexpr(requires { T::pointer_free; })
     {
       if constexpr(T::pointer_free)
       {
@@ -2362,7 +2367,14 @@ namespace jank::runtime
   oref<T> make_box(Args &&...args)
   {
     static_assert(sizeof(oref<T>) == sizeof(T *));
-    if constexpr(requires { T::pointer_free; })
+    if constexpr(requires { T::gc_descriptor; })
+    {
+      auto const ret{ reinterpret_cast<T *>(
+        GC_malloc_explicitly_typed(sizeof(T), T::gc_descriptor)) };
+      new(ret) T{ std::forward<Args>(args)... };
+      return detail::untagged(ret);
+    }
+    else if constexpr(requires { T::pointer_free; })
     {
       if constexpr(T::pointer_free)
       {

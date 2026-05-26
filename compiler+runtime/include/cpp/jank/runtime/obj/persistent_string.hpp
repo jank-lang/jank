@@ -15,6 +15,7 @@ namespace jank::runtime::obj
     static constexpr object_behavior obj_behaviors{ object_behavior::get
                                                     | object_behavior::compare };
     static constexpr bool pointer_free{ false };
+    static GC_word gc_descriptor;
 
     persistent_string();
     persistent_string(persistent_string &&) noexcept = default;

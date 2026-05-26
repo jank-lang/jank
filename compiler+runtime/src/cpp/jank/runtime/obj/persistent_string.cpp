@@ -9,6 +9,8 @@
 
 namespace jank::runtime::obj
 {
+  GC_word persistent_string::gc_descriptor{};
+
   persistent_string::persistent_string()
     : object{ obj_type, obj_behaviors }
   {
