@@ -129,6 +129,14 @@ namespace jank::runtime
     return {};
   }
 
+  object_ref print1(object_ref const o)
+  {
+    jtl::string_builder buff;
+    runtime::to_string(o, buff);
+    std::fwrite(buff.data(), 1, buff.size(), stdout);
+    return {};
+  }
+
   object_ref println(object_ref const args)
   {
     visit_object(

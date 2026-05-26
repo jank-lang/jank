@@ -568,10 +568,17 @@
 ;; Input/output.
 (def ^{:arglists '([& more])
        :doc "Prints the object(s) to the output stream that is the current value
-   of *out*.  print and println produce output for human consumption."}
+   of *out*.  print and println produce output for human consumption."
+       :inline (fn* [x]
+                 (list 'cpp/jank.runtime.print1 x))
+       :inline-arities #{1}}
   print
-  (fn* print [& more]
-    (cpp/jank.runtime.print more)))
+  (fn* print
+    ([x]
+     (cpp/jank.runtime.print1 x))
+    ([x & more]
+     (cpp/jank.runtime.print1 x)
+     (cpp/jank.runtime.print more))))
 
 (def ^{:arglists '([& more])
        :doc "Same as print followed by (newline)"}
