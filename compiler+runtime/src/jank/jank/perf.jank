@@ -9,8 +9,8 @@
   tune the benchmark parameters, perhaps for a fixed benchmark suite, use the
   regular `bench` macro which accepts benchmark parameters.
 
-  Each of these has a `*-to-data` variant which return the benchmark result as a
-  map instead of printing. The data can be printed, just as in the
+  Each of these has a `*-to-data` variant which returns the benchmark result as
+  a map instead of printing. The data can be printed, just as in the
   non-`*-to-data` variants, using the `report` function.
 
   To compare relative performance between two expressions, use the

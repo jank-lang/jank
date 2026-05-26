@@ -2,9 +2,7 @@
   (:require
    [jank.perf.gc :as gc]
    [jank.perf.stats :as stats])
-  (:include
-   "chrono"
-   "nanobench.h"))
+  (:include "nanobench.h"))
 
 (cpp/raw "
 namespace jank::perf::core
