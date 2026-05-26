@@ -3385,6 +3385,17 @@ namespace jank::analyze
         }
       }
     }
+    /* If we're calling a keyword with one or two params, just change the call to an inlined
+     * `get` instead. */
+    else if(first.get_type() == runtime::object_type::keyword && count <= 3)
+    {
+      return analyze(cons(make_box<obj::symbol>("cpp/jank.runtime.get"),
+                          cons(o->next()->first(), cons(first, o->next()->next()))),
+                     current_frame,
+                     position,
+                     fn_ctx,
+                     needs_box);
+    }
     else
     {
       pop_macro_expansions = push_macro_expansions(*this, o);
