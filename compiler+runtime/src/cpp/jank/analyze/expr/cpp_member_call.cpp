@@ -1,10 +1,7 @@
+#include <CppInterOp/CppInterOp.h>
+
 #include <jank/analyze/expr/cpp_member_call.hpp>
 #include <jank/detail/to_runtime_data.hpp>
-
-namespace CppImpl
-{
-  void *GetFunctionReturnType(void *);
-}
 
 namespace jank::analyze::expr
 {
