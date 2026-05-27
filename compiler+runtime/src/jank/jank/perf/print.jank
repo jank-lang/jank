@@ -1,0 +1,159 @@
+(ns jank.perf.print
+  (:require [jank.perf.stats :refer [clamp standard-deviation hist1d]])
+  (:include
+   "iomanip"
+   "sstream"))
+
+(defn format-size
+  "Format a byte size given in whole bytes as a human-readable string with
+  reasonable units."
+  [s & {:keys [precision] :or {precision 1}}]
+  ;; TODO: Use clojure.core/format once it's ready...
+  (let [[v unit] (cond
+                   (> s 1e12) [(/ s 1e12) "TB"]
+                   (> s 1e9)  [(/ s 1e9) "GB"]
+                   (> s 1e6)  [(/ s 1e6) "MB"]
+                   (> s 1e3)  [(/ s 1e3) "kB"]
+                   :else      [s "bytes"])]
+    ;; bytes cannot be fractional
+    (if (= "bytes" unit)
+      (str s " bytes")
+      (->
+       (doto (cpp/std.ostringstream)
+         (cpp/<< cpp/std.fixed)
+         (cpp/<< (cpp/std.setprecision (cpp/int precision)))
+         (cpp/<< (cpp/double (double v)))
+         (cpp/<< #cpp " ")
+         (cpp/<< (cpp/cast cpp/std.string unit)))
+       (.str)))))
+
+(defn format-duration
+  "Format a duration given in floating point seconds as a human-readable string
+  with reasonable units."
+  [s & {:keys [precision pad] :or {precision 3 pad true}}]
+  ;; TODO: Use clojure.core/format once it's ready...
+  (let [[v unit] (cond
+                   (< s 1e-6) [(* 1e9 s) "ns"]
+                   (< s 1e-3) [(* 1e6 s) "µs"]
+                   (< s 1)    [(* 1e3 s) "ms"]
+                   :else      [s "s"])
+        ;; max 3 digits + dot + `precision` digits
+        width    (if pad (+ 3 1 precision) 0)]
+    (->
+     (doto (cpp/std.ostringstream)
+       (cpp/<< (cpp/std.setw width))
+       (cpp/<< cpp/std.fixed)
+       (cpp/<< (cpp/std.setprecision (cpp/int precision)))
+       (cpp/<< (cpp/double (double v)))
+       (cpp/<< #cpp " ")
+       (cpp/<< (cpp/cast cpp/std.string unit)))
+     (.str))))
+
+(def color-map
+  {:none       ""
+   :yellow     ";33"
+   :magenta    ";35"
+   :cyan       ";36"
+   :white      ";37"
+   :green      ";92"
+   :blue       ";94"
+   :bright-red ";91"})
+
+(defn color [color s]
+  (str \u001b "[0" (color-map color) "m" s \u001b "[0m"))
+
+(defn bold
+  ([s]
+   (bold :none s))
+  ([color s]
+   (str \u001b "[1" (color-map color) "m" s \u001b "[0m")))
+
+;; TODO: are these all common enough non-ASCII characters to work in most
+;; terminals/fonts?
+(def hist-bars ["▁" "▂" "▃" "▄" "▅" "▆" "▇" "█"])
+(def reverse-hist-bars ["▔" "🮂" "🮃" "▀" "🮄" "🮅" "🮆" "█"])
+
+(defn print-hist1d [{:keys [width bins] :as hist}
+                    report
+                    {:keys [reverse? legend?]
+                     :or   {reverse? false legend? true}}]
+  (let [height     2
+        nbins      (count bins)
+        max-count  (apply max bins)
+        mean-bin   (int (/ (- (:mean report) (:min hist)) width))
+        median-bin (int (/ (- (:median report) (:min hist)) width))]
+    (doseq [baseline (if reverse? (range height) (reverse (range height)))]
+      (print " ")
+      (doseq [[idx bin] (map-indexed vector bins)]
+        (let [norm         (/ (double bin) (double max-count))
+              bar-height   (- (* height norm) baseline)
+              bar-char-idx (clamp (int (* bar-height (count hist-bars))) 0 (dec (count hist-bars)))
+              bar-char     (if reverse?
+                             (nth reverse-hist-bars bar-char-idx)
+                             (nth hist-bars bar-char-idx))]
+          (if (and (> baseline 0) (<= bar-height 0))
+            (print " ")
+            (print (cond (= idx mean-bin)   (color :green bar-char)
+                         (= idx median-bin) (color :blue bar-char)
+                         :else              bar-char)))))
+      (println))
+    (when legend?
+      ;; TODO: Use clojure.core/format once it's ready...
+      (print " ")
+      (let [min-str    (format-duration (:min hist) {:pad false})
+            max-str    (format-duration (:max hist) {:pad false})
+            half-width (cpp/int (/ nbins 2))]
+        (cpp/printf #cpp "%-*s" half-width (.c_str (cpp/cast cpp/std.string min-str)))
+        (cpp/printf #cpp "%*s" half-width (.c_str (cpp/cast cpp/std.string max-str))))
+      (println))))
+
+(defn print-timing [report]
+  (let [samples (:samples report)
+        label   (bold (:label report))
+        sum     (format-duration (:sum report) {:pad false})
+        median  (bold :blue (format-duration (:median report)))
+        mean    (bold :green (format-duration (:mean report)))
+        stddev  (color :green (format-duration (standard-deviation (:variance report))))
+        min     (bold :cyan (format-duration (:min report)))
+        max     (color :magenta (format-duration (:max report)))]
+    (println (str label ": " (count samples) " samples from " (:evaluations report) " evaluations collected in " sum))
+    (println (str " Time  (" (bold :blue "median") ")   : " median))
+    (println (str " Time  (" (bold :green "mean") " ± " (color :green "σ") ") : " mean " ± " stddev))
+    (println (str " Range (" (bold :cyan "min") " … " (color :magenta "max") "): " min " … " max))))
+
+(defn print-gc [report]
+  (let [{:keys [allocated-bytes collections collection-time]} (:gc report)
+        gc-percent (int (* 100 (/ collection-time (:sum report))))]
+    (println (str " Memory estimate: "
+                  (color :yellow (str (format-size allocated-bytes)))
+                  " with "
+                  (color :yellow (str collections " garbage collections"))
+                  " in "
+                  (color :yellow (format-duration collection-time {:pad false}))
+                  " (" (color :yellow (str gc-percent "%"))
+                  " of total runtime)"))))
+
+(defn print-summary [report]
+  (print-timing report)
+
+  (let [{:keys [min max p99 samples]} report]
+    (println)
+    (-> samples
+        (hist1d min (or p99 max) 60)
+        (print-hist1d report {})))
+
+  (println)
+  (print-gc report))
+
+(defn print-compare-summary [report-a report-b]
+  (doseq [[prefix report] [["A" report-a] ["B" report-b]]]
+    (print-timing (update report :label #(str "(" prefix ") " %))))
+  (println)
+
+  (let [omin (min (:min report-a) (:min report-b))
+        omax (max (:max report-a) (:max report-b))]
+    (doseq [[report opts] [[report-a {:reverse? false :legend? true}]
+                           [report-b {:reverse? true :legend? false}]]]
+      (-> (:samples report)
+          (hist1d omin omax 60)
+          (print-hist1d report opts)))))

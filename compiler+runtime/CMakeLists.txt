@@ -560,7 +560,6 @@ add_library(
   src/cpp/jank/runtime/core/meta.cpp
   src/cpp/jank/runtime/core/call.cpp
   src/cpp/jank/runtime/sequence_range.cpp
-  src/cpp/jank/runtime/perf.cpp
   src/cpp/jank/runtime/module/loader.cpp
   src/cpp/jank/runtime/object.cpp
   src/cpp/jank/runtime/detail/native_array_map.cpp
@@ -693,7 +692,6 @@ add_library(
   src/cpp/clojure/core_native.cpp
   src/cpp/clojure/string_native.cpp
   src/cpp/jank/compiler_native.cpp
-  src/cpp/jank/perf_native.cpp
   src/cpp/jank/nrepl/server.cpp
 )
 set_target_properties(jank_lib PROPERTIES UNITY_BUILD ${jank_unity_build})

@@ -759,7 +759,7 @@ namespace jank::read::lex
               }
               radix = 10; /* numbers like 02.3 should be parsed as decimal numbers. */
             }
-            else if(c == 'e' || c == 'E')
+            else if(contains_leading_digit && (c == 'e' || c == 'E'))
             {
               if(found_r)
               {
