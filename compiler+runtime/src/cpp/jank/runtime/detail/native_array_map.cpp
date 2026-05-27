@@ -165,44 +165,6 @@ namespace jank::runtime::detail
     insert_unique(key, val);
   }
 
-  jtl::option<object_ref> native_array_map::find(object_ref const key) const
-  {
-    if(key.get_type() == runtime::object_type::keyword)
-    {
-      for(u8 i{}; i < length; i += 2)
-      {
-        if(data[i] == key)
-        {
-          return data[i + 1];
-        }
-      }
-    }
-    else
-    {
-      for(u8 i{}; i < length; i += 2)
-      {
-        if(runtime::equal(data[i], key))
-        {
-          return data[i + 1];
-        }
-      }
-    }
-    return {};
-  }
-
-  jtl::option<object_ref> native_array_map::find(obj::keyword const &key) const
-  {
-    object_ref const kw{ detail::untagged(&key) };
-    for(u8 i{}; i < length; i += 2)
-    {
-      if(data[i] == kw)
-      {
-        return data[i + 1];
-      }
-    }
-    return {};
-  }
-
   void native_array_map::erase(object_ref const key)
   {
     if(key.get_type() == runtime::object_type::keyword)

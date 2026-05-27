@@ -192,11 +192,6 @@ namespace jank::runtime
     return {};
   }
 
-  object_ref object::get(obj::keyword const &key) const
-  {
-    return get(object_ref{ detail::untagged(&key) });
-  }
-
   object_ref object::get(object_ref const, object_ref const fallback) const
   {
     return fallback;

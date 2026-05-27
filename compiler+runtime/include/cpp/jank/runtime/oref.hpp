@@ -767,22 +767,6 @@ namespace jank::runtime
       return ptr()->get(key);
     }
 
-    object_ref get(obj::keyword const &key) const
-    {
-      if(detail::is_small_int(data))
-      {
-        obj::small_integer const i{ detail::as_integer(data) };
-        return i.get(key);
-      }
-      if(detail::is_small_real(data))
-      {
-        obj::small_real const i{ detail::as_real(data) };
-        return i.get(key);
-      }
-
-      return ptr()->get(key);
-    }
-
     object_ref get(object_ref const key, object_ref const fallback) const
     {
       if(detail::is_small_int(data))
@@ -1328,15 +1312,6 @@ namespace jank::runtime
       return static_cast<T *>(data)->get(key);
     }
 
-    object_ref get(obj::keyword const &key) const
-    {
-      if(is_nil())
-      {
-        return _jank_nil.get(key);
-      }
-      return static_cast<T *>(data)->get(key);
-    }
-
     object_ref get(object_ref const key, object_ref const fallback) const
     {
       if(is_nil())
@@ -1654,12 +1629,6 @@ namespace jank::runtime
       return i.get(key);
     }
 
-    object_ref get(obj::keyword const &key) const
-    {
-      obj::small_integer const i{ data };
-      return i.get(key);
-    }
-
     object_ref get(object_ref const key, object_ref const fallback) const
     {
       obj::small_integer const i{ data };
@@ -1968,12 +1937,6 @@ namespace jank::runtime
 
     /* behavior::get */
     object_ref get(object_ref const key) const
-    {
-      obj::small_real const i{ data };
-      return i.get(key);
-    }
-
-    object_ref get(obj::keyword const &key) const
     {
       obj::small_real const i{ data };
       return i.get(key);
@@ -2300,11 +2263,6 @@ namespace jank::runtime
 
     /* behavior::get */
     object_ref get(object_ref const key) const
-    {
-      return _jank_nil.get(key);
-    }
-
-    object_ref get(obj::keyword const &key) const
     {
       return _jank_nil.get(key);
     }

@@ -70,12 +70,8 @@ namespace jank::runtime::obj
     }
 
     /* behavior::get */
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
     object_ref get(object_ref const key) const override
-    {
-      return data.find(key).unwrap_or(jank_nil);
-    }
-
-    object_ref get(obj::keyword const &key) const override
     {
       return data.find(key).unwrap_or(jank_nil);
     }
