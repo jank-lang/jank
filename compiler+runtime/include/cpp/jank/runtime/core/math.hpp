@@ -1192,6 +1192,7 @@ namespace jank::runtime
   object_ref rem(object_ref const l, object_ref const r);
   object_ref quot(object_ref const l, object_ref const r);
   object_ref inc(object_ref const l);
+  object_ref unchecked_inc(object_ref const l);
   object_ref promoting_inc(object_ref const l);
   object_ref dec(object_ref const l);
   object_ref promoting_dec(object_ref const l);

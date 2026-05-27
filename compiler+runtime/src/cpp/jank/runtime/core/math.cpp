@@ -427,6 +427,13 @@ namespace jank::runtime
       l);
   }
 
+  object_ref unchecked_inc(object_ref const l)
+  {
+    return visit_number_like(
+      [](auto const typed_l) -> object_ref { return make_box(typed_l->data + 1ll); },
+      l);
+  }
+
   object_ref promoting_inc(object_ref const l)
   {
     return visit_number_like(

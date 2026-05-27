@@ -1730,6 +1730,211 @@
   [n]
   (cpp/jank.runtime.is_odd n))
 
+(defn inc'
+  "Returns a number one greater than num. Supports arbitrary precision.
+  See also: inc"
+  [x]
+  (cpp/jank.runtime.promoting_inc x))
+
+;; ;;math stuff
+;; (defn ^:private nary-inline
+;;   ([op] (nary-inline op op))
+;;   ([op unchecked-op]
+;;      (fn
+;;        ([x] (let [op (if *unchecked-math* unchecked-op op)]
+;;               `(. clojure.lang.Numbers (~op ~x))))
+;;        ([x y] (let [op (if *unchecked-math* unchecked-op op)]
+;;                 `(. clojure.lang.Numbers (~op ~x ~y))))
+;;        ([x y & more]
+;;           (let [op (if *unchecked-math* unchecked-op op)]
+;;             (reduce1
+;;              (fn [a b] `(. clojure.lang.Numbers (~op ~a ~b)))
+;;              `(. clojure.lang.Numbers (~op ~x ~y)) more))))))
+
+;; (defn ^:private >1? [n] (clojure.lang.Numbers/gt n 1))
+
+;; (defn ^:private >0? [n] (clojure.lang.Numbers/gt n 0))
+
+(defn +'
+  "Returns the sum of nums. (+') returns 0. Supports arbitrary precision.
+  See also: +"
+  ([] 0)
+  ([x]
+   (cpp/jank.runtime.number x))
+  ([x y]
+   (cpp/jank.runtime.promoting_add x y))
+  ([x y & more]
+   (reduce +' (+' x y) more)))
+
+(defn *'
+  "Returns the product of nums. (*') returns 1. Supports arbitrary precision.
+  See also: *"
+  ([] 1)
+  ([x]
+   (cpp/jank.runtime.number x))
+  ([x y]
+   (cpp/jank.runtime.promoting_mul x y))
+  ([x y & more]
+   (reduce *' (*' x y) more)))
+
+(defn -'
+  "If no ys are supplied, returns the negation of x, else subtracts
+  the ys from x and returns the result. Supports arbitrary precision.
+  See also: -"
+  ([x]
+   (-' 0 x))
+  ([x y]
+   (cpp/jank.runtime.promoting_sub x y))
+  ([x y & more]
+   (reduce -' (-' x y) more)))
+
+(defn ^{:inline (fn* [x]
+                 (list 'cpp/jank.runtime.abs x))}
+              abs
+  "Returns the absolute value of a.
+  If a is Long/MIN_VALUE => Long/MIN_VALUE
+  If a is a double and zero => +0.0
+  If a is a double and ##Inf or ##-Inf => ##Inf
+  If a is a double and ##NaN => ##NaN"
+  [a]
+  (cpp/jank.runtime.abs a))
+
+(defn dec'
+  "Returns a number one less than num. Supports arbitrary precision.
+  See also: dec"
+  [x]
+  (cpp/jank.runtime.promoting_dec x))
+
+(defn unchecked-inc-int
+  "Returns a number one greater than x, an int.
+  Note - uses a primitive operator subject to overflow."
+  [x]
+  ;; (. clojure.lang.Numbers (unchecked_int_inc x))
+  (throw "TODO: port unchecked-inc-int"))
+
+(defn unchecked-inc
+  "Returns a number one greater than x, a long.
+  Note - uses a primitive operator subject to overflow."
+  {:inline (fn* [x]
+             (list 'cpp/jank.runtime.unchecked_inc x))}
+  [x]
+  (cpp/jank.runtime.unchecked_inc x))
+
+(defn unchecked-dec-int
+  "Returns a number one less than x, an int.
+  Note - uses a primitive operator subject to overflow."
+  [x]
+  ;; (. clojure.lang.Numbers (unchecked_int_dec x))
+  (throw "TODO: port unchecked-dec-int"))
+
+(defn unchecked-dec
+  "Returns a number one less than x, a long.
+  Note - uses a primitive operator subject to overflow."
+  [x]
+  ;; (. clojure.lang.Numbers (unchecked_dec x))
+  (throw "TODO: port unchecked-dec"))
+
+(defn unchecked-negate-int
+  "Returns the negation of x, an int.
+  Note - uses a primitive operator subject to overflow."
+  [x]
+  ;; (. clojure.lang.Numbers (unchecked_int_negate x))
+  (throw "TODO: port unchecked-negate-int"))
+
+(defn unchecked-negate
+  "Returns the negation of x, a long.
+  Note - uses a primitive operator subject to overflow."
+  [x]
+  ;; (. clojure.lang.Numbers (unchecked_minus x))
+  (throw "TODO: port unchecked-negate"))
+
+(defn unchecked-add-int
+  "Returns the sum of x and y, both int.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_int_add x y))
+  (throw "TODO: port unchecked-add-int"))
+
+(defn unchecked-add
+  "Returns the sum of x and y, both long.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_add x y))
+  (throw "TODO: port unchecked-add"))
+
+(defn unchecked-subtract-int
+  "Returns the difference of x and y, both int.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_int_subtract x y))
+  (throw "TODO: port unchecked-subtract-int"))
+
+(defn unchecked-subtract
+  "Returns the difference of x and y, both long.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_minus x y))
+  (throw "TODO: port unchecked-subtract"))
+
+(defn unchecked-multiply-int
+  "Returns the product of x and y, both int.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_int_multiply x y))
+  (throw "TODO: port unchecked-multiply-int"))
+
+(defn unchecked-multiply
+  "Returns the product of x and y, both long.
+  Note - uses a primitive operator subject to overflow."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_multiply x y))
+  (throw "TODO: port unchecked-multiply"))
+
+(defn unchecked-divide-int
+  "Returns the division of x by y, both int.
+  Note - uses a primitive operator subject to truncation."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_int_divide x y))
+  (throw "TODO: port unchecked-divide-int"))
+
+(defn unchecked-remainder-int
+  "Returns the remainder of division of x by y, both int.
+  Note - uses a primitive operator subject to truncation."
+  [x y]
+  ;; (. clojure.lang.Numbers (unchecked_int_remainder x y))
+  (throw "TODO: port unchecked-remainder-int"))
+
+(defn rationalize
+  "returns the rational value of num"
+  [num]
+  ;; (. clojure.lang.Numbers (rationalize num))
+  (throw "TODO: port rationalize"))
+
+(defn int?
+  "Return true if x is a fixed precision integer"
+  [x]
+  (integer? x))
+
+(defn pos-int?
+  "Return true if x is a positive fixed precision integer"
+  [x] (and (int? x)
+           (pos? x)))
+
+(defn neg-int?
+  "Return true if x is a negative fixed precision integer"
+  [x] (and (int? x)
+           (neg? x)))
+
+(defn nat-int?
+  "Return true if x is a non-negative fixed precision integer"
+  [x] (and (int? x)
+           (not (neg? x))))
+
+(defn double?
+  "Return true if x is a Double"
+  [x]
+  (float? x))
+
 ;; Random.
 (defn
    ^{:inline (fn* []
@@ -2472,8 +2677,7 @@
        (loop [~i 0]
          (when (< ~i n#)
            ~@body
-           ; TODO: unchecked-inc
-           (recur (inc ~i)))))))
+           (recur (unchecked-inc ~i)))))))
 
 (defmacro doseq
   "Repeatedly executes body (presumably for side-effects) with
@@ -2506,16 +2710,15 @@
                            chunk- (gensym "chunk_")
                            count- (gensym "count_")
                            i- (gensym "i_")
-                           recform `(recur (next ~seq-) nil 0 0)
+                           recform `(recur (next-in-place ~seq-) nil 0 0)
                            steppair (step recform (nnext exprs))
                            needrec (steppair 0)
                            subform (steppair 1)
-                           ; TODO: unchecked-inc
-                           recform-chunk `(recur ~seq- ~chunk- ~count- (inc ~i-))
+                           recform-chunk `(recur ~seq- ~chunk- ~count- (unchecked-inc ~i-))
                            steppair-chunk (step recform-chunk (nnext exprs))
                            subform-chunk (steppair-chunk 1)]
                        [true
-                        `(loop [~seq- (seq ~v), ~chunk- nil,
+                        `(loop [~seq- (fresh-seq ~v), ~chunk- nil,
                                 ~count- 0, ~i- 0]
                            (if (< ~i- ~count-)
                              (let [~k (nth ~chunk- ~i-)]
@@ -3434,14 +3637,12 @@
                                           (= k :when) `(if ~v
                                                          ~(do-cmod etc)
                                                          (recur
-                                                           ; TODO: unchecked-inc
-                                                           (inc ~gi)))
+                                                           (unchecked-inc ~gi)))
                                           (keyword? k)
                                           (err "Invalid 'for' keyword " k)
                                           :else
                                           `(do (chunk-append ~gb ~body-expr)
-                                               ; TODO: unchecked-inc
-                                               (recur (inc ~gi)))))]
+                                               (recur (unchecked-inc ~gi)))))]
                           `(fn ~giter [~gxs]
                              (lazy-seq
                                (loop [~gxs ~gxs]
@@ -4837,210 +5038,6 @@
   must implement Comparable"
   [x y]
   (cpp/jank.runtime.compare x y))
-
-(defn inc'
-  "Returns a number one greater than num. Supports arbitrary precision.
-  See also: inc"
-  [x]
-  (cpp/jank.runtime.promoting_inc x))
-
-;; ;;math stuff
-;; (defn ^:private nary-inline
-;;   ([op] (nary-inline op op))
-;;   ([op unchecked-op]
-;;      (fn
-;;        ([x] (let [op (if *unchecked-math* unchecked-op op)]
-;;               `(. clojure.lang.Numbers (~op ~x))))
-;;        ([x y] (let [op (if *unchecked-math* unchecked-op op)]
-;;                 `(. clojure.lang.Numbers (~op ~x ~y))))
-;;        ([x y & more]
-;;           (let [op (if *unchecked-math* unchecked-op op)]
-;;             (reduce1
-;;              (fn [a b] `(. clojure.lang.Numbers (~op ~a ~b)))
-;;              `(. clojure.lang.Numbers (~op ~x ~y)) more))))))
-
-;; (defn ^:private >1? [n] (clojure.lang.Numbers/gt n 1))
-
-;; (defn ^:private >0? [n] (clojure.lang.Numbers/gt n 0))
-
-(defn +'
-  "Returns the sum of nums. (+') returns 0. Supports arbitrary precision.
-  See also: +"
-  ([] 0)
-  ([x]
-   (cpp/jank.runtime.number x))
-  ([x y]
-   (cpp/jank.runtime.promoting_add x y))
-  ([x y & more]
-   (reduce +' (+' x y) more)))
-
-(defn *'
-  "Returns the product of nums. (*') returns 1. Supports arbitrary precision.
-  See also: *"
-  ([] 1)
-  ([x]
-   (cpp/jank.runtime.number x))
-  ([x y]
-   (cpp/jank.runtime.promoting_mul x y))
-  ([x y & more]
-   (reduce *' (*' x y) more)))
-
-(defn -'
-  "If no ys are supplied, returns the negation of x, else subtracts
-  the ys from x and returns the result. Supports arbitrary precision.
-  See also: -"
-  ([x]
-   (-' 0 x))
-  ([x y]
-   (cpp/jank.runtime.promoting_sub x y))
-  ([x y & more]
-   (reduce -' (-' x y) more)))
-
-(defn ^{:inline (fn* [x]
-                 (list 'cpp/jank.runtime.abs x))}
-              abs
-  "Returns the absolute value of a.
-  If a is Long/MIN_VALUE => Long/MIN_VALUE
-  If a is a double and zero => +0.0
-  If a is a double and ##Inf or ##-Inf => ##Inf
-  If a is a double and ##NaN => ##NaN"
-  [a]
-  (cpp/jank.runtime.abs a))
-
-(defn dec'
-  "Returns a number one less than num. Supports arbitrary precision.
-  See also: dec"
-  [x]
-  (cpp/jank.runtime.promoting_dec x))
-
-(defn unchecked-inc-int
-  "Returns a number one greater than x, an int.
-  Note - uses a primitive operator subject to overflow."
-  [x]
-  ;; (. clojure.lang.Numbers (unchecked_int_inc x))
-  (throw "TODO: port unchecked-inc-int"))
-
-(defn unchecked-inc
-  "Returns a number one greater than x, a long.
-  Note - uses a primitive operator subject to overflow."
-  [x]
-  ;; (. clojure.lang.Numbers (unchecked_inc x))
-  (throw "TODO: port unchecked-inc"))
-
-(defn unchecked-dec-int
-  "Returns a number one less than x, an int.
-  Note - uses a primitive operator subject to overflow."
-  [x]
-  ;; (. clojure.lang.Numbers (unchecked_int_dec x))
-  (throw "TODO: port unchecked-dec-int"))
-
-(defn unchecked-dec
-  "Returns a number one less than x, a long.
-  Note - uses a primitive operator subject to overflow."
-  [x]
-  ;; (. clojure.lang.Numbers (unchecked_dec x))
-  (throw "TODO: port unchecked-dec"))
-
-(defn unchecked-negate-int
-  "Returns the negation of x, an int.
-  Note - uses a primitive operator subject to overflow."
-  [x]
-  ;; (. clojure.lang.Numbers (unchecked_int_negate x))
-  (throw "TODO: port unchecked-negate-int"))
-
-(defn unchecked-negate
-  "Returns the negation of x, a long.
-  Note - uses a primitive operator subject to overflow."
-  [x]
-  ;; (. clojure.lang.Numbers (unchecked_minus x))
-  (throw "TODO: port unchecked-negate"))
-
-(defn unchecked-add-int
-  "Returns the sum of x and y, both int.
-  Note - uses a primitive operator subject to overflow."
-  [x y]
-  ;; (. clojure.lang.Numbers (unchecked_int_add x y))
-  (throw "TODO: port unchecked-add-int"))
-
-(defn unchecked-add
-  "Returns the sum of x and y, both long.
-  Note - uses a primitive operator subject to overflow."
-  [x y]
-  ;; (. clojure.lang.Numbers (unchecked_add x y))
-  (throw "TODO: port unchecked-add"))
-
-(defn unchecked-subtract-int
-  "Returns the difference of x and y, both int.
-  Note - uses a primitive operator subject to overflow."
-  [x y]
-  ;; (. clojure.lang.Numbers (unchecked_int_subtract x y))
-  (throw "TODO: port unchecked-subtract-int"))
-
-(defn unchecked-subtract
-  "Returns the difference of x and y, both long.
-  Note - uses a primitive operator subject to overflow."
-  [x y]
-  ;; (. clojure.lang.Numbers (unchecked_minus x y))
-  (throw "TODO: port unchecked-subtract"))
-
-(defn unchecked-multiply-int
-  "Returns the product of x and y, both int.
-  Note - uses a primitive operator subject to overflow."
-  [x y]
-  ;; (. clojure.lang.Numbers (unchecked_int_multiply x y))
-  (throw "TODO: port unchecked-multiply-int"))
-
-(defn unchecked-multiply
-  "Returns the product of x and y, both long.
-  Note - uses a primitive operator subject to overflow."
-  [x y]
-  ;; (. clojure.lang.Numbers (unchecked_multiply x y))
-  (throw "TODO: port unchecked-multiply"))
-
-(defn unchecked-divide-int
-  "Returns the division of x by y, both int.
-  Note - uses a primitive operator subject to truncation."
-  [x y]
-  ;; (. clojure.lang.Numbers (unchecked_int_divide x y))
-  (throw "TODO: port unchecked-divide-int"))
-
-(defn unchecked-remainder-int
-  "Returns the remainder of division of x by y, both int.
-  Note - uses a primitive operator subject to truncation."
-  [x y]
-  ;; (. clojure.lang.Numbers (unchecked_int_remainder x y))
-  (throw "TODO: port unchecked-remainder-int"))
-
-(defn rationalize
-  "returns the rational value of num"
-  [num]
-  ;; (. clojure.lang.Numbers (rationalize num))
-  (throw "TODO: port rationalize"))
-
-(defn int?
-  "Return true if x is a fixed precision integer"
-  [x]
-  (integer? x))
-
-(defn pos-int?
-  "Return true if x is a positive fixed precision integer"
-  [x] (and (int? x)
-           (pos? x)))
-
-(defn neg-int?
-  "Return true if x is a negative fixed precision integer"
-  [x] (and (int? x)
-           (neg? x)))
-
-(defn nat-int?
-  "Return true if x is a non-negative fixed precision integer"
-  [x] (and (int? x)
-           (not (neg? x))))
-
-(defn double?
-  "Return true if x is a Double"
-  [x]
-  (float? x))
 
 ;;map stuff
 
