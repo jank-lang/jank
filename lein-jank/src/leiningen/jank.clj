@@ -1,15 +1,20 @@
 (ns leiningen.jank
   (:refer-clojure :exclude [run!])
   (:require [clojure.pprint :as pp]
-
+            [clojure.string :as string]
             [leiningen.core.main :as lmain]
+            [leiningen.core.classpath :as cp]
             [leiningen.jank.core :as ljc]
-            [leiningen.jank.test :as ljt]))
+            [leiningen.jank.test :as ljt]
+            [leiningen.jank.build :as ljb]
+            [babashka.fs :as fs]))
 
 (defn run!
   "Run your project, starting at the main entrypoint."
   [project & args]
-  (let [cp-str (ljc/build-module-path project)]
+  (let [cp-str       (ljc/build-module-path project)
+        native-flags (ljb/run-build! (ljb/plan-build project))
+        project      (update project :jank ljb/merge-native-flags native-flags)]
     (if (:main project)
       (ljc/shell-out! project cp-str "run-main" [(:main project)] args)
       (do
@@ -19,7 +24,9 @@
 (defn repl!
   "Start a terminal REPL in your :main ns."
   [project & args]
-  (let [cp-str (ljc/build-module-path project)]
+  (let [cp-str       (ljc/build-module-path project)
+        native-flags (ljb/run-build! (ljb/plan-build project))
+        project      (update project :jank ljb/merge-native-flags native-flags)]
     (if (:main project)
       (ljc/shell-out! project cp-str "repl" [(:main project)] args)
       (do
@@ -29,7 +36,9 @@
 (defn compile!
   "Compile your project to an executable."
   [project & args]
-  (let [cp-str (ljc/build-module-path project)]
+  (let [cp-str       (ljc/build-module-path project)
+        native-flags (ljb/run-build! (ljb/plan-build project))
+        project      (update project :jank ljb/merge-native-flags native-flags)]
     (if (:main project)
       (ljc/shell-out! project cp-str "compile" [(:main project)] args)
       (do
@@ -39,7 +48,9 @@
 (defn compile-module!
   "Compile a single module and its dependencies to object files."
   [project & args]
-  (let [cp-str (ljc/build-module-path project)]
+  (let [cp-str       (ljc/build-module-path project)
+        native-flags (ljb/run-build! (ljb/plan-build project))
+        project      (update project :jank ljb/merge-native-flags native-flags)]
     (ljc/shell-out! project cp-str "compile-module" [] args)))
 
 (defn check-health!
@@ -142,7 +153,20 @@
           (with-meta result (apply deep-merge-metadata maps))
           result)))))
 
+(defn verbatim->filespecs [{:keys [root verbatim-paths] :as project}]
+  ;; TODO: I couldn't find a good way to insert paths verbatim into the output
+  ;; jar. With resource-paths etc. lein always seems to strip the first
+  ;; directory from the source path when copying. Need to find an alternative or
+  ;; implement a better version of verbatim-paths.
+  (for [path  verbatim-paths
+        f     (fs/glob (fs/path (:root project) path) "**")
+        :when (not (fs/directory? f))]
+    {:type  :bytes
+     :path  (str (fs/relativize (:root project) f))
+     :bytes (fs/read-all-bytes f)}))
+
 (defn middleware
   "Inject jank project details into your current project."
   [project]
-  (deep-merge default-project project))
+  (-> (deep-merge default-project project)
+      (update :filespecs concat (verbatim->filespecs project))))
