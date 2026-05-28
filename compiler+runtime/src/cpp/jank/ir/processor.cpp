@@ -917,9 +917,21 @@ namespace jank::ir
     for(auto &fn : mod.functions)
     {
       build_dominance(fn);
-      hoist_literals(fn);
-      hoist_var_derefs(fn);
-      remove_nops(fn);
+
+      if(util::cli::opts.hoist_literals)
+      {
+        hoist_literals(fn);
+      }
+
+      if(util::cli::opts.hoist_var_derefs)
+      {
+        hoist_var_derefs(fn);
+      }
+
+      if(util::cli::opts.remove_nops)
+      {
+        remove_nops(fn);
+      }
     }
 
     if(print_settings == "2")

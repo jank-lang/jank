@@ -82,8 +82,26 @@ namespace jank::util::cli
 
     /* Compilation. */
     bool debug{};
-    u8 runtime_optimization_level{ 0 };
-    u8 codegen_optimization_level{ 0 };
+
+    /* The level of optimization used by the JIT runtime. This will be passed to Clang as a -O
+     * flag. It generally only makes when using the repl/run/run-main commands, since during
+     * the compile/compile-module commands, we don't care as much how fast the runtime is. */
+    u8 runtime_optimization_level{};
+    /* The level of optimization used during code generation, for both AOT and JIT compiled code.
+     * This is what determines which IR passes we run on the jank functions we compile. */
+    u8 codegen_optimization_level{};
+
+    /* Optimization passes. */
+    /*** O1 ***/
+    bool hoist_literals{};
+    bool remove_nops{};
+
+    /*** O2 ***/
+
+    /*** O3 ***/
+    bool hoist_var_derefs{};
+
+    /* Other optimization flags. */
     bool direct_call{};
     compilation_eagerness eagerness{ compilation_eagerness::lazy };
 
