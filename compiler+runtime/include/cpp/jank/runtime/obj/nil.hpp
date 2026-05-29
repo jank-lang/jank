@@ -1,6 +1,8 @@
 #pragma once
 
+#define JANK_JUST_OBJECT_PLEASE
 #include <jank/runtime/object.hpp>
+#undef JANK_JUST_OBJECT_PLEASE
 
 namespace jank::runtime::obj
 {
@@ -11,7 +13,8 @@ namespace jank::runtime::obj
   struct nil : object
   {
     static constexpr object_type obj_type{ object_type::nil };
-    static constexpr object_behavior obj_behaviors{ object_behavior::get };
+    static constexpr object_behavior obj_behaviors{ object_behavior::get
+                                                    | object_behavior::compare };
     static constexpr bool pointer_free{ true };
 
     nil();
@@ -24,7 +27,7 @@ namespace jank::runtime::obj
     uhash to_hash() const override;
 
     /* behavior::comparable */
-    i64 compare(object const &) const;
+    i64 compare(object const &) const override;
 
     /* behavior::comparable extended */
     i64 compare(nil const &) const;

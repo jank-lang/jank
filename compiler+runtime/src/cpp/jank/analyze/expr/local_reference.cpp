@@ -11,7 +11,7 @@ namespace jank::analyze::expr
                                    bool const needs_box,
                                    runtime::obj::symbol_ref const name,
                                    local_binding_ptr const binding)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, name }
     , name{ name }
     , binding{ binding }
   {

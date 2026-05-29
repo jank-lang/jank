@@ -13,6 +13,7 @@ namespace jank::analyze::expr
     cpp_new(expression_position position,
             local_frame_ptr frame,
             bool needs_box,
+            runtime::object_ref form,
             jtl::ptr<void> type,
             expression_ref value_expr);
 

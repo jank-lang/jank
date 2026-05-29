@@ -74,7 +74,7 @@ namespace jank::ir
     auto const type{ untyped_object_ref_type() };
     used_identifiers.emplace(name);
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::parameter>(name, type));
+      jtl::make_ref<inst::parameter>(name, type, location));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
@@ -88,7 +88,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::capture>(name, type, value));
+      jtl::make_ref<inst::capture>(name, type, location, value));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
@@ -101,12 +101,11 @@ namespace jank::ir
   {
     auto const type{ literal_type(value) };
     jtl::immutable_string lifted_literal_name;
-    auto const found{ lifted_constants.find(value) };
-    if(found == lifted_constants.end())
+    auto const found{ mod->lifted_constants.find(value) };
+    if(found == mod->lifted_constants.end())
     {
       lifted_literal_name = runtime::munge(runtime::__rt_ctx->unique_string("const"));
-      mod->lifted_constants.emplace(lifted_literal_name, value);
-      lifted_constants.emplace(value, lifted_literal_name);
+      mod->lifted_constants.emplace(value, lifted_literal_name);
     }
     else
     {
@@ -115,7 +114,7 @@ namespace jank::ir
 
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::literal>(name, type, value, lifted_literal_name));
+      jtl::make_ref<inst::literal>(name, type, location, value, lifted_literal_name));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
@@ -129,7 +128,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::persistent_list>(name, jtl::move(values), meta));
+      jtl::make_ref<inst::persistent_list>(name, location, jtl::move(values), meta));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, current_function()->blocks[block_index].instructions.back()->type);
@@ -143,7 +142,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::persistent_vector>(name, jtl::move(values), meta));
+      jtl::make_ref<inst::persistent_vector>(name, location, jtl::move(values), meta));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, current_function()->blocks[block_index].instructions.back()->type);
@@ -158,7 +157,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::persistent_array_map>(name, jtl::move(values), meta));
+      jtl::make_ref<inst::persistent_array_map>(name, location, jtl::move(values), meta));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, current_function()->blocks[block_index].instructions.back()->type);
@@ -172,7 +171,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::persistent_hash_map>(name, jtl::move(values), meta));
+      jtl::make_ref<inst::persistent_hash_map>(name, location, jtl::move(values), meta));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, current_function()->blocks[block_index].instructions.back()->type);
@@ -186,7 +185,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::persistent_hash_set>(name, jtl::move(values), meta));
+      jtl::make_ref<inst::persistent_hash_set>(name, location, jtl::move(values), meta));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, current_function()->blocks[block_index].instructions.back()->type);
@@ -200,7 +199,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::function>(name, jtl::move(arities), arity_flags));
+      jtl::make_ref<inst::function>(name, location, jtl::move(arities), arity_flags));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, current_function()->blocks[block_index].instructions.back()->type);
@@ -218,6 +217,7 @@ namespace jank::ir
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::closure>(name,
+                                   location,
                                    context,
                                    jtl::move(arities),
                                    jtl::move(captures),
@@ -233,7 +233,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::letfn>(name, jtl::move(bindings)));
+      jtl::make_ref<inst::letfn>(name, location, jtl::move(bindings)));
     return name;
   }
 
@@ -246,7 +246,7 @@ namespace jank::ir
     auto name{ next_ident() };
     auto const type{ var_type() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::def>(name, type, qualified_var, value, meta, is_dynamic));
+      jtl::make_ref<inst::def>(name, type, location, qualified_var, value, meta, is_dynamic));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
@@ -261,20 +261,19 @@ namespace jank::ir
     static jtl::immutable_string const dot{ "\\." };
     auto const us{ runtime::__rt_ctx->unique_string(qualified_var) };
     jtl::immutable_string lifted_var_name;
-    auto const found{ lifted_vars.find(qualified_var) };
-    if(found == lifted_vars.end())
+    auto const found{ mod->lifted_vars.find(qualified_var) };
+    if(found == mod->lifted_vars.end())
     {
       lifted_var_name = runtime::munge_and_replace(us, dot, "_");
-      mod->lifted_vars.emplace(lifted_var_name, qualified_var);
-      lifted_vars.emplace(qualified_var, lifted_var_name);
+      mod->lifted_vars.emplace(qualified_var, module::lifted_var{ lifted_var_name, false });
     }
     else
     {
-      lifted_var_name = found->second;
+      lifted_var_name = found->second.name;
     }
 
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::var_deref>(name, lifted_var_name));
+      jtl::make_ref<inst::var_deref>(name, location, qualified_var));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, untyped_object_ref_type());
@@ -288,11 +287,11 @@ namespace jank::ir
     static jtl::immutable_string const dot{ "\\." };
     auto const us{ runtime::__rt_ctx->unique_string(qualified_var) };
     auto var_name{ runtime::munge_and_replace(us, dot, "_") };
-    mod->lifted_vars.emplace(var_name, module::lifted_var{ qualified_var, false });
+    mod->lifted_vars.emplace(qualified_var, module::lifted_var{ var_name, false });
     auto const type{ var_type() };
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::var_ref>(name, type, var_name));
+      jtl::make_ref<inst::var_ref>(name, type, location, qualified_var));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
@@ -305,7 +304,7 @@ namespace jank::ir
     auto name{ next_ident() };
     auto const type{ untyped_object_ref_type() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::type_erase>(name, value));
+      jtl::make_ref<inst::type_erase>(name, location, value));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
@@ -320,7 +319,7 @@ namespace jank::ir
     auto name{ next_ident() };
     auto const type{ untyped_object_ref_type() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::dynamic_call>(name, type, fn, jtl::move(args)));
+      jtl::make_ref<inst::dynamic_call>(name, type, location, fn, jtl::move(args)));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
@@ -355,6 +354,7 @@ namespace jank::ir
     current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::named_recursion>(name,
                                            type,
+                                           location,
                                            fn,
                                            fn_base_name,
                                            jtl::move(args),
@@ -371,7 +371,7 @@ namespace jank::ir
     auto name{ next_ident() };
     auto const type{ untyped_object_ref_type() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::recursion_reference>(name, type));
+      jtl::make_ref<inst::recursion_reference>(name, type, location));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, type);
@@ -383,7 +383,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::truthy>(name, value));
+      jtl::make_ref<inst::truthy>(name, location, value));
     return name;
   }
 
@@ -392,7 +392,7 @@ namespace jank::ir
     auto name{ next_ident() };
     auto const &block{ current_function()->blocks[index].name };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::jump>(name, block));
+      jtl::make_ref<inst::jump>(name, location, block));
     return name;
   }
 
@@ -401,7 +401,7 @@ namespace jank::ir
     auto name{ next_ident() };
     auto const &block{ current_function()->blocks[index].name };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::jump>(name, block, loop));
+      jtl::make_ref<inst::jump>(name, location, block, loop));
     return name;
   }
 
@@ -409,14 +409,14 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::branch_set>(name, shadow, value));
+      jtl::make_ref<inst::branch_set>(name, location, shadow, value));
     return name;
   }
 
   identifier builder::branch_get(identifier const &name, jtl::ptr<void> const type) const
   {
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::branch_get>(name, type));
+      jtl::make_ref<inst::branch_get>(name, type, location));
     return name;
   }
 
@@ -428,7 +428,13 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::branch>(name, condition, then_blk, else_blk, merge_blk, shadow));
+      jtl::make_ref<inst::branch>(name,
+                                  location,
+                                  condition,
+                                  then_blk,
+                                  else_blk,
+                                  merge_blk,
+                                  shadow));
     return name;
   }
 
@@ -439,7 +445,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::loop>(name, loop_blk, merge_blk, shadow, jtl::move(shadows)));
+      jtl::make_ref<inst::loop>(name, location, loop_blk, merge_blk, shadow, jtl::move(shadows)));
     return name;
   }
 
@@ -454,6 +460,7 @@ namespace jank::ir
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::case_>(name,
+                                 location,
                                  shift,
                                  mask,
                                  value,
@@ -471,7 +478,12 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::try_>(name, jtl::move(catches), merge_block, shadow, finally_block));
+      jtl::make_ref<inst::try_>(name,
+                                location,
+                                jtl::move(catches),
+                                merge_block,
+                                shadow,
+                                finally_block));
     return name;
   }
 
@@ -482,7 +494,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::catch_>(name, type, merge_block, shadow, finally_block));
+      jtl::make_ref<inst::catch_>(name, type, location, merge_block, shadow, finally_block));
     return name;
   }
 
@@ -490,7 +502,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::finally>(name, merge_block));
+      jtl::make_ref<inst::finally>(name, location, merge_block));
     return name;
   }
 
@@ -498,7 +510,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::throw_>(name, value));
+      jtl::make_ref<inst::throw_>(name, location, value));
     return name;
   }
 
@@ -506,7 +518,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::ret>(name, type, value));
+      jtl::make_ref<inst::ret>(name, type, location, value));
     return name;
   }
 
@@ -514,7 +526,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_raw>(name, expr));
+      jtl::make_ref<inst::cpp_raw>(name, location, expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
@@ -526,7 +538,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_value>(name, expr));
+      jtl::make_ref<inst::cpp_value>(name, location, expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
@@ -541,12 +553,12 @@ namespace jank::ir
     if(expr->policy == analyze::conversion_policy::into_object)
     {
       current_function()->blocks[block_index].instructions.emplace_back(
-        jtl::make_ref<inst::cpp_into_object>(name, value, expr));
+        jtl::make_ref<inst::cpp_into_object>(name, location, value, expr));
     }
     else
     {
       current_function()->blocks[block_index].instructions.emplace_back(
-        jtl::make_ref<inst::cpp_from_object>(name, value, expr));
+        jtl::make_ref<inst::cpp_from_object>(name, location, value, expr));
     }
     if(expr->position == analyze::expression_position::tail)
     {
@@ -560,7 +572,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_unsafe_cast>(name, value, expr));
+      jtl::make_ref<inst::cpp_unsafe_cast>(name, location, value, expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
@@ -574,7 +586,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_call>(name, value, jtl::move(args), expr));
+      jtl::make_ref<inst::cpp_call>(name, location, value, jtl::move(args), expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
@@ -587,7 +599,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_constructor_call>(name, jtl::move(args), expr));
+      jtl::make_ref<inst::cpp_constructor_call>(name, location, jtl::move(args), expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
@@ -600,7 +612,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_member_call>(name, jtl::move(args), expr));
+      jtl::make_ref<inst::cpp_member_call>(name, location, jtl::move(args), expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
@@ -613,7 +625,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_member_access>(name, value, expr));
+      jtl::make_ref<inst::cpp_member_access>(name, location, value, expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
@@ -627,7 +639,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_builtin_operator_call>(name, jtl::move(args), expr));
+      jtl::make_ref<inst::cpp_builtin_operator_call>(name, location, jtl::move(args), expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
@@ -639,7 +651,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_box>(name, value, expr));
+      jtl::make_ref<inst::cpp_box>(name, location, value, expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
@@ -653,7 +665,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_unbox>(name, value, meta, expr));
+      jtl::make_ref<inst::cpp_unbox>(name, location, value, meta, expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
@@ -665,7 +677,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_new>(name, value, expr));
+      jtl::make_ref<inst::cpp_new>(name, location, value, expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
@@ -677,7 +689,7 @@ namespace jank::ir
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::cpp_delete>(name, value, expr));
+      jtl::make_ref<inst::cpp_delete>(name, location, value, expr));
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));

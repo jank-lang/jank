@@ -66,6 +66,7 @@ misc-definitions-in-headers,\
 -readability-use-anyofallof,\
 -readability-enum-initial-value,\
 -readability-use-concise-preprocessor-directives,\
+-performance-no-int-to-ptr,\
 -performance-noexcept-move-constructor,\
 -performance-move-const-arg"
 

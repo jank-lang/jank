@@ -1,10 +1,7 @@
+#include <CppInterOp/CppInterOp.h>
+
 #include <jank/analyze/expr/cpp_new.hpp>
 #include <jank/detail/to_runtime_data.hpp>
-
-namespace CppImpl
-{
-  void *GetPointerType(void *type);
-}
 
 namespace jank::analyze::expr
 {
@@ -13,9 +10,10 @@ namespace jank::analyze::expr
   cpp_new::cpp_new(expression_position const position,
                    local_frame_ptr const frame,
                    bool const needs_box,
+                   object_ref const form,
                    jtl::ptr<void> const type,
                    expression_ref const value_expr)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , type{ type }
     , value_expr{ value_expr }
   {
@@ -40,6 +38,6 @@ namespace jank::analyze::expr
 
   jtl::ptr<void> cpp_new::get_type() const
   {
-    return CppImpl::GetPointerType(type);
+    return Cpp::GetPointerType(type);
   }
 }

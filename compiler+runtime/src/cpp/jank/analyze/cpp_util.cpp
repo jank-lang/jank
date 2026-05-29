@@ -346,6 +346,17 @@ namespace jank::analyze::cpp_util
       }
     }
 
+    /* Unnamed enums should just be treated as their underlying type. */
+    if(auto const enum_type{ qual_type->getAs<clang::EnumType>() }; enum_type)
+    {
+      auto const decl{ enum_type->getDecl() };
+
+      if(decl->getName().empty())
+      {
+        return Cpp::GetTypeAsString(decl->getIntegerType().getAsOpaquePtr());
+      }
+    }
+
     if(auto const scope{ Cpp::GetScopeFromType(type) }; scope)
     {
       auto name{ get_qualified_name(scope) };
@@ -478,7 +489,7 @@ namespace jank::analyze::cpp_util
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(o->type)
+    switch(o.get_type())
     {
       case jank::runtime::object_type::nil:
         {
@@ -498,6 +509,12 @@ namespace jank::analyze::cpp_util
             resolve_scope("jank.runtime.obj.integer_ref").expect_ok()) };
           return type;
         }
+      case jank::runtime::object_type::small_integer:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.small_integer_ref").expect_ok()) };
+          return type;
+        }
       case jank::runtime::object_type::character:
         {
           static auto const type{ Cpp::GetTypeFromScope(
@@ -508,6 +525,12 @@ namespace jank::analyze::cpp_util
         {
           static auto const type{ Cpp::GetTypeFromScope(
             resolve_scope("jank.runtime.obj.real_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::small_real:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.small_real_ref").expect_ok()) };
           return type;
         }
       case jank::runtime::object_type::symbol:

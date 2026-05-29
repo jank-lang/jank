@@ -14,7 +14,7 @@ namespace jank::runtime::obj
 
   atom::atom(object_ref const o)
     : object{ obj_type, obj_behaviors }
-    , val{ o.data }
+    , val{ o.raw() }
     , watches{ persistent_hash_map::empty() }
   {
   }
@@ -40,8 +40,8 @@ namespace jank::runtime::obj
   object_ref atom::reset(object_ref const o)
   {
     auto const v(val.load());
-    val = o.data;
-    notify_watches(this, v, o);
+    val = o.raw();
+    notify_watches(runtime::detail::untagged(this), v, o);
     return o;
   }
 
@@ -50,9 +50,9 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      if(val.compare_exchange_weak(v, o.data))
+      if(val.compare_exchange_weak(v, o.raw()))
       {
-        notify_watches(this, v, o);
+        notify_watches(runtime::detail::untagged(this), v, o);
         auto ret{ make_box<persistent_vector>(std::in_place, v, o) };
         return ret;
       }
@@ -66,9 +66,9 @@ namespace jank::runtime::obj
     {
       auto v(val.load());
       auto const next(dynamic_call(fn, v));
-      if(val.compare_exchange_weak(v, next.data))
+      if(val.compare_exchange_weak(v, next.raw()))
       {
-        notify_watches(this, v, next);
+        notify_watches(runtime::detail::untagged(this), v, next);
         return next;
       }
     }
@@ -81,9 +81,9 @@ namespace jank::runtime::obj
     {
       auto v(val.load());
       auto const next(dynamic_call(fn, v, a1));
-      if(val.compare_exchange_weak(v, next.data))
+      if(val.compare_exchange_weak(v, next.raw()))
       {
-        notify_watches(this, v, next);
+        notify_watches(runtime::detail::untagged(this), v, next);
         return next;
       }
     }
@@ -96,9 +96,9 @@ namespace jank::runtime::obj
     {
       auto v(val.load());
       auto const next(dynamic_call(fn, v, a1, a2));
-      if(val.compare_exchange_weak(v, next.data))
+      if(val.compare_exchange_weak(v, next.raw()))
       {
-        notify_watches(this, v, next);
+        notify_watches(runtime::detail::untagged(this), v, next);
         return next;
       }
     }
@@ -113,9 +113,9 @@ namespace jank::runtime::obj
       auto v(val.load());
       auto const args(runtime::cons(v, runtime::cons(a1, runtime::cons(a2, rest))));
       auto const next(apply_to(fn, args));
-      if(val.compare_exchange_weak(v, next.data))
+      if(val.compare_exchange_weak(v, next.raw()))
       {
-        notify_watches(this, v, next);
+        notify_watches(runtime::detail::untagged(this), v, next);
         return next;
       }
     }
@@ -127,9 +127,9 @@ namespace jank::runtime::obj
     {
       auto v(val.load());
       auto const next(dynamic_call(fn, v));
-      if(val.compare_exchange_weak(v, next.data))
+      if(val.compare_exchange_weak(v, next.raw()))
       {
-        notify_watches(this, v, next);
+        notify_watches(runtime::detail::untagged(this), v, next);
         auto ret{ make_box<persistent_vector>(std::in_place, v, next) };
         return ret;
       }
@@ -142,9 +142,9 @@ namespace jank::runtime::obj
     {
       auto v(val.load());
       auto const next(dynamic_call(fn, v, a1));
-      if(val.compare_exchange_weak(v, next.data))
+      if(val.compare_exchange_weak(v, next.raw()))
       {
-        notify_watches(this, v, next);
+        notify_watches(runtime::detail::untagged(this), v, next);
         auto ret{ make_box<persistent_vector>(std::in_place, v, next) };
         return ret;
       }
@@ -158,9 +158,9 @@ namespace jank::runtime::obj
     {
       auto v(val.load());
       auto const next(dynamic_call(fn, v, a1, a2));
-      if(val.compare_exchange_weak(v, next.data))
+      if(val.compare_exchange_weak(v, next.raw()))
       {
-        notify_watches(this, v, next);
+        notify_watches(runtime::detail::untagged(this), v, next);
         auto ret{ make_box<persistent_vector>(std::in_place, v, next) };
         return ret;
       }
@@ -177,9 +177,9 @@ namespace jank::runtime::obj
       auto v(val.load());
       auto const args(runtime::cons(v, runtime::cons(a1, runtime::cons(a2, rest))));
       auto const next(apply_to(fn, args));
-      if(val.compare_exchange_weak(v, next.data))
+      if(val.compare_exchange_weak(v, next.raw()))
       {
-        notify_watches(this, v, next);
+        notify_watches(runtime::detail::untagged(this), v, next);
         auto ret{ make_box<persistent_vector>(std::in_place, v, next) };
         return ret;
       }
@@ -189,11 +189,11 @@ namespace jank::runtime::obj
   object_ref atom::compare_and_set(object_ref const old_val, object_ref const new_val)
   {
     /* NOLINTNEXTLINE(misc-const-correctness): Can't actually be const. */
-    object *old{ old_val.data };
-    auto const ret(val.compare_exchange_weak(old, new_val.data));
+    object *old{ old_val.raw() };
+    auto const ret(val.compare_exchange_weak(old, new_val.raw()));
     if(ret)
     {
-      notify_watches(this, old_val, new_val);
+      notify_watches(runtime::detail::untagged(this), old_val, new_val);
     }
     return make_box(ret);
   }

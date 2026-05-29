@@ -8,10 +8,11 @@ namespace jank::analyze::expr
   cpp_unbox::cpp_unbox(expression_position const position,
                        local_frame_ptr const frame,
                        bool const needs_box,
+                       object_ref const form,
                        jtl::ptr<void> type,
                        expression_ref const value_expr,
                        read::source const &source)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , type{ type }
     , value_expr{ value_expr }
     , source{ source }

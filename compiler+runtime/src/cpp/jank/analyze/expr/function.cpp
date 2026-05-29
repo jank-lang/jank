@@ -14,11 +14,12 @@ namespace jank::analyze::expr
   function::function(expression_position const position,
                      local_frame_ptr const frame,
                      bool const needs_box,
+                     object_ref const form,
                      jtl::immutable_string const &name,
                      jtl::immutable_string const &unique_name,
                      native_vector<function_arity> &&arities,
                      runtime::obj::persistent_hash_map_ref const meta)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , name{ name }
     , unique_name{ unique_name }
     , arities{ std::move(arities) }

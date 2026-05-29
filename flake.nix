@@ -65,6 +65,7 @@
               root = ./.;
               fileset = lib.fileset.unions [
                 ./.clang-format
+                ./gdb
                 ./compiler+runtime
               ];
             });
@@ -94,7 +95,6 @@
               ]);
 
             checkInputs = with pkgs; [
-              doctest
               glibcLocales
             ];
 
@@ -179,9 +179,6 @@
             gdb
             clangbuildanalyzer
             openjdk
-
-            ## Dev libs.
-            doctest
 
             ## Book.
             mdbook

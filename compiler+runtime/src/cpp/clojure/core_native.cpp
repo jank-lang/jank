@@ -72,7 +72,7 @@ namespace clojure::core_native
 
   object_ref is_var(object_ref const o)
   {
-    return make_box(o->type == object_type::var);
+    return make_box(o.get_type() == object_type::var);
   }
 
   object_ref var_get(object_ref const o)
@@ -117,14 +117,15 @@ namespace clojure::core_native
 
   object_ref is_fn(object_ref const o)
   {
-    return make_box(o->type == object_type::native_function_wrapper
-                    || o->type == object_type::jit_function || o->type == object_type::jit_closure
-                    || o->type == object_type::deferred_cpp_function);
+    return make_box(o.get_type() == object_type::native_function_wrapper
+                    || o.get_type() == object_type::jit_function
+                    || o.get_type() == object_type::jit_closure
+                    || o.get_type() == object_type::deferred_cpp_function);
   }
 
   object_ref is_multi_fn(object_ref const o)
   {
-    return make_box(o->type == object_type::multi_function);
+    return make_box(o.get_type() == object_type::multi_function);
   }
 
   object_ref multi_fn(object_ref const name,
@@ -213,7 +214,7 @@ namespace clojure::core_native
 
   object_ref is_ns(object_ref const ns_or_sym)
   {
-    return make_box(ns_or_sym->type == object_type::ns);
+    return make_box(ns_or_sym.get_type() == object_type::ns);
   }
 
   object_ref ns_name(object_ref const ns)
@@ -314,7 +315,7 @@ namespace clojure::core_native
 
   object_ref hash_unordered(object_ref const coll)
   {
-    return make_box(hash::unordered(coll.data)).erase();
+    return make_box(hash::unordered(coll)).erase();
   }
 
   object_ref jank_version()
@@ -528,8 +529,6 @@ extern "C" void jank_load_clojure_core_native()
   intern_fn("eval", &core_native::eval);
   intern_fn("hash-unordered-coll", &core_native::hash_unordered);
   intern_fn("jank-version", &core_native::jank_version);
-  intern_fn("parse-long", &parse_long);
-  intern_fn("parse-double", &parse_double);
   intern_fn("tagged-literal", &tagged_literal);
   intern_fn("tagged-literal?", &is_tagged_literal);
   intern_fn("sorted?", &is_sorted);

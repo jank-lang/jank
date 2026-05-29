@@ -3,6 +3,7 @@
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/math.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -52,12 +53,12 @@ namespace jank::runtime::obj
   transient_vector_ref transient_vector::assoc_in_place(object_ref const key, object_ref const val)
   {
     assert_active();
-    if(key->type != object_type::integer)
+    if(!is_integer(key))
     {
       throw std::runtime_error{ "Key must be an integer." };
     }
 
-    auto const i(expect_object<integer>(key)->data);
+    auto const i(to_i64(key));
     auto const size(static_cast<i64>(data.size()));
 
     if(i > size || 0 > i)
@@ -91,9 +92,9 @@ namespace jank::runtime::obj
   object_ref transient_vector::call(object_ref const idx) const
   {
     assert_active();
-    if(idx->type == object_type::integer)
+    if(is_integer(idx))
     {
-      auto const i(expect_object<integer>(idx)->data);
+      auto const i(to_i64(idx));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{
@@ -113,9 +114,9 @@ namespace jank::runtime::obj
   object_ref transient_vector::get(object_ref const idx) const
   {
     assert_active();
-    if(idx->type == object_type::integer)
+    if(is_integer(idx))
     {
-      auto const i(expect_object<integer>(idx)->data);
+      auto const i(to_i64(idx));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         return {};
@@ -133,9 +134,9 @@ namespace jank::runtime::obj
   object_ref transient_vector::get(object_ref const idx, object_ref const fallback) const
   {
     assert_active();
-    if(idx->type == object_type::integer)
+    if(is_integer(idx))
     {
-      auto const i(expect_object<integer>(idx)->data);
+      auto const i(to_i64(idx));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         return fallback;
@@ -152,9 +153,9 @@ namespace jank::runtime::obj
 
   object_ref transient_vector::find(object_ref const idx) const
   {
-    if(idx->type == object_type::integer)
+    if(is_integer(idx))
     {
-      auto const i(expect_object<integer>(idx)->data);
+      auto const i(to_i64(idx));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         return {};
@@ -171,9 +172,9 @@ namespace jank::runtime::obj
 
   bool transient_vector::contains(object_ref const elem) const
   {
-    if(elem->type == object_type::integer)
+    if(is_integer(elem))
     {
-      auto const i(expect_object<integer>(elem)->data);
+      auto const i(to_i64(elem));
       return i >= 0 && static_cast<size_t>(i) < data.size();
     }
     else

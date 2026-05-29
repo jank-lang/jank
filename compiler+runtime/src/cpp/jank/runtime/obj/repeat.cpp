@@ -46,14 +46,14 @@ namespace jank::runtime::obj
 
   repeat_ref repeat::seq() const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   repeat_ref repeat::fresh_seq() const
   {
     if(runtime::equal(count, make_box(infinite)))
     {
-      return this;
+      return runtime::detail::untagged(this);
     }
     return make_box<repeat>(count, value);
   }
@@ -67,7 +67,7 @@ namespace jank::runtime::obj
   {
     if(runtime::equal(count, make_box(infinite)))
     {
-      return this;
+      return runtime::detail::untagged(this);
     }
     if(lte(count, make_box(1)))
     {
@@ -80,24 +80,24 @@ namespace jank::runtime::obj
   {
     if(runtime::equal(count, make_box(infinite)))
     {
-      return this;
+      return runtime::detail::untagged(this);
     }
     if(lte(count, make_box(1)))
     {
       return {};
     }
     count = add(count, make_box(-1));
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   cons_ref repeat::conj(object_ref const head) const
   {
-    return make_box<cons>(head, this);
+    return make_box<cons>(head, runtime::detail::untagged(this));
   }
 
   bool repeat::equal(object const &o) const
   {
-    return runtime::sequence_equal(this, &o);
+    return runtime::sequence_equal(runtime::detail::untagged(this), runtime::detail::untagged(&o));
   }
 
   void repeat::to_string(jtl::string_builder &buff) const
@@ -117,7 +117,7 @@ namespace jank::runtime::obj
 
   uhash repeat::to_hash() const
   {
-    return hash::ordered(this);
+    return hash::ordered(runtime::detail::untagged(this));
   }
 
   repeat_ref repeat::with_meta(object_ref const m) const

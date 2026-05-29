@@ -17,6 +17,7 @@
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/core/math.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/step/force_boxed.hpp>
@@ -119,6 +120,11 @@ namespace jank::analyze
     return expansions.back();
   }
 
+  static jtl::result<expression_ref, error_ref>
+  apply_implicit_conversion(expression_ref const expr,
+                            jtl::ptr<void> expr_type,
+                            jtl::ptr<void> const expected_type,
+                            native_vector<runtime::object_ref> const &macro_expansions);
   static jtl::result<void, error_ref>
   apply_implicit_conversions(jtl::ptr<void> const fn,
                              /* Out param. */
@@ -461,6 +467,7 @@ namespace jank::analyze
                               local_frame_ptr const current_frame,
                               expression_position const position,
                               bool const needs_box,
+                              object_ref const form,
                               native_vector<runtime::object_ref> const &macro_expansions)
   {
     auto const op_name{ try_object<obj::symbol>(val->form)->name };
@@ -536,6 +543,7 @@ namespace jank::analyze
       return jtl::make_ref<expr::cpp_builtin_operator_call>(position,
                                                             current_frame,
                                                             needs_box,
+                                                            form,
                                                             op,
                                                             jtl::move(arg_exprs),
                                                             found->second.type(arg_types));
@@ -552,6 +560,7 @@ namespace jank::analyze
                  local_frame_ptr const current_frame,
                  expression_position const position,
                  bool const needs_box,
+                 object_ref const form,
                  native_vector<runtime::object_ref> const &macro_expansions)
   {
     /* TODO: Make this a set. */
@@ -591,6 +600,7 @@ namespace jank::analyze
       return jtl::make_ref<expr::cpp_constructor_call>(position,
                                                        current_frame,
                                                        needs_box,
+                                                       form,
                                                        val->type,
                                                        nullptr,
                                                        false,
@@ -663,6 +673,7 @@ namespace jank::analyze
 
       if(always_use_builtin || cpp_util::is_primitive(obj_type))
       {
+        /* Handle primitive on primitive action. */
         if(always_use_builtin
            || (arg_types.size() == 1
                || cpp_util::is_primitive(Cpp::GetNonReferenceType(arg_types[1].m_Type))))
@@ -674,8 +685,56 @@ namespace jank::analyze
                                              current_frame,
                                              position,
                                              needs_box,
+                                             form,
                                              macro_expansions);
         }
+        /* Handle binary ops: <primitive> op <object> */
+        else if(!cpp_util::is_any_object(obj_type) && cpp_util::is_trait_convertible(obj_type)
+                && cpp_util::is_any_object(Cpp::GetNonReferenceType(arg_types[1].m_Type)))
+        {
+          auto const conversion_res{
+            apply_implicit_conversion(arg_exprs[1], arg_types[1].m_Type, obj_type, macro_expansions)
+          };
+          if(conversion_res.is_err())
+          {
+            return conversion_res.expect_err();
+          }
+          arg_exprs[1] = conversion_res.expect_ok();
+          arg_types[1].m_Type = obj_type;
+          return build_builtin_operator_call(val,
+                                             op,
+                                             std::move(arg_exprs),
+                                             arg_types,
+                                             current_frame,
+                                             position,
+                                             needs_box,
+                                             form,
+                                             macro_expansions);
+        }
+      }
+      /* Handle binary ops: <object> op <primitive> */
+      else if(arg_types.size() == 2 && !cpp_util::is_any_object(arg_types[1].m_Type)
+              && cpp_util::is_trait_convertible(arg_types[1].m_Type)
+              && cpp_util::is_any_object(Cpp::GetNonReferenceType(obj_type)))
+      {
+        auto const conversion_res{
+          apply_implicit_conversion(arg_exprs[1], arg_types[1].m_Type, obj_type, macro_expansions)
+        };
+        if(conversion_res.is_err())
+        {
+          return conversion_res.expect_err();
+        }
+        arg_exprs[1] = conversion_res.expect_ok();
+        arg_types[1].m_Type = obj_type;
+        return build_builtin_operator_call(val,
+                                           op,
+                                           std::move(arg_exprs),
+                                           arg_types,
+                                           current_frame,
+                                           position,
+                                           needs_box,
+                                           form,
+                                           macro_expansions);
       }
 
       auto const arity{ arg_count == 1 ? Cpp::kUnary : Cpp::kBinary };
@@ -824,6 +883,7 @@ namespace jank::analyze
         return jtl::make_ref<expr::cpp_constructor_call>(position,
                                                          current_frame,
                                                          needs_box,
+                                                         form,
                                                          val->type,
                                                          match,
                                                          false,
@@ -834,6 +894,7 @@ namespace jank::analyze
         return jtl::make_ref<expr::cpp_member_call>(position,
                                                     current_frame,
                                                     needs_box,
+                                                    form,
                                                     Cpp::GetFunctionReturnType(match),
                                                     match,
                                                     jtl::move(arg_exprs));
@@ -844,6 +905,7 @@ namespace jank::analyze
         auto const source{ jtl::make_ref<expr::cpp_value>(expression_position::value,
                                                           current_frame,
                                                           needs_box,
+                                                          form,
                                                           /* TODO: Is symbol needed? */
                                                           try_object<obj::symbol>(val->form),
                                                           Cpp::GetTypeFromScope(match),
@@ -852,6 +914,7 @@ namespace jank::analyze
         return jtl::make_ref<expr::cpp_call>(position,
                                              current_frame,
                                              needs_box,
+                                             form,
                                              return_type,
                                              source,
                                              jtl::move(arg_exprs));
@@ -912,6 +975,7 @@ namespace jank::analyze
         return jtl::make_ref<expr::cpp_constructor_call>(position,
                                                          current_frame,
                                                          needs_box,
+                                                         form,
                                                          val->type,
                                                          match,
                                                          false,
@@ -922,6 +986,7 @@ namespace jank::analyze
         return jtl::make_ref<expr::cpp_member_call>(position,
                                                     current_frame,
                                                     needs_box,
+                                                    form,
                                                     Cpp::GetFunctionReturnType(match),
                                                     match,
                                                     jtl::move(arg_exprs));
@@ -932,6 +997,7 @@ namespace jank::analyze
         auto const source{ jtl::make_ref<expr::cpp_value>(expression_position::value,
                                                           current_frame,
                                                           needs_box,
+                                                          form,
                                                           /* TODO: Is symbol needed? */
                                                           try_object<obj::symbol>(val->form),
                                                           Cpp::GetTypeFromScope(match),
@@ -940,6 +1006,7 @@ namespace jank::analyze
         return jtl::make_ref<expr::cpp_call>(position,
                                              current_frame,
                                              needs_box,
+                                             form,
                                              return_type,
                                              source,
                                              jtl::move(arg_exprs));
@@ -963,6 +1030,7 @@ namespace jank::analyze
       return jtl::make_ref<expr::cpp_constructor_call>(position,
                                                        current_frame,
                                                        needs_box,
+                                                       form,
                                                        val->type,
                                                        nullptr,
                                                        true,
@@ -1063,6 +1131,7 @@ namespace jank::analyze
           position,
           current_frame,
           needs_box,
+          o,
           /* TODO: This works, but it has no source info. */
           make_box<obj::symbol>("()"),
           source_type,
@@ -1079,6 +1148,7 @@ namespace jank::analyze
                               current_frame,
                               position,
                               needs_box,
+                              o,
                               macro_expansions);
       }
 
@@ -1122,6 +1192,7 @@ namespace jank::analyze
     return jtl::make_ref<expr::cpp_call>(position,
                                          current_frame,
                                          needs_box,
+                                         o,
                                          Cpp::GetFunctionReturnTypeFromType(source_type),
                                          source,
                                          jtl::move(arg_exprs));
@@ -1147,6 +1218,7 @@ namespace jank::analyze
           return jtl::make_ref<expr::cpp_conversion>(cast_position,
                                                      expr->frame,
                                                      expr->needs_box,
+                                                     expr->form,
                                                      expected_type,
                                                      expr_type,
                                                      conversion_policy::into_object,
@@ -1160,6 +1232,7 @@ namespace jank::analyze
           return jtl::make_ref<expr::cpp_conversion>(cast_position,
                                                      expr->frame,
                                                      expr->needs_box,
+                                                     expr->form,
                                                      Cpp::GetNonReferenceType(expected_type),
                                                      expected_type,
                                                      conversion_policy::from_object,
@@ -1175,6 +1248,7 @@ namespace jank::analyze
             cast_position,
             expr->frame,
             false,
+            expr->form,
             /* TODO: Can we do better here? */
             make_box<obj::symbol>(Cpp::GetTypeAsString(bare_param_type)),
             bare_param_type,
@@ -1187,6 +1261,7 @@ namespace jank::analyze
                                               expr->frame,
                                               cast_position,
                                               expr->needs_box,
+                                              expr->form,
                                               macro_expansions) };
           if(new_expr.is_err())
           {
@@ -1328,7 +1403,7 @@ namespace jank::analyze
     }
 
     auto const sym_obj(l->data.rest().first().unwrap());
-    if(sym_obj->type != runtime::object_type::symbol)
+    if(sym_obj.get_type() != runtime::object_type::symbol)
     {
       return error::analyze_invalid_def("The var name in a 'def' must be a symbol.",
                                         object_source(sym_obj),
@@ -1386,7 +1461,7 @@ namespace jank::analyze
     if(has_docstring)
     {
       auto const docstring_obj(l->data.rest().rest().first().unwrap());
-      if(docstring_obj->type != runtime::object_type::persistent_string)
+      if(docstring_obj.get_type() != runtime::object_type::persistent_string)
       {
         return error::analyze_invalid_def("The doc string for a 'def' must be a string.",
                                           object_source(docstring_obj),
@@ -1399,7 +1474,7 @@ namespace jank::analyze
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
     }
 
-    return jtl::make_ref<expr::def>(position, current_frame, true, qualified_sym, value_expr);
+    return jtl::make_ref<expr::def>(position, current_frame, true, l, qualified_sym, value_expr);
   }
 
   processor::expression_result
@@ -1451,13 +1526,13 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const shift_obj{ it.first().unwrap() };
-    if(shift_obj.data->type != object_type::integer)
+    if(!runtime::is_integer(shift_obj))
     {
-      return error::analyze_invalid_case("Shift value should be an integer.",
+      return error::analyze_invalid_case("Shift value must be an integer.",
                                          meta_source(o->meta),
                                          latest_expansion(macro_expansions));
     }
-    auto const shift{ runtime::expect_object<runtime::obj::integer>(shift_obj) };
+    auto const shift{ runtime::to_i64(shift_obj) };
 
     it = it.rest();
     if(it.first().is_none())
@@ -1467,13 +1542,13 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const mask_obj{ it.first().unwrap() };
-    if(mask_obj.data->type != object_type::integer)
+    if(!runtime::is_integer(mask_obj))
     {
-      return error::analyze_invalid_case("Mask value should be an integer.",
+      return error::analyze_invalid_case("Mask value must be an integer.",
                                          meta_source(o->meta),
                                          latest_expansion(macro_expansions));
     }
-    auto const mask{ runtime::expect_object<runtime::obj::integer>(mask_obj) };
+    auto const mask{ runtime::to_i64(mask_obj) };
 
     it = it.rest();
     if(it.first().is_none())
@@ -1510,17 +1585,17 @@ namespace jank::analyze
           auto const e{ seq->first() };
           auto const k_obj{ e->data[0] };
           auto const v_obj{ e->data[1] };
-          if(k_obj.data->type != object_type::integer)
+          if(!runtime::is_integer(k_obj))
           {
             return err("Map key for case* is expected to be an integer.");
           }
-          auto const key{ runtime::expect_object<obj::integer>(k_obj) };
+          auto const key{ runtime::to_i64(k_obj) };
           auto const expr{ analyze(v_obj, current_frame, position, fn_ctx, needs_box) };
           if(expr.is_err())
           {
             return err(expr.expect_err()->message);
           }
-          ret.keys.push_back(key->data);
+          ret.keys.push_back(key);
           ret.exprs.push_back(expr.expect_ok());
         }
         return ret;
@@ -1542,9 +1617,10 @@ namespace jank::analyze
     return jtl::make_ref<expr::case_>(position,
                                       current_frame,
                                       needs_box,
+                                      o,
                                       value_expr.expect_ok(),
-                                      shift->data,
-                                      mask->data,
+                                      shift,
+                                      mask,
                                       default_expr.expect_ok(),
                                       std::move(pairs.keys),
                                       std::move(pairs.exprs));
@@ -1639,6 +1715,7 @@ namespace jank::analyze
         position,
         current_frame,
         needs_box,
+        sym,
         unwrapped_named_recursion.fn_frame->fn_ctx.data);
     }
 
@@ -1680,7 +1757,7 @@ namespace jank::analyze
                                                   latest_expansion(macro_expansions));
     }
     auto const &params_obj(first_form.unwrap());
-    if(params_obj->type != runtime::object_type::persistent_vector)
+    if(params_obj.get_type() != runtime::object_type::persistent_vector)
     {
       return error::analyze_invalid_fn_parameters("A function parameter vector must be a vector.",
                                                   object_source(params_obj),
@@ -1704,7 +1781,7 @@ namespace jank::analyze
     for(auto it(params->data.begin()); it != params->data.end(); ++it)
     {
       auto const &p(*it);
-      if(p->type != runtime::object_type::symbol)
+      if(p.get_type() != runtime::object_type::symbol)
       {
         auto const param_idx{ std::distance(params->data.begin(), it) };
         return error::analyze_invalid_fn_parameters("Each function parameter must be a symbol.",
@@ -1781,7 +1858,7 @@ namespace jank::analyze
     fn_ctx->is_variadic = is_variadic;
     fn_ctx->param_count = param_symbols.size();
     frame->fn_ctx = fn_ctx;
-    auto body_do{ jtl::make_ref<expr::do_>(expression_position::tail, frame, true) };
+    auto body_do{ jtl::make_ref<expr::do_>(expression_position::tail, frame, true, list) };
     usize const form_count{ list->count() - 1 };
     usize i{};
     for(auto const &item : list->data.rest())
@@ -1860,7 +1937,7 @@ namespace jank::analyze
 
     jtl::immutable_string name, unique_name;
     auto first_elem(list->data.rest().first().unwrap());
-    if(first_elem->type == runtime::object_type::symbol)
+    if(first_elem.get_type() == runtime::object_type::symbol)
     {
       auto const s(runtime::expect_object<runtime::obj::symbol>(first_elem));
       name = s->name;
@@ -1882,7 +1959,7 @@ namespace jank::analyze
 
     native_vector<expr::function_arity> arities;
 
-    if(first_elem->type == runtime::object_type::persistent_vector)
+    if(first_elem.get_type() == runtime::object_type::persistent_vector)
     {
       auto const result(analyze_fn_arity(make_box<runtime::obj::persistent_list>(list->data.rest()),
                                          name,
@@ -1977,6 +2054,7 @@ namespace jank::analyze
     auto ret(jtl::make_ref<expr::function>(position,
                                            current_frame,
                                            true,
+                                           full_list,
                                            name,
                                            unique_name,
                                            native_vector<expr::function_arity>{},
@@ -2105,7 +2183,7 @@ namespace jank::analyze
           expression_position::statement,
           fn_ctx,
           false) };
-        if(op_equal_call.is_err())
+        if(op_equal_call.is_err() && !cpp_util::is_trait_convertible(expected_type))
         {
           /* TODO: Improve error to reference let binding and provide a custom recur message
            * instead of operator = stuff. */
@@ -2140,6 +2218,7 @@ namespace jank::analyze
     return jtl::make_ref<expr::recur>(position,
                                       current_frame,
                                       true,
+                                      list,
                                       make_box<runtime::obj::persistent_list>(list->data.rest()),
                                       std::move(arg_exprs),
                                       std::move(op_equal_exprs),
@@ -2211,7 +2290,7 @@ namespace jank::analyze
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
-    if(bindings_obj->type != runtime::object_type::persistent_vector)
+    if(bindings_obj.get_type() != runtime::object_type::persistent_vector)
     {
       return error::analyze_invalid_let("The bindings of a 'let' must be in a vector.",
                                         object_source(bindings_obj),
@@ -2235,7 +2314,8 @@ namespace jank::analyze
       position,
       frame,
       needs_box,
-      jtl::make_ref<expr::do_>(position, frame, needs_box, native_vector<expression_ref>{})) };
+      o,
+      jtl::make_ref<expr::do_>(position, frame, needs_box, o, native_vector<expression_ref>{})) };
 
     static auto const loop_kw{ make_box<obj::symbol>("loop*") };
     if(loop_details.is_some() && runtime::equal(o->first(), loop_kw))
@@ -2248,7 +2328,7 @@ namespace jank::analyze
       auto const &sym_obj(bindings->data[i]);
       auto const &val(bindings->data[i + 1]);
 
-      if(sym_obj->type != runtime::object_type::symbol)
+      if(sym_obj.get_type() != runtime::object_type::symbol)
       {
         return error::analyze_invalid_let("The left hand side of a 'let' binding must be a symbol.",
                                           object_source(sym_obj),
@@ -2277,6 +2357,7 @@ namespace jank::analyze
         value_expr = jtl::make_ref<expr::cpp_conversion>(value_expr->position,
                                                          value_expr->frame,
                                                          value_expr->needs_box,
+                                                         value_expr->form,
                                                          cpp_util::untyped_object_ref_type(),
                                                          expr_type,
                                                          conversion_policy::into_object,
@@ -2351,7 +2432,7 @@ namespace jank::analyze
     }
 
     auto const bindings_obj(o->data.rest().first().unwrap());
-    if(bindings_obj->type != runtime::object_type::persistent_vector)
+    if(bindings_obj.get_type() != runtime::object_type::persistent_vector)
     {
       return error::analyze_invalid_letfn("The bindings of a 'letfn*' must be in a vector.",
                                           meta_source(bindings_obj),
@@ -2373,7 +2454,8 @@ namespace jank::analyze
       position,
       frame,
       needs_box,
-      make_box<expr::do_>(position, frame, needs_box, native_vector<expression_ref>{})) };
+      o,
+      make_box<expr::do_>(position, frame, needs_box, o, native_vector<expression_ref>{})) };
 
     /* All bindings in a letfn appear simultaneously and may be mutually recursive.
      * This makes creating a letfn locals frame a bit more involved than let, where locals
@@ -2387,7 +2469,7 @@ namespace jank::analyze
     {
       auto const &sym_obj(bindings->data[i]);
 
-      if(sym_obj->type != runtime::object_type::symbol)
+      if(sym_obj.get_type() != runtime::object_type::symbol)
       {
         return error::analyze_invalid_letfn(
           "The left hand side of a 'letfn*' binding must be a symbol.",
@@ -2567,7 +2649,7 @@ namespace jank::analyze
     {
       return then_expr.expect_err();
     }
-    auto const then_type{ cpp_util::expression_type(then_expr.expect_ok()) };
+    auto const then_type{ cpp_util::non_void_expression_type(then_expr.expect_ok()) };
 
     jtl::option<expression_ref> else_expr_opt;
     if(form_count == 4)
@@ -2578,50 +2660,54 @@ namespace jank::analyze
       {
         return else_expr.expect_err();
       }
-      auto const else_type{ cpp_util::expression_type(else_expr.expect_ok()) };
-      auto const is_then_object{ cpp_util::is_any_object(then_type) };
-      auto const is_else_object{ cpp_util::is_any_object(else_type) };
-      auto const is_then_convertible{ is_else_object && cpp_util::is_trait_convertible(then_type) };
-      auto const is_else_convertible{ is_then_object && cpp_util::is_trait_convertible(else_type) };
 
-      /* If one of the branches has a native type, we need to match one of these scenarios.
+      else_expr_opt = else_expr.expect_ok();
+    }
+
+    auto const else_type{ else_expr_opt.is_some()
+                            ? cpp_util::expression_type(else_expr_opt.unwrap())
+                            : cpp_util::untyped_object_ref_type() };
+    auto const is_then_object{ cpp_util::is_any_object(then_type) };
+    auto const is_else_object{ cpp_util::is_any_object(else_type) };
+    auto const is_then_convertible{ is_else_object && cpp_util::is_trait_convertible(then_type) };
+    auto const is_else_convertible{ is_then_object && cpp_util::is_trait_convertible(else_type) };
+
+    /* If one of the branches has a native type, we need to match one of these scenarios.
        *
        * 1. The other branch has the same native type.
        * 2. The other branch has an object type and the native branch is trait convertible.
        *
        * If neither of these are the case, we have an error. */
-      if((Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
-         && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible))
-      {
-        return error::analyze_mismatched_if_types(
-          util::format(
-            "Mismatched 'if' branch types '{}' and '{}'. Each branch of an 'if' must have "
-            "the same type.",
-            cpp_util::get_qualified_type_name(then_type),
-            cpp_util::get_qualified_type_name(else_type)),
-          object_source(o->first()),
-          latest_expansion(macro_expansions));
-      }
+    if((Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
+       && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible))
+    {
+      return error::analyze_mismatched_if_types(
+        util::format("Mismatched 'if' branch types '{}' and '{}'. Each branch of an 'if' must have "
+                     "the same type.",
+                     cpp_util::get_qualified_type_name(then_type),
+                     cpp_util::get_qualified_type_name(else_type)),
+        object_source(o->first()),
+        latest_expansion(macro_expansions));
+    }
 
-      if(is_then_convertible)
-      {
-        then_expr = apply_implicit_conversion(then_expr.expect_ok(),
-                                              cpp_util::untyped_object_ref_type(),
-                                              macro_expansions);
-      }
-      else if(is_else_convertible)
-      {
-        else_expr = apply_implicit_conversion(else_expr.expect_ok(),
-                                              cpp_util::untyped_object_ref_type(),
-                                              macro_expansions);
-      }
-
-      else_expr_opt = else_expr.expect_ok();
+    if(is_then_convertible)
+    {
+      then_expr = apply_implicit_conversion(then_expr.expect_ok(),
+                                            cpp_util::untyped_object_ref_type(),
+                                            macro_expansions);
+    }
+    else if(is_else_convertible)
+    {
+      else_expr_opt = apply_implicit_conversion(else_expr_opt.unwrap(),
+                                                cpp_util::untyped_object_ref_type(),
+                                                macro_expansions)
+                        .expect_ok();
     }
 
     return jtl::make_ref<expr::if_>(position,
                                     current_frame,
                                     needs_box,
+                                    o,
                                     condition_expr.expect_ok(),
                                     then_expr.expect_ok(),
                                     else_expr_opt);
@@ -2667,7 +2753,7 @@ namespace jank::analyze
     }
 
     auto const arg(o->data.rest().first().unwrap());
-    if(arg->type != runtime::object_type::symbol)
+    if(arg.get_type() != runtime::object_type::symbol)
     {
       return error::analyze_invalid_var_reference("The argument to 'var' must be a symbol.",
                                                   object_source(arg),
@@ -2737,7 +2823,7 @@ namespace jank::analyze
       return arg_expr.expect_err();
     }
 
-    return jtl::make_ref<expr::throw_>(position, current_frame, true, arg_expr.unwrap_move());
+    return jtl::make_ref<expr::throw_>(position, current_frame, true, o, arg_expr.unwrap_move());
   }
 
   processor::expression_result
@@ -2753,7 +2839,9 @@ namespace jank::analyze
     /* We introduce a new frame so that we can register the sym as a local.
      * It holds the exception value which was caught. */
     auto finally_frame(jtl::make_ref<local_frame>(local_frame::frame_type::finally, current_frame));
-    auto ret{ jtl::make_ref<expr::try_>(position, try_frame, true, jtl::make_ref<expr::do_>()) };
+    auto ret{
+      jtl::make_ref<expr::try_>(position, try_frame, true, list, jtl::make_ref<expr::do_>())
+    };
 
     /* Clojure JVM doesn't support recur across try/catch/finally, so we don't either. */
     context::binding_scope const _(runtime::obj::persistent_hash_map::create_unique(
@@ -2860,7 +2948,7 @@ namespace jank::analyze
                 ->add_usage(read::parse::reparse_nth(item, 1));
             }
 
-            if(catch_sym_form->type != runtime::object_type::symbol)
+            if(catch_sym_form.get_type() != runtime::object_type::symbol)
             {
               return error::analyze_invalid_try(
                        "A symbol is required after 'catch', which is used as the binding to "
@@ -3019,7 +3107,7 @@ namespace jank::analyze
                                        bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
-    return jtl::make_ref<expr::primitive_literal>(position, current_frame, needs_box, o);
+    return jtl::make_ref<expr::primitive_literal>(position, current_frame, needs_box, o, o);
   }
 
   /* TODO: Test for this. */
@@ -3060,12 +3148,12 @@ namespace jank::analyze
     {
       /* Eval the literal to resolve exprs such as quotes. */
       auto const pre_eval_expr(
-        jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta));
+        jtl::make_ref<expr::vector>(position, current_frame, true, o, std::move(exprs), o->meta));
       auto const oref(evaluate::eval(pre_eval_expr));
-      return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, oref);
+      return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o, oref);
     }
 
-    return jtl::make_ref<expr::vector>(position, current_frame, true, std::move(exprs), o->meta);
+    return jtl::make_ref<expr::vector>(position, current_frame, true, o, std::move(exprs), o->meta);
   }
 
   processor::expression_result
@@ -3119,6 +3207,7 @@ namespace jank::analyze
         return jtl::make_ref<expr::map>(position,
                                         current_frame,
                                         true,
+                                        o,
                                         std::move(exprs),
                                         typed_o->meta);
       },
@@ -3166,16 +3255,18 @@ namespace jank::analyze
           auto const pre_eval_expr(jtl::make_ref<expr::set>(position,
                                                             current_frame,
                                                             true,
+                                                            o,
                                                             std::move(exprs),
                                                             typed_o->meta));
           auto const constant(evaluate::eval(pre_eval_expr));
 
-          return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, constant);
+          return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o, constant);
         }
 
         return jtl::make_ref<expr::set>(position,
                                         current_frame,
                                         true,
+                                        o,
                                         std::move(exprs),
                                         typed_o->meta);
       },
@@ -3206,7 +3297,7 @@ namespace jank::analyze
     bool needs_arg_box{ true };
 
     /* TODO: If this is a recursive call, note that and skip the var lookup. */
-    if(first->type == runtime::object_type::symbol)
+    if(first.get_type() == runtime::object_type::symbol)
     {
       auto const sym(runtime::expect_object<runtime::obj::symbol>(first));
       auto const found_special(specials().find(sym));
@@ -3232,6 +3323,7 @@ namespace jank::analyze
           position,
           current_frame,
           needs_box,
+          o,
           sym,
           type->type,
           Cpp::GetScopeFromType(type->type),
@@ -3279,15 +3371,16 @@ namespace jank::analyze
           runtime::get(var_deref->var->get_meta(),
                        __rt_ctx->intern_keyword("", "inline-arities", true).expect_ok()));
 
-        if(runtime::contains(inline_arities, make_box(arg_count)))
+        if(inline_arities.is_nil() || runtime::contains(inline_arities, make_box(arg_count)))
         {
           auto const inline_fn(
             runtime::get(var_deref->var->get_meta(),
                          __rt_ctx->intern_keyword("", "inline", true).expect_ok()));
-          /* TODO: Once we're evaluating meta, we can remove this eval. */
-          auto const actual_fn{ __rt_ctx->eval(inline_fn) };
-          auto const expanded{ apply_to(actual_fn, o->next()) };
-          return analyze(expanded, current_frame, position, fn_ctx, needs_box);
+          if(inline_fn.is_some())
+          {
+            auto const expanded{ apply_to(inline_fn, o->next()) };
+            return analyze(expanded, current_frame, position, fn_ctx, needs_box);
+          }
         }
       }
     }
@@ -3310,6 +3403,7 @@ namespace jank::analyze
           position,
           current_frame,
           needs_box,
+          o,
           try_object<obj::symbol>(runtime::first(first)),
           type->type,
           Cpp::GetScopeFromType(type->type),
@@ -3375,6 +3469,7 @@ namespace jank::analyze
       arg_exprs.emplace_back(jtl::make_ref<expr::list>(expression_position::value,
                                                        current_frame,
                                                        needs_arg_box,
+                                                       o,
                                                        std::move(packed_arg_exprs),
                                                        jank_nil));
     }
@@ -3386,6 +3481,7 @@ namespace jank::analyze
         position,
         current_frame,
         needs_ret_box,
+        o,
         std::move(*recursion_ref),
         make_box<runtime::obj::persistent_list>(o->data.rest()),
         std::move(arg_exprs));
@@ -3704,9 +3800,15 @@ namespace jank::analyze
                                                           Cpp::GetTypeFromScope(result.fn_scope),
                                                           result.fn_scope,
                                                           expr::cpp_value::value_kind::function) };
-        auto const res{
-          build_cpp_call(source, {}, {}, {}, current_frame, position, needs_box, macro_expansions)
-        };
+        auto const res{ build_cpp_call(source,
+                                       {},
+                                       {},
+                                       {},
+                                       current_frame,
+                                       position,
+                                       needs_box,
+                                       sym,
+                                       macro_expansions) };
         if(res.is_ok())
         {
           llvm::cast<expr::cpp_call>(res.expect_ok().data)->function_code = result.function_code;
@@ -3781,6 +3883,7 @@ namespace jank::analyze
                             current_frame,
                             position,
                             needs_box,
+                            o,
                             macro_expansions);
     }
     else
@@ -3840,7 +3943,7 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
     auto const obj{ llvm::cast<expr::primitive_literal>(string_expr.data)->data };
-    if(obj->type != runtime::object_type::persistent_string)
+    if(obj.get_type() != runtime::object_type::persistent_string)
     {
       return error::analyze_invalid_cpp_raw(
                "The first and only argument to 'cpp/raw' must be a string of C++ code.",
@@ -3864,7 +3967,7 @@ namespace jank::analyze
                                           guard_name,
                                           raw_string) };
 
-    return jtl::make_ref<expr::cpp_raw>(position, current_frame, needs_box, guarded_code);
+    return jtl::make_ref<expr::cpp_raw>(position, current_frame, needs_box, l, guarded_code);
   }
 
   processor::expression_result
@@ -3917,7 +4020,7 @@ namespace jank::analyze
     jtl::string_result<cpp_util::literal_value_result> literal_res{ err("unset") };
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(arg->type)
+    switch(arg.get_type())
 #pragma clang diagnostic pop
     {
       case object_type::integer:
@@ -3925,9 +4028,17 @@ namespace jank::analyze
           util::format("static_cast<jtl::i64>({})",
                        expect_object<runtime::obj::integer>(arg)->data));
         break;
+      case object_type::small_integer:
+        literal_res = cpp_util::resolve_literal_value(
+          util::format("static_cast<jtl::i32>({})", runtime::detail::as_integer(arg.raw())));
+        break;
       case object_type::real:
         literal_res = cpp_util::resolve_literal_value(
           util::format("static_cast<jtl::f64>({})", expect_object<runtime::obj::real>(arg)->data));
+        break;
+      case object_type::small_real:
+        literal_res = cpp_util::resolve_literal_value(
+          util::format("static_cast<jtl::f64>({})", runtime::detail::as_real(arg.raw())));
         break;
       case object_type::boolean:
         literal_res = cpp_util::resolve_literal_value(
@@ -3965,7 +4076,7 @@ namespace jank::analyze
                                                       result.fn_scope,
                                                       expr::cpp_value::value_kind::function) };
     auto const res{
-      build_cpp_call(source, {}, {}, {}, current_frame, position, false, macro_expansions)
+      build_cpp_call(source, {}, {}, {}, current_frame, position, false, l, macro_expansions)
     };
     if(res.is_ok())
     {
@@ -4041,6 +4152,7 @@ namespace jank::analyze
         position,
         current_frame,
         needs_box,
+        l,
         /* TODO: We don't want to be limited to symbols. */
         runtime::try_object<obj::symbol>(l->first()),
         type,
@@ -4057,6 +4169,7 @@ namespace jank::analyze
       return jtl::make_ref<expr::cpp_conversion>(position,
                                                  current_frame,
                                                  needs_box,
+                                                 l,
                                                  type,
                                                  value_type,
                                                  conversion_policy::into_object,
@@ -4067,6 +4180,7 @@ namespace jank::analyze
       return jtl::make_ref<expr::cpp_conversion>(position,
                                                  current_frame,
                                                  needs_box,
+                                                 l,
                                                  type,
                                                  type,
                                                  conversion_policy::from_object,
@@ -4168,6 +4282,7 @@ namespace jank::analyze
       return jtl::make_ref<expr::cpp_unsafe_cast>(position,
                                                   current_frame,
                                                   needs_box,
+                                                  l,
                                                   type,
                                                   value_expr);
     }
@@ -4244,6 +4359,7 @@ namespace jank::analyze
     return jtl::make_ref<expr::cpp_box>(position,
                                         current_frame,
                                         needs_box,
+                                        l,
                                         value_expr,
                                         object_source(l->first()));
   }
@@ -4327,6 +4443,7 @@ namespace jank::analyze
     return jtl::make_ref<expr::cpp_unbox>(position,
                                           current_frame,
                                           needs_box,
+                                          l,
                                           type,
                                           value_expr,
                                           object_source(l->first()));
@@ -4382,6 +4499,7 @@ namespace jank::analyze
     return jtl::make_ref<expr::cpp_new>(position,
                                         current_frame,
                                         needs_box,
+                                        l,
                                         type,
                                         value_expr_res.expect_ok());
   }
@@ -4431,7 +4549,7 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
-    return jtl::make_ref<expr::cpp_delete>(position, current_frame, needs_box, value_expr);
+    return jtl::make_ref<expr::cpp_delete>(position, current_frame, needs_box, l, value_expr);
   }
 
   processor::expression_result
@@ -4543,6 +4661,7 @@ namespace jank::analyze
     return jtl::make_ref<expr::cpp_member_access>(position,
                                                   current_frame,
                                                   needs_box,
+                                                  l,
                                                   member_type,
                                                   member_scope,
                                                   name,
@@ -4616,7 +4735,7 @@ namespace jank::analyze
         {
           return error::internal_analyze_failure(
             util::format("Unimplemented analysis for object type '{}'.",
-                         object_type_str(typed_o->type)),
+                         object_type_str(typed_o.get_type())),
             object_source(o),
             latest_expansion(macro_expansions));
         }
@@ -4640,7 +4759,7 @@ namespace jank::analyze
                                   expression_position const position,
                                   jtl::option<expr::function_context_ref> const &fn_ctx)
   {
-    if(o->type == object_type::symbol)
+    if(o.get_type() == object_type::symbol)
     {
       auto const res{ analyze_cpp_symbol(expect_object<obj::symbol>(o),
                                          current_frame,
@@ -4717,7 +4836,7 @@ namespace jank::analyze
         auto const seq{ typed_o->seq() };
         auto const first{ runtime::first(seq) };
 
-        if(first->type == object_type::keyword)
+        if(first.get_type() == object_type::keyword)
         {
           static auto const ptr{ runtime::__rt_ctx->intern_keyword("*").expect_ok() };
           static auto const lref{ runtime::__rt_ctx->intern_keyword("&").expect_ok() };
@@ -4992,21 +5111,22 @@ namespace jank::analyze
                 }
 
                 auto const size_obj{ runtime::second(next(seq)) };
-                if(auto const size{ runtime::dyn_cast<obj::integer>(size_obj) }; size.is_some())
+                if(runtime::is_integer(size_obj))
                 {
-                  if(size->data < 0)
+                  auto const size{ runtime::to_i64(size_obj) };
+                  if(size < 0)
                   {
                     return error::analyze_invalid_cpp_dsl(
                       "Array sizes must be either zero or positive integers.",
                       object_source(o),
                       latest_expansion(macro_expansions));
                   }
-                  return Cpp::GetArrayType(type, size->data);
+                  return Cpp::GetArrayType(type, size);
                 }
 
                 return error::analyze_invalid_cpp_dsl(
                   util::format("Invalid array size. An integer was expected, but a {} was found.",
-                               object_type_str(size_obj->type)),
+                               object_type_str(size_obj.get_type())),
                   object_source(o),
                   latest_expansion(macro_expansions));
               });
@@ -5050,7 +5170,7 @@ namespace jank::analyze
                     return error::analyze_invalid_cpp_dsl(
                       util::format(
                         "A sequence of parameter types was expected, but a {} was found instead.",
-                        object_type_str(params->type)),
+                        object_type_str(params.get_type())),
                       object_source(params),
                       latest_expansion(macro_expansions));
                   },
@@ -5066,7 +5186,7 @@ namespace jank::analyze
             }
 
             auto const member_arg{ runtime::second(runtime::next(seq)) };
-            if(member_arg->type != object_type::symbol)
+            if(member_arg.get_type() != object_type::symbol)
             {
               return error::analyze_invalid_cpp_dsl("Member names need to be symbols.",
                                                     object_source(member_arg),
@@ -5086,7 +5206,7 @@ namespace jank::analyze
             {
               return error::analyze_invalid_cpp_dsl(
                 util::format("There is no '{}' member within '{}'.",
-                             member_arg->to_string(),
+                             member_arg.to_string(),
                              cpp_util::get_qualified_type_name(type)),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
@@ -5099,7 +5219,7 @@ namespace jank::analyze
             {
               return error::analyze_invalid_cpp_dsl(
                 util::format("There is no '{}' member within '{}'.",
-                             member_arg->to_string(),
+                             member_arg.to_string(),
                              cpp_util::get_qualified_type_name(type)),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
@@ -5197,7 +5317,7 @@ namespace jank::analyze
             }
 
             auto const member_arg{ runtime::second(runtime::next(seq)) };
-            if(member_arg->type != object_type::symbol)
+            if(member_arg.get_type() != object_type::symbol)
             {
               return error::analyze_invalid_cpp_dsl("Member names need to be symbols.",
                                                     object_source(member_arg),
@@ -5217,7 +5337,7 @@ namespace jank::analyze
             {
               return error::analyze_invalid_cpp_dsl(
                 util::format("There is no '{}' member within '{}'.",
-                             member_arg->to_string(),
+                             member_arg.to_string(),
                              cpp_util::get_qualified_type_name(type)),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
@@ -5230,7 +5350,7 @@ namespace jank::analyze
             {
               return error::analyze_invalid_cpp_dsl(
                 util::format("There is no '{}' member within '{}'.",
-                             member_arg->to_string(),
+                             member_arg.to_string(),
                              cpp_util::get_qualified_type_name(type)),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
@@ -5241,7 +5361,7 @@ namespace jank::analyze
                 util::format(
                   "A member variable or function was expected here, but '{}::{}' was found.",
                   cpp_util::get_qualified_type_name(type),
-                  member_arg->to_string()),
+                  member_arg.to_string()),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
             }
@@ -5250,7 +5370,7 @@ namespace jank::analyze
               return error::analyze_invalid_cpp_dsl(
                 util::format("A non-static member was expected here, but '{}::{}' is static.",
                              cpp_util::get_qualified_type_name(type),
-                             member_arg->to_string()),
+                             member_arg.to_string()),
                 object_source(member_arg),
                 latest_expansion(macro_expansions));
             }
@@ -5280,7 +5400,7 @@ namespace jank::analyze
             object_source(o),
             latest_expansion(macro_expansions));
         }
-        else if(first->type == object_type::symbol)
+        else if(first.get_type() == object_type::symbol)
         {
           static obj::symbol const cpp_type{ "cpp", "dsl" };
           if(expect_object<obj::symbol>(first)->equal(cpp_type))
@@ -5320,11 +5440,12 @@ namespace jank::analyze
           native_vector<Cpp::TemplateArgInfo> args;
           for(auto const arg : make_sequence_range(rest(typed_o)))
           {
-            if(auto const int_arg{ dyn_cast<obj::integer>(arg) }; int_arg.is_some())
+            if(runtime::is_integer(arg))
             {
+              auto const int_arg{ runtime::to_i64(arg) };
               static auto const int_type{ cpp_util::resolve_literal_type("long long").expect_ok() };
               jtl::string_builder sb;
-              sb(int_arg->data);
+              sb(int_arg);
               /* XXX: Safe, due to the GC. */
               args.emplace_back(int_type.data, sb.release().c_str());
               continue;
@@ -5442,7 +5563,7 @@ namespace jank::analyze
 
   bool processor::is_special(runtime::object_ref const form)
   {
-    if(form->type != runtime::object_type::symbol)
+    if(form.get_type() != runtime::object_type::symbol)
     {
       return false;
     }

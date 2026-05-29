@@ -31,11 +31,11 @@ namespace jank::runtime::obj
 
   void deferred_cpp_function::to_string(jtl::string_builder &buff) const
   {
-    auto const name(meta->get(__rt_ctx->intern_keyword("name").expect_ok()));
+    auto const name(meta.get(__rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
       "#object [{} {} {}]",
-      (name->type == object_type::nil ? "unknown" : try_object<persistent_string>(name)->data),
+      (name.get_type() == object_type::nil ? "unknown" : try_object<persistent_string>(name)->data),
       object_type_str(type),
       this);
   }
@@ -54,14 +54,18 @@ namespace jank::runtime::obj
     // auto const name(meta->get(__rt_ctx->intern_keyword("name").expect_ok()));
     //util::println(
     //  "lazily creating {}",
-    //  (name->type == object_type::nil ? "unknown" : try_object<persistent_string>(name)->data));
+    //  (name.get_type() == object_type::nil ? "unknown" : try_object<persistent_string>(name)->data));
 
     /* On the first invocation, we don't have a compiled_fn. We compile our C++ code, get a fn,
      * rebind the root of the var, and then apply our args to the new fn.*/
     __rt_ctx->jit_prc.eval_string(declaration_code);
     compiled_fn = __rt_ctx->jit_prc.create_function(arity_flags, base_name, arities);
     compiled_fn->meta = meta;
-    var->bind_root(compiled_fn);
+
+    if(var.is_some())
+    {
+      var->bind_root(compiled_fn);
+    }
 
     /* Clear these just to free up some memory. */
     declaration_code = "";

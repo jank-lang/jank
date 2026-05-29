@@ -194,7 +194,7 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::local_reference_ref const expr, builder &b)
   {
-    auto const &local_name{ expr->name->get_name() };
+    auto const &local_name{ runtime::munge(expr->name->get_name()) };
     auto const local{ b.locals.find(local_name) };
     if(local != b.locals.end())
     {
@@ -223,20 +223,19 @@ namespace jank::ir
     fn.add_block("entry");
     builder b{ &mod, mod.functions.size() - 1 };
 
-    b.locals[fn_expr->name]
+    b.locals[runtime::munge(fn_expr->name)]
       = b.parameter(analyze::expression_position::value, runtime::munge(fn_expr->name));
     for(auto const &param : arity.params)
     {
-      auto const &name{ param->get_name() };
+      auto const &name{ runtime::munge(param->get_name()) };
       b.locals[name] = b.parameter(analyze::expression_position::value, runtime::munge(name));
     }
 
     for(auto const &capture : arity.frame->captures)
     {
-      auto const &name{ capture.first->get_name() };
-      b.locals[name] = b.capture(analyze::expression_position::value,
-                                 capture.second.binding.type,
-                                 runtime::munge(name));
+      auto const &name{ runtime::munge(capture.first->get_name()) };
+      b.locals[name]
+        = b.capture(analyze::expression_position::value, capture.second.binding.type, name);
     }
 
     if(arity.fn_ctx->is_recur_recursive)
@@ -247,7 +246,7 @@ namespace jank::ir
       for(auto const param : arity.params)
       {
         auto const shadow{ b.next_shadow() };
-        auto const &name{ param->get_name() };
+        auto const &name{ runtime::munge(param->get_name()) };
         b.local_to_loop_shadow[name] = shadow;
         shadows.emplace_back(shadow, b.locals[name], untyped_object_ref_type());
       }
@@ -264,7 +263,7 @@ namespace jank::ir
 
       for(auto const &param : arity.params)
       {
-        auto const &name{ param->get_name() };
+        auto const &name{ runtime::munge(param->get_name()) };
         b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
       }
 
@@ -283,7 +282,7 @@ namespace jank::ir
       b.enter_block(merge_blk);
       for(auto const param : arity.params)
       {
-        auto const &name{ param->get_name() };
+        auto const &name{ runtime::munge(param->get_name()) };
         b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
       }
     }
@@ -351,7 +350,7 @@ namespace jank::ir
       native_unordered_map<jtl::immutable_string, detail::typed_identifier> captured_idents;
       for(auto const &capture : captures)
       {
-        auto const &name{ capture.first->get_name() };
+        auto const &name{ runtime::munge(capture.first->get_name()) };
         analyze::expr::local_reference const local_ref{ analyze::expression_position::value,
                                                         expr->frame,
                                                         expr->needs_box,
@@ -384,7 +383,7 @@ namespace jank::ir
       auto const loop{ expr->loop_target.unwrap() };
       for(usize i{}; i < loop->pairs.size(); ++i)
       {
-        auto const &name{ loop->pairs[i].first->name->get_name() };
+        auto const &name{ runtime::munge(loop->pairs[i].first->name->get_name()) };
         b.branch_set(b.local_to_loop_shadow[name], arg_idents[i]);
       }
       return b.jump(b.loop_recur_target.unwrap(), true);
@@ -394,7 +393,7 @@ namespace jank::ir
       for(usize i{}; i < b.current_function()->arity->params.size(); ++i)
       {
         auto const shadow{ b.next_shadow() };
-        auto const &name{ b.current_function()->arity->params[i]->get_name() };
+        auto const &name{ runtime::munge(b.current_function()->arity->params[i]->get_name()) };
         b.branch_set(b.local_to_loop_shadow[name], arg_idents[i]);
       }
       return b.jump(b.fn_recur_target.unwrap(), true);
@@ -437,7 +436,7 @@ namespace jank::ir
     identifier fn;
     if(expr->recursion_ref.fn_ctx != b.current_function()->arity->fn_ctx)
     {
-      fn = runtime::munge(b.locals[expr->recursion_ref.fn_ctx->name]);
+      fn = runtime::munge(b.locals[runtime::munge(expr->recursion_ref.fn_ctx->name)]);
     }
     else
     {
@@ -458,12 +457,13 @@ namespace jank::ir
 
     for(auto const &pair : expr->pairs)
     {
-      b.locals[pair.first->name->get_name()] = gen(pair.second, b).unwrap();
+      auto const name{ runtime::munge(pair.first->name->get_name()) };
+      b.locals[name] = gen(pair.second, b).unwrap();
 
       auto const local_type{ pair.second->get_type() };
       if(expr->loop_kind != analyze::expr::let::loop_kind::none && is_typed_object(local_type))
       {
-        auto &local{ b.locals[pair.first->name->get_name()] };
+        auto &local{ b.locals[name] };
         local = b.type_erase(analyze::expression_position::value, local);
       }
     }
@@ -476,7 +476,7 @@ namespace jank::ir
       for(auto const &pair : expr->pairs)
       {
         auto const shadow{ b.next_shadow() };
-        auto const &name{ pair.first->name->get_name() };
+        auto const &name{ runtime::munge(pair.first->name->get_name()) };
         auto const type{ mutable_type(pair.second->get_type()) };
         b.local_to_loop_shadow[name] = shadow;
         shadows.emplace_back(shadow, b.locals[name], type);
@@ -498,7 +498,7 @@ namespace jank::ir
 
       for(auto const &pair : expr->pairs)
       {
-        auto const &name{ pair.first->name->get_name() };
+        auto const &name{ runtime::munge(pair.first->name->get_name()) };
         b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], expression_type(pair.second));
       }
 
@@ -542,7 +542,7 @@ namespace jank::ir
     bindings.reserve(expr->pairs.size());
     for(auto const &pair : expr->pairs)
     {
-      auto const &name{ pair.first->name->get_name() };
+      auto const &name{ runtime::munge(pair.first->name->get_name()) };
       bindings.emplace_back(name);
       b.allowed_defers.insert(name);
     }
@@ -551,7 +551,7 @@ namespace jank::ir
 
     for(auto const &pair : expr->pairs)
     {
-      auto const &name{ pair.first->name->get_name() };
+      auto const &name{ runtime::munge(pair.first->name->get_name()) };
       b.locals[name] = gen(pair.second, b).unwrap();
     }
 
@@ -679,7 +679,7 @@ namespace jank::ir
       b.enter_block(catch_blk);
       auto old_locals{ b.locals };
       util::scope_exit const finally{ [&] { b.locals = jtl::move(old_locals); } };
-      b.locals[catch_.sym->get_name()]
+      b.locals[runtime::munge(catch_.sym->get_name())]
         = b.catch_(catch_.type, b.block_name(merge_blk), shadow, finally_blk);
 
       auto const catch_res{ gen(catch_.body, b) };
@@ -871,8 +871,12 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expression_ref const expr, builder &b)
   {
+    auto const prev_location(b.location);
+    auto const expr_location(runtime::object_source(expr->form));
+    b.location = expr_location;
     jtl::option<identifier> name;
     visit_expr([&](auto const typed_ex) { name = gen(typed_ex, b); }, expr);
+    b.location = prev_location;
     return name;
   }
 
@@ -901,8 +905,8 @@ namespace jank::ir
     jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
     if(print_settings == "1")
     {
-      //util::println("{}", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
-      util::println("{}", print(mod));
+      //util::println("{}\n", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
+      util::println("{}\n", print(mod));
     }
 
     return mod;

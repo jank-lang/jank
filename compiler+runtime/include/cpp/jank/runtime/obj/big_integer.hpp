@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   struct big_integer : object
   {
     static constexpr object_type obj_type{ object_type::big_integer };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
     static constexpr bool pointer_free{ true };
 
     big_integer();
@@ -30,7 +30,7 @@ namespace jank::runtime::obj
     uhash to_hash() const override;
 
     /* behavior::comparable */
-    i64 compare(object const &) const;
+    i64 compare(object const &) const override;
 
     /* behavior::comparable extended */
     i64 compare(big_integer const &) const;

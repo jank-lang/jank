@@ -4,6 +4,7 @@
 
 namespace jank::runtime
 {
+  /* TODO: Remove. */
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
@@ -18,11 +19,11 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   constexpr oref<T> dyn_cast(object_ref const o)
   {
-    if(o->type != T::obj_type)
+    if(o.get_type() != T::obj_type)
     {
       return {};
     }
-    return static_cast<T *>(o.data);
+    return static_cast<T *>(o.ptr());
   }
 
   template <typename T>
@@ -30,18 +31,23 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   oref<T> try_object(object_ref const o)
   {
-    if(o->type != T::obj_type)
+    if(o.get_type() != T::obj_type)
     {
       jtl::string_builder sb;
       sb("invalid object type (expected ");
       sb(object_type_str(T::obj_type));
       sb(" found ");
-      sb(object_type_str(o->type));
+      sb(object_type_str(o.get_type()));
       sb(")");
       throw std::runtime_error{ sb.str() };
     }
-    return static_cast<T *>(o.data);
+    return static_cast<T *>(o.ptr());
   }
+
+  template <>
+  obj::small_integer_ref try_object<obj::small_integer>(object_ref const o);
+  template <>
+  obj::small_real_ref try_object<obj::small_real>(object_ref const o);
 
   /* This is dangerous. You probably don't want it. Just use `try_object` or `visit_object`.
    * However, if you're absolutely certain you know the type of an erased object, I guess
@@ -57,17 +63,35 @@ namespace jank::runtime
     {
       jank_debug_assert(o.is_some());
     }
-    jank_debug_assert(o->type == T::obj_type);
-    return static_cast<T *>(o.data);
+    jank_debug_assert(o.get_type() == T::obj_type);
+
+    return static_cast<T *>(o.ptr());
   }
+
+  /* TODO: Inline once we have LLVM 23. */
+  template <>
+  obj::small_integer_ref expect_object<obj::small_integer>(object_ref const o);
+
+  /* TODO: Inline once we have LLVM 23. */
+  template <>
+  obj::small_real_ref expect_object<obj::small_real>(object_ref const o);
 
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr oref<T> expect_object(object const * const o)
+  oref<T> expect_object(object const * const o)
   {
     jank_debug_assert(o);
     jank_debug_assert(o->type == T::obj_type);
+
     return static_cast<T *>(const_cast<object *>(o));
   }
+
+  /* TODO: Inline once we have LLVM 23. */
+  template <>
+  obj::small_integer_ref expect_object<obj::small_integer>(object const * const o);
+
+  /* TODO: Inline once we have LLVM 23. */
+  template <>
+  obj::small_real_ref expect_object<obj::small_real>(object const * const o);
 }

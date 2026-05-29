@@ -157,6 +157,7 @@ extern "C"
   jank_object_ref jank_set_create(jank_u64 size, ...);
 
   jank_object_ref jank_box(char const *type, void const *o);
+  char const *jank_box_type(jank_object_ref o);
   void *jank_unbox(char const *type, jank_object_ref o);
   void *jank_unbox_with_source(char const *type, jank_object_ref o, jank_object_ref source);
 
@@ -314,10 +315,14 @@ extern "C"
   jank_bool jank_truthy(jank_object_ref o);
   jank_bool jank_equal(jank_object_ref l, jank_object_ref r);
   jank_uhash jank_to_hash(jank_object_ref o);
+  char const *jank_to_string(jank_object_ref o);
+  char const *jank_to_code_string(jank_object_ref o);
   jank_i64 jank_to_integer(jank_object_ref o);
   jank_i64 jank_shift_mask_case_integer(jank_object_ref o, jank_i64 shift, jank_i64 mask);
 
   void jank_set_meta(jank_object_ref o, jank_object_ref meta);
+
+  jank_object_ref jank_tag_pointer(void *ptr);
 
   void jank_throw(jank_object_ref o);
   void jank_profile_enter(char const *label);

@@ -142,7 +142,7 @@ namespace clojure::string_native
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(match->type)
+    switch(match.get_type())
     {
       case object_type::character:
         return replace_first(s,
@@ -153,7 +153,7 @@ namespace clojure::string_native
                              try_object<obj::persistent_string>(match)->data,
                              try_object<obj::persistent_string>(replacement)->data);
       case object_type::re_pattern:
-        if(replacement->type == object_type::persistent_string)
+        if(replacement.get_type() == object_type::persistent_string)
         {
           return replace_first(s,
                                try_object<obj::re_pattern>(match)->regex,
@@ -170,7 +170,7 @@ namespace clojure::string_native
 
   object_ref replace_first(object_ref const s, object_ref const match, object_ref const replacement)
   {
-    auto const is_string(s->type == object_type::persistent_string);
+    auto const is_string(s.get_type() == object_type::persistent_string);
     auto const &s_str(is_string ? try_object<obj::persistent_string>(s)->data
                                 : runtime::to_string(s));
 
@@ -183,7 +183,7 @@ namespace clojure::string_native
   {
     auto const s_str(runtime::to_string(s));
     auto const value_str(runtime::to_string(value));
-    auto const pos(try_object<obj::integer>(from_index)->data);
+    auto const pos(to_i64(from_index));
     return static_cast<i64>(s_str.find(value_str, pos));
   }
 
@@ -191,7 +191,7 @@ namespace clojure::string_native
   {
     auto const s_str(runtime::to_string(s));
     auto const value_str(runtime::to_string(value));
-    auto const pos(try_object<obj::integer>(from_index)->data);
+    auto const pos(to_i64(from_index));
     return static_cast<i64>(s_str.rfind(value_str, pos));
   }
 
@@ -326,27 +326,21 @@ namespace clojure::string_native
 
     std::string const search_str{ s_str.c_str() };
 
-    native_vector<object_ref> vec;
+    detail::native_transient_vector vec;
     std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
     std::sregex_token_iterator const end;
 
-    if(iter != end && iter->str().empty())
-    {
-      ++iter;
-    }
-
     for(; iter != end; ++iter)
     {
-      vec.emplace_back(make_box<obj::persistent_string>(iter->str().c_str()));
+      vec.push_back(make_box<obj::persistent_string>(iter->str()));
     }
 
-    return make_box<obj::persistent_vector>(
-      runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+    return make_box<obj::persistent_vector>(vec.persistent());
   }
 
   object_ref split(object_ref const s, object_ref const re, object_ref const limit)
   {
-    auto const limit_int(try_object<obj::integer>(limit)->data);
+    auto const limit_int(to_i64(limit));
 
     if(limit_int < 1)
     {
@@ -358,29 +352,22 @@ namespace clojure::string_native
 
     std::string const search_str{ s_str.c_str() };
 
-    native_vector<object_ref> vec;
-    vec.reserve(limit_int);
+    detail::native_transient_vector vec;
 
     std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
     std::sregex_token_iterator const end;
 
-    if(iter != end && iter->str().empty())
-    {
-      ++iter;
-    }
-
     int i{ 1 };
     for(; i < limit_int && iter != end; ++i, ++iter)
     {
-      vec.emplace_back(make_box<obj::persistent_string>(iter->str().c_str()));
+      vec.push_back(make_box<obj::persistent_string>(iter->str().c_str()));
     }
 
     if(i == limit_int)
     {
-      vec.emplace_back(make_box(s_str.substr(iter->first - search_str.begin())));
+      vec.push_back(make_box(s_str.substr(iter->first - search_str.begin())));
     }
 
-    return make_box<obj::persistent_vector>(
-      runtime::detail::native_persistent_vector{ vec.begin(), vec.end() });
+    return make_box<obj::persistent_vector>(vec.persistent());
   }
 }

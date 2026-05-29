@@ -1,0 +1,53 @@
+(ns jank.perf.stats)
+
+(defn clamp
+  "Clamp x such that lb ≤ x ≤ ub."
+  [x lb ub]
+  (-> x (min ub) (max lb)))
+
+(defn variance
+  "Compute the population variance of `xs`."
+  [xs mean]
+  (/ (reduce (fn [acc x] (+ acc (cpp/pow (- x mean) #cpp 2))) 0.0 xs)
+     (count xs)))
+
+(defn standard-deviation
+  [variance]
+  (cpp/sqrt variance))
+
+(defn hist1d
+  "Compute bins of an equal-width histogram."
+  [xs min max nbins]
+  (let [width (/ (- max min) nbins)]
+    {:min   min
+     :max   max
+     :width width
+     :bins  (persistent!
+             (reduce
+              (fn [acc x]
+                ;; Only include samples which belong in one of the bins. The
+                ;; input min/max can be arbitrary, so could be smaller than the
+                ;; overall dataset min/max.
+                ;;
+                ;; Each bin contains samples which satisfy lb <= x < ub, so we
+                ;; drop the sample which is equal to the final bin max (if there
+                ;; is one).
+                (if (and (<= min x) (< x max))
+                  (let [k (int (/ (- x min) width))]
+                    (assoc! acc k (inc (get acc k))))
+                  acc))
+              (transient (vec (repeat nbins 0)))
+              xs))}))
+
+(defn quantile-lite
+  "Computes the q-th quantile of xs.
+
+  If the q-th quantile does not line up exactly with a point in `xs` then this
+  returns the nearest point to the left of the quantile. Note that a more
+  sophisticated method would perform linear interpolation between the
+  neighboring points."
+  [xs q]
+  (assert (<= 0.0 q 1.0))
+  (let [xs* (sort xs)
+        i   (int (* q (inc (count xs))))]
+    (nth xs* i nil)))

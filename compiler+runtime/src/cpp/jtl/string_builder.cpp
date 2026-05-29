@@ -1,4 +1,5 @@
 #include <bit>
+#include <charconv>
 #include <codecvt>
 #include <locale>
 
@@ -6,6 +7,8 @@
 
 #include <jtl/string_builder.hpp>
 #include <jtl/format/style.hpp>
+
+#include <jank/runtime/obj/ratio.hpp>
 
 namespace jtl
 {
@@ -128,13 +131,35 @@ namespace jtl
 
   string_builder &string_builder::operator()(double const d) &
   {
-    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    auto const required{ snprintf(nullptr, 0, "%f", d) };
-    maybe_realloc(*this, required);
+    if(std::isinf(d))
+    {
+      constexpr jtl::immutable_string_view const infinity{ "INFINITY" };
+      maybe_realloc(*this, infinity.size());
 
-    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-    snprintf(buffer + pos, capacity - pos, "%f", d);
-    pos += required;
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+      snprintf(buffer + pos, capacity - pos, "%s", infinity.data());
+      pos += infinity.size();
+    }
+    else if(std::isnan(d))
+    {
+      constexpr jtl::immutable_string_view const nan{ "NAN" };
+      maybe_realloc(*this, nan.size());
+
+      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+      snprintf(buffer + pos, capacity - pos, "%s", nan.data());
+      pos += nan.size();
+    }
+    else
+    {
+      /* 32 bytes is enough to hold any double. */
+      char tmp[32];
+      auto const [ptr, _]{ std::to_chars(tmp, tmp + sizeof(tmp), d) };
+      auto const required{ ptr - tmp };
+      maybe_realloc(*this, required);
+
+      std::memcpy(buffer + pos, tmp, required);
+      pos += required;
+    }
 
     return *this;
   }
@@ -238,6 +263,13 @@ namespace jtl
   string_builder &string_builder::operator()(jank::native_big_integer const &d) &
   {
     return (*this)(d.str());
+  }
+
+  string_builder &string_builder::operator()(jank::runtime::obj::ratio_data const &r) &
+  {
+    (*this)(r.numerator);
+    (*this)('/');
+    return (*this)(r.denominator);
   }
 
   string_builder &string_builder::operator()(char const d) &

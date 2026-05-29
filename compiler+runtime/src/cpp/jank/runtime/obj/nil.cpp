@@ -1,3 +1,4 @@
+#include <jank/runtime/oref.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/persistent_array_map.hpp>
 #include <jank/runtime/obj/cons.hpp>
@@ -47,7 +48,7 @@ namespace jank::runtime::obj
 
   object_ref nil::get(object_ref const) const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   object_ref nil::get(object_ref const, object_ref const fallback) const
@@ -67,32 +68,32 @@ namespace jank::runtime::obj
 
   nil_ref nil::dissoc(object_ref const) const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   nil_ref nil::seq()
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   nil_ref nil::fresh_seq() const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   nil_ref nil::first() const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   nil_ref nil::next() const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   nil_ref nil::next_in_place()
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 }
 
@@ -109,5 +110,5 @@ namespace jank::runtime
   }
 
   obj::nil const _jank_nil;
-  obj::nil_ref const jank_nil{ &_jank_nil };
+  obj::nil_ref const jank_nil{ runtime::detail::untagged(&_jank_nil) };
 }

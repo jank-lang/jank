@@ -137,7 +137,7 @@ namespace jank::runtime::detail
 
   void native_array_map::insert_or_assign(object_ref const key, object_ref const val)
   {
-    if(key->type == runtime::object_type::keyword)
+    if(key.get_type() == runtime::object_type::keyword)
     {
       for(u8 i{}; i < length; i += 2)
       {
@@ -166,7 +166,7 @@ namespace jank::runtime::detail
 
   jtl::option<object_ref> native_array_map::find(object_ref const key) const
   {
-    if(key->type == runtime::object_type::keyword)
+    if(key.get_type() == runtime::object_type::keyword)
     {
       for(u8 i{}; i < length; i += 2)
       {
@@ -191,7 +191,7 @@ namespace jank::runtime::detail
 
   void native_array_map::erase(object_ref const key)
   {
-    if(key->type == runtime::object_type::keyword)
+    if(key.get_type() == runtime::object_type::keyword)
     {
       for(u8 i{}; i < length; i += 2)
       {

@@ -1,7 +1,7 @@
 (cpp/raw "namespace jank::cpp::if_::pass_object_ref_condition
          {
            runtime::object_ref is_nil(runtime::object_ref const o)
-           { return runtime::make_box(o->type == runtime::object_type::nil); }
+           { return runtime::make_box(o.get_type() == runtime::object_type::nil); }
          }")
 (let* [f (fn* [o]
            (if (cpp/jank.cpp.if_.pass_object_ref_condition.is_nil o)

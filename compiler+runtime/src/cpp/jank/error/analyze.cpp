@@ -188,7 +188,7 @@ namespace jank::error
                                               runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_macro_expansion_exception,
-                      e->type == runtime::object_type::persistent_string
+                      e.get_type() == runtime::object_type::persistent_string
                         ? runtime::to_string(e)
                         : runtime::to_code_string(e),
                       source,

@@ -13,6 +13,7 @@ namespace jank::analyze::expr
     cpp_delete(expression_position position,
                local_frame_ptr frame,
                bool needs_box,
+               runtime::object_ref form,
                expression_ref value_expr);
 
     void propagate_position(expression_position const pos) override;

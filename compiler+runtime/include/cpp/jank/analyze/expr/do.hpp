@@ -11,10 +11,14 @@ namespace jank::analyze::expr
     static constexpr expression_kind expr_kind{ expression_kind::do_ };
 
     do_();
-    do_(expression_position position, local_frame_ptr frame, bool needs_box);
     do_(expression_position position,
         local_frame_ptr frame,
         bool needs_box,
+        runtime::object_ref form);
+    do_(expression_position position,
+        local_frame_ptr frame,
+        bool needs_box,
+        runtime::object_ref form,
         native_vector<expression_ref> &&values);
     void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 

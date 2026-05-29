@@ -54,6 +54,7 @@
 #include <jank/runtime/obj/volatile.hpp>
 #include <jank/runtime/obj/delay.hpp>
 #include <jank/runtime/obj/future.hpp>
+#include <jank/runtime/obj/promise.hpp>
 #include <jank/runtime/obj/reduced.hpp>
 #include <jank/runtime/obj/tagged_literal.hpp>
 #include <jank/runtime/obj/re_pattern.hpp>
@@ -74,7 +75,7 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_object(F const &fn, oref<T const> const not_erased, Args &&...args)
   {
-    return fn(const_cast<T *>(not_erased.data), std::forward<Args>(args)...);
+    return fn(const_cast<T *>(not_erased.raw()), std::forward<Args>(args)...);
   }
 
   template <typename F, typename... Args>
@@ -85,7 +86,16 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_object(F const &fn, object_ref const erased, Args &&...args)
   {
-    switch(erased->type)
+    if(detail::is_small_int(erased.raw()))
+    {
+      return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
+    }
+    if(detail::is_small_real(erased.raw()))
+    {
+      return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
+    }
+
+    switch(erased.get_type())
     {
       case object_type::nil:
         return fn(expect_object<obj::nil>(erased), std::forward<Args>(args)...);
@@ -93,12 +103,16 @@ namespace jank::runtime
         return fn(expect_object<obj::boolean>(erased), std::forward<Args>(args)...);
       case object_type::integer:
         return fn(expect_object<obj::integer>(erased), std::forward<Args>(args)...);
+      case object_type::small_integer:
+        return fn(expect_object<obj::small_integer>(erased), std::forward<Args>(args)...);
       case object_type::big_integer:
         return fn(expect_object<obj::big_integer>(erased), std::forward<Args>(args)...);
       case object_type::big_decimal:
         return fn(expect_object<obj::big_decimal>(erased), std::forward<Args>(args)...);
       case object_type::real:
         return fn(expect_object<obj::real>(erased), std::forward<Args>(args)...);
+      case object_type::small_real:
+        return fn(expect_object<obj::small_real>(erased), std::forward<Args>(args)...);
       case object_type::persistent_string:
         return fn(expect_object<obj::persistent_string>(erased), std::forward<Args>(args)...);
       case object_type::keyword:
@@ -200,6 +214,8 @@ namespace jank::runtime
         return fn(expect_object<obj::delay>(erased), std::forward<Args>(args)...);
       case object_type::future:
         return fn(expect_object<obj::future>(erased), std::forward<Args>(args)...);
+      case object_type::promise:
+        return fn(expect_object<obj::promise>(erased), std::forward<Args>(args)...);
       case object_type::ns:
         return fn(expect_object<ns>(erased), std::forward<Args>(args)...);
       case object_type::var:
@@ -224,8 +240,8 @@ namespace jank::runtime
         return fn(expect_object<obj::reader_conditional>(erased), std::forward<Args>(args)...);
       default:
         jtl::panic("invalid object type: {}, raw value {}",
-                   object_type_str(erased->type),
-                   static_cast<int>(erased->type));
+                   object_type_str(erased.get_type()),
+                   static_cast<int>(erased.get_type()));
     }
   }
 
@@ -234,15 +250,15 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_type(F const &fn, object_ref const erased, Args &&...args)
   {
-    if(erased->type == T::obj_type)
+    if(erased.get_type() == T::obj_type)
     {
       return fn(expect_object<T>(erased), std::forward<Args>(args)...);
     }
     else
     {
       jtl::panic("invalid object type: {}, raw value {}",
-                 object_type_str(erased->type),
-                 static_cast<int>(erased->type));
+                 object_type_str(erased.get_type()),
+                 static_cast<int>(erased.get_type()));
     }
   }
 
@@ -253,7 +269,7 @@ namespace jank::runtime
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(erased->type)
+    switch(erased.get_type())
     {
       case object_type::nil:
         return fn(expect_object<obj::nil>(erased), std::forward<Args>(args)...);
@@ -345,7 +361,7 @@ namespace jank::runtime
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(erased->type)
+    switch(erased.get_type())
     {
       case object_type::persistent_array_map:
         return fn(expect_object<obj::persistent_array_map>(erased), std::forward<Args>(args)...);
@@ -381,7 +397,7 @@ namespace jank::runtime
   {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(erased->type)
+    switch(erased.get_type())
     {
       case object_type::persistent_hash_set:
         return fn(expect_object<obj::persistent_hash_set>(erased), std::forward<Args>(args)...);
@@ -410,21 +426,34 @@ namespace jank::runtime
 
   template <typename F1, typename F2, typename... Args>
   requires(!std::convertible_to<F2, object_ref>)
-  [[gnu::hot]]
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto visit_number_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
+    if(detail::is_small_int(erased.raw()))
+    {
+      return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
+    }
+    if(detail::is_small_real(erased.raw()))
+    {
+      return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
+    }
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(erased->type)
+    switch(erased.get_type())
     {
       case object_type::integer:
         return fn(expect_object<obj::integer>(erased), std::forward<Args>(args)...);
+      case object_type::small_integer:
+        return fn(expect_object<obj::small_integer>(erased), std::forward<Args>(args)...);
       case object_type::big_integer:
         return fn(expect_object<obj::big_integer>(erased), std::forward<Args>(args)...);
       case object_type::big_decimal:
         return fn(expect_object<obj::big_decimal>(erased), std::forward<Args>(args)...);
       case object_type::real:
         return fn(expect_object<obj::real>(erased), std::forward<Args>(args)...);
+      case object_type::small_real:
+        return fn(expect_object<obj::small_real>(erased), std::forward<Args>(args)...);
       case object_type::ratio:
         return fn(expect_object<obj::ratio>(erased), std::forward<Args>(args)...);
       default:
@@ -435,7 +464,7 @@ namespace jank::runtime
 
   /* Throws if the object isn't number-like. */
   template <typename F1, typename... Args>
-  [[gnu::hot]]
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto visit_number_like(F1 const &fn, object_ref const erased, Args &&...args)
   {
     return visit_number_like(

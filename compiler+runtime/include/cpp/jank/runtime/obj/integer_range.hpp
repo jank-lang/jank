@@ -6,7 +6,6 @@
 
 namespace jank::runtime::obj
 {
-  using integer_ref = oref<struct integer>;
   using cons_ref = oref<struct cons>;
   using integer_range_ref = oref<struct integer_range>;
 
@@ -19,19 +18,16 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
-    using bounds_check_t = bool (*)(integer_ref const, integer_ref const);
+    using bounds_check_t = bool (*)(i64 const, i64 const);
 
     /* Constructors are only to be used within integer_range.cpp. Prefer integer_range::create. */
     integer_range();
     integer_range(integer_range &&) noexcept = default;
     integer_range(integer_range const &) = default;
-    integer_range(integer_ref const end);
-    integer_range(integer_ref const start, obj::integer_ref const end);
-    integer_range(integer_ref const start, obj::integer_ref const end, obj::integer_ref const step);
-    integer_range(integer_ref const start,
-                  integer_ref const end,
-                  integer_ref const step,
-                  bounds_check_t bounds_check);
+    integer_range(i64 const end);
+    integer_range(i64 const start, i64 const end);
+    integer_range(i64 const start, i64 const end, i64 const step);
+    integer_range(i64 const start, i64 const end, i64 const step, bounds_check_t bounds_check);
     //integer_range(integer_ptr start,
     //              integer_ptr end,
     //              integer_ptr step,
@@ -39,10 +35,9 @@ namespace jank::runtime::obj
     //              array_chunk_ptr chunk,
     //              integer_range_ptr chunk_next);
 
-    static object_ref create(integer_ref const end);
-    static object_ref create(integer_ref const start, obj::integer_ref const end);
-    static object_ref
-    create(integer_ref const start, obj::integer_ref const end, obj::integer_ref const step);
+    static object_ref create(i64 const end);
+    static object_ref create(i64 const start, i64 const end);
+    static object_ref create(i64 const start, i64 const end, i64 const step);
 
     /* behavior::object_like */
     bool equal(object const &) const override;
@@ -56,7 +51,7 @@ namespace jank::runtime::obj
     integer_range_ref fresh_seq() const;
 
     /* behavior::sequenceable */
-    integer_ref first() const;
+    object_ref first() const;
     integer_range_ref next() const;
 
     /* behavior::sequenceable_in_place */
@@ -78,9 +73,9 @@ namespace jank::runtime::obj
     usize count() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    integer_ref start{};
-    integer_ref end{};
-    integer_ref step{};
+    i64 start{};
+    i64 end{};
+    i64 step{ 1 };
     bounds_check_t bounds_check{};
 
     /* TODO: behavior::chunkable */

@@ -48,7 +48,7 @@ namespace jank::runtime::obj::detail
         return true;
       },
       []() { return false; },
-      &o);
+      runtime::detail::untagged(&o));
   }
 
   template <typename PT, typename ST, typename V>
@@ -135,7 +135,7 @@ namespace jank::runtime::obj::detail
     {
       return {};
     }
-    return make_box<ST>(static_cast<PT const *>(this),
+    return make_box<ST>(runtime::detail::untagged(static_cast<PT const *>(this)),
                         static_cast<PT const *>(this)->data.begin(),
                         static_cast<PT const *>(this)->data.end());
   }
@@ -147,7 +147,7 @@ namespace jank::runtime::obj::detail
     {
       return {};
     }
-    return make_box<ST>(static_cast<PT const *>(this),
+    return make_box<ST>(runtime::detail::untagged(static_cast<PT const *>(this)),
                         static_cast<PT const *>(this)->data.begin(),
                         static_cast<PT const *>(this)->data.end());
   }
@@ -161,7 +161,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   object_ref base_persistent_map<PT, ST, V>::conj(object_ref const head) const
   {
-    auto const ret(static_cast<PT const *>(this));
+    auto const ret(runtime::detail::untagged(this));
     if(head.is_nil())
     {
       return ret;
@@ -172,7 +172,7 @@ namespace jank::runtime::obj::detail
       return merge(ret, head);
     }
 
-    if(head->type != object_type::persistent_vector)
+    if(head.get_type() != object_type::persistent_vector)
     {
       throw std::runtime_error{ util::format("invalid map entry: {}",
                                              runtime::to_code_string(head)) };
@@ -185,7 +185,7 @@ namespace jank::runtime::obj::detail
                                              runtime::to_code_string(head)) };
     }
 
-    return ret->assoc(vec->data[0], vec->data[1]);
+    return static_cast<PT const *>(this)->assoc(vec->data[0], vec->data[1]);
   }
 
   template <typename PT, typename ST, typename V>

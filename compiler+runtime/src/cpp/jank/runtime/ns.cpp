@@ -43,7 +43,7 @@ namespace jank::runtime
       return expect_object<var>(*found_var);
     }
 
-    auto const new_var(make_box<var>(this, unqualified_sym));
+    auto const new_var(make_box<var>(runtime::detail::untagged(this), unqualified_sym));
     *locked_vars
       = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(unqualified_sym, new_var));
     return new_var;
@@ -80,7 +80,7 @@ namespace jank::runtime
     if(found_var && found_var->is_some())
     {
       auto const v{ expect_object<var>(*found_var) };
-      if(v->n == this)
+      if(v->n == runtime::detail::untagged(this))
       {
         return v;
       }
@@ -88,7 +88,7 @@ namespace jank::runtime
       redefined = true;
     }
 
-    auto const new_var(make_box<var>(this, unqualified_sym));
+    auto const new_var(make_box<var>(runtime::detail::untagged(this), unqualified_sym));
     if(redefined)
     {
       auto const v{ expect_object<var>(*found_var) };
@@ -177,9 +177,9 @@ namespace jank::runtime
     auto locked_vars(vars.wlock());
     if(auto const found = (*locked_vars)->data.find(sym))
     {
-      if(found->data->type == object_type::var)
+      if(found->get_type() == object_type::var)
       {
-        auto const found_var(expect_object<runtime::var>(found->data));
+        auto const found_var(expect_object<runtime::var>(*found));
         auto const clojure_core(__rt_ctx->find_ns(make_box<obj::symbol>("clojure.core")));
         if(var->n != found_var->n && (found_var->n != clojure_core))
         {
@@ -196,7 +196,7 @@ namespace jank::runtime
 
   jtl::result<void, error_ref> ns::refer_global(object_ref const sym)
   {
-    if(sym->type != object_type::symbol)
+    if(sym.get_type() != object_type::symbol)
     {
       return error::runtime_invalid_referred_global_symbol(object_source(sym));
     }
@@ -273,12 +273,12 @@ namespace jank::runtime
           auto const old_name{ first(p) };
           auto const new_name{ second(p) };
 
-          if(old_name->type != object_type::symbol
+          if(old_name.get_type() != object_type::symbol
              || !expect_object<obj::symbol>(old_name)->ns.empty())
           {
             return error::runtime_invalid_referred_global_symbol(object_source(old_name));
           }
-          if(new_name->type != object_type::symbol
+          if(new_name.get_type() != object_type::symbol
              || !expect_object<obj::symbol>(new_name)->ns.empty())
           {
             return error::runtime_invalid_referred_global_symbol(object_source(new_name));
@@ -298,10 +298,10 @@ namespace jank::runtime
               util::format(
                 "'{}' already refers to {} in namespace '{}'. A '{}' referred global will not be "
                 "accessible, since vars are resolved before C++ referred globals.",
-                new_name->to_code_string(),
+                new_name.to_code_string(),
                 existing_var->to_code_string(),
                 name->to_string(),
-                new_name->to_code_string()),
+                new_name.to_code_string()),
               object_source(new_name));
           }
 

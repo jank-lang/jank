@@ -9,6 +9,7 @@
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/obj/big_decimal.hpp>
+#include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime
 {
@@ -23,18 +24,6 @@ namespace jank::runtime
   inline auto make_box(bool const b)
   {
     return b ? jank_true : jank_false;
-  }
-
-  [[gnu::flatten, gnu::hot]]
-  inline auto make_box(int const i)
-  {
-    return make_box<obj::integer>(static_cast<i64>(i));
-  }
-
-  [[gnu::flatten, gnu::hot]]
-  inline auto make_box(i64 const i)
-  {
-    return make_box<obj::integer>(i);
   }
 
   [[gnu::flatten, gnu::hot]]
@@ -53,18 +42,6 @@ namespace jank::runtime
   inline auto make_box(char const i)
   {
     return make_box<obj::character>(i);
-  }
-
-  [[gnu::flatten, gnu::hot]]
-  inline auto make_box(usize const i)
-  {
-    return make_box<obj::integer>(static_cast<i64>(i));
-  }
-
-  [[gnu::flatten, gnu::hot]]
-  inline obj::real_ref make_box(f64 const r)
-  {
-    return make_box<obj::real>(r);
   }
 
   [[gnu::flatten, gnu::hot]]
@@ -102,19 +79,28 @@ namespace jank::runtime
   template <typename T>
   requires std::is_floating_point_v<T>
   [[gnu::flatten, gnu::hot]]
-  inline auto make_box(T const d)
+  inline obj::small_real_ref make_box(T const d)
   {
-    return make_box<obj::real>(d);
+    return static_cast<f64>(d);
   }
 
   template <typename T>
   requires std::is_integral_v<T>
   [[gnu::flatten, gnu::hot]]
-  inline auto make_box(T const d)
+  inline object_ref make_box(T const i)
   {
-    return make_box<obj::integer>(d);
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-compare"
+    /* NOLINTNEXTLINE(misc-redundant-expression) */
+    if(detail::min_small_integer <= i && i <= detail::max_small_integer)
+#pragma clang diagnostic pop
+    {
+      return detail::tag<object *>(static_cast<i32>(i));
+    }
+    return make_box<obj::integer>(static_cast<i64>(i));
   }
 
+  /* TODO: Remove these two. */
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::flatten, gnu::hot]]

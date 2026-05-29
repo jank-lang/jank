@@ -26,6 +26,8 @@ set(CMAKE_CXX_CLANG_TIDY_OLD ${CMAKE_CXX_CLANG_TIDY})
     set(enable_gc_debug ON CACHE BOOL "Support for pointer back-tracing")
   endif()
 
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPOINTER_MASK=0x0000FFFFFFFFFFFF")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPOINTER_MASK=0x0000FFFFFFFFFFFF")
   add_subdirectory(third-party/bdwgc EXCLUDE_FROM_ALL)
 
   unset(GC_BUILD_SHARED_LIBS)

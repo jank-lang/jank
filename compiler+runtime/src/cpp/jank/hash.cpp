@@ -155,19 +155,18 @@ namespace jank::hash
 
   u32 visit(runtime::object_ref const o)
   {
-    return runtime::visit_object([](auto const typed_o) -> u32 { return typed_o->to_hash(); }, o);
+    return o.to_hash();
   }
 
   template <typename T>
   requires runtime::behavior::object_like<T>
   static u32 visit(runtime::oref<T> const o)
   {
-    return o->to_hash();
+    return o.to_hash();
   }
 
-  u32 ordered(runtime::object const * const sequence)
+  u32 ordered(runtime::oref<runtime::object> const sequence)
   {
-    jank_debug_assert(sequence);
     return runtime::visit_object(
       [](auto const typed_sequence) -> u32 {
         using T = typename decltype(typed_sequence)::value_type;
@@ -185,15 +184,14 @@ namespace jank::hash
         }
         else
         {
-          return typed_sequence->to_hash();
+          return typed_sequence.to_hash();
         }
       },
       sequence);
   }
 
-  u32 unordered(runtime::object const * const sequence)
+  u32 unordered(runtime::object_ref const sequence)
   {
-    jank_debug_assert(sequence);
     return runtime::visit_object(
       [](auto const typed_sequence) -> u32 {
         using T = typename decltype(typed_sequence)::value_type;
@@ -211,7 +209,7 @@ namespace jank::hash
         }
         else
         {
-          return typed_sequence->to_hash();
+          return typed_sequence.to_hash();
         }
       },
       sequence);

@@ -22,6 +22,7 @@ namespace jank::analyze::expr
     cpp_unsafe_cast(expression_position position,
                     local_frame_ptr frame,
                     bool needs_box,
+                    runtime::object_ref form,
                     jtl::ptr<void> type,
                     expression_ref value_expr);
 

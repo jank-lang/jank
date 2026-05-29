@@ -85,7 +85,7 @@ endif()
 set(
   jank_aot_compiler_flags
   -Wall -Wextra -Wpedantic
-  -Wfloat-equal -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor
+  -Wuninitialized -Wswitch-enum -Wnon-virtual-dtor -Wno-float-equal
   -Wold-style-cast -Wno-gnu-case-range -Wno-c99-designator -Wno-c2y-extensions
   -Wno-gnu-conditional-omitted-operand
   -Wno-implicit-fallthrough
@@ -104,9 +104,10 @@ set(
 set(
   jank_common_compiler_flags
   -std=gnu++20
+  -DJANK_VERSION="${jank_version}"
   # https://groups.google.com/g/llvm-dev/c/W-OweiAjDcU?pli=1
   -femulated-tls
-  -DGC_THREADS
+  -DGC_THREADS -DPOINTER_MASK=0x0000FFFFFFFFFFFF
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
   -DCPPINTEROP_USE_REPL
   -DFOLLY_HAVE_JEMALLOC=0 -DFOLLY_HAVE_TCMALLOC=0 -DFOLLY_ASSUME_NO_JEMALLOC=1 -DFOLLY_ASSUME_NO_TCMALLOC=1
@@ -498,6 +499,10 @@ include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
 
+if(jank_test)
+  include(cmake/dependency/doctest.cmake)
+endif()
+
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 
 # CMake changed its mechanism for finding Boost. The old behavior uses
@@ -550,18 +555,17 @@ add_library(
   src/cpp/jank/runtime/core/equal.cpp
   src/cpp/jank/runtime/core/to_string.cpp
   src/cpp/jank/runtime/core/seq.cpp
-  src/cpp/jank/runtime/core/truthy.cpp
   src/cpp/jank/runtime/core/munge.cpp
   src/cpp/jank/runtime/core/math.cpp
   src/cpp/jank/runtime/core/meta.cpp
   src/cpp/jank/runtime/core/call.cpp
   src/cpp/jank/runtime/sequence_range.cpp
-  src/cpp/jank/runtime/perf.cpp
   src/cpp/jank/runtime/module/loader.cpp
   src/cpp/jank/runtime/object.cpp
   src/cpp/jank/runtime/detail/native_array_map.cpp
   src/cpp/jank/runtime/detail/native_array_blocking_queue.cpp
   src/cpp/jank/runtime/context.cpp
+  src/cpp/jank/runtime/rtti.cpp
   src/cpp/jank/runtime/ns.cpp
   src/cpp/jank/runtime/var.cpp
   src/cpp/jank/runtime/obj/nil.cpp
@@ -618,6 +622,7 @@ add_library(
   src/cpp/jank/runtime/obj/volatile.cpp
   src/cpp/jank/runtime/obj/delay.cpp
   src/cpp/jank/runtime/obj/future.cpp
+  src/cpp/jank/runtime/obj/promise.cpp
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/obj/reader_conditional.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
@@ -680,7 +685,6 @@ add_library(
   src/cpp/clojure/core_native.cpp
   src/cpp/clojure/string_native.cpp
   src/cpp/jank/compiler_native.cpp
-  src/cpp/jank/perf_native.cpp
   src/cpp/jank/nrepl/server.cpp
 )
 set_target_properties(jank_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
@@ -710,6 +714,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/lib>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-process/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
   ${OPENSSL_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
@@ -774,7 +779,6 @@ string(REPLACE "\"" "\\\"" jank_jit_compile_flags_str "${jank_jit_compile_flags_
 target_compile_options(
   jank_lib
   PUBLIC
-  -DJANK_VERSION="${jank_version}"
   -DJANK_CLANG_PREFIX="${CLANG_INSTALL_PREFIX}"
   -DJANK_JIT_FLAGS="${jank_jit_compile_flags_str}"
   -DJANK_AOT_FLAGS="${jank_lib_linker_flags_str}"
@@ -836,6 +840,7 @@ target_include_directories(
   PUBLIC
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-process/include>"
 )
 
 set_property(TARGET folly_lib PROPERTY OUTPUT_NAME folly)
@@ -1000,7 +1005,6 @@ if(jank_test)
   target_link_directories(jank_test_exe PRIVATE "$<TARGET_PROPERTY:jank_lib,LINK_DIRECTORIES>")
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags} -L ${CMAKE_BINARY_DIR})
 
-  find_package(doctest REQUIRED)
   target_link_libraries(
     jank_test_exe PUBLIC
     ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-standalone-phase-1.a ${jank_link_whole_end}

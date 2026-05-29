@@ -8,10 +8,11 @@ namespace jank::analyze::expr
   cpp_builtin_operator_call::cpp_builtin_operator_call(expression_position const position,
                                                        local_frame_ptr const frame,
                                                        bool const needs_box,
+                                                       object_ref const form,
                                                        int const op,
                                                        native_vector<expression_ref> &&arg_exprs,
                                                        jtl::ptr<void> const type)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , op{ op }
     , arg_exprs{ std::move(arg_exprs) }
     , type{ type }

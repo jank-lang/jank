@@ -1,11 +1,6 @@
 #include <jank/analyze/expr/cpp_call.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
-namespace Cpp
-{
-  std::string GetName(void *);
-}
-
 namespace jank::analyze::expr
 {
   using namespace jank::runtime;
@@ -13,10 +8,11 @@ namespace jank::analyze::expr
   cpp_call::cpp_call(expression_position const position,
                      local_frame_ptr const frame,
                      bool const needs_box,
+                     object_ref const form,
                      jtl::ptr<void> const type,
                      expression_ref const source_expr,
                      native_vector<expression_ref> &&arg_exprs)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , type{ type }
     , source_expr{ source_expr }
     , arg_exprs{ jtl::move(arg_exprs) }
@@ -26,11 +22,12 @@ namespace jank::analyze::expr
   cpp_call::cpp_call(expression_position const position,
                      local_frame_ptr const frame,
                      bool const needs_box,
+                     object_ref const form,
                      jtl::ptr<void> const type,
                      expression_ref const source_expr,
                      native_vector<expression_ref> &&arg_exprs,
                      jtl::immutable_string const &function_code)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, form }
     , type{ type }
     , source_expr{ source_expr }
     , arg_exprs{ jtl::move(arg_exprs) }

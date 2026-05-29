@@ -17,7 +17,7 @@ namespace jank::runtime
     : object{ obj_type, obj_behaviors }
     , n{ n }
     , name{ name }
-    , root{ make_box<var_unbound_root>(this) }
+    , root{ make_box<var_unbound_root>(detail::untagged(this)) }
   {
   }
 
@@ -45,7 +45,7 @@ namespace jank::runtime
 
   bool var::equal(object const &o) const
   {
-    auto const v(dyn_cast<var>(&o));
+    auto const v(dyn_cast<var>(detail::untagged(&o)));
     if(v.is_nil())
     {
       return false;
@@ -87,7 +87,7 @@ namespace jank::runtime
 
   bool var::is_bound() const
   {
-    return deref()->type != object_type::var_unbound_root;
+    return deref().get_type() != object_type::var_unbound_root;
   }
 
   object_ref var::get_root() const
@@ -100,7 +100,7 @@ namespace jank::runtime
   {
     profile::timer const timer{ "var bind_root" };
     *root.wlock() = r;
-    return this;
+    return detail::untagged(this);
   }
 
   object_ref var::alter_root(object_ref const f, object_ref const args)
@@ -132,7 +132,7 @@ namespace jank::runtime
   var_ref var::set_dynamic(bool const dyn)
   {
     dynamic.store(dyn);
-    return this;
+    return detail::untagged(this);
   }
 
   obj::symbol_ref var::to_qualified_symbol() const
@@ -153,7 +153,7 @@ namespace jank::runtime
       return {};
     }
 
-    auto const found(tbfs->find(this));
+    auto const found(tbfs->find(detail::untagged(this)));
     if(found.is_nil())
     {
       return {};
@@ -190,7 +190,7 @@ namespace jank::runtime
     auto const new_meta(behavior::detail::validate_meta(m));
     auto const locked_meta{ meta.wlock() };
     *locked_meta = new_meta;
-    return this;
+    return detail::untagged(this);
   }
 
   object_ref var::get_meta() const
@@ -233,7 +233,7 @@ namespace jank::runtime
 
   uhash var_thread_binding::to_hash() const
   {
-    return hash::visit(value.get());
+    return hash::visit(value);
   }
 
   var_unbound_root::var_unbound_root(var_ref const var)

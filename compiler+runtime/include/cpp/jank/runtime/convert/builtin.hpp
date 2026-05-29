@@ -72,6 +72,42 @@ namespace jank::runtime
     }
   };
 
+  template <>
+  struct convert<obj::small_integer_ref>
+  {
+    static obj::integer_ref into_object(obj::small_integer_ref const o)
+    {
+      return make_box<obj::integer>(o.data);
+    }
+
+    static obj::small_integer_ref from_object(object_ref const o)
+    {
+      if(detail::is_small_int(o.raw()))
+      {
+        return detail::as_integer(o.raw());
+      }
+      return try_object<obj::integer>(o)->data;
+    }
+  };
+
+  template <>
+  struct convert<obj::small_real_ref>
+  {
+    static obj::real_ref into_object(obj::small_real_ref const o)
+    {
+      return make_box<obj::real>(o.data);
+    }
+
+    static obj::small_real_ref from_object(object_ref const o)
+    {
+      if(detail::is_small_real(o.raw()))
+      {
+        return detail::as_real(o.raw());
+      }
+      return try_object<obj::real>(o)->data;
+    }
+  };
+
   /* Any type with conversion members can be convertible. */
   template <typename T>
   requires has_conversion_members<T>
@@ -157,19 +193,28 @@ namespace jank::runtime
   requires std::is_enum_v<T>
   struct convert<T>
   {
-    static obj::integer_ref into_object(T const o)
+    static object_ref into_object(T const o)
     {
       return make_box(static_cast<i64>(o));
     }
 
     static T from_object(object_ref const o)
     {
-      return try_object<obj::integer>(o);
+      if(detail::is_small_int(o.raw()))
+      {
+        return static_cast<T>(detail::as_integer(o.raw()));
+      }
+      return static_cast<T>(try_object<obj::integer>(o)->data);
     }
 
     static T from_object(obj::integer_ref const o)
     {
       return o->data;
+    }
+
+    static T from_object(obj::small_integer_ref const o)
+    {
+      return o.data;
     }
   };
 
@@ -179,19 +224,28 @@ namespace jank::runtime
            && !jtl::is_any_same<T, bool, char, char8_t, char16_t, char32_t, wchar_t>)
   struct convert<T>
   {
-    static obj::integer_ref into_object(T const o)
+    static object_ref into_object(T const o)
     {
       return make_box(static_cast<i64>(o));
     }
 
     static T from_object(object_ref const o)
     {
+      if(detail::is_small_int(o.raw()))
+      {
+        return static_cast<T>(detail::as_integer(o.raw()));
+      }
       return static_cast<T>(try_object<obj::integer>(o)->data);
     }
 
     static T from_object(obj::integer_ref const o)
     {
       return static_cast<T>(o->data);
+    }
+
+    static T from_object(obj::small_integer_ref const o)
+    {
+      return static_cast<T>(o.data);
     }
   };
 
@@ -220,13 +274,17 @@ namespace jank::runtime
   requires(std::is_floating_point_v<T>)
   struct convert<T>
   {
-    static obj::real_ref into_object(T const o)
+    static obj::small_real_ref into_object(T const o)
     {
       return make_box(static_cast<f64>(o));
     }
 
     static T from_object(object_ref const o)
     {
+      if(detail::is_small_real(o.raw()))
+      {
+        return static_cast<T>(detail::as_real(o.raw()));
+      }
       return static_cast<T>(try_object<obj::real>(o)->data);
     }
 

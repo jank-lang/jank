@@ -39,6 +39,15 @@ namespace jank::analyze::expr
               jtl::ptr<void> scope,
               value_kind val_kind);
 
+    cpp_value(expression_position position,
+              local_frame_ptr frame,
+              bool needs_box,
+              runtime::object_ref form,
+              runtime::obj::symbol_ref const sym,
+              jtl::ptr<void> type,
+              jtl::ptr<void> scope,
+              value_kind val_kind);
+
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
     jtl::ptr<void> get_type() const override;

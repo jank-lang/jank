@@ -5,7 +5,7 @@ namespace jank::runtime
 {
   jtl::immutable_string to_string(object_ref const o)
   {
-    return visit_object([](auto const typed_o) { return typed_o->to_string(); }, o);
+    return o.to_string();
   }
 
   void to_string(char const ch, jtl::string_builder &buff)
@@ -15,12 +15,12 @@ namespace jank::runtime
 
   void to_string(object_ref const o, jtl::string_builder &buff)
   {
-    visit_object([&](auto const typed_o) { typed_o->to_string(buff); }, o);
+    o.to_string(buff);
   }
 
   jtl::immutable_string to_code_string(object_ref const o)
   {
-    return visit_object([](auto const typed_o) { return typed_o->to_code_string(); }, o);
+    return o.to_code_string();
   }
 
   void to_code_string(char const ch, jtl::string_builder &buff)
@@ -30,8 +30,7 @@ namespace jank::runtime
 
   void to_code_string(object_ref const o, jtl::string_builder &buff)
   {
-    auto const value{ visit_object([](auto const typed_o) { return typed_o->to_code_string(); },
-                                   o) };
+    auto const value{ o.to_code_string() };
     buff(value);
   }
 }

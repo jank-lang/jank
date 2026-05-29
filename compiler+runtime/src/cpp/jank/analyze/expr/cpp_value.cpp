@@ -12,7 +12,23 @@ namespace jank::analyze::expr
                        jtl::ptr<void> const type,
                        jtl::ptr<void> const scope,
                        value_kind const val_kind)
-    : expression{ expr_kind, position, frame, needs_box }
+    : expression{ expr_kind, position, frame, needs_box, sym }
+    , form{ sym }
+    , type{ type }
+    , scope{ scope }
+    , val_kind{ val_kind }
+  {
+  }
+
+  cpp_value::cpp_value(expression_position const position,
+                       local_frame_ptr const frame,
+                       bool const needs_box,
+                       object_ref const form,
+                       obj::symbol_ref const sym,
+                       jtl::ptr<void> const type,
+                       jtl::ptr<void> const scope,
+                       value_kind const val_kind)
+    : expression{ expr_kind, position, frame, needs_box, form }
     , form{ sym }
     , type{ type }
     , scope{ scope }

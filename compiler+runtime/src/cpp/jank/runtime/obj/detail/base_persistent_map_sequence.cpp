@@ -19,7 +19,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename IT>
   bool base_persistent_map_sequence<PT, IT>::equal(object const &o) const
   {
-    return runtime::sequence_equal(static_cast<PT const *>(this), &o);
+    return runtime::sequence_equal(runtime::detail::untagged(this), runtime::detail::untagged(&o));
   }
 
   template <typename PT, typename IT>

@@ -1,0 +1,3 @@
+(letfn* [a-dashed-name (fn* a-dashed-name []
+                         (a-dashed-name))]
+  :success)

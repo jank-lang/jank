@@ -28,21 +28,29 @@ namespace jank::runtime
     concept valid_boxed_math = (jtl::is_same<T, object_ref>
                                 || jtl::is_any_same<T,
                                                     obj::integer_ref,
+                                                    obj::small_integer_ref,
                                                     obj::real_ref,
+                                                    obj::small_real_ref,
                                                     obj::big_integer_ref,
                                                     obj::big_decimal_ref,
                                                     obj::ratio_ref>);
   }
 
+  /* Only for fixed integer sizes (i.e. integer and small_integer). */
+  i64 to_i64(object_ref const o);
+  /* Only for fixed real sizes (i.e. real and small_real). */
+  f64 to_f64(object_ref const o);
+
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto add(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't add a {} to {}.", object_type_str(l->type), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't add a {} to {}.",
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -81,12 +89,13 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto add(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{
-        util::format("Can't add a {} to {}.", jtl::type_name<L>(), object_type_str(r->type))
+        util::format("Can't add a {} to {}.", jtl::type_name<L>(), object_type_str(r.get_type()))
       };
       return object_ref{};
     }
@@ -109,12 +118,13 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto add(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
       throw std::runtime_error{
-        util::format("Can't add a {} to {}.", object_type_str(l->type), jtl::type_name<R>())
+        util::format("Can't add a {} to {}.", object_type_str(l.get_type()), jtl::type_name<R>())
       };
       return object_ref{};
     }
@@ -137,6 +147,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto add(L const l, R const r)
   {
     return l + r;
@@ -146,13 +157,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto sub(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't subtract a {} from a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -191,13 +203,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto sub(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't subtract a {} from a {}.",
                                              jtl::type_name<L>(),
-                                             object_type_str(r->type)) };
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -219,12 +232,13 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto sub(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
       throw std::runtime_error{ util::format("Can't subtract a {} from a {}.",
-                                             object_type_str(l->type),
+                                             object_type_str(l.get_type()),
                                              jtl::type_name<R>()) };
       return object_ref{};
     }
@@ -247,6 +261,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto sub(L const l, R const r)
   {
     return l - r;
@@ -256,13 +271,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto div(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't divide a {} by a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -301,13 +317,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto div(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't divide a {} by a {}.", jtl::type_name<L>(), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't divide a {} by a {}.",
+                                             jtl::type_name<L>(),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -329,13 +346,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto div(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{
-        util::format("Can't divide a {} by a {}.", object_type_str(l->type), jtl::type_name<R>())
-      };
+      throw std::runtime_error{ util::format("Can't divide a {} by a {}.",
+                                             object_type_str(l.get_type()),
+                                             jtl::type_name<R>()) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref>)
@@ -357,6 +375,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto div(L const l, R const r)
   {
     return l / r;
@@ -364,13 +383,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto mul(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't multiply a {} with a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -409,13 +429,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto mul(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't multiply a {} with a {}.",
                                              jtl::type_name<L>(),
-                                             object_type_str(r->type)) };
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -437,12 +458,13 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto mul(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
       throw std::runtime_error{ util::format("Can't multiply a {} with a {}.",
-                                             object_type_str(l->type),
+                                             object_type_str(l.get_type()),
                                              jtl::type_name<R>()) };
       return object_ref{};
     }
@@ -465,6 +487,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto mul(L const l, R const r)
   {
     return l * r;
@@ -474,13 +497,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lt(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return false;
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -517,13 +541,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lt(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", jtl::type_name<L>(), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             jtl::type_name<L>(),
+                                             object_type_str(r.get_type())) };
       return false;
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -544,13 +569,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lt(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", object_type_str(l->type), jtl::type_name<R>())
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             object_type_str(l.get_type()),
+                                             jtl::type_name<R>()) };
       return false;
     }
     else if constexpr(jtl::is_same<L, object_ref>)
@@ -571,6 +597,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lt(L const l, R const r)
   {
     return l < r;
@@ -578,13 +605,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lte(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return false;
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -621,13 +649,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lte(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", jtl::type_name<L>(), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             jtl::type_name<L>(),
+                                             object_type_str(r.get_type())) };
       return false;
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -648,13 +677,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lte(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", object_type_str(l->type), jtl::type_name<R>())
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             object_type_str(l.get_type()),
+                                             jtl::type_name<R>()) };
       return false;
     }
     if constexpr(jtl::is_same<L, object_ref>)
@@ -675,6 +705,7 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   bool lte(L const l, R const r)
   {
     return l <= r;
@@ -682,13 +713,14 @@ namespace jank::runtime
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto min(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -725,19 +757,22 @@ namespace jank::runtime
     }
     else
     {
-      return std::min(l->data, r->data);
+      using C
+        = std::common_type_t<jtl::decay_t<decltype(l->data)>, jtl::decay_t<decltype(r->data)>>;
+      return std::min(static_cast<C>(l->data), static_cast<C>(r->data));
     }
   }
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto min(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", jtl::type_name<L>(), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             jtl::type_name<L>(),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -751,23 +786,26 @@ namespace jank::runtime
     }
     else if constexpr(detail::typed_object<R>)
     {
-      return std::min(l, r->data);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r->data)>>;
+      return std::min(static_cast<C>(l), static_cast<C>(r->data));
     }
     else
     {
-      return std::min(l, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+      return std::min(static_cast<C>(l), static_cast<C>(r));
     }
   }
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto min(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", object_type_str(l->type), jtl::type_name<R>())
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             object_type_str(l.get_type()),
+                                             jtl::type_name<R>()) };
       return object_ref{};
     }
     if constexpr(jtl::is_same<L, object_ref>)
@@ -781,30 +819,35 @@ namespace jank::runtime
     }
     else if constexpr(detail::typed_object<L>)
     {
-      return std::min(l->data, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l->data)>, jtl::decay_t<decltype(r)>>;
+      return std::min(static_cast<C>(l->data), static_cast<C>(r));
     }
     else
     {
-      return std::min(l, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+      return std::min(static_cast<C>(l), static_cast<C>(r));
     }
   }
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto min(L const l, R const r)
   {
-    return std::min(l, r);
+    using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+    return std::min(static_cast<C>(l), static_cast<C>(r));
   }
 
   template <typename L, typename R>
   requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto max(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
       throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
-                                             object_type_str(l->type),
-                                             object_type_str(r->type)) };
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -813,7 +856,7 @@ namespace jank::runtime
         [](auto const typed_l, auto const r) -> object_ref {
           return visit_number_like(
             [](auto const typed_r, auto const typed_l) -> object_ref {
-              return typed_r->data < typed_l->data ? typed_r.erase() : typed_l.erase();
+              return typed_l->data < typed_r->data ? typed_r.erase() : typed_l.erase();
             },
             r,
             typed_l);
@@ -825,7 +868,7 @@ namespace jank::runtime
     {
       return visit_number_like(
         [](auto const typed_l, auto const r) -> object_ref {
-          return r->data < typed_l->data ? r.erase() : typed_l.erase();
+          return typed_l->data < r->data ? r.erase() : typed_l.erase();
         },
         l,
         r);
@@ -834,82 +877,92 @@ namespace jank::runtime
     {
       return visit_number_like(
         [](auto const typed_r, auto const l) {
-          return typed_r->data < l->data ? typed_r.erase() : l.erase();
+          return l->data < typed_r->data ? typed_r.erase() : l.erase();
         },
         r,
         l);
     }
     else
     {
-      return std::max(l->data, r->data);
+      using C
+        = std::common_type_t<jtl::decay_t<decltype(l->data)>, jtl::decay_t<decltype(r->data)>>;
+      return std::max(static_cast<C>(l->data), static_cast<C>(r->data));
     }
   }
 
   template <typename L, typename R>
   requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto max(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", jtl::type_name<L>(), object_type_str(r->type))
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             jtl::type_name<L>(),
+                                             object_type_str(r.get_type())) };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<R, object_ref>)
     {
       return visit_number_like(
         [](auto const typed_r, L const l) -> object_ref {
-          return typed_r->data < l ? typed_r.erase() : make_box(l).erase();
+          return l < typed_r->data ? typed_r.erase() : make_box(l).erase();
         },
         r,
         l);
     }
     else if constexpr(detail::typed_object<R>)
     {
-      return std::max(l, r->data);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r->data)>>;
+      return std::max(static_cast<C>(l), static_cast<C>(r->data));
     }
     else
     {
-      return std::max(l, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+      return std::max(static_cast<C>(l), static_cast<C>(r));
     }
   }
 
   template <typename L, typename R>
   requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto max(L const l, R const r)
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{
-        util::format("Can't compare a {} to a {}.", object_type_str(l->type), jtl::type_name<R>())
-      };
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             object_type_str(l.get_type()),
+                                             jtl::type_name<R>()) };
       return object_ref{};
     }
     if constexpr(jtl::is_same<L, object_ref>)
     {
       return visit_number_like(
         [](auto const typed_l, R const r) -> object_ref {
-          return r < typed_l ? make_box(r).erase() : typed_l.erase();
+          return typed_l < r ? make_box(r).erase() : typed_l.erase();
         },
         l,
         r);
     }
     else if constexpr(detail::typed_object<L>)
     {
-      return std::max(l->data, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l->data)>, jtl::decay_t<decltype(r)>>;
+      return std::max(static_cast<C>(l->data), static_cast<C>(r));
     }
     else
     {
-      return std::max(l, r);
+      using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+      return std::max(static_cast<C>(l), static_cast<C>(r));
     }
   }
 
   template <typename L, typename R>
   requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto max(L const l, R const r)
   {
-    return std::max(l, r);
+    using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+    return std::max(static_cast<C>(l), static_cast<C>(r));
   }
 
   object_ref abs(object_ref const l);
@@ -1000,10 +1053,52 @@ namespace jank::runtime
   i64 to_int(obj::nil_ref const l);
   i64 to_int(obj::integer_ref const l);
   i64 to_int(obj::real_ref const l);
-  i64 to_int(i64 l);
-  i64 to_int(f64 l);
+
+  template <typename T>
+  requires detail::primitive_number<T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  i64 to_int(T const l)
+  {
+    return static_cast<i64>(l);
+  }
 
   f64 to_real(object_ref const o);
+
+  template <typename T>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  static f64 to_real(T const &val)
+  {
+    if constexpr(jtl::is_any_same<T, i32, i64>)
+    {
+      return static_cast<f64>(val);
+    }
+    else if constexpr(std::is_same_v<T, native_big_integer>
+                      || std::is_same_v<T, native_big_decimal>)
+    {
+      return val.template convert_to<f64>();
+    }
+    else if constexpr(std::is_same_v<T, f64>)
+    {
+      return val;
+    }
+    else if constexpr(std::is_same_v<T, obj::ratio_data>)
+    {
+      return val.to_real();
+    }
+    else if constexpr(jtl::is_any_same<T,
+                                       obj::integer_ref,
+                                       obj::small_integer_ref,
+                                       obj::real_ref,
+                                       obj::small_real_ref>)
+    {
+      return val->to_real();
+    }
+    else
+    {
+      static_assert(!sizeof(T *), "Unsupported type for to_real conversion.");
+      return 0.0;
+    }
+  }
 
   bool is_number(object_ref const o);
   object_ref number(object_ref const o);
@@ -1015,8 +1110,8 @@ namespace jank::runtime
   bool is_nan(object_ref const o);
   bool is_infinite(object_ref const o);
 
-  i64 parse_long(object_ref const o);
-  f64 parse_double(object_ref const o);
+  object_ref parse_long(object_ref const o);
+  object_ref parse_double(object_ref const o);
 
   bool is_big_integer(object_ref const o);
   obj::big_integer_ref to_big_integer(object_ref const o);

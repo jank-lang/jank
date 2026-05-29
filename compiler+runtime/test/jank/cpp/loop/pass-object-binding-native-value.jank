@@ -1,0 +1,5 @@
+(let* [r (loop* [i 0]
+           (if (cpp/== #cpp 3 i)
+             :success
+             (recur #cpp 3)))]
+  r)

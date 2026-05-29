@@ -631,6 +631,8 @@ namespace jank::read::parse
       return meta_result;
     }
 
+    auto const meta{ meta_result.expect_ok().unwrap().ptr };
+
     auto target_val_result(next());
 
     if(target_val_result.is_err())
@@ -648,9 +650,7 @@ namespace jank::read::parse
         using T = typename jtl::decay_t<decltype(typed_val)>::value_type;
         if constexpr(behavior::metadatable<T>)
         {
-          return object_source_info{ typed_val->with_meta(
-                                       merge(typed_val->get_meta(),
-                                             meta_result.expect_ok().unwrap().ptr)),
+          return object_source_info{ typed_val->with_meta(merge(typed_val->get_meta(), meta)),
                                      start_token,
                                      latest_token };
         }
@@ -759,7 +759,7 @@ namespace jank::read::parse
       return list_result;
     }
     else if(list_result.expect_ok().is_none()
-            || list_result.expect_ok().unwrap().ptr->type != object_type::persistent_list)
+            || list_result.expect_ok().unwrap().ptr.get_type() != object_type::persistent_list)
     {
       return error::internal_parse_failure("Value after #( must be present.",
                                            { start_token.start, latest_token.end });
@@ -806,7 +806,7 @@ namespace jank::read::parse
       return error::parse_invalid_reader_var({ start_token.start, latest_token.end },
                                              "Value after #' must be present.");
     }
-    else if(sym_result.expect_ok().unwrap().ptr->type != object_type::symbol)
+    else if(sym_result.expect_ok().unwrap().ptr.get_type() != object_type::symbol)
     {
       return error::parse_invalid_reader_var({ start_token.start, latest_token.end },
                                              "Value after #' must be a symbol.");
@@ -837,7 +837,7 @@ namespace jank::read::parse
       return error::parse_invalid_reader_symbolic_value("Value after ## must be present.",
                                                         { start_token.start, latest_token.end });
     }
-    else if(sym_result.expect_ok().unwrap().ptr->type != object_type::symbol)
+    else if(sym_result.expect_ok().unwrap().ptr.get_type() != object_type::symbol)
     {
       return error::parse_invalid_reader_symbolic_value("Value after ## must be a symbol.",
                                                         { start_token.start, latest_token.end });
@@ -1019,7 +1019,7 @@ namespace jank::read::parse
           return error::parse_invalid_data_reader(
             util::format("The 'clojure.core/*data-readers*' var needs to be a map between the tag "
                          "symbol and it's corresponding data reader function. Found a {} instead.",
-                         object_type_str(data_readers->type)),
+                         object_type_str(data_readers.get_type())),
             { start_token.start, sym_end.end });
         },
         data_readers,
@@ -1036,7 +1036,7 @@ namespace jank::read::parse
       {
         if(is_callable(data_reader))
         {
-          return object_source_info{ data_reader->call(form), form_token, form_end };
+          return object_source_info{ data_reader.call(form), form_token, form_end };
         }
         else
         {
@@ -1044,7 +1044,7 @@ namespace jank::read::parse
             util::format("The data reader for the tagged literal '#{}' needs to be a function. "
                          "Found a {} instead.",
                          sym->to_string(),
-                         object_type_str(data_reader->type)),
+                         object_type_str(data_reader.get_type())),
             { start_token.start, sym_end.end });
         }
       }
@@ -1060,9 +1060,7 @@ namespace jank::read::parse
       {
         if(is_callable(default_data_reader_fn))
         {
-          return object_source_info{ default_data_reader_fn->call(sym, form),
-                                     form_token,
-                                     form_end };
+          return object_source_info{ default_data_reader_fn.call(sym, form), form_token, form_end };
         }
         else
         {
@@ -1070,7 +1068,7 @@ namespace jank::read::parse
             util::format(
               "The 'clojure.core/*default-data-reader-fn*' var must be a function taking 2 "
               "arguments, the tag and the form immediately after the tag. Found a {} instead.",
-              object_type_str(default_data_reader_fn->type)),
+              object_type_str(default_data_reader_fn.get_type())),
             { start_token.start, latest_token.end });
         }
       }
@@ -1091,8 +1089,9 @@ namespace jank::read::parse
     else
     {
       return error::parse_invalid_reader_symbolic_value(
-        "This reader tag is not supported. '#uuid', '#inst' and '#cpp' are the only default tags "
-        "currently supported.",
+        util::format("This '{}' reader tag is not supported. '#uuid', '#inst' and '#cpp' are the "
+                     "only currently recognized tags.",
+                     sym->to_code_string()),
         { start_token.start, sym_end.end });
     }
   }
@@ -1165,7 +1164,7 @@ namespace jank::read::parse
 
       auto const feature{ it->expect_ok().unwrap() };
 
-      if(feature.ptr->type != object_type::keyword)
+      if(feature.ptr.get_type() != object_type::keyword)
       {
         return error::parse_invalid_reader_conditional({ feature.start.start, feature.end.end },
                                                        "Feature must be a keyword.");
@@ -1418,7 +1417,7 @@ namespace jank::read::parse
         object_ref const item{ s.is_some() ? first(s).erase() : s.erase() };
 
         return make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote"))
-          ->equal(*item);
+          .equal(item);
       },
       [] { return false; },
       form);
@@ -1436,19 +1435,19 @@ namespace jank::read::parse
     /* By default, all symbols get qualified. However, any symbol ending in # does not get
      * qualified, but instead gets a gensym (a unique name). The unique names are kept in
      * a bound map for reproducibility. */
-    else if(form->type == object_type::symbol)
+    else if(form.get_type() == object_type::symbol)
     {
       auto sym(expect_object<obj::symbol>(form));
       if(sym->ns.empty() && sym->name.ends_with('#'))
       {
         auto const env(__rt_ctx->gensym_env_var->deref());
-        if(env->type == object_type::nil)
+        if(env.get_type() == object_type::nil)
         {
           return err(error::internal_parse_failure("Missing gensym env."));
         }
 
         auto gensym(get(env, sym));
-        if(gensym->type == object_type::nil)
+        if(gensym.get_type() == object_type::nil)
         {
           gensym = __rt_ctx->unique_symbol(sym->name);
           __rt_ctx->gensym_env_var->set(assoc(env, sym, gensym)).expect_ok();
@@ -1484,9 +1483,11 @@ namespace jank::read::parse
     }
     /* Clojure treats these specially, perhaps as a small optimization, by not quoting. We can
      * do the same for now, but quoting all of these has no effect. */
-    else if(form->type == object_type::keyword || form->type == object_type::persistent_string
-            || form->type == object_type::integer || form->type == object_type::real
-            || form->type == object_type::character || form->type == object_type::nil)
+    else if(form.get_type() == object_type::keyword
+            || form.get_type() == object_type::persistent_string
+            || form.get_type() == object_type::integer
+            || form.get_type() == object_type::small_integer || form.get_type() == object_type::real
+            || form.get_type() == object_type::character || form.get_type() == object_type::nil)
     {
       ret = form;
     }
@@ -1852,7 +1853,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::integer>(std::get<i64>(token.data)), token, token };
+    return object_source_info{ make_box(std::get<i64>(token.data)), token, token };
   }
 
   processor::object_result processor::parse_big_integer()
@@ -1884,17 +1885,11 @@ namespace jank::read::parse
                                         "A ratio may not have a denominator of zero.");
     }
     if(auto const ratio{ obj::ratio::create(ratio_data.numerator, ratio_data.denominator) };
-       ratio->type == object_type::ratio)
+       ratio.get_type() == object_type::ratio || ratio.get_type() == object_type::integer
+       || ratio.get_type() == object_type::small_integer
+       || ratio.get_type() == object_type::big_integer)
     {
-      return object_source_info{ expect_object<obj::ratio>(ratio), token, token };
-    }
-    else if(ratio->type == object_type::integer)
-    {
-      return object_source_info{ expect_object<obj::integer>(ratio), token, token };
-    }
-    else if(ratio->type == object_type::big_integer)
-    {
-      return object_source_info{ expect_object<obj::big_integer>(ratio), token, token };
+      return object_source_info{ ratio, token, token };
     }
     else
     {
@@ -1907,7 +1902,7 @@ namespace jank::read::parse
   {
     auto const token(token_current->expect_ok());
     ++token_current;
-    return object_source_info{ make_box<obj::real>(std::get<f64>(token.data)), token, token };
+    return object_source_info{ make_box(std::get<f64>(token.data)), token, token };
   }
 
   processor::object_result processor::parse_string()

@@ -23,18 +23,22 @@ namespace jank::runtime::obj
   static native_big_integer extract_big_integer(object_ref const d)
   {
     native_big_integer result{};
-    if(d->type == object_type::big_integer)
+    if(d.get_type() == object_type::big_integer)
     {
       result = expect_object<big_integer>(d)->data;
     }
-    else if(d->type == object_type::integer)
+    else if(d.get_type() == object_type::integer)
     {
       result = expect_object<integer>(d)->data;
+    }
+    else if(d.get_type() == object_type::small_integer)
+    {
+      result = expect_object<small_integer>(d)->data;
     }
     else
     {
       throw std::runtime_error{
-        util::format("Type {} cannot be used as a ratio numerator or denominator.", d->type)
+        util::format("Type {} cannot be used as a ratio numerator or denominator.", d.get_type())
       };
     }
     return result;
@@ -136,17 +140,27 @@ namespace jank::runtime::obj
   {
     if(o.type == object_type::integer)
     {
-      return data == expect_object<integer>(&o)->data;
+      return data == expect_object<integer>(runtime::detail::untagged(&o))->data;
+    }
+
+    if(o.type == object_type::small_integer)
+    {
+      return data == expect_object<small_integer>(runtime::detail::untagged(&o))->data;
     }
 
     if(o.type == object_type::real)
     {
-      return data == expect_object<real>(&o)->data;
+      return data == expect_object<real>(runtime::detail::untagged(&o))->data;
+    }
+
+    if(o.type == object_type::small_real)
+    {
+      return data == expect_object<small_real>(runtime::detail::untagged(&o))->data;
     }
 
     if(o.type == object_type::ratio)
     {
-      return data == expect_object<ratio>(&o)->data;
+      return data == expect_object<ratio>(runtime::detail::untagged(&o))->data;
     }
 
     return false;
@@ -166,7 +180,7 @@ namespace jank::runtime::obj
           return (typed_o->data < data) - (data < typed_o->data);
         }
       },
-      &o);
+      runtime::detail::untagged(&o));
   }
 
   i64 ratio::compare(ratio const &o) const
@@ -181,12 +195,12 @@ namespace jank::runtime::obj
     return ratio::create(num, denom);
   }
 
-  ratio_ref operator+(integer_ref const l, ratio_data const &r)
+  ratio_data operator+(integer_ref const l, ratio_data const &r)
   {
     return l->data + r;
   }
 
-  ratio_ref operator+(ratio_data const &l, integer_ref const r)
+  ratio_data operator+(ratio_data const &l, integer_ref const r)
   {
     return r + l;
   }
@@ -208,12 +222,12 @@ namespace jank::runtime::obj
     return ratio::create(num, denom);
   }
 
-  ratio_ref operator-(integer_ref const l, ratio_data const &r)
+  ratio_data operator-(integer_ref const l, ratio_data const &r)
   {
     return l->data - r;
   }
 
-  ratio_ref operator-(ratio_data const &l, integer_ref const r)
+  ratio_data operator-(ratio_data const &l, integer_ref const r)
   {
     return l - r->data;
   }
@@ -224,6 +238,16 @@ namespace jank::runtime::obj
   }
 
   f64 operator-(ratio_data const &l, real_ref const r)
+  {
+    return l.to_real() - r->data;
+  }
+
+  f64 operator-(small_real_ref const l, ratio_data const &r)
+  {
+    return l->data - r.to_real();
+  }
+
+  f64 operator-(ratio_data const &l, small_real_ref const r)
   {
     return l.to_real() - r->data;
   }
@@ -253,6 +277,16 @@ namespace jank::runtime::obj
     return l.to_real() * r->data;
   }
 
+  f64 operator*(small_real_ref const l, ratio_data const &r)
+  {
+    return l->data * r.to_real();
+  }
+
+  f64 operator*(ratio_data const &l, small_real_ref const r)
+  {
+    return l.to_real() * r->data;
+  }
+
   object_ref operator/(ratio_data const &l, ratio_data const &r)
   {
     return ratio::create(l.numerator * r.denominator, l.denominator * r.numerator);
@@ -278,6 +312,16 @@ namespace jank::runtime::obj
     return l.to_real() / r->data;
   }
 
+  f64 operator/(small_real_ref const l, ratio_data const &r)
+  {
+    return l->data / r.to_real();
+  }
+
+  f64 operator/(ratio_data const &l, small_real_ref const r)
+  {
+    return l.to_real() / r->data;
+  }
+
   bool operator==(ratio_data const &l, ratio_data const &r)
   {
     return l.numerator == r.numerator && l.denominator == r.denominator;
@@ -299,6 +343,16 @@ namespace jank::runtime::obj
   }
 
   bool operator==(ratio_data const &l, real_ref const r)
+  {
+    return r == l;
+  }
+
+  bool operator==(small_real_ref const l, ratio_data const &r)
+  {
+    return std::fabs(l->data - r) < epsilon;
+  }
+
+  bool operator==(ratio_data const &l, small_real_ref const r)
   {
     return r == l;
   }
@@ -343,12 +397,32 @@ namespace jank::runtime::obj
     return l.to_real() < r->data;
   }
 
+  bool operator<(small_real_ref const l, ratio_data const &r)
+  {
+    return l->data < r.to_real();
+  }
+
+  bool operator<(ratio_data const &l, small_real_ref const r)
+  {
+    return l.to_real() < r->data;
+  }
+
   bool operator<=(real_ref const l, ratio_data const &r)
   {
     return l->data <= r.to_real();
   }
 
   bool operator<=(ratio_data const &l, real_ref const r)
+  {
+    return l.to_real() <= r->data;
+  }
+
+  bool operator<=(small_real_ref const l, ratio_data const &r)
+  {
+    return l->data <= r.to_real();
+  }
+
+  bool operator<=(ratio_data const &l, small_real_ref const r)
   {
     return l.to_real() <= r->data;
   }

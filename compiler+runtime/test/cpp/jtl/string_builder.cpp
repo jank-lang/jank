@@ -84,18 +84,36 @@ namespace jtl
     {
       string_builder sb;
       sb(3.14);
-      CHECK_EQ(8, sb.pos);
+      CHECK_EQ(4, sb.pos);
       CHECK_EQ(initial_capacity, sb.capacity);
-      CHECK_EQ("3.140000", sb.view());
+      CHECK_EQ("3.14", sb.view());
+    }
+
+    TEST_CASE("float / double scientific")
+    {
+      string_builder sb;
+      sb(1e-9);
+      CHECK_EQ(5, sb.pos);
+      CHECK_EQ(initial_capacity, sb.capacity);
+      CHECK_EQ("1e-09", sb.view());
+    }
+
+    TEST_CASE("float / double scientific from non-scientific")
+    {
+      string_builder sb;
+      sb(0.000000000000000000000000000001);
+      CHECK_EQ(5, sb.pos);
+      CHECK_EQ(initial_capacity, sb.capacity);
+      CHECK_EQ("1e-30", sb.view());
     }
 
     TEST_CASE("infinity")
     {
       string_builder sb;
       sb(INFINITY);
-      CHECK_EQ(3, sb.pos);
+      CHECK_EQ(8, sb.pos);
       CHECK_EQ(initial_capacity, sb.capacity);
-      CHECK_EQ("inf", sb.view());
+      CHECK_EQ("INFINITY", sb.view());
     }
 
     TEST_CASE("nan")
@@ -104,7 +122,7 @@ namespace jtl
       sb(NAN);
       CHECK_EQ(3, sb.pos);
       CHECK_EQ(initial_capacity, sb.capacity);
-      CHECK_EQ("nan", sb.view());
+      CHECK_EQ("NAN", sb.view());
     }
 
     TEST_CASE("char32_t")

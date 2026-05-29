@@ -90,7 +90,7 @@ namespace jank::util
 
   void print_exception(runtime::object_ref const e)
   {
-    if(e->type == runtime::object_type::persistent_string)
+    if(e.get_type() == runtime::object_type::persistent_string)
     {
       util::println("Uncaught exception: {}\n", runtime::to_string(e));
     }

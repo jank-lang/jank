@@ -115,17 +115,34 @@ namespace jank::runtime::obj
   {
     if(o.type == object_type::big_integer)
     {
-      return data == expect_object<big_integer>(&o)->data;
+      return data == expect_object<big_integer>(runtime::detail::untagged(&o))->data;
     }
     if(o.type == object_type::integer)
     {
-      return data == expect_object<integer>(&o)->data;
+      return data == expect_object<integer>(runtime::detail::untagged(&o))->data;
+    }
+    if(o.type == object_type::small_integer)
+    {
+      return data == expect_object<small_integer>(runtime::detail::untagged(&o))->data;
     }
     if(o.type == object_type::real)
     {
       try
       {
-        return std::fabs(this->to_real() - expect_object<real>(&o)->data)
+        return std::fabs(this->to_real() - expect_object<real>(runtime::detail::untagged(&o))->data)
+          < std::numeric_limits<f64>::epsilon();
+      }
+      catch(...)
+      {
+        return false;
+      }
+    }
+    if(o.type == object_type::small_real)
+    {
+      try
+      {
+        return std::fabs(this->to_real()
+                         - expect_object<small_real>(runtime::detail::untagged(&o))->data)
           < std::numeric_limits<f64>::epsilon();
       }
       catch(...)
@@ -139,7 +156,7 @@ namespace jank::runtime::obj
 
   jtl::immutable_string big_integer::to_string() const
   {
-    return data.str() + 'N';
+    return data.str();
   }
 
   void big_integer::to_string(jtl::string_builder &buff) const
@@ -149,7 +166,7 @@ namespace jank::runtime::obj
 
   jtl::immutable_string big_integer::to_code_string() const
   {
-    return to_string();
+    return to_string() + 'N';
   }
 
   template <class T>
@@ -186,9 +203,10 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}", runtime::to_string(&o)) };
+        throw std::runtime_error{ util::format("not comparable: {}",
+                                               runtime::to_string(runtime::detail::untagged(&o))) };
       },
-      &o);
+      runtime::detail::untagged(&o));
   }
 
   i64 big_integer::compare(big_integer const &o) const

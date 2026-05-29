@@ -105,7 +105,7 @@ namespace jank::runtime::obj
       return expect_object<transient_sorted_map>(runtime::merge_in_place(this, head));
     }
 
-    if(head->type != object_type::persistent_vector)
+    if(head.get_type() != object_type::persistent_vector)
     {
       throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
     }

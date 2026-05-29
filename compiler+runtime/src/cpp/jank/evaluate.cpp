@@ -149,10 +149,12 @@ namespace jank::evaluate
     auto const frame{ jtl::make_ref<local_frame>(local_frame::frame_type::fn,
                                                  expr->frame->parent) };
     auto const fn_ctx{ jtl::make_ref<expr::function_context>() };
-    expr::function_arity arity{ jtl::move(params),
-                                jtl::make_ref<expr::do_>(expression_position::tail, frame, true),
-                                frame,
-                                fn_ctx };
+    expr::function_arity arity{
+      jtl::move(params),
+      jtl::make_ref<expr::do_>(expression_position::tail, frame, true, jank_nil),
+      frame,
+      fn_ctx
+    };
     expr->frame->parent = arity.frame;
     ret->frame = arity.frame->parent.unwrap_or(arity.frame);
     fn_ctx->name = ret->name;
@@ -175,6 +177,7 @@ namespace jank::evaluate
       expr_to_add = jtl::make_ref<expr::cpp_conversion>(expr->position,
                                                         expr->frame,
                                                         expr->needs_box,
+                                                        expr->form,
                                                         cpp_util::untyped_object_ref_type(),
                                                         expr_type,
                                                         conversion_policy::into_object,
@@ -220,6 +223,7 @@ namespace jank::evaluate
       return wrap_expression(jtl::make_ref<expr::primitive_literal>(expression_position::tail,
                                                                     an_prc.root_frame,
                                                                     true,
+                                                                    jank_nil,
                                                                     jank_nil),
                              name,
                              {});
@@ -277,7 +281,7 @@ namespace jank::evaluate
   object_ref eval(expr::def_ref const expr)
   {
     auto var(__rt_ctx->intern_var(expr->name).expect_ok());
-    auto const meta(expr->name->meta);
+    auto const meta(__rt_ctx->eval(expr->name->meta));
     var->set_meta(meta);
 
     auto const dynamic(get(meta, __rt_ctx->intern_keyword("dynamic").expect_ok()));
@@ -320,7 +324,7 @@ namespace jank::evaluate
   object_ref eval(expr::call_ref const expr)
   {
     auto source(eval(expr->source_expr));
-    while(source->type == object_type::var)
+    while(source.get_type() == object_type::var)
     {
       source = deref(source);
     }
@@ -431,7 +435,7 @@ namespace jank::evaluate
 
   object_ref eval(expr::primitive_literal_ref const expr)
   {
-    if(expr->data->type == object_type::keyword)
+    if(expr->data.get_type() == object_type::keyword)
     {
       auto const d(expect_object<obj::keyword>(expr->data));
       return __rt_ctx->intern_keyword(d->sym->ns, d->sym->name).expect_ok();
@@ -450,7 +454,7 @@ namespace jank::evaluate
     runtime::detail::native_persistent_list const npl{ ret.rbegin(), ret.rend() };
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_list>(expr->meta, jtl::move(npl));
+      return make_box<obj::persistent_list>(__rt_ctx->eval(expr->meta), jtl::move(npl));
     }
     else
     {
@@ -467,7 +471,7 @@ namespace jank::evaluate
     }
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_vector>(expr->meta, ret.persistent());
+      return make_box<obj::persistent_vector>(__rt_ctx->eval(expr->meta), ret.persistent());
     }
     else
     {
@@ -490,7 +494,7 @@ namespace jank::evaluate
 
       if(expr->meta.is_some())
       {
-        return make_box<obj::persistent_array_map>(expr->meta,
+        return make_box<obj::persistent_array_map>(__rt_ctx->eval(expr->meta),
                                                    runtime::detail::in_place_unique{},
                                                    array_box,
                                                    size * 2);
@@ -512,7 +516,7 @@ namespace jank::evaluate
 
       if(expr->meta.is_some())
       {
-        return make_box<obj::persistent_hash_map>(expr->meta, trans.persistent());
+        return make_box<obj::persistent_hash_map>(__rt_ctx->eval(expr->meta), trans.persistent());
       }
       else
       {
@@ -530,7 +534,8 @@ namespace jank::evaluate
     }
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_hash_set>(expr->meta, jtl::move(ret).persistent());
+      return make_box<obj::persistent_hash_set>(__rt_ctx->eval(expr->meta),
+                                                jtl::move(ret).persistent());
     }
     else
     {
@@ -555,8 +560,7 @@ namespace jank::evaluate
     auto const module{ munge(expr->unique_name) };
     auto const mod{ ir::create(expr, module, codegen::compilation_target::eval) };
 
-    if(current_def_var.is_some()
-       && util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
+    if(util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
     {
       auto const generated{ codegen::gen_cpp(mod) };
       native_vector<u8> arities;
@@ -566,7 +570,7 @@ namespace jank::evaluate
         arities.emplace_back(arity.params.size());
       }
 
-      auto const ret{ make_box<obj::deferred_cpp_function>(expr->meta,
+      auto const ret{ make_box<obj::deferred_cpp_function>(__rt_ctx->eval(expr->meta),
                                                            current_def_var,
                                                            generated.declaration,
                                                            mod.arity_flags,

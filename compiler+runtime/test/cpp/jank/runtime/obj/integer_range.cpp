@@ -11,13 +11,13 @@ namespace jank::runtime::obj
   {
     TEST_CASE("equal")
     {
-      CHECK(equal(integer_range::create(make_box(5)), integer_range::create(make_box(5))));
-      CHECK(equal(integer_range::create(make_box(1)), integer_range::create(make_box(1))));
-      CHECK(!equal(integer_range::create(make_box(6)), integer_range::create(make_box(5))));
-      CHECK(!equal(integer_range::create(make_box(5)), integer_range::create(make_box(6))));
-      CHECK(equal(integer_range::create(make_box(0)), integer_range::create(make_box(0))));
-      CHECK(!equal(integer_range::create(make_box(0)), integer_range::create(make_box(5))));
-      CHECK(!equal(integer_range::create(make_box(1)), integer_range::create(make_box(0))));
+      CHECK(equal(integer_range::create(5), integer_range::create(5)));
+      CHECK(equal(integer_range::create(1), integer_range::create(1)));
+      CHECK(!equal(integer_range::create(6), integer_range::create(5)));
+      CHECK(!equal(integer_range::create(5), integer_range::create(6)));
+      CHECK(equal(integer_range::create(0), integer_range::create(0)));
+      CHECK(!equal(integer_range::create(0), integer_range::create(5)));
+      CHECK(!equal(integer_range::create(1), integer_range::create(0)));
     }
   }
 }
