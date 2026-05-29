@@ -41,7 +41,7 @@
                                   "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
                             (= "on" analyze)
                             (conj "-DCMAKE_CXX_CLANG_TIDY=clang-tidy-cache-wrapper"))
-          configure-cmd (str "./bin/configure " (clojure.string/join " " configure-flags))
+          configure-cmd (str "nu ./bin/configure.nu " (clojure.string/join " " configure-flags))
           stats-cmd (if (= "on" analyze)
                       "clang-tidy-cache"
                       "ccache")]
@@ -58,13 +58,13 @@
       (util/with-elapsed-time duration
         (util/quiet-shell {:dir compiler+runtime-dir
                            :extra-env exports}
-                          "./bin/clean")
+                          "nu ./bin/clean.nu")
         (util/log-info-with-time duration "Cleaned"))
 
       (util/with-elapsed-time duration
         (util/quiet-shell {:dir compiler+runtime-dir
                            :extra-env exports}
-                          "./bin/compile")
+                          "nu ./bin/compile.nu")
         (util/log-info-with-time duration "Compiled"))
 
       (util/quiet-shell {:dir compiler+runtime-dir
@@ -75,7 +75,7 @@
         (util/quiet-shell {:dir compiler+runtime-dir
                            :extra-env (merge exports
                                              {"LLVM_PROFILE_FILE" (str compiler+runtime-dir "/build/jank-%p.profraw")})}
-                          "./bin/test")
+                          "nu ./bin/test.nu")
         (util/log-info-with-time duration "Tested")))))
 
 (when (= *file* (System/getProperty "babashka.file"))

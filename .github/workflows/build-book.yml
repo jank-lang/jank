@@ -50,6 +50,9 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      - uses: hustcer/setup-nu@v3
+        with:
+          version: "*"
       - name: Publish
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -61,5 +64,5 @@ jobs:
           curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
           cargo binstall mdbook-mermaid
           pushd ${{ github.workspace }}/book
-            ./bin/publish || exit 1
+            nu ./bin/publish.nu
           popd

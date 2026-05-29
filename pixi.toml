@@ -1,0 +1,96 @@
+[workspace]
+authors = ["Fredrick Eisele <fred.eisele@vanderbilt.edu>"]
+channels = ["https://prefix.dev/meso-forge", "conda-forge"]
+name = "jank"
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+version = "0.1.0"
+
+[dependencies]
+nushell = ">=0.100"
+cmake = ">=3.21"
+ninja = "*"
+git = "*"
+
+# entr is not available on Windows; the watch task is Linux/macOS only.
+[target.linux-64.dependencies]
+entr = "*"
+
+[target.osx-64.dependencies]
+entr = "*"
+
+[target.osx-arm64.dependencies]
+entr = "*"
+
+[tasks]
+
+# Build the patched LLVM/Clang that jank requires.
+# Run this once before the first configure; re-run after llvm_commit changes.
+[tasks.build-clang]
+cmd = "nu compiler+runtime/bin/build-clang.nu"
+description = "Build patched LLVM/Clang from source"
+
+# Configure the CMake build.  Pass extra cmake -D flags after --:
+#   pixi run configure -- -Djank_test=ON -Djank_coverage=ON
+[tasks.configure]
+cmd = "nu bin/configure.nu"
+cwd = "compiler+runtime"
+description = "Configure the jank CMake build"
+
+# Compile jank.  Pass extra cmake --build flags after --:
+#   pixi run build -- --target jank_exe_phase_1
+[tasks.build]
+cmd = "nu bin/compile.nu"
+cwd = "compiler+runtime"
+description = "Compile jank"
+
+# Remove build artifacts and CMake state.
+[tasks.clean]
+cmd = "nu bin/clean.nu"
+cwd = "compiler+runtime"
+description = "Clean build artifacts"
+
+# Run the test suite (compiles first).
+[tasks.test]
+cmd = "nu bin/test.nu"
+cwd = "compiler+runtime"
+description = "Build and run the jank test suite"
+
+# Install jank.  Pass cmake --install flags after --.
+[tasks.install]
+cmd = "nu bin/install.nu"
+cwd = "compiler+runtime"
+description = "Install jank"
+
+# Format modified C++ source files via clang-format.
+[tasks.format]
+cmd = "nu bin/format.nu"
+cwd = "compiler+runtime"
+description = "Format modified C++ source files"
+
+# Syntax-check all nushell scripts under compiler+runtime/bin/.
+[tasks.lint]
+cmd = "nu bin/ci/lint.nu"
+cwd = "compiler+runtime"
+description = "Syntax-check nushell scripts"
+
+# Verify that git GPG commit signing is configured correctly.
+[tasks.verify-gpg]
+cmd = "nu bin/verify-git-gpg.nu"
+description = "Verify git GPG signing is working"
+
+# Watch tracked files and re-run a command on change (Linux/macOS only — requires entr).
+#   pixi run watch -- nu bin/compile.nu
+[target.linux-64.tasks.watch]
+cmd = "nu bin/watch.nu"
+cwd = "compiler+runtime"
+description = "Watch files and re-run a command on change"
+
+[target.osx-64.tasks.watch]
+cmd = "nu bin/watch.nu"
+cwd = "compiler+runtime"
+description = "Watch files and re-run a command on change"
+
+[target.osx-arm64.tasks.watch]
+cmd = "nu bin/watch.nu"
+cwd = "compiler+runtime"
+description = "Watch files and re-run a command on change"

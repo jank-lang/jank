@@ -99,7 +99,7 @@
             ];
 
             postPatch = ''
-              patchShebangs ./compiler+runtime/bin/ar-merge
+              patchShebangs ./compiler+runtime/bin/ar-merge.nu
             '';
 
             preConfigure = ''

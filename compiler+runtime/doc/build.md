@@ -72,7 +72,7 @@ should take a minute or two.
 cd compiler+runtime
 mkdir -p build
 export CC=clang; export CXX=clang++;
-./bin/build-clang
+nu ./bin/build-clang.nu
 export CC=$PWD/build/llvm-install/usr/local/bin/clang; export CXX=$PWD/build/llvm-install/usr/local/bin/clang++
 ```
 
@@ -85,7 +85,7 @@ Run the same commands from the [MSYS2](https://www.msys2.org/) CLANG64 shell.
 Rather than passing `-Djank_local_clang=on`, install the built toolchain into the environment, which will replace the existing LLVM installation:
 
 ```bash
-./bin/build-clang -i
+nu ./bin/build-clang.nu --install
 ```
 
 ## Compiling jank
@@ -94,8 +94,8 @@ A typical release build just needs the following:
 
 ```bash
 cd compiler+runtime
-./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
-./bin/compile
+nu ./bin/configure.nu -GNinja -DCMAKE_BUILD_TYPE=Release
+nu ./bin/compile.nu
 ```
 
 ### Debug
@@ -103,11 +103,11 @@ To make a debug build, specify the build type when configuring.
 
 ```bash
 cd compiler+runtime
-./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_test=on
-./bin/compile
+nu ./bin/configure.nu -GNinja -DCMAKE_BUILD_TYPE=Debug -Djank_test=on
+nu ./bin/compile.nu
 
 # When developing, continuously run the tests locally.
-./bin/watch ./bin/test
+nu ./bin/watch.nu nu ./bin/test.nu
 ```
 
 # Run jank
@@ -124,6 +124,6 @@ JIT compilation.
 
 ```bash
 cd compiler+runtime
-./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
-./bin/install
+nu ./bin/configure.nu -GNinja -DCMAKE_BUILD_TYPE=Release
+nu ./bin/install.nu
 ```

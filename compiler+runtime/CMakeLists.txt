@@ -431,15 +431,8 @@ set_target_properties(jankzip_lib PROPERTIES ENABLE_EXPORTS 1)
 # object files seen into the final library.
 
 
-if(WIN32) # Use wrapper ar-merge.bat script if on MSYS2
-  configure_file(bin/ar-merge.bat ar-merge.bat USE_SOURCE_PERMISSIONS @ONLY)
-  set(EXT_AR ".bat")
-else()
-  set(EXT_AR "")
-endif()
-
-configure_file(bin/ar-merge ar-merge USE_SOURCE_PERMISSIONS @ONLY)
-set(CMAKE_AR "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}")
+configure_file(bin/ar-merge.nu ar-merge.nu USE_SOURCE_PERMISSIONS @ONLY)
+set(CMAKE_AR "${CMAKE_BINARY_DIR}/ar-merge.nu")
 set(jank_lib_standalone_deps
   jank_lib
   cpptrace::cpptrace
@@ -467,7 +460,7 @@ add_custom_command(
   OUTPUT ${CMAKE_BINARY_DIR}/libjank-standalone-phase-1.a
   COMMAND_EXPAND_LISTS
   VERBATIM
-  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge
+  COMMAND "${CMAKE_BINARY_DIR}/ar-merge.nu" merge
 )
 add_custom_target(
   jank_lib_standalone_phase_1
@@ -480,7 +473,7 @@ add_custom_command(
   OUTPUT ${CMAKE_BINARY_DIR}/libjank-standalone.a
   COMMAND_EXPAND_LISTS
   VERBATIM
-  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2
+  COMMAND "${CMAKE_BINARY_DIR}/ar-merge.nu" merge-phase-2
 )
 add_custom_target(
   jank_lib_standalone_phase_2

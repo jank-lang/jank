@@ -36,13 +36,13 @@ jobs:
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang.nu') }}
 
       - uses: msys2/setup-msys2@v2
         if: steps.clang-cache.outputs.cache-hit != 'true'
         with:
           msystem: CLANG64
-          install: base-devel git mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-ninja mingw-w64-clang-x86_64-pkgconf mingw-w64-clang-x86_64-libunwind mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-z3 mingw-w64-clang-x86_64-python mingw-w64-clang-x86_64-compiler-rt mingw-w64-clang-x86_64-libc++
+          install: base-devel git mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-ninja mingw-w64-clang-x86_64-pkgconf mingw-w64-clang-x86_64-libunwind mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-z3 mingw-w64-clang-x86_64-python mingw-w64-clang-x86_64-compiler-rt mingw-w64-clang-x86_64-libc++ mingw-w64-clang-x86_64-nushell
           update: true
 
       - name: Build Clang/LLVM
@@ -52,7 +52,7 @@ jobs:
           MSYSTEM: CLANG64
         run: |
           pushd compiler+runtime
-            ./bin/build-clang
+            nu ./bin/build-clang.nu
           popd
           ls -al compiler+runtime/build/llvm-install
 
@@ -96,7 +96,7 @@ jobs:
         if: runner.os == 'Windows'
         with:
           MSYSTEM: CLANG64
-          install: unzip mingw-w64-clang-x86_64-ccache base-devel curl zip mingw-w64-clang-x86_64-git-lfs mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-doctest mingw-w64-clang-x86_64-libzip mingw-w64-clang-x86_64-gc mingw-w64-clang-x86_64-boost
+          install: unzip mingw-w64-clang-x86_64-ccache base-devel curl zip mingw-w64-clang-x86_64-git-lfs mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-doctest mingw-w64-clang-x86_64-libzip mingw-w64-clang-x86_64-gc mingw-w64-clang-x86_64-boost mingw-w64-clang-x86_64-nushell
           update: true
       - name: Prepare java
         if: runner.os == 'Windows'
@@ -118,7 +118,7 @@ jobs:
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang.nu') }}
       - name: Cache ccache object files
         if: matrix.analyze == 'off'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
@@ -149,7 +149,7 @@ jobs:
           JAVA_DIR=$(cygpath -u "${{ steps.find.outputs.java_dir }}")
 
           pushd compiler+runtime
-            ./bin/build-clang -i
+            nu ./bin/build-clang.nu --install
             clang++ --version
           popd
 

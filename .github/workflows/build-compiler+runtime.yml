@@ -35,18 +35,21 @@ jobs:
           packages: curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev
           # Increment this when the package list changes.
           version: 1
+      - uses: hustcer/setup-nu@v3
+        with:
+          version: "*"
       - name: Cache Clang/LLVM
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang.nu') }}
       - name: Build Clang/LLVM
         run: |
           if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
           then
             pushd ${{ github.workspace }}/compiler+runtime
-              ./bin/build-clang
+              nu ./bin/build-clang.nu
             popd
           fi
           ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
@@ -63,19 +66,19 @@ jobs:
           submodules: true
       - name: Install Homebrew deps
         run: |
-          brew install git git-lfs pkg-config ninja python cmake gnupg zlib
+          brew install git git-lfs pkg-config ninja python cmake gnupg zlib nushell
       - name: Cache Clang/LLVM
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang.nu') }}
       - name: Build Clang/LLVM
         run: |
           if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
           then
             pushd ${{ github.workspace }}/compiler+runtime
-              ./bin/build-clang
+              nu ./bin/build-clang.nu
             popd
           fi
           ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
@@ -186,6 +189,10 @@ jobs:
           packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev gcc g++ libgc-dev libboost-all-dev
           # Increment this when the package list changes.
           version: 13
+      - uses: hustcer/setup-nu@v3
+        if: runner.os == 'Linux'
+        with:
+          version: "*"
       # Boost doesn't get cached properly with the above action.
       # https://github.com/awalsh128/cache-apt-pkgs-action/issues/151
       - name: Install boost
@@ -195,13 +202,13 @@ jobs:
       - name: Install Homebrew packages
         if: runner.os == 'macOS'
         run: |
-          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib boost clojure/tools/clojure
+          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib boost clojure/tools/clojure nushell
       - name: Cache Clang/LLVM
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
+          key: clang-${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang.nu') }}
       - name: Cache ccache object files
         if: matrix.analyze == 'off'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684

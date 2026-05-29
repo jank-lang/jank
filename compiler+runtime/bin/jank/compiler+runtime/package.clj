@@ -29,7 +29,7 @@ Description: The native Clojure dialect hosted on LLVM with seamless C++ interop
 " jank-version)]
     (util/quiet-shell {:dir compiler+runtime-dir
                        :extra-env {"DESTDIR" dir}}
-                      "./bin/install")
+                      "nu ./bin/install.nu")
     (b.f/create-dir (str compiler+runtime-dir "/" dir "/DEBIAN"))
     (spit (str compiler+runtime-dir "/" dir "/DEBIAN/control") control)
     (util/quiet-shell {:dir compiler+runtime-dir}
@@ -43,7 +43,7 @@ Description: The native Clojure dialect hosted on LLVM with seamless C++ interop
         tarball (format "%s.tar.gz" dir)]
     (util/quiet-shell {:dir compiler+runtime-dir
                        :extra-env {"DESTDIR" dir}}
-                      "./bin/install")
+                      "nu ./bin/install.nu")
     (util/quiet-shell {:dir compiler+runtime-dir}
                       (format "tar czf %s %s" tarball dir))
     (when-some [gh-output (util/get-env "GITHUB_OUTPUT")]

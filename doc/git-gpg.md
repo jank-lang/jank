@@ -41,7 +41,7 @@ Your session should look something like this:
 
 $ git clone git@github.com:jank-lang/jank.git
 $ cd jank
-$ ./bin/verify-git-gpg
+$ nu ./bin/verify-git-gpg.nu
 gpg: Signature made Tue 17 Apr 2018 02:19:21 PM PDT
 gpg:                using RSA key FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
 gpg:                issuer "sally@foo.com"
