@@ -1223,54 +1223,60 @@ namespace jank::runtime
   native_big_integer numerator(object_ref const o);
   native_big_integer denominator(object_ref const o);
 
-  i64 to_int(object_ref const l);
-  i64 to_int(obj::nil_ref const l);
-  i64 to_int(obj::integer_ref const l);
-  i64 to_int(obj::real_ref const l);
-
-  template <typename T>
-  requires detail::primitive_number<T>
+  template <typename L>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  i64 to_int(T const l)
+  i64 to_int(L const l)
   {
-    return static_cast<i64>(l);
-  }
-
-  f64 to_real(object_ref const o);
-
-  template <typename T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  static f64 to_real(T const &val)
-  {
-    if constexpr(jtl::is_any_same<T, i32, i64>)
+    if constexpr(detail::primitive_number<L>)
     {
-      return static_cast<f64>(val);
+      return static_cast<i64>(l);
     }
-    else if constexpr(std::is_same_v<T, native_big_integer>
-                      || std::is_same_v<T, native_big_decimal>)
+    else if constexpr(!detail::valid_boxed_math<L>)
     {
-      return val.template convert_to<f64>();
+      throw std::runtime_error{ util::format("Can't convert {} to integer.",
+                                             object_type_str(l.get_type())) };
+      return 0;
     }
-    else if constexpr(std::is_same_v<T, f64>)
+    else if constexpr(jtl::is_same<L, object_ref>)
     {
-      return val;
-    }
-    else if constexpr(std::is_same_v<T, obj::ratio_data>)
-    {
-      return val.to_real();
-    }
-    else if constexpr(jtl::is_any_same<T,
-                                       obj::integer_ref,
-                                       obj::small_integer_ref,
-                                       obj::real_ref,
-                                       obj::small_real_ref>)
-    {
-      return val->to_real();
+      return visit_number_like([](auto const typed_l) -> i64 { return typed_l->to_integer(); }, l);
     }
     else
     {
-      static_assert(!sizeof(T *), "Unsupported type for to_real conversion.");
+      return l->to_integer();
+    }
+  }
+
+  template <typename L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  f64 to_real(L const l)
+  {
+    if constexpr(detail::primitive_number<L>)
+    {
+      return static_cast<f64>(l);
+    }
+    else if constexpr(std::is_same_v<L, native_big_integer>
+                      || std::is_same_v<L, native_big_decimal>)
+    {
+      return l.template convert_to<f64>();
+    }
+    else if constexpr(std::is_same_v<L, obj::ratio_data>)
+    {
+      return l.to_real();
+    }
+    else if constexpr(!detail::valid_boxed_math<L>)
+    {
+      throw std::runtime_error{ util::format("Can't conver {} to real.",
+                                             object_type_str(l.get_type())) };
       return 0.0;
+    }
+    else if constexpr(jtl::is_same<L, object_ref>)
+    {
+      return visit_number_like([](auto const typed_l) -> f64 { return typed_l->to_real(); }, l);
+    }
+    else
+    {
+      return l->to_real();
     }
   }
 

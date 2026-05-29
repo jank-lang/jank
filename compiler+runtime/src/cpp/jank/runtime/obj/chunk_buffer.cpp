@@ -1,5 +1,6 @@
 #include <jank/runtime/obj/chunk_buffer.hpp>
 #include <jank/runtime/obj/array_chunk.hpp>
+#include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/math.hpp>
 #include <jank/util/fmt.hpp>
 
