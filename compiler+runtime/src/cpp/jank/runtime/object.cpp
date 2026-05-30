@@ -216,6 +216,20 @@ namespace jank::runtime
                                               object_source(runtime::detail::untagged(this)));
   }
 
+  i64 object::to_integer() const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "number_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  f64 object::to_real() const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "number_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
     if(lhs.get_type() != rhs.get_type())

@@ -1,7 +1,6 @@
 #include <random>
 
 #include <jank/runtime/core/math.hpp>
-#include <jank/runtime/behavior/number_like.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/fmt/print.hpp>

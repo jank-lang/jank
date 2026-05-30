@@ -300,6 +300,7 @@ namespace jank::runtime
     get = 1 << 1,
     find = 1 << 2,
     compare = 1 << 3,
+    number_like = 1 << 4,
     //associatively_writable,
     //chunkable,
     //collection_like,
@@ -310,7 +311,6 @@ namespace jank::runtime
     //map_like,
     //metadatable,
     //nameable,
-    //number_like,
     //realizable,
     //ref_like,
     //seqable,
@@ -443,6 +443,9 @@ namespace jank::runtime
      * For sequences, all values need to be considered for comparison.
      */
     virtual i64 compare(object const &) const;
+
+    virtual i64 to_integer() const;
+    virtual f64 to_real() const;
 
     object_type type{};
     object_behavior behaviors{ object_behavior::none };

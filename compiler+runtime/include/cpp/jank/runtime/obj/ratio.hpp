@@ -29,7 +29,8 @@ namespace jank::runtime::obj
   struct ratio : object
   {
     static constexpr object_type obj_type{ object_type::ratio };
-    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare
+                                                    | object_behavior::number_like };
     static constexpr bool pointer_free{ true };
 
     ratio(ratio &&) noexcept = default;
@@ -52,8 +53,8 @@ namespace jank::runtime::obj
     i64 compare(ratio const &) const;
 
     /* behavior::number_like */
-    i64 to_integer() const;
-    f64 to_real() const;
+    i64 to_integer() const override;
+    f64 to_real() const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     ratio_data data;

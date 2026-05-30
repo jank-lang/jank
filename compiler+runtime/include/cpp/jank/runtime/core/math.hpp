@@ -1029,11 +1029,7 @@ namespace jank::runtime
     }
     else if constexpr(jtl::is_same<L, object_ref>)
     {
-      return visit_number_like(
-        [](auto const typed_l) -> object_ref {
-          return make_box(std::tan(typed_l->to_real())).erase();
-        },
-        l);
+      return make_box(std::tan(l.to_real())).erase();
     }
     else
     {
@@ -1056,11 +1052,7 @@ namespace jank::runtime
     }
     else if constexpr(jtl::is_same<L, object_ref>)
     {
-      return visit_number_like(
-        [](auto const typed_l) -> object_ref {
-          return make_box(std::sqrt(typed_l->to_real())).erase();
-        },
-        l);
+      return make_box(std::sqrt(l.to_real())).erase();
     }
     else
     {
@@ -1082,35 +1074,15 @@ namespace jank::runtime
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
     {
-      return visit_number_like(
-        [](auto const typed_l, auto const r) -> object_ref {
-          return visit_number_like(
-            [](auto const typed_r, auto const typed_l) -> object_ref {
-              return make_box(std::pow(typed_l->to_real(), typed_r->to_real())).erase();
-            },
-            r,
-            typed_l);
-        },
-        l,
-        r);
+      return make_box(std::pow(l.to_real(), r.to_real())).erase();
     }
     else if constexpr(jtl::is_same<L, object_ref>)
     {
-      return visit_number_like(
-        [](auto const typed_l, auto const r) -> object_ref {
-          return make_box(std::pow(typed_l->to_real(), r->to_real())).erase();
-        },
-        l,
-        r);
+      return make_box(std::pow(l.to_real(), r->to_real())).erase();
     }
     else if constexpr(jtl::is_same<R, object_ref>)
     {
-      return visit_number_like(
-        [](auto const typed_r, auto const l) {
-          return make_box(std::pow(l->to_real(), typed_r->to_real())).erase();
-        },
-        r,
-        l);
+      return make_box(std::pow(l->to_real(), r.to_real())).erase();
     }
     else
     {
@@ -1132,12 +1104,7 @@ namespace jank::runtime
     }
     else if constexpr(jtl::is_same<R, object_ref>)
     {
-      return visit_number_like(
-        [](auto const typed_r, L const l) -> object_ref {
-          return make_box(std::pow(static_cast<f64>(l), typed_r->to_real())).erase();
-        },
-        r,
-        l);
+      return make_box(std::pow(static_cast<f64>(l), r.to_real())).erase();
     }
     else if constexpr(detail::typed_object<R>)
     {
@@ -1163,12 +1130,7 @@ namespace jank::runtime
     }
     if constexpr(jtl::is_same<L, object_ref>)
     {
-      return visit_number_like(
-        [](auto const typed_l, R const r) -> object_ref {
-          return make_box(std::pow(typed_l->to_real(), static_cast<f64>(r))).erase();
-        },
-        l,
-        r);
+      return make_box(std::pow(l.to_real(), static_cast<f64>(r))).erase();
     }
     else if constexpr(detail::typed_object<L>)
     {
@@ -1239,7 +1201,7 @@ namespace jank::runtime
     }
     else if constexpr(jtl::is_same<L, object_ref>)
     {
-      return visit_number_like([](auto const typed_l) -> i64 { return typed_l->to_integer(); }, l);
+      return l.to_integer();
     }
     else
     {
@@ -1260,19 +1222,15 @@ namespace jank::runtime
     {
       return l.template convert_to<f64>();
     }
-    else if constexpr(std::is_same_v<L, obj::ratio_data>)
+    else if constexpr(jtl::is_any_same<L, object_ref, obj::ratio_data>)
     {
       return l.to_real();
     }
     else if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{ util::format("Can't conver {} to real.",
+      throw std::runtime_error{ util::format("Can't convert {} to real.",
                                              object_type_str(l.get_type())) };
       return 0.0;
-    }
-    else if constexpr(jtl::is_same<L, object_ref>)
-    {
-      return visit_number_like([](auto const typed_l) -> f64 { return typed_l->to_real(); }, l);
     }
     else
     {

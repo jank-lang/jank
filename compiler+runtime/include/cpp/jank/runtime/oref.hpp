@@ -858,6 +858,35 @@ namespace jank::runtime
       return ptr()->compare(*o.ptr());
     }
 
+    /* behavior::number_like */
+    i64 to_integer() const
+    {
+      if(detail::is_small_int(data))
+      {
+        return detail::as_integer(data);
+      }
+      if(detail::is_small_real(data))
+      {
+        return static_cast<i64>(detail::as_real(data));
+      }
+
+      return ptr()->to_integer();
+    }
+
+    f64 to_real() const
+    {
+      if(detail::is_small_int(data))
+      {
+        return static_cast<f64>(detail::as_integer(data));
+      }
+      if(detail::is_small_real(data))
+      {
+        return detail::as_real(data);
+      }
+
+      return ptr()->to_real();
+    }
+
     value_type *raw() const
     {
       return data;
@@ -1353,6 +1382,43 @@ namespace jank::runtime
         return static_cast<T *>(data)->compare(i);
       }
       return static_cast<T *>(data)->compare(*o.ptr());
+    }
+
+    /* behavior::number_like */
+    i64 to_integer() const
+    {
+      if(is_nil())
+      {
+        return _jank_nil.to_integer();
+      }
+      else if(detail::is_small_int(data))
+      {
+        return detail::as_integer(data);
+      }
+      if(detail::is_small_real(data))
+      {
+        return static_cast<i64>(detail::as_real(data));
+      }
+
+      return static_cast<T *>(data)->to_integer();
+    }
+
+    f64 to_real() const
+    {
+      if(is_nil())
+      {
+        return _jank_nil.to_real();
+      }
+      else if(detail::is_small_int(data))
+      {
+        return static_cast<f64>(detail::as_integer(data));
+      }
+      if(detail::is_small_real(data))
+      {
+        return detail::as_real(data);
+      }
+
+      return static_cast<T *>(data)->to_real();
     }
 
     void *raw() const
@@ -2292,6 +2358,17 @@ namespace jank::runtime
         return _jank_nil.compare(i);
       }
       return _jank_nil.compare(*o.ptr());
+    }
+
+    /* behavior::number_like */
+    i64 to_integer() const
+    {
+      return _jank_nil.to_integer();
+    }
+
+    f64 to_real() const
+    {
+      return _jank_nil.to_real();
     }
 
     value_type *raw() const

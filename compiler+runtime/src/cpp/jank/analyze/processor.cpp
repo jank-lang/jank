@@ -7,7 +7,6 @@
 #include <jank/read/reparse.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/behavior/number_like.hpp>
 #include <jank/runtime/behavior/sequential.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/set_like.hpp>
@@ -4713,15 +4712,16 @@ namespace jank::analyze
         {
           return analyze_set(typed_o, current_frame, position, fn_ctx, needs_box);
         }
-        else if constexpr(runtime::behavior::number_like<T>
-                          || std::same_as<T, runtime::obj::boolean>
-                          || std::same_as<T, runtime::obj::keyword>
-                          || std::same_as<T, runtime::obj::nil>
-                          || std::same_as<T, runtime::obj::persistent_string>
-                          || std::same_as<T, runtime::obj::character>
-                          || std::same_as<T, runtime::obj::uuid>
-                          || std::same_as<T, runtime::obj::inst>
-                          || std::same_as<T, runtime::obj::re_pattern>)
+        else if constexpr((T::obj_behaviors & runtime::object_behavior::number_like)
+                            != object_behavior::none
+                          || jtl::is_any_same<T,
+                                              runtime::obj::keyword,
+                                              runtime::obj::nil,
+                                              runtime::obj::persistent_string,
+                                              runtime::obj::character,
+                                              runtime::obj::uuid,
+                                              runtime::obj::inst,
+                                              runtime::obj::re_pattern>)
         {
           return analyze_primitive_literal(o, current_frame, position, fn_ctx, needs_box);
         }

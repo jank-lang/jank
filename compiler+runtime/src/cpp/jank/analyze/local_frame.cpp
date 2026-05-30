@@ -3,7 +3,6 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/munge.hpp>
-#include <jank/runtime/behavior/number_like.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/cpp_util.hpp>
