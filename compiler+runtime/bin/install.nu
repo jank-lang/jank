@@ -1,10 +1,10 @@
 #!/usr/bin/env nu
+use jank-mod.nu *
 
-def --wrapped main [...args: string] {
-    let here = $env.FILE_PWD
-    ^cmake --install build ...$args
-
-    let stamps_dir = ($here | path dirname | path join "stamps")
-    mkdir $stamps_dir
-    date now | format date "%Y-%m-%dT%H:%M:%S%z" | save --force ($stamps_dir | path join "install.stamp")
+def --wrapped main [
+    --profile: string = "release"  # Build profile to install from; defaults to "release"
+    ...args: string
+] {
+    ^cmake --install (jank-build-dir --profile $profile) ...$args
+    write-stamp "install.stamp" --profile $profile
 }

@@ -1,19 +1,21 @@
 #!/usr/bin/env nu
+use jank-mod.nu *
 
 def --wrapped main [...args: string] {
-    let here = $env.FILE_PWD
-    let build_dir = ($here | path dirname | path join "build")
+    # Tests always use the debug profile with tests enabled.
+    configure --profile debug -Djank_test=on
+
+    let build_dir = (jank-build-dir --profile debug)
 
     # Remove any previous code coverage files.
     glob $"($build_dir)/jank-*.profraw" | each { |f| rm -f $f }
     let profdata = ($build_dir | path join "jank.profdata")
     if ($profdata | path exists) { rm -f $profdata }
 
-    ^nu ($here | path join "compile.nu")
+    compile --profile debug
+
     let test_bin = ($build_dir | path join "jank-test")
     ^$test_bin ...$args
 
-    let stamps_dir = ($here | path dirname | path join "stamps")
-    mkdir $stamps_dir
-    date now | format date "%Y-%m-%dT%H:%M:%S%z" | save --force ($stamps_dir | path join "test.stamp")
+    write-stamp "test.stamp" --profile debug
 }

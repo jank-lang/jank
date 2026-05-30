@@ -1,4 +1,5 @@
 #!/usr/bin/env nu
+use jank-mod.nu *
 
 ^git status
 | lines
@@ -9,6 +10,4 @@
     print $"formatted ($file)"
 }
 
-let stamps_dir = ($env.FILE_PWD | path dirname | path join "stamps")
-mkdir $stamps_dir
-date now | format date "%Y-%m-%dT%H:%M:%S%z" | save --force ($stamps_dir | path join "format.stamp")
+write-stamp "format.stamp" --profile ""

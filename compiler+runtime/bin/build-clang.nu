@@ -1,4 +1,5 @@
 #!/usr/bin/env nu
+use jank-mod.nu *
 
 def main [
     --update (-u)         # Update existing LLVM source to the tracked branch
@@ -73,7 +74,5 @@ def main [
     print ""
     print "Clang/LLVM successfully compiled. You can now build jank."
 
-    let stamps_dir = ($here | path dirname | path join "stamps")
-    mkdir $stamps_dir
-    date now | format date "%Y-%m-%dT%H:%M:%S%z" | save --force ($stamps_dir | path join "build-clang.stamp")
+    write-stamp "build-clang.stamp" --profile ""
 }

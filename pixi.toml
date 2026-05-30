@@ -54,51 +54,95 @@ outputs = [
   "compiler+runtime/stamps/build-clang.stamp",
 ]
 
-# Configure the CMake build.  Pass extra cmake -D flags after --:
-#   pixi run configure -- -Djank_test=ON -Djank_coverage=ON
+# ── debug profile ────────────────────────────────────────────────────────────
+
+# Configure the debug CMake build.  Pass extra cmake -D flags after --:
+#   pixi run configure -- -Djank_coverage=ON
 [tasks.configure]
-cmd = "nu bin/configure.nu"
+cmd = "nu bin/configure.nu --profile debug"
 cwd = "compiler+runtime"
-description = "Configure the jank CMake build"
+description = "Configure the jank CMake build (debug)"
 depends-on = ["sync"]
 inputs = [
   "compiler+runtime/CMakeLists.txt",
   "compiler+runtime/cmake/**/*",
+  "compiler+runtime/bin/jank-mod.nu",
   "compiler+runtime/bin/configure.nu",
   "compiler+runtime/bin/ar-merge.nu",
   "compiler+runtime/stamps/sync.stamp",
 ]
 outputs = [
-  "compiler+runtime/build/build.ninja",
-  "compiler+runtime/stamps/configure.stamp",
+  "compiler+runtime/build/debug/build.ninja",
+  "compiler+runtime/stamps/debug/configure.stamp",
 ]
 
-# Compile jank.  Pass extra cmake --build flags after --:
+# Compile jank (debug).  Pass extra cmake --build flags after --:
 #   pixi run build -- --target jank_exe_phase_1
 [tasks.build]
-cmd = "nu bin/compile.nu"
+cmd = "nu bin/compile.nu --profile debug"
 cwd = "compiler+runtime"
-description = "Compile jank"
+description = "Compile jank (debug)"
 depends-on = ["configure"]
 inputs = [
   "compiler+runtime/src/**/*",
   "compiler+runtime/include/**/*",
   "compiler+runtime/third-party/**/*",
   "compiler+runtime/bin/compile.nu",
-  "compiler+runtime/stamps/configure.stamp",
+  "compiler+runtime/stamps/debug/configure.stamp",
 ]
 outputs = [
-  "compiler+runtime/build/jank",
-  "compiler+runtime/stamps/build.stamp",
+  "compiler+runtime/build/debug/jank",
+  "compiler+runtime/stamps/debug/build.stamp",
 ]
 
-# Remove build artifacts and CMake state.
+# ── release profile ──────────────────────────────────────────────────────────
+
+# Configure the release CMake build.
+[tasks.configure-release]
+cmd = "nu bin/configure.nu --profile release"
+cwd = "compiler+runtime"
+description = "Configure the jank CMake build (release)"
+depends-on = ["sync"]
+inputs = [
+  "compiler+runtime/CMakeLists.txt",
+  "compiler+runtime/cmake/**/*",
+  "compiler+runtime/bin/jank-mod.nu",
+  "compiler+runtime/bin/configure.nu",
+  "compiler+runtime/bin/ar-merge.nu",
+  "compiler+runtime/stamps/sync.stamp",
+]
+outputs = [
+  "compiler+runtime/build/release/build.ninja",
+  "compiler+runtime/stamps/release/configure.stamp",
+]
+
+# Compile jank (release).
+[tasks.build-release]
+cmd = "nu bin/compile.nu --profile release"
+cwd = "compiler+runtime"
+description = "Compile jank (release)"
+depends-on = ["configure-release"]
+inputs = [
+  "compiler+runtime/src/**/*",
+  "compiler+runtime/include/**/*",
+  "compiler+runtime/third-party/**/*",
+  "compiler+runtime/bin/compile.nu",
+  "compiler+runtime/stamps/release/configure.stamp",
+]
+outputs = [
+  "compiler+runtime/build/release/jank",
+  "compiler+runtime/stamps/release/build.stamp",
+]
+
+# ── shared tasks ─────────────────────────────────────────────────────────────
+
+# Remove build artifacts and CMake state for both profiles.
 [tasks.clean]
 cmd = "nu bin/clean.nu"
 cwd = "compiler+runtime"
-description = "Clean build artifacts"
+description = "Clean build artifacts (both profiles)"
 
-# Run the test suite (compiles first).
+# Run the test suite against the debug build (compiles with tests enabled).
 [tasks.test]
 cmd = "nu bin/test.nu"
 cwd = "compiler+runtime"
@@ -109,21 +153,22 @@ inputs = [
   "compiler+runtime/include/**/*",
   "compiler+runtime/test/**/*",
   "compiler+runtime/bin/test.nu",
-  "compiler+runtime/stamps/build.stamp",
+  "compiler+runtime/stamps/debug/build.stamp",
 ]
-outputs = ["compiler+runtime/stamps/test.stamp"]
+outputs = ["compiler+runtime/stamps/debug/test.stamp"]
 
-# Install jank.  Pass cmake --install flags after --.
+# Install jank from the release build.  Pass cmake --install flags after --.
 [tasks.install]
-cmd = "nu bin/install.nu"
+cmd = "nu bin/install.nu --profile release"
 cwd = "compiler+runtime"
-description = "Install jank"
+description = "Install jank (release)"
+depends-on = ["build-release"]
 inputs = [
-  "compiler+runtime/build/jank",
+  "compiler+runtime/build/release/jank",
   "compiler+runtime/bin/install.nu",
-  "compiler+runtime/stamps/build.stamp",
+  "compiler+runtime/stamps/release/build.stamp",
 ]
-outputs = ["compiler+runtime/stamps/install.stamp"]
+outputs = ["compiler+runtime/stamps/release/install.stamp"]
 
 # Format modified C++ source files via clang-format.
 [tasks.format]
@@ -150,12 +195,12 @@ inputs = [
 ]
 outputs = ["compiler+runtime/stamps/lint.stamp"]
 
-# Start the jank REPL (builds first if needed).
+# Start the jank REPL using the debug build.
 [tasks.repl]
-cmd = "compiler+runtime/build/jank repl"
-description = "Start the jank REPL"
+cmd = "compiler+runtime/build/debug/jank repl"
+description = "Start the jank REPL (debug)"
 depends-on = ["build"]
-inputs = ["compiler+runtime/stamps/build.stamp"]
+inputs = ["compiler+runtime/stamps/debug/build.stamp"]
 
 # Verify that git GPG commit signing is configured correctly.
 [tasks.verify-gpg]
