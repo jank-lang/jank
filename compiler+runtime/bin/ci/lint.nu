@@ -3,7 +3,7 @@
 # Syntax-check all nushell scripts under bin/.
 glob "bin/**/*.nu" | each { |f|
     print $"Checking ($f)"
-    ^nu --check $f
+    ^nu --ide-check 100 $f
 }
 
 let stamps_dir = ($env.FILE_PWD | path dirname | path dirname | path join "stamps")

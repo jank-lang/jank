@@ -1,6 +1,6 @@
 [workspace]
-authors = ["Fredrick Eisele <fred.eisele@vanderbilt.edu>"]
-channels = ["https://prefix.dev/meso-forge", "conda-forge"]
+authors = ["Fredrick Eisele", "Jeaye Wilkerson"]
+channels = ["conda-forge"]
 name = "jank"
 platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 version = "0.1.0"
