@@ -6,7 +6,7 @@
 
 # Absolute path to the cmake build directory for the given profile.
 export def jank-build-dir [--profile: string = "debug"] {
-    $env.FILE_PWD | path dirname | path join "build" | path join $profile
+    $env.FILE_PWD | path dirname | path join $"build-($profile)"
 }
 
 # Absolute path to the task stamp directory.

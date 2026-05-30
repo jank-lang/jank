@@ -22,8 +22,29 @@ brew reinstall jank-lang/jank/jank
 If you'd like to install from source using brew, you can use `jank-lang/jank/jank-git` instead.
 
 > [!NOTE]
-> We don't yet have x86 binaries in the Homebrew package. If you'd like to help
-> with this, please reach out.
+> We don't yet have macOS x86, or linux binaries in the Homebrew package. 
+> If you'd like to help with this, please reach out.
+
+
+## Pixi (linux: x64, aarch64; macOS: aarch64)
+
+We have prebuilt `jank` packages in `conda-forge`, installation is quick and easy.
+`pixi` installs into an environment, largely independent from the host environment.
+
+```sh
+pixi global install jank
+```
+
+To update jank, you can run the following.
+
+```sh
+pixi global update jank
+```
+
+> [!NOTE]
+> `pixi` is most productively employed when installing packages into a development environment.
+> In this way it aleviates the "Works on my machine!" problem.
+
 
 ## Ubuntu Linux (24.04, 24.10, 25.04)
 We have a binary jank package in our own repo, so installation is quick and easy.
@@ -63,6 +84,8 @@ yay -S jank-bin
 
 
 If you'd like to install from source on Arch, you can install `jank-git` instead.
+
+
 
 ## Something else?
 Don't see your preferred system here? [Help us with

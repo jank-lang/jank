@@ -72,7 +72,7 @@ inputs = [
   "compiler+runtime/stamps/sync.stamp",
 ]
 outputs = [
-  "compiler+runtime/build/debug/build.ninja",
+  "compiler+runtime/build-debug/build.ninja",
   "compiler+runtime/stamps/debug/configure.stamp",
 ]
 
@@ -91,7 +91,7 @@ inputs = [
   "compiler+runtime/stamps/debug/configure.stamp",
 ]
 outputs = [
-  "compiler+runtime/build/debug/jank",
+  "compiler+runtime/build-debug/jank",
   "compiler+runtime/stamps/debug/build.stamp",
 ]
 
@@ -112,7 +112,7 @@ inputs = [
   "compiler+runtime/stamps/sync.stamp",
 ]
 outputs = [
-  "compiler+runtime/build/release/build.ninja",
+  "compiler+runtime/build-release/build.ninja",
   "compiler+runtime/stamps/release/configure.stamp",
 ]
 
@@ -130,7 +130,7 @@ inputs = [
   "compiler+runtime/stamps/release/configure.stamp",
 ]
 outputs = [
-  "compiler+runtime/build/release/jank",
+  "compiler+runtime/build-release/jank",
   "compiler+runtime/stamps/release/build.stamp",
 ]
 
@@ -164,7 +164,7 @@ cwd = "compiler+runtime"
 description = "Install jank (release)"
 depends-on = ["build-release"]
 inputs = [
-  "compiler+runtime/build/release/jank",
+  "compiler+runtime/build-release/jank",
   "compiler+runtime/bin/install.nu",
   "compiler+runtime/stamps/release/build.stamp",
 ]
@@ -197,7 +197,7 @@ outputs = ["compiler+runtime/stamps/lint.stamp"]
 
 # Start the jank REPL using the debug build.
 [tasks.repl]
-cmd = "compiler+runtime/build/debug/jank repl"
+cmd = "compiler+runtime/build-debug/jank repl"
 description = "Start the jank REPL (debug)"
 depends-on = ["build"]
 inputs = ["compiler+runtime/stamps/debug/build.stamp"]

@@ -23,6 +23,9 @@ $ sudo apt install -y leiningen
 
 # If you're on Arch (or similar).
 $ yay -S leiningen
+
+# If you are on: linux-64, linux-aarch64, linux-ppc64le, osx-64, win-64
+$ pixi global install leiningen
 ```
 
 For more details, see the [Leiningen docs](https://leiningen.org/#install).
@@ -38,6 +41,16 @@ $ lein new org.jank-lang/jank hello_lein
 $ cd hello_lein
 ```
 
+Or, if you want to isolate your develpment directory from the host environment.
+
+```sh
+$ mkdir -p ~/projects/hello_lein
+$ cd ~/projects/hello_lein
+$ pixi init
+$ pixi add leiningen
+$ pixi install
+$ pixi run -- lein new org.jank-lang/jank hello-lein --to-dir . --force
+```
 
 > [!NOTE]
 > If you use `lein new` without specifying `org.jank-lang/jank`, you will get a
