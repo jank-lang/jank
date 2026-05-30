@@ -46,14 +46,8 @@ export CPPFLAGS="-I/opt/homebrew/opt/llvm/include ${CPPFLAGS}"
 
 For Windows:
 
-Building is supported via [MSYS2](https://www.msys2.org/) using the **CLANG64** toolchain.
-
-Install MSYS2, open the **CLANG64** shell, and install dependencies:
-
-```bash
-pacman -S mingw-w64-clang-x86_64-git-lfs mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-libzip mingw-w64-clang-x86_64-boost
-```
-> Note: The CLANG64 shell is required, all commands should be run within it.
+Install [pixi](https://pixi.sh), then run `pixi install` from the repo root. This installs
+`clang-cl` (MSVC ABI) and all other build-time dependencies via conda-forge. No MSYS2 required.
 
 Clone the repo as follows:
 
@@ -80,7 +74,7 @@ Now configure and build jank as normal, but pass `-Djank_local_clang=on` when yo
 
 For Windows:
 
-Run the same commands from the [MSYS2](https://www.msys2.org/) CLANG64 shell.
+Run the same commands from any terminal with the pixi environment active.
 
 Rather than passing `-Djank_local_clang=on`, install the built toolchain into the environment, which will replace the existing LLVM installation:
 

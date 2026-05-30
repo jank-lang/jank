@@ -71,16 +71,7 @@
   "Converts CMD into a form that can be executed portably across
   supported platforms."
   [cmd]
-  (if (b.f/windows?)
-    ;; Assumes an MSYS2 environment and runs the command via bash.
-    (let [bash-exe (b.f/which "bash")]
-      (when-not bash-exe
-        (throw (ex-info "Unable to find bash." {})))
-      (let [[prog & rest] (clojure.string/split cmd #"\s+")
-            unix-prog (b.f/unixify prog)
-            rebuilt (clojure.string/join " " (cons unix-prog rest))]
-        (str bash-exe " -c \"" rebuilt "\"")))
-    cmd))
+  cmd)
 
 (defn quiet-shell
   "Runs the shell string CMD in a cross-platform manner using

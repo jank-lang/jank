@@ -10,6 +10,13 @@ nushell = ">=0.100"
 cmake = ">=3.21"
 ninja = "*"
 git = "*"
+boost-cpp = "*"
+libffi = "*"
+zlib = "*"
+zstd = "*"
+llvmdev = "22.*"
+clangdev = "22.*"
+libclang-cpp = "22.*"
 
 # entr is not available on Windows; the watch task is Linux/macOS only.
 [target.linux-64.dependencies]
@@ -21,13 +28,31 @@ entr = "*"
 [target.osx-arm64.dependencies]
 entr = "*"
 
+# Windows: conda-forge clang with MSVC ABI + required build-time libraries.
+[target.win-64.dependencies]
+clang-cl_win-64 = ">=18"
+openssl = "*"
+zlib = "*"
+boost-cpp = "*"
+
 [tasks]
 
+# Populate all git submodules (third-party dependencies).
+[tasks.sync]
+cmd = "nu bin/sync.nu"
+description = "Initialise and update all git submodules"
+inputs = [".gitmodules"]
+outputs = ["compiler+runtime/stamps/sync.stamp"]
+
 # Build the patched LLVM/Clang that jank requires.
-# Run this once before the first configure; re-run after llvm_commit changes.
 [tasks.build-clang]
 cmd = "nu compiler+runtime/bin/build-clang.nu"
 description = "Build patched LLVM/Clang from source"
+inputs = ["compiler+runtime/bin/build-clang.nu"]
+outputs = [
+  "compiler+runtime/build/llvm-install/usr/local/bin/clang++",
+  "compiler+runtime/stamps/build-clang.stamp",
+]
 
 # Configure the CMake build.  Pass extra cmake -D flags after --:
 #   pixi run configure -- -Djank_test=ON -Djank_coverage=ON
@@ -35,6 +60,18 @@ description = "Build patched LLVM/Clang from source"
 cmd = "nu bin/configure.nu"
 cwd = "compiler+runtime"
 description = "Configure the jank CMake build"
+depends-on = ["sync"]
+inputs = [
+  "compiler+runtime/CMakeLists.txt",
+  "compiler+runtime/cmake/**/*",
+  "compiler+runtime/bin/configure.nu",
+  "compiler+runtime/bin/ar-merge.nu",
+  "compiler+runtime/stamps/sync.stamp",
+]
+outputs = [
+  "compiler+runtime/build/build.ninja",
+  "compiler+runtime/stamps/configure.stamp",
+]
 
 # Compile jank.  Pass extra cmake --build flags after --:
 #   pixi run build -- --target jank_exe_phase_1
@@ -42,6 +79,18 @@ description = "Configure the jank CMake build"
 cmd = "nu bin/compile.nu"
 cwd = "compiler+runtime"
 description = "Compile jank"
+depends-on = ["configure"]
+inputs = [
+  "compiler+runtime/src/**/*",
+  "compiler+runtime/include/**/*",
+  "compiler+runtime/third-party/**/*",
+  "compiler+runtime/bin/compile.nu",
+  "compiler+runtime/stamps/configure.stamp",
+]
+outputs = [
+  "compiler+runtime/build/jank",
+  "compiler+runtime/stamps/build.stamp",
+]
 
 # Remove build artifacts and CMake state.
 [tasks.clean]
@@ -54,24 +103,59 @@ description = "Clean build artifacts"
 cmd = "nu bin/test.nu"
 cwd = "compiler+runtime"
 description = "Build and run the jank test suite"
+depends-on = ["build"]
+inputs = [
+  "compiler+runtime/src/**/*",
+  "compiler+runtime/include/**/*",
+  "compiler+runtime/test/**/*",
+  "compiler+runtime/bin/test.nu",
+  "compiler+runtime/stamps/build.stamp",
+]
+outputs = ["compiler+runtime/stamps/test.stamp"]
 
 # Install jank.  Pass cmake --install flags after --.
 [tasks.install]
 cmd = "nu bin/install.nu"
 cwd = "compiler+runtime"
 description = "Install jank"
+inputs = [
+  "compiler+runtime/build/jank",
+  "compiler+runtime/bin/install.nu",
+  "compiler+runtime/stamps/build.stamp",
+]
+outputs = ["compiler+runtime/stamps/install.stamp"]
 
 # Format modified C++ source files via clang-format.
 [tasks.format]
 cmd = "nu bin/format.nu"
 cwd = "compiler+runtime"
 description = "Format modified C++ source files"
+inputs = [
+  "compiler+runtime/src/**/*.cpp",
+  "compiler+runtime/src/**/*.hpp",
+  "compiler+runtime/include/**/*.hpp",
+  "compiler+runtime/include/**/*.cpp",
+]
+outputs = ["compiler+runtime/stamps/format.stamp"]
 
 # Syntax-check all nushell scripts under compiler+runtime/bin/.
 [tasks.lint]
 cmd = "nu bin/ci/lint.nu"
 cwd = "compiler+runtime"
 description = "Syntax-check nushell scripts"
+inputs = [
+  "compiler+runtime/bin/**/*.nu",
+  "bin/**/*.nu",
+  "book/bin/**/*.nu",
+]
+outputs = ["compiler+runtime/stamps/lint.stamp"]
+
+# Start the jank REPL (builds first if needed).
+[tasks.repl]
+cmd = "compiler+runtime/build/jank repl"
+description = "Start the jank REPL"
+depends-on = ["build"]
+inputs = ["compiler+runtime/stamps/build.stamp"]
 
 # Verify that git GPG commit signing is configured correctly.
 [tasks.verify-gpg]

@@ -134,6 +134,10 @@ if(WIN32)
   list(APPEND jank_linker_flags "-Wl,--export-all-symbols" -lws2_32 -ldbghelp)
 endif()
 
+# Threads and dl must be resolved after the whole-archive, so they belong in
+# target_link_libraries (not target_link_options / jank_linker_flags).
+find_package(Threads REQUIRED)
+
 # If the user opts into a specific build type, we will provide sane defaults. However, for
 # packaging, we can expect that CMAKE_BUILD_TYPE=None will be used and packagers will provide
 # the exact flags they desire.
@@ -506,6 +510,7 @@ if(POLICY CMP0167)
   cmake_policy(SET CMP0167 NEW)
 endif()
 find_package(Boost REQUIRED)
+find_package(zstd REQUIRED)
 # ---- Other dependencies ----
 
 # ---- libjank.a ----
@@ -881,16 +886,16 @@ target_link_libraries(
   z
   LLVM clang-cpp
   OpenSSL::Crypto
+  Threads::Threads
+  ${CMAKE_DL_LIBS}
 )
+if(NOT APPLE)
+  target_link_libraries(jank_exe_phase_1 PUBLIC -lzstd)
+endif()
 
 if(WIN32)
   target_link_libraries(
     jank_exe_phase_1 PUBLIC
-    ${jank_link_whole_start} libclang_rt.builtins-x86_64.a ${jank_link_whole_end}
-    # Required at least for mkstemp
-    ${jank_link_whole_start} libmingwex.a ${jank_link_whole_end}
-
-    pthread
     zstd
   )
 endif()
@@ -1005,16 +1010,16 @@ if(jank_test)
     LLVM clang-cpp
     OpenSSL::Crypto
     doctest::doctest
+    Threads::Threads
+    ${CMAKE_DL_LIBS}
   )
+  if(NOT APPLE)
+    target_link_libraries(jank_test_exe PUBLIC -lzstd)
+  endif()
 
   if(WIN32)
     target_link_libraries(
       jank_test_exe PUBLIC
-      ${jank_link_whole_start} libclang_rt.builtins-x86_64.a ${jank_link_whole_end}
-      # Required at least for mkstemp
-      ${jank_link_whole_start} libmingwex.a ${jank_link_whole_end}
-
-      pthread
       zstd
     )
   endif()
