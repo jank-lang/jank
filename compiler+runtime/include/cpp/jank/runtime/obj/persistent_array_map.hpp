@@ -76,6 +76,7 @@ namespace jank::runtime::obj
       return data.find(key).unwrap_or(jank_nil);
     }
 
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
     object_ref get(object_ref const key, object_ref const fallback) const override
     {
       return data.find(key).unwrap_or(fallback);
