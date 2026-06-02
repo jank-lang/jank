@@ -124,9 +124,9 @@ OPTIONS
           --perf              Enable Linux perf event sampling.
           --gc-incremental    Enable incremental GC collection.
           --debug             Enable debug symbol generation for generated code.
-          --direct-call       Elides the dereferencing of vars for improved performance.
   -O,     --optimization <0 - 3>
                               The optimization level to use for AOT compilation.
+  -Odirect-call               Elides the dereferencing of vars for improved performance.
           --eagerness <lazy, eager> [default: lazy]
                               How eagerly to JIT compile functions.
   -o,     --output <path>

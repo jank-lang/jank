@@ -312,7 +312,6 @@ namespace jank::ir
           rewrite(i.value, old_name, new_name);
         }
         break;
-        break;
     }
   }
 

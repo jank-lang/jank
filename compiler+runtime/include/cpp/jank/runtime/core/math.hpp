@@ -1148,7 +1148,7 @@ namespace jank::runtime
   auto pow(L const l, R const r)
   {
     using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
-    return std::min(static_cast<C>(l), static_cast<C>(r));
+    return std::pow(static_cast<C>(l), static_cast<C>(r));
   }
 
   object_ref rem(object_ref const l, object_ref const r);

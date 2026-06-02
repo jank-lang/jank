@@ -104,7 +104,7 @@ namespace jank::ir
 
         /* Copy type info from any of the existing occurrences — they all
          * produce the same value so the type is identical. */
-        auto const &[_, existing_instr_name]{ occurrences[0] };
+        auto const &existing_instr_name{ occurrences[0].second };
         auto &existing_block{ fn.blocks[fn.find_block(occurrences[0].first)] };
         auto const existing_it{ std::ranges::find_if(
           existing_block.instructions,
@@ -124,18 +124,19 @@ namespace jank::ir
 
       /* Nop out every occurrence that isn't the canonical one and rewrite
        * all uses across the whole function to point to canonical_name. */
-      for(auto const &[block_name, instr_name] : occurrences)
+      for(auto const &occurrence : occurrences)
       {
-        if(instr_name == canonical_name)
+        if(occurrence.second == canonical_name)
         {
           continue;
         }
 
-        rewrite_uses(fn, instr_name, canonical_name);
+        rewrite_uses(fn, occurrence.second, canonical_name);
 
-        auto &owning_block{ fn.blocks[fn.find_block(block_name)] };
-        auto const it{ std::ranges::find_if(owning_block.instructions,
-                                            [&](auto const &i) { return i->name == instr_name; }) };
+        auto &owning_block{ fn.blocks[fn.find_block(occurrence.first)] };
+        auto const it{ std::ranges::find_if(owning_block.instructions, [&](auto const &i) {
+          return i->name == occurrence.second;
+        }) };
         jank_debug_assert(it != owning_block.instructions.end());
         /* TODO: Better name. */
         *it = jtl::make_ref<inst::nop>(runtime::munge(runtime::__rt_ctx->unique_string()));
