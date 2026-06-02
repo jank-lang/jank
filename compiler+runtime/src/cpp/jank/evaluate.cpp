@@ -483,7 +483,7 @@ namespace jank::evaluate
     auto const module{ munge(expr->unique_name) };
     auto const mod{ ir::create(expr, module, codegen::compilation_target::eval) };
 
-    if(false && util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
+    if(util::cli::opts.eagerness == util::cli::compilation_eagerness::lazy)
     {
       auto const generated{ codegen::gen_cpp(mod) };
       native_vector<u8> arities;

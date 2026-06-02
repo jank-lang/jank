@@ -1211,7 +1211,7 @@ namespace jank::runtime
 
   template <typename L>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  f64 to_real(L const l)
+  f64 to_real(L const &l)
   {
     if constexpr(detail::primitive_number<L>)
     {

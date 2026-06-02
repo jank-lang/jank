@@ -47,8 +47,59 @@ namespace jank::runtime::obj
     void to_string(jtl::string_builder &buff) const override;
 
     /* behavior::callable */
-    using object::call;
+    object_ref call() const override;
     object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
+    object_ref call(object_ref const, object_ref const, object_ref const) const override;
+    object_ref
+    call(object_ref const, object_ref const, object_ref const, object_ref const) const override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) const override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) const override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) const override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) const override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) const override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) const override;
+
+    void realize() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     object_ref meta;

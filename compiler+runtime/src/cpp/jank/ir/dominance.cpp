@@ -157,7 +157,7 @@ namespace jank::ir
 
   void build_idom(function &fn, native_deque<identifier> const &rpo)
   {
-    jank_debug_assert(1 <= rpo.size());
+    jank_debug_assert(!rpo.empty());
 
     /* Map each block name to its RPO index for quick lookup. */
     rpo_index_map rpo_index;
