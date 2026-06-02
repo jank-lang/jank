@@ -98,6 +98,17 @@ namespace jank::runtime::obj
                     object_ref const,
                     object_ref const,
                     object_ref const) const override;
+    object_ref call(object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const,
+                    object_ref const) const override;
 
     void realize() const;
 

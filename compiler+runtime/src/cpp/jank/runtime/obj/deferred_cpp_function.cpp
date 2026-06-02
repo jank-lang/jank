@@ -183,4 +183,20 @@ namespace jank::runtime::obj
     realize();
     return compiled_fn.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
   }
+
+  object_ref deferred_cpp_function::call(object_ref const a1,
+                                         object_ref const a2,
+                                         object_ref const a3,
+                                         object_ref const a4,
+                                         object_ref const a5,
+                                         object_ref const a6,
+                                         object_ref const a7,
+                                         object_ref const a8,
+                                         object_ref const a9,
+                                         object_ref const a10,
+                                         object_ref const more) const
+  {
+    realize();
+    return compiled_fn.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
+  }
 }
