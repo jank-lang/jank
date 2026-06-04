@@ -43,7 +43,6 @@ namespace jank::runtime::obj
       this);
   }
 
-  /* TODO: This won't work anymore. We need to handle every arity. */
   void deferred_cpp_function::realize() const
   {
     std::lock_guard<std::recursive_mutex> const lock{ compilation_mutex };
