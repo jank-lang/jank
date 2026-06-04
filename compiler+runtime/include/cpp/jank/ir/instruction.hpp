@@ -34,6 +34,7 @@ namespace jank::ir
 
   enum class instruction_kind : u8
   {
+    nop,
     parameter,
     capture,
     literal,
@@ -111,6 +112,15 @@ namespace jank::ir
 
   namespace inst
   {
+    struct nop : instruction
+    {
+      nop(identifier const &name);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+    };
+
+    using nop_ref = jtl::ref<nop>;
+
     struct parameter : instruction
     {
       parameter(identifier const &name, jtl::ptr<void> const type, read::source const &location);
@@ -230,12 +240,14 @@ namespace jank::ir
       function(identifier const &name,
                read::source const &location,
                native_unordered_map<u8, jtl::immutable_string> &&arities,
-               runtime::callable_arity_flags const arity_flags);
+               runtime::callable_arity_flags const arity_flags,
+               bool const is_variadic);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_unordered_map<u8, jtl::immutable_string> arities;
       runtime::callable_arity_flags arity_flags{};
+      bool is_variadic{};
     };
 
     using function_ref = jtl::ref<function>;
@@ -247,7 +259,8 @@ namespace jank::ir
               jtl::immutable_string const &context,
               native_unordered_map<u8, jtl::immutable_string> &&arities,
               native_unordered_map<jtl::immutable_string, detail::typed_identifier> &&captures,
-              runtime::callable_arity_flags const arity_flags);
+              runtime::callable_arity_flags const arity_flags,
+              bool const is_variadic);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
@@ -255,6 +268,7 @@ namespace jank::ir
       native_unordered_map<u8, jtl::immutable_string> arities;
       native_unordered_map<jtl::immutable_string, detail::typed_identifier> captures;
       runtime::callable_arity_flags arity_flags{};
+      bool is_variadic{};
     };
 
     using closure_ref = jtl::ref<closure>;

@@ -22,7 +22,7 @@ namespace jank::runtime::obj
     using parent_type = obj::detail::base_persistent_map<persistent_array_map,
                                                          persistent_array_map_sequence,
                                                          runtime::detail::native_array_map>;
-
+    static GC_word gc_descriptor;
 
     persistent_array_map() = default;
     persistent_array_map(persistent_array_map &&) noexcept = default;
@@ -70,8 +70,18 @@ namespace jank::runtime::obj
     }
 
     /* behavior::get */
-    object_ref get(object_ref const key) const override;
-    object_ref get(object_ref const key, object_ref const fallback) const override;
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    object_ref get(object_ref const key) const override
+    {
+      return data.find(key).unwrap_or(jank_nil);
+    }
+
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    object_ref get(object_ref const key, object_ref const fallback) const override
+    {
+      return data.find(key).unwrap_or(fallback);
+    }
+
     bool contains(object_ref const key) const override;
 
     /* behavior::find */

@@ -10,6 +10,7 @@
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/core/call.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/escape.hpp>
@@ -619,13 +620,16 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::dynamic_call_ref const &inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer,
-                    "auto const {}(jank::runtime::dynamic_call({}",
-                    inst->name,
-                    inst->fn);
+    util::format_to(b.body_buffer, "auto const {}({}.call(", inst->name, inst->fn);
+    bool need_comma{};
     for(auto const &arg : inst->args)
     {
-      util::format_to(b.body_buffer, ", {}", arg);
+      if(need_comma)
+      {
+        util::format_to(b.body_buffer, ",");
+      }
+      need_comma = true;
+      util::format_to(b.body_buffer, " {}", arg);
     }
 
     util::format_to(b.body_buffer, "));\n");
@@ -775,7 +779,14 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(", inst->name);
-    util::format_to(b.body_buffer, "_jank_fn({})", inst->arity_flags);
+    if(inst->is_variadic)
+    {
+      util::format_to(b.body_buffer, "_jank_vfn({})", inst->arity_flags);
+    }
+    else
+    {
+      util::format_to(b.body_buffer, "_jank_fn({})", inst->arity_flags);
+    }
     util::format_to(b.body_buffer, ");\n");
 
     for(auto const &arity : inst->arities)
@@ -831,7 +842,20 @@ namespace jank::codegen
 
 
     util::format_to(b.body_buffer, "auto const {}(", inst->name);
-    util::format_to(b.body_buffer, "_jank_closure({}, {}.data)", inst->arity_flags, inst->context);
+    if(inst->is_variadic)
+    {
+      util::format_to(b.body_buffer,
+                      "_jank_vclosure({}, {}.data)",
+                      inst->arity_flags,
+                      inst->context);
+    }
+    else
+    {
+      util::format_to(b.body_buffer,
+                      "_jank_closure({}, {}.data)",
+                      inst->arity_flags,
+                      inst->context);
+    }
     util::format_to(b.body_buffer, ");\n");
 
     for(auto const &arity : inst->arities)
@@ -847,6 +871,12 @@ namespace jank::codegen
     }
 
     return inst->name;
+  }
+
+  jtl::option<identifier> gen(ir::inst::nop_ref const &, builder &b)
+  {
+    b.next_instruction();
+    return none;
   }
 
   jtl::option<identifier> gen(ir::inst::parameter_ref const &inst, builder &b)
@@ -881,17 +911,16 @@ namespace jank::codegen
   {
     b.next_instruction();
 
+    bool needs_comma{};
     if(inst->needs_dynamic_call)
     {
-      util::format_to(b.body_buffer,
-                      "auto const {}(jank::runtime::dynamic_call({}",
-                      inst->name,
-                      inst->fn);
+      util::format_to(b.body_buffer, "auto const {}({}.call(", inst->name, inst->fn);
     }
     else
     {
       auto const fn_name{ util::format("{}_{}", inst->fn_base_name, inst->args.size()) };
       util::format_to(b.body_buffer, "auto const {}({}({}", inst->name, fn_name, inst->fn);
+      needs_comma = true;
 
       /* TODO: Save some state that we did this so we don't do it again. */
       //if(b.function->arity->params.size() < inst->args.size())
@@ -911,7 +940,12 @@ namespace jank::codegen
 
     for(auto const &arg : inst->args)
     {
-      util::format_to(b.body_buffer, ", {}", arg);
+      if(needs_comma)
+      {
+        util::format_to(b.body_buffer, ",");
+      }
+      needs_comma = true;
+      util::format_to(b.body_buffer, " {}", arg);
     }
 
     util::format_to(b.body_buffer, "));\n");

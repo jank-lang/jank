@@ -60,10 +60,22 @@ jank::runtime::obj::jit_function_ref _jank_fn(jank::runtime::callable_arity_flag
   return jank::runtime::make_box<jank::runtime::obj::jit_function>(flags);
 }
 
+jank::runtime::obj::jit_variadic_function_ref
+_jank_vfn(jank::runtime::callable_arity_flags const flags)
+{
+  return jank::runtime::make_box<jank::runtime::obj::jit_variadic_function>(flags);
+}
+
 jank::runtime::obj::jit_closure_ref
 _jank_closure(jank::runtime::callable_arity_flags const flags, void * const ctx)
 {
   return jank::runtime::make_box<jank::runtime::obj::jit_closure>(flags, ctx);
+}
+
+jank::runtime::obj::jit_variadic_closure_ref
+_jank_vclosure(jank::runtime::callable_arity_flags const flags, void * const ctx)
+{
+  return jank::runtime::make_box<jank::runtime::obj::jit_variadic_closure>(flags, ctx);
 }
 
 jank::runtime::object_ref _jank_eval_str(char const *edn)

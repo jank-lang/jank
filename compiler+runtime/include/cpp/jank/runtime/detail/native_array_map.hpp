@@ -6,6 +6,12 @@
 #include <jtl/ref.hpp>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/obj/keyword.hpp>
+
+namespace jank::runtime
+{
+  bool equal(object_ref const lhs, object_ref const rhs);
+}
 
 namespace jank::runtime::detail
 {
@@ -43,7 +49,31 @@ namespace jank::runtime::detail
 
     void erase(object_ref const key);
 
-    jtl::option<object_ref> find(object_ref const key) const;
+    [[gnu::hot]]
+    jtl::option<object_ref> find(object_ref const key) const
+    {
+      if(key.get_type() == runtime::object_type::keyword)
+      {
+        for(u8 i{}; i < length; i += 2)
+        {
+          if(data[i] == key)
+          {
+            return data[i + 1];
+          }
+        }
+      }
+      else
+      {
+        for(u8 i{}; i < length; i += 2)
+        {
+          if(runtime::equal(data[i], key))
+          {
+            return data[i + 1];
+          }
+        }
+      }
+      return {};
+    }
 
     uhash to_hash() const;
 

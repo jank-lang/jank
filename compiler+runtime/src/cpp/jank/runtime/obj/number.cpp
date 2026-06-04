@@ -68,6 +68,16 @@ namespace jank::runtime::obj
     return (o.data < data) - (data < o.data);
   }
 
+  i64 boolean::to_integer() const
+  {
+    return static_cast<i64>(data);
+  }
+
+  f64 boolean::to_real() const
+  {
+    return static_cast<f64>(data);
+  }
+
   /***** integer *****/
   integer::integer()
     : object{ obj_type, obj_behaviors }

@@ -79,8 +79,6 @@ namespace jank::runtime::obj
                     object_ref const,
                     object_ref const) const final;
 
-    callable_arity_flags get_arity_flags() const final;
-
     /*** XXX: Everything here is immutable after initialization. ***/
     void *context{};
     object_ref (*arity_0)(object_ref){};

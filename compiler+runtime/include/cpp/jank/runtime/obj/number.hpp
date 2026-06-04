@@ -9,7 +9,8 @@ namespace jank::runtime::obj
   struct boolean : object
   {
     static constexpr object_type obj_type{ object_type::boolean };
-    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare
+                                                    | object_behavior::number_like };
     static constexpr bool pointer_free{ true };
 
     boolean();
@@ -31,8 +32,8 @@ namespace jank::runtime::obj
     i64 compare(boolean const &) const;
 
     /* behavior::number_like */
-    i64 to_integer() const;
-    f64 to_real() const;
+    i64 to_integer() const override;
+    f64 to_real() const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     bool data{};
@@ -41,7 +42,8 @@ namespace jank::runtime::obj
   struct integer : object
   {
     static constexpr object_type obj_type{ object_type::integer };
-    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare
+                                                    | object_behavior::number_like };
     static constexpr bool pointer_free{ true };
 
     integer();
@@ -63,8 +65,8 @@ namespace jank::runtime::obj
     i64 compare(integer const &) const;
 
     /* behavior::number_like */
-    i64 to_integer() const;
-    f64 to_real() const;
+    i64 to_integer() const override;
+    f64 to_real() const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     i64 data{};
@@ -73,7 +75,8 @@ namespace jank::runtime::obj
   struct small_integer : object
   {
     static constexpr object_type obj_type{ object_type::small_integer };
-    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare
+                                                    | object_behavior::number_like };
     static constexpr bool pointer_free{ true };
 
     small_integer();
@@ -96,8 +99,8 @@ namespace jank::runtime::obj
     i64 compare(small_integer const &) const;
 
     /* behavior::number_like */
-    i64 to_integer() const;
-    f64 to_real() const;
+    i64 to_integer() const override;
+    f64 to_real() const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     i32 data{};
@@ -106,7 +109,8 @@ namespace jank::runtime::obj
   struct real : object
   {
     static constexpr object_type obj_type{ object_type::real };
-    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare
+                                                    | object_behavior::number_like };
     static constexpr bool pointer_free{ true };
 
     real();
@@ -128,8 +132,8 @@ namespace jank::runtime::obj
     i64 compare(real const &) const;
 
     /* behavior::number_like */
-    i64 to_integer() const;
-    f64 to_real() const;
+    i64 to_integer() const override;
+    f64 to_real() const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     f64 data{};
@@ -138,7 +142,8 @@ namespace jank::runtime::obj
   struct small_real : object
   {
     static constexpr object_type obj_type{ object_type::small_real };
-    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare
+                                                    | object_behavior::number_like };
     static constexpr bool pointer_free{ true };
 
     small_real();
@@ -160,8 +165,8 @@ namespace jank::runtime::obj
     i64 compare(small_real const &) const;
 
     /* behavior::number_like */
-    i64 to_integer() const;
-    f64 to_real() const;
+    i64 to_integer() const override;
+    f64 to_real() const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     f64 data{};

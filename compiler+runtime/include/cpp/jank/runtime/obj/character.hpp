@@ -27,7 +27,7 @@ namespace jank::runtime::obj
     uhash to_hash() const override;
 
     /* Character does not fully support `behavior::number_like`, but can be converted to an integer. */
-    i64 to_integer() const;
+    i64 to_integer() const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
 

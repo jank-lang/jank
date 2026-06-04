@@ -34,6 +34,7 @@ namespace jank::runtime
   object_ref to_qualified_symbol(object_ref const ns, object_ref const name);
 
   object_ref print(object_ref const args);
+  object_ref print1(object_ref const o);
   object_ref println(object_ref const args);
   object_ref pr(object_ref const args);
   object_ref prn(object_ref const args);

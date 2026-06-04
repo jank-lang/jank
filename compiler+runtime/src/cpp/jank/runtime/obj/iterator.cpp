@@ -40,7 +40,7 @@ namespace jank::runtime::obj
       return n;
     }
 
-    auto const next(dynamic_call(fn, current));
+    auto const next(fn.call(current));
     auto const ret(make_box<iterator>(fn, next));
     cached_next.store(reinterpret_cast<iterator *>(ret.raw()));
 
@@ -57,7 +57,7 @@ namespace jank::runtime::obj
     }
     else
     {
-      auto const next(dynamic_call(fn, current));
+      auto const next(fn.call(current));
       current = next;
     }
 

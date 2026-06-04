@@ -7,7 +7,6 @@
 #include <jank/read/reparse.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/behavior/number_like.hpp>
 #include <jank/runtime/behavior/sequential.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/set_like.hpp>
@@ -2087,6 +2086,7 @@ namespace jank::analyze
     }
 
     static_ref_cast<expr::function>(ret)->arities = std::move(arities);
+    static_ref_cast<expr::function>(ret)->is_variadic = found_variadic != 0;
 
     return ret;
   }
@@ -3384,6 +3384,17 @@ namespace jank::analyze
         }
       }
     }
+    /* If we're calling a keyword with one or two params, just change the call to an inlined
+     * `get` instead. */
+    else if(first.get_type() == runtime::object_type::keyword && count <= 3)
+    {
+      return analyze(cons(make_box<obj::symbol>("cpp/jank.runtime.get"),
+                          cons(o->next()->first(), cons(first, o->next()->next()))),
+                     current_frame,
+                     position,
+                     fn_ctx,
+                     needs_box);
+    }
     else
     {
       pop_macro_expansions = push_macro_expansions(*this, o);
@@ -3447,9 +3458,9 @@ namespace jank::analyze
     /* If we have more args than a fn allows, we need to pack all of the extras
      * into a single list and tack that on at the end. So, if max_params is 10, and
      * we pass 15 args, we'll pass 10 normally and then we'll have a special 11th
-     * arg which is a list containing the 5 remaining params. We rely on dynamic_call
-     * to do the hard work of packing that in the shape the function actually wants,
-     * based on its highest fixed arity flag. */
+     * arg which is a list containing the 5 remaining params. We rely on the object's
+     * call function to do the hard work of packing that in the shape the function
+     * actually wants, based on its highest fixed arity flag. */
     if(runtime::max_params < arg_count)
     {
       native_vector<expression_ref> packed_arg_exprs;
@@ -4701,15 +4712,16 @@ namespace jank::analyze
         {
           return analyze_set(typed_o, current_frame, position, fn_ctx, needs_box);
         }
-        else if constexpr(runtime::behavior::number_like<T>
-                          || std::same_as<T, runtime::obj::boolean>
-                          || std::same_as<T, runtime::obj::keyword>
-                          || std::same_as<T, runtime::obj::nil>
-                          || std::same_as<T, runtime::obj::persistent_string>
-                          || std::same_as<T, runtime::obj::character>
-                          || std::same_as<T, runtime::obj::uuid>
-                          || std::same_as<T, runtime::obj::inst>
-                          || std::same_as<T, runtime::obj::re_pattern>)
+        else if constexpr((T::obj_behaviors & runtime::object_behavior::number_like)
+                            != object_behavior::none
+                          || jtl::is_any_same<T,
+                                              runtime::obj::keyword,
+                                              runtime::obj::nil,
+                                              runtime::obj::persistent_string,
+                                              runtime::obj::character,
+                                              runtime::obj::uuid,
+                                              runtime::obj::inst,
+                                              runtime::obj::re_pattern>)
         {
           return analyze_primitive_literal(o, current_frame, position, fn_ctx, needs_box);
         }

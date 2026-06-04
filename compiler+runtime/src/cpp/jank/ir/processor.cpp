@@ -1,5 +1,9 @@
 #include <jank/ir/processor.hpp>
 #include <jank/ir/print.hpp>
+#include <jank/ir/dominance.hpp>
+#include <jank/ir/opt/hoist_literals.hpp>
+#include <jank/ir/opt/hoist_var_derefs.hpp>
+#include <jank/ir/opt/remove_nops.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/core/to_string.hpp>
@@ -203,7 +207,7 @@ namespace jank::ir
                                   analyze::expr::function_ref const fn_expr,
                                   analyze::expr::function_arity const &arity)
   {
-    auto &fn{ mod.functions.emplace_back(&arity) };
+    auto &fn{ mod.functions.emplace_back(mod.functions.size(), &arity) };
     auto name{ runtime::munge(util::format("{}_{}", fn_expr->unique_name, arity.params.size())) };
     fn.name = name;
     fn.add_block("entry");
@@ -263,13 +267,20 @@ namespace jank::ir
       {
         b.branch_set(recur_shadow, body_res.unwrap());
         b.jump(merge_blk);
-      }
 
-      b.enter_block(merge_blk);
-      for(auto const param : arity.params)
+        b.enter_block(merge_blk);
+        for(auto const param : arity.params)
+        {
+          auto const &name{ runtime::munge(param->get_name()) };
+          b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
+        }
+      }
+      /* If we already have a terminator for the current block, there's no need for our merge
+       * block. */
+      else
       {
-        auto const &name{ runtime::munge(param->get_name()) };
-        b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
+        fn.remove_block(merge_blk);
+        dynamic_cast<inst::loop &>(*fn.blocks[0].instructions.back()).merge_block = none;
       }
     }
     else
@@ -349,10 +360,11 @@ namespace jank::ir
                        runtime::munge(expr->unique_name + "_ctx"),
                        jtl::move(arities),
                        jtl::move(captured_idents),
-                       flags);
+                       flags,
+                       expr->is_variadic);
     }
 
-    return b.function(expr->position, jtl::move(arities), flags);
+    return b.function(expr->position, jtl::move(arities), flags, expr->is_variadic);
   }
 
   jtl::option<identifier> gen(analyze::expr::recur_ref const expr, builder &b)
@@ -370,7 +382,14 @@ namespace jank::ir
       for(usize i{}; i < loop->pairs.size(); ++i)
       {
         auto const &name{ runtime::munge(loop->pairs[i].first->name->get_name()) };
-        b.branch_set(b.local_to_loop_shadow[name], arg_idents[i]);
+        auto const &shadow{ b.local_to_loop_shadow[name] };
+        auto const &new_val{ arg_idents[i] };
+
+        /* There's no need to generate self-assignment instructions. */
+        if(shadow != new_val)
+        {
+          b.branch_set(shadow, new_val);
+        }
       }
       return b.jump(b.loop_recur_target.unwrap(), true);
     }
@@ -890,6 +909,32 @@ namespace jank::ir
 
     jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_IR") ?: "" };
     if(print_settings == "1")
+    {
+      //util::println("{}\n", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
+      util::println("{}\n", print(mod));
+    }
+
+    for(auto &fn : mod.functions)
+    {
+      build_dominance(fn);
+
+      if(util::cli::opts.hoist_literals)
+      {
+        hoist_literals(fn);
+      }
+
+      if(util::cli::opts.hoist_var_derefs)
+      {
+        hoist_var_derefs(fn);
+      }
+
+      if(util::cli::opts.remove_nops)
+      {
+        remove_nops(fn);
+      }
+    }
+
+    if(print_settings == "2")
     {
       //util::println("{}\n", ui::highlight_str(runtime::module::file_view{ "ir.jank", print(mod) }));
       util::println("{}\n", print(mod));

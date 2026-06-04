@@ -26,6 +26,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
+#include <jank/runtime/obj/jit_variadic_function.hpp>
 #include <jank/ir/processor.hpp>
 #include <jank/codegen/cpp_processor.hpp>
 #include <jank/profile/time.hpp>
@@ -273,7 +274,7 @@ namespace jank::jit
     llvm::remove_fatal_error_handler();
   }
 
-  runtime::obj::jit_function_ref processor::eval(ir::module const &module) const
+  runtime::object_ref processor::eval(ir::module const &module) const
   {
     auto const generated{ codegen::gen_cpp(module) };
     eval_string(generated.declaration);
@@ -284,69 +285,134 @@ namespace jank::jit
       arities.emplace_back(arity.params.size());
     }
 
-    return create_function(module.arity_flags, module.name, arities);
+    return create_function(module.arity_flags,
+                           module.name,
+                           arities,
+                           module.root_fn_expr->is_variadic);
   }
 
-  runtime::obj::jit_function_ref
-  processor::create_function(runtime::callable_arity_flags const flags,
-                             jtl::immutable_string const &base_name,
-                             native_vector<u8> const &arities) const
+  runtime::object_ref processor::create_function(runtime::callable_arity_flags const flags,
+                                                 jtl::immutable_string const &base_name,
+                                                 native_vector<u8> const &arities,
+                                                 bool const is_variadic) const
   {
-    auto const ret{ runtime::make_box<jank::runtime::obj::jit_function>(flags) };
-    for(auto const arity : arities)
+    /* TODO: Clean up with template. */
+    if(is_variadic)
     {
-      switch(arity)
+      auto const ret{ runtime::make_box<jank::runtime::obj::jit_variadic_function>(flags) };
+      for(auto const arity : arities)
       {
-        case 0:
-          ret->arity_0 = reinterpret_cast<decltype(ret->arity_0)>(
-            find_symbol(util::format("{}_0", base_name)).expect_ok());
-          break;
-        case 1:
-          ret->arity_1 = reinterpret_cast<decltype(ret->arity_1)>(
-            find_symbol(util::format("{}_1", base_name)).expect_ok());
-          break;
-        case 2:
-          ret->arity_2 = reinterpret_cast<decltype(ret->arity_2)>(
-            find_symbol(util::format("{}_2", base_name)).expect_ok());
-          break;
-        case 3:
-          ret->arity_3 = reinterpret_cast<decltype(ret->arity_3)>(
-            find_symbol(util::format("{}_3", base_name)).expect_ok());
-          break;
-        case 4:
-          ret->arity_4 = reinterpret_cast<decltype(ret->arity_4)>(
-            find_symbol(util::format("{}_4", base_name)).expect_ok());
-          break;
-        case 5:
-          ret->arity_5 = reinterpret_cast<decltype(ret->arity_5)>(
-            find_symbol(util::format("{}_5", base_name)).expect_ok());
-          break;
-        case 6:
-          ret->arity_6 = reinterpret_cast<decltype(ret->arity_6)>(
-            find_symbol(util::format("{}_6", base_name)).expect_ok());
-          break;
-        case 7:
-          ret->arity_7 = reinterpret_cast<decltype(ret->arity_7)>(
-            find_symbol(util::format("{}_7", base_name)).expect_ok());
-          break;
-        case 8:
-          ret->arity_8 = reinterpret_cast<decltype(ret->arity_8)>(
-            find_symbol(util::format("{}_8", base_name)).expect_ok());
-          break;
-        case 9:
-          ret->arity_9 = reinterpret_cast<decltype(ret->arity_9)>(
-            find_symbol(util::format("{}_9", base_name)).expect_ok());
-          break;
-        case 10:
-          ret->arity_10 = reinterpret_cast<decltype(ret->arity_10)>(
-            find_symbol(util::format("{}_10", base_name)).expect_ok());
-          break;
-        default:
-          throw error::internal_runtime_failure(util::format("Unsupported arity {}.", arity));
+        switch(arity)
+        {
+          case 0:
+            ret->arity_0 = reinterpret_cast<decltype(ret->arity_0)>(
+              find_symbol(util::format("{}_0", base_name)).expect_ok());
+            break;
+          case 1:
+            ret->arity_1 = reinterpret_cast<decltype(ret->arity_1)>(
+              find_symbol(util::format("{}_1", base_name)).expect_ok());
+            break;
+          case 2:
+            ret->arity_2 = reinterpret_cast<decltype(ret->arity_2)>(
+              find_symbol(util::format("{}_2", base_name)).expect_ok());
+            break;
+          case 3:
+            ret->arity_3 = reinterpret_cast<decltype(ret->arity_3)>(
+              find_symbol(util::format("{}_3", base_name)).expect_ok());
+            break;
+          case 4:
+            ret->arity_4 = reinterpret_cast<decltype(ret->arity_4)>(
+              find_symbol(util::format("{}_4", base_name)).expect_ok());
+            break;
+          case 5:
+            ret->arity_5 = reinterpret_cast<decltype(ret->arity_5)>(
+              find_symbol(util::format("{}_5", base_name)).expect_ok());
+            break;
+          case 6:
+            ret->arity_6 = reinterpret_cast<decltype(ret->arity_6)>(
+              find_symbol(util::format("{}_6", base_name)).expect_ok());
+            break;
+          case 7:
+            ret->arity_7 = reinterpret_cast<decltype(ret->arity_7)>(
+              find_symbol(util::format("{}_7", base_name)).expect_ok());
+            break;
+          case 8:
+            ret->arity_8 = reinterpret_cast<decltype(ret->arity_8)>(
+              find_symbol(util::format("{}_8", base_name)).expect_ok());
+            break;
+          case 9:
+            ret->arity_9 = reinterpret_cast<decltype(ret->arity_9)>(
+              find_symbol(util::format("{}_9", base_name)).expect_ok());
+            break;
+          case 10:
+            ret->arity_10 = reinterpret_cast<decltype(ret->arity_10)>(
+              find_symbol(util::format("{}_10", base_name)).expect_ok());
+            break;
+          default:
+            throw error::internal_runtime_failure(util::format("Unsupported arity {}.", arity));
+        }
       }
-    }
 
-    return ret;
+      return ret;
+    }
+    else
+    {
+      auto const ret{ runtime::make_box<jank::runtime::obj::jit_function>(flags) };
+      for(auto const arity : arities)
+      {
+        switch(arity)
+        {
+          case 0:
+            ret->arity_0 = reinterpret_cast<decltype(ret->arity_0)>(
+              find_symbol(util::format("{}_0", base_name)).expect_ok());
+            break;
+          case 1:
+            ret->arity_1 = reinterpret_cast<decltype(ret->arity_1)>(
+              find_symbol(util::format("{}_1", base_name)).expect_ok());
+            break;
+          case 2:
+            ret->arity_2 = reinterpret_cast<decltype(ret->arity_2)>(
+              find_symbol(util::format("{}_2", base_name)).expect_ok());
+            break;
+          case 3:
+            ret->arity_3 = reinterpret_cast<decltype(ret->arity_3)>(
+              find_symbol(util::format("{}_3", base_name)).expect_ok());
+            break;
+          case 4:
+            ret->arity_4 = reinterpret_cast<decltype(ret->arity_4)>(
+              find_symbol(util::format("{}_4", base_name)).expect_ok());
+            break;
+          case 5:
+            ret->arity_5 = reinterpret_cast<decltype(ret->arity_5)>(
+              find_symbol(util::format("{}_5", base_name)).expect_ok());
+            break;
+          case 6:
+            ret->arity_6 = reinterpret_cast<decltype(ret->arity_6)>(
+              find_symbol(util::format("{}_6", base_name)).expect_ok());
+            break;
+          case 7:
+            ret->arity_7 = reinterpret_cast<decltype(ret->arity_7)>(
+              find_symbol(util::format("{}_7", base_name)).expect_ok());
+            break;
+          case 8:
+            ret->arity_8 = reinterpret_cast<decltype(ret->arity_8)>(
+              find_symbol(util::format("{}_8", base_name)).expect_ok());
+            break;
+          case 9:
+            ret->arity_9 = reinterpret_cast<decltype(ret->arity_9)>(
+              find_symbol(util::format("{}_9", base_name)).expect_ok());
+            break;
+          case 10:
+            ret->arity_10 = reinterpret_cast<decltype(ret->arity_10)>(
+              find_symbol(util::format("{}_10", base_name)).expect_ok());
+            break;
+          default:
+            throw error::internal_runtime_failure(util::format("Unsupported arity {}.", arity));
+        }
+      }
+
+      return ret;
+    }
   }
 
   void processor::eval_string(jtl::immutable_string const &s) const

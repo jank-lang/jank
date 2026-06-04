@@ -34,6 +34,11 @@ namespace jank::ir
     }
   }
 
+  void inst::nop::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :nop :type \"{}\"}", name, get_qualified_type_name(type));
+  }
+
   void inst::parameter::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,

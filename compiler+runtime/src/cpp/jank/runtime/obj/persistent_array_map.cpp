@@ -11,6 +11,8 @@
 
 namespace jank::runtime::obj
 {
+  GC_word persistent_array_map::gc_descriptor{};
+
   persistent_array_map::persistent_array_map(value_type &&d)
     : data{ std::move(d) }
   {
@@ -25,16 +27,6 @@ namespace jank::runtime::obj
     : parent_type{ meta }
     , data{ std::move(d) }
   {
-  }
-
-  object_ref persistent_array_map::get(object_ref const key) const
-  {
-    return data.find(key).unwrap_or(jank_nil);
-  }
-
-  object_ref persistent_array_map::get(object_ref const key, object_ref const fallback) const
-  {
-    return data.find(key).unwrap_or(fallback);
   }
 
   object_ref persistent_array_map::find(object_ref const key) const

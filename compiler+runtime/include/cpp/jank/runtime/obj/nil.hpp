@@ -33,6 +33,7 @@ namespace jank::runtime::obj
     i64 compare(nil const &) const;
 
     /* behavior::get */
+    using object::get;
     object_ref get(object_ref const key) const override;
     object_ref get(object_ref const key, object_ref const fallback) const override;
     bool contains(object_ref const key) const override;

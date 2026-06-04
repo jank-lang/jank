@@ -724,14 +724,30 @@ namespace jank::runtime
       return ptr()->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    callable_arity_flags get_arity_flags() const
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10,
+                    object_ref const more) const
     {
-      if(detail::is_small_int(data) || detail::is_small_real(data))
+      if(detail::is_small_int(data))
       {
-        return 0;
+        obj::small_integer const i{ detail::as_integer(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
+      }
+      if(detail::is_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
+        return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
       }
 
-      return ptr()->get_arity_flags();
+      return ptr()->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
     }
 
     /* behavior::get */
@@ -840,6 +856,35 @@ namespace jank::runtime
       }
 
       return ptr()->compare(*o.ptr());
+    }
+
+    /* behavior::number_like */
+    i64 to_integer() const
+    {
+      if(detail::is_small_int(data))
+      {
+        return detail::as_integer(data);
+      }
+      if(detail::is_small_real(data))
+      {
+        return static_cast<i64>(detail::as_real(data));
+      }
+
+      return ptr()->to_integer();
+    }
+
+    f64 to_real() const
+    {
+      if(detail::is_small_int(data))
+      {
+        return static_cast<f64>(detail::as_integer(data));
+      }
+      if(detail::is_small_real(data))
+      {
+        return detail::as_real(data);
+      }
+
+      return ptr()->to_real();
     }
 
     value_type *raw() const
@@ -1267,13 +1312,23 @@ namespace jank::runtime
       return static_cast<T *>(data)->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    callable_arity_flags get_arity_flags() const
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10,
+                    object_ref const more) const
     {
       if(is_nil())
       {
-        return _jank_nil.get_arity_flags();
+        return _jank_nil.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
       }
-      return static_cast<T *>(data)->get_arity_flags();
+      return static_cast<T *>(data)->call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
     }
 
     /* behavior::get */
@@ -1327,6 +1382,43 @@ namespace jank::runtime
         return static_cast<T *>(data)->compare(i);
       }
       return static_cast<T *>(data)->compare(*o.ptr());
+    }
+
+    /* behavior::number_like */
+    i64 to_integer() const
+    {
+      if(is_nil())
+      {
+        return _jank_nil.to_integer();
+      }
+      else if(detail::is_small_int(data))
+      {
+        return detail::as_integer(data);
+      }
+      if(detail::is_small_real(data))
+      {
+        return static_cast<i64>(detail::as_real(data));
+      }
+
+      return static_cast<T *>(data)->to_integer();
+    }
+
+    f64 to_real() const
+    {
+      if(is_nil())
+      {
+        return _jank_nil.to_real();
+      }
+      else if(detail::is_small_int(data))
+      {
+        return static_cast<f64>(detail::as_integer(data));
+      }
+      if(detail::is_small_real(data))
+      {
+        return detail::as_real(data);
+      }
+
+      return static_cast<T *>(data)->to_real();
     }
 
     void *raw() const
@@ -1580,9 +1672,20 @@ namespace jank::runtime
       return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    callable_arity_flags get_arity_flags() const
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10,
+                    object_ref const more) const
     {
-      return 0;
+      obj::small_integer const i{ data };
+      return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
     }
 
     /* behavior::get */
@@ -1882,9 +1985,20 @@ namespace jank::runtime
       return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    callable_arity_flags get_arity_flags() const
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10,
+                    object_ref const more) const
     {
-      return 0;
+      obj::small_real const i{ data };
+      return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
     }
 
     /* behavior::get */
@@ -2198,9 +2312,19 @@ namespace jank::runtime
       return _jank_nil.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    callable_arity_flags get_arity_flags() const
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10,
+                    object_ref const more) const
     {
-      return _jank_nil.get_arity_flags();
+      return _jank_nil.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
     }
 
     /* behavior::get */
@@ -2234,6 +2358,17 @@ namespace jank::runtime
         return _jank_nil.compare(i);
       }
       return _jank_nil.compare(*o.ptr());
+    }
+
+    /* behavior::number_like */
+    i64 to_integer() const
+    {
+      return _jank_nil.to_integer();
+    }
+
+    f64 to_real() const
+    {
+      return _jank_nil.to_real();
     }
 
     value_type *raw() const
@@ -2270,7 +2405,12 @@ namespace jank::runtime
   {
     static_assert(sizeof(jtl::ref<T>) == sizeof(T *));
     T *ret{};
-    if constexpr(requires { T::pointer_free; })
+    if constexpr(requires { T::gc_descriptor; })
+    {
+      ret = reinterpret_cast<T *>(GC_malloc_explicitly_typed(sizeof(T), T::gc_descriptor));
+      new(ret) T{ std::forward<Args>(args)... };
+    }
+    else if constexpr(requires { T::pointer_free; })
     {
       if constexpr(T::pointer_free)
       {
@@ -2304,7 +2444,14 @@ namespace jank::runtime
   oref<T> make_box(Args &&...args)
   {
     static_assert(sizeof(oref<T>) == sizeof(T *));
-    if constexpr(requires { T::pointer_free; })
+    if constexpr(requires { T::gc_descriptor; })
+    {
+      auto const ret{ reinterpret_cast<T *>(
+        GC_malloc_explicitly_typed(sizeof(T), T::gc_descriptor)) };
+      new(ret) T{ std::forward<Args>(args)... };
+      return detail::untagged(ret);
+    }
+    else if constexpr(requires { T::pointer_free; })
     {
       if constexpr(T::pointer_free)
       {

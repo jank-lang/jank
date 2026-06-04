@@ -72,6 +72,7 @@ namespace jank::runtime::obj
     static persistent_hash_map_ref create_from_seq(object_ref const seq);
 
     /* behavior::get */
+    using object::get;
     object_ref get(object_ref const key) const override;
     object_ref get(object_ref const key, object_ref const fallback) const override;
     bool contains(object_ref const key) const override;

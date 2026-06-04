@@ -141,14 +141,14 @@ extern "C"
   jank_object_ref jank_call0(jank_object_ref const f)
   {
     object_ref const f_obj(reinterpret_cast<object *>(f));
-    return dynamic_call(f_obj).erase().raw();
+    return f_obj.call().erase().raw();
   }
 
   jank_object_ref jank_call1(jank_object_ref const f, jank_object_ref const a1)
   {
     object_ref const f_obj(reinterpret_cast<object *>(f));
     object_ref const a1_obj(reinterpret_cast<object *>(a1));
-    return dynamic_call(f_obj, a1_obj).erase().raw();
+    return f_obj.call(a1_obj).erase().raw();
   }
 
   jank_object_ref
@@ -157,7 +157,7 @@ extern "C"
     object_ref const f_obj(reinterpret_cast<object *>(f));
     object_ref const a1_obj(reinterpret_cast<object *>(a1));
     object_ref const a2_obj(reinterpret_cast<object *>(a2));
-    return dynamic_call(f_obj, a1_obj, a2_obj).erase().raw();
+    return f_obj.call(a1_obj, a2_obj).erase().raw();
   }
 
   jank_object_ref jank_call3(jank_object_ref const f,
@@ -169,7 +169,7 @@ extern "C"
     object_ref const a1_obj(reinterpret_cast<object *>(a1));
     object_ref const a2_obj(reinterpret_cast<object *>(a2));
     object_ref const a3_obj(reinterpret_cast<object *>(a3));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj).erase().raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj).erase().raw();
   }
 
   jank_object_ref jank_call4(jank_object_ref const f,
@@ -183,7 +183,7 @@ extern "C"
     object_ref const a2_obj(reinterpret_cast<object *>(a2));
     object_ref const a3_obj(reinterpret_cast<object *>(a3));
     object_ref const a4_obj(reinterpret_cast<object *>(a4));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj).erase().raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj).erase().raw();
   }
 
   jank_object_ref jank_call5(jank_object_ref const f,
@@ -199,7 +199,7 @@ extern "C"
     object_ref const a3_obj(reinterpret_cast<object *>(a3));
     object_ref const a4_obj(reinterpret_cast<object *>(a4));
     object_ref const a5_obj(reinterpret_cast<object *>(a5));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj).erase().raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj).erase().raw();
   }
 
   jank_object_ref jank_call6(jank_object_ref const f,
@@ -217,7 +217,7 @@ extern "C"
     object_ref const a4_obj(reinterpret_cast<object *>(a4));
     object_ref const a5_obj(reinterpret_cast<object *>(a5));
     object_ref const a6_obj(reinterpret_cast<object *>(a6));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj).erase().raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj).erase().raw();
   }
 
   jank_object_ref jank_call7(jank_object_ref const f,
@@ -237,9 +237,7 @@ extern "C"
     object_ref const a5_obj(reinterpret_cast<object *>(a5));
     object_ref const a6_obj(reinterpret_cast<object *>(a6));
     object_ref const a7_obj(reinterpret_cast<object *>(a7));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj)
-      .erase()
-      .raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj).erase().raw();
   }
 
   jank_object_ref jank_call8(jank_object_ref const f,
@@ -261,9 +259,7 @@ extern "C"
     object_ref const a6_obj(reinterpret_cast<object *>(a6));
     object_ref const a7_obj(reinterpret_cast<object *>(a7));
     object_ref const a8_obj(reinterpret_cast<object *>(a8));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj)
-      .erase()
-      .raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj).erase().raw();
   }
 
   jank_object_ref jank_call9(jank_object_ref const f,
@@ -287,16 +283,7 @@ extern "C"
     object_ref const a7_obj(reinterpret_cast<object *>(a7));
     object_ref const a8_obj(reinterpret_cast<object *>(a8));
     object_ref const a9_obj(reinterpret_cast<object *>(a9));
-    return dynamic_call(f_obj,
-                        a1_obj,
-                        a2_obj,
-                        a3_obj,
-                        a4_obj,
-                        a5_obj,
-                        a6_obj,
-                        a7_obj,
-                        a8_obj,
-                        a9_obj)
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj, a9_obj)
       .erase()
       .raw();
   }
@@ -324,17 +311,8 @@ extern "C"
     object_ref const a8_obj(reinterpret_cast<object *>(a8));
     object_ref const a9_obj(reinterpret_cast<object *>(a9));
     object_ref const a10_obj(reinterpret_cast<object *>(a10));
-    return dynamic_call(f_obj,
-                        a1_obj,
-                        a2_obj,
-                        a3_obj,
-                        a4_obj,
-                        a5_obj,
-                        a6_obj,
-                        a7_obj,
-                        a8_obj,
-                        a9_obj,
-                        a10_obj)
+    return f_obj
+      .call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj, a9_obj, a10_obj)
       .erase()
       .raw();
   }
@@ -364,18 +342,18 @@ extern "C"
     object_ref const a9_obj(reinterpret_cast<object *>(a9));
     object_ref const a10_obj(reinterpret_cast<object *>(a10));
     object_ref const rest_obj(reinterpret_cast<object *>(rest));
-    return dynamic_call(f_obj,
-                        a1_obj,
-                        a2_obj,
-                        a3_obj,
-                        a4_obj,
-                        a5_obj,
-                        a6_obj,
-                        a7_obj,
-                        a8_obj,
-                        a9_obj,
-                        a10_obj,
-                        try_object<obj::persistent_list>(rest_obj))
+    return f_obj
+      .call(a1_obj,
+            a2_obj,
+            a3_obj,
+            a4_obj,
+            a5_obj,
+            a6_obj,
+            a7_obj,
+            a8_obj,
+            a9_obj,
+            a10_obj,
+            try_object<obj::persistent_list>(rest_obj))
       .erase()
       .raw();
   }
@@ -1086,6 +1064,23 @@ extern "C"
       GC_set_all_interior_pointers(1);
       GC_init();
       GC_allow_register_threads();
+
+      {
+        GC_word bm[GC_BITMAP_SIZE(jank::runtime::obj::persistent_array_map)]{ 0 };
+        GC_set_bit(bm,
+                   GC_OFFSETOF_IN_PTRS(jank::runtime::obj::persistent_array_map, data)
+                     + GC_OFFSETOF_IN_PTRS(jank::runtime::detail::native_array_map, data));
+        GC_set_bit(bm, GC_OFFSETOF_IN_PTRS(jank::runtime::obj::persistent_array_map, meta));
+        jank::runtime::obj::persistent_array_map::gc_descriptor
+          = GC_make_descriptor(bm, GC_SIZEOF_IN_PTRS(jank::runtime::obj::persistent_array_map));
+      }
+
+      {
+        GC_word bm[GC_BITMAP_SIZE(jank::runtime::obj::persistent_string)]{ 0 };
+        GC_set_bit(bm, GC_OFFSETOF_IN_PTRS(jank::runtime::obj::persistent_string, data));
+        jank::runtime::obj::persistent_string::gc_descriptor
+          = GC_make_descriptor(bm, GC_SIZEOF_IN_PTRS(jank::runtime::obj::persistent_string));
+      }
 
       llvm::llvm_shutdown_obj const Y{};
 

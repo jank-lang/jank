@@ -572,7 +572,9 @@ add_library(
   src/cpp/jank/runtime/obj/number.cpp
   src/cpp/jank/runtime/obj/native_function_wrapper.cpp
   src/cpp/jank/runtime/obj/jit_function.cpp
+  src/cpp/jank/runtime/obj/jit_variadic_function.cpp
   src/cpp/jank/runtime/obj/jit_closure.cpp
+  src/cpp/jank/runtime/obj/jit_variadic_closure.cpp
   src/cpp/jank/runtime/obj/deferred_cpp_function.cpp
   src/cpp/jank/runtime/obj/multi_function.cpp
   src/cpp/jank/runtime/obj/native_pointer_wrapper.cpp
@@ -673,6 +675,11 @@ add_library(
   src/cpp/jank/ir/instruction.cpp
   src/cpp/jank/ir/builder.cpp
   src/cpp/jank/ir/print.cpp
+  src/cpp/jank/ir/dominance.cpp
+  src/cpp/jank/ir/rewrite.cpp
+  src/cpp/jank/ir/opt/hoist_literals.cpp
+  src/cpp/jank/ir/opt/hoist_var_derefs.cpp
+  src/cpp/jank/ir/opt/remove_nops.cpp
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/cpp_processor.cpp
   src/cpp/jank/codegen/api.cpp
@@ -1101,7 +1108,7 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_clojure_core_sources} ${jank_other_core_sources} ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output} ${jank_nrepl_server_outputs}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} --debug -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
   COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} clojure.core
   COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
   COMMAND touch ${jank_core_libraries_flag}

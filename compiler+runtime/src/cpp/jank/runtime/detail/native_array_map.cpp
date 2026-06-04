@@ -1,6 +1,7 @@
 #include <jank/runtime/detail/native_array_map.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/obj/nil.hpp>
+#include <jank/runtime/obj/keyword.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime::detail
@@ -162,31 +163,6 @@ namespace jank::runtime::detail
       }
     }
     insert_unique(key, val);
-  }
-
-  jtl::option<object_ref> native_array_map::find(object_ref const key) const
-  {
-    if(key.get_type() == runtime::object_type::keyword)
-    {
-      for(u8 i{}; i < length; i += 2)
-      {
-        if(data[i] == key)
-        {
-          return data[i + 1];
-        }
-      }
-    }
-    else
-    {
-      for(u8 i{}; i < length; i += 2)
-      {
-        if(runtime::equal(data[i], key))
-        {
-          return data[i + 1];
-        }
-      }
-    }
-    return {};
   }
 
   void native_array_map::erase(object_ref const key)

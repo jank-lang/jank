@@ -124,9 +124,9 @@ OPTIONS
           --perf              Enable Linux perf event sampling.
           --gc-incremental    Enable incremental GC collection.
           --debug             Enable debug symbol generation for generated code.
-          --direct-call       Elides the dereferencing of vars for improved performance.
   -O,     --optimization <0 - 3>
                               The optimization level to use for AOT compilation.
+  -Odirect-call               Elides the dereferencing of vars for improved performance.
           --eagerness <lazy, eager> [default: lazy]
                               How eagerly to JIT compile functions.
   -o,     --output <path>
@@ -150,6 +150,56 @@ OPTIONS
     std::exit(1);
   }
 
+  struct options_scratchpad
+  {
+    /* TODO: Enum for these. */
+    jtl::option<u8> runtime_optimization_level;
+    jtl::option<u8> codegen_optimization_level;
+
+    /* Optimization passes. */
+    /*** O1 ***/
+    jtl::option<bool> hoist_literals;
+    jtl::option<bool> remove_nops;
+
+    /*** O2 ***/
+
+    /*** O3 ***/
+    jtl::option<bool> hoist_var_derefs;
+
+    /* Other optimization flags. */
+    jtl::option<bool> direct_call;
+  };
+
+  static native_unordered_map<jtl::immutable_string, jtl::option<bool>(options_scratchpad::*)> const
+    optimization_flags{
+      {   "hoist-literals",   &options_scratchpad::hoist_literals },
+      {      "remove-nops",      &options_scratchpad::remove_nops },
+      { "hoist-var-derefs", &options_scratchpad::hoist_var_derefs },
+      {      "direct-call",      &options_scratchpad::direct_call },
+  };
+
+  /* TODO: Construct global options here. */
+  static void commit_scratchpad(options_scratchpad const &scratch)
+  {
+    opts.runtime_optimization_level = scratch.runtime_optimization_level.unwrap_or(0);
+    opts.codegen_optimization_level = scratch.codegen_optimization_level.unwrap_or(0);
+    opts.direct_call = scratch.direct_call.unwrap_or(false);
+
+    /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */
+    switch(opts.codegen_optimization_level)
+    {
+      case 3:
+        opts.hoist_var_derefs = scratch.hoist_var_derefs.unwrap_or(true);
+        [[fallthrough]];
+      case 2:
+        [[fallthrough]];
+      case 1:
+        opts.hoist_literals = scratch.hoist_literals.unwrap_or(true);
+        opts.remove_nops = scratch.remove_nops.unwrap_or(true);
+        break;
+    }
+  }
+
   jtl::result<void, int> parse_opts(int const argc, char const **argv)
   {
     auto const flags{ parse_into_vector(argc, argv) };
@@ -163,6 +213,8 @@ OPTIONS
       { "compile-module", command::compile_module },
       {   "check-health",   command::check_health }
     };
+
+    options_scratchpad scratch;
 
     /* The flow of this is broken into the following steps.
      *
@@ -191,7 +243,30 @@ OPTIONS
           std::copy(it, end, std::back_inserter(opts.extra_opts));
           break;
         }
-        else if(check_flag(it, end, value, "-h", "--help", false))
+
+        bool handled{};
+        /* We automatically support flags like -Ofoo and -Ono-foo here. */
+        for(auto const &pass : optimization_flags)
+        {
+          if(check_flag(it, end, value, util::format("-O{}", pass.first), false))
+          {
+            scratch.*(pass.second) = true;
+            handled = true;
+            break;
+          }
+          else if(check_flag(it, end, value, util::format("-Ono-{}", pass.first), false))
+          {
+            scratch.*(pass.second) = false;
+            handled = true;
+            break;
+          }
+        }
+        if(handled)
+        {
+          continue;
+        }
+
+        if(check_flag(it, end, value, "-h", "--help", false))
         {
           show_help();
         }
@@ -215,27 +290,23 @@ OPTIONS
         {
           opts.debug = true;
         }
-        else if(check_flag(it, end, value, "--direct-call", false))
-        {
-          opts.direct_call = true;
-        }
         else if(check_flag(it, end, value, "-O", "--optimization", true))
         {
           if(value == "0")
           {
-            opts.codegen_optimization_level = 0;
+            scratch.codegen_optimization_level = static_cast<u8>(0);
           }
           else if(value == "1")
           {
-            opts.codegen_optimization_level = 1;
+            scratch.codegen_optimization_level = static_cast<u8>(1);
           }
           else if(value == "2")
           {
-            opts.codegen_optimization_level = 2;
+            scratch.codegen_optimization_level = static_cast<u8>(2);
           }
           else if(value == "3")
           {
-            opts.codegen_optimization_level = 3;
+            scratch.codegen_optimization_level = static_cast<u8>(3);
           }
           else
           {
@@ -378,7 +449,7 @@ OPTIONS
 
       if(command == "run" || command == "run-main" || command == "repl")
       {
-        opts.runtime_optimization_level = opts.codegen_optimization_level;
+        scratch.runtime_optimization_level = scratch.codegen_optimization_level;
       }
 
       /* If we have any more pending flags at this point, they don't belong. */
@@ -406,6 +477,8 @@ OPTIONS
         }
         throw sb.release();
       }
+
+      commit_scratchpad(scratch);
     }
     catch(jtl::immutable_string const &msg)
     {

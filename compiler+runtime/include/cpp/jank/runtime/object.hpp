@@ -7,6 +7,12 @@
 
 namespace jank::runtime
 {
+  namespace obj
+  {
+    struct persistent_list;
+    struct keyword;
+  }
+
   enum class object_type : u8
   {
     nil,
@@ -68,7 +74,9 @@ namespace jank::runtime
 
     native_function_wrapper,
     jit_function,
+    jit_variadic_function,
     jit_closure,
+    jit_variadic_closure,
     deferred_cpp_function,
     multi_function,
 
@@ -207,8 +215,12 @@ namespace jank::runtime
         return "native_function_wrapper";
       case object_type::jit_function:
         return "jit_function";
+      case object_type::jit_variadic_function:
+        return "jit_variadic_function";
       case object_type::jit_closure:
         return "jit_closure";
+      case object_type::jit_variadic_closure:
+        return "jit_variadic_closure";
       case object_type::deferred_cpp_function:
         return "deferred_cpp_function";
       case object_type::multi_function:
@@ -288,6 +300,7 @@ namespace jank::runtime
     get = 1 << 1,
     find = 1 << 2,
     compare = 1 << 3,
+    number_like = 1 << 4,
     //associatively_writable,
     //chunkable,
     //collection_like,
@@ -298,7 +311,6 @@ namespace jank::runtime
     //map_like,
     //metadatable,
     //nameable,
-    //number_like,
     //realizable,
     //ref_like,
     //seqable,
@@ -399,37 +411,17 @@ namespace jank::runtime
                             object_ref const,
                             object_ref const,
                             object_ref const) const;
-
-    /* When dynamically calling a function, we need to know three things:
-      *
-      * 1. Is the function variadic?
-      * 2. Is there an ambiguous fixed overload?
-      * 3. How many fixed arguments are required before the packed args?
-      *
-      * We cannot perform the correct call without all of this information. Since function calls
-      * are on the hottest path there is, we pack all of this into a single byte. Questions
-      * 1 and 2 each get a bit and question 3 gets 6 bits to store the fixed arg count.
-      *
-      * From there, when we use it, we strip out the bit for question 2 and we switch/case on
-      * the rest. This allows us to do a O(1) jump on the combination of whether it's variadic
-      * and the required fixed args. Finally, we only need the question 2 bit to disambiguate
-      * one branch of each switch.
-      *
-      * The ambiguity comes in this case:
-      *
-      * ```
-      * (defn ambiguous
-      *   ([a] 1)
-      *   ([a & args] args))
-      * (ambiguous :a)
-      * ```
-      *
-      * When we call `ambiguous` with a single arg, we want it to match the fixed unary arity.
-      * However, given just questions 1 and 3, we will see that we've met the required args
-      * and that the function is variadic and we'll instead dispatch to the variadic arity, with
-      * an empty sequence for `args`.
-      */
-    virtual callable_arity_flags get_arity_flags() const;
+    virtual object_ref call(object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const,
+                            object_ref const) const;
 
     /* behavior::get */
     virtual object_ref get(object_ref key) const;
@@ -451,6 +443,9 @@ namespace jank::runtime
      * For sequences, all values need to be considered for comparison.
      */
     virtual i64 compare(object const &) const;
+
+    virtual i64 to_integer() const;
+    virtual f64 to_real() const;
 
     object_type type{};
     object_behavior behaviors{ object_behavior::none };

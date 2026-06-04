@@ -32,7 +32,7 @@ namespace jank::runtime::obj
       auto const fn(entry.second);
       if(fn.is_some())
       {
-        dynamic_call(fn, entry.first, a, old_val, new_val);
+        fn.call(entry.first, a, old_val, new_val);
       }
     }
   }
@@ -65,7 +65,7 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      auto const next(dynamic_call(fn, v));
+      auto const next(fn.call(v));
       if(val.compare_exchange_weak(v, next.raw()))
       {
         notify_watches(runtime::detail::untagged(this), v, next);
@@ -80,7 +80,7 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      auto const next(dynamic_call(fn, v, a1));
+      auto const next(fn.call(v, a1));
       if(val.compare_exchange_weak(v, next.raw()))
       {
         notify_watches(runtime::detail::untagged(this), v, next);
@@ -95,7 +95,7 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      auto const next(dynamic_call(fn, v, a1, a2));
+      auto const next(fn.call(v, a1, a2));
       if(val.compare_exchange_weak(v, next.raw()))
       {
         notify_watches(runtime::detail::untagged(this), v, next);
@@ -126,7 +126,7 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      auto const next(dynamic_call(fn, v));
+      auto const next(fn.call(v));
       if(val.compare_exchange_weak(v, next.raw()))
       {
         notify_watches(runtime::detail::untagged(this), v, next);
@@ -141,7 +141,7 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      auto const next(dynamic_call(fn, v, a1));
+      auto const next(fn.call(v, a1));
       if(val.compare_exchange_weak(v, next.raw()))
       {
         notify_watches(runtime::detail::untagged(this), v, next);
@@ -157,7 +157,7 @@ namespace jank::runtime::obj
     while(true)
     {
       auto v(val.load());
-      auto const next(dynamic_call(fn, v, a1, a2));
+      auto const next(fn.call(v, a1, a2));
       if(val.compare_exchange_weak(v, next.raw()))
       {
         notify_watches(runtime::detail::untagged(this), v, next);

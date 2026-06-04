@@ -18,6 +18,7 @@ namespace jank::runtime::obj
 
     /* behavior::object_like */
     bool equal(object const &) const override;
+    jtl::immutable_string to_code_string() const override;
     uhash to_hash() const override;
 
     /* behavior::metadatable */

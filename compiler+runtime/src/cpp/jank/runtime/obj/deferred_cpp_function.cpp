@@ -9,6 +9,7 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/call.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/util/fmt/print.hpp>
 
 namespace jank::runtime::obj
@@ -18,7 +19,8 @@ namespace jank::runtime::obj
                                                jtl::immutable_string const &declaration_code,
                                                callable_arity_flags const arity_flags,
                                                jtl::immutable_string const &base_name,
-                                               native_vector<u8> const &arities)
+                                               native_vector<u8> const &arities,
+                                               bool const is_variadic)
     : object{ obj_type, obj_behaviors }
     , meta{ meta }
     , var{ var }
@@ -26,6 +28,7 @@ namespace jank::runtime::obj
     , arity_flags{ arity_flags }
     , base_name{ base_name }
     , arities{ arities }
+    , is_variadic{ is_variadic }
   {
   }
 
@@ -40,7 +43,7 @@ namespace jank::runtime::obj
       this);
   }
 
-  object_ref deferred_cpp_function::call(object_ref const args) const
+  void deferred_cpp_function::realize() const
   {
     std::lock_guard<std::recursive_mutex> const lock{ compilation_mutex };
     /* It's possible that we're called again, even after we've compiled our actual function.
@@ -48,7 +51,7 @@ namespace jank::runtime::obj
      * through a var. In that case, we just proxy the args on to the compiled fn. */
     if(compiled_fn.is_some())
     {
-      return apply_to(compiled_fn, args);
+      return;
     }
 
     // auto const name(meta->get(__rt_ctx->intern_keyword("name").expect_ok()));
@@ -59,8 +62,8 @@ namespace jank::runtime::obj
     /* On the first invocation, we don't have a compiled_fn. We compile our C++ code, get a fn,
      * rebind the root of the var, and then apply our args to the new fn.*/
     __rt_ctx->jit_prc.eval_string(declaration_code);
-    compiled_fn = __rt_ctx->jit_prc.create_function(arity_flags, base_name, arities);
-    compiled_fn->meta = meta;
+    compiled_fn = __rt_ctx->jit_prc.create_function(arity_flags, base_name, arities, is_variadic);
+    reset_meta(compiled_fn, meta);
 
     if(var.is_some())
     {
@@ -69,13 +72,130 @@ namespace jank::runtime::obj
 
     /* Clear these just to free up some memory. */
     declaration_code = "";
-
-    return apply_to(compiled_fn, args);
   }
 
-  callable_arity_flags deferred_cpp_function::get_arity_flags() const
+  object_ref deferred_cpp_function::call() const
   {
-    /* Deferred fns are always [& args], which they then apply to the proxied fn. */
-    return build_arity_flags(0, true, false);
+    realize();
+    return compiled_fn.call();
+  }
+
+  object_ref deferred_cpp_function::call(object_ref const a1) const
+  {
+    realize();
+    return compiled_fn.call(a1);
+  }
+
+  object_ref deferred_cpp_function::call(object_ref const a1, object_ref const a2) const
+  {
+    realize();
+    return compiled_fn.call(a1, a2);
+  }
+
+  object_ref
+  deferred_cpp_function::call(object_ref const a1, object_ref const a2, object_ref const a3) const
+  {
+    realize();
+    return compiled_fn.call(a1, a2, a3);
+  }
+
+  object_ref deferred_cpp_function::call(object_ref const a1,
+                                         object_ref const a2,
+                                         object_ref const a3,
+                                         object_ref const a4) const
+  {
+    realize();
+    return compiled_fn.call(a1, a2, a3, a4);
+  }
+
+  object_ref deferred_cpp_function::call(object_ref const a1,
+                                         object_ref const a2,
+                                         object_ref const a3,
+                                         object_ref const a4,
+                                         object_ref const a5) const
+  {
+    realize();
+    return compiled_fn.call(a1, a2, a3, a4, a5);
+  }
+
+  object_ref deferred_cpp_function::call(object_ref const a1,
+                                         object_ref const a2,
+                                         object_ref const a3,
+                                         object_ref const a4,
+                                         object_ref const a5,
+                                         object_ref const a6) const
+  {
+    realize();
+    return compiled_fn.call(a1, a2, a3, a4, a5, a6);
+  }
+
+  object_ref deferred_cpp_function::call(object_ref const a1,
+                                         object_ref const a2,
+                                         object_ref const a3,
+                                         object_ref const a4,
+                                         object_ref const a5,
+                                         object_ref const a6,
+                                         object_ref const a7) const
+  {
+    realize();
+    return compiled_fn.call(a1, a2, a3, a4, a5, a6, a7);
+  }
+
+  object_ref deferred_cpp_function::call(object_ref const a1,
+                                         object_ref const a2,
+                                         object_ref const a3,
+                                         object_ref const a4,
+                                         object_ref const a5,
+                                         object_ref const a6,
+                                         object_ref const a7,
+                                         object_ref const a8) const
+  {
+    realize();
+    return compiled_fn.call(a1, a2, a3, a4, a5, a6, a7, a8);
+  }
+
+  object_ref deferred_cpp_function::call(object_ref const a1,
+                                         object_ref const a2,
+                                         object_ref const a3,
+                                         object_ref const a4,
+                                         object_ref const a5,
+                                         object_ref const a6,
+                                         object_ref const a7,
+                                         object_ref const a8,
+                                         object_ref const a9) const
+  {
+    realize();
+    return compiled_fn.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+  }
+
+  object_ref deferred_cpp_function::call(object_ref const a1,
+                                         object_ref const a2,
+                                         object_ref const a3,
+                                         object_ref const a4,
+                                         object_ref const a5,
+                                         object_ref const a6,
+                                         object_ref const a7,
+                                         object_ref const a8,
+                                         object_ref const a9,
+                                         object_ref const a10) const
+  {
+    realize();
+    return compiled_fn.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+  }
+
+  object_ref deferred_cpp_function::call(object_ref const a1,
+                                         object_ref const a2,
+                                         object_ref const a3,
+                                         object_ref const a4,
+                                         object_ref const a5,
+                                         object_ref const a6,
+                                         object_ref const a7,
+                                         object_ref const a8,
+                                         object_ref const a9,
+                                         object_ref const a10,
+                                         object_ref const more) const
+  {
+    realize();
+    return compiled_fn.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
   }
 }
