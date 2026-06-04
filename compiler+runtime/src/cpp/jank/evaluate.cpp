@@ -505,7 +505,9 @@ namespace jank::evaluate
     }
     else
     {
-      return __rt_ctx->jit_prc.eval(mod);
+      auto const res{ __rt_ctx->jit_prc.eval(mod) };
+      runtime::reset_meta(res, __rt_ctx->eval(expr->meta));
+      return res;
     }
   }
 
