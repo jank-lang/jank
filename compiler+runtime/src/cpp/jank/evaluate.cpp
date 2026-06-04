@@ -192,7 +192,7 @@ namespace jank::evaluate
       if constexpr(std::same_as<T, expr::local_reference>)
       {
         auto found_local(expr->frame->find_local_or_capture(form.name));
-        if(found_local && !found_local.unwrap().crossed_fns.empty())
+        if(found_local.is_some() && !found_local.unwrap().crossed_fns.empty())
         {
           arity.frame->captures.emplace(
             form.name,

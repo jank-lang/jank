@@ -249,11 +249,6 @@ namespace jtl
       return !(*this != rhs);
     }
 
-    constexpr operator bool() const noexcept
-    {
-      return is_some();
-    }
-
     jtl::storage<T> data;
     bool set{};
   };
