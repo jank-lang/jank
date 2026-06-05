@@ -677,8 +677,12 @@ namespace jank::runtime
         {
           return make_box<obj::big_integer>(typed_o->data);
         }
-        else if constexpr(
-          jtl::is_any_same<T, obj::real, obj::small_real, obj::ratio, obj::big_decimal>)
+        else if constexpr(jtl::is_any_same<T, obj::real, obj::small_real, obj::big_decimal>)
+        {
+          return make_box<obj::big_integer>(
+            native_big_decimal(typed_o->data).convert_to<native_big_integer>());
+        }
+        else if constexpr(jtl::is_same<T, obj::ratio>)
         {
           return make_box<obj::big_integer>(typed_o->to_integer());
         }

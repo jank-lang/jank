@@ -15,8 +15,8 @@
     ; clojure.core-test.associative-qmark ; TODO: port to-array
     ; clojure.core-test.atom ; libc++abi: terminating due to uncaught exception of type jank::runtime::invalid_arity<3ull>: invalid call to #object [unknown jit_function 0x1041da080] with 3 args provided
     clojure.core-test.bigdec
-    ; clojure.core-test.bigint ; FIXME: Failing tests.
-    clojure.core-test.binding
+    clojure.core-test.bigint
+    clojure.core-test.binding ; TODO: port future
     clojure.core-test.bit-and
     clojure.core-test.bit-and-not
     clojure.core-test.bit-clear
