@@ -1691,11 +1691,11 @@
 ;; Numbers.
 (defn
   ^{:inline (fn* [x]
-             (list 'cpp/jank.runtime.is_integer x))}
+             (list 'cpp/jank.runtime.is_integral x))}
   integer?
   "Returns true if n is an integer"
   [n]
-  (cpp/jank.runtime.is_integer n))
+  (cpp/jank.runtime.is_integral n))
 
 (defn
   ^{:inline (fn* [x]

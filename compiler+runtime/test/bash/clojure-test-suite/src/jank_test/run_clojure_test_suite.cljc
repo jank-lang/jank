@@ -162,7 +162,7 @@
     clojure.core-test.random-sample
     clojure.core-test.random-uuid
     ; clojure.core-test.ratio-qmark ; FIXME: Failing test.
-    ; clojure.core-test.rational-qmark ; FIXME: Failing test.
+    clojure.core-test.rational-qmark
     ; clojure.core-test.rationalize ; TODO: port rationalize
     ; clojure.core-test.realized-qmark ; TODO: port promise
     ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map. TODO: into-array.

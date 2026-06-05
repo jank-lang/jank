@@ -539,6 +539,11 @@ namespace jank::runtime
     return detail::is_tagged_small_int(o.raw()) || o.get_type() == object_type::integer;
   }
 
+  bool is_integral(object_ref const o)
+  {
+    return is_integer(o) || is_big_integer(o);
+  }
+
   bool is_real(object_ref const o)
   {
     return detail::is_tagged_small_real(o.raw()) || o.get_type() == object_type::real;
