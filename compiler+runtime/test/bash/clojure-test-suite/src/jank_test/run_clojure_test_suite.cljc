@@ -116,7 +116,7 @@
     clojure.core-test.name
     clojure.core-test.namespace
     clojure.core-test.nan-qmark
-    ; clojure.core-test.neg-int-qmark ; FIXME: Failing test.
+    clojure.core-test.neg-int-qmark
     clojure.core-test.neg-qmark
     clojure.core-test.next
     clojure.core-test.nfirst
