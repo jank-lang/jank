@@ -14,6 +14,7 @@
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/core/call.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/util/cli.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -645,9 +646,9 @@ namespace jank::codegen
     {
       /* Embed the function pointer directly. */
       auto const root_val{ var->get_root() };
-      auto const *jit_fn{ dynamic_cast<runtime::obj::jit_function *>(root_val.data) };
+      auto const jit_fn{ runtime::dyn_cast<runtime::obj::jit_function>(root_val) };
       /* Variadic fns need rest-arg packing, which only dynamic_call does. */
-      if(jit_fn != nullptr && !runtime::is_variadic(jit_fn->arity_flags))
+      if(jit_fn.is_some() && !runtime::is_variadic(jit_fn->arity_flags))
       {
         auto const arity{ inst->args.size() };
         void *fn_ptr{};
