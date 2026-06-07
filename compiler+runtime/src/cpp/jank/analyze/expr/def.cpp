@@ -10,9 +10,11 @@ namespace jank::analyze::expr
            bool const needs_box,
            object_ref const form,
            runtime::obj::symbol_ref const name,
+           runtime::var_ref const var,
            jtl::option<expression_ref> const &value)
     : expression{ expr_kind, position, frame, needs_box, form }
     , name{ name }
+    , var{ var }
     , value{ value }
   {
   }
