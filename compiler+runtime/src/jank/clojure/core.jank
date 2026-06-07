@@ -1920,7 +1920,7 @@
 (defn int?
   "Return true if x is a fixed precision integer"
   [x]
-  (integer? x))
+  (cpp/jank.runtime.is_integer x))
 
 (defn pos-int?
   "Return true if x is a positive fixed precision integer"

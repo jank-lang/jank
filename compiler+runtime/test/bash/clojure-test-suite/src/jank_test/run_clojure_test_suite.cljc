@@ -88,8 +88,8 @@
     clojure.core-test.identical-qmark
     ; clojure.core-test.ifn-qmark ; TODO: port promise
     clojure.core-test.inc
-    ; clojure.core-test.int ; FIXME: Failing tests.
-    ; clojure.core-test.int-qmark ; FIXME: Failing tests.
+    ; clojure.core-test.int ; FIXME: Codegen bug.
+    clojure.core-test.int-qmark
     ; clojure.core-test.integer-qmark ; FIXME: Failing tests.
     clojure.core-test.interleave
     clojure.core-test.intern
