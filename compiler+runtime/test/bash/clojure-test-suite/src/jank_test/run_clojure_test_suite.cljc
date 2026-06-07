@@ -72,7 +72,7 @@
     clojure.core-test.ffirst
     clojure.core-test.find
     clojure.core-test.first
-    ; clojure.core-test.float ; FIXME: Failing tests.
+    clojure.core-test.float
     clojure.core-test.float-qmark
     clojure.core-test.fn-qmark
     clojure.core-test.fnext
