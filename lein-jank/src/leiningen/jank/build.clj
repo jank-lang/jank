@@ -12,6 +12,13 @@
 (def jank-build-file "jank-build.bb")
 (def jank-build-cache-file "jank-build-cache.txt")
 
+(def default-build-opts
+  {:output-dir         "target"
+   :disable-sandbox    false
+   :optimization-level 2
+   :static-build       true
+   :verbose-build      true})
+
 (defn merge-native-flags [& maps]
   (let [valid-keys [:defines :include-dirs :library-dirs :linked-libraries]]
     (reduce (fn [a b] (merge-with into a (select-keys b valid-keys))) maps)))
@@ -108,6 +115,7 @@
         ;; Pass `bb --stream` and provide the EDN-formatted build metadata on
         ;; stdin so that it is available in the build script on `*input*`.
         proc         (sandbox/process
+                      (not (:disable-sandbox subtree-meta))
                       sandbox-args
                       ["bb" "--stream" (fs/path src-dir jank-build-file)]
                       {:in       (pr-str build-meta)
@@ -146,8 +154,8 @@
              plan-ops)
        (into {})))
 
-(defn plan-subtree-build [project target-dir [dep subtree]]
-  (let [subtree-ops    (vec (mapcat #(plan-subtree-build project target-dir %) subtree))
+(defn plan-subtree-build [build-opts target-dir [dep subtree]]
+  (let [subtree-ops    (vec (mapcat #(plan-subtree-build build-opts target-dir %) subtree))
         src-jar        (first (aether/dependency-files {dep nil}))
         jar-name       (-> src-jar fs/file-name fs/strip-ext)
         src-dir        (get-target-dir target-dir "src" jar-name (sha256sum src-jar))
@@ -164,11 +172,12 @@
       ;; If this is a native build then we must add its build step and all of
       ;; the child build steps.
       (into subtree-ops
-            [{:op :extract-src
+            [{:op  :extract-src
               :dep dep :jar src-jar :dir src-dir}
-             {:op :run-build
-              :dep dep :src-dir src-dir :out-dir out-dir
-              :child-outs (collect-outputs subtree-ops)}]))))
+             {:op              :run-build
+              :dep             dep :src-dir src-dir :out-dir out-dir
+              :disable-sandbox (:disable-sandbox build-opts)
+              :child-outs      (collect-outputs subtree-ops)}]))))
 
 (defn plan-build
   "Compute a build plan, i.e. a linear sequence of operations, which will
@@ -177,37 +186,30 @@
   Returns a map, including the build operations and additional build metadata,
   which can be executed by `run-build!`."
   [project]
-  (let [{:keys [output-dir optimization-level static-build verbose-build]
-         :or   {output-dir         "target"
-                optimization-level 2
-                static-build       true
-                verbose-build      true}}
-        (:jank project)]
-    {:target-dir         (fs/absolutize output-dir)
-     :optimization-level optimization-level
-     :static-build       static-build
-     :verbose-build      verbose-build
-     :operations         (let [tree     (lcp/managed-dependency-hierarchy :dependencies :managed-dependencies project)
-                               dep-ops  (vec (mapcat #(plan-subtree-build project output-dir %) tree))
-                               ;; Special handling when the root project has a
-                               ;; build script.
-                               ;; 
-                               ;; TODO: For now we always run the root build
-                               ;; script, but we could cache it if we knew its
-                               ;; input files. Cargo does this by outputting
-                               ;; rerun-if-changed flags from the build script.
-                               root-ops (when (fs/exists? (fs/path (:root project) jank-build-file))
-                                          [{:op           :run-build
-                                            :dep          [(:name project) (:version project)]
-                                            :src-dir      (:root project)
-                                            :out-dir      (get-target-dir output-dir "out" (:name project) "XXX")
-                                            :child-outs   (collect-outputs dep-ops)
-                                            :always-build true}])]
-                           (into dep-ops root-ops))}))
+  (let [{:keys [output-dir disable-sandbox] :as build-opts}
+        (merge default-build-opts (:jank project))]
+    (assoc build-opts :operations
+           (let [tree     (lcp/managed-dependency-hierarchy :dependencies :managed-dependencies project)
+                 dep-ops  (vec (mapcat #(plan-subtree-build build-opts output-dir %) tree))
+                 ;; Special handling when the root project has a build script.
+                 ;; 
+                 ;; TODO: For now we always run the root build script, but we
+                 ;; could cache it if we knew its input files. Cargo does this
+                 ;; by outputting rerun-if-changed flags from the build script.
+                 root-ops (when (fs/exists? (fs/path (:root project) jank-build-file))
+                            [{:op              :run-build
+                              :dep             [(:name project) (:version project)]
+                              :src-dir         (:root project)
+                              :out-dir         (get-target-dir output-dir "out" (:name project) "XXX")
+                              :child-outs      (collect-outputs dep-ops)
+                              :disable-sandbox disable-sandbox
+                              :always-build    true}])]
+             (into dep-ops root-ops)))))
 
 (defmulti run-build-op! (fn [_ op] (:op op)))
 
-(defmethod run-build-op! :extract-src [plan {:keys [dep jar dir]}]
+(defmethod run-build-op! :extract-src
+  [plan {:keys [dep jar dir]}]
   ;; If the output dir already exists then the jar has already been extracted.
   (when-not (fs/exists? dir)
     (println "\u001b[1;36mExtracting\u001b[0m" dep)
@@ -216,7 +218,8 @@
   ;; does not produce any jank flags
   nil)
 
-(defmethod run-build-op! :run-build [plan {:keys [dep src-dir out-dir child-outs always-build]}]
+(defmethod run-build-op! :run-build
+  [plan {:keys [dep src-dir out-dir child-outs disable-sandbox always-build]}]
   (let [needs-build? (or always-build (not (fs/exists? (fs/path out-dir jank-build-cache-file))))]
     (when needs-build?
       (println "\u001b[1;32mCompiling\u001b[0m" dep)
@@ -228,6 +231,8 @@
 (defn run-build!
   "Run the sequence of build steps planned by `plan-build`."
   [plan]
+  (when (some :disable-sandbox (:operations plan))
+    (println "\u001b[1;31mBuilding with sandboxing disabled is potentially dangerous!\u001b[0m"))
   (->> (mapv #(run-build-op! plan %) (:operations plan))
        (flatten)
        (apply merge-native-flags)))

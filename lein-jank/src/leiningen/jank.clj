@@ -9,12 +9,29 @@
             [leiningen.jank.build :as ljb]
             [babashka.fs :as fs]))
 
+(defn apply-args
+  "Extract task-specific args from the list and apply them to the project,
+  returning the updated project and the leftover arguments."
+  [project args]
+  (let [res (reduce
+             (fn [acc arg]
+               (cond
+                 (= arg ":disable-sandbox")
+                 (assoc-in acc [:project :jank :disable-sandbox] true)
+
+                 :else
+                 (update acc :args conj arg)))
+             {:project project :args []}
+             args)]
+    ((juxt :project :args) res)))
+
 (defn run!
   "Run your project, starting at the main entrypoint."
   [project & args]
-  (let [cp-str       (ljc/build-module-path project)
-        native-flags (ljb/run-build! (ljb/plan-build project))
-        project      (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[project args] (apply-args project args)
+        cp-str         (ljc/build-module-path project)
+        native-flags   (ljb/run-build! (ljb/plan-build project))
+        project        (update project :jank ljb/merge-native-flags native-flags)]
     (if (:main project)
       (ljc/shell-out! project cp-str "run-main" [(:main project)] args)
       (do
@@ -24,9 +41,10 @@
 (defn repl!
   "Start a terminal REPL in your :main ns."
   [project & args]
-  (let [cp-str       (ljc/build-module-path project)
-        native-flags (ljb/run-build! (ljb/plan-build project))
-        project      (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[project args] (apply-args project args)
+        cp-str         (ljc/build-module-path project)
+        native-flags   (ljb/run-build! (ljb/plan-build project))
+        project        (update project :jank ljb/merge-native-flags native-flags)]
     (if (:main project)
       (ljc/shell-out! project cp-str "repl" [(:main project)] args)
       (do
@@ -36,9 +54,10 @@
 (defn compile!
   "Compile your project to an executable."
   [project & args]
-  (let [cp-str       (ljc/build-module-path project)
-        native-flags (ljb/run-build! (ljb/plan-build project))
-        project      (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[project args] (apply-args project args)
+        cp-str         (ljc/build-module-path project)
+        native-flags   (ljb/run-build! (ljb/plan-build project))
+        project        (update project :jank ljb/merge-native-flags native-flags)]
     (if (:main project)
       (ljc/shell-out! project cp-str "compile" [(:main project)] args)
       (do
@@ -48,9 +67,10 @@
 (defn compile-module!
   "Compile a single module and its dependencies to object files."
   [project & args]
-  (let [cp-str       (ljc/build-module-path project)
-        native-flags (ljb/run-build! (ljb/plan-build project))
-        project      (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[project args] (apply-args project args)
+        cp-str         (ljc/build-module-path project)
+        native-flags   (ljb/run-build! (ljb/plan-build project))
+        project        (update project :jank ljb/merge-native-flags native-flags)]
     (ljc/shell-out! project cp-str "compile-module" [] args)))
 
 (defn check-health!
