@@ -14,6 +14,7 @@
 
 (def jank-build-file "jank-build.bb")
 (def jank-build-cache-file "jank-build-cache.txt")
+(def jank-tmp-build-dir "/tmp/jank-build")
 
 (def default-build-opts
   {:output-dir         "target"
@@ -106,15 +107,15 @@
   [src-dir out-dir subtree-meta]
   (fs/create-dirs out-dir)
   (let [build-meta   (merge subtree-meta {:src-dir   (str src-dir)
-                                          :build-dir "/tmp"
+                                          :build-dir jank-tmp-build-dir
                                           :out-dir   (str out-dir)})
         ;; The sandbox gets standard mounts for a scratch directory and build
         ;; output directory. It also mounts as RO each build output from its
         ;; dependencies.
         sandbox-args (into [[:ro-bind src-dir src-dir]
                             [:bind out-dir out-dir]
-                            [:tmpfs "/tmp"]
-                            [:chdir src-dir]
+                            [:tmpfs jank-tmp-build-dir]
+                            [:chdir jank-tmp-build-dir]
                             [:net false]]
                            (map (fn [dir] [:ro-bind dir dir]) (vals (:outputs subtree-meta))))
         ;; Pass `bb --stream` and provide the EDN-formatted build metadata on
