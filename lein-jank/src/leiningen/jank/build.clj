@@ -7,9 +7,10 @@
             [leiningen.core.main :as lmain]
             [leiningen.core.classpath :as lcp]
             [leiningen.jank.sandbox.core :as sandbox])
-  (:import (java.util HexFormat)
-           (java.util.jar JarFile)
-           (java.security MessageDigest)))
+  (:import (java.nio ByteBuffer)
+           (java.security MessageDigest)
+           (java.util HexFormat)
+           (java.util.jar JarFile)))
 
 (def jank-build-file "jank-build.bb")
 (def jank-build-cache-file "jank-build-cache.txt")
@@ -36,24 +37,21 @@
   [file out-dir]
   (fs/unzip file out-dir {:replace-existing true}))
 
-(defn sha256sum
-  "Equivalent to the standard coreutils/sha256sum tool."
-  [f]
-  (let [bytes (fs/read-all-bytes f)
-        hash  (-> (MessageDigest/getInstance "SHA-256")
-                  (.digest bytes))]
-    (.formatHex (HexFormat/of) hash)))
-
 (defn fingerprint
   "Compute a fingerprint of the dependency. When the fingerprint changes (due to
   some change in the descendant dependencies or environment) the dependency
   needs to be recompiled."
-  [src-jar subtree-meta]
+  [src-jar meta]
   ;; TODO: We should implement something like Cargo's fingerprint to better
   ;; react to changes in the environment:
   ;; 
   ;; https://doc.rust-lang.org/nightly/nightly-rustc/cargo/core/compiler/fingerprint/index.html
-  (hash [(sha256sum src-jar) subtree-meta]))
+  (let [md     (MessageDigest/getInstance "SHA-256")
+        _      (doto md
+                 (.update (fs/read-all-bytes src-jar))
+                 (.update (-> (ByteBuffer/allocate 4) (.putInt (hash meta)) .array)))
+        digest (.digest md)]
+    (.formatHex (HexFormat/of) digest)))
 
 (defn target-subdir
   "Returns a path located in the target directory which is unique based on the
@@ -159,12 +157,13 @@
   (let [subtree-ops    (vec (mapcat #(plan-subtree-build build-opts target-dir %) subtree))
         src-jar        (first (aether/dependency-files {dep nil}))
         jar-name       (-> src-jar fs/file-name fs/strip-ext)
-        src-dir        (target-subdir target-dir "src" jar-name (sha256sum src-jar))
+        src-fprint     (fingerprint src-jar {})
+        src-dir        (target-subdir target-dir "src" jar-name src-fprint)
         ;; Output is fingerprinted on the source jar contents and all of the
         ;; build steps which produce its descendant outputs. If any of these
         ;; change then a fresh build is triggered.
-        fprint         (fingerprint src-jar subtree-ops)
-        out-dir        (target-subdir target-dir "out" jar-name fprint)
+        out-fprint     (fingerprint src-jar subtree-ops)
+        out-dir        (target-subdir target-dir "out" jar-name out-fprint)
         is-native-dep? (has-build-file? src-jar)]
     (if-not is-native-dep?
       ;; If this is a plain jank jar then no build step is required, but it
