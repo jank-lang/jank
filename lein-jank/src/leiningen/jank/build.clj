@@ -217,7 +217,7 @@
   [plan {:keys [dep jar dir]}]
   ;; If the output dir already exists then the jar has already been extracted.
   (when-not (fs/exists? dir)
-    (println "\u001b[1;36mExtracting\u001b[0m" dep)
+    (println (str "\u001b[1;36m" (format "%10s" "Extracting") "\u001b[0m") dep)
     (extract-jar! jar dir))
 
   ;; does not produce any jank flags
@@ -227,7 +227,7 @@
   [plan {:keys [dep src-dir out-dir child-outs always-build]}]
   (let [needs-build? (or always-build (not (fs/exists? (fs/path out-dir jank-build-cache-file))))]
     (when needs-build?
-      (println "\u001b[1;32mCompiling\u001b[0m" dep)
+      (println (str "\u001b[1;32m" (format "%10s" "Compiling") "\u001b[0m") dep)
       (build-dep! src-dir out-dir (assoc plan :outputs child-outs)))
 
     ;; jank flags are extracted from the build cache file
