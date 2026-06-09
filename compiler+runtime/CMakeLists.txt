@@ -66,7 +66,7 @@ set(jank_cxx_standard cxx_std_20)
 # We need different flags for linking whole libraries on different OSes.
 # We need to be mindful to wrap each library with ${jank_link_whole_start} and ${jank_link_whole_end}.
 # For example:
-#   ${jank_link_whole_start} jank_lib ${jank_link_whole_end}
+#   ${jank_link_whole_start} jank_common_lib ${jank_link_whole_end}
 #   ${jank_link_whole_start} nanobench_lib ${jank_link_whole_end}
 #
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
@@ -412,10 +412,11 @@ set_target_properties(jankzip_lib PROPERTIES ENABLE_EXPORTS 1)
 # remains a static lib, since these symbols need to be accessible in the
 # compiler's runtime by the JIT compiler.
 #
-# This is libjank.a, but the final libjank-standalone.a will be merged
+# TODO: Update.
+# This is libjank.a, but the final libjank-dynamic-runtime.a will be merged
 # by ar-merge to contain all of the other static libs we build, too. We
 # merge them so that consumption of jank as a lib is much easier. Rather
-# than bringing in libjank and 10 other libs, users just need libjank-standalone.
+# than bringing in libjank and 10 other libs, users just need libjank-dynamic-runtime.
 #
 # However, merging static libs isn't a well supported operation. Generally,
 # it involves unpacking each archive and then buliding a new archive from
@@ -440,8 +441,11 @@ endif()
 
 configure_file(bin/ar-merge ar-merge USE_SOURCE_PERMISSIONS @ONLY)
 set(CMAKE_AR "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}")
-set(jank_lib_standalone_deps
-  jank_lib
+set(jank_standalone_dynamic_lib_deps
+  jank_common_lib
+  jank_compiler_lib
+  jank_dynamic_lib
+  jank_static_lib
   cpptrace::cpptrace
   ftxui::screen ftxui::dom
   Boost::multiprecision
@@ -463,29 +467,29 @@ set(jank_lib_standalone_deps
 # cost of jank's startup being a little slower, since it's loading the core libs via their
 # object files, rather than having them baked in.
 add_custom_command(
-  DEPENDS ${jank_lib_standalone_deps}
-  OUTPUT ${CMAKE_BINARY_DIR}/libjank-standalone-phase-1.a
+  DEPENDS ${jank_standalone_dynamic_lib_deps}
+  OUTPUT ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a
   COMMAND_EXPAND_LISTS
   VERBATIM
-  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge
+  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-1
 )
 add_custom_target(
-  jank_lib_standalone_phase_1
+  jank_standalone_dynamic_lib_phase_1
   ALL
-  DEPENDS ${CMAKE_BINARY_DIR}/libjank-standalone-phase-1.a
+  DEPENDS ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a
 )
 
 add_custom_command(
-  DEPENDS ${jank_lib_standalone_deps} jank_exe_phase_2
-  OUTPUT ${CMAKE_BINARY_DIR}/libjank-standalone.a
+  DEPENDS ${jank_standalone_dynamic_lib_deps} jank_exe_phase_2
+  OUTPUT ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime.a
   COMMAND_EXPAND_LISTS
   VERBATIM
   COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2
 )
 add_custom_target(
-  jank_lib_standalone_phase_2
+  jank_standalone_dynamic_lib_phase_2
   ALL
-  DEPENDS ${CMAKE_BINARY_DIR}/libjank-standalone.a
+  DEPENDS ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime.a
 )
 
 # ---- Other dependencies ----
@@ -515,9 +519,9 @@ endif()
 find_package(Boost REQUIRED)
 # ---- Other dependencies ----
 
-# ---- libjank.a ----
+# ---- libjank-common.a ----
 add_library(
-  jank_lib STATIC
+  jank_common_lib STATIC
   src/cpp/jtl/panic.cpp
   src/cpp/jtl/assert.cpp
   src/cpp/jtl/string_builder.cpp
@@ -528,18 +532,15 @@ add_library(
   src/cpp/jank/util/environment.cpp
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/util/escape.cpp
-  src/cpp/jank/util/clang_format.cpp
   src/cpp/jank/util/string.cpp
   src/cpp/jank/util/fmt.cpp
   src/cpp/jank/util/fmt/print.cpp
   src/cpp/jank/util/path.cpp
   src/cpp/jank/util/try.cpp
-  src/cpp/jank/util/clang.cpp
   src/cpp/jank/profile/time.cpp
-  src/cpp/jank/ui/highlight.cpp
   src/cpp/jank/error.cpp
-  src/cpp/jank/error/aot.cpp
   src/cpp/jank/error/report.cpp
+  src/cpp/jank/error/aot.cpp
   src/cpp/jank/error/lex.cpp
   src/cpp/jank/error/parse.cpp
   src/cpp/jank/error/analyze.cpp
@@ -628,6 +629,167 @@ add_library(
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/obj/reader_conditional.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
+  src/cpp/jank/codegen/api.cpp
+  src/cpp/jank/aot/resource.cpp
+
+  # Native module sources.
+  src/cpp/clojure/core_native.cpp
+  src/cpp/clojure/string_native.cpp
+  src/cpp/jank/compiler_native.cpp
+  src/cpp/jank/nrepl/server.cpp
+)
+set_target_properties(jank_common_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
+
+set_property(TARGET jank_common_lib PROPERTY OUTPUT_NAME jank)
+
+target_compile_features(jank_common_lib PUBLIC ${jank_cxx_standard})
+target_compile_options(jank_common_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
+
+target_include_directories(
+  jank_common_lib
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
+)
+target_include_directories(
+  jank_common_lib
+  SYSTEM
+  PUBLIC
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/zip/src>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/lib>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-process/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
+  ${OPENSSL_INCLUDE_DIR}
+  ${Boost_INCLUDE_DIRS}
+)
+
+target_link_libraries(
+  jank_common_lib PRIVATE
+  clangCppInterOp
+  cpptrace::cpptrace
+  ftxui::screen ftxui::dom
+  Boost::multiprecision
+  Boost::boost
+  nanobench_lib
+  bdwgc::gc bdwgc::gctba
+)
+
+if(APPLE)
+  target_link_libraries(jank_common_lib PUBLIC libzstd_static)
+endif()
+
+jank_hook_llvm(jank_common_lib)
+
+# Build a string of all include flags for jank. This will be used for building the PCH at build
+# time as well as building the PCH on first run, after installation.
+get_target_property(jank_lib_includes_prop jank_common_lib INCLUDE_DIRECTORIES)
+set(jank_lib_includes "")
+foreach(dir ${jank_lib_includes_prop})
+  # System includes are just the path, but normal includes have this format:
+  # $<BUILD_INTERFACE:/home/jeaye/projects/jank/compiler+runtime/include/cpp>
+  # We need to strip all of that out.
+  if(${dir} MATCHES "BUILD_INTERFACE:")
+    string(REGEX REPLACE "\\$<BUILD_INTERFACE:(.*)>" "\\1" dir_path ${dir})
+    list(APPEND jank_lib_includes -I${dir_path})
+  else()
+    # We use -I instead of -isystem here, since the latter causes Clang's JIT to
+    # fail to find important headers, like stdlib.h, even if we're only adding new
+    # system includes.
+    #
+    # Fortunately, this doesn't really matter. The main reason for the system includes
+    # is for static analysis and such to ignore those headers.
+    list(APPEND jank_lib_includes -I${dir})
+  endif()
+endforeach()
+
+set(jank_lib_linker_flags_list "")
+
+get_target_property(jank_lib_link_dirs_prop jank_common_lib LINK_DIRECTORIES)
+foreach(lib ${jank_lib_link_dirs_prop})
+  list(APPEND jank_lib_linker_flags_list -L${lib})
+endforeach()
+list(APPEND jank_lib_linker_flags_list ${jank_linker_flags})
+list(APPEND jank_lib_linker_flags_list ${CMAKE_CXX_FLAGS})
+list(APPEND jank_lib_linker_flags_list ${CMAKE_SHARED_LINKER_FLAGS})
+list(JOIN jank_lib_linker_flags_list " " jank_lib_linker_flags_unescaped)
+string(REPLACE "\"" "\\\"" jank_lib_linker_flags_str "${jank_lib_linker_flags_unescaped}")
+
+# Build a string of all of our JIT compilation flags so we can load them up in the runtime.
+set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes})
+list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str_unescaped)
+string(REPLACE "\"" "\\\"" jank_jit_compile_flags_str "${jank_jit_compile_flags_str_unescaped}")
+
+target_compile_options(
+  jank_common_lib
+  PUBLIC
+  -DJANK_CLANG_PREFIX="${CLANG_INSTALL_PREFIX}"
+  -DJANK_JIT_FLAGS="${jank_jit_compile_flags_str}"
+  -DJANK_AOT_FLAGS="${jank_lib_linker_flags_str}"
+)
+target_link_options(jank_common_lib PRIVATE ${jank_linker_flags})
+
+#set_target_properties(jank_common_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
+
+# Symbol exporting for JIT.
+set_target_properties(jank_common_lib PROPERTIES ENABLE_EXPORTS 1)
+# ---- libjank-common.a ----
+
+# ---- libjank-dynamic.a ----
+add_library(
+  jank_dynamic_lib STATIC
+  src/cpp/jank/error/report_dynamic.cpp
+  src/cpp/jank/c_api_dynamic.cpp
+  src/cpp/jank/util/environment_dynamic.cpp
+  src/cpp/jank/runtime/module/loader_dynamic.cpp
+  src/cpp/jank/runtime/context_dynamic.cpp
+  src/cpp/jank/runtime/ns_dynamic.cpp
+  src/cpp/jank/jit/processor_dynamic.cpp
+  src/cpp/jank/codegen/api_dynamic.cpp
+)
+set_target_properties(jank_dynamic_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
+set_property(TARGET jank_dynamic_lib PROPERTY OUTPUT_NAME jank-dynamic)
+target_compile_features(jank_dynamic_lib PUBLIC ${jank_cxx_standard})
+target_compile_options(jank_dynamic_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
+target_include_directories(jank_dynamic_lib SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_common_lib,INCLUDE_DIRECTORIES>")
+target_link_options(jank_dynamic_lib PRIVATE ${jank_linker_flags})
+set_target_properties(jank_dynamic_lib PROPERTIES ENABLE_EXPORTS 1)
+# ---- libjank-dynamic.a ----
+
+# ---- libjank-static.a ----
+add_library(
+  jank_static_lib STATIC
+  src/cpp/jank/error/report_static.cpp
+  src/cpp/jank/c_api_static.cpp
+  src/cpp/jank/util/environment_static.cpp
+  src/cpp/jank/runtime/module/loader_static.cpp
+  src/cpp/jank/runtime/context_static.cpp
+  src/cpp/jank/runtime/ns_static.cpp
+  src/cpp/jank/jit/processor_static.cpp
+  src/cpp/jank/codegen/api_static.cpp
+)
+set_target_properties(jank_static_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
+set_property(TARGET jank_static_lib PROPERTY OUTPUT_NAME jank-static)
+target_compile_features(jank_static_lib PUBLIC ${jank_cxx_standard})
+target_compile_options(jank_static_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
+target_include_directories(jank_static_lib SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_common_lib,INCLUDE_DIRECTORIES>")
+target_link_options(jank_static_lib PRIVATE ${jank_linker_flags})
+set_target_properties(jank_static_lib PROPERTIES ENABLE_EXPORTS 1)
+# ---- libjank-static.a ----
+
+# ---- libjank-compiler.a ----
+add_library(
+  jank_compiler_lib STATIC
+  src/cpp/jank/ui/highlight.cpp
+  src/cpp/jank/util/clang_format.cpp
+  src/cpp/jank/util/clang.cpp
   src/cpp/jank/analyze/processor.cpp
   src/cpp/jank/analyze/expression.cpp
   src/cpp/jank/analyze/expr/vector.cpp
@@ -682,121 +844,22 @@ add_library(
   src/cpp/jank/ir/opt/remove_nops.cpp
   src/cpp/jank/evaluate.cpp
   src/cpp/jank/codegen/cpp_processor.cpp
-  src/cpp/jank/codegen/api.cpp
   src/cpp/jank/codegen/optimize.cpp
-  src/cpp/jank/jit/processor.cpp
   src/cpp/jank/aot/processor.cpp
-  src/cpp/jank/aot/resource.cpp
-
-  # Native module sources.
-  src/cpp/clojure/core_native.cpp
-  src/cpp/clojure/string_native.cpp
-  src/cpp/jank/compiler_native.cpp
-  src/cpp/jank/nrepl/server.cpp
 )
-set_target_properties(jank_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
-
-set_property(TARGET jank_lib PROPERTY OUTPUT_NAME jank)
-
-target_compile_features(jank_lib PUBLIC ${jank_cxx_standard})
-target_compile_options(jank_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
-
-target_include_directories(
-  jank_lib
-  PUBLIC
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/cpp>"
-)
-target_include_directories(
-  jank_lib
-  SYSTEM
-  PUBLIC
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/zip/src>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/lib>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-process/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
-  ${OPENSSL_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIRS}
-)
-
+set_target_properties(jank_compiler_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
+set_property(TARGET jank_compiler_lib PROPERTY OUTPUT_NAME jank-compiler)
+target_compile_features(jank_compiler_lib PUBLIC ${jank_cxx_standard})
+target_compile_options(jank_compiler_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
+target_include_directories(jank_compiler_lib SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_common_lib,INCLUDE_DIRECTORIES>")
 target_link_libraries(
-  jank_lib PRIVATE
+  jank_compiler_lib PRIVATE
   clangCppInterOp
-  cpptrace::cpptrace
-  ftxui::screen ftxui::dom
-  Boost::multiprecision
-  Boost::boost
-  nanobench_lib
-  bdwgc::gc bdwgc::gctba
 )
-
-if(APPLE)
-  target_link_libraries(jank_lib PUBLIC libzstd_static)
-endif()
-
-jank_hook_llvm(jank_lib)
-
-# Build a string of all include flags for jank. This will be used for building the PCH at build
-# time as well as building the PCH on first run, after installation.
-get_target_property(jank_lib_includes_prop jank_lib INCLUDE_DIRECTORIES)
-set(jank_lib_includes "")
-foreach(dir ${jank_lib_includes_prop})
-  # System includes are just the path, but normal includes have this format:
-  # $<BUILD_INTERFACE:/home/jeaye/projects/jank/compiler+runtime/include/cpp>
-  # We need to strip all of that out.
-  if(${dir} MATCHES "BUILD_INTERFACE:")
-    string(REGEX REPLACE "\\$<BUILD_INTERFACE:(.*)>" "\\1" dir_path ${dir})
-    list(APPEND jank_lib_includes -I${dir_path})
-  else()
-    # We use -I instead of -isystem here, since the latter causes Clang's JIT to
-    # fail to find important headers, like stdlib.h, even if we're only adding new
-    # system includes.
-    #
-    # Fortunately, this doesn't really matter. The main reason for the system includes
-    # is for static analysis and such to ignore those headers.
-    list(APPEND jank_lib_includes -I${dir})
-  endif()
-endforeach()
-
-set(jank_lib_linker_flags_list "")
-
-get_target_property(jank_lib_link_dirs_prop jank_lib LINK_DIRECTORIES)
-foreach(lib ${jank_lib_link_dirs_prop})
-  list(APPEND jank_lib_linker_flags_list -L${lib})
-endforeach()
-list(APPEND jank_lib_linker_flags_list ${jank_linker_flags})
-list(APPEND jank_lib_linker_flags_list ${CMAKE_CXX_FLAGS})
-list(APPEND jank_lib_linker_flags_list ${CMAKE_SHARED_LINKER_FLAGS})
-list(JOIN jank_lib_linker_flags_list " " jank_lib_linker_flags_unescaped)
-string(REPLACE "\"" "\\\"" jank_lib_linker_flags_str "${jank_lib_linker_flags_unescaped}")
-
-# Build a string of all of our JIT compilation flags so we can load them up in the runtime.
-set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes})
-list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str_unescaped)
-string(REPLACE "\"" "\\\"" jank_jit_compile_flags_str "${jank_jit_compile_flags_str_unescaped}")
-
-target_compile_options(
-  jank_lib
-  PUBLIC
-  -DJANK_CLANG_PREFIX="${CLANG_INSTALL_PREFIX}"
-  -DJANK_JIT_FLAGS="${jank_jit_compile_flags_str}"
-  -DJANK_AOT_FLAGS="${jank_lib_linker_flags_str}"
-)
-target_link_options(jank_lib PRIVATE ${jank_linker_flags})
-
-#set_target_properties(jank_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
-
-# Symbol exporting for JIT.
-set_target_properties(jank_lib PROPERTIES ENABLE_EXPORTS 1)
-# ---- libjank.a ----
+jank_hook_llvm(jank_compiler_lib)
+target_link_options(jank_compiler_lib PRIVATE ${jank_linker_flags})
+set_target_properties(jank_compiler_lib PROPERTIES ENABLE_EXPORTS 1)
+# ---- libjank-compiler.a ----
 
 # ---- libfolly.a ----
 # Folly is well and truly a pain in the ass to build through its
@@ -885,15 +948,17 @@ target_compile_options(jank_exe_phase_1
   ${jank_common_compiler_flags} ${jank_aot_compiler_flags}
   -DJANK_VERSION="${jank_version}"
 )
-target_include_directories(jank_exe_phase_1 SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_lib,INCLUDE_DIRECTORIES>")
-target_link_directories(jank_exe_phase_1 PRIVATE "$<TARGET_PROPERTY:jank_lib,LINK_DIRECTORIES>")
+target_include_directories(jank_exe_phase_1 SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_common_lib,INCLUDE_DIRECTORIES>")
+target_link_directories(jank_exe_phase_1 PRIVATE "$<TARGET_PROPERTY:jank_common_lib,LINK_DIRECTORIES>")
 target_link_options(jank_exe_phase_1 PRIVATE ${jank_linker_flags} -L ${CMAKE_BINARY_DIR})
 
 target_link_libraries(
   jank_exe_phase_1 PUBLIC
-  ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-standalone-phase-1.a ${jank_link_whole_end}
+  ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a ${jank_link_whole_end}
+  clangCppInterOp
   z
-  LLVM clang-cpp
+  LLVMLineEditor
+  #LLVM clang-cpp
   OpenSSL::Crypto
 )
 
@@ -911,7 +976,7 @@ endif()
 
 jank_hook_llvm(jank_exe_phase_1)
 
-add_dependencies(jank_exe_phase_1 jank_lib_standalone_phase_1)
+add_dependencies(jank_exe_phase_1 jank_standalone_dynamic_lib_phase_1)
 
 #set_target_properties(jank_exe_phase_1 PROPERTIES LINK_FLAGS_RELEASE "-s")
 # ---- jank phase 1 executable ----
@@ -943,6 +1008,7 @@ if(jank_enable_phase_2)
 
   target_link_libraries(
     jank_exe_phase_2 PUBLIC
+    # TODO: We need the phase 2 standalone lib.
     "$<TARGET_PROPERTY:jank_exe_phase_1,LINK_LIBRARIES>"
   )
 
@@ -1008,13 +1074,13 @@ if(jank_test)
   # A doctest issue causes some warnings: https://github.com/doctest/doctest/issues/900
   target_compile_options(jank_test_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags} "-Wno-#warnings")
   target_compile_options(jank_test_exe PRIVATE -DDOCTEST_CONFIG_SUPER_FAST_ASSERTS)
-  target_include_directories(jank_test_exe SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_lib,INCLUDE_DIRECTORIES>")
-  target_link_directories(jank_test_exe PRIVATE "$<TARGET_PROPERTY:jank_lib,LINK_DIRECTORIES>")
+  target_include_directories(jank_test_exe SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_common_lib,INCLUDE_DIRECTORIES>")
+  target_link_directories(jank_test_exe PRIVATE "$<TARGET_PROPERTY:jank_common_lib,LINK_DIRECTORIES>")
   target_link_options(jank_test_exe PRIVATE ${jank_linker_flags} -L ${CMAKE_BINARY_DIR})
 
   target_link_libraries(
     jank_test_exe PUBLIC
-    ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-standalone-phase-1.a ${jank_link_whole_end}
+    ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a ${jank_link_whole_end}
     z
     LLVM clang-cpp
     OpenSSL::Crypto

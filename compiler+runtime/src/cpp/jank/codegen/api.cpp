@@ -1,5 +1,10 @@
+#include <cstdarg>
+
 #include <jank/codegen/api.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/obj/transient_hash_map.hpp>
+#include <jank/runtime/obj/transient_array_map.hpp>
+#include <jank/runtime/obj/transient_vector.hpp>
 
 jank::runtime::var_ref _jank_var(char const * const sym)
 {
@@ -55,6 +60,64 @@ jank::runtime::obj::persistent_string_ref _jank_string(char const * const s)
   return jank::runtime::make_box<jank::runtime::obj::persistent_string>(s);
 }
 
+jank::runtime::obj::persistent_vector_ref _jank_vec(jank::u64 const elems, ...)
+{
+  /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+  va_list args{};
+  va_start(args, elems);
+
+  jank::runtime::obj::transient_vector trans;
+
+  for(jank::u64 i{}; i < elems; ++i)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    trans.conj_in_place(va_arg(args, jank::runtime::object *));
+  }
+
+  va_end(args);
+  return trans.to_persistent();
+}
+
+jank::runtime::obj::persistent_array_map_ref _jank_amap(jank::u64 const pairs, ...)
+{
+  /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+  va_list args{};
+  va_start(args, pairs);
+
+  jank::runtime::obj::transient_array_map trans;
+
+  for(jank::u64 i{}; i < pairs; ++i)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    trans.assoc_in_place(va_arg(args, jank::runtime::object *),
+                         /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+                         va_arg(args, jank::runtime::object *));
+  }
+
+  va_end(args);
+  return trans.to_persistent();
+}
+
+jank::runtime::obj::persistent_hash_map_ref _jank_hmap(jank::u64 const pairs, ...)
+{
+  /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+  va_list args{};
+  va_start(args, pairs);
+
+  jank::runtime::obj::transient_hash_map trans;
+
+  for(jank::u64 i{}; i < pairs; ++i)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    trans.assoc_in_place(va_arg(args, jank::runtime::object *),
+                         /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+                         va_arg(args, jank::runtime::object *));
+  }
+
+  va_end(args);
+  return trans.to_persistent();
+}
+
 jank::runtime::obj::jit_function_ref _jank_fn(jank::runtime::callable_arity_flags const flags)
 {
   return jank::runtime::make_box<jank::runtime::obj::jit_function>(flags);
@@ -76,9 +139,4 @@ jank::runtime::obj::jit_variadic_closure_ref
 _jank_vclosure(jank::runtime::callable_arity_flags const flags, void * const ctx)
 {
   return jank::runtime::make_box<jank::runtime::obj::jit_variadic_closure>(flags, ctx);
-}
-
-jank::runtime::object_ref _jank_eval_str(char const *edn)
-{
-  return jank::runtime::__rt_ctx->eval(jank::runtime::__rt_ctx->forcefully_read_string(edn));
 }

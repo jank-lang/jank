@@ -37,11 +37,15 @@ using jank_object_ref = void*;
 using jank_bool = char;
 using jank_usize = unsigned long long;
 
-extern "C" int jank_init_with_pch(int const argc,
+extern "C" int jank_init_dynamic(int const argc,
                          char const ** const argv,
                          jank_bool const init_default_ctx,
                          char const * const pch_data,
                          jank_usize pch_size,
+                         int (*fn)(int const, char const ** const));
+extern "C" int jank_init_static(int const argc,
+                         char const ** const argv,
+                         jank_bool const init_default_ctx,
                          int (*fn)(int const, char const ** const));
 extern "C" void jank_load_clojure_core_native();
 extern "C" void jank_load_clojure_core();
@@ -64,6 +68,7 @@ extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
     }
 
     /* TODO: Embed all registered resources. */
+    /*
     auto const pch_path{ util::find_pch(util::binary_version()) };
     sb(util::format(R"(
 namespace
@@ -75,6 +80,7 @@ namespace
 }
         )",
                     pch_path.unwrap()));
+                    */
 
     sb(R"(
 
@@ -110,7 +116,7 @@ int main(int argc, const char** argv)
 
   } };
 
-  return jank_init_with_pch(argc, argv, true, incremental_pch, sizeof(incremental_pch), fn);
+  return jank_init_static(argc, argv, true, fn);
 }
   )");
 
@@ -302,17 +308,19 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("c++"));
     compiler_args.push_back(strdup(entrypoint_path.c_str()));
 
-    for(auto const &lib : { "-ljank-standalone",
-                            /* Default libraries that jank depends on. */
-                            "-lm",
-                            "-lLLVM",
-                            "-lclang-cpp",
-                            "-lcrypto",
+    for(auto const &lib : {
+          "-ljank-static-runtime",
+          /* Default libraries that jank depends on. */
+          "-lm",
+    //"-lLLVM",
+    //"-lclang-cpp",
+    //"-lcrypto",
 #if defined(__MINGW64__)
-                            "-lpthread",
+          "-lpthread",
 #endif
-                            "-lz",
-                            "-lzstd" })
+          "-lz",
+          //"-lzstd"
+        })
     {
       compiler_args.push_back(strdup(lib));
     }

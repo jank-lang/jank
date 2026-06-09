@@ -234,6 +234,8 @@ namespace jank::error
         return "Invalid referred C++ global rename.";
       case kind::runtime_unsupported_behavior:
         return "Unsupported behavior.";
+      case kind::runtime_static_feature_disabled:
+        return "This feature is disabled in a static runtime.";
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
 

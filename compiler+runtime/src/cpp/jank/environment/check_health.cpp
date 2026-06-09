@@ -461,7 +461,7 @@ namespace jank::environment
     if(!fatal_error)
     {
       util::println("{}", header("jank runtime", max_width));
-      auto const ret{ jank_init(0, nullptr, true, [](int const, char const **) {
+      auto const ret{ jank_init_dynamic(0, nullptr, true, nullptr, 0, [](int const, char const **) {
         jank_load_clojure_core_native();
         util::println("{}─ ✅{} jank runtime initialized",
                       terminal_style::green,

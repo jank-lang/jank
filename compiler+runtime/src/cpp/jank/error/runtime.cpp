@@ -101,4 +101,11 @@ namespace jank::error
                                    behavior),
                       source);
   }
+
+  error_ref runtime_static_feature_disabled(jtl::immutable_string const &feature)
+  {
+    return make_error(kind::runtime_static_feature_disabled,
+                      util::format("The '{}' feature is unsupported in a static runtime.", feature),
+                      read::source::unknown());
+  }
 }

@@ -5,12 +5,12 @@
 
 namespace jank::error
 {
-  void warn(jtl::immutable_string const &msg)
+  void report(error_ref const e)
   {
     util::println(stderr,
-                  "{}warning:{} {}",
-                  jtl::terminal_style::yellow,
+                  "{}error:{} {}",
+                  jtl::terminal_style::red,
                   jtl::terminal_style::reset,
-                  msg);
+                  e->message);
   }
 }
