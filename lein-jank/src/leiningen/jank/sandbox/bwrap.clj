@@ -1,6 +1,6 @@
 (ns leiningen.jank.sandbox.bwrap
-  (:require [babashka.process :as proc]
-            [babashka.fs :as fs]))
+  (:require [babashka.fs :as fs]
+            [babashka.process :as proc]))
 
 ;; TODO: consider the merits of an allowlist vs. denylist of mounts. Per the
 ;; bwrap documentation, we definitely want to avoid mounting /var which may
@@ -27,12 +27,17 @@
   []
   (fs/which "bwrap"))
 
-(defn bind-valid? [src dst]
-  (fs/exists? src))
-
 (defn bwrap
+  "Build a `bwrap` command with the given options, returning the command.
+
+  Valid options are:
+    - [:ro-bind src dst]
+    - [:bind src dst]
+    - [:tmpfs dir]
+    - [:chdir dir]
+    - [:net enabled?]"
   [cmds]
-  (concat
+  (->>
    ["bwrap"
     ;; Without this bwrap processes could outlive this process which spawned it.
     "--die-with-parent"
@@ -41,18 +46,18 @@
     "--new-session"
     ;; Start with a clean slate and add namespaces back via '--share-*'
     ;; commands.
-    "--unshare-all"]
-   (->> (for [[k & rst] cmds]
-          (case k
-            :ro-bind (let [[src dst] rst] (when (bind-valid? src dst) ["--ro-bind" src dst]))
-            :bind    (let [[src dst] rst] (when (bind-valid? src dst) ["--bind" src dst]))
-            :tmpfs   (let [dir rst] ["--tmpfs" dir])
-            :chdir   (let [dir rst] ["--chdir" dir])
-            :net     (let [share rst] (when share ["--share-net"]))))
-        (flatten)
-        (remove nil?))
-   ["--proc" "/proc"
-    "--dev" "/dev"]))
+    "--unshare-all"
+    "--proc" "/proc"
+    "--dev" "/dev"
+    (for [[k & rst] cmds]
+      (case k
+        :ro-bind (let [[src dst] rst] (when (fs/exists? src) ["--ro-bind" src dst]))
+        :bind    (let [[src dst] rst] (when (fs/exists? src) ["--bind" src dst]))
+        :tmpfs   (let [dir rst] ["--tmpfs" dir])
+        :chdir   (let [dir rst] ["--chdir" dir])
+        :net     (let [share rst] (when share ["--share-net"]))))]
+   (flatten)
+   (remove nil?)))
 
 (comment
   (bwrap
