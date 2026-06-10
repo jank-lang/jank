@@ -8,6 +8,7 @@
 #include <jank/analyze/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/error/analyze.hpp>
@@ -574,6 +575,133 @@ namespace jank::analyze::cpp_util
           static auto const type{ Cpp::GetTypeFromScope(
             resolve_scope("jank.runtime.obj.persistent_array_map_ref").expect_ok()) };
           return type;
+        }
+      case jank::runtime::object_type::var:
+        return var_type();
+      default:
+        {
+          static auto const type{ untyped_object_ref_type() };
+          return type;
+        }
+    }
+#pragma clang diagnostic pop
+  }
+
+  jtl::ptr<void> literal_codegen_type(runtime::object_ref const o)
+  {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+    switch(o.get_type())
+    {
+      case jank::runtime::object_type::nil:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.nil_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::boolean:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.boolean_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::integer:
+        {
+          auto const i{ runtime::expect_object<runtime::obj::integer>(o)->data };
+          if(static_cast<i32>(i) == i)
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.small_integer_ref").expect_ok()) };
+            return type;
+          }
+          else
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.integer_ref").expect_ok()) };
+            return type;
+          }
+        }
+      case jank::runtime::object_type::small_integer:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.small_integer_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::character:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.character_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::real:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.real_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::small_real:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.small_real_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::symbol:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.symbol_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::keyword:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.keyword_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_string:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_string_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_list:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_list_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_vector:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_vector_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_hash_set:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_hash_set_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_array_map:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.persistent_array_map_ref").expect_ok()) };
+          return type;
+        }
+      case jank::runtime::object_type::persistent_hash_map:
+        {
+          auto const m{ runtime::expect_object<runtime::obj::persistent_hash_map>(o) };
+          if(m->count() <= runtime::detail::native_array_map::max_size)
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.persistent_array_map_ref").expect_ok()) };
+            return type;
+          }
+          else
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.persistent_hash_map_ref").expect_ok()) };
+            return type;
+          }
         }
       case jank::runtime::object_type::var:
         return var_type();

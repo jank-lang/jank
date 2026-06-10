@@ -245,20 +245,26 @@ namespace jank::codegen
               util::format_to(buffer, "jank::runtime::jank_false");
             }
           }
-          else if constexpr(jtl::is_any_same<T, obj::integer, obj::small_integer>)
+          else if constexpr(std::same_as<T, obj::integer>)
           {
-            if(static_cast<i32>(typed_o->data) == typed_o->data)
-            {
-              util::format_to(buffer, "_jank_small_int({})", typed_o->data);
-            }
-            else
-            {
-              util::format_to(buffer, "_jank_int({})", typed_o->data);
-            }
+            util::format_to(buffer, "_jank_int({})", typed_o->data);
+          }
+          else if constexpr(std::same_as<T, obj::small_integer>)
+          {
+            util::format_to(buffer, "_jank_small_int({})", typed_o->data);
           }
           else if constexpr(jtl::is_any_same<T, obj::real, obj::small_real>)
           {
-            util::format_to(buffer, "_jank_small_real({})", typed_o->data);
+            if constexpr(std::same_as<T, obj::real>)
+            {
+              util::format_to(buffer, "_jank_real(");
+            }
+            else
+            {
+              util::format_to(buffer, "_jank_small_real(");
+            }
+
+            util::format_to(buffer, "{})", typed_o->data);
           }
           else if constexpr(std::same_as<T, obj::big_integer>)
           {
@@ -343,25 +349,20 @@ namespace jank::codegen
             }
             else
             {
-              auto const has_meta{ should_gen_meta(typed_o->meta) };
-              if(has_meta)
+              util::format_to(buffer,
+                              "jank::runtime::make_box<jank::runtime::obj::persistent_vector>(");
+              if(should_gen_meta(typed_o->meta))
               {
-                util::format_to(buffer, "jank::runtime::reset_meta(");
+                gen_constant(typed_o->meta, buffer);
+                util::format_to(buffer, ",");
               }
-              util::format_to(buffer, "_jank_vec({} ", typed_o->count());
-              for(auto const e : typed_o->data)
+              util::format_to(buffer, "std::in_place ");
+              for(auto const &form : typed_o->data)
               {
                 util::format_to(buffer, ", ");
-                gen_constant(e, buffer);
-                util::format_to(buffer, ".erase()");
+                gen_constant(form, buffer);
               }
               util::format_to(buffer, ")");
-              if(has_meta)
-              {
-                util::format_to(buffer, ",");
-                gen_constant(typed_o->meta, buffer);
-                util::format_to(buffer, ")");
-              }
             }
           }
           else if constexpr(std::same_as<T, obj::persistent_list>)
@@ -438,20 +439,31 @@ namespace jank::codegen
             }
             else
             {
-              auto const has_meta{ should_gen_meta(typed_o->meta) };
-              if(has_meta)
+              bool need_comma{};
+              if(should_gen_meta(typed_o->meta))
               {
-                util::format_to(buffer, "jank::runtime::reset_meta(");
-              }
-              util::format_to(buffer,
-                              "_jank_eval_str(\"{}\")",
-                              util::escape(typed_o->to_code_string()));
-              if(has_meta)
-              {
-                util::format_to(buffer, ",");
+                util::format_to(
+                  buffer,
+                  "jank::runtime::obj::persistent_array_map::create_unique_with_meta(");
                 gen_constant(typed_o->meta, buffer);
-                util::format_to(buffer, ")");
+                need_comma = true;
               }
+              else
+              {
+                util::format_to(buffer, "jank::runtime::obj::persistent_array_map::create_unique(");
+              }
+              for(auto const &form : typed_o->data)
+              {
+                if(need_comma)
+                {
+                  util::format_to(buffer, ", ");
+                }
+                need_comma = true;
+                gen_constant(form.first, buffer);
+                util::format_to(buffer, ", ");
+                gen_constant(form.second, buffer);
+              }
+              util::format_to(buffer, ")");
             }
           }
           else if constexpr(std::same_as<T, obj::persistent_hash_map>)
