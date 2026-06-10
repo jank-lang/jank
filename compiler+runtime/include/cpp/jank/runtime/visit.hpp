@@ -92,7 +92,7 @@ namespace jank::runtime
     {
       return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
     }
-    if(detail::is_small_real(erased.raw()))
+    if(detail::is_tagged_small_real(erased.raw()))
     {
       return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
     }
@@ -439,7 +439,7 @@ namespace jank::runtime
     {
       return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
     }
-    if(detail::is_small_real(erased.raw()))
+    if(detail::is_tagged_small_real(erased.raw()))
     {
       return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
     }

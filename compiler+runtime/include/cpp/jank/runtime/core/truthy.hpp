@@ -20,7 +20,7 @@ namespace jank::runtime
       {
         return true;
       }
-      if(detail::is_small_real(d.raw()))
+      if(detail::is_tagged_small_real(d.raw()))
       {
         return true;
       }

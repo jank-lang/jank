@@ -99,7 +99,7 @@ namespace jank::runtime
     constexpr i32 min_small_integer{ std::numeric_limits<i32>::min() };
     constexpr i32 max_small_integer{ std::numeric_limits<i32>::max() };
 
-    inline bool is_small_real(void * const val)
+    inline bool is_tagged_small_real(void * const val)
     {
       auto const bits{ std::bit_cast<u64>(val) };
       return bits < max_real;
@@ -117,7 +117,7 @@ namespace jank::runtime
 
     inline f64 as_real(void * const val)
     {
-      jank_debug_assert(is_small_real(val));
+      jank_debug_assert(is_tagged_small_real(val));
       return std::bit_cast<f64>(val);
     }
 
@@ -354,7 +354,7 @@ namespace jank::runtime
       {
         return true;
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         return true;
       }
@@ -365,7 +365,7 @@ namespace jank::runtime
 
     bool is_nil() const noexcept
     {
-      if(detail::is_tagged_small_int(data) || detail::is_small_real(data))
+      if(detail::is_tagged_small_int(data) || detail::is_tagged_small_real(data))
       {
         return false;
       }
@@ -380,7 +380,7 @@ namespace jank::runtime
       {
         return object_type::small_integer;
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         return object_type::small_real;
       }
@@ -406,9 +406,9 @@ namespace jank::runtime
         return ptr()->equal(i);
       }
 
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
-        if(detail::is_small_real(o.raw()))
+        if(detail::is_tagged_small_real(o.raw()))
         {
           return detail::as_real(data) == detail::as_real(o.raw());
         }
@@ -416,7 +416,7 @@ namespace jank::runtime
         obj::small_real const i{ detail::as_real(data) };
         return o.equal(detail::untagged(&i));
       }
-      else if(detail::is_small_real(o.raw()))
+      else if(detail::is_tagged_small_real(o.raw()))
       {
         obj::small_real const i{ detail::as_real(o.raw()) };
         return ptr()->equal(i);
@@ -432,7 +432,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.to_string();
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.to_string();
@@ -449,7 +449,7 @@ namespace jank::runtime
         i.to_string(sb);
         return;
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         i.to_string(sb);
@@ -466,7 +466,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.to_code_string();
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.to_code_string();
@@ -482,7 +482,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.to_hash();
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.to_hash();
@@ -498,7 +498,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.has_behavior(b);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.has_behavior(b);
@@ -515,7 +515,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call();
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call();
@@ -531,7 +531,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call(a1);
@@ -547,7 +547,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2);
@@ -563,7 +563,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3);
@@ -580,7 +580,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4);
@@ -600,7 +600,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5);
@@ -621,7 +621,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5, a6);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5, a6);
@@ -643,7 +643,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7);
@@ -666,7 +666,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8);
@@ -690,7 +690,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
@@ -715,7 +715,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
@@ -741,7 +741,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
@@ -758,7 +758,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.get(key);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.get(key);
@@ -774,7 +774,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.get(key, fallback);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.get(key, fallback);
@@ -790,7 +790,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.contains(key);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.contains(key);
@@ -807,7 +807,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(data) };
         return i.find(key);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         obj::small_real const i{ detail::as_real(data) };
         return i.find(key);
@@ -837,9 +837,9 @@ namespace jank::runtime
         return ptr()->compare(i);
       }
 
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
-        if(detail::is_small_real(o.raw()))
+        if(detail::is_tagged_small_real(o.raw()))
         {
           auto const l{ detail::as_real(data) };
           auto const r{ detail::as_real(o.raw()) };
@@ -849,7 +849,7 @@ namespace jank::runtime
         obj::small_real const i{ detail::as_real(data) };
         return o.compare(detail::untagged(&i));
       }
-      else if(detail::is_small_real(o.raw()))
+      else if(detail::is_tagged_small_real(o.raw()))
       {
         obj::small_real const i{ detail::as_real(o.raw()) };
         return ptr()->compare(i);
@@ -865,7 +865,7 @@ namespace jank::runtime
       {
         return detail::as_integer(data);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         return static_cast<i64>(detail::as_real(data));
       }
@@ -879,7 +879,7 @@ namespace jank::runtime
       {
         return static_cast<f64>(detail::as_integer(data));
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         return detail::as_real(data);
       }
@@ -1130,7 +1130,7 @@ namespace jank::runtime
         obj::small_integer const i{ detail::as_integer(o.raw()) };
         return static_cast<T *>(data)->equal(i);
       }
-      if(detail::is_small_real(o.raw()))
+      if(detail::is_tagged_small_real(o.raw()))
       {
         obj::small_real const i{ detail::as_real(o.raw()) };
         return static_cast<T *>(data)->equal(i);
@@ -1407,7 +1407,7 @@ namespace jank::runtime
       {
         return detail::as_integer(data);
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         return static_cast<i64>(detail::as_real(data));
       }
@@ -1425,7 +1425,7 @@ namespace jank::runtime
       {
         return static_cast<f64>(detail::as_integer(data));
       }
-      if(detail::is_small_real(data))
+      if(detail::is_tagged_small_real(data))
       {
         return detail::as_real(data);
       }
@@ -1795,7 +1795,7 @@ namespace jank::runtime
 
     bool operator==(oref<object> const &rhs) const
     {
-      if(detail::is_small_real(rhs.raw()))
+      if(detail::is_tagged_small_real(rhs.raw()))
       {
         return data == detail::as_real(rhs.raw());
       }
@@ -1804,7 +1804,7 @@ namespace jank::runtime
 
     bool operator!=(oref<object> const &rhs) const
     {
-      if(detail::is_small_real(rhs.raw()))
+      if(detail::is_tagged_small_real(rhs.raw()))
       {
         return data != detail::as_real(rhs.raw());
       }
@@ -1851,7 +1851,7 @@ namespace jank::runtime
 
     bool equal(object_ref const o) const
     {
-      if(detail::is_small_real(o.raw()))
+      if(detail::is_tagged_small_real(o.raw()))
       {
         return data == detail::as_real(o.raw());
       }
@@ -2042,7 +2042,7 @@ namespace jank::runtime
     /* behavior::compare */
     i64 compare(object_ref const o) const
     {
-      if(detail::is_small_real(o.raw()))
+      if(detail::is_tagged_small_real(o.raw()))
       {
         auto const l{ data };
         auto const r{ detail::as_real(o.raw()) };

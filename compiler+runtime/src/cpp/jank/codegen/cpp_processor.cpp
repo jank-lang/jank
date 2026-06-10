@@ -156,19 +156,19 @@ namespace jank::codegen
       }
       else if(is_typed_object(type))
       {
-        if(runtime::detail::is_pointer(ptr))
+        if(runtime::detail::is_tagged_pointer(ptr))
         {
           fmt_str = util::format("{}{ (void*){} }",
                                  get_qualified_type_name(type),
                                  runtime::detail::as_pointer(ptr));
         }
-        else if(runtime::detail::is_small_int(ptr))
+        else if(runtime::detail::is_tagged_small_int(ptr))
         {
           fmt_str = util::format("{}{ {} }",
                                  get_qualified_type_name(type),
                                  runtime::detail::as_integer(ptr));
         }
-        else if(runtime::detail::is_small_real(ptr))
+        else if(runtime::detail::is_tagged_small_real(ptr))
         {
           fmt_str = util::format("{}{ {} }",
                                  get_qualified_type_name(type),
@@ -443,16 +443,9 @@ namespace jank::codegen
               {
                 util::format_to(buffer, "jank::runtime::reset_meta(");
               }
-              util::format_to(buffer, "_jank_amap({} ", typed_o->count());
-              for(auto const p : typed_o->data)
-              {
-                util::format_to(buffer, ", ");
-                gen_constant(p.first, buffer);
-                util::format_to(buffer, ".erase(), ");
-                gen_constant(p.second, buffer);
-                util::format_to(buffer, ".erase()");
-              }
-              util::format_to(buffer, ")");
+              util::format_to(buffer,
+                              "_jank_eval_str(\"{}\")",
+                              util::escape(typed_o->to_code_string()));
               if(has_meta)
               {
                 util::format_to(buffer, ",");
@@ -480,16 +473,9 @@ namespace jank::codegen
               {
                 util::format_to(buffer, "jank::runtime::reset_meta(");
               }
-              util::format_to(buffer, "_jank_hmap({} ", typed_o->count());
-              for(auto const p : typed_o->data)
-              {
-                util::format_to(buffer, ", ");
-                gen_constant(p.first, buffer);
-                util::format_to(buffer, ".erase(), ");
-                gen_constant(p.second, buffer);
-                util::format_to(buffer, ".erase()");
-              }
-              util::format_to(buffer, ")");
+              util::format_to(buffer,
+                              "_jank_eval_str(\"{}\")",
+                              util::escape(typed_o->to_code_string()));
               if(has_meta)
               {
                 util::format_to(buffer, ",");

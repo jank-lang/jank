@@ -25,7 +25,7 @@ namespace jank::runtime
 
   f64 to_f64(object_ref const o)
   {
-    if(detail::is_small_real(o.raw()))
+    if(detail::is_tagged_small_real(o.raw()))
     {
       return detail::as_real(o.raw());
     }
@@ -541,7 +541,7 @@ namespace jank::runtime
 
   bool is_real(object_ref const o)
   {
-    return detail::is_small_real(o.raw()) || o.get_type() == object_type::real;
+    return detail::is_tagged_small_real(o.raw()) || o.get_type() == object_type::real;
   }
 
   bool is_ratio(object_ref const o)
