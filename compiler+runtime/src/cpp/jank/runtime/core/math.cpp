@@ -9,7 +9,7 @@ namespace jank::runtime
 {
   i64 to_i64(object_ref const o)
   {
-    if(detail::is_small_int(o.raw()))
+    if(detail::is_tagged_small_int(o.raw()))
     {
       return detail::as_integer(o.raw());
     }
@@ -536,7 +536,7 @@ namespace jank::runtime
 
   bool is_integer(object_ref const o)
   {
-    return detail::is_small_int(o.raw()) || o.get_type() == object_type::integer;
+    return detail::is_tagged_small_int(o.raw()) || o.get_type() == object_type::integer;
   }
 
   bool is_real(object_ref const o)
