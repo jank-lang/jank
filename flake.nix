@@ -160,6 +160,7 @@
             llvmPackages.clang
             llvmPackages.libclang
             llvmPackages.libllvm
+            bubblewrap
 
             ## Required libs.
             boehmgc
@@ -179,6 +180,7 @@
             gdb
             clangbuildanalyzer
             openjdk
+            leiningen
 
             ## Book.
             mdbook
