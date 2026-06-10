@@ -5,6 +5,8 @@
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
+#include <jank/runtime/obj/persistent_hash_set.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/jit_variadic_function.hpp>
 #include <jank/runtime/obj/jit_closure.hpp>
@@ -23,9 +25,21 @@ jank::runtime::obj::symbol_ref
 _jank_symbol(jank::runtime::object_ref const meta, char const * const ns, char const * const name);
 jank::runtime::obj::persistent_string_ref _jank_string(char const * const s);
 jank::runtime::obj::jit_function_ref _jank_fn(jank::runtime::callable_arity_flags const flags);
+jank::runtime::obj::persistent_list_ref _jank_list(jank::u64 const elems, ...);
+jank::runtime::obj::persistent_list_ref
+_jank_list(jank::runtime::object_ref const meta, jank::u64 const elems, ...);
 jank::runtime::obj::persistent_vector_ref _jank_vec(jank::u64 const elems, ...);
+jank::runtime::obj::persistent_vector_ref
+_jank_vec(jank::runtime::object_ref const meta, jank::u64 const elems, ...);
+jank::runtime::obj::persistent_hash_set_ref _jank_hset(jank::u64 const elems, ...);
+jank::runtime::obj::persistent_hash_set_ref
+_jank_hset(jank::runtime::object_ref const meta, jank::u64 const elems, ...);
 jank::runtime::obj::persistent_array_map_ref _jank_amap(jank::u64 const pairs, ...);
+jank::runtime::obj::persistent_array_map_ref
+_jank_amap(jank::runtime::object_ref const meta, jank::u64 const pairs, ...);
 jank::runtime::obj::persistent_hash_map_ref _jank_hmap(jank::u64 const pairs, ...);
+jank::runtime::obj::persistent_hash_map_ref
+_jank_hmap(jank::runtime::object_ref const meta, jank::u64 const pairs, ...);
 jank::runtime::obj::jit_variadic_function_ref
 _jank_vfn(jank::runtime::callable_arity_flags const flags);
 jank::runtime::obj::jit_closure_ref
