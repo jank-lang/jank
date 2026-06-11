@@ -76,7 +76,7 @@ and `cpp/delete` or `cpp/malloc` and `cpp/free`, if you so desire.
 ## Why does jank compile to C++?
 jank is both a Clojure dialect and a C++ dialect, which is unique among most
 programming languages. In order for us to consider jank a C++ dialect, we must
-have exellent interop with C++, such as:
+have excellent interop with C++, such as:
 
 * Including C++ headers
 * Instantiating templates
@@ -91,7 +91,7 @@ lines of code from Clang in order to properly encode C++ semantics and ABI
 nuances in LLVM IR. We know, since we have done this. It was not worth it.
 Even when it worked, we would need to keep up with Clang as C++ evolved, we
 would need to deal with more portability issues, and, in general, we would need
-to build no only a Clojure compiler but a C++ compiler.
+to build not only a Clojure compiler but a C++ compiler.
 
 Clang is already a C++ compiler and it's a better C++ compiler than we're going
 to build, so instead we generate C++ and let Clang do what it does best. This
@@ -103,5 +103,15 @@ same some huge benefits:
    project
 3. Inspecting the generated code is a breeze
 
-The only real downside is worse compilation performance. This is a trade off we
+The only real downside is worse compilation performance. This is a tradeoff we
 accept.
+
+## Why does Clojure not compile to Java then?
+The Clojure JVM compiler compiles to JVM bytecode, rather than Java. It can do
+this because the JVM bytecode operates at the nearly semantic level of Java.
+Clojure can represent Java objects, virtual calls, exceptions, and so on, using
+JVM bytecode.
+
+LLVM IR, on the other hand, is much, much lower level than C++. The only way to
+turn C++ semantics into LLVM IR is with a C++ compiler, which is why jank
+generates C++ and uses Clang to then turn the C++ into LLVM IR.
