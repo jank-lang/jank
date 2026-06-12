@@ -1391,13 +1391,13 @@ namespace jank::analyze
     if(length < 2)
     {
       return error::analyze_invalid_def("Missing var name in 'def'.",
-                                        meta_source(l->meta),
+                                        meta_source(l->get_meta()),
                                         latest_expansion(macro_expansions));
     }
     else if(length > 4)
     {
       return error::analyze_invalid_def("Too many arguments provided to 'def'.",
-                                        meta_source(l->meta),
+                                        meta_source(l->get_meta()),
                                         latest_expansion(macro_expansions));
     }
 
@@ -1415,13 +1415,13 @@ namespace jank::analyze
     if(!sym->ns.empty())
     {
       return error::analyze_invalid_def("The provided var name for a 'def' must not be qualified.",
-                                        meta_source(sym->meta),
+                                        meta_source(sym->get_meta()),
                                         latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
     auto qualified_sym(runtime::__rt_ctx->qualify_symbol(sym));
-    qualified_sym->meta = sym->meta;
+    qualified_sym->set_meta(sym->get_meta());
     /* We always def in the current ns, so we want an owned var. */
     auto const var_res(__rt_ctx->intern_owned_var(qualified_sym));
     if(var_res.is_err())
@@ -1467,7 +1467,7 @@ namespace jank::analyze
                                           latest_expansion(macro_expansions))
           ->add_usage(read::parse::reparse_nth(l, 2));
       }
-      auto const meta_with_doc(runtime::assoc(qualified_sym->meta,
+      auto const meta_with_doc(runtime::assoc(qualified_sym->get_meta(),
                                               __rt_ctx->intern_keyword("doc").expect_ok(),
                                               docstring_obj));
       qualified_sym = qualified_sym->with_meta(meta_with_doc);
@@ -1488,7 +1488,7 @@ namespace jank::analyze
     if(auto const length(o->count()); length != 6)
     {
       return error::analyze_invalid_case("Invalid case*: exactly 6 parameters are needed.",
-                                         meta_source(o->meta),
+                                         meta_source(o->get_meta()),
                                          latest_expansion(macro_expansions));
     }
 
@@ -1496,7 +1496,7 @@ namespace jank::analyze
     if(it.first().is_none())
     {
       return error::analyze_invalid_case("Value expression is missing.",
-                                         meta_source(o->meta),
+                                         meta_source(o->get_meta()),
                                          latest_expansion(macro_expansions));
     }
     auto const value_expr_obj{ it.first().unwrap() };
@@ -1506,7 +1506,7 @@ namespace jank::analyze
     if(value_expr.is_err())
     {
       return error::analyze_invalid_case(value_expr.expect_err()->message,
-                                         meta_source(o->meta),
+                                         meta_source(o->get_meta()),
                                          latest_expansion(macro_expansions));
     }
     value_expr = apply_implicit_conversion(value_expr.expect_ok(),
@@ -1521,14 +1521,14 @@ namespace jank::analyze
     if(it.first().is_none())
     {
       return error::analyze_invalid_case("Shift value is missing.",
-                                         meta_source(o->meta),
+                                         meta_source(o->get_meta()),
                                          latest_expansion(macro_expansions));
     }
     auto const shift_obj{ it.first().unwrap() };
     if(!runtime::is_integer(shift_obj))
     {
       return error::analyze_invalid_case("Shift value must be an integer.",
-                                         meta_source(o->meta),
+                                         meta_source(o->get_meta()),
                                          latest_expansion(macro_expansions));
     }
     auto const shift{ runtime::to_i64(shift_obj) };
@@ -1537,14 +1537,14 @@ namespace jank::analyze
     if(it.first().is_none())
     {
       return error::analyze_invalid_case("Mask value is missing.",
-                                         meta_source(o->meta),
+                                         meta_source(o->get_meta()),
                                          latest_expansion(macro_expansions));
     }
     auto const mask_obj{ it.first().unwrap() };
     if(!runtime::is_integer(mask_obj))
     {
       return error::analyze_invalid_case("Mask value must be an integer.",
-                                         meta_source(o->meta),
+                                         meta_source(o->get_meta()),
                                          latest_expansion(macro_expansions));
     }
     auto const mask{ runtime::to_i64(mask_obj) };
@@ -1553,7 +1553,7 @@ namespace jank::analyze
     if(it.first().is_none())
     {
       return error::analyze_invalid_case("Default expression is missing.",
-                                         meta_source(o->meta),
+                                         meta_source(o->get_meta()),
                                          latest_expansion(macro_expansions));
     }
     auto const default_expr_obj{ it.first().unwrap() };
@@ -1565,7 +1565,7 @@ namespace jank::analyze
     if(it.first().is_none())
     {
       return error::analyze_invalid_case("Keys and expressions are missing.",
-                                         meta_source(o->meta),
+                                         meta_source(o->get_meta()),
                                          latest_expansion(macro_expansions));
     }
     auto const imap_obj{ it.first().unwrap() };
@@ -1607,7 +1607,7 @@ namespace jank::analyze
     if(keys_exprs.is_err())
     {
       return error::analyze_invalid_case(keys_exprs.expect_err(),
-                                         meta_source(o->meta),
+                                         meta_source(o->get_meta()),
                                          latest_expansion(macro_expansions));
     }
 
@@ -1656,7 +1656,7 @@ namespace jank::analyze
             util::format("Unable to capture '{}', since its type '{}' is not copyable.",
                          sym->to_string(),
                          cpp_util::get_qualified_type_name(binding_type)),
-            meta_source(sym->meta),
+            meta_source(sym->get_meta()),
             latest_expansion(macro_expansions));
         }
       }
@@ -1735,7 +1735,7 @@ namespace jank::analyze
 
       return error::analyze_unresolved_symbol(
         util::format("Unable to resolve symbol '{}'.", sym->to_string()),
-        meta_source(sym->meta),
+        meta_source(sym->get_meta()),
         latest_expansion(macro_expansions));
     }
 
@@ -1929,7 +1929,7 @@ namespace jank::analyze
     if(length < 2)
     {
       return error::analyze_invalid_fn("This function is missing its parameter vector.",
-                                       meta_source(full_list->meta),
+                                       meta_source(full_list->get_meta()),
                                        latest_expansion(macro_expansions));
     }
     auto list(full_list);
@@ -1944,7 +1944,7 @@ namespace jank::analyze
       if(length < 3)
       {
         return error::analyze_invalid_fn("This function is missing its parameter vector.",
-                                         meta_source(full_list->meta),
+                                         meta_source(full_list->get_meta()),
                                          latest_expansion(macro_expansions));
       }
       first_elem = list->data.rest().rest().first().unwrap();
@@ -1996,7 +1996,7 @@ namespace jank::analyze
               return error::analyze_invalid_fn(
                 "Invalid 'fn' syntax. Please provide either a list of arities or a "
                 "parameter vector.",
-                meta_source(full_list->meta),
+                meta_source(full_list->get_meta()),
                 latest_expansion(macro_expansions));
             }
           },
@@ -2023,7 +2023,7 @@ namespace jank::analyze
     if(found_variadic > 1)
     {
       return error::analyze_invalid_fn("A function may only have one variadic arity.",
-                                       meta_source(full_list->meta),
+                                       meta_source(full_list->get_meta()),
                                        latest_expansion(macro_expansions));
     }
 
@@ -2039,7 +2039,7 @@ namespace jank::analyze
           return error::analyze_invalid_fn(
             "The variadic arity of this function has fewer parameters than one of "
             "its fixed arities, which would lead to ambiguities when it's called.",
-            meta_source(full_list->meta),
+            meta_source(full_list->get_meta()),
             latest_expansion(macro_expansions));
         }
       }
@@ -2079,7 +2079,7 @@ namespace jank::analyze
           return error::analyze_invalid_fn(
             "There are multiple overloads with the same number of parameters. Each "
             "one must be unique.",
-            meta_source(full_list->meta),
+            meta_source(full_list->get_meta()),
             latest_expansion(macro_expansions));
         }
       }
@@ -2104,7 +2104,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_recur_position(
         "Unable to use 'recur' outside of a function or 'loop'.",
-        meta_source(list->meta),
+        meta_source(list->get_meta()),
         latest_expansion(macro_expansions));
     }
     else if(__rt_ctx->no_recur_var->is_bound() && runtime::truthy(__rt_ctx->no_recur_var->deref()))
@@ -2112,13 +2112,13 @@ namespace jank::analyze
       /* TODO: Note where the try is. */
       return error::analyze_invalid_recur_from_try(
         "It's not permitted to use 'recur' through a 'try'.",
-        meta_source(list->meta),
+        meta_source(list->get_meta()),
         latest_expansion(macro_expansions));
     }
     else if(position != expression_position::tail)
     {
       return error::analyze_invalid_recur_position("'recur' must be used in tail position.",
-                                                   meta_source(list->meta),
+                                                   meta_source(list->get_meta()),
                                                    latest_expansion(macro_expansions));
     }
 
@@ -2134,7 +2134,7 @@ namespace jank::analyze
           util::format("{} arg(s) were passed to 'recur', but it needs exactly {} here.",
                        arg_count,
                        loop_details.unwrap()->pairs.size()),
-          meta_source(list->meta),
+          meta_source(list->get_meta()),
           latest_expansion(macro_expansions));
       }
     }
@@ -2147,7 +2147,7 @@ namespace jank::analyze
           util::format("{} arg(s) were passed to 'recur', but it needs exactly {} here.",
                        arg_count,
                        fn_ctx.unwrap()->param_count),
-          meta_source(list->meta),
+          meta_source(list->get_meta()),
           latest_expansion(macro_expansions));
       }
     }
@@ -2284,7 +2284,7 @@ namespace jank::analyze
     if(o->count() < 2)
     {
       return error::analyze_invalid_let("A bindings vector must be provided to 'let'.",
-                                        meta_source(o->meta),
+                                        meta_source(o->get_meta()),
                                         latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(o, 1));
     }
@@ -2607,7 +2607,7 @@ namespace jank::analyze
     if(form_count < 3)
     {
       return error::analyze_invalid_if("Each 'if' needs at least a condition and a 'then' form.",
-                                       meta_source(o->meta),
+                                       meta_source(o->get_meta()),
                                        latest_expansion(macro_expansions));
     }
     else if(form_count > 4)
@@ -2725,7 +2725,7 @@ namespace jank::analyze
     if(o->count() != 2)
     {
       return error::analyze_invalid_quote("'quote' requires exactly one form to quote.",
-                                          meta_source(o->meta),
+                                          meta_source(o->get_meta()),
                                           latest_expansion(macro_expansions));
     }
 
@@ -2748,7 +2748,7 @@ namespace jank::analyze
     if(o->count() != 2)
     {
       return error::analyze_invalid_var_reference("'var' expects exactly one form to resolve.",
-                                                  meta_source(o->meta),
+                                                  meta_source(o->get_meta()),
                                                   latest_expansion(macro_expansions));
     }
 
@@ -2769,7 +2769,7 @@ namespace jank::analyze
     {
       return error::analyze_unresolved_var(
         util::format("Unable to resolve var '{}'.", qualified_sym->to_string()),
-        meta_source(o->meta),
+        meta_source(o->get_meta()),
         latest_expansion(macro_expansions));
     }
 
@@ -2805,7 +2805,7 @@ namespace jank::analyze
     if(o->count() != 2)
     {
       return error::analyze_invalid_throw("'throw' requires exactly one argument.",
-                                          meta_source(o->meta),
+                                          meta_source(o->get_meta()),
                                           latest_expansion(macro_expansions));
     }
 
@@ -3147,13 +3147,22 @@ namespace jank::analyze
     if(literal)
     {
       /* Eval the literal to resolve exprs such as quotes. */
-      auto const pre_eval_expr(
-        jtl::make_ref<expr::vector>(position, current_frame, true, o, std::move(exprs), o->meta));
+      auto const pre_eval_expr(jtl::make_ref<expr::vector>(position,
+                                                           current_frame,
+                                                           true,
+                                                           o,
+                                                           std::move(exprs),
+                                                           o->get_meta()));
       auto const oref(evaluate::eval(pre_eval_expr));
       return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o, oref);
     }
 
-    return jtl::make_ref<expr::vector>(position, current_frame, true, o, std::move(exprs), o->meta);
+    return jtl::make_ref<expr::vector>(position,
+                                       current_frame,
+                                       true,
+                                       o,
+                                       std::move(exprs),
+                                       o->get_meta());
   }
 
   processor::expression_result
@@ -3209,7 +3218,7 @@ namespace jank::analyze
                                         true,
                                         o,
                                         std::move(exprs),
-                                        typed_o->meta);
+                                        typed_o->get_meta());
       },
       o);
   }
@@ -3257,7 +3266,7 @@ namespace jank::analyze
                                                             true,
                                                             o,
                                                             std::move(exprs),
-                                                            typed_o->meta));
+                                                            typed_o->get_meta()));
           auto const constant(evaluate::eval(pre_eval_expr));
 
           return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o, constant);
@@ -3268,7 +3277,7 @@ namespace jank::analyze
                                         true,
                                         o,
                                         std::move(exprs),
-                                        typed_o->meta);
+                                        typed_o->get_meta());
       },
       o);
   }

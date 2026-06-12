@@ -11,7 +11,7 @@
 
 namespace jank::runtime::obj
 {
-  GC_word persistent_array_map::gc_descriptor{};
+  //GC_word persistent_array_map::gc_descriptor{};
 
   persistent_array_map::persistent_array_map(value_type &&d)
     : data{ std::move(d) }
@@ -24,6 +24,12 @@ namespace jank::runtime::obj
   }
 
   persistent_array_map::persistent_array_map(object_ref const meta, value_type &&d)
+    : parent_type{ meta }
+    , data{ std::move(d) }
+  {
+  }
+
+  persistent_array_map::persistent_array_map(jtl::immutable_string const &meta, value_type &&d)
     : parent_type{ meta }
     , data{ std::move(d) }
   {
@@ -55,13 +61,13 @@ namespace jank::runtime::obj
      * TODO: Benchmark if it's faster to have this behavior or to check first. */
     if(data.size() == runtime::detail::native_array_map::max_size)
     {
-      return make_box<persistent_hash_map>(meta, data, key, val);
+      return make_box<persistent_hash_map>(meta.get(), data, key, val);
     }
     else
     {
       auto copy(data.clone());
       copy.insert_or_assign(key, val);
-      return make_box<persistent_array_map>(meta, std::move(copy));
+      return make_box<persistent_array_map>(meta.get(), std::move(copy));
     }
   }
 
@@ -69,7 +75,7 @@ namespace jank::runtime::obj
   {
     auto copy(data.clone());
     copy.erase(key);
-    return make_box<persistent_array_map>(meta, std::move(copy));
+    return make_box<persistent_array_map>(meta.get(), std::move(copy));
   }
 
   object_ref persistent_array_map::call(object_ref const o) const

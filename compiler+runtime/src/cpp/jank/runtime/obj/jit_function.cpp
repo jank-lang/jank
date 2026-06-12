@@ -30,7 +30,7 @@ namespace jank::runtime::obj
 
   void jit_function::to_string(jtl::string_builder &buff) const
   {
-    auto const name(meta.get(__rt_ctx->intern_keyword("name").expect_ok()));
+    auto const name(meta.get().get(__rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
       "#object [{} {} {}]",
@@ -49,7 +49,13 @@ namespace jank::runtime::obj
 
   object_ref jit_function::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void jit_function::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   object_ref jit_function::call() const

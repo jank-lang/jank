@@ -29,6 +29,13 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_hash_set::persistent_hash_set(jtl::immutable_string const &meta, value_type &&d)
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
+    , meta{ meta }
+  {
+  }
+
   persistent_hash_set_ref persistent_hash_set::empty()
   {
     static persistent_hash_set const ret;
@@ -134,13 +141,19 @@ namespace jank::runtime::obj
 
   object_ref persistent_hash_set::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void persistent_hash_set::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   persistent_hash_set_ref persistent_hash_set::conj(object_ref const head) const
   {
     auto set(data.insert(head));
-    auto ret(make_box<persistent_hash_set>(meta, std::move(set)));
+    auto ret(make_box<persistent_hash_set>(meta.get(), std::move(set)));
     return ret;
   }
 
@@ -182,7 +195,7 @@ namespace jank::runtime::obj
   persistent_hash_set_ref persistent_hash_set::disj(object_ref const o) const
   {
     auto set(data.erase(o));
-    auto ret(make_box<persistent_hash_set>(meta, std::move(set)));
+    auto ret(make_box<persistent_hash_set>(meta.get(), std::move(set)));
     return ret;
   }
 }

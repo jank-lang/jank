@@ -135,14 +135,20 @@ namespace jank::runtime::obj
 
   object_ref persistent_sorted_set::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void persistent_sorted_set::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   persistent_sorted_set_ref persistent_sorted_set::conj(object_ref const head) const
   {
     auto copy(data);
     copy.insert(head);
-    auto ret(make_box<persistent_sorted_set>(meta, std::move(copy)));
+    auto ret(make_box<persistent_sorted_set>(meta.get(), std::move(copy)));
     return ret;
   }
 
@@ -190,7 +196,7 @@ namespace jank::runtime::obj
   {
     auto copy(data);
     copy.erase(o);
-    auto ret(make_box<persistent_sorted_set>(meta, std::move(copy)));
+    auto ret(make_box<persistent_sorted_set>(meta.get(), std::move(copy)));
     return ret;
   }
 }

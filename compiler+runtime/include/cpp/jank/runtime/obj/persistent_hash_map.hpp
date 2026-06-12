@@ -36,6 +36,7 @@ namespace jank::runtime::obj
     persistent_hash_map(value_type &&d);
     persistent_hash_map(value_type const &d);
     persistent_hash_map(object_ref const meta, value_type &&d);
+    persistent_hash_map(jtl::immutable_string const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_hash_map(runtime::detail::in_place_unique, Args &&...args)

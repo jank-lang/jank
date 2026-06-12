@@ -127,8 +127,9 @@ namespace jank::runtime
 
     /* behavior::metadatable */
     var_ref with_meta(object_ref m);
+    var_ref with_lazy_meta(jtl::immutable_string const &source);
     object_ref get_meta() const;
-    void set_meta(object_ref const m);
+    void set_meta(object_ref const o);
 
     bool operator==(var const &rhs) const;
 
@@ -142,7 +143,7 @@ namespace jank::runtime
     /*** XXX: Everything here is thread-safe. ***/
   private:
     folly::Synchronized<object_ref> root;
-    folly::Synchronized<object_ref> meta;
+    lazy_meta meta;
 
   public:
     std::atomic_bool dynamic{ false };

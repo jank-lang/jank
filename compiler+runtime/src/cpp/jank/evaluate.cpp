@@ -281,7 +281,7 @@ namespace jank::evaluate
   object_ref eval(expr::def_ref const expr)
   {
     auto var(__rt_ctx->intern_var(expr->name).expect_ok());
-    auto const meta(__rt_ctx->eval(expr->name->meta));
+    auto const meta(__rt_ctx->eval(expr->name->get_meta()));
     var->set_meta(meta);
 
     auto const dynamic(get(meta, __rt_ctx->intern_keyword("dynamic").expect_ok()));

@@ -3,6 +3,7 @@
 #include <folly/Synchronized.h>
 
 #include <jank/runtime/var.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 #include <jank/error.hpp>
 
 namespace jank::runtime
@@ -52,12 +53,12 @@ namespace jank::runtime
     /* behavior::metadatable */
     object_ref with_meta(object_ref m);
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
     bool operator==(ns const &rhs) const;
 
     /* XXX: Everything here is immutable after initialization. */
     obj::symbol_ref name{};
-    object_ref meta;
 
     /* XXX: Everything here is thread-safe. */
     /* TODO: Benchmark the use of atomics here. That's what Clojure uses. */
@@ -65,5 +66,8 @@ namespace jank::runtime
     folly::Synchronized<obj::persistent_hash_map_ref> aliases;
     folly::Synchronized<obj::persistent_hash_map_ref> referred_cpp_globals;
     std::atomic_uint64_t symbol_counter{};
+
+  private:
+    lazy_meta meta;
   };
 }

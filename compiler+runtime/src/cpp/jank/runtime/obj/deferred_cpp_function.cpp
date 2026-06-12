@@ -22,8 +22,8 @@ namespace jank::runtime::obj
                                                native_vector<u8> const &arities,
                                                bool const is_variadic)
     : object{ obj_type, obj_behaviors }
-    , meta{ meta }
     , var{ var }
+    , meta{ meta }
     , declaration_code{ declaration_code }
     , arity_flags{ arity_flags }
     , base_name{ base_name }
@@ -34,7 +34,7 @@ namespace jank::runtime::obj
 
   void deferred_cpp_function::to_string(jtl::string_builder &buff) const
   {
-    auto const name(meta.get(__rt_ctx->intern_keyword("name").expect_ok()));
+    auto const name(meta.get().get(__rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
       "#object [{} {} {}]",
@@ -63,7 +63,7 @@ namespace jank::runtime::obj
      * rebind the root of the var, and then apply our args to the new fn.*/
     __rt_ctx->jit_prc.eval_string(declaration_code);
     compiled_fn = __rt_ctx->jit_prc.create_function(arity_flags, base_name, arities, is_variadic);
-    reset_meta(compiled_fn, meta);
+    reset_meta(compiled_fn, meta.get());
 
     if(var.is_some())
     {

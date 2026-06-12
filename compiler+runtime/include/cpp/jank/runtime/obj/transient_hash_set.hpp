@@ -33,6 +33,7 @@ namespace jank::runtime::obj
 
     /* behavior::persistentable */
     persistent_type_ref to_persistent();
+    persistent_type_ref to_persistent(jtl::immutable_string const &meta);
 
     /* behavior::callable */
     using object::call;

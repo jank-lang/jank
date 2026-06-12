@@ -34,6 +34,13 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_vector::persistent_vector(jtl::immutable_string const &meta, value_type &&d)
+    : object{ obj_type, obj_behaviors }
+    , data{ jtl::move(d) }
+    , meta{ meta }
+  {
+  }
+
   persistent_vector_ref persistent_vector::create(object_ref const s)
   {
     if(s.is_nil())
@@ -177,7 +184,7 @@ namespace jank::runtime::obj
   persistent_vector_ref persistent_vector::conj(object_ref const head) const
   {
     auto vec(data.push_back(head));
-    auto ret(make_box<persistent_vector>(meta, std::move(vec)));
+    auto ret(make_box<persistent_vector>(meta.get(), std::move(vec)));
     return ret;
   }
 
@@ -201,7 +208,13 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void persistent_vector::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   object_ref persistent_vector::get(object_ref const key) const
@@ -275,11 +288,11 @@ namespace jank::runtime::obj
     if(i == size)
     {
       auto vec(data.push_back(val));
-      return make_box<persistent_vector>(meta, std::move(vec));
+      return make_box<persistent_vector>(meta.get(), std::move(vec));
     }
 
     auto vec(data.set(i, val));
-    return make_box<persistent_vector>(meta, std::move(vec));
+    return make_box<persistent_vector>(meta.get(), std::move(vec));
   }
 
   persistent_vector_ref persistent_vector::dissoc(object_ref const /*key*/) const
@@ -304,7 +317,7 @@ namespace jank::runtime::obj
       throw std::runtime_error{ "cannot pop an empty vector" };
     }
 
-    return make_box<persistent_vector>(meta, data.take(data.size() - 1));
+    return make_box<persistent_vector>(meta.get(), data.take(data.size() - 1));
   }
 
   object_ref persistent_vector::nth(object_ref const index) const

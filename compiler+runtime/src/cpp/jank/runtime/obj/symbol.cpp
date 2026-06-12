@@ -60,6 +60,16 @@ namespace jank::runtime::obj
   {
   }
 
+  symbol::symbol(jtl::immutable_string const &meta,
+                 jtl::immutable_string const &ns,
+                 jtl::immutable_string const &n)
+    : object{ obj_type, obj_behaviors }
+    , ns{ ns }
+    , name{ n }
+    , meta{ meta }
+  {
+  }
+
   symbol::symbol(object_ref const ns, object_ref const n)
     : object{ obj_type, obj_behaviors }
     , ns{ runtime::to_string(ns) }
@@ -161,7 +171,13 @@ namespace jank::runtime::obj
 
   object_ref symbol::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void symbol::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   jtl::immutable_string const &symbol::get_name() const

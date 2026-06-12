@@ -3,6 +3,7 @@
 #include <jtl/option.hpp>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime::obj
 {
@@ -28,6 +29,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     cons_ref with_meta(object_ref const m) const;
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
     /* behavior::seqable */
     cons_ref seq() const;
@@ -43,9 +45,9 @@ namespace jank::runtime::obj
     /*** XXX: Everything here is immutable after initialization. ***/
     object_ref head{};
     object_ref tail{};
-    object_ref meta;
 
     /*** XXX: Everything here is thread-safe. ***/
+    lazy_meta meta;
     mutable std::atomic<uhash> hash{};
   };
 }

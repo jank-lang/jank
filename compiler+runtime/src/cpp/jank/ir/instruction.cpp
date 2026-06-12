@@ -72,7 +72,7 @@ namespace jank::ir::inst
   persistent_list::persistent_list(identifier const &name,
                                    read::source const &location,
                                    native_vector<identifier> &&values,
-                                   jtl::option<identifier> const &meta)
+                                   runtime::object_ref const meta)
     : instruction{ instruction_kind::persistent_list, name, persistent_list_ref_type(), location }
     , values{ jtl::move(values) }
     , meta{ meta }
@@ -82,7 +82,7 @@ namespace jank::ir::inst
   persistent_vector::persistent_vector(identifier const &name,
                                        read::source const &location,
                                        native_vector<identifier> &&values,
-                                       jtl::option<identifier> const &meta)
+                                       runtime::object_ref const meta)
     : instruction{ instruction_kind::persistent_vector,
                    name,
                    persistent_vector_ref_type(),
@@ -96,7 +96,7 @@ namespace jank::ir::inst
     identifier const &name,
     read::source const &location,
     native_vector<std::pair<identifier, identifier>> &&values,
-    jtl::option<identifier> const &meta)
+    runtime::object_ref const meta)
     : instruction{ instruction_kind::persistent_array_map,
                    name,
                    persistent_array_map_ref_type(),
@@ -110,7 +110,7 @@ namespace jank::ir::inst
     identifier const &name,
     read::source const &location,
     native_vector<std::pair<identifier, identifier>> &&values,
-    jtl::option<identifier> const &meta)
+    runtime::object_ref const meta)
     : instruction{ instruction_kind::persistent_hash_map,
                    name,
                    persistent_hash_map_ref_type(),
@@ -123,7 +123,7 @@ namespace jank::ir::inst
   persistent_hash_set::persistent_hash_set(identifier const &name,
                                            read::source const &location,
                                            native_vector<identifier> &&values,
-                                           jtl::option<identifier> const &meta)
+                                           runtime::object_ref const meta)
     : instruction{ instruction_kind::persistent_hash_set,
                    name,
                    persistent_hash_set_ref_type(),
@@ -174,7 +174,7 @@ namespace jank::ir::inst
            read::source const &location,
            jtl::immutable_string const &qualified_var,
            jtl::option<identifier> const &value,
-           identifier const &meta,
+           runtime::object_ref const meta,
            bool const is_dynamic)
     : instruction{ instruction_kind::def, name, type, location }
     , qualified_var{ qualified_var }

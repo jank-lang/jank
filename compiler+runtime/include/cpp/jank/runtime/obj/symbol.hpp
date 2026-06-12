@@ -3,6 +3,7 @@
 #include <jtl/option.hpp>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime::obj
 {
@@ -23,6 +24,9 @@ namespace jank::runtime::obj
     symbol(jtl::immutable_string const &ns, jtl::immutable_string const &n);
     symbol(jtl::immutable_string &&ns, jtl::immutable_string &&n);
     symbol(object_ref const meta, jtl::immutable_string const &ns, jtl::immutable_string const &n);
+    symbol(jtl::immutable_string const &meta,
+           jtl::immutable_string const &ns,
+           jtl::immutable_string const &n);
     symbol(object_ref const ns, object_ref const n);
 
     symbol &operator=(symbol const &) = default;
@@ -47,6 +51,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     symbol_ref with_meta(object_ref const m) const;
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
     /* behavior::nameable */
     jtl::immutable_string const &get_name() const;
@@ -58,7 +63,10 @@ namespace jank::runtime::obj
     /*** XXX: Everything here is immutable after initialization. ***/
     jtl::immutable_string ns;
     jtl::immutable_string name;
-    object_ref meta;
+
+  private:
+    /*** XXX: Everything here is thead-safe. ***/
+    lazy_meta meta;
   };
 }
 

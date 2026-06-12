@@ -30,7 +30,7 @@ namespace jank::runtime
     }
 
     auto const cpp_sym{ make_box<obj::symbol>("cpp", sym_obj->name) };
-    cpp_sym->meta = sym_obj->meta;
+    cpp_sym->set_meta(sym_obj->get_meta());
 
     analyze::processor an_prc;
     auto const an_res{ an_prc.analyze(cpp_sym, analyze::expression_position::type) };

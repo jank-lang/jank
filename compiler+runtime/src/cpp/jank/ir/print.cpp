@@ -222,7 +222,10 @@ namespace jank::ir
     {
       util::format_to(sb, " :value {}", value.unwrap());
     }
-    util::format_to(sb, " :meta {} :type \"{}\"}", meta, get_qualified_type_name(type));
+    util::format_to(sb,
+                    " :meta {} :type \"{}\"}",
+                    meta.to_code_string(),
+                    get_qualified_type_name(type));
   }
 
   void inst::var_deref::print(jtl::string_builder &sb, usize const) const

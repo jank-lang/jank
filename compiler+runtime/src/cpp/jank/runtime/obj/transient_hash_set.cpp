@@ -54,6 +54,14 @@ namespace jank::runtime::obj
     return make_box<persistent_hash_set>(data.persistent());
   }
 
+  transient_hash_set::persistent_type_ref
+  transient_hash_set::to_persistent(jtl::immutable_string const &meta)
+  {
+    assert_active();
+    active = false;
+    return make_box<persistent_hash_set>(meta, data.persistent());
+  }
+
   object_ref transient_hash_set::call(object_ref const elem) const
   {
     assert_active();

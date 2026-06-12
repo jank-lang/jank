@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime::obj
 {
@@ -47,10 +48,14 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     native_vector_sequence_ref with_meta(object_ref const m) const;
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
     /*** XXX: Everything here is immutable after initialization. ***/
     native_vector<object_ref> data{};
     usize index{};
-    object_ref meta;
+
+    /*** XXX: Everything here is thead-safe. ***/
+  private:
+    lazy_meta meta;
   };
 }

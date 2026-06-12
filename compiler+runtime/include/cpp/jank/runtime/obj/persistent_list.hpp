@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 #include <jank/runtime/detail/native_persistent_list.hpp>
 
 namespace jank::runtime::obj
@@ -28,6 +29,7 @@ namespace jank::runtime::obj
     persistent_list(persistent_list const &) = default;
     persistent_list(value_type const &d);
     persistent_list(object_ref const meta, value_type const &d);
+    persistent_list(jtl::immutable_string const &meta, value_type const &d);
 
     /* TODO: This is broken when `args` is a value_type list we're looking to wrap in another list.
      * It just uses the copy ctor. */
@@ -62,6 +64,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     persistent_list_ref with_meta(object_ref const m) const;
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
     /* behavior::seqable */
     obj::persistent_list_ref seq() const;
@@ -86,6 +89,9 @@ namespace jank::runtime::obj
 
     /*** XXX: Everything here is immutable after initialization. ***/
     value_type data;
-    object_ref meta;
+
+    /*** XXX: Everything here is thead-safe. ***/
+  private:
+    lazy_meta meta;
   };
 }

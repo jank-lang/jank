@@ -90,6 +90,12 @@ namespace jank::runtime::obj
 
   object_ref cons::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void cons::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 }
