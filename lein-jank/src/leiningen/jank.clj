@@ -173,20 +173,35 @@
           (with-meta result (apply deep-merge-metadata maps))
           result)))))
 
-(defn verbatim->filespecs [{:keys [root verbatim-paths] :as project}]
+(defn verbatim->filespecs
+  "Specify filespecs to copy files or directories in the :verbatim-paths project
+  key into the output archive."
+  [{:keys [root verbatim-paths] :as project}]
   ;; TODO: I couldn't find a good way to insert paths verbatim into the output
   ;; jar. With resource-paths etc. lein always seems to strip the first
   ;; directory from the source path when copying. Need to find an alternative or
   ;; implement a better version of verbatim-paths.
   (for [path  verbatim-paths
-        f     (fs/glob (fs/path (:root project) path) "**")
-        :when (not (fs/directory? f))]
+        f     (if (fs/directory? path)
+                (fs/glob (fs/path (:root project) path) "**")
+                [(fs/path (:root project) path)])
+        :when (fs/regular-file? f)]
     {:type  :bytes
      :path  (str (fs/relativize (:root project) f))
      :bytes (fs/read-all-bytes f)}))
+
+(defn build-dependencies->dependencies
+  "Compute regular :dependencies coordinates from the jank-specific
+  :build-dependencies coordinates.
+
+  We simply add a :scope 'jank-build' to the end of the coordinate, which
+  designates it as a build-time dependency."
+  [{:keys [build-dependencies] :as project}]
+  (mapv #(conj % :scope "jank-build") build-dependencies))
 
 (defn middleware
   "Inject jank project details into your current project."
   [project]
   (-> (deep-merge default-project project)
-      (update :filespecs concat (verbatim->filespecs project))))
+      (update :filespecs concat (verbatim->filespecs project))
+      (update :dependencies concat (build-dependencies->dependencies project))))
