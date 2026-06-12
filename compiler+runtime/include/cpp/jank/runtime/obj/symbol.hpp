@@ -20,13 +20,11 @@ namespace jank::runtime::obj
     symbol(symbol &&) noexcept = default;
     symbol(symbol const &) = default;
     symbol(jtl::immutable_string const &d);
-    symbol(jtl::immutable_string &&d);
     symbol(jtl::immutable_string const &ns, jtl::immutable_string const &n);
-    symbol(jtl::immutable_string &&ns, jtl::immutable_string &&n);
-    symbol(object_ref const meta, jtl::immutable_string const &ns, jtl::immutable_string const &n);
     symbol(jtl::immutable_string const &meta,
            jtl::immutable_string const &ns,
            jtl::immutable_string const &n);
+    symbol(object_ref const meta, jtl::immutable_string const &ns, jtl::immutable_string const &n);
     symbol(object_ref const ns, object_ref const n);
 
     symbol &operator=(symbol const &) = default;

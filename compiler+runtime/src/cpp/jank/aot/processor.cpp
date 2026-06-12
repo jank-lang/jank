@@ -120,6 +120,13 @@ int main(int argc, const char** argv)
 }
   )");
 
+    jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_CODEGEN") ?: "" };
+    if(print_settings == "1")
+    {
+      auto const formatted{ util::format_cpp_source(sb.view()).expect_ok() };
+      util::println("\n{}\n", formatted);
+    }
+
     auto const tmp_dir{ std::filesystem::temp_directory_path() };
     std::string main_file_path{ (tmp_dir / "jank-main-XXXXXX").string() };
 

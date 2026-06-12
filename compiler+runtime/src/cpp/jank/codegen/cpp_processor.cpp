@@ -285,7 +285,7 @@ namespace jank::codegen
             if(should_gen_meta(typed_o->get_meta()))
             {
               util::format_to(buffer,
-                              "\"{},\"",
+                              "\"{}\",",
                               util::escape(typed_o->get_meta().to_code_string()));
             }
             util::format_to(buffer, R"("{}", "{}"))", typed_o->ns, typed_o->name);
