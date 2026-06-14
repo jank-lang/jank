@@ -124,7 +124,7 @@
   (fs/create-dirs out-dir)
   (let [dep-name     (first (:dep subtree-meta))
         build-meta   (merge subtree-meta {:src-dir   (str src-dir)
-                                          :build-dir jank-tmp-build-dir
+                                          :build-dir (str jank-tmp-build-dir)
                                           :out-dir   (str out-dir)})
         ;; The sandbox gets standard mounts for a scratch directory and build
         ;; output directory. It also mounts as RO each input and build input.
@@ -246,8 +246,8 @@
                  root-ops (when (has-build-file? (:root project))
                             [{:op           :compile
                               :dep          [(symbol (:group project) (:name project)) (:version project)]
-                              :src-dir      (:root project)
-                              :out-dir      (target-subdir output-dir "out" (:name project) "XXX")
+                              :src-dir      (str (:root project))
+                              :out-dir      (str (target-subdir output-dir "out" (:name project) "XXX"))
                               :build-inputs (collect-build-deps tree)
                               :inputs       (collect-out-dirs dep-ops)
                               :always-build true}])]
