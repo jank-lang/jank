@@ -34,9 +34,7 @@
         project        (update project :jank ljb/merge-native-flags native-flags)]
     (if (:main project)
       (ljc/shell-out! project cp-str "run-main" [(:main project)] args)
-      (do
-        (lmain/warn "No :main entrypoint for project.")
-        (lmain/exit 1)))))
+      (lmain/warn "No :main entrypoint for project."))))
 
 (defn repl!
   "Start a terminal REPL in your :main ns."
@@ -47,9 +45,7 @@
         project        (update project :jank ljb/merge-native-flags native-flags)]
     (if (:main project)
       (ljc/shell-out! project cp-str "repl" [(:main project)] args)
-      (do
-        (lmain/warn "No :main entrypoint for project.")
-        (lmain/exit 1)))))
+      (lmain/warn "No :main entrypoint for project."))))
 
 (defn compile!
   "Compile your project to an executable."
@@ -60,9 +56,7 @@
         project        (update project :jank ljb/merge-native-flags native-flags)]
     (if (:main project)
       (ljc/shell-out! project cp-str "compile" [(:main project)] args)
-      (do
-        (lmain/warn "No :main entrypoint for project.")
-        (lmain/exit 1)))))
+      (lmain/warn "No :main entrypoint for project."))))
 
 (defn compile-module!
   "Compile a single module and its dependencies to object files."
@@ -179,8 +173,11 @@
   [{:keys [root verbatim-paths] :as project}]
   ;; TODO: I couldn't find a good way to insert paths verbatim into the output
   ;; jar. With resource-paths etc. lein always seems to strip the first
-  ;; directory from the source path when copying. Need to find an alternative or
-  ;; implement a better version of verbatim-paths.
+  ;; directory from the source path when copying.
+  ;; 
+  ;; Need to find an alternative or implement a better version of
+  ;; verbatim-paths. As it stands, every lein command which invokes the jank
+  ;; middleware will read all of these files into memory.
   (for [path  verbatim-paths
         f     (if (fs/directory? path)
                 (fs/glob (fs/path (:root project) path) "**")
