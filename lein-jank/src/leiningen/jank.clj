@@ -169,23 +169,24 @@
 
 (defn verbatim->filespecs
   "Specify filespecs to copy files or directories in the :verbatim-paths project
-  key into the output archive."
+  key into the output archive.
+
+  These paths are copied exactly, whereas the standard keys like :source-paths
+  strip the path prefix such that the entries appear directly on the classpath
+  when the jar is loaded."
   [{:keys [root verbatim-paths] :as project}]
-  ;; TODO: I couldn't find a good way to insert paths verbatim into the output
-  ;; jar. With resource-paths etc. lein always seems to strip the first
-  ;; directory from the source path when copying.
-  ;; 
-  ;; Need to find an alternative or implement a better version of
-  ;; verbatim-paths. As it stands, every lein command which invokes the jank
-  ;; middleware will read all of these files into memory.
   (for [path  verbatim-paths
         f     (if (fs/directory? path)
                 (fs/glob (fs/path (:root project) path) "**")
                 [(fs/path (:root project) path)])
         :when (fs/regular-file? f)]
-    {:type  :bytes
-     :path  (str (fs/relativize (:root project) f))
-     :bytes (fs/read-all-bytes f)}))
+    ;; Lazy :fn type filespecs so that the file contents are only loaded when
+    ;; needed, rather than every time the middleware is executed.
+    {:type :fn
+     :fn   (fn [project]
+             {:type  :bytes
+              :path  (str (fs/relativize (:root project) f))
+              :bytes (fs/read-all-bytes f)})}))
 
 (defn build-dependencies->dependencies
   "Compute regular :dependencies coordinates from the jank-specific
