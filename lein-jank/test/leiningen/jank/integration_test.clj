@@ -23,15 +23,10 @@
 ;; Children need to be installed into the maven cache to be properly picked up
 ;; by parents.
 (defn setup-fixture [f]
-  (try
-    (install build-dependency-project)
-    (install grandchild-project)
-    (install child-project)
-    (install parent-project)
-    (catch Exception e
-      ;; ignore lein exit calls
-      (when (not= (ex-message e) "Suppressed exit")
-        (throw e))))
+  (install build-dependency-project)
+  (install grandchild-project)
+  (install child-project)
+  (install parent-project)
   (f))
 
 (use-fixtures :once setup-fixture)
