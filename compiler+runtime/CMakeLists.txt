@@ -348,62 +348,40 @@ set(
 # nanobench uses a single header for both .hpp and .cpp inclusion, based on
 # whether a define has been set. This doesn't work with jank's pre-compiled
 # headers, so I've manually split the two up and included them here.
-
 set(
   nanobench_sources
   third-party/nanobench/src/nanobench.cpp
 )
-
 add_library(nanobench_lib STATIC ${nanobench_sources})
-
-# Not our code. Don't try to lint it.
 set_source_files_properties(${nanobench_sources} PROPERTIES SKIP_LINTING ON)
-
 target_include_directories(
     nanobench_lib
     SYSTEM
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/nanobench/include>"
 )
-
 set_property(TARGET nanobench_lib PROPERTY OUTPUT_NAME nanobench)
-
 target_compile_features(nanobench_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(nanobench_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags})
 target_link_options(nanobench_lib PRIVATE ${jank_linker_flags})
-
-#set_target_properties(nanobench_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
-
-# Symbol exporting for JIT.
 set_target_properties(nanobench_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libnanobench.a ----
 
 # ---- libjankzip.a ----
-
 set(
   jankzip_sources
   third-party/zip/src/zip.c
 )
-
 add_library(jankzip_lib STATIC ${jankzip_sources})
-
-# Not our code. Don't try to lint it.
 set_source_files_properties(${jankzip_sources} PROPERTIES SKIP_LINTING ON)
-
 target_include_directories(
     jankzip_lib
     SYSTEM
     PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/zip/src>"
 )
-
 set_property(TARGET jankzip_lib PROPERTY OUTPUT_NAME jankzip)
-
 target_compile_options(jankzip_lib PUBLIC -w)
-
-#set_target_properties(jankzip_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
-
-# Symbol exporting for JIT.
 set_target_properties(jankzip_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libjankzip.a ----
 
@@ -412,11 +390,20 @@ set_target_properties(jankzip_lib PROPERTIES ENABLE_EXPORTS 1)
 # remains a static lib, since these symbols need to be accessible in the
 # compiler's runtime by the JIT compiler.
 #
-# TODO: Update.
-# This is libjank.a, but the final libjank-dynamic-runtime.a will be merged
-# by ar-merge to contain all of the other static libs we build, too. We
-# merge them so that consumption of jank as a lib is much easier. Rather
-# than bringing in libjank and 10 other libs, users just need libjank-dynamic-runtime.
+# jank has two final "standalone" libraries, where "standalone" means that
+# all non-system, non-LLVM dependencies are combined into the static lib.
+# We do this so that people linking to jank don't also need to pull in all
+# of our third party libraries like folly, zip, bdwgc, cpptrace, and so on.
+#
+# 1. libjank-static-runtime.a
+# 2. libjank-dynamic-runtime.a
+#
+# Each of these is composed of the following first-party static libaries.
+#
+# 1. libjank-common.a - reader and runtime, used everywhere
+# 2. libjank-dynamic.a - implementation of certain runtime functions specific to JIT evaluation
+# 3. libjank-static.a - implementation of certain runtime functions where JIT evaluation is not possible
+# 4. libjank-compiler.a - analyzer, ir, optimization passes, codegen
 #
 # However, merging static libs isn't a well supported operation. Generally,
 # it involves unpacking each archive and then buliding a new archive from
@@ -502,6 +489,7 @@ include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
+include(cmake/dependency/folly.cmake)
 
 if(jank_test)
   include(cmake/dependency/doctest.cmake)
@@ -674,7 +662,6 @@ target_include_directories(
 
 target_link_libraries(
   jank_common_lib PRIVATE
-  clangCppInterOp
   cpptrace::cpptrace
   ftxui::screen ftxui::dom
   Boost::multiprecision
@@ -776,7 +763,7 @@ target_compile_features(jank_static_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_static_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
 target_include_directories(jank_static_lib SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_common_lib,INCLUDE_DIRECTORIES>")
 target_link_options(jank_static_lib PRIVATE ${jank_linker_flags})
-set_target_properties(jank_static_lib PROPERTIES ENABLE_EXPORTS 1)
+set_target_properties(jank_static_lib PROPERTIES ENABLE_EXPORTS 0)
 # ---- libjank-static.a ----
 
 # ---- libjank-compiler.a ----
@@ -855,74 +842,6 @@ target_link_options(jank_compiler_lib PRIVATE ${jank_linker_flags})
 set_target_properties(jank_compiler_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libjank-compiler.a ----
 
-# ---- libfolly.a ----
-# Folly is well and truly a pain in the ass to build through its
-# own build system. It regularly fails to build for me
-# on all sorts of standard systems (both Linux and macOS) and jank
-# has been running with custom patches for several months now. After
-# running into compilation issues with it yet again, I've decided to
-# just rip the good bits out and only compile what we need.
-#
-# The Folly fork we have makes things even easier to build by commenting
-# out some bits related to jemalloc and tcmalloc. Folly has a whole
-# complex preprocessor system for this stuff, but it still ends up
-# linking to them even when you say you don't want them.
-
-set(
-  folly_sources
-  third-party/folly/folly/ScopeGuard.cpp
-  third-party/folly/folly/SharedMutex.cpp
-  third-party/folly/folly/concurrency/CacheLocality.cpp
-  third-party/folly/folly/synchronization/ParkingLot.cpp
-  third-party/folly/folly/synchronization/SanitizeThread.cpp
-  third-party/folly/folly/lang/SafeAssert.cpp
-  third-party/folly/folly/lang/ToAscii.cpp
-  third-party/folly/folly/system/ThreadId.cpp
-  third-party/folly/folly/system/AtFork.cpp
-  third-party/folly/folly/detail/Futex.cpp
-  third-party/folly/folly/memory/folly_stubs.cpp
-)
-
-if(WIN32)
-  list(APPEND folly_sources
-    third-party/folly/folly/net/NetOps.cpp
-    third-party/folly/folly/net/detail/SocketFileDescriptorMap.cpp
-    third-party/folly/folly/portability/Sockets.cpp
-    third-party/folly/folly/portability/SysResource.cpp
-    third-party/folly/folly/portability/Unistd.cpp
-  )
-endif()
-
-add_library(folly_lib STATIC ${folly_sources})
-
-# Not our code. Don't try to lint it.
-set_source_files_properties(${folly_sources} PROPERTIES SKIP_LINTING ON)
-
-target_include_directories(
-  folly_lib
-  SYSTEM
-  PUBLIC
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-preprocessor/include>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-process/include>"
-)
-
-set_property(TARGET folly_lib PROPERTY OUTPUT_NAME folly)
-
-target_compile_features(folly_lib PUBLIC ${jank_cxx_standard})
-target_compile_options(folly_lib PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags} -w)
-target_link_options(folly_lib PRIVATE ${jank_linker_flags})
-
-#set_target_properties(folly_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
-
-# Symbol exporting for JIT.
-set_target_properties(folly_lib PROPERTIES ENABLE_EXPORTS 1)
-
-target_link_libraries(
-  folly_lib PUBLIC
-)
-# ---- libfolly.a ----
-
 # ---- jank phase 1 executable ----
 add_executable(
   jank_exe_phase_1
@@ -948,11 +867,8 @@ target_link_options(jank_exe_phase_1 PRIVATE ${jank_linker_flags} -L ${CMAKE_BIN
 target_link_libraries(
   jank_exe_phase_1 PUBLIC
   ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a ${jank_link_whole_end}
-  clangCppInterOp
+  LLVM clang-cpp
   z
-  LLVMLineEditor
-  # TODO: Fix double linkage.
-  #LLVM clang-cpp
   OpenSSL::Crypto
 )
 
@@ -968,7 +884,7 @@ if(WIN32)
   )
 endif()
 
-jank_hook_llvm(jank_exe_phase_1)
+#jank_hook_llvm(jank_exe_phase_1)
 # ---- jank phase 1 executable ----
 
 # ---- jank phase 2 executable ----
