@@ -24,7 +24,7 @@ extern "C" void jank_load_clojure_core();
 int main(int const argc, char const **argv)
 try
 {
-  return jank_init(argc, argv, /*init_default_ctx=*/true, [](int const argc, char const **argv) {
+  return jank_init_dynamic(argc, argv, true, nullptr, 0, [](int const argc, char const **argv) {
     doctest::Context context;
     context.applyCommandLine(argc, argv);
     context.setOption("no-breaks", true);
@@ -47,7 +47,7 @@ try
     return res;
   });
 }
-/* Most exceptions are being caught in `jank_init`.
+/* Most exceptions are being caught in `jank_init_dynamic`.
  * This piece here catches rest of them. */
 catch(...)
 {
