@@ -14,10 +14,17 @@
        lcp/get-classpath
        (string/join File/pathSeparatorChar)))
 
-(defn build-declarative-flag [flag value]
+(defn build-declarative-flag [project-name flag value]
   (case flag
+    ;; When a user specifies an :output-dir in the project.clj, this is the
+    ;; output for all artifacts. All dependency sources and builds will go into
+    ;; subdirectories in :output-dir.
+    ;;
+    ;; To prevent jank from placing artifacts for _this_ project in the
+    ;; top-level output-dir and potentially trampling files from dependencies,
+    ;; we pass it an output directory suffixed by the project name.
     :output-dir
-    ["--output-dir" value]
+    ["--output-dir" (fs/path value project-name)]
 
     :direct-call
     (if value
@@ -43,11 +50,14 @@
     :linked-libraries
     (map (fn [v] (str "-l" v)) value)
 
+    :disable-sandbox
+    [] ;; ignore, used in build process
+
     (lmain/warn (str "Unknown flag " flag))))
 
 (defn build-declarative-flags [project]
   (flatten (map (fn [[flag value]]
-                  (build-declarative-flag flag value))
+                  (build-declarative-flag (:name project) flag value))
                 (:jank project))))
 
 (defn shell-out! [project classpath command compiler-args runtime-args]

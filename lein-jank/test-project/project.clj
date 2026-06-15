@@ -2,6 +2,8 @@
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :plugins [[org.jank-lang/lein-jank "0.6"]]
+  ;; include a native dependency for testing
+  :dependencies [[org.clojars.kylc/jank-glfw3 "0.1-SNAPSHOT"]]
   :main test-project.core
   :jank {;:disable-locals-clearing false
          ;:elide-meta false
