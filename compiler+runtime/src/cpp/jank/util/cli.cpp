@@ -123,7 +123,7 @@ OPTIONS
                               The file to write profile entries (will be overwritten).
           --perf              Enable Linux perf event sampling.
           --gc-incremental    Enable incremental GC collection.
-          --debug             Enable debug symbol generation for generated code.
+          --no-debug          Disable debug source map generation for generated code.
   -O,     --optimization <0 - 3>
                               The optimization level to use for AOT compilation.
   -Odirect-call               Elides the dereferencing of vars for improved performance.

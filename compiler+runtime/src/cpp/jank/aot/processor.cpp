@@ -227,6 +227,9 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(util::format("-D{}", define).c_str()));
     }
 
+    /* We always enable debug info. Users can later strip the binary, if they want. */
+    compiler_args.push_back(strdup("-g"));
+
     compiler_args.push_back(strdup("-std=c++20"));
     compiler_args.push_back(strdup("-Wno-c23-extensions"));
     if constexpr(jtl::current_platform == jtl::platform::linux_like)
@@ -234,9 +237,10 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup("-Wl,--export-dynamic"));
     }
 
-#ifndef JANK_WINDOWS_LIKE
-    compiler_args.push_back(strdup("-rdynamic"));
-#endif
+    if constexpr(jtl::current_platform != jtl::platform::windows_like)
+    {
+      compiler_args.push_back(strdup("-rdynamic"));
+    }
 
     switch(util::cli::opts.codegen_optimization_level)
     {
