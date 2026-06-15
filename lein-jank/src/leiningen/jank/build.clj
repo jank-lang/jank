@@ -10,13 +10,14 @@
            (java.util HexFormat)
            (java.util.jar JarFile)))
 
+(def ^:dynamic *disable-sandbox* false)
+
 (def jank-build-file "jank-build.bb")
 (def jank-build-cache-file "jank-build-cache.txt")
 (def jank-tmp-build-dir (fs/path (fs/temp-dir) "jank-build"))
 
 (def default-build-opts
   {:output-dir         "target"
-   :disable-sandbox    false
    :optimization-level 2
    :static-build       true
    :verbose-build      true})
@@ -107,9 +108,9 @@
       (swap! lines-atom conj line))))
 
 (defn build-dep!
-  "Run a sandboxed (unless :disable-sandbox is set in subtree-meta) build on the
-  dependency located at `src-dir`, and instruct the build script to place
-  artifacts in the `out-dir`.
+  "Run a sandboxed (unless disable-sandbox is set) build on the dependency
+  located at `src-dir`, and instruct the build script to place artifacts in the
+  `out-dir`.
 
   The `src-dir` is expected to contain a `jank-build.bb` file. This file is run
   in the sandbox by `bb --stream jank-build.bb`, and is passed the build
@@ -141,7 +142,7 @@
         ;; Include all build input jars into the classpath.
         bb-classpath (string/join ":" (:build-inputs subtree-meta))
         proc         (sandbox/process
-                      (not (:disable-sandbox subtree-meta))
+                      (not *disable-sandbox*)
                       sandbox-args
                       ["bb" "--classpath" bb-classpath "--stream" (fs/path src-dir jank-build-file)]
                       {:in       (pr-str build-meta)
@@ -232,7 +233,7 @@
   which can be executed by `run-build!`."
   [project]
   (let [{:keys [output-dir] :as build-opts} (merge default-build-opts (:jank project))]
-    (when (:disable-sandbox build-opts)
+    (when *disable-sandbox*
       (println "\u001b[1;31mBuilding with sandboxing disabled is potentially dangerous!\u001b[0m"))
 
     (assoc build-opts :operations

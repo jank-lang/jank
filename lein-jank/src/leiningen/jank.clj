@@ -1,37 +1,39 @@
 (ns leiningen.jank
   (:refer-clojure :exclude [run!])
   (:require [clojure.pprint :as pp]
-            [clojure.string :as string]
             [leiningen.core.main :as lmain]
-            [leiningen.core.classpath :as cp]
             [leiningen.jank.core :as ljc]
             [leiningen.jank.test :as ljt]
             [leiningen.jank.build :as ljb]
             [babashka.fs :as fs]))
 
-(defn apply-args
-  "Extract task-specific args from the list and apply them to the project,
-  returning the updated project and the leftover arguments."
+(defn process-task-args
+  "Extract task-specific args from the list and return the parsed options and
+  the leftover arguments."
   [project args]
   (let [res (reduce
              (fn [acc arg]
                (cond
                  (= arg ":disable-sandbox")
-                 (assoc-in acc [:project :jank :disable-sandbox] true)
+                 (assoc-in acc [:opts :disable-sandbox] true)
 
                  :else
                  (update acc :args conj arg)))
-             {:project project :args []}
+             {:project project :opts {} :args []}
              args)]
-    ((juxt :project :args) res)))
+    ((juxt :opts :args) res)))
+
+(defn native-build [project opts]
+  (binding [ljb/*disable-sandbox* (or ljb/*disable-sandbox* (:disable-sandbox opts))]
+    (let [native-flags (ljb/run-build! (ljb/plan-build project))]
+      (update project :jank ljb/merge-native-flags native-flags))))
 
 (defn run!
   "Run your project, starting at the main entrypoint."
   [project & args]
-  (let [[project args] (apply-args project args)
-        cp-str         (ljc/build-module-path project)
-        native-flags   (ljb/run-build! (ljb/plan-build project))
-        project        (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[opts args] (process-task-args project args)
+        project     (native-build project opts)
+        cp-str      (ljc/build-module-path project)]
     (if (:main project)
       (ljc/shell-out! project cp-str "run-main" [(:main project)] args)
       (lmain/warn "No :main entrypoint for project."))))
@@ -39,10 +41,9 @@
 (defn repl!
   "Start a terminal REPL in your :main ns."
   [project & args]
-  (let [[project args] (apply-args project args)
-        cp-str         (ljc/build-module-path project)
-        native-flags   (ljb/run-build! (ljb/plan-build project))
-        project        (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[opts args] (process-task-args project args)
+        project     (native-build project opts)
+        cp-str      (ljc/build-module-path project)]
     (if (:main project)
       (ljc/shell-out! project cp-str "repl" [(:main project)] args)
       (lmain/warn "No :main entrypoint for project."))))
@@ -50,10 +51,9 @@
 (defn compile!
   "Compile your project to an executable."
   [project & args]
-  (let [[project args] (apply-args project args)
-        cp-str         (ljc/build-module-path project)
-        native-flags   (ljb/run-build! (ljb/plan-build project))
-        project        (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[opts args] (process-task-args project args)
+        project     (native-build project opts)
+        cp-str      (ljc/build-module-path project)]
     (if (:main project)
       (ljc/shell-out! project cp-str "compile" [(:main project)] args)
       (lmain/warn "No :main entrypoint for project."))))
@@ -61,10 +61,9 @@
 (defn compile-module!
   "Compile a single module and its dependencies to object files."
   [project & args]
-  (let [[project args] (apply-args project args)
-        cp-str         (ljc/build-module-path project)
-        native-flags   (ljb/run-build! (ljb/plan-build project))
-        project        (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[opts args] (process-task-args project args)
+        project     (native-build project opts)
+        cp-str      (ljc/build-module-path project)]
     (ljc/shell-out! project cp-str "compile-module" [] args)))
 
 (defn check-health!
@@ -92,7 +91,7 @@
            :help (-> fn-ref meta :doc)})
         subtask-kw->var)))
 
-(defn process-args [args]
+(defn process-jank-args [args]
   (loop [args args
          ret []]
     (if (empty? args)
@@ -109,7 +108,7 @@
   "Compile, run, test and repl into jank."
   [project subcmd & args]
   (if-some [handler (subtask-kw->var (keyword subcmd))]
-    (apply handler project (process-args args))
+    (apply handler project (process-jank-args args))
     (do
       (lmain/warn "Invalid subcommand!")
       (print-help!)

@@ -23,11 +23,12 @@
 ;; Children need to be installed into the maven cache to be properly picked up
 ;; by parents.
 (defn setup-fixture [f]
-  (install build-dependency-project)
-  (install grandchild-project)
-  (install child-project)
-  (install parent-project)
-  (f))
+  (binding [build/*disable-sandbox* true]
+    (install build-dependency-project)
+    (install grandchild-project)
+    (install child-project)
+    (install parent-project)
+    (f)))
 
 (use-fixtures :once setup-fixture)
 
@@ -65,10 +66,10 @@
 (deftest run-build-test
   (let [output-dir (fs/create-temp-dir {:prefix "lein-jank-test-out"})
         plan       (-> parent-project
-                       (assoc-in [:jank :disable-sandbox] true)
                        (assoc-in [:jank :output-dir] output-dir)
                        (build/plan-build))
-        result     (build/run-build! plan)]
+        result     (binding [build/*disable-sandbox* true]
+                     (build/run-build! plan))]
     ;; These are the results from the test-grandchild jank-build.bb script.
     (is (match?
          {:defines          {"I_LIKE" "TURTLES"}
