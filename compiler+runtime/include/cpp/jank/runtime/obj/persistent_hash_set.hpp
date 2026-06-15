@@ -25,7 +25,7 @@ namespace jank::runtime::obj
     persistent_hash_set(value_type &&d);
     persistent_hash_set(value_type const &d);
     persistent_hash_set(object_ref const meta, value_type &&d);
-    persistent_hash_set(jtl::immutable_string const &meta, value_type &&d);
+    persistent_hash_set(lazy_meta const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_hash_set(std::in_place_t, Args &&...args)

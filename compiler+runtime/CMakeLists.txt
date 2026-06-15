@@ -687,8 +687,6 @@ if(APPLE)
   target_link_libraries(jank_common_lib PUBLIC libzstd_static)
 endif()
 
-jank_hook_llvm(jank_common_lib)
-
 # Build a string of all include flags for jank. This will be used for building the PCH at build
 # time as well as building the PCH on first run, after installation.
 get_target_property(jank_lib_includes_prop jank_common_lib INCLUDE_DIRECTORIES)
@@ -736,10 +734,6 @@ target_compile_options(
   -DJANK_AOT_FLAGS="${jank_lib_linker_flags_str}"
 )
 target_link_options(jank_common_lib PRIVATE ${jank_linker_flags})
-
-#set_target_properties(jank_common_lib PROPERTIES LINK_FLAGS_RELEASE "-s")
-
-# Symbol exporting for JIT.
 set_target_properties(jank_common_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libjank-common.a ----
 
@@ -857,7 +851,6 @@ target_link_libraries(
   jank_compiler_lib PRIVATE
   clangCppInterOp
 )
-jank_hook_llvm(jank_compiler_lib)
 target_link_options(jank_compiler_lib PRIVATE ${jank_linker_flags})
 set_target_properties(jank_compiler_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libjank-compiler.a ----
@@ -937,10 +930,9 @@ add_executable(
   src/cpp/jank/environment/check_health.cpp
 )
 add_executable(jank::exe ALIAS jank_exe_phase_1)
-
 set_property(TARGET jank_exe_phase_1 PROPERTY OUTPUT_NAME jank-phase-1)
 
-# Symbol exporting for JIT.
+add_dependencies(jank_exe_phase_1 jank_standalone_dynamic_lib_phase_1)
 set_target_properties(jank_exe_phase_1 PROPERTIES ENABLE_EXPORTS 1)
 
 target_compile_features(jank_exe_phase_1 PRIVATE ${jank_cxx_standard})
@@ -959,6 +951,7 @@ target_link_libraries(
   clangCppInterOp
   z
   LLVMLineEditor
+  # TODO: Fix double linkage.
   #LLVM clang-cpp
   OpenSSL::Crypto
 )
@@ -967,7 +960,7 @@ if(WIN32)
   target_link_libraries(
     jank_exe_phase_1 PUBLIC
     ${jank_link_whole_start} libclang_rt.builtins-x86_64.a ${jank_link_whole_end}
-    # Required at least for mkstemp
+    # Required at least for mkstemp.
     ${jank_link_whole_start} libmingwex.a ${jank_link_whole_end}
 
     pthread
@@ -976,10 +969,6 @@ if(WIN32)
 endif()
 
 jank_hook_llvm(jank_exe_phase_1)
-
-add_dependencies(jank_exe_phase_1 jank_standalone_dynamic_lib_phase_1)
-
-#set_target_properties(jank_exe_phase_1 PROPERTIES LINK_FLAGS_RELEASE "-s")
 # ---- jank phase 1 executable ----
 
 # ---- jank phase 2 executable ----
@@ -1062,7 +1051,7 @@ if(jank_test)
     test/cpp/jank/jit/processor.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
-  add_dependencies(jank_test_exe jank_exe_phase_1 jank_core_libraries)
+  add_dependencies(jank_test_exe jank_core_libraries)
 
   if(jank_enable_phase_2)
     target_sources(jank_test_exe PUBLIC ${jank_clojure_core_output})
@@ -1072,6 +1061,7 @@ if(jank_test)
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)
 
   target_compile_features(jank_test_exe PRIVATE ${jank_cxx_standard})
+  # TODO: Check if this is still needed.
   # A doctest issue causes some warnings: https://github.com/doctest/doctest/issues/900
   target_compile_options(jank_test_exe PUBLIC ${jank_common_compiler_flags} ${jank_aot_compiler_flags} "-Wno-#warnings")
   target_compile_options(jank_test_exe PRIVATE -DDOCTEST_CONFIG_SUPER_FAST_ASSERTS)
@@ -1175,7 +1165,7 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_clojure_core_sources} ${jank_other_core_sources} ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output} ${jank_nrepl_server_outputs}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} --debug -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
   COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} clojure.core
   COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
   COMMAND touch ${jank_core_libraries_flag}

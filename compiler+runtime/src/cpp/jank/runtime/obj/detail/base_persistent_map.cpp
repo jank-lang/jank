@@ -21,7 +21,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  base_persistent_map<PT, ST, V>::base_persistent_map(jtl::immutable_string const &meta)
+  base_persistent_map<PT, ST, V>::base_persistent_map(lazy_meta const &meta)
     : object{ PT::obj_type, PT::obj_behaviors }
     , meta{ meta }
   {

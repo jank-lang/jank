@@ -79,7 +79,9 @@ _jank_list_impl(char const * const meta, jank::u64 const elems, va_list args)
   jank::runtime::detail::native_persistent_list list{ trans.rbegin(), trans.rend() };
   if(meta)
   {
-    return jank::runtime::make_box<jank::runtime::obj::persistent_list>(meta, jtl::move(list));
+    return jank::runtime::make_box<jank::runtime::obj::persistent_list>(
+      jank::runtime::lazy_meta{ meta },
+      jtl::move(list));
   }
   return jank::runtime::make_box<jank::runtime::obj::persistent_list>(jtl::move(list));
 }

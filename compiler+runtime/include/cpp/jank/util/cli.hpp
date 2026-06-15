@@ -81,7 +81,7 @@ namespace jank::util::cli
     native_vector<jtl::immutable_string> libs;
 
     /* Compilation. */
-    bool debug{};
+    bool debug{ true };
 
     /* The level of optimization used by the JIT runtime. This will be passed to Clang as a -O
      * flag. It generally only makes when using the repl/run/run-main commands, since during

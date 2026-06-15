@@ -30,6 +30,13 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_sorted_set::persistent_sorted_set(lazy_meta const &meta, value_type &&d)
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
+    , meta{ meta }
+  {
+  }
+
   persistent_sorted_set_ref persistent_sorted_set::empty()
   {
     static persistent_sorted_set const ret;
@@ -148,7 +155,7 @@ namespace jank::runtime::obj
   {
     auto copy(data);
     copy.insert(head);
-    auto ret(make_box<persistent_sorted_set>(meta.get(), std::move(copy)));
+    auto ret(make_box<persistent_sorted_set>(meta, std::move(copy)));
     return ret;
   }
 
@@ -196,7 +203,7 @@ namespace jank::runtime::obj
   {
     auto copy(data);
     copy.erase(o);
-    auto ret(make_box<persistent_sorted_set>(meta.get(), std::move(copy)));
+    auto ret(make_box<persistent_sorted_set>(meta, std::move(copy)));
     return ret;
   }
 }

@@ -9,7 +9,7 @@
 
 namespace jank::runtime::obj
 {
-  persistent_hash_map::persistent_hash_map(object_ref const meta,
+  persistent_hash_map::persistent_hash_map(lazy_meta const &meta,
                                            runtime::detail::native_array_map const &m,
                                            object_ref const key,
                                            object_ref const val)
@@ -40,7 +40,7 @@ namespace jank::runtime::obj
   {
   }
 
-  persistent_hash_map::persistent_hash_map(jtl::immutable_string const &meta, value_type &&d)
+  persistent_hash_map::persistent_hash_map(lazy_meta const &meta, value_type &&d)
     : parent_type{ meta }
     , data{ std::move(d) }
   {
@@ -117,13 +117,13 @@ namespace jank::runtime::obj
   persistent_hash_map::assoc(object_ref const key, object_ref const val) const
   {
     auto copy(data.set(key, val));
-    return make_box<persistent_hash_map>(meta.get(), std::move(copy));
+    return make_box<persistent_hash_map>(meta, std::move(copy));
   }
 
   persistent_hash_map_ref persistent_hash_map::dissoc(object_ref const key) const
   {
     auto copy(data.erase(key));
-    return make_box<persistent_hash_map>(meta.get(), std::move(copy));
+    return make_box<persistent_hash_map>(meta, std::move(copy));
   }
 
   object_ref persistent_hash_map::call(object_ref const o) const

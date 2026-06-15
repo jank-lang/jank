@@ -580,7 +580,7 @@ namespace jank::codegen
     util::format_to(b.body_buffer, "{}", inst->values.size());
     for(auto const &val : inst->values)
     {
-      util::format_to(b.body_buffer, ", {}", val);
+      util::format_to(b.body_buffer, ", {}.erase()", val);
     }
     util::format_to(b.body_buffer, "));\n");
 
@@ -598,7 +598,7 @@ namespace jank::codegen
     util::format_to(b.body_buffer, "{}", inst->values.size());
     for(auto const &val : inst->values)
     {
-      util::format_to(b.body_buffer, ", {}", val);
+      util::format_to(b.body_buffer, ", {}.erase()", val);
     }
     util::format_to(b.body_buffer, "));\n");
 
@@ -617,7 +617,7 @@ namespace jank::codegen
     util::format_to(b.body_buffer, "{}", inst->values.size());
     for(auto const &val : inst->values)
     {
-      util::format_to(b.body_buffer, ", {}, {}", val.first, val.second);
+      util::format_to(b.body_buffer, ", {}.erase(), {}.erase()", val.first, val.second);
     }
     util::format_to(b.body_buffer, "));\n");
 
@@ -636,7 +636,7 @@ namespace jank::codegen
     util::format_to(b.body_buffer, "{}", inst->values.size());
     for(auto const &val : inst->values)
     {
-      util::format_to(b.body_buffer, ", {}, {}", val.first, val.second);
+      util::format_to(b.body_buffer, ", {}.erase(), {}.erase()", val.first, val.second);
     }
     util::format_to(b.body_buffer, "));\n");
 
@@ -655,7 +655,7 @@ namespace jank::codegen
     util::format_to(b.body_buffer, "{}", inst->values.size());
     for(auto const &val : inst->values)
     {
-      util::format_to(b.body_buffer, ", {}", val);
+      util::format_to(b.body_buffer, ", {}.erase()", val);
     }
     util::format_to(b.body_buffer, "));\n");
 

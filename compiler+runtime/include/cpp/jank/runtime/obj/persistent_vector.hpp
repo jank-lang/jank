@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     persistent_vector(value_type &&d);
     persistent_vector(value_type const &d);
     persistent_vector(object_ref const meta, value_type &&d);
-    persistent_vector(jtl::immutable_string const &meta, value_type &&d);
+    persistent_vector(lazy_meta const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_vector(std::in_place_t, Args &&...args)

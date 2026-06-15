@@ -30,7 +30,7 @@ namespace jank::runtime::obj::detail
 
     base_persistent_map();
     base_persistent_map(object_ref const meta);
-    base_persistent_map(jtl::immutable_string const &meta);
+    base_persistent_map(lazy_meta const &meta);
 
     /* behavior::object_like */
     bool equal(object const &o) const override;

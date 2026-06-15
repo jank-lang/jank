@@ -24,6 +24,12 @@ namespace jank::runtime::obj
     this->meta = meta;
   }
 
+  persistent_sorted_map::persistent_sorted_map(lazy_meta const &meta, value_type &&d)
+    : data{ std::move(d) }
+  {
+    this->meta = meta;
+  }
+
   persistent_sorted_map_ref persistent_sorted_map::empty()
   {
     static persistent_sorted_map const ret;
@@ -102,14 +108,14 @@ namespace jank::runtime::obj
   {
     auto copy(data);
     copy[key] = val;
-    return make_box<persistent_sorted_map>(meta.get(), std::move(copy));
+    return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
   persistent_sorted_map_ref persistent_sorted_map::dissoc(object_ref const key) const
   {
     auto copy(data);
     copy.erase(key);
-    return make_box<persistent_sorted_map>(meta.get(), std::move(copy));
+    return make_box<persistent_sorted_map>(meta, std::move(copy));
   }
 
   object_ref persistent_sorted_map::call(object_ref const o) const

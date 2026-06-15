@@ -286,9 +286,9 @@ OPTIONS
         {
           opts.perf_profiling_enabled = true;
         }
-        else if(check_flag(it, end, value, "--debug", false))
+        else if(check_flag(it, end, value, "--no-debug", false))
         {
-          opts.debug = true;
+          opts.debug = false;
         }
         else if(check_flag(it, end, value, "-O", "--optimization", true))
         {
