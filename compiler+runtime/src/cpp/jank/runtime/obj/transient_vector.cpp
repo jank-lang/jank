@@ -89,7 +89,8 @@ namespace jank::runtime::obj
     return make_box<persistent_vector>(data.persistent());
   }
 
-  transient_vector::persistent_type_ref transient_vector::to_persistent(jtl::immutable_string const &meta)
+  transient_vector::persistent_type_ref
+  transient_vector::to_persistent(jtl::immutable_string const &meta)
   {
     assert_active();
     active = false;
