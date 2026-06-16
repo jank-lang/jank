@@ -47,10 +47,11 @@ namespace jank::util
       sb(def);
     }
 
-    auto const input(util::format("{}.{}.{}.{}.{}.{}",
+    auto const input(util::format("{}.{}.{}.{}.{}.{}.{}",
                                   JANK_VERSION,
                                   clang::getClangRevision(),
                                   JANK_JIT_FLAGS,
+                                  util::cli::opts.codegen_optimization_level,
                                   util::cli::opts.codegen_optimization_level,
                                   sb.release()));
     /* TODO: Actual target triple. */

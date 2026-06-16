@@ -68,9 +68,10 @@ extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
     }
 
     /* TODO: Embed all registered resources. */
-    /*
-    auto const pch_path{ util::find_pch(util::binary_version()) };
-    sb(util::format(R"(
+    if(util::cli::opts.target_runtime == util::cli::compilation_runtime::dynamic)
+    {
+      auto const pch_path{ util::find_pch(util::binary_version()) };
+      sb(util::format(R"(
 namespace
 {
   char const incremental_pch[]
@@ -79,8 +80,8 @@ namespace
   };
 }
         )",
-                    pch_path.unwrap()));
-                    */
+                      pch_path.unwrap()));
+    }
 
     sb(R"(
 
@@ -115,10 +116,24 @@ int main(int argc, const char** argv)
     return 0;
 
   } };
+  )");
+
+    if(util::cli::opts.target_runtime == util::cli::compilation_runtime::static_)
+    {
+      sb(R"(
 
   return jank_init_static(argc, argv, true, fn);
 }
   )");
+    }
+    else
+    {
+      sb(R"(
+
+  return jank_init_dynamic(argc, argv, true, incremental_pch, sizeof(incremental_pch), fn);
+}
+  )");
+    }
 
     jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_CODEGEN") ?: "" };
     if(print_settings == "1")
@@ -319,22 +334,29 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("c++"));
     compiler_args.push_back(strdup(entrypoint_path.c_str()));
 
-    for(auto const &lib : {
-          "-ljank-static-runtime",
-          /* Default libraries that jank depends on. */
-          "-lm",
-    //"-lLLVM",
-    //"-lclang-cpp",
-    //"-lcrypto",
-#if defined(__MINGW64__)
-          "-lpthread",
-#endif
-          "-lz",
-          //"-lzstd"
-        })
+    if(util::cli::opts.target_runtime == util::cli::compilation_runtime::static_)
     {
-      compiler_args.push_back(strdup(lib));
+      for(auto const &lib : {
+            "-ljank-static-runtime",
+            "-lm",
+            "-lz",
+          })
+      {
+        compiler_args.push_back(strdup(lib));
+      }
     }
+    else
+    {
+      for(auto const &lib :
+          { "-ljank-dynamic-runtime", "-lLLVM", "-lclang-cpp", "-lcrypto", "-lm", "-lz", "-lzstd" })
+      {
+        compiler_args.push_back(strdup(lib));
+      }
+    }
+
+#if defined(__MINGW64__)
+    compiler_args.push_back(strdup("-lpthread"));
+#endif
 
     for(auto const &lib : util::cli::opts.libs)
     {

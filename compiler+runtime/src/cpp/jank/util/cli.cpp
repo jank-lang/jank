@@ -126,9 +126,13 @@ OPTIONS
           --no-debug          Disable debug source map generation for generated code.
   -O,     --optimization <0 - 3>
                               The optimization level to use for AOT compilation.
-  -Odirect-call               Elides the dereferencing of vars for improved performance.
+  -Odirect-call               Elides the dereferencing of vars for improved performance. (not yet implemented)
           --eagerness <lazy, eager> [default: lazy]
                               How eagerly to JIT compile functions.
+          --runtime <static, dynamic> [default: static]
+                              The AOT runtime to target. The static runtime bakes in
+                              all functionality and does not link to Clang/LLVM for easier
+                              distribution.
   -o,     --output <path>
                               The name of the output file.
           --output-dir <path> [default: target]
@@ -326,6 +330,21 @@ OPTIONS
           else
           {
             throw util::format("Invalid eagerness type '{}'.", value);
+          }
+        }
+        else if(check_flag(it, end, value, "--runtime", true))
+        {
+          if(value == "static")
+          {
+            opts.target_runtime = compilation_runtime::static_;
+          }
+          else if(value == "dynamic")
+          {
+            opts.target_runtime = compilation_runtime::dynamic;
+          }
+          else
+          {
+            throw util::format("Invalid runtime type '{}'.", value);
           }
         }
         else if(check_flag(it, end, value, "-I", "--include-dir", true))

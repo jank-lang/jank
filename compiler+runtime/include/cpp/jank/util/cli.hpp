@@ -65,6 +65,25 @@ namespace jank::util::cli
     }
   }
 
+  enum class compilation_runtime : u8
+  {
+    static_,
+    dynamic
+  };
+
+  constexpr char const *compilation_runtime_str(compilation_runtime const rt)
+  {
+    switch(rt)
+    {
+      case compilation_runtime::static_:
+        return "static";
+      case compilation_runtime::dynamic:
+        return "dynamic";
+      default:
+        return "unknown";
+    }
+  }
+
   struct options
   {
     /* Runtime. */
@@ -104,13 +123,13 @@ namespace jank::util::cli
     /* Other optimization flags. */
     bool direct_call{};
     compilation_eagerness eagerness{ compilation_eagerness::lazy };
+    compilation_runtime target_runtime{ compilation_runtime::static_ };
 
     /* Run command. */
     jtl::immutable_string target_file;
 
     /* Compile command. */
     jtl::immutable_string target_module;
-    jtl::immutable_string target_runtime{ "dynamic" };
     jtl::immutable_string output_filename{ "a.out" };
     /* TODO: Add automatic cleaning when hash changes. */
     jtl::immutable_string output_dir{ "target" };
