@@ -883,8 +883,6 @@ if(WIN32)
     zstd
   )
 endif()
-
-#jank_hook_llvm(jank_exe_phase_1)
 # ---- jank phase 1 executable ----
 
 # ---- jank phase 2 executable ----
@@ -918,11 +916,7 @@ if(jank_enable_phase_2)
     "$<TARGET_PROPERTY:jank_exe_phase_1,LINK_LIBRARIES>"
   )
 
-  jank_hook_llvm(jank_exe_phase_2)
-
   add_dependencies(jank_exe_phase_2 jank_core_libraries)
-
-  #set_target_properties(jank_exe_phase_2 PROPERTIES LINK_FLAGS_RELEASE "-s")
 else()
   add_custom_command(
     DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_clojure_core_output} ${jank_nrepl_server_outputs} ${jank_incremental_pch_flag}

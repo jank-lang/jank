@@ -4,9 +4,7 @@
 
 namespace jank::runtime::module
 {
-  loader::loader()
-  {
-  }
+  loader::loader() = default;
 
   jtl::result<void, error_ref> loader::load(jtl::immutable_string const &module, origin const)
   {

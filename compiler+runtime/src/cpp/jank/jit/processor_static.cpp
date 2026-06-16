@@ -6,7 +6,5 @@ namespace jank::jit
   {
   }
 
-  processor::~processor()
-  {
-  }
+  processor::~processor() = default;
 }

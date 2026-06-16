@@ -28,7 +28,7 @@ namespace jank::runtime::obj
     symbol(object_ref const ns, object_ref const n);
 
     symbol &operator=(symbol const &) = default;
-    symbol &operator=(symbol &&) = default;
+    symbol &operator=(symbol &&) noexcept = default;
 
     /* behavior::object_like */
     bool equal(object const &) const override;
