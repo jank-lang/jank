@@ -738,7 +738,7 @@ target_link_libraries(
   bdwgc::gc bdwgc::gctba
 )
 
-if(APPLE)
+if(NOT WIN32)
   target_link_libraries(jank_lib PUBLIC libzstd_static)
 endif()
 

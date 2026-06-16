@@ -16,7 +16,7 @@ sudo apt-get install -y curl git git-lfs build-essential entr libssl-dev libdoub
 For Arch:
 
 ```bash
-sudo pacman -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr libxml2 libedit
+sudo pacman -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr libxml2 libedit boost
 ```
 
 For Nix:
