@@ -47,13 +47,14 @@ namespace jank::util
       sb(def);
     }
 
-    auto const input(util::format("{}.{}.{}.{}.{}.{}",
-                                  JANK_VERSION,
-                                  clang::getClangRevision(),
-                                  JANK_JIT_FLAGS,
-                                  util::cli::opts.codegen_optimization_level,
-                                  util::cli::opts.target_runtime,
-                                  sb.release()));
+    auto const input(
+      util::format("{}.{}.{}.{}.{}.{}",
+                   JANK_VERSION,
+                   clang::getClangRevision(),
+                   JANK_JIT_FLAGS,
+                   util::cli::opts.codegen_optimization_level,
+                   util::cli::compilation_runtime_str(util::cli::opts.target_runtime),
+                   sb.release()));
     /* TODO: Actual target triple. */
     res = util::format("{}-{}", llvm::sys::getDefaultTargetTriple(), util::sha256(input));
 

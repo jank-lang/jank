@@ -260,6 +260,14 @@ if(
     "Follow the build.md documentation."
   )
 endif()
+
+# This is needed on macOS to ensure we end up using the correct C++ stdlib.
+function(jank_hook_llvm target)
+  set(tgt "${target}")
+  target_include_directories("${tgt}" SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
+  target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS_LIST})
+  target_link_directories("${tgt}" PRIVATE ${llvm_dir}/lib)
+endfunction()
 # ---- Clang/LLVM ----
 
 # ---- Clang JIT environment ----
@@ -843,6 +851,7 @@ add_executable(
 )
 add_executable(jank::exe ALIAS jank_exe_phase_1)
 set_property(TARGET jank_exe_phase_1 PROPERTY OUTPUT_NAME jank-phase-1)
+jank_hook_llvm(jank_exe_phase_1)
 
 add_dependencies(jank_exe_phase_1 jank_standalone_dynamic_lib_phase_1)
 set_target_properties(jank_exe_phase_1 PROPERTIES ENABLE_EXPORTS 1)
@@ -888,6 +897,7 @@ if(jank_enable_phase_2)
   )
   add_executable(jank::exe ALIAS jank_exe_phase_2)
   set_property(TARGET jank_exe_phase_2 PROPERTY OUTPUT_NAME jank)
+  jank_hook_llvm(jank_exe_phase_2)
 
   # Our generated code is not as precisely written as hand-written C++, so we ignore various
   # warnings and skip linting.
@@ -954,6 +964,7 @@ if(jank_test)
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
   add_dependencies(jank_test_exe jank_core_libraries)
+  jank_hook_llvm(jank_test_exe)
 
   if(jank_enable_phase_2)
     target_sources(jank_test_exe PUBLIC ${jank_clojure_core_output})
