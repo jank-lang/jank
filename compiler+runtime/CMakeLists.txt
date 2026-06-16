@@ -124,12 +124,6 @@ set(
   #-stdlib=libc++ -lc++abi
   )
 
-if (NOT jank_local_clang)
-  # On macOS, we need to link to LLVM's custom libunwind, instead of the system's. Otherwise,
-  # we're unable to catch exceptions thrown across JIT compiled frames.
-  list(APPEND jank_linker_flags -L/opt/homebrew/opt/llvm/lib -L/opt/homebrew/opt/llvm/lib/c++ -L/opt/homebrew/opt/llvm/lib/unwind)
-endif ()
-
 if(WIN32)
   list(APPEND jank_linker_flags "-Wl,--export-all-symbols" -lws2_32 -ldbghelp)
 endif()
@@ -268,6 +262,14 @@ function(jank_hook_llvm target)
   target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS_LIST})
   target_link_directories("${tgt}" PRIVATE ${llvm_dir}/lib)
 endfunction()
+
+
+# We need to keep track of linker flags for use with AOT compilation.
+#
+# Also, on macOS, we need to link to LLVM's custom libunwind, instead of the system's.
+# Otherwise, we're unable to catch exceptions thrown across JIT compiled frames.
+list(APPEND jank_linker_flags -L${llvm_dir}/lib -L${llvm_dir}/lib/c++ -L${llvm_dir}/lib/unwind)
+list(APPEND jank_common_compiler_flags ${LLVM_DEFINITIONS_LIST})
 # ---- Clang/LLVM ----
 
 # ---- Clang JIT environment ----
@@ -860,7 +862,6 @@ target_compile_features(jank_exe_phase_1 PRIVATE ${jank_cxx_standard})
 target_compile_options(jank_exe_phase_1
   PUBLIC
   ${jank_common_compiler_flags} ${jank_aot_compiler_flags}
-  -DJANK_VERSION="${jank_version}"
 )
 target_include_directories(jank_exe_phase_1 SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_common_lib,INCLUDE_DIRECTORIES>")
 target_link_directories(jank_exe_phase_1 PRIVATE "$<TARGET_PROPERTY:jank_common_lib,LINK_DIRECTORIES>")
