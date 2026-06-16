@@ -7,4 +7,5 @@
                  [babashka/process "0.6.25"]
                  [leiningen-core "2.12.0"]
                  [org.clojure/tools.namespace "1.5.1"]]
+  :profiles {:dev {:dependencies [[nubank/matcher-combinators "3.10.0"]]}}
   :eval-in-leiningen true)
