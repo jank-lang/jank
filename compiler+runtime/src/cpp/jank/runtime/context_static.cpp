@@ -3,10 +3,9 @@
 
 namespace jank::runtime
 {
-  object_ref context::eval(object_ref const o)
+  object_ref context::eval(object_ref const)
   {
-    //throw error::runtime_static_feature_disabled("eval");
-    return o;
+    throw error::runtime_static_feature_disabled("eval");
   }
 
   jtl::result<void, error_ref> context::compile_module(jtl::immutable_string const &)

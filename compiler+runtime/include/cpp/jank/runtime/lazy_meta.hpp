@@ -3,10 +3,16 @@
 #include <folly/Synchronized.h>
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime
 {
+  /* Each runtime object which can hold metadata holds this `lazy_meta` instead. It's a
+   * synchronized container of either a meta object or a string of EDN to lazily read/eval
+   * as meta. Upon calling `get()`, if we have a source string, we'll read/eval and then
+   * clear the string and just set the meta map.
+   *
+   * It's important to note that this synchronization is also needed to ensure changing
+   * the meta on values is thread-safe. */
   struct lazy_meta
   {
     lazy_meta() = default;

@@ -36,7 +36,7 @@
     [(str "-O" value)]
 
     :runtime
-    ["--runtime " (name value)]
+    ["--runtime" (name value)]
 
     :defines
     (map (fn [[k v]] (str "-D" k "=" v)) value)

@@ -640,11 +640,6 @@ namespace jank::analyze::cpp_util
           return type;
         }
       case jank::runtime::object_type::real:
-        {
-          static auto const type{ Cpp::GetTypeFromScope(
-            resolve_scope("jank.runtime.obj.real_ref").expect_ok()) };
-          return type;
-        }
       case jank::runtime::object_type::small_real:
         {
           static auto const type{ Cpp::GetTypeFromScope(

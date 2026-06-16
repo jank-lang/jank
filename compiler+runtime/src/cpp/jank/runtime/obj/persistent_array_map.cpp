@@ -11,8 +11,6 @@
 
 namespace jank::runtime::obj
 {
-  //GC_word persistent_array_map::gc_descriptor{};
-
   persistent_array_map::persistent_array_map(value_type &&d)
     : data{ std::move(d) }
   {

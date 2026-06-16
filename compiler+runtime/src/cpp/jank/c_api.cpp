@@ -1041,16 +1041,6 @@ extern "C"
     GC_init();
     GC_allow_register_threads();
 
-    //{
-    //  GC_word bm[GC_BITMAP_SIZE(jank::runtime::obj::persistent_array_map)]{ 0 };
-    //  GC_set_bit(bm,
-    //             GC_OFFSETOF_IN_PTRS(jank::runtime::obj::persistent_array_map, data)
-    //               + GC_OFFSETOF_IN_PTRS(jank::runtime::detail::native_array_map, data));
-    //  GC_set_bit(bm, GC_OFFSETOF_IN_PTRS(jank::runtime::obj::persistent_array_map, meta));
-    //  jank::runtime::obj::persistent_array_map::gc_descriptor
-    //    = GC_make_descriptor(bm, GC_SIZEOF_IN_PTRS(jank::runtime::obj::persistent_array_map));
-    //}
-
     {
       GC_word bm[GC_BITMAP_SIZE(jank::runtime::obj::persistent_string)]{ 0 };
       GC_set_bit(bm, GC_OFFSETOF_IN_PTRS(jank::runtime::obj::persistent_string, data));

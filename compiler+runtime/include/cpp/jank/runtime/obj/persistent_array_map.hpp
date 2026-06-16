@@ -22,7 +22,6 @@ namespace jank::runtime::obj
     using parent_type = obj::detail::base_persistent_map<persistent_array_map,
                                                          persistent_array_map_sequence,
                                                          runtime::detail::native_array_map>;
-    //static GC_word gc_descriptor;
 
     persistent_array_map() = default;
     persistent_array_map(persistent_array_map &&) noexcept = default;
