@@ -260,13 +260,6 @@ if(
     "Follow the build.md documentation."
   )
 endif()
-
-function(jank_hook_llvm target)
-  set(tgt "${target}")
-  target_include_directories("${tgt}" SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
-  target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS_LIST})
-  target_link_directories("${tgt}" PRIVATE ${llvm_dir}/lib)
-endfunction()
 # ---- Clang/LLVM ----
 
 # ---- Clang JIT environment ----
@@ -912,7 +905,6 @@ if(jank_enable_phase_2)
 
   target_link_libraries(
     jank_exe_phase_2 PUBLIC
-    # TODO: We need the phase 2 standalone lib.
     "$<TARGET_PROPERTY:jank_exe_phase_1,LINK_LIBRARIES>"
   )
 
@@ -999,8 +991,6 @@ if(jank_test)
       zstd
     )
   endif()
-
-  jank_hook_llvm(jank_test_exe)
 
   # Symbol exporting for JIT.
   set_target_properties(jank_test_exe PROPERTIES ENABLE_EXPORTS 1)
