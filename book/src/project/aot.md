@@ -22,9 +22,17 @@ profile.
 lein with-profile release compile
 ```
 
-## Distributing your executables
-Currently, AOT compiled executables still depend on jank, Clang, and LLVM. This
-makes distribution more complicated, especially since the Clang/LLVM version
-jank requires is bleeding edge. We are working on ways to both better package
-these together as well as to provide options for building executables which are
-standalone.
+## AOT runtime selection
+By default, AOT compilation will target jank's `static` runtime. This means that
+the compiled binary will not link to Clang/LLVM and all of its functionality
+will be baked in. Since Clang/LLVM is not linked in, JIT compilation is not
+possible at runtime. Calling something like `eval` will throw. This is very
+similar to a Graal native image.
+
+If you need to be able to JIT compile code from your AOT compiled binary, you'll
+need to enable the `dynamic` runtime. From jank's command line, you can use
+`--runtime dynamic`, but you can also just set this in your Leiningen project.
+
+```clojure
+:profiles {:release {:jank {:runtime :dynamic}}
+```

@@ -26,6 +26,7 @@
     :output-dir
     ["--output-dir" (fs/path value project-name)]
 
+    ; TODO: Refactor into :optimizations #{:direct-call}
     :direct-call
     (if value
       ["-Odirect-call"]
@@ -33,9 +34,6 @@
 
     :optimization-level
     [(str "-O" value)]
-
-    :codegen
-    ["--codegen " (name value)]
 
     :runtime
     ["--runtime " (name value)]
