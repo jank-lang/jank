@@ -50,9 +50,6 @@
     :linked-libraries
     (map (fn [v] (str "-l" v)) value)
 
-    :disable-sandbox
-    [] ;; ignore, used in build process
-
     (lmain/warn (str "Unknown flag " flag))))
 
 (defn build-declarative-flags [project]

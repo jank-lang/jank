@@ -1,76 +1,69 @@
 (ns leiningen.jank
   (:refer-clojure :exclude [run!])
   (:require [clojure.pprint :as pp]
-            [clojure.string :as string]
             [leiningen.core.main :as lmain]
-            [leiningen.core.classpath :as cp]
             [leiningen.jank.core :as ljc]
             [leiningen.jank.test :as ljt]
             [leiningen.jank.build :as ljb]
             [babashka.fs :as fs]))
 
-(defn apply-args
-  "Extract task-specific args from the list and apply them to the project,
-  returning the updated project and the leftover arguments."
+(defn process-task-args
+  "Extract task-specific args from the list and return the parsed options and
+  the leftover arguments."
   [project args]
   (let [res (reduce
              (fn [acc arg]
                (cond
                  (= arg ":disable-sandbox")
-                 (assoc-in acc [:project :jank :disable-sandbox] true)
+                 (assoc-in acc [:opts :disable-sandbox] true)
 
                  :else
                  (update acc :args conj arg)))
-             {:project project :args []}
+             {:project project :opts {} :args []}
              args)]
-    ((juxt :project :args) res)))
+    ((juxt :opts :args) res)))
+
+(defn native-build [project opts]
+  (binding [ljb/*disable-sandbox* (or ljb/*disable-sandbox* (:disable-sandbox opts))]
+    (let [native-flags (ljb/run-build! (ljb/plan-build project))]
+      (update project :jank ljb/merge-native-flags native-flags))))
 
 (defn run!
   "Run your project, starting at the main entrypoint."
   [project & args]
-  (let [[project args] (apply-args project args)
-        cp-str         (ljc/build-module-path project)
-        native-flags   (ljb/run-build! (ljb/plan-build project))
-        project        (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[opts args] (process-task-args project args)
+        project     (native-build project opts)
+        cp-str      (ljc/build-module-path project)]
     (if (:main project)
       (ljc/shell-out! project cp-str "run-main" [(:main project)] args)
-      (do
-        (lmain/warn "No :main entrypoint for project.")
-        (lmain/exit 1)))))
+      (lmain/warn "No :main entrypoint for project."))))
 
 (defn repl!
   "Start a terminal REPL in your :main ns."
   [project & args]
-  (let [[project args] (apply-args project args)
-        cp-str         (ljc/build-module-path project)
-        native-flags   (ljb/run-build! (ljb/plan-build project))
-        project        (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[opts args] (process-task-args project args)
+        project     (native-build project opts)
+        cp-str      (ljc/build-module-path project)]
     (if (:main project)
       (ljc/shell-out! project cp-str "repl" [(:main project)] args)
-      (do
-        (lmain/warn "No :main entrypoint for project.")
-        (lmain/exit 1)))))
+      (lmain/warn "No :main entrypoint for project."))))
 
 (defn compile!
   "Compile your project to an executable."
   [project & args]
-  (let [[project args] (apply-args project args)
-        cp-str         (ljc/build-module-path project)
-        native-flags   (ljb/run-build! (ljb/plan-build project))
-        project        (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[opts args] (process-task-args project args)
+        project     (native-build project opts)
+        cp-str      (ljc/build-module-path project)]
     (if (:main project)
       (ljc/shell-out! project cp-str "compile" [(:main project)] args)
-      (do
-        (lmain/warn "No :main entrypoint for project.")
-        (lmain/exit 1)))))
+      (lmain/warn "No :main entrypoint for project."))))
 
 (defn compile-module!
   "Compile a single module and its dependencies to object files."
   [project & args]
-  (let [[project args] (apply-args project args)
-        cp-str         (ljc/build-module-path project)
-        native-flags   (ljb/run-build! (ljb/plan-build project))
-        project        (update project :jank ljb/merge-native-flags native-flags)]
+  (let [[opts args] (process-task-args project args)
+        project     (native-build project opts)
+        cp-str      (ljc/build-module-path project)]
     (ljc/shell-out! project cp-str "compile-module" [] args)))
 
 (defn check-health!
@@ -98,7 +91,7 @@
            :help (-> fn-ref meta :doc)})
         subtask-kw->var)))
 
-(defn process-args [args]
+(defn process-jank-args [args]
   (loop [args args
          ret []]
     (if (empty? args)
@@ -115,7 +108,7 @@
   "Compile, run, test and repl into jank."
   [project subcmd & args]
   (if-some [handler (subtask-kw->var (keyword subcmd))]
-    (apply handler project (process-args args))
+    (apply handler project (process-jank-args args))
     (do
       (lmain/warn "Invalid subcommand!")
       (print-help!)
@@ -173,20 +166,39 @@
           (with-meta result (apply deep-merge-metadata maps))
           result)))))
 
-(defn verbatim->filespecs [{:keys [root verbatim-paths] :as project}]
-  ;; TODO: I couldn't find a good way to insert paths verbatim into the output
-  ;; jar. With resource-paths etc. lein always seems to strip the first
-  ;; directory from the source path when copying. Need to find an alternative or
-  ;; implement a better version of verbatim-paths.
+(defn verbatim->filespecs
+  "Specify filespecs to copy files or directories in the :verbatim-paths project
+  key into the output archive.
+
+  These paths are copied exactly, whereas the standard keys like :source-paths
+  strip the path prefix such that the entries appear directly on the classpath
+  when the jar is loaded."
+  [{:keys [root verbatim-paths] :as project}]
   (for [path  verbatim-paths
-        f     (fs/glob (fs/path (:root project) path) "**")
-        :when (not (fs/directory? f))]
-    {:type  :bytes
-     :path  (str (fs/relativize (:root project) f))
-     :bytes (fs/read-all-bytes f)}))
+        f     (if (fs/directory? path)
+                (fs/glob (fs/path (:root project) path) "**")
+                [(fs/path (:root project) path)])
+        :when (fs/regular-file? f)]
+    ;; Lazy :fn type filespecs so that the file contents are only loaded when
+    ;; needed, rather than every time the middleware is executed.
+    {:type :fn
+     :fn   (fn [project]
+             {:type  :bytes
+              :path  (str (fs/relativize (:root project) f))
+              :bytes (fs/read-all-bytes f)})}))
+
+(defn build-dependencies->dependencies
+  "Compute regular :dependencies coordinates from the jank-specific
+  :build-dependencies coordinates.
+
+  We simply add a :scope 'jank-build' to the end of the coordinate, which
+  designates it as a build-time dependency."
+  [{:keys [build-dependencies] :as project}]
+  (mapv #(conj % :scope "jank-build") build-dependencies))
 
 (defn middleware
   "Inject jank project details into your current project."
   [project]
   (-> (deep-merge default-project project)
-      (update :filespecs concat (verbatim->filespecs project))))
+      (update :filespecs concat (verbatim->filespecs project))
+      (update :dependencies concat (build-dependencies->dependencies project))))
