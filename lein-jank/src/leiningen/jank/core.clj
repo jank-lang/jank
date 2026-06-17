@@ -26,17 +26,17 @@
     :output-dir
     ["--output-dir" (fs/path value project-name)]
 
+    ; TODO: Refactor into :optimizations #{:direct-call}
     :direct-call
     (if value
-      ["--direct-call"]
+      ["-Odirect-call"]
       [])
 
     :optimization-level
-    ; TODO: Validate.
     [(str "-O" value)]
 
-    :codegen
-    ["--codegen " (name value)]
+    :runtime
+    ["--runtime" (name value)]
 
     :defines
     (map (fn [[k v]] (str "-D" k "=" v)) value)

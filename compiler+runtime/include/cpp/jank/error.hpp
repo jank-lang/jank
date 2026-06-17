@@ -130,6 +130,7 @@ namespace jank::error
     runtime_invalid_referred_global_symbol,
     runtime_invalid_referred_global_rename,
     runtime_unsupported_behavior,
+    runtime_static_feature_disabled,
     internal_runtime_failure,
 
     internal_failure,
@@ -360,6 +361,8 @@ namespace jank::error
         return "runtime/invalid-referred-global-rename";
       case kind::runtime_unsupported_behavior:
         return "runtime/unsupported-behavior";
+      case kind::runtime_static_feature_disabled:
+        return "runtime/static-feature-disabled";
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";
 

@@ -20,7 +20,6 @@ namespace jank::util::cli
     /* The target will be determined based on the extension of the output.
      * If that's not possible, we'll error out. */
     unspecified,
-    llvm_ir,
     cpp,
     object
   };
@@ -31,12 +30,25 @@ namespace jank::util::cli
     {
       case compilation_target::unspecified:
         return "unspecified";
-      case compilation_target::llvm_ir:
-        return "llvm-ir";
       case compilation_target::cpp:
         return "cpp";
       case compilation_target::object:
         return "object";
+      default:
+        return "unknown";
+    }
+  }
+
+  constexpr char const *compilation_target_extension(compilation_target const target)
+  {
+    switch(target)
+    {
+      case compilation_target::unspecified:
+        return "unspecified";
+      case compilation_target::cpp:
+        return "cpp";
+      case compilation_target::object:
+        return "o";
       default:
         return "unknown";
     }
@@ -65,6 +77,25 @@ namespace jank::util::cli
     }
   }
 
+  enum class compilation_runtime : u8
+  {
+    static_,
+    dynamic
+  };
+
+  constexpr char const *compilation_runtime_str(compilation_runtime const rt)
+  {
+    switch(rt)
+    {
+      case compilation_runtime::static_:
+        return "static";
+      case compilation_runtime::dynamic:
+        return "dynamic";
+      default:
+        return "unknown";
+    }
+  }
+
   struct options
   {
     /* Runtime. */
@@ -81,7 +112,7 @@ namespace jank::util::cli
     native_vector<jtl::immutable_string> libs;
 
     /* Compilation. */
-    bool debug{};
+    bool debug{ true };
 
     /* The level of optimization used by the JIT runtime. This will be passed to Clang as a -O
      * flag. It generally only makes when using the repl/run/run-main commands, since during
@@ -104,13 +135,13 @@ namespace jank::util::cli
     /* Other optimization flags. */
     bool direct_call{};
     compilation_eagerness eagerness{ compilation_eagerness::lazy };
+    compilation_runtime target_runtime{ compilation_runtime::static_ };
 
     /* Run command. */
     jtl::immutable_string target_file;
 
     /* Compile command. */
     jtl::immutable_string target_module;
-    jtl::immutable_string target_runtime{ "dynamic" };
     jtl::immutable_string output_filename{ "a.out" };
     /* TODO: Add automatic cleaning when hash changes. */
     jtl::immutable_string output_dir{ "target" };

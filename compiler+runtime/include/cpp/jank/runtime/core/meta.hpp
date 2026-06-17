@@ -2,6 +2,7 @@
 
 #include <jank/read/source.hpp>
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime
 {

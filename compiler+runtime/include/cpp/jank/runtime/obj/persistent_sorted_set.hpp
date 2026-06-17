@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 #include <jank/runtime/detail/type.hpp>
 
 namespace jank::runtime::obj
@@ -24,6 +25,7 @@ namespace jank::runtime::obj
     persistent_sorted_set(value_type &&d);
     persistent_sorted_set(value_type const &d);
     persistent_sorted_set(object_ref const meta, value_type &&d);
+    persistent_sorted_set(lazy_meta const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_sorted_set(std::in_place_t, Args &&...args)
@@ -53,6 +55,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     persistent_sorted_set_ref with_meta(object_ref const m) const;
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
     /* behavior::seqable */
     persistent_sorted_set_sequence_ref seq() const;
@@ -81,7 +84,10 @@ namespace jank::runtime::obj
 
     /*** XXX: Everything here is immutable after initialization. ***/
     value_type data;
-    object_ref meta;
+
+    /*** XXX: Everything here is thread-safe. ***/
+  private:
+    lazy_meta meta;
   };
 }
 

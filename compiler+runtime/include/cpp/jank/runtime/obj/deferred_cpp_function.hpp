@@ -3,6 +3,7 @@
 #include <mutex>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime
 {
@@ -113,10 +114,10 @@ namespace jank::runtime::obj
     void realize() const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    object_ref meta;
     var_ref var;
 
     /*** XXX: Everything here is thread-safe. ***/
+    lazy_meta meta;
     mutable std::recursive_mutex compilation_mutex;
     mutable object_ref compiled_fn;
     mutable jtl::immutable_string declaration_code;

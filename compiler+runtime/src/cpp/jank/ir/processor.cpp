@@ -75,8 +75,8 @@ namespace jank::ir
     return b.def(expr->position,
                  expr->name->to_code_string(),
                  value_ident,
-                 b.literal(analyze::expression_position::value, expr->name->meta),
-                 runtime::truthy(runtime::get(expr->name->meta, dynamic_kw)));
+                 expr->name->get_meta(),
+                 runtime::truthy(runtime::get(expr->name->get_meta(), dynamic_kw)));
   }
 
   jtl::option<identifier> gen(analyze::expr::var_deref_ref const expr, builder &b)
@@ -118,12 +118,7 @@ namespace jank::ir
       values.emplace_back(gen(value_expr, b).unwrap());
     }
 
-    jtl::option<identifier> meta;
-    if(!is_empty(expr->meta))
-    {
-      meta = b.literal(analyze::expression_position::value, expr->meta);
-    }
-    return b.persistent_list(expr->position, jtl::move(values), meta);
+    return b.persistent_list(expr->position, jtl::move(values), expr->meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::vector_ref const expr, builder &b)
@@ -135,12 +130,7 @@ namespace jank::ir
       values.emplace_back(gen(value_expr, b).unwrap());
     }
 
-    jtl::option<identifier> meta;
-    if(!is_empty(expr->meta))
-    {
-      meta = b.literal(analyze::expression_position::value, expr->meta);
-    }
-    return b.persistent_vector(expr->position, jtl::move(values), meta);
+    return b.persistent_vector(expr->position, jtl::move(values), expr->meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::map_ref const expr, builder &b)
@@ -152,17 +142,11 @@ namespace jank::ir
       values.emplace_back(gen(value_expr.first, b).unwrap(), gen(value_expr.second, b).unwrap());
     }
 
-    jtl::option<identifier> meta;
-    if(!is_empty(expr->meta))
-    {
-      meta = b.literal(analyze::expression_position::value, expr->meta);
-    }
-
     if(expr->data_exprs.size() <= runtime::obj::persistent_array_map::max_size)
     {
-      return b.persistent_array_map(expr->position, jtl::move(values), meta);
+      return b.persistent_array_map(expr->position, jtl::move(values), expr->meta);
     }
-    return b.persistent_hash_map(expr->position, jtl::move(values), meta);
+    return b.persistent_hash_map(expr->position, jtl::move(values), expr->meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::set_ref const expr, builder &b)
@@ -174,12 +158,7 @@ namespace jank::ir
       values.emplace_back(gen(value_expr, b).unwrap());
     }
 
-    jtl::option<identifier> meta;
-    if(!is_empty(expr->meta))
-    {
-      meta = b.literal(analyze::expression_position::value, expr->meta);
-    }
-    return b.persistent_hash_set(expr->position, jtl::move(values), meta);
+    return b.persistent_hash_set(expr->position, jtl::move(values), expr->meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::local_reference_ref const expr, builder &b)

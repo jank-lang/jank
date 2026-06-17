@@ -5,6 +5,7 @@
 #include <jtl/option.hpp>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime::obj
 {
@@ -74,18 +75,19 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     range_ref with_meta(object_ref const m) const;
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
     /*** XXX: Everything here is immutable after initialization. ***/
     object_ref start{};
     object_ref end{};
     object_ref step{};
     bounds_check_t bounds_check{};
-    object_ref meta{};
 
     /*** XXX: Everything here is thread-safe. ***/
     mutable std::recursive_mutex mutex;
     mutable obj::array_chunk_ref chunk{};
     mutable range_ref chunk_next{};
     mutable range_ref cached_next{};
+    lazy_meta meta{};
   };
 }

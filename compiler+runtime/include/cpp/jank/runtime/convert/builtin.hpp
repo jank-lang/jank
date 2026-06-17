@@ -82,7 +82,7 @@ namespace jank::runtime
 
     static obj::small_integer_ref from_object(object_ref const o)
     {
-      if(detail::is_small_int(o.raw()))
+      if(detail::is_tagged_small_int(o.raw()))
       {
         return detail::as_integer(o.raw());
       }
@@ -100,7 +100,7 @@ namespace jank::runtime
 
     static obj::small_real_ref from_object(object_ref const o)
     {
-      if(detail::is_small_real(o.raw()))
+      if(detail::is_tagged_small_real(o.raw()))
       {
         return detail::as_real(o.raw());
       }
@@ -200,7 +200,7 @@ namespace jank::runtime
 
     static T from_object(object_ref const o)
     {
-      if(detail::is_small_int(o.raw()))
+      if(detail::is_tagged_small_int(o.raw()))
       {
         return static_cast<T>(detail::as_integer(o.raw()));
       }
@@ -231,7 +231,7 @@ namespace jank::runtime
 
     static T from_object(object_ref const o)
     {
-      if(detail::is_small_int(o.raw()))
+      if(detail::is_tagged_small_int(o.raw()))
       {
         return static_cast<T>(detail::as_integer(o.raw()));
       }
@@ -281,7 +281,7 @@ namespace jank::runtime
 
     static T from_object(object_ref const o)
     {
-      if(detail::is_small_real(o.raw()))
+      if(detail::is_tagged_small_real(o.raw()))
       {
         return static_cast<T>(detail::as_real(o.raw()));
       }

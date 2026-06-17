@@ -1150,7 +1150,7 @@ namespace jank::runtime
 
         if constexpr(behavior::metadatable<T>)
         {
-          return make_box<obj::native_vector_sequence>(typed_coll->meta, std::move(vec));
+          return make_box<obj::native_vector_sequence>(typed_coll->get_meta(), std::move(vec));
         }
         else
         {

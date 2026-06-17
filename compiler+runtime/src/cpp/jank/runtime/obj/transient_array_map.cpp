@@ -131,6 +131,14 @@ namespace jank::runtime::obj
     return make_box<persistent_array_map>(std::move(data));
   }
 
+  transient_array_map::persistent_type_ref
+  transient_array_map::to_persistent(jtl::immutable_string const &meta)
+  {
+    assert_active();
+    active = false;
+    return make_box<persistent_array_map>(meta, std::move(data));
+  }
+
   object_ref transient_array_map::call(object_ref const o) const
   {
     return get(o);

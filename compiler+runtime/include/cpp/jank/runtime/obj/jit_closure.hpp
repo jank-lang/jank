@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime::obj
 {
@@ -25,6 +26,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     jit_closure_ref with_meta(object_ref const m);
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
     /* behavior::callable */
     object_ref call() const final;
@@ -132,7 +134,10 @@ namespace jank::runtime::obj
                            object_ref,
                            object_ref,
                            object_ref){};
-    object_ref meta;
     callable_arity_flags arity_flags{};
+
+    /*** XXX: Everything here is thread-safe. ***/
+  private:
+    lazy_meta meta;
   };
 }

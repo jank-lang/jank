@@ -46,7 +46,6 @@ namespace jank::ir
           {
             rewrite(v, old_name, new_name);
           }
-          rewrite(i.meta, old_name, new_name);
         }
         break;
       case instruction_kind::persistent_vector:
@@ -56,7 +55,6 @@ namespace jank::ir
           {
             rewrite(v, old_name, new_name);
           }
-          rewrite(i.meta, old_name, new_name);
         }
         break;
       case instruction_kind::persistent_array_map:
@@ -67,7 +65,6 @@ namespace jank::ir
             rewrite(v.first, old_name, new_name);
             rewrite(v.second, old_name, new_name);
           }
-          rewrite(i.meta, old_name, new_name);
         }
         break;
       case instruction_kind::persistent_hash_map:
@@ -78,7 +75,6 @@ namespace jank::ir
             rewrite(v.first, old_name, new_name);
             rewrite(v.second, old_name, new_name);
           }
-          rewrite(i.meta, old_name, new_name);
         }
         break;
       case instruction_kind::persistent_hash_set:
@@ -88,7 +84,6 @@ namespace jank::ir
           {
             rewrite(v, old_name, new_name);
           }
-          rewrite(i.meta, old_name, new_name);
         }
         break;
       case instruction_kind::closure:
@@ -104,7 +99,6 @@ namespace jank::ir
         {
           auto &i{ static_cast<inst::def &>(*inst.data) };
           rewrite(i.value, old_name, new_name);
-          rewrite(i.meta, old_name, new_name);
         }
         break;
       case instruction_kind::type_erase:

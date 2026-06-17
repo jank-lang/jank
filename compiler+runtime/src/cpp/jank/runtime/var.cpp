@@ -288,20 +288,25 @@ namespace jank::runtime
   var_ref var::with_meta(object_ref const m)
   {
     auto const new_meta(behavior::detail::validate_meta(m));
-    auto const locked_meta{ meta.wlock() };
-    *locked_meta = new_meta;
+    meta.set(new_meta);
+    return detail::untagged(this);
+  }
+
+  var_ref var::with_lazy_meta(jtl::immutable_string const &source)
+  {
+    meta = lazy_meta{ source };
     return detail::untagged(this);
   }
 
   object_ref var::get_meta() const
   {
-    auto const locked_meta{ meta.rlock() };
-    return *locked_meta;
+    return meta.get();
   }
 
-  void var::set_meta(object_ref const m)
+  void var::set_meta(object_ref const o)
   {
-    with_meta(m);
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   var_ref var::clone() const

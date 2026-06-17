@@ -141,11 +141,7 @@ namespace jank
       else
       {
         auto const ext{ std::filesystem::path{ opts.output_module_filename.c_str() }.extension() };
-        if(ext == ".ll")
-        {
-          opts.output_target = util::cli::compilation_target::llvm_ir;
-        }
-        else if(ext == ".cpp")
+        if(ext == ".cpp")
         {
           opts.output_target = util::cli::compilation_target::cpp;
         }
@@ -167,8 +163,7 @@ namespace jank
     else if(!opts.output_module_filename.empty())
     {
       auto const ext{ std::filesystem::path{ opts.output_module_filename.c_str() }.extension() };
-      if((ext == ".ll" && opts.output_target != util::cli::compilation_target::llvm_ir)
-         || (ext == ".cpp" && opts.output_target != util::cli::compilation_target::cpp)
+      if((ext == ".cpp" && opts.output_target != util::cli::compilation_target::cpp)
          || (ext == ".o" && opts.output_target != util::cli::compilation_target::object))
       {
         error::warn(util::format("The output file name '{}' has the extension '{}', but the output "
@@ -386,102 +381,108 @@ int main(int const argc, char const **argv)
   using namespace jank;
   using namespace jank::runtime;
 
-  return jank_init(argc, argv, /*init_default_ctx=*/false, [](int const argc, char const **argv) {
-    auto const parse_result(util::cli::parse_opts(argc, argv));
-    if(parse_result.is_err())
-    {
-      return parse_result.expect_err();
-    }
+  return jank_init_dynamic(
+    argc,
+    argv,
+    /*init_default_ctx=*/false,
+    nullptr,
+    0,
+    [](int const argc, char const **argv) {
+      auto const parse_result(util::cli::parse_opts(argc, argv));
+      if(parse_result.is_err())
+      {
+        return parse_result.expect_err();
+      }
 
-    if(jank::util::cli::opts.gc_incremental)
-    {
-      GC_enable_incremental();
-    }
+      if(jank::util::cli::opts.gc_incremental)
+      {
+        GC_enable_incremental();
+      }
 
-    profile::configure();
-    profile::timer const timer{ "main" };
+      profile::configure();
+      profile::timer const timer{ "main" };
 
-    if(util::cli::opts.command == util::cli::command::check_health)
-    {
-      return jank::environment::check_health() ? 0 : 1;
-    }
+      if(util::cli::opts.command == util::cli::command::check_health)
+      {
+        return jank::environment::check_health() ? 0 : 1;
+      }
 
-    __rt_ctx = new(UseGC) runtime::context{};
+      __rt_ctx = new(UseGC) runtime::context{};
 
-    jank_load_clojure_core_native();
+      jank_load_clojure_core_native();
 
-    __rt_ctx->module_loader.add_load_fn("jank.compiler-native", &jank_load_jank_compiler_native);
+      __rt_ctx->module_loader.add_load_fn("jank.compiler-native", &jank_load_jank_compiler_native);
 
 #ifdef JANK_PHASE_2
-    __rt_ctx->module_loader.add_load_fn("clojure.core", &jank_load_clojure_core);
-    __rt_ctx->module_loader.add_load_fn("clojure.string", &jank_load_clojure_string);
-    __rt_ctx->module_loader.add_load_fn("clojure.walk", &jank_load_clojure_walk);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.core",
-                                        &jank_load_jank_nrepl_server_core);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.inspect",
-                                        &jank_load_jank_nrepl_server_inspect);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler",
-                                        &jank_load_jank_nrepl_server_handler);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.bencode",
-                                        &jank_load_jank_nrepl_server_bencode);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.capture",
-                                        &jank_load_jank_nrepl_server_capture);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.util",
-                                        &jank_load_jank_nrepl_server_util);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.eval",
-                                        &jank_load_jank_nrepl_server_eval);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.parsec",
-                                        &jank_load_jank_nrepl_server_parsec);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.close",
-                                        &jank_load_jank_nrepl_server_handler_close);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.clone",
-                                        &jank_load_jank_nrepl_server_handler_clone);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.describe",
-                                        &jank_load_jank_nrepl_server_handler_describe);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.completions",
-                                        &jank_load_jank_nrepl_server_handler_completions);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.eval",
-                                        &jank_load_jank_nrepl_server_handler_eval);
-    __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.lookup",
-                                        &jank_load_jank_nrepl_server_handler_lookup);
+      __rt_ctx->module_loader.add_load_fn("clojure.core", &jank_load_clojure_core);
+      __rt_ctx->module_loader.add_load_fn("clojure.string", &jank_load_clojure_string);
+      __rt_ctx->module_loader.add_load_fn("clojure.walk", &jank_load_clojure_walk);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.core",
+                                          &jank_load_jank_nrepl_server_core);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.inspect",
+                                          &jank_load_jank_nrepl_server_inspect);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler",
+                                          &jank_load_jank_nrepl_server_handler);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.bencode",
+                                          &jank_load_jank_nrepl_server_bencode);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.capture",
+                                          &jank_load_jank_nrepl_server_capture);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.util",
+                                          &jank_load_jank_nrepl_server_util);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.eval",
+                                          &jank_load_jank_nrepl_server_eval);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.parsec",
+                                          &jank_load_jank_nrepl_server_parsec);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.close",
+                                          &jank_load_jank_nrepl_server_handler_close);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.clone",
+                                          &jank_load_jank_nrepl_server_handler_clone);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.describe",
+                                          &jank_load_jank_nrepl_server_handler_describe);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.completions",
+                                          &jank_load_jank_nrepl_server_handler_completions);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.eval",
+                                          &jank_load_jank_nrepl_server_handler_eval);
+      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.lookup",
+                                          &jank_load_jank_nrepl_server_handler_lookup);
 #endif
 
-    Cpp::EnableDebugOutput(false);
+      Cpp::EnableDebugOutput(false);
 
-    {
-      runtime::detail::native_transient_vector extra_args;
-      for(auto const &s : opts.extra_opts)
       {
-        extra_args.push_back(make_box<runtime::obj::persistent_string>(s));
+        runtime::detail::native_transient_vector extra_args;
+        for(auto const &s : opts.extra_opts)
+        {
+          extra_args.push_back(make_box<runtime::obj::persistent_string>(s));
+        }
+        __rt_ctx->intern_var("clojure.core", "*command-line-args*")
+          .expect_ok()
+          ->bind_root(make_box<obj::persistent_vector>(extra_args.persistent())->seq());
       }
-      __rt_ctx->intern_var("clojure.core", "*command-line-args*")
-        .expect_ok()
-        ->bind_root(make_box<obj::persistent_vector>(extra_args.persistent())->seq());
-    }
 
-    switch(jank::util::cli::opts.command)
-    {
-      case util::cli::command::run:
-        run();
-        break;
-      case util::cli::command::compile_module:
-        compile_module();
-        break;
-      case util::cli::command::repl:
-        repl();
-        break;
-      case util::cli::command::cpp_repl:
-        cpp_repl();
-        break;
-      case util::cli::command::run_main:
-        run_main();
-        break;
-      case util::cli::command::compile:
-        compile();
-        break;
-      case util::cli::command::check_health:
-        break;
-    }
-    return 0;
-  });
+      switch(jank::util::cli::opts.command)
+      {
+        case util::cli::command::run:
+          run();
+          break;
+        case util::cli::command::compile_module:
+          compile_module();
+          break;
+        case util::cli::command::repl:
+          repl();
+          break;
+        case util::cli::command::cpp_repl:
+          cpp_repl();
+          break;
+        case util::cli::command::run_main:
+          run_main();
+          break;
+        case util::cli::command::compile:
+          compile();
+          break;
+        case util::cli::command::check_health:
+          break;
+      }
+      return 0;
+    });
 }

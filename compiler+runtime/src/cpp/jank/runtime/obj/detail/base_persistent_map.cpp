@@ -21,6 +21,13 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
+  base_persistent_map<PT, ST, V>::base_persistent_map(lazy_meta const &meta)
+    : object{ PT::obj_type, PT::obj_behaviors }
+    , meta{ meta }
+  {
+  }
+
+  template <typename PT, typename ST, typename V>
   bool base_persistent_map<PT, ST, V>::equal(object const &o) const
   {
     if(&o == static_cast<object const *>(this))
@@ -200,7 +207,14 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename ST, typename V>
   object_ref base_persistent_map<PT, ST, V>::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  template <typename PT, typename ST, typename V>
+  void base_persistent_map<PT, ST, V>::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   template struct base_persistent_map<persistent_array_map,

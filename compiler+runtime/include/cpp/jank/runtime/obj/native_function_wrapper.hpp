@@ -3,6 +3,7 @@
 #include <any>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
 
 namespace jank::runtime
@@ -135,10 +136,14 @@ namespace jank::runtime
       /* behavior::metadatable */
       native_function_wrapper_ref with_meta(object_ref const m) const;
       object_ref get_meta() const;
+      void set_meta(object_ref const o);
 
       /*** XXX: Everything here is immutable after initialization. ***/
       obj::detail::function_type data{};
-      object_ref meta;
+
+      /*** XXX: Everything here is thread-safe. ***/
+    private:
+      lazy_meta meta;
     };
   }
 }

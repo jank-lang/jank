@@ -25,6 +25,14 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_list::persistent_list(lazy_meta const &meta,
+                                   runtime::detail::native_persistent_list const &d)
+    : object{ obj_type, obj_behaviors }
+    , data{ d }
+    , meta{ meta }
+  {
+  }
+
   persistent_list_ref persistent_list::create(object_ref const meta, object_ref const s)
   {
     auto const ret{ create(s) };
@@ -168,7 +176,13 @@ namespace jank::runtime::obj
 
   object_ref persistent_list::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void persistent_list::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   object_ref persistent_list::peek() const

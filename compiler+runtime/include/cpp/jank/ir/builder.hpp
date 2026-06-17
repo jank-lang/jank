@@ -54,19 +54,19 @@ namespace jank::ir
     identifier literal(analyze::expression_position const pos, runtime::object_ref const value);
     identifier persistent_list(analyze::expression_position const pos,
                                native_vector<identifier> &&values,
-                               jtl::option<identifier> const &meta);
+                               runtime::object_ref const meta);
     identifier persistent_vector(analyze::expression_position const pos,
                                  native_vector<identifier> &&values,
-                                 jtl::option<identifier> const &meta);
+                                 runtime::object_ref const meta);
     identifier persistent_array_map(analyze::expression_position const pos,
                                     native_vector<std::pair<identifier, identifier>> &&values,
-                                    jtl::option<identifier> const &meta);
+                                    runtime::object_ref const meta);
     identifier persistent_hash_map(analyze::expression_position const pos,
                                    native_vector<std::pair<identifier, identifier>> &&values,
-                                   jtl::option<identifier> const &meta);
+                                   runtime::object_ref const meta);
     identifier persistent_hash_set(analyze::expression_position const pos,
                                    native_vector<identifier> &&values,
-                                   jtl::option<identifier> const &meta);
+                                   runtime::object_ref const meta);
     identifier function(analyze::expression_position const pos,
                         native_unordered_map<u8, jtl::immutable_string> &&arities,
                         runtime::callable_arity_flags const arity_flags,
@@ -82,7 +82,7 @@ namespace jank::ir
     identifier def(analyze::expression_position const pos,
                    jtl::immutable_string const &qualified_var,
                    jtl::option<identifier> const &value,
-                   identifier const &meta,
+                   runtime::object_ref const meta,
                    bool const is_dynamic);
     identifier
     var_deref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var);

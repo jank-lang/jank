@@ -27,4 +27,5 @@ namespace jank::error
   error_ref runtime_unsupported_behavior(runtime::object_type const type,
                                          jtl::immutable_string const &behavior,
                                          read::source const &source);
+  error_ref runtime_static_feature_disabled(jtl::immutable_string const &feature);
 }

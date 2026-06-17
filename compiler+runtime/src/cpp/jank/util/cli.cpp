@@ -123,12 +123,16 @@ OPTIONS
                               The file to write profile entries (will be overwritten).
           --perf              Enable Linux perf event sampling.
           --gc-incremental    Enable incremental GC collection.
-          --debug             Enable debug symbol generation for generated code.
+          --no-debug          Disable debug source map generation for generated code.
   -O,     --optimization <0 - 3>
                               The optimization level to use for AOT compilation.
-  -Odirect-call               Elides the dereferencing of vars for improved performance.
+  -Odirect-call               Elides the dereferencing of vars for improved performance. (not yet implemented)
           --eagerness <lazy, eager> [default: lazy]
                               How eagerly to JIT compile functions.
+          --runtime <static, dynamic> [default: static]
+                              The AOT runtime to target. The static runtime bakes in
+                              all functionality and does not link to Clang/LLVM for easier
+                              distribution.
   -o,     --output <path>
                               The name of the output file.
           --output-dir <path> [default: target]
@@ -286,9 +290,9 @@ OPTIONS
         {
           opts.perf_profiling_enabled = true;
         }
-        else if(check_flag(it, end, value, "--debug", false))
+        else if(check_flag(it, end, value, "--no-debug", false))
         {
-          opts.debug = true;
+          opts.debug = false;
         }
         else if(check_flag(it, end, value, "-O", "--optimization", true))
         {
@@ -326,6 +330,21 @@ OPTIONS
           else
           {
             throw util::format("Invalid eagerness type '{}'.", value);
+          }
+        }
+        else if(check_flag(it, end, value, "--runtime", true))
+        {
+          if(value == "static")
+          {
+            opts.target_runtime = compilation_runtime::static_;
+          }
+          else if(value == "dynamic")
+          {
+            opts.target_runtime = compilation_runtime::dynamic;
+          }
+          else
+          {
+            throw util::format("Invalid runtime type '{}'.", value);
           }
         }
         else if(check_flag(it, end, value, "-I", "--include-dir", true))
@@ -419,11 +438,7 @@ OPTIONS
         }
         if(check_pending_flag("--output-target", value, pending_flags))
         {
-          if(value == "llvm-ir")
-          {
-            opts.output_target = compilation_target::llvm_ir;
-          }
-          else if(value == "cpp")
+          if(value == "cpp")
           {
             opts.output_target = compilation_target::cpp;
           }

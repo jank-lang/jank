@@ -88,11 +88,11 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_object(F const &fn, object_ref const erased, Args &&...args)
   {
-    if(detail::is_small_int(erased.raw()))
+    if(detail::is_tagged_small_int(erased.raw()))
     {
       return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
     }
-    if(detail::is_small_real(erased.raw()))
+    if(detail::is_tagged_small_real(erased.raw()))
     {
       return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
     }
@@ -435,11 +435,11 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto visit_number_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
-    if(detail::is_small_int(erased.raw()))
+    if(detail::is_tagged_small_int(erased.raw()))
     {
       return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
     }
-    if(detail::is_small_real(erased.raw()))
+    if(detail::is_tagged_small_real(erased.raw()))
     {
       return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
     }

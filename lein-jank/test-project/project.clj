@@ -19,5 +19,5 @@
          ;; -l
          ;:linked-libraries []
          }
-  :profiles {:release {:jank {:codegen :cpp}}
+  :profiles {:release {:jank {}}
              :test {:test-paths ["tests"]}})

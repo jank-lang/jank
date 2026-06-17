@@ -7,15 +7,6 @@
   #include <windows.h>
 #endif
 
-#include <llvm-c/Target.h>
-#include <llvm/ExecutionEngine/Orc/AbsoluteSymbols.h>
-#include <llvm/Support/CommandLine.h>
-#include <llvm/Support/ManagedStatic.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/ExecutionEngine/Orc/Mangling.h>
-
-#include <CppInterOp/Compatibility.h>
-
 #include <jank/c_api.h>
 #include <jank/gc.hpp>
 #include <jank/runtime/visit.hpp>
@@ -1024,74 +1015,49 @@ extern "C"
     runtime::__rt_ctx->module_loader.set_is_loaded(module);
   }
 
-  int jank_init(int const argc,
-                char const ** const argv,
-                jank_bool const init_default_ctx,
-                int (*fn)(int const, char const ** const))
+  void jank_init_base()
   {
-    return jank_init_with_pch(argc, argv, init_default_ctx, nullptr, 0, fn);
+#ifdef JANK_WINDOWS_LIKE
+    std::setlocale(LC_CTYPE, ".UTF8");
+    std::locale::global(std::locale(".UTF-8"));
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#else
+    /* To handle UTF-8, we set the locale to the current environment locale.
+     * Usage of the local locale allows better localization.
+     * Notably, this might make text encoding become more platform dependent. */
+    std::locale::global(std::locale(""));
+
+    /* Number parsing needs to remain as the US default of decimal separators so that folks
+     * in other locales can have their numbers parsed properly. Otherwise, someone with a
+     * locale which uses comma as the decimal point might input 3.14 in some jank source
+     * and not have it parse properly. */
+    std::setlocale(LC_NUMERIC, "C");
+#endif
+
+    /* The GC needs to initialized even before arg parsing, since our native types,
+     * like strings, use the GC for allocations. It can still be configured later. */
+    GC_set_all_interior_pointers(1);
+    GC_init();
+    GC_allow_register_threads();
+
+    {
+      GC_word bm[GC_BITMAP_SIZE(jank::runtime::obj::persistent_string)]{ 0 };
+      GC_set_bit(bm, GC_OFFSETOF_IN_PTRS(jank::runtime::obj::persistent_string, data));
+      jank::runtime::obj::persistent_string::gc_descriptor
+        = GC_make_descriptor(bm, GC_SIZEOF_IN_PTRS(jank::runtime::obj::persistent_string));
+    }
   }
 
-  int jank_init_with_pch(int const argc,
-                         char const ** const argv,
-                         jank_bool const init_default_ctx,
-                         char const * const pch_data,
-                         jank_usize const pch_size,
-                         int (*fn)(int const, char const ** const))
+  int jank_init_static(int const argc,
+                       char const ** const argv,
+                       jank_bool const init_default_ctx,
+                       int (*fn)(int const, char const ** const))
   {
     JANK_TRY
     {
-#ifdef JANK_WINDOWS_LIKE
-      std::setlocale(LC_CTYPE, ".UTF8");
-      std::locale::global(std::locale(".UTF-8"));
-      SetConsoleOutputCP(CP_UTF8);
-      SetConsoleCP(CP_UTF8);
-#else
-      /* To handle UTF-8, we set the locale to the current environment locale.
-       * Usage of the local locale allows better localization.
-       * Notably, this might make text encoding become more platform dependent. */
-      std::locale::global(std::locale(""));
+      jank_init_base();
 
-      /* Number parsing needs to remain as the US default of decimal separators so that folks
-       * in other locales can have their numbers parsed properly. Otherwise, someone with a
-       * locale which uses comma as the decimal point might input 3.14 in some jank source
-       * and not have it parse properly. */
-      std::setlocale(LC_NUMERIC, "C");
-#endif
-
-      /* The GC needs to initialized even before arg parsing, since our native types,
-       * like strings, use the GC for allocations. It can still be configured later. */
-      GC_set_all_interior_pointers(1);
-      GC_init();
-      GC_allow_register_threads();
-
-      {
-        GC_word bm[GC_BITMAP_SIZE(jank::runtime::obj::persistent_array_map)]{ 0 };
-        GC_set_bit(bm,
-                   GC_OFFSETOF_IN_PTRS(jank::runtime::obj::persistent_array_map, data)
-                     + GC_OFFSETOF_IN_PTRS(jank::runtime::detail::native_array_map, data));
-        GC_set_bit(bm, GC_OFFSETOF_IN_PTRS(jank::runtime::obj::persistent_array_map, meta));
-        jank::runtime::obj::persistent_array_map::gc_descriptor
-          = GC_make_descriptor(bm, GC_SIZEOF_IN_PTRS(jank::runtime::obj::persistent_array_map));
-      }
-
-      {
-        GC_word bm[GC_BITMAP_SIZE(jank::runtime::obj::persistent_string)]{ 0 };
-        GC_set_bit(bm, GC_OFFSETOF_IN_PTRS(jank::runtime::obj::persistent_string, data));
-        jank::runtime::obj::persistent_string::gc_descriptor
-          = GC_make_descriptor(bm, GC_SIZEOF_IN_PTRS(jank::runtime::obj::persistent_string));
-      }
-
-      llvm::llvm_shutdown_obj const Y{};
-
-      llvm::InitializeNativeTarget();
-      llvm::InitializeNativeTargetAsmParser();
-      llvm::InitializeNativeTargetAsmPrinter();
-
-      if(pch_data)
-      {
-        aot::register_resource("incremental.pch", { pch_data, pch_size });
-      }
       if(init_default_ctx)
       {
         runtime::__rt_ctx = new(UseGC) runtime::context{};

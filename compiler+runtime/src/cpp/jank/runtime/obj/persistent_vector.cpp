@@ -34,6 +34,13 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_vector::persistent_vector(lazy_meta const &meta, value_type &&d)
+    : object{ obj_type, obj_behaviors }
+    , data{ jtl::move(d) }
+    , meta{ meta }
+  {
+  }
+
   persistent_vector_ref persistent_vector::create(object_ref const s)
   {
     if(s.is_nil())
@@ -201,7 +208,13 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void persistent_vector::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   object_ref persistent_vector::get(object_ref const key) const
