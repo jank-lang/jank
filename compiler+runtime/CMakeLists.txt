@@ -519,7 +519,6 @@ add_library(
   src/cpp/jank/c_api.cpp
   src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp
-  src/cpp/jank/util/sha256.cpp
   src/cpp/jank/util/environment.cpp
   src/cpp/jank/util/scope_exit.cpp
   src/cpp/jank/util/escape.cpp
@@ -627,8 +626,6 @@ add_library(
   # Native module sources.
   src/cpp/clojure/core_native.cpp
   src/cpp/clojure/string_native.cpp
-  src/cpp/jank/compiler_native.cpp
-  src/cpp/jank/nrepl/server.cpp
 )
 set_target_properties(jank_common_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
 
@@ -732,6 +729,7 @@ add_library(
   jank_dynamic_lib STATIC
   src/cpp/jank/error/report_dynamic.cpp
   src/cpp/jank/c_api_dynamic.cpp
+  src/cpp/jank/util/sha256.cpp
   src/cpp/jank/util/environment_dynamic.cpp
   src/cpp/jank/runtime/module/loader_dynamic.cpp
   src/cpp/jank/runtime/context_dynamic.cpp
@@ -831,6 +829,9 @@ add_library(
   src/cpp/jank/codegen/cpp_processor.cpp
   src/cpp/jank/codegen/optimize.cpp
   src/cpp/jank/aot/processor.cpp
+
+  src/cpp/jank/compiler_native.cpp
+  src/cpp/jank/nrepl/server.cpp
 )
 set_target_properties(jank_compiler_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
 set_property(TARGET jank_compiler_lib PROPERTY OUTPUT_NAME jank-compiler)

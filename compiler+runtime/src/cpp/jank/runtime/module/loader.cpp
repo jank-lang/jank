@@ -147,6 +147,91 @@ namespace jank::runtime::module
     }
   }
 
+  static jtl::result<file_view, error_ref> map_file(jtl::immutable_string const &path)
+  {
+    if(!std::filesystem::exists(path.c_str()))
+    {
+      return error::runtime_unable_to_open_file(util::format("File '{}' doesn't exist.", path));
+    }
+
+#ifdef JANK_WINDOWS_LIKE
+    HANDLE hFile{ CreateFileA(path.c_str(),
+                              GENERIC_READ,
+                              FILE_SHARE_READ,
+                              nullptr,
+                              OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL,
+                              nullptr) };
+
+    if(hFile == INVALID_HANDLE_VALUE)
+    {
+      return error::runtime_unable_to_open_file(util::format("Unable to open file '{}'.", path));
+    }
+
+    LARGE_INTEGER fileSize{};
+    if(!GetFileSizeEx(hFile, &fileSize))
+    {
+      CloseHandle(hFile);
+      return error::internal_runtime_failure("Failed to get file size");
+    }
+
+    HANDLE hMapping{ CreateFileMappingA(hFile, nullptr, PAGE_READONLY, 0, 0, nullptr) };
+
+    if(!hMapping)
+    {
+      CloseHandle(hFile);
+      return error::internal_runtime_failure("Failed to create file mapping");
+    }
+
+    auto head{ static_cast<char const *>(MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0)) };
+    if(!head)
+    {
+      CloseHandle(hMapping);
+      CloseHandle(hFile);
+      return error::internal_runtime_failure("Failed to map view of file");
+    }
+
+    return ok(
+      file_view{ path, HANDLES(hFile, hMapping), head, static_cast<size_t>(fileSize.QuadPart) });
+#else
+    auto const file_size(std::filesystem::file_size(path.c_str()));
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    auto const fd(::open(path.c_str(), O_RDONLY));
+    if(fd < 0)
+    {
+      return error::runtime_unable_to_open_file(util::format("Unable to open file '{}'.", path));
+    }
+    auto const head(
+      reinterpret_cast<char const *>(mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0)));
+
+    /* MAP_FAILED is a macro which does a C-style cast. */
+  #pragma clang diagnostic push
+  #pragma clang diagnostic ignored "-Wold-style-cast"
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast,performance-no-int-to-ptr) */
+    if(head == MAP_FAILED)
+  #pragma clang diagnostic pop
+    {
+      return error::runtime_unable_to_open_file(util::format("Unable to map file '{}'.", path));
+    }
+
+    return ok(file_view{ path, fd, head, file_size });
+#endif
+  }
+
+  jtl::result<file_view, error_ref> loader::read_file(jtl::immutable_string const &path)
+  {
+    if(path == read::no_source_path)
+    {
+      return error::internal_runtime_failure("No source to read.");
+    }
+
+    if(path.contains(".jar:"))
+    {
+      return read_jar_file(path);
+    }
+    return map_file(path);
+  }
+
   bool loader::is_loaded(jtl::immutable_string const &module)
   {
     auto const atom{

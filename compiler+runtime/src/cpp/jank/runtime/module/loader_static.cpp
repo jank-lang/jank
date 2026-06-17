@@ -23,4 +23,14 @@ namespace jank::runtime::module
 
     return error::runtime_module_not_found(util::format("Unable to find module '{}'.", module));
   }
+
+  jtl::result<file_view, error_ref> read_jar_file(jtl::immutable_string const &)
+  {
+    throw error::runtime_static_feature_disabled("jar reading");
+  }
+
+  jtl::result<file_view, error_ref> loader::read_module(jtl::immutable_string const &)
+  {
+    throw error::runtime_static_feature_disabled("read_module");
+  }
 }
