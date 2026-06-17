@@ -247,14 +247,18 @@ int main(int argc, const char** argv)
 
     compiler_args.push_back(strdup("-std=c++20"));
     compiler_args.push_back(strdup("-Wno-c23-extensions"));
-    if constexpr(jtl::current_platform == jtl::platform::linux_like)
-    {
-      compiler_args.push_back(strdup("-Wl,--export-dynamic"));
-    }
 
-    if constexpr(jtl::current_platform != jtl::platform::windows_like)
+    if(util::cli::opts.target_runtime == util::cli::compilation_runtime::dynamic)
     {
-      compiler_args.push_back(strdup("-rdynamic"));
+      if constexpr(jtl::current_platform == jtl::platform::linux_like)
+      {
+        compiler_args.push_back(strdup("-Wl,--export-dynamic"));
+      }
+
+      if constexpr(jtl::current_platform != jtl::platform::windows_like)
+      {
+        compiler_args.push_back(strdup("-rdynamic"));
+      }
     }
 
     switch(util::cli::opts.codegen_optimization_level)
@@ -308,8 +312,10 @@ int main(int argc, const char** argv)
         continue;
       }
 
-      auto const &module_path{ util::format("{}.o",
-                                            relative_to_cache_dir(module::module_to_path(mod))) };
+      auto const &module_path{ util::format(
+        "{}.{}",
+        relative_to_cache_dir(module::module_to_path(mod)),
+        util::cli::compilation_target_extension(util::cli::opts.output_target)) };
 
       if(std::filesystem::exists(module_path.c_str()))
       {
@@ -318,11 +324,26 @@ int main(int argc, const char** argv)
       else
       {
         auto const find_res{ __rt_ctx->module_loader.find(mod, module::origin::latest) };
-        if(find_res.is_ok() && find_res.expect_ok().sources.o.is_some())
+        bool found{};
+
+        if(util::cli::opts.output_target == util::cli::compilation_target::object)
         {
-          compiler_args.push_back(strdup(find_res.expect_ok().sources.o.unwrap().path.c_str()));
+          if(find_res.is_ok() && find_res.expect_ok().sources.o.is_some())
+          {
+            compiler_args.push_back(strdup(find_res.expect_ok().sources.o.unwrap().path.c_str()));
+            found = true;
+          }
         }
         else
+        {
+          if(find_res.is_ok() && find_res.expect_ok().sources.cpp.is_some())
+          {
+            compiler_args.push_back(strdup(find_res.expect_ok().sources.cpp.unwrap().path.c_str()));
+            found = true;
+          }
+        }
+
+        if(!found)
         {
           return error::internal_aot_failure(util::format("Compiled module '{}' not found.", mod));
         }

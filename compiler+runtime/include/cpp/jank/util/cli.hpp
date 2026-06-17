@@ -20,7 +20,6 @@ namespace jank::util::cli
     /* The target will be determined based on the extension of the output.
      * If that's not possible, we'll error out. */
     unspecified,
-    llvm_ir,
     cpp,
     object
   };
@@ -31,12 +30,25 @@ namespace jank::util::cli
     {
       case compilation_target::unspecified:
         return "unspecified";
-      case compilation_target::llvm_ir:
-        return "llvm-ir";
       case compilation_target::cpp:
         return "cpp";
       case compilation_target::object:
         return "object";
+      default:
+        return "unknown";
+    }
+  }
+
+  constexpr char const *compilation_target_extension(compilation_target const target)
+  {
+    switch(target)
+    {
+      case compilation_target::unspecified:
+        return "unspecified";
+      case compilation_target::cpp:
+        return "cpp";
+      case compilation_target::object:
+        return "o";
       default:
         return "unknown";
     }

@@ -438,11 +438,7 @@ OPTIONS
         }
         if(check_pending_flag("--output-target", value, pending_flags))
         {
-          if(value == "llvm-ir")
-          {
-            opts.output_target = compilation_target::llvm_ir;
-          }
-          else if(value == "cpp")
+          if(value == "cpp")
           {
             opts.output_target = compilation_target::cpp;
           }

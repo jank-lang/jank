@@ -242,30 +242,11 @@ namespace jank::runtime
   jtl::immutable_string
   context::get_output_module_name(jtl::immutable_string const &module_name) const
   {
-    char const *ext{};
-    switch(util::cli::opts.output_target)
-    {
-      case util::cli::compilation_target::llvm_ir:
-        ext = "ll";
-        break;
-      case util::cli::compilation_target::cpp:
-        ext = "cpp";
-        break;
-      case util::cli::compilation_target::object:
-        ext = "o";
-        break;
-      case util::cli::compilation_target::unspecified:
-      default:
-        throw error::internal_runtime_failure(
-          util::format("Unable to determine output module name, given output target '{}'.",
-                       util::cli::compilation_target_str(util::cli::opts.output_target)));
-    }
-
     return util::cli::opts.output_module_filename.empty()
       ? util::format("{}/{}.{}",
                      util::cli::opts.output_dir,
                      module::module_to_path(module_name),
-                     ext)
+                     util::cli::compilation_target_extension(util::cli::opts.output_target))
       : jtl::immutable_string{ util::cli::opts.output_module_filename };
   }
 
@@ -290,21 +271,6 @@ namespace jank::runtime
           std::ofstream ofs{ module_path.c_str() };
           ofs << "#include <jank/prelude.hpp>\n";
           ofs << cpp_code;
-          return ok();
-        }
-      case util::cli::compilation_target::llvm_ir:
-        {
-          std::error_code file_error{};
-          llvm::raw_fd_ostream os(module_path.string(),
-                                  file_error,
-                                  llvm::sys::fs::OpenFlags::OF_None);
-          if(file_error)
-          {
-            return err(util::format("Failed to open module file '{}' with error '{}'.",
-                                    module_path.c_str(),
-                                    file_error.message()));
-          }
-          module->print(os, nullptr);
           return ok();
         }
       case util::cli::compilation_target::object:

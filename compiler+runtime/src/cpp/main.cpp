@@ -141,11 +141,7 @@ namespace jank
       else
       {
         auto const ext{ std::filesystem::path{ opts.output_module_filename.c_str() }.extension() };
-        if(ext == ".ll")
-        {
-          opts.output_target = util::cli::compilation_target::llvm_ir;
-        }
-        else if(ext == ".cpp")
+        if(ext == ".cpp")
         {
           opts.output_target = util::cli::compilation_target::cpp;
         }
@@ -167,8 +163,7 @@ namespace jank
     else if(!opts.output_module_filename.empty())
     {
       auto const ext{ std::filesystem::path{ opts.output_module_filename.c_str() }.extension() };
-      if((ext == ".ll" && opts.output_target != util::cli::compilation_target::llvm_ir)
-         || (ext == ".cpp" && opts.output_target != util::cli::compilation_target::cpp)
+      if((ext == ".cpp" && opts.output_target != util::cli::compilation_target::cpp)
          || (ext == ".o" && opts.output_target != util::cli::compilation_target::object))
       {
         error::warn(util::format("The output file name '{}' has the extension '{}', but the output "
