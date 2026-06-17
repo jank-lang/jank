@@ -336,11 +336,7 @@ int main(int argc, const char** argv)
 
     if(util::cli::opts.target_runtime == util::cli::compilation_runtime::static_)
     {
-      for(auto const &lib : {
-            "-ljank-static-runtime",
-            "-lm",
-            "-lz",
-          })
+      for(auto const &lib : { "-ljank-static-runtime", "-lm", "-lz", "-lzstd" })
       {
         compiler_args.push_back(strdup(lib));
       }
