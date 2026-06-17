@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-5f986219.js";
+            window.path_to_searchindex_js = "../searchindex-5ce6ac35.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f18007b9.js"></script>
@@ -196,12 +196,17 @@ optimizations enabled. To get a release executable, you can enable the <code>rel
 profile.</p>
 <pre><code class="language-bash">lein with-profile release compile
 </code></pre>
-<h2 id="distributing-your-executables"><a class="header" href="#distributing-your-executables">Distributing your executables</a></h2>
-<p>Currently, AOT compiled executables still depend on jank, Clang, and LLVM. This
-makes distribution more complicated, especially since the Clang/LLVM version
-jank requires is bleeding edge. We are working on ways to both better package
-these together as well as to provide options for building executables which are
-standalone.</p>
+<h2 id="aot-runtime-selection"><a class="header" href="#aot-runtime-selection">AOT runtime selection</a></h2>
+<p>By default, AOT compilation will target jank’s <code>static</code> runtime. This means that
+the compiled binary will not link to Clang/LLVM and all of its functionality
+will be baked in. Since Clang/LLVM is not linked in, JIT compilation is not
+possible at runtime. Calling something like <code>eval</code> will throw. This is very
+similar to a Graal native image.</p>
+<p>If you need to be able to JIT compile code from your AOT compiled binary, you’ll
+need to enable the <code>dynamic</code> runtime. From jank’s command line, you can use
+<code>--runtime dynamic</code>, but you can also just set this in your Leiningen project.</p>
+<pre><code class="language-clojure">:profiles {:release {:jank {:runtime :dynamic}}}
+</code></pre>
 
                     </main>
 

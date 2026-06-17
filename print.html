@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-5f986219.js";
+            window.path_to_searchindex_js = "searchindex-5ce6ac35.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f18007b9.js"></script>
@@ -1435,12 +1435,17 @@ optimizations enabled. To get a release executable, you can enable the <code>rel
 profile.</p>
 <pre><code class="language-bash">lein with-profile release compile
 </code></pre>
-<h2 id="distributing-your-executables"><a class="header" href="#distributing-your-executables">Distributing your executables</a></h2>
-<p>Currently, AOT compiled executables still depend on jank, Clang, and LLVM. This
-makes distribution more complicated, especially since the Clang/LLVM version
-jank requires is bleeding edge. We are working on ways to both better package
-these together as well as to provide options for building executables which are
-standalone.</p>
+<h2 id="aot-runtime-selection"><a class="header" href="#aot-runtime-selection">AOT runtime selection</a></h2>
+<p>By default, AOT compilation will target jank’s <code>static</code> runtime. This means that
+the compiled binary will not link to Clang/LLVM and all of its functionality
+will be baked in. Since Clang/LLVM is not linked in, JIT compilation is not
+possible at runtime. Calling something like <code>eval</code> will throw. This is very
+similar to a Graal native image.</p>
+<p>If you need to be able to JIT compile code from your AOT compiled binary, you’ll
+need to enable the <code>dynamic</code> runtime. From jank’s command line, you can use
+<code>--runtime dynamic</code>, but you can also just set this in your Leiningen project.</p>
+<pre><code class="language-clojure">:profiles {:release {:jank {:runtime :dynamic}}}
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="differences-from-clojure"><a class="header" href="#differences-from-clojure">Differences from Clojure</a></h1>
 <p>jank is meant to be Clojure, but Clojure itself has no specification. There are
@@ -1736,7 +1741,7 @@ and <code>cpp/delete</code> or <code>cpp/malloc</code> and <code>cpp/free</code>
 <h2 id="why-does-jank-compile-to-c"><a class="header" href="#why-does-jank-compile-to-c">Why does jank compile to C++?</a></h2>
 <p>jank is both a Clojure dialect and a C++ dialect, which is unique among most
 programming languages. In order for us to consider jank a C++ dialect, we must
-have exellent interop with C++, such as:</p>
+have excellent interop with C++, such as:</p>
 <ul>
 <li>Including C++ headers</li>
 <li>Instantiating templates</li>
@@ -1751,7 +1756,7 @@ lines of code from Clang in order to properly encode C++ semantics and ABI
 nuances in LLVM IR. We know, since we have done this. It was not worth it.
 Even when it worked, we would need to keep up with Clang as C++ evolved, we
 would need to deal with more portability issues, and, in general, we would need
-to build no only a Clojure compiler but a C++ compiler.</p>
+to build not only a Clojure compiler but a C++ compiler.</p>
 <p>Clang is already a C++ compiler and it’s a better C++ compiler than we’re going
 to build, so instead we generate C++ and let Clang do what it does best. This
 same some huge benefits:</p>
@@ -1762,8 +1767,16 @@ feed that into a normal C++ build system. At that point, it’s just a C++
 project</li>
 <li>Inspecting the generated code is a breeze</li>
 </ol>
-<p>The only real downside is worse compilation performance. This is a trade off we
+<p>The only real downside is worse compilation performance. This is a tradeoff we
 accept.</p>
+<h2 id="why-does-clojure-not-compile-to-java-then"><a class="header" href="#why-does-clojure-not-compile-to-java-then">Why does Clojure not compile to Java then?</a></h2>
+<p>The Clojure JVM compiler compiles to JVM bytecode, rather than Java. It can do
+this because the JVM bytecode operates at the nearly semantic level of Java.
+Clojure can represent Java objects, virtual calls, exceptions, and so on, using
+JVM bytecode.</p>
+<p>LLVM IR, on the other hand, is much, much lower level than C++. The only way to
+turn C++ semantics into LLVM IR is with a C++ compiler, which is why jank
+generates C++ and uses Clang to then turn the C++ into LLVM IR.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="developing-jank"><a class="header" href="#developing-jank">Developing jank</a></h1>
 <p>This documentation is for the compiler hackers working on jank itself. Anything
