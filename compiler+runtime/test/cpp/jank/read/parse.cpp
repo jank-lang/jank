@@ -678,7 +678,7 @@ namespace jank::read::parse
       {
         lex::processor lp{ "::foo/foo" };
         auto const foo_ns(__rt_ctx->intern_ns(make_box<obj::symbol>("foo.bar.spam")));
-        auto const clojure_ns(__rt_ctx->find_ns(make_box<obj::symbol>("clojure.core")));
+        auto const clojure_ns(__rt_ctx->find_ns(make_box<obj::symbol>("user")));
         clojure_ns->add_alias(make_box<obj::symbol>("foo"), foo_ns).expect_ok();
         processor p{ lp.begin(), lp.end() };
         auto const r(p.next());

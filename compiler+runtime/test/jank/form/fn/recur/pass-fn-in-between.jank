@@ -1,0 +1,3 @@
+; We've had an IR issue with this before, so I'm making sure that doesn't happen again.
+(let* [f (fn* [] (fn* []) (recur))]
+  :success)

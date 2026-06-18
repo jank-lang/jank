@@ -294,7 +294,7 @@ namespace jank::runtime
 
   var_ref var::with_lazy_meta(jtl::immutable_string const &source)
   {
-    meta = lazy_meta{ source };
+    meta = lazy_meta{ source, n };
     return detail::untagged(this);
   }
 

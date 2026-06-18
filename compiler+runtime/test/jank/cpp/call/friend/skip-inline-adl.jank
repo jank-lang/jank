@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::call::friend_::pass_inline_adl
+          {
+            struct foo
+            {
+              friend int bar(foo &)
+              { return 6; }
+            };
+          }")
+
+(let [f (cpp/jank.cpp.call.friend_.pass_inline_adl.foo)]
+  (if (= 6 (cpp/bar f))
+    :success))
