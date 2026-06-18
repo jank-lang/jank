@@ -1,12 +1,22 @@
-#include <jank/runtime/lazy_meta.hpp>
 #include <jank/codegen/api.hpp>
+#include <jank/runtime/context.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime
 {
   lazy_meta::lazy_meta(jtl::immutable_string const &source)
     : state{
       { source, {} }
+  },
+    ns{ __rt_ctx->current_ns_var->n }
+  {
   }
+
+  lazy_meta::lazy_meta(jtl::immutable_string const &source, ns_ref const ns)
+    : state{
+      { source, {} }
+  },
+    ns{ ns }
   {
   }
 
@@ -26,7 +36,12 @@ namespace jank::runtime
       return locked_state->meta;
     };
 
-    locked_state->meta = _jank_eval_str(locked_state->source.c_str());
+    {
+      context::binding_scope const _{ runtime::obj::persistent_hash_map::create_unique(
+        std::make_pair(__rt_ctx->current_ns_var, ns)) };
+      locked_state->meta = _jank_eval_str(locked_state->source.c_str());
+    }
+
     locked_state->source = "";
     return locked_state->meta;
   }

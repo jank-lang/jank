@@ -6,6 +6,8 @@
 
 namespace jank::runtime
 {
+  using ns_ref = oref<struct ns>;
+
   /* Each runtime object which can hold metadata holds this `lazy_meta` instead. It's a
    * synchronized container of either a meta object or a string of EDN to lazily read/eval
    * as meta. Upon calling `get()`, if we have a source string, we'll read/eval and then
@@ -17,6 +19,7 @@ namespace jank::runtime
   {
     lazy_meta() = default;
     lazy_meta(jtl::immutable_string const &source);
+    lazy_meta(jtl::immutable_string const &source, ns_ref const ns);
     lazy_meta(object_ref const meta);
 
     object_ref get() const;
@@ -32,5 +35,6 @@ namespace jank::runtime
     };
 
     mutable folly::Synchronized<mutable_state> state;
+    ns_ref ns;
   };
 }
