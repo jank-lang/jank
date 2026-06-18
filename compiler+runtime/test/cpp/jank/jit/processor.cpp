@@ -43,6 +43,11 @@ namespace jank::jit
   {
     TEST_CASE("files")
     {
+      __rt_ctx->in_ns_var->deref().call(runtime::make_box<runtime::obj::symbol>("user"));
+      __rt_ctx->intern_var("clojure.core", "refer")
+        .expect_ok()
+        .call(runtime::make_box<runtime::obj::symbol>("clojure.core"));
+
       auto const cardinal_result(__rt_ctx->intern_keyword("success").expect_ok());
       usize test_count{};
 

@@ -3,4 +3,8 @@
 
 ; This will throw if we try to evaluate it in this ns.
 (let* [m `(str (str 1))]
-  :success)
+  )
+
+(ns user)
+
+:success

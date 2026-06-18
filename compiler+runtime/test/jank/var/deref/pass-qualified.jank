@@ -1,5 +1,5 @@
 (def some-var? true)
 
-(assert clojure.core/some-var?)
+(assert user/some-var?)
 
 :success
