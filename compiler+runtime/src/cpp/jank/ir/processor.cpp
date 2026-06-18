@@ -186,10 +186,16 @@ namespace jank::ir
                                   analyze::expr::function_ref const fn_expr,
                                   analyze::expr::function_arity const &arity)
   {
-    auto &fn{ mod.functions.emplace_back(mod.functions.size(), &arity) };
     auto name{ runtime::munge(util::format("{}_{}", fn_expr->unique_name, arity.params.size())) };
-    fn.name = name;
-    fn.add_block("entry");
+
+    {
+      /* We can't access `fn` later in this function, since `mod.functions` may have been
+       * reallocated. We don't have a stable pointer. */
+      auto &fn{ mod.functions.emplace_back(mod.functions.size(), &arity) };
+      fn.name = name;
+      fn.add_block("entry");
+    }
+
     builder b{ &mod, mod.functions.size() - 1 };
 
     b.locals[runtime::munge(fn_expr->name)]
@@ -258,8 +264,9 @@ namespace jank::ir
        * block. */
       else
       {
-        fn.remove_block(merge_blk);
-        dynamic_cast<inst::loop &>(*fn.blocks[0].instructions.back()).merge_block = none;
+        auto const fn{ b.current_function() };
+        fn->remove_block(merge_blk);
+        dynamic_cast<inst::loop &>(*fn->blocks[0].instructions.back()).merge_block = none;
       }
     }
     else
