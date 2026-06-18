@@ -34,7 +34,10 @@ namespace jank::runtime
       object_ref meta;
     };
 
+    /*** XXX: Everything here is thead-safe. ***/
     mutable folly::Synchronized<mutable_state> state;
+
+    /*** XXX: Everything here is immutable after initialization. ***/
     ns_ref ns;
   };
 }

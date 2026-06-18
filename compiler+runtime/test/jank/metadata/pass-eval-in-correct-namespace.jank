@@ -1,0 +1,6 @@
+(ns jank.test.metadata.eval-in-correct-namespace
+  (:refer-clojure :exclude [list]))
+
+; This will throw if we try to evaluate it in this ns.
+(let* [m `(str (str 1))]
+  (println :success))
