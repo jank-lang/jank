@@ -1,8 +1,8 @@
-(assert (= 'clojure.core/meow `clojure.core/meow `meow))
-(assert (= '[clojure.core/meow] `[clojure.core/meow] `[meow]))
-(assert (= '[clojure.core/meow {clojure.core/a clojure.core/b}]
-           `[clojure.core/meow {clojure.core/a clojure.core/b}]
+(assert (= 'user/meow `user/meow `meow))
+(assert (= '[user/meow] `[user/meow] `[meow]))
+(assert (= '[user/meow {user/a user/b}]
+           `[user/meow {user/a user/b}]
            `[meow {a b}]))
-(assert (= '(quote [clojure.core/meow {clojure.core/a clojure.core/b}]) `'[meow {a b}]))
+(assert (= '(quote [user/meow {user/a user/b}]) `'[meow {a b}]))
 
 :success
