@@ -8,4 +8,4 @@
   :profiles {:base {:jank {:output-dir "target/debug"
                            :optimization-level 0}}
              :release {:jank {:output-dir "target/release"
-                              :optimization-level 2}}})
+                              :optimization-level 3}}})
