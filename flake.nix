@@ -182,6 +182,11 @@
             openjdk
             leiningen
 
+            # Examples.
+            pkg-config
+            glfw3
+            libGL
+
             ## Book.
             mdbook
             mdbook-mermaid
