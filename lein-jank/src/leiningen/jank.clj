@@ -199,6 +199,9 @@
 (defn middleware
   "Inject jank project details into your current project."
   [project]
-  (-> (deep-merge default-project project)
-      (update :filespecs concat (verbatim->filespecs project))
-      (update :dependencies concat (build-dependencies->dependencies project))))
+  (let [project (-> (deep-merge default-project project)
+                    (update :verbatim-paths concat ["jank-build.bb"]))
+        project (-> project
+                    (update :filespecs concat (verbatim->filespecs project))
+                    (update :dependencies concat (build-dependencies->dependencies project)))]
+    project))

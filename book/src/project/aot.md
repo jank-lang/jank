@@ -19,7 +19,7 @@ optimizations enabled. To get a release executable, you can enable the `release`
 profile.
 
 ```bash
-lein with-profile release compile
+lein with-profile +release compile
 ```
 
 ## AOT runtime selection

@@ -706,6 +706,12 @@ namespace jank::analyze::cpp_util
         }
       case jank::runtime::object_type::var:
         return var_type();
+      case jank::runtime::object_type::re_pattern:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.re_pattern_ref").expect_ok()) };
+          return type;
+        }
       default:
         {
           static auto const type{ untyped_object_ref_type() };
@@ -838,6 +844,12 @@ namespace jank::analyze::cpp_util
     if(Cpp::IsConstType(Cpp::GetNonReferenceType(type)))
     {
       return Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type));
+    }
+    /* void & => object_ref */
+    /* void => object_ref */
+    if(Cpp::IsVoid(Cpp::GetNonReferenceType(type)))
+    {
+      return untyped_object_ref_type();
     }
 
     return type;

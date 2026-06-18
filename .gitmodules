@@ -37,3 +37,6 @@
 [submodule "compiler+runtime/third-party/boost-process"]
 	path = compiler+runtime/third-party/boost-process
 	url = https://github.com/jank-lang/boost-process.git
+[submodule "example/cli/imgui+glfw/lib/imgui-sys/lib/imgui"]
+	path = example/cli/imgui+glfw/lib/imgui-sys/lib/imgui
+	url = https://github.com/ocornut/imgui.git
