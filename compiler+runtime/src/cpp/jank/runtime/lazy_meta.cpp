@@ -30,11 +30,10 @@ namespace jank::runtime
   object_ref lazy_meta::get() const
   {
     auto const locked_state{ state.wlock() };
-    /* TODO: Synchronize. */
     if(locked_state->source.empty())
     {
       return locked_state->meta;
-    };
+    }
 
     {
       context::binding_scope const _{ runtime::obj::persistent_hash_map::create_unique(
