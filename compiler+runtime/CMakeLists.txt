@@ -657,7 +657,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-process/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/compiler+runtime/third-party/json/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/json/include>"
   ${OPENSSL_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
 )
