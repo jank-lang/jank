@@ -11,17 +11,16 @@
   "Extract task-specific args from the list and return the parsed options and
   the leftover arguments."
   [project args]
-  (let [res (reduce
-             (fn [acc arg]
-               (cond
-                 (= arg ":disable-sandbox")
-                 (assoc-in acc [:opts :disable-sandbox] true)
+  (let [[args extra] (lmain/parse-options args)
+        opts         (reduce (fn [opts arg]
+                               (case arg
+                                 [:--disable-sandbox true]
+                                 (assoc opts :disable-sandbox true)
 
-                 :else
-                 (update acc :args conj arg)))
-             {:project project :opts {} :args []}
-             args)]
-    ((juxt :opts :args) res)))
+                                 project))
+                             {}
+                             args)]
+    [opts extra]))
 
 (defn native-build [project opts]
   (binding [ljb/*disable-sandbox* (or ljb/*disable-sandbox* (:disable-sandbox opts))]
@@ -199,6 +198,7 @@
 (defn middleware
   "Inject jank project details into your current project."
   [project]
-  (-> (deep-merge default-project project)
-      (update :filespecs concat (verbatim->filespecs project))
-      (update :dependencies concat (build-dependencies->dependencies project))))
+  (let [project (update project :verbatim-paths conj "jank-build.bb")]
+    (-> (deep-merge default-project project)
+        (update :filespecs concat (verbatim->filespecs project))
+        (update :dependencies concat (build-dependencies->dependencies project)))))
