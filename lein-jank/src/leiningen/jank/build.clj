@@ -4,8 +4,8 @@
             [clojure.java.io :as io]
             [babashka.fs :as fs]
             [leiningen.core.main :as lmain]
-            [leiningen.core.classpath :as lcp]
-            [leiningen.jank.sandbox.core :as sandbox])
+            [leiningen.jank.sandbox.core :as sandbox]
+            [leiningen.jank.resolve :as resolve])
   (:import (java.security MessageDigest)
            (java.util HexFormat)
            (java.util.jar JarFile)))
@@ -187,13 +187,13 @@
   searched. Deeper build-scoped dependencies will be ignored."
   [tree]
   (->> tree
-       keys
-       (filter build-scoped?)
-       (mapv #(-> % meta :file str))))
+       (filter (fn [[k v]] (build-scoped? k)))
+       (into {})
+       (resolve/dependency-files)))
 
 (defn plan-subtree-build [build-opts target-dir [dep subtree]]
   (let [subtree-ops (vec (mapcat #(plan-subtree-build build-opts target-dir %) subtree))
-        src-jar     (:file (meta dep))
+        src-jar     (first (resolve/dependency-files {dep nil}))
         jar-name    (-> src-jar fs/file-name fs/strip-ext)]
     ;; NOTE: make sure all outputs here are pure Clojure data. We use (pr ops)
     ;; to compute a subtree hash to determine if the build has changed and needs
@@ -204,7 +204,7 @@
       ;; still may have native dependencies in the subtree.
       subtree-ops
       ;; If this is a native build then we must add its build step and all of
-      ;; the its descendant build steps.
+      ;; its descendants' build steps.
       (let [src-fprint (fingerprint-file src-jar)
             src-dir    (target-subdir target-dir "src" jar-name src-fprint)
             ;; Output is fingerprinted on the source jar contents and all of the
@@ -237,7 +237,10 @@
       (println "\u001b[1;31mBuilding with sandboxing disabled is potentially dangerous!\u001b[0m"))
 
     (assoc build-opts :operations
-           (let [tree     (lcp/managed-dependency-hierarchy :dependencies :managed-dependencies project)
+           (let [tree     (->> (mapv #(resolve/dependency-hierarchy project %) (:dependencies project))
+                               (apply merge))
+                 ;; Plan the build steps just for the child dependencies,
+                 ;; recursively resolving their dependencies and so on.
                  dep-ops  (vec (mapcat #(plan-subtree-build build-opts output-dir %) tree))
                  ;; Special handling when the root project has a build script.
                  ;; 
