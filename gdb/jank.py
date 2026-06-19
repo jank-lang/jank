@@ -6,12 +6,15 @@ def jank_address(oref):
     data_ptr = oref["data"].format_string(raw=True)
     return re.search("(0x[0-9a-fA-F]+)", data_ptr).group(1)
 
-def to_py_string(val):
-    address = jank_address(val)
-    eval_result = gdb.parse_and_eval(f"jank_to_code_string((jank_object_ref){address})")
-    match = re.search("0x([0-9a-fA-F]{12}) (.*)", str(eval_result))
+def py_str(val):
+    match = re.search("0x([0-9a-fA-F]{12}) (.*)", str(val))
     edn_str = match.group(2)
-    return edn_str[1:-1].replace('\\"', '"')
+    return edn_str[1:-1].replace('\\"', '"').replace("\\\\", "\\")
+
+def jank_to_string(val):
+    address = jank_address(val)
+    eval_result = gdb.parse_and_eval(f"jank_to_string((jank_object_ref){address})")
+    return py_str(eval_result)
 
 def jank_truthy(val):
     address = jank_address(val)
@@ -23,15 +26,20 @@ def jank_call(var_name, val):
     jank_call1 = f'jank_call1({resolve_var}, (jank_object_ref){address})'
     return gdb.parse_and_eval(f'(jank::runtime::object_ref){{(jank::runtime::object*){jank_call1}}}')
 
+def jank_to_code_string(val):
+    address = jank_address(val)
+    eval_result = gdb.parse_and_eval(f"jank_to_code_string((jank_object_ref){address})")
+    return py_str(eval_result)
+
 def jank_pr_str(val):
     try:
-        return to_py_string(jank_call("pr-str", val))
+        return jank_to_code_string(val)
     except Exception as e:
         return str(repr(e))
 
 def jank_type(val):
     try:
-        return to_py_string(jank_call("type", val))
+        return jank_to_string(jank_call("type", val))
     except Exception as e:
         return str(repr(e))
 
@@ -116,7 +124,7 @@ class jank_print_opaque_box:
     def __init__(self, val):
         self.val = val
     def to_string(self):
-        return jank_pr_str(self.val)
+        return jank_box_type(self.val)
     def children(self):
         try:
             address = jank_address(self.val)
