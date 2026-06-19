@@ -6,7 +6,6 @@
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/make_box.hpp>
-#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
