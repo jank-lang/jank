@@ -1,0 +1,42 @@
+(ns clojure.data.json
+  (:include "clojure/data/json_native.hpp"))
+
+(defn read-str
+  "Reads one JSON value from input String. Options are the same as for
+  read."
+  [string & {:as options}]
+  (cpp/clojure.data.json_native.read_str string))
+
+(defn write-str
+  "Converts x to a JSON-formatted string. Options are the same as
+  write."
+  ^String [x & {:as options}]
+  (cpp/clojure.data.json_native.write_str x))
+
+(comment
+  (read-str "null")
+  (read-str "false")
+  (read-str "true")
+  (read-str "\"foo\"")
+  (type (read-str "1"))
+  (type (read-str "1.0"))
+  (type (read-str "1.1"))
+  (read-str "[true,false]")
+  (type (read-str "{\"hello\": [null, false, true]}"))
+
+  (write-str "hi")
+  (write-str {:foo "bar"})
+  (write-str nil)
+  (write-str false)
+  (write-str true)
+  (write-str 10)
+  (write-str 1.0)
+  (write-str 1.1)
+  (write-str [true false])
+  (write-str {:hello [nil, false, true]})
+
+  ;; unsupported types
+  (write-str #'write-str)
+  (write-str 42N)
+
+  comment)
