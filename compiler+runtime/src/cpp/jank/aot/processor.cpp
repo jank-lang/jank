@@ -375,6 +375,11 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("-lpthread"));
 #endif
 
+    for(auto const &library_dir : util::cli::opts.library_dirs)
+    {
+      compiler_args.push_back(strdup(util::format("-Wl,-rpath,{}", library_dir).c_str()));
+    }
+
     for(auto const &lib : util::cli::opts.libs)
     {
       compiler_args.push_back(strdup(util::format("-l{}", lib).c_str()));
