@@ -160,7 +160,7 @@
     clojure.core-test.rand-int
     clojure.core-test.rand-nth
     clojure.core-test.random-sample
-    ; clojure.core-test.random-uuid ; FIXME: Failing test.
+    clojure.core-test.random-uuid
     ; clojure.core-test.ratio-qmark ; FIXME: Failing test.
     ; clojure.core-test.rational-qmark ; FIXME: Failing test.
     ; clojure.core-test.rationalize ; TODO: port rationalize
