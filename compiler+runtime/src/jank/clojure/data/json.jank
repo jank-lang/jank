@@ -53,29 +53,11 @@
       (:key-fn options)
       (:value-fn options)))))
 
-(def default-write-options {:escape-unicode true
-                            :escape-js-separators true
-                            :escape-slash true
-                            :indent false})
+(def default-write-options {:indent false})
 
 (defn write-str
   "Converts x to a JSON-formatted string. Options are the same as
    write. Options are key-value pairs, valid options are:
-
-    :escape-unicode boolean
-
-       If true (default) non-ASCII characters are escaped as \\uXXXX
-
-    :escape-js-separators boolean
-
-       If true (default) the Unicode characters U+2028 and U+2029 will
-       be escaped as \\u2028 and \\u2029 even if :escape-unicode is
-       false. (These two characters are valid in pure JSON but are not
-       valid in JavaScript strings.)
-
-    :escape-slash boolean
-
-       If true (default) the slash / is escaped as \\/
 
     :date-formatter
 
@@ -110,9 +92,6 @@
    x
    (let [options (merge default-write-options options)]
      (cpp/clojure.data.json_native.write_options.
-      (cpp/jank.runtime.truthy (:escape-unicode options))
-      (cpp/jank.runtime.truthy (:escape-js-separators options))
-      (cpp/jank.runtime.truthy (:escape-slash options))
       (cpp/jank.runtime.truthy (:indent options))
       (:date-formatter options)
       (:key-fn options)

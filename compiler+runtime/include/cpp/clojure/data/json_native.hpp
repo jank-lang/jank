@@ -21,9 +21,8 @@ namespace clojure::data::json_native
 
   struct write_options
   {
-    bool escape_unicode{ true };
-    bool escape_js_separators{ true };
-    bool escape_slash{ true };
+    // TODO: Add more read options supported by clojure.data.json
+    // https://github.com/clojure/data.json/blob/master/src/main/clojure/clojure/data/json.clj#L796-L806
     bool indent{ false };
     object_ref date_formatter{};
     object_ref key_fn{};
