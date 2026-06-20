@@ -117,31 +117,3 @@
       (:date-formatter options)
       (:key-fn options)
       (:value-fn options)))))
-
-(comment
-  (read-str "null")
-  (read-str "false")
-  (read-str "true")
-  (read-str "\"foo\"")
-  (type (read-str "1"))
-  (type (read-str "1.0"))
-  (type (read-str "1.1"))
-  (read-str "[true,false]")
-  (type (read-str "{\"hello\": [null, false, true]}"))
-
-  (write-str "hi")
-  (write-str {:foo "bar"})
-  (write-str nil)
-  (write-str false)
-  (write-str true)
-  (write-str 10)
-  (write-str 1.0)
-  (write-str 1.1)
-  (write-str [true false])
-  (write-str {:hello [nil, false, true]})
-
-  ;; unsupported types
-  (write-str #'write-str)
-  (write-str 42N)
-
-  comment)
