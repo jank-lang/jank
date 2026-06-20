@@ -37,6 +37,16 @@ namespace clojure::data::json_native
           return typed_o->data;
         }
 
+        if constexpr(std::same_as<T, obj::ratio>)
+        {
+          return typed_o->to_real();
+        }
+
+        if constexpr(jtl::is_any_same<T, obj::uuid, obj::inst, obj::big_integer, obj::big_decimal>)
+        {
+          return typed_o->to_string();
+        }
+
         if constexpr(behavior::nameable<T>)
         {
           return typed_o->get_name();
