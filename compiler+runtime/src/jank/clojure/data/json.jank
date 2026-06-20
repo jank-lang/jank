@@ -1,11 +1,75 @@
 (ns clojure.data.json
+  (:refer-clojure :exclude (read))
   (:include "clojure/data/json_native.hpp"))
+
+(def default-read-options {:bigdec false
+                           :key-fn nil
+                           :value-fn nil})
+
+(defn read
+  "Reads a single item of JSON data from a java.io.Reader.
+
+  If you wish to repeatedly read items from the same reader, you must
+  supply a PushbackReader with buffer size >= 64, and reuse it on
+  subsequent calls.
+
+  Options are key-value pairs, valid options are:
+
+     :eof-error? boolean
+
+        If true (default) will throw exception if the stream is empty.
+
+     :eof-value Object
+
+        Object to return if the stream is empty and eof-error? is
+        false. Default is nil.
+
+     :bigdec boolean
+
+        If true use BigDecimal for decimal numbers instead of Double.
+        Default is false.
+
+     :key-fn function
+
+        Single-argument function called on JSON property names; return
+        value will replace the property names in the output. Default
+        is clojure.core/identity, use clojure.core/keyword to get
+        keyword properties.
+
+     :value-fn function
+
+        Function to transform values in maps (\"objects\" in JSON) in
+        the output. For each JSON property, value-fn is called with
+        two arguments: the property name (transformed by key-fn) and
+        the value. The return value of value-fn will replace the value
+        in the output. If value-fn returns itself, the property will
+        be omitted from the output. The default value-fn returns the
+        value unchanged. This option does not apply to non-map
+        collections.
+
+     :extra-data-fn function
+
+       If :extra-data-fn is not nil, then the reader will be checked
+       for extra data after the read. If found, the extra-data-fn will
+       be invoked with the read value and the reader. The result of
+       the extra-data-fn will be returned."
+  [reader & {:as options}]
+  (throw "TODO: port clojure.data.json/read"))
 
 (defn read-str
   "Reads one JSON value from input String. Options are the same as for
   read."
   [string & {:as options}]
-  (cpp/clojure.data.json_native.read_str string))
+  (cpp/clojure.data.json_native.read_str
+   string
+   (let [options (merge default-read-options options)]
+     (cpp/clojure.data.json_native.read_options.
+      (cpp/jank.runtime.truthy (:eof-error? options))
+      (:eof-value options)
+      (cpp/jank.runtime.truthy (:bigdec options))
+      (:key-fn options)
+      (:value-fn options)
+      (:extra-data-fn options)))))
 
 (defn write-str
   "Converts x to a JSON-formatted string. Options are the same as

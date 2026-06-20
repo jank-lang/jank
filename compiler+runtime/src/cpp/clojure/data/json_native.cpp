@@ -1,11 +1,14 @@
 #include <nlohmann/json.hpp>
 
+#include <clojure/data/json_native.hpp>
+
 #include <jank/util/fmt.hpp>
 
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
@@ -74,7 +77,7 @@ namespace clojure::data::json_native
     return write(x).dump();
   }
 
-  static object_ref read(nlohmann::json const &json)
+  static object_ref read(nlohmann::json const &json, read_options const &opts)
   {
     switch(json.type())
     {
@@ -95,7 +98,7 @@ namespace clojure::data::json_native
 
           for(auto const &element : json)
           {
-            v.conj_in_place(read(element));
+            v.conj_in_place(read(element, opts));
           }
 
           return v.to_persistent();
@@ -106,8 +109,10 @@ namespace clojure::data::json_native
 
           for(auto const &[k, v] : json.items())
           {
-            auto const kw(__rt_ctx->intern_keyword(k).expect_ok());
-            m.assoc_in_place(kw, read(v));
+            auto const key(make_box<obj::persistent_string>(k));
+            auto const value(read(v, opts));
+            m.assoc_in_place(truthy(opts.key_fn) ? opts.key_fn.call(key) : key,
+                             truthy(opts.value_fn) ? opts.value_fn.call(key, value) : value);
           }
 
           return m.to_persistent();
@@ -115,13 +120,14 @@ namespace clojure::data::json_native
       case nlohmann::json::value_t::binary:
         throw std::runtime_error{ "JSON read error (unsupported type: binary)" };
       case nlohmann::json::value_t::discarded:
-        throw std::runtime_error{ "JSON read error (failed to parse)" };
+        return opts.eof_error ? throw std::runtime_error{ "JSON read error (failed to parse)" }
+                              : opts.eof_value;
     }
   }
 
-  object_ref read_str(jtl::immutable_string const &string)
+  object_ref read_str(jtl::immutable_string const &string, read_options const &opts)
   {
     auto const json(nlohmann::json::parse(string));
-    return read(json);
+    return read(json, opts);
   }
 }

@@ -6,6 +6,18 @@
 
 namespace clojure::data::json_native
 {
-  jtl::immutable_string write_str(jank::runtime::object_ref const x);
-  jank::runtime::object_ref read_str(jtl::immutable_string const &string);
+  using namespace ::jank::runtime;
+
+  struct read_options
+  {
+    bool eof_error{ true };
+    object_ref eof_value{ jank_nil };
+    bool bigdec{ false };
+    object_ref key_fn{ jank_nil };
+    object_ref value_fn{ jank_nil };
+    object_ref extra_data_fn{ jank_nil };
+  };
+
+  jtl::immutable_string write_str(object_ref const x);
+  object_ref read_str(jtl::immutable_string const &string, read_options const &opts);
 }
