@@ -185,8 +185,13 @@ namespace clojure::data::json_native
       case nlohmann::json::value_t::binary:
         throw std::runtime_error{ "JSON read error (unsupported type: binary)" };
       case nlohmann::json::value_t::discarded:
-        return opts.eof_error ? throw std::runtime_error{ "JSON read error (failed to parse)" }
-                              : opts.eof_value;
+        {
+          if(opts.eof_error)
+          {
+            throw std::runtime_error{ "JSON read error (failed to parse)" };
+          }
+          return opts.eof_value;
+        }
     }
   }
 
