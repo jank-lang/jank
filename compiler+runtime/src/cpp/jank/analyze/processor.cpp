@@ -1525,7 +1525,7 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const shift_obj{ it.first().unwrap() };
-    if(!runtime::is_integer(shift_obj))
+    if(!runtime::is_integral(shift_obj))
     {
       return error::analyze_invalid_case("Shift value must be an integer.",
                                          meta_source(o->get_meta()),
@@ -1541,7 +1541,7 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const mask_obj{ it.first().unwrap() };
-    if(!runtime::is_integer(mask_obj))
+    if(!runtime::is_integral(mask_obj))
     {
       return error::analyze_invalid_case("Mask value must be an integer.",
                                          meta_source(o->get_meta()),
@@ -1584,7 +1584,7 @@ namespace jank::analyze
           auto const e{ seq->first() };
           auto const k_obj{ e->data[0] };
           auto const v_obj{ e->data[1] };
-          if(!runtime::is_integer(k_obj))
+          if(!runtime::is_integral(k_obj))
           {
             return err("Map key for case* is expected to be an integer.");
           }
@@ -5190,7 +5190,7 @@ namespace jank::analyze
                 }
 
                 auto const size_obj{ runtime::second(next(seq)) };
-                if(runtime::is_integer(size_obj))
+                if(runtime::is_integral(size_obj))
                 {
                   auto const size{ runtime::to_i64(size_obj) };
                   if(size < 0)
@@ -5519,7 +5519,7 @@ namespace jank::analyze
           native_vector<Cpp::TemplateArgInfo> args;
           for(auto const arg : make_sequence_range(rest(typed_o)))
           {
-            if(runtime::is_integer(arg))
+            if(runtime::is_integral(arg))
             {
               auto const int_arg{ runtime::to_i64(arg) };
               static auto const int_type{ cpp_util::resolve_literal_type("long long").expect_ok() };

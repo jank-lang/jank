@@ -19,6 +19,11 @@ namespace jank::runtime
       return i->data;
     }
 
+    if(auto const bi{ dyn_cast<obj::big_integer>(o) }; bi.is_some())
+    {
+      return bi->to_integer();
+    }
+
     throw std::runtime_error{ util::format("An integer was required here, but a {} was provided.",
                                            object_type_str(o.get_type())) };
   }
