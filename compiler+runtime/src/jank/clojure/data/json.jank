@@ -53,11 +53,70 @@
       (:key-fn options)
       (:value-fn options)))))
 
+(def default-write-options {:escape-unicode true
+                            :escape-js-separators true
+                            :escape-slash true
+                            :indent false})
+
 (defn write-str
   "Converts x to a JSON-formatted string. Options are the same as
-  write."
+   write. Options are key-value pairs, valid options are:
+
+    :escape-unicode boolean
+
+       If true (default) non-ASCII characters are escaped as \\uXXXX
+
+    :escape-js-separators boolean
+
+       If true (default) the Unicode characters U+2028 and U+2029 will
+       be escaped as \\u2028 and \\u2029 even if :escape-unicode is
+       false. (These two characters are valid in pure JSON but are not
+       valid in JavaScript strings.)
+
+    :escape-slash boolean
+
+       If true (default) the slash / is escaped as \\/
+
+    :date-formatter
+
+        A function that will be passed any inst. Must return a string.
+
+    :key-fn function
+
+        Single-argument function called on map keys; return value will
+        replace the property names in the output. Must return a
+        string. Default calls clojure.core/name on symbols and
+        keywords and clojure.core/str on everything else.
+
+    :value-fn function
+
+        Function to transform values in maps before writing. For each
+        key-value pair in an input map, called with two arguments: the
+        key (BEFORE transformation by key-fn) and the value. The
+        return value of value-fn will replace the value in the output.
+        If the return value is a number, boolean, string, or nil it
+        will be included literally in the output. If the return value
+        is a non-map collection, it will be processed recursively. If
+        the return value is a map, it will be processed recursively,
+        calling value-fn again on its key-value pairs. If value-fn
+        returns itself, the key-value pair will be omitted from the
+        output. This option does not apply to non-map collections.
+
+    :indent boolean
+
+        If true, indent json while writing (default = false)."
   [x & {:as options}]
-  (cpp/clojure.data.json_native.write_str x))
+  (cpp/clojure.data.json_native.write_str
+   x
+   (let [options (merge default-write-options options)]
+     (cpp/clojure.data.json_native.write_options.
+      (cpp/jank.runtime.truthy (:escape-unicode options))
+      (cpp/jank.runtime.truthy (:escape-js-separators options))
+      (cpp/jank.runtime.truthy (:escape-slash options))
+      (cpp/jank.runtime.truthy (:indent options))
+      (:date-formatter options)
+      (:key-fn options)
+      (:value-fn options)))))
 
 (comment
   (read-str "null")

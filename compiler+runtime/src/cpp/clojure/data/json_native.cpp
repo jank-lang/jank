@@ -19,10 +19,30 @@ namespace clojure::data::json_native
 {
   using namespace ::jank::runtime;
 
-  static nlohmann::json write(object_ref const o)
+  static jtl::immutable_string resolve_key(object_ref const key, write_options const &opts)
+  {
+    if(truthy(opts.key_fn))
+    {
+      return try_object<obj::persistent_string>(opts.key_fn.call(key))->data;
+    }
+
+    if(key.get_type() == object_type::symbol)
+    {
+      return expect_object<obj::symbol>(key)->get_name();
+    }
+
+    if(key.get_type() == object_type::keyword)
+    {
+      return expect_object<obj::keyword>(key)->get_name();
+    }
+
+    return key.to_string();
+  }
+
+  static nlohmann::json write(object_ref const o, write_options const &opts)
   {
     return visit_object(
-      [](auto const typed_o) -> nlohmann::json {
+      [&](auto const typed_o) -> nlohmann::json {
         using T = typename decltype(typed_o)::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
@@ -46,8 +66,17 @@ namespace clojure::data::json_native
           return typed_o->to_real();
         }
 
-        if constexpr(jtl::is_any_same<T, obj::uuid, obj::inst, obj::big_integer, obj::big_decimal>)
+        if constexpr(jtl::is_any_same<T, obj::uuid, obj::big_integer, obj::big_decimal>)
         {
+          return typed_o->to_string();
+        }
+
+        if constexpr(jtl::is_any_same<T, obj::inst>)
+        {
+          if(truthy(opts.date_formatter))
+          {
+            return try_object<obj::persistent_string>(opts.date_formatter.call(o))->data;
+          }
           return typed_o->to_string();
         }
 
@@ -62,7 +91,12 @@ namespace clojure::data::json_native
 
           for(auto const &kv : typed_o->data)
           {
-            map[write(kv.first)] = write(kv.second);
+            auto const value(truthy(opts.value_fn) ? opts.value_fn.call(kv.first, kv.second)
+                                                   : kv.second);
+            if(opts.value_fn != value)
+            {
+              map[resolve_key(kv.first, opts)] = write(value, opts);
+            }
           }
 
           return map;
@@ -74,7 +108,7 @@ namespace clojure::data::json_native
 
           for(auto const e : make_sequence_range(typed_o))
           {
-            array.push_back(write(e));
+            array.push_back(write(e, opts));
           }
 
           return array;
@@ -86,9 +120,13 @@ namespace clojure::data::json_native
       o);
   }
 
-  jtl::immutable_string write_str(object_ref const x)
+  jtl::immutable_string write_str(object_ref const x, write_options const &opts)
   {
-    return write(x).dump();
+    if(opts.indent)
+    {
+      return write(x, opts).dump(2);
+    }
+    return write(x, opts).dump();
   }
 
   static object_ref read(nlohmann::json const &json, read_options const &opts)
