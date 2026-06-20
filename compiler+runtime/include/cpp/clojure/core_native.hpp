@@ -1,19 +1,26 @@
 #pragma once
 
+#include <jtl/primitive.hpp>
+
 #include <jank/c_api.h>
 #include <jank/runtime/object.hpp>
 
 extern "C" void jank_load_clojure_core_native();
 
+namespace jank::runtime::obj
+{
+  using delay_ref = oref<struct delay>;
+}
+
 namespace clojure::core_native
 {
   using namespace jank::runtime;
 
-  object_ref is_var(object_ref const o);
+  bool is_var(object_ref const o);
   object_ref var_get(object_ref const o);
   object_ref alter_var_root(object_ref const o, object_ref const fn, object_ref const args);
-  object_ref is_var_bound(object_ref const o);
-  object_ref is_var_thread_bound(object_ref const o);
+  bool is_var_bound(object_ref const o);
+  bool is_var_thread_bound(object_ref const o);
   object_ref var_bind_root(object_ref const v, object_ref const o);
   object_ref var_get_root(object_ref const o);
   object_ref intern_var(object_ref const sym);
@@ -25,7 +32,7 @@ namespace clojure::core_native
   object_ref find_ns(object_ref const sym);
   object_ref find_var(object_ref const sym);
   object_ref remove_ns(object_ref const sym);
-  object_ref is_ns(object_ref const ns_or_sym);
+  bool is_ns(object_ref const ns_or_sym);
   object_ref ns_name(object_ref const ns);
   object_ref ns_map(object_ref const ns);
   object_ref var_ns(object_ref const v);
@@ -40,10 +47,10 @@ namespace clojure::core_native
   object_ref load_module(object_ref const path);
   object_ref compile(object_ref const path);
 
-  object_ref not_(object_ref const o);
+  bool not_(object_ref const o);
 
-  object_ref is_fn(object_ref const o);
-  object_ref is_multi_fn(object_ref const o);
+  bool is_fn(object_ref const o);
+  bool is_multi_fn(object_ref const o);
   object_ref multi_fn(object_ref const name,
                       object_ref const dispatch_fn,
                       object_ref const default_,
@@ -66,8 +73,8 @@ namespace clojure::core_native
 
   object_ref lazy_seq(object_ref const o);
 
-  object_ref hash_unordered(object_ref const coll);
-  object_ref jank_version();
+  jtl::u32 hash_unordered(object_ref const coll);
+  jtl::immutable_string jank_version();
 
-  object_ref delay(object_ref const fn);
+  obj::delay_ref delay(object_ref const fn);
 }
