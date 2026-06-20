@@ -1,0 +1,98 @@
+(ns clojure.data.json
+  (:refer-clojure :exclude (read))
+  (:include "clojure/data/json_native.hpp"))
+
+(def default-read-options {:bigdec false
+                           :key-fn nil
+                           :value-fn nil})
+
+(defn read-str
+  "Reads one JSON value from input String.
+
+  Options are key-value pairs, valid options are:
+
+     :eof-error? boolean
+
+        If true (default) will throw exception if the stream is empty.
+
+     :eof-value Object
+
+        Object to return if the stream is empty and eof-error? is
+        false. Default is nil.
+
+     :bigdec boolean
+
+        If true use big_decimal for decimal numbers instead of Double.
+        Default is false.
+
+     :key-fn function
+
+        Single-argument function called on JSON property names; return
+        value will replace the property names in the output. Default
+        is clojure.core/identity, use clojure.core/keyword to get
+        keyword properties.
+
+     :value-fn function
+
+        Function to transform values in maps (\"objects\" in JSON) in
+        the output. For each JSON property, value-fn is called with
+        two arguments: the property name (transformed by key-fn) and
+        the value. The return value of value-fn will replace the value
+        in the output. If value-fn returns itself, the property will
+        be omitted from the output. The default value-fn returns the
+        value unchanged. This option does not apply to non-map
+        collections."
+  [string & {:as options}]
+  (cpp/clojure.data.json_native.read_str
+   string
+   (let [options (merge default-read-options options)]
+     (cpp/clojure.data.json_native.read_options.
+      (cpp/jank.runtime.truthy (:eof-error? options))
+      (cpp/jank.runtime.truthy (:bigdec options))
+      (:eof-value options)
+      (:key-fn options)
+      (:value-fn options)))))
+
+(def default-write-options {:indent false})
+
+(defn write-str
+  "Converts x to a JSON-formatted string. Options are the same as
+   write. Options are key-value pairs, valid options are:
+
+    :date-formatter
+
+        A function that will be passed any inst. Must return a string.
+
+    :key-fn function
+
+        Single-argument function called on map keys; return value will
+        replace the property names in the output. Must return a
+        string. Default calls clojure.core/name on symbols and
+        keywords and clojure.core/str on everything else.
+
+    :value-fn function
+
+        Function to transform values in maps before writing. For each
+        key-value pair in an input map, called with two arguments: the
+        key (BEFORE transformation by key-fn) and the value. The
+        return value of value-fn will replace the value in the output.
+        If the return value is a number, boolean, string, or nil it
+        will be included literally in the output. If the return value
+        is a non-map collection, it will be processed recursively. If
+        the return value is a map, it will be processed recursively,
+        calling value-fn again on its key-value pairs. If value-fn
+        returns itself, the key-value pair will be omitted from the
+        output. This option does not apply to non-map collections.
+
+    :indent boolean
+
+        If true, indent json while writing (default = false)."
+  [x & {:as options}]
+  (cpp/clojure.data.json_native.write_str
+   x
+   (let [options (merge default-write-options options)]
+     (cpp/clojure.data.json_native.write_options.
+      (cpp/jank.runtime.truthy (:indent options))
+      (:date-formatter options)
+      (:key-fn options)
+      (:value-fn options)))))
