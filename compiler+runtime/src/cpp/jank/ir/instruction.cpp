@@ -37,6 +37,11 @@ namespace jank::ir::inst
 {
   using namespace analyze::cpp_util;
 
+  nop::nop(identifier const &name)
+    : instruction{ instruction_kind::nop, name, Cpp::GetVoidType() }
+  {
+  }
+
   parameter::parameter(identifier const &name,
                        jtl::ptr<void> const type,
                        read::source const &location)
@@ -67,7 +72,7 @@ namespace jank::ir::inst
   persistent_list::persistent_list(identifier const &name,
                                    read::source const &location,
                                    native_vector<identifier> &&values,
-                                   jtl::option<identifier> const &meta)
+                                   runtime::object_ref const meta)
     : instruction{ instruction_kind::persistent_list, name, persistent_list_ref_type(), location }
     , values{ jtl::move(values) }
     , meta{ meta }
@@ -77,7 +82,7 @@ namespace jank::ir::inst
   persistent_vector::persistent_vector(identifier const &name,
                                        read::source const &location,
                                        native_vector<identifier> &&values,
-                                       jtl::option<identifier> const &meta)
+                                       runtime::object_ref const meta)
     : instruction{ instruction_kind::persistent_vector,
                    name,
                    persistent_vector_ref_type(),
@@ -91,7 +96,7 @@ namespace jank::ir::inst
     identifier const &name,
     read::source const &location,
     native_vector<std::pair<identifier, identifier>> &&values,
-    jtl::option<identifier> const &meta)
+    runtime::object_ref const meta)
     : instruction{ instruction_kind::persistent_array_map,
                    name,
                    persistent_array_map_ref_type(),
@@ -105,7 +110,7 @@ namespace jank::ir::inst
     identifier const &name,
     read::source const &location,
     native_vector<std::pair<identifier, identifier>> &&values,
-    jtl::option<identifier> const &meta)
+    runtime::object_ref const meta)
     : instruction{ instruction_kind::persistent_hash_map,
                    name,
                    persistent_hash_map_ref_type(),
@@ -118,7 +123,7 @@ namespace jank::ir::inst
   persistent_hash_set::persistent_hash_set(identifier const &name,
                                            read::source const &location,
                                            native_vector<identifier> &&values,
-                                           jtl::option<identifier> const &meta)
+                                           runtime::object_ref const meta)
     : instruction{ instruction_kind::persistent_hash_set,
                    name,
                    persistent_hash_set_ref_type(),
@@ -131,10 +136,12 @@ namespace jank::ir::inst
   function::function(identifier const &name,
                      read::source const &location,
                      native_unordered_map<u8, jtl::immutable_string> &&arities,
-                     runtime::callable_arity_flags const arity_flags)
+                     runtime::callable_arity_flags const arity_flags,
+                     bool const is_variadic)
     : instruction{ instruction_kind::function, name, jit_function_ref_type(), location }
     , arities{ jtl::move(arities) }
     , arity_flags{ arity_flags }
+    , is_variadic{ is_variadic }
   {
   }
 
@@ -143,12 +150,14 @@ namespace jank::ir::inst
                    jtl::immutable_string const &context,
                    native_unordered_map<u8, jtl::immutable_string> &&arities,
                    native_unordered_map<jtl::immutable_string, detail::typed_identifier> &&captures,
-                   runtime::callable_arity_flags const arity_flags)
+                   runtime::callable_arity_flags const arity_flags,
+                   bool const is_variadic)
     : instruction{ instruction_kind::closure, name, jit_closure_ref_type(), location }
     , context{ context }
     , arities{ jtl::move(arities) }
     , captures{ jtl::move(captures) }
     , arity_flags{ arity_flags }
+    , is_variadic{ is_variadic }
   {
   }
 
@@ -165,7 +174,7 @@ namespace jank::ir::inst
            read::source const &location,
            jtl::immutable_string const &qualified_var,
            jtl::option<identifier> const &value,
-           identifier const &meta,
+           runtime::object_ref const meta,
            bool const is_dynamic)
     : instruction{ instruction_kind::def, name, type, location }
     , qualified_var{ qualified_var }

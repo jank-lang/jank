@@ -172,9 +172,19 @@ namespace jank::runtime
     throw invalid_arity<10>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
-  callable_arity_flags object::get_arity_flags() const
+  object_ref object::call(object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const) const
   {
-    return 0;
+    throw invalid_arity<11>{ runtime::to_code_string(runtime::detail::untagged(this)) };
   }
 
   object_ref object::get(object_ref const) const
@@ -203,6 +213,20 @@ namespace jank::runtime
   {
     throw error::runtime_unsupported_behavior(type,
                                               "compare",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  i64 object::to_integer() const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "number_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  f64 object::to_real() const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "number_like",
                                               object_source(runtime::detail::untagged(this)));
   }
 

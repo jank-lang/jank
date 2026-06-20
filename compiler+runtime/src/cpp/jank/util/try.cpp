@@ -14,6 +14,8 @@ namespace jank::util
   /* jank's stack frame symbols can be immense, due to templated return and
    * parameter types. For a quick glance at a stacktrace to see what's up,
    * we don't need more than the function name, file, and line. */
+  [[maybe_unused]]
+  /* TODO: This is pretty borked. */
   static cpptrace::stacktrace_frame strip_frame_symbol(cpptrace::stacktrace_frame &&frame)
   {
     auto const paren{ frame.symbol.find('(') };
@@ -68,7 +70,7 @@ namespace jank::util
                                  .paths(cpptrace::formatter::path_mode::basename)
                                  .columns(false)
                                  .snippets(false)
-                                 .transform(&strip_frame_symbol)
+                                 //.transform(&strip_frame_symbol)
                                  .filtered_frame_placeholders(false)
                                  .filter(&filter_frame) };
 

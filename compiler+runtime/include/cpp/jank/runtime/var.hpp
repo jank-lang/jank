@@ -57,17 +57,79 @@ namespace jank::runtime
     var_thread_binding_ref get_thread_binding() const;
 
     /* behavior::callable */
-    using object::call;
-    object_ref call(object_ref const) const override;
-    callable_arity_flags get_arity_flags() const override;
+    object_ref call() const override;
+    object_ref call(object_ref const a1) const override;
+    object_ref call(object_ref const a1, object_ref const a2) const override;
+    object_ref call(object_ref const a1, object_ref const a2, object_ref const a3) const override;
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4) const override;
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5) const override;
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6) const override;
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7) const override;
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8) const override;
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9) const override;
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10) const override;
+    object_ref call(object_ref const a1,
+                    object_ref const a2,
+                    object_ref const a3,
+                    object_ref const a4,
+                    object_ref const a5,
+                    object_ref const a6,
+                    object_ref const a7,
+                    object_ref const a8,
+                    object_ref const a9,
+                    object_ref const a10,
+                    object_ref const more) const override;
 
     /* behavior::derefable */
     object_ref deref() const;
 
     /* behavior::metadatable */
     var_ref with_meta(object_ref m);
+    var_ref with_lazy_meta(jtl::immutable_string const &source);
     object_ref get_meta() const;
-    void set_meta(object_ref const m);
+    void set_meta(object_ref const o);
 
     bool operator==(var const &rhs) const;
 
@@ -81,7 +143,7 @@ namespace jank::runtime
     /*** XXX: Everything here is thread-safe. ***/
   private:
     folly::Synchronized<object_ref> root;
-    folly::Synchronized<object_ref> meta;
+    lazy_meta meta;
 
   public:
     std::atomic_bool dynamic{ false };

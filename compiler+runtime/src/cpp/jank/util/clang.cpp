@@ -10,6 +10,7 @@
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 
 #include <CppInterOp/Compatibility.h>
+#include <CppInterOp/CppInterOp.h>
 
 #include <llvm/TargetParser/Host.h>
 #include <llvm/Support/Program.h>
@@ -22,11 +23,6 @@
 #include <jank/runtime/context.hpp>
 #include <jank/aot/resource.hpp>
 #include <jank/error/system.hpp>
-
-namespace CppImpl
-{
-  std::string DetectResourceDir(char const *ClangBinaryName = "clang");
-}
 
 namespace jank::util
 {
@@ -151,7 +147,7 @@ namespace jank::util
       return JANK_CLANG_RESOURCE_DIR;
     }
 
-    auto resource_dir{ CppImpl::DetectResourceDir(clang_path.unwrap().c_str()) };
+    auto resource_dir{ Cpp::DetectResourceDir(clang_path.unwrap().c_str()) };
 
     if(resource_dir.empty())
     {

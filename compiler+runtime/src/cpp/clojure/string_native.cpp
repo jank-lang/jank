@@ -123,7 +123,7 @@ namespace clojure::string_native
     buff(s.substr(0, i));
 
     auto const group(smatch_to_vector(match_results));
-    auto const replacement_value(dynamic_call(replacement, group));
+    auto const replacement_value(replacement.call(group));
     buff(try_object<obj::persistent_string>(replacement_value)->data);
 
     auto const rest_i(i + match_results[0].str().size());

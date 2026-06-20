@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime
 {
@@ -29,6 +30,7 @@ namespace jank::runtime::obj::detail
 
     base_persistent_map();
     base_persistent_map(object_ref const meta);
+    base_persistent_map(lazy_meta const &meta);
 
     /* behavior::object_like */
     bool equal(object const &o) const override;
@@ -51,11 +53,13 @@ namespace jank::runtime::obj::detail
     /* behavior::metadatable */
     oref<PT> with_meta(object_ref const m) const;
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
     /* behavior::conjable */
     object_ref conj(object_ref const head) const;
 
-    /*** XXX: Everything here is immutable after initialization. ***/
-    object_ref meta;
+    /*** XXX: Everything here is thread-safe. ***/
+  protected:
+    lazy_meta meta;
   };
 }

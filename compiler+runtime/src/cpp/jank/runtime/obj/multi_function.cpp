@@ -27,23 +27,23 @@ namespace jank::runtime::obj
 
   object_ref multi_function::call() const
   {
-    return dynamic_call(get_fn(dynamic_call(dispatch)));
+    return get_fn(dispatch.call()).call();
   }
 
   object_ref multi_function::call(object_ref const a1) const
   {
-    return dynamic_call(get_fn(dynamic_call(dispatch, a1)), a1);
+    return get_fn(dispatch.call(a1)).call(a1);
   }
 
   object_ref multi_function::call(object_ref const a1, object_ref const a2) const
   {
-    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2)), a1, a2);
+    return get_fn(dispatch.call(a1, a2)).call(a1, a2);
   }
 
   object_ref
   multi_function::call(object_ref const a1, object_ref const a2, object_ref const a3) const
   {
-    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3)), a1, a2, a3);
+    return get_fn(dispatch.call(a1, a2, a3)).call(a1, a2, a3);
   }
 
   object_ref multi_function::call(object_ref const a1,
@@ -51,7 +51,7 @@ namespace jank::runtime::obj
                                   object_ref const a3,
                                   object_ref const a4) const
   {
-    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4)), a1, a2, a3, a4);
+    return get_fn(dispatch.call(a1, a2, a3, a4)).call(a1, a2, a3, a4);
   }
 
   object_ref multi_function::call(object_ref const a1,
@@ -60,7 +60,7 @@ namespace jank::runtime::obj
                                   object_ref const a4,
                                   object_ref const a5) const
   {
-    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5)), a1, a2, a3, a4, a5);
+    return get_fn(dispatch.call(a1, a2, a3, a4, a5)).call(a1, a2, a3, a4, a5);
   }
 
   object_ref multi_function::call(object_ref const a1,
@@ -70,13 +70,7 @@ namespace jank::runtime::obj
                                   object_ref const a5,
                                   object_ref const a6) const
   {
-    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6)),
-                        a1,
-                        a2,
-                        a3,
-                        a4,
-                        a5,
-                        a6);
+    return get_fn(dispatch.call(a1, a2, a3, a4, a5, a6)).call(a1, a2, a3, a4, a5, a6);
   }
 
   object_ref multi_function::call(object_ref const a1,
@@ -87,14 +81,7 @@ namespace jank::runtime::obj
                                   object_ref const a6,
                                   object_ref const a7) const
   {
-    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7)),
-                        a1,
-                        a2,
-                        a3,
-                        a4,
-                        a5,
-                        a6,
-                        a7);
+    return get_fn(dispatch.call(a1, a2, a3, a4, a5, a6, a7)).call(a1, a2, a3, a4, a5, a6, a7);
   }
 
   object_ref multi_function::call(object_ref const a1,
@@ -106,15 +93,8 @@ namespace jank::runtime::obj
                                   object_ref const a7,
                                   object_ref const a8) const
   {
-    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8)),
-                        a1,
-                        a2,
-                        a3,
-                        a4,
-                        a5,
-                        a6,
-                        a7,
-                        a8);
+    return get_fn(dispatch.call(a1, a2, a3, a4, a5, a6, a7, a8))
+      .call(a1, a2, a3, a4, a5, a6, a7, a8);
   }
 
   object_ref multi_function::call(object_ref const a1,
@@ -127,16 +107,8 @@ namespace jank::runtime::obj
                                   object_ref const a8,
                                   object_ref const a9) const
   {
-    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8, a9)),
-                        a1,
-                        a2,
-                        a3,
-                        a4,
-                        a5,
-                        a6,
-                        a7,
-                        a8,
-                        a9);
+    return get_fn(dispatch.call(a1, a2, a3, a4, a5, a6, a7, a8, a9))
+      .call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
   }
 
   object_ref multi_function::call(object_ref const a1,
@@ -150,17 +122,8 @@ namespace jank::runtime::obj
                                   object_ref const a9,
                                   object_ref const a10) const
   {
-    return dynamic_call(get_fn(dynamic_call(dispatch, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)),
-                        a1,
-                        a2,
-                        a3,
-                        a4,
-                        a5,
-                        a6,
-                        a7,
-                        a8,
-                        a9,
-                        a10);
+    return get_fn(dispatch.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10))
+      .call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
   }
 
   multi_function_ref multi_function::reset()
@@ -231,8 +194,7 @@ namespace jank::runtime::obj
       __rt_ctx->intern_var("clojure.core", "parents").expect_ok()->deref()
     };
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, y))); it.is_some();
-        it = next_in_place(it))
+    for(auto it(fresh_seq(parents.call(hierarchy, y))); it.is_some(); it = next_in_place(it))
     {
       if(is_preferred(hierarchy, x, first(it)))
       {
@@ -240,8 +202,7 @@ namespace jank::runtime::obj
       }
     }
 
-    for(auto it(fresh_seq(dynamic_call(parents, hierarchy, x))); it.is_some();
-        it = next_in_place(it))
+    for(auto it(fresh_seq(parents.call(hierarchy, x))); it.is_some(); it = next_in_place(it))
     {
       if(is_preferred(hierarchy, first(it), y))
       {
@@ -257,7 +218,7 @@ namespace jank::runtime::obj
     static object_ref const isa{
       __rt_ctx->intern_var("clojure.core", "isa?").expect_ok()->deref()
     };
-    return truthy(dynamic_call(isa, deref(hierarchy), x, y));
+    return truthy(isa.call(deref(hierarchy), x, y));
   }
 
   bool multi_function::is_dominant(object_ref const hierarchy,

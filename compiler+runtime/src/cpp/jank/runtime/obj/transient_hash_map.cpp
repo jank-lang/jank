@@ -144,6 +144,14 @@ namespace jank::runtime::obj
     return make_box<persistent_hash_map>(std::move(data).persistent());
   }
 
+  transient_hash_map::persistent_type_ref
+  transient_hash_map::to_persistent(jtl::immutable_string const &meta)
+  {
+    assert_active();
+    active = false;
+    return make_box<persistent_hash_map>(meta, std::move(data).persistent());
+  }
+
   object_ref transient_hash_map::call(object_ref const o) const
   {
     return get(o);

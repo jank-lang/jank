@@ -73,6 +73,7 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> jit_function_ref_type();
   jtl::ptr<void> jit_closure_ref_type();
   jtl::ptr<void> literal_type(runtime::object_ref const o);
+  jtl::ptr<void> literal_codegen_type(runtime::object_ref const o);
 
   usize offset_to_typed_object_base(jtl::ptr<void> type);
 

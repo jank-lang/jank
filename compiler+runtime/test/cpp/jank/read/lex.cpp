@@ -1625,6 +1625,16 @@ namespace jank::read::lex
         }));
       }
 
+      SUBCASE("Starting with -e")
+      {
+        processor p{ "-equiv" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 6, token_kind::symbol, "-equiv"sv }
+        }));
+      }
+
       SUBCASE("Double hyphen")
       {
         processor p{ "--" };

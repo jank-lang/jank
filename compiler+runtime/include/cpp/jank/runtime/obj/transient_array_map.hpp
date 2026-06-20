@@ -30,6 +30,7 @@ namespace jank::runtime::obj
     u8 count() const;
 
     /* behavior::get */
+    using object::get;
     object_ref get(object_ref const key) const override;
     object_ref get(object_ref const key, object_ref const fallback) const override;
     bool contains(object_ref const key) const override;
@@ -46,6 +47,7 @@ namespace jank::runtime::obj
 
     /* behavior::persistentable */
     persistent_type_ref to_persistent();
+    persistent_type_ref to_persistent(jtl::immutable_string const &meta);
 
     /* behavior::callable */
     using object::call;

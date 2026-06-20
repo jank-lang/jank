@@ -34,6 +34,7 @@ namespace jank::ir
 
   enum class instruction_kind : u8
   {
+    nop,
     parameter,
     capture,
     literal,
@@ -111,6 +112,15 @@ namespace jank::ir
 
   namespace inst
   {
+    struct nop : instruction
+    {
+      nop(identifier const &name);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+    };
+
+    using nop_ref = jtl::ref<nop>;
+
     struct parameter : instruction
     {
       parameter(identifier const &name, jtl::ptr<void> const type, read::source const &location);
@@ -155,12 +165,12 @@ namespace jank::ir
       persistent_list(identifier const &name,
                       read::source const &location,
                       native_vector<identifier> &&values,
-                      jtl::option<identifier> const &meta);
+                      runtime::object_ref const meta);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<identifier> values;
-      jtl::option<identifier> meta;
+      runtime::object_ref meta;
     };
 
     using persistent_list_ref = jtl::ref<persistent_list>;
@@ -170,12 +180,12 @@ namespace jank::ir
       persistent_vector(identifier const &name,
                         read::source const &location,
                         native_vector<identifier> &&values,
-                        jtl::option<identifier> const &meta);
+                        runtime::object_ref const meta);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<identifier> values;
-      jtl::option<identifier> meta;
+      runtime::object_ref meta;
     };
 
     using persistent_vector_ref = jtl::ref<persistent_vector>;
@@ -185,12 +195,12 @@ namespace jank::ir
       persistent_array_map(identifier const &name,
                            read::source const &location,
                            native_vector<std::pair<identifier, identifier>> &&values,
-                           jtl::option<identifier> const &meta);
+                           runtime::object_ref const meta);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<std::pair<identifier, identifier>> values;
-      jtl::option<identifier> meta;
+      runtime::object_ref meta;
     };
 
     using persistent_array_map_ref = jtl::ref<persistent_array_map>;
@@ -200,12 +210,12 @@ namespace jank::ir
       persistent_hash_map(identifier const &name,
                           read::source const &location,
                           native_vector<std::pair<identifier, identifier>> &&values,
-                          jtl::option<identifier> const &meta);
+                          runtime::object_ref const meta);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<std::pair<identifier, identifier>> values;
-      jtl::option<identifier> meta;
+      runtime::object_ref meta;
     };
 
     using persistent_hash_map_ref = jtl::ref<persistent_hash_map>;
@@ -215,12 +225,12 @@ namespace jank::ir
       persistent_hash_set(identifier const &name,
                           read::source const &location,
                           native_vector<identifier> &&values,
-                          jtl::option<identifier> const &meta);
+                          runtime::object_ref const meta);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_vector<identifier> values;
-      jtl::option<identifier> meta;
+      runtime::object_ref meta;
     };
 
     using persistent_hash_set_ref = jtl::ref<persistent_hash_set>;
@@ -230,12 +240,14 @@ namespace jank::ir
       function(identifier const &name,
                read::source const &location,
                native_unordered_map<u8, jtl::immutable_string> &&arities,
-               runtime::callable_arity_flags const arity_flags);
+               runtime::callable_arity_flags const arity_flags,
+               bool const is_variadic);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       native_unordered_map<u8, jtl::immutable_string> arities;
       runtime::callable_arity_flags arity_flags{};
+      bool is_variadic{};
     };
 
     using function_ref = jtl::ref<function>;
@@ -247,7 +259,8 @@ namespace jank::ir
               jtl::immutable_string const &context,
               native_unordered_map<u8, jtl::immutable_string> &&arities,
               native_unordered_map<jtl::immutable_string, detail::typed_identifier> &&captures,
-              runtime::callable_arity_flags const arity_flags);
+              runtime::callable_arity_flags const arity_flags,
+              bool const is_variadic);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
@@ -255,6 +268,7 @@ namespace jank::ir
       native_unordered_map<u8, jtl::immutable_string> arities;
       native_unordered_map<jtl::immutable_string, detail::typed_identifier> captures;
       runtime::callable_arity_flags arity_flags{};
+      bool is_variadic{};
     };
 
     using closure_ref = jtl::ref<closure>;
@@ -279,14 +293,14 @@ namespace jank::ir
           read::source const &location,
           jtl::immutable_string const &qualified_var,
           jtl::option<identifier> const &value,
-          identifier const &meta,
+          runtime::object_ref const meta,
           bool const is_dynamic);
 
       void print(jtl::string_builder &sb, usize indent) const override;
 
       jtl::immutable_string qualified_var;
       jtl::option<identifier> value;
-      identifier meta;
+      runtime::object_ref meta;
       bool is_dynamic{};
     };
 

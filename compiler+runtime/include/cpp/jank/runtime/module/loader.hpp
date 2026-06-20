@@ -140,6 +140,8 @@ namespace jank::runtime::module
   /* A core module is one baked into the jank runtime. For example, clojure.core. */
   bool is_core_module(jtl::immutable_string const &module);
 
+  jtl::result<file_view, error_ref> read_jar_file(jtl::immutable_string const &path);
+
   struct loader
   {
     /* A module entry represents one or more files on the module path which prove that module.

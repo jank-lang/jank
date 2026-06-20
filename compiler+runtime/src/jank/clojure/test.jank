@@ -19,14 +19,10 @@
 ;; - workaround https://github.com/jank-lang/jank/issues/197
 ;;   - wrote -workaround-var->ns to translate var to qualified symbol because
 ;;     we don't yet support `(-> v meta :ns)`
-;;   - made global atom from var -> test
-;;   - -workaround-set-test
-;;   - -workaround-get-test
-;;   - -workaround-test-mappings
 ;; - no stacktrace support
 
-(ns 
-  ^{:author "Stuart Sierra, with contributions and suggestions by 
+(ns
+  ^{:author "Stuart Sierra, with contributions and suggestions by
   Chas Emerick, Allen Rohner, and Stuart Halloway",
      :doc "A unit testing framework.
 
@@ -60,7 +56,7 @@
    \"(is (thrown? ...))\" form tests if something is
    thrown:
 
-   (is (thrown? (/ 1 0))) 
+   (is (thrown? (/ 1 0)))
 
    \"(is (thrown-with-msg? re ...))\" does the same thing and also
    tests that the message on the exception matches the regular
@@ -261,7 +257,7 @@
 
 (def ^:dynamic
  ^{:doc "The maximum depth of stack traces to print when an Exception
-  is thrown during a test.  Defaults to nil, which means print the 
+  is thrown during a test.  Defaults to nil, which means print the
   complete stack trace."}
  *stack-trace-depth* nil)
 
@@ -286,18 +282,18 @@
      (do ~@body)))
 
 ;   ;;; UTILITIES FOR REPORTING FUNCTIONS
-;   
+;
 ;   (defn file-position
 ;     "Returns a vector [filename line-number] for the nth call up the
 ;     stack.
-;   
+;
 ;     Deprecated in 1.2: The information needed for test reporting is
 ;     now on :file and :line keys in the result map."
 ;     {:deprecated "1.2"}
 ;     [n]
 ;     (let [^StackTraceElement s (nth (.getStackTrace (new java.lang.Throwable)) n)]
 ;       [(.getFileName s) (.getLineNumber s)]))
-;   
+;
 
 (defn testing-vars-str
   "Returns a string representation of the current test.  Renders names
@@ -344,7 +340,7 @@
 ;       (let [^StackTraceElement s (first stacktrace)]
 ;         {:file (.getFileName s) :line (.getLineNumber s)})
 ;       {:file nil :line nil}))
-;   
+;
 (defn do-report
   "Add file and line information to a test result and call report.
    If you are writing a custom assert-expr method, call this function
@@ -362,7 +358,7 @@
     :error (merge ;(stacktrace-file-and-line (.getStackTrace ^Throwable (:actual m)))
                   m)
     m)))
-  
+
 
 (defmethod report :default [m]
   (with-test-out (prn m)))
@@ -466,7 +462,7 @@
 ;; macro.  These define different kinds of tests, based on the first
 ;; symbol in the test expression.
 
-(defmulti assert-expr 
+(defmulti assert-expr
   (fn [msg form]
     (cond
       (nil? form) :always-fail
@@ -544,7 +540,7 @@
 (defmacro is
   "Generic assertion macro.  'form' is any predicate test.
   'msg' is an optional message to attach to the assertion.
-  
+
   Example: (is (= 4 (+ 2 2)) \"Two plus two should be 4\")
 
   Special forms:
@@ -563,10 +559,10 @@
   See clojure.template/do-template for an explanation of
   templates.
 
-  Example: (are [x y] (= x y)  
+  Example: (are [x y] (= x y)
                 2 (+ 1 1)
                 4 (* 2 2))
-  Expands to: 
+  Expands to:
            (do (is (= 2 (+ 1 1)))
                (is (= 4 (* 2 2))))
 
@@ -593,13 +589,6 @@
 
 ;;; DEFINING TESTS
 
-(def ^:private -workaround-test-mappings (atom {}))
-(defn- -workaround-set-test [v f]
-  {:pre [(var? v)]}
-  (swap! -workaround-test-mappings assoc v f)
-  v)
-(defn- -workaround-get-test [v]
-  (@-workaround-test-mappings v))
 (defn- -workaround-var->ns [v]
   (-> v symbol namespace symbol the-ns))
 
@@ -611,9 +600,7 @@
   the tests."
   [definition & body]
   (if *load-tests*
-    ;;FIXME https://github.com/jank-lang/jank/issues/197
-    ;#_`(doto ~definition (alter-meta! assoc :test (fn [] ~@body)))
-    `(doto ~definition (-workaround-set-test (fn [] ~@body)))
+    `(doto ~definition (alter-meta! assoc :test (fn [] ~@body)))
     definition))
 
 
@@ -630,21 +617,15 @@
   When *load-tests* is false, deftest is ignored."
   [name & body]
   (when *load-tests*
-    ;;FIXME https://github.com/jank-lang/jank/issues/197
-    ;#_`(def ~(vary-meta name assoc :test `(fn [] ~@body))
-    ;     (fn [] (test-var (var ~name))))
-    `(do (def ~name (fn [] (test-var (var ~name))))
-         (#'-workaround-set-test (var ~name) (fn [] ~@body)))))
+    `(def ~(vary-meta name assoc :test `(fn [] ~@body))
+       (fn [] (test-var (var ~name))))))
 
 (defmacro deftest-
   "Like deftest but creates a private var."
   [name & body]
   (when *load-tests*
-    ;;FIXME https://github.com/jank-lang/jank/issues/197
-    ;#_`(def ~(vary-meta name assoc :test `(fn [] ~@body) :private true)
-    ;     (fn [] (test-var (var ~name))))
-    `(do (def ~name (fn [] (test-var (var ~name))))
-         (#'-workaround-set-test (var ~name) (fn [] ~@body)))))
+    `(def ~(vary-meta name assoc :test `(fn [] ~@body) :private true)
+       (fn [] (test-var (var ~name))))))
 
 
 (defmacro set-test
@@ -655,9 +636,7 @@
   When *load-tests* is false, set-test is ignored."
   [name & body]
   (when *load-tests*
-    ;;FIXME https://github.com/jank-lang/jank/issues/197
-    ;#_`(alter-meta! (var ~name) assoc :test (fn [] ~@body))
-    `(#'-workaround-set-test (var ~name) (fn [] ~@body))))
+    `(alter-meta! (var ~name) assoc :test (fn [] ~@body))))
 
 
 
@@ -708,9 +687,7 @@
   with *testing-vars* bound to (conj *testing-vars* v)."
   {:dynamic true}
   [v]
-  (when-let [;;FIXME https://github.com/jank-lang/jank/issues/197
-             t ;(:test (meta v))
-             (-workaround-get-test v)]
+  (when-let [t (:test (meta v))]
     (binding [*testing-vars* (conj *testing-vars* v)]
       (do-report {:type :begin-test-var :var v})
       (inc-report-counter :test)
@@ -732,9 +709,7 @@
       (once-fixture-fn
        (fn []
          (doseq [v vars]
-           (when ;;FIXME https://github.com/jank-lang/jank/issues/197
-             ;#_(:test (meta v))
-             (-workaround-get-test v)
+           (when (:test (meta v))
              (each-fixture-fn (fn [] (test-var v))))))))))
 
 (defn test-all-vars
@@ -832,9 +807,7 @@
       (binding [*out* *err*]
         (println "Unable to resolve" test-symbol "to a test function."))
 
-      ;;FIXME https://github.com/jank-lang/jank/issues/197
-      ;#_(not (-> test-var meta :test))
-      (not (-> test-var -workaround-get-test))
+      (not (-> test-var meta :test))
       (binding [*out* *err*]
         (println test-symbol "is not a test."))
 

@@ -23,6 +23,17 @@ namespace jank::runtime::obj
     return b->data == data;
   }
 
+  jtl::immutable_string opaque_box::to_code_string() const
+  {
+    jtl::string_builder buff;
+    util::format_to(buff,
+                    "#object [{} {} holding {}]",
+                    object_type_str(type),
+                    this,
+                    canonical_type.empty() ? "<nothing>" : canonical_type);
+    return buff.release();
+  }
+
   uhash opaque_box::to_hash() const
   {
     return static_cast<uhash>(reinterpret_cast<uintptr_t>(data.data));
@@ -38,6 +49,12 @@ namespace jank::runtime::obj
 
   object_ref opaque_box::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void opaque_box::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 }

@@ -16,11 +16,11 @@ namespace jank::runtime
         return false;
       }
 
-      if(detail::is_small_int(d.raw()))
+      if(detail::is_tagged_small_int(d.raw()))
       {
         return true;
       }
-      if(detail::is_small_real(d.raw()))
+      if(detail::is_tagged_small_real(d.raw()))
       {
         return true;
       }

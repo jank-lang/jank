@@ -46,10 +46,11 @@ namespace jank::jit
     processor(jtl::immutable_string const &binary_version);
     ~processor();
 
-    runtime::obj::jit_function_ref eval(ir::module const &module) const;
-    runtime::obj::jit_function_ref create_function(runtime::callable_arity_flags flags,
-                                                   jtl::immutable_string const &base_name,
-                                                   native_vector<u8> const &arities) const;
+    runtime::object_ref eval(ir::module const &module) const;
+    runtime::object_ref create_function(runtime::callable_arity_flags flags,
+                                        jtl::immutable_string const &base_name,
+                                        native_vector<u8> const &arities,
+                                        bool const is_variadic) const;
 
     void eval_string(jtl::immutable_string const &s) const;
     void eval_string(jtl::immutable_string const &s, clang::Value *) const;

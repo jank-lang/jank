@@ -17,84 +17,6 @@ namespace jank::runtime
    * reason to bump this, I think we're good. */
   constexpr usize const max_params{ 10 };
 
-  /* When analysis can match a call to a fn definition, we can know the
-   * supported arities at compile-time, but that's not always the case in
-   * dynamic code. We may not every know if the source is callable at all, so
-   * codegen will use this suite of fns instead. */
-  object_ref dynamic_call(object_ref const source);
-  object_ref dynamic_call(object_ref const source, object_ref const);
-  object_ref dynamic_call(object_ref const source, object_ref const, object_ref const);
-  object_ref
-  dynamic_call(object_ref const source, object_ref const, object_ref const, object_ref const);
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const);
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const);
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const);
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const);
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const);
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const);
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const);
-  object_ref dynamic_call(object_ref const source,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          obj::persistent_list_ref const);
-
   object_ref apply_to(object_ref const source, object_ref const args);
 
   static constexpr callable_arity_flags mask_variadic_arity(u8 const pos)
@@ -106,6 +28,11 @@ namespace jank::runtime
   extract_variadic_arity_mask(callable_arity_flags const arity_flags)
   {
     return (arity_flags & 0b10001111);
+  }
+
+  static constexpr bool is_variadic(callable_arity_flags const arity_flags)
+  {
+    return (arity_flags & 0b10000000);
   }
 
   static constexpr bool is_variadic_ambiguous(callable_arity_flags const arity_flags)

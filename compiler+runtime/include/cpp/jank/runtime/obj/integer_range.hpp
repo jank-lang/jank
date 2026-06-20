@@ -3,6 +3,7 @@
 #include <jtl/option.hpp>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime::obj
 {
@@ -68,6 +69,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     integer_range_ref with_meta(object_ref const m) const;
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
     /* behavior::countable */
     usize count() const;
@@ -82,6 +84,6 @@ namespace jank::runtime::obj
     /* mutable array_chunk_ptr chunk{}; */
     /* mutable integer_range_ptr chunk_next{}; */
     /* mutable integer_range_ptr cached_next{}; */
-    object_ref meta{};
+    lazy_meta meta{};
   };
 }

@@ -965,60 +965,196 @@ namespace jank::runtime
     return std::max(static_cast<C>(l), static_cast<C>(r));
   }
 
-  object_ref abs(object_ref const l);
-  object_ref abs(obj::nil_ref const l);
-  i64 abs(obj::integer_ref const l);
-  f64 abs(obj::real_ref const l);
-  i64 abs(i64 l);
-  f64 abs(f64 l);
+  template <typename L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  auto abs(L const l)
+  {
+    if constexpr(detail::primitive_number<L>)
+    {
+      if constexpr(std::is_integral_v<L>)
+      {
+        return std::abs(static_cast<i64>(l));
+      }
+      else
+      {
+        return std::abs(static_cast<f64>(l));
+      }
+    }
+    else if constexpr(!detail::valid_boxed_math<L>)
+    {
+      throw std::runtime_error{ util::format("Can't abs a {}.", object_type_str(l.get_type())) };
+      return object_ref{};
+    }
+    else if constexpr(jtl::is_same<L, object_ref>)
+    {
+      return visit_number_like(
+        [](auto const typed_l) -> object_ref {
+          return typed_l->data < 0ll ? make_box(-1ll * typed_l->data).erase()
+                                     : make_box(typed_l->data).erase();
+        },
+        l);
+    }
+    else
+    {
+      if constexpr(jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::integer
+                   || jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::small_integer)
+      {
+        return std::abs(l->to_integer());
+      }
+      else if constexpr(jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::real
+                        || jtl::decay_t<decltype(l)>::value_type::obj_type
+                          == object_type::small_real)
+      {
+        return std::abs(l->to_real());
+      }
+      else
+      {
+        return l->data < 0ll ? make_box(-1ll * l->data).erase() : make_box(l->data).erase();
+      }
+    }
+  }
 
-  f64 tan(object_ref const l);
+  template <typename L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  auto tan(L const l)
+  {
+    if constexpr(detail::primitive_number<L>)
+    {
+      return std::tan(static_cast<f64>(l));
+    }
+    else if constexpr(!detail::valid_boxed_math<L>)
+    {
+      throw std::runtime_error{ util::format("Can't tan a {}.", object_type_str(l.get_type())) };
+      return object_ref{};
+    }
+    else if constexpr(jtl::is_same<L, object_ref>)
+    {
+      return make_box(std::tan(l.to_real())).erase();
+    }
+    else
+    {
+      return std::tan(l->to_real());
+    }
+  }
 
-  f64 sqrt(object_ref const l);
-  f64 sqrt(obj::integer_ref const l);
-  f64 sqrt(obj::real_ref const l);
-  f64 sqrt(i64 l);
-  f64 sqrt(f64 l);
-
-  f64 pow(object_ref const l, object_ref const r);
-  f64 pow(obj::integer_ref const l, object_ref const r);
-  f64 pow(object_ref const l, obj::integer_ref const r);
-  f64 pow(obj::integer_ref const l, obj::integer_ref const r);
-  f64 pow(obj::real_ref const l, obj::real_ref const r);
-  f64 pow(obj::real_ref const l, object_ref const r);
-  f64 pow(object_ref const l, obj::real_ref const r);
-  f64 pow(obj::real_ref const l, obj::integer_ref const r);
-  f64 pow(obj::integer_ref const l, obj::real_ref const r);
-  f64 pow(object_ref const l, obj::ratio_ref const r);
-  f64 pow(obj::ratio_ref const l, object_ref const r);
-  f64 pow(obj::ratio_ref const l, obj::ratio_ref const r);
-
-  object_ref pow(object_ref const l, f64 r);
-  object_ref pow(f64 l, object_ref const r);
-  f64 pow(f64 l, f64 r);
-
-  f64 pow(i64 l, f64 r);
-  f64 pow(f64 l, i64 r);
-
-  f64 pow(object_ref const l, i64 r);
-  f64 pow(i64 l, object_ref const r);
-  f64 pow(i64 l, i64 r);
+  template <typename L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  auto sqrt(L const l)
+  {
+    if constexpr(detail::primitive_number<L>)
+    {
+      return std::sqrt(static_cast<f64>(l));
+    }
+    else if constexpr(!detail::valid_boxed_math<L>)
+    {
+      throw std::runtime_error{ util::format("Can't sqrt a {}.", object_type_str(l.get_type())) };
+      return object_ref{};
+    }
+    else if constexpr(jtl::is_same<L, object_ref>)
+    {
+      return make_box(std::sqrt(l.to_real())).erase();
+    }
+    else
+    {
+      return std::sqrt(l->to_real());
+    }
+  }
 
   template <typename L, typename R>
+  requires(!detail::primitive_number<L> && !detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto pow(L const l, R const r)
   {
-    using NormalizedL = std::conditional_t<std::is_integral_v<L>,
-                                           i64,
-                                           std::conditional_t<std::is_floating_point_v<L>, f64, L>>;
-    using NormalizedR = std::conditional_t<std::is_integral_v<R>,
-                                           i64,
-                                           std::conditional_t<std::is_floating_point_v<R>, f64, R>>;
-    return pow(static_cast<NormalizedL>(l), static_cast<NormalizedR>(r));
+    if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
+    {
+      throw std::runtime_error{ util::format("Can't pow a {} to a {}.",
+                                             object_type_str(l.get_type()),
+                                             object_type_str(r.get_type())) };
+      return object_ref{};
+    }
+    else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
+    {
+      return make_box(std::pow(l.to_real(), r.to_real())).erase();
+    }
+    else if constexpr(jtl::is_same<L, object_ref>)
+    {
+      return make_box(std::pow(l.to_real(), r->to_real())).erase();
+    }
+    else if constexpr(jtl::is_same<R, object_ref>)
+    {
+      return make_box(std::pow(l->to_real(), r.to_real())).erase();
+    }
+    else
+    {
+      return std::pow(l->to_real(), r->to_real());
+    }
+  }
+
+  template <typename L, typename R>
+  requires detail::primitive_number<L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  auto pow(L const l, R const r)
+  {
+    if constexpr(!detail::valid_boxed_math<R>)
+    {
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             jtl::type_name<L>(),
+                                             object_type_str(r.get_type())) };
+      return object_ref{};
+    }
+    else if constexpr(jtl::is_same<R, object_ref>)
+    {
+      return make_box(std::pow(static_cast<f64>(l), r.to_real())).erase();
+    }
+    else if constexpr(detail::typed_object<R>)
+    {
+      return std::pow(static_cast<f64>(l), r->to_real());
+    }
+    else
+    {
+      return std::pow(static_cast<f64>(l), static_cast<f64>(r));
+    }
+  }
+
+  template <typename L, typename R>
+  requires detail::primitive_number<R>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  auto pow(L const l, R const r)
+  {
+    if constexpr(!detail::valid_boxed_math<L>)
+    {
+      throw std::runtime_error{ util::format("Can't compare a {} to a {}.",
+                                             object_type_str(l.get_type()),
+                                             jtl::type_name<R>()) };
+      return object_ref{};
+    }
+    if constexpr(jtl::is_same<L, object_ref>)
+    {
+      return make_box(std::pow(l.to_real(), static_cast<f64>(r))).erase();
+    }
+    else if constexpr(detail::typed_object<L>)
+    {
+      return std::pow(l->to_real(), static_cast<f64>(r));
+    }
+    else
+    {
+      return std::pow(static_cast<f64>(l), static_cast<f64>(r));
+    }
+  }
+
+  template <typename L, typename R>
+  requires(detail::primitive_number<L> && detail::primitive_number<R>)
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  auto pow(L const l, R const r)
+  {
+    using C = std::common_type_t<jtl::decay_t<decltype(l)>, jtl::decay_t<decltype(r)>>;
+    return std::pow(static_cast<C>(l), static_cast<C>(r));
   }
 
   object_ref rem(object_ref const l, object_ref const r);
   object_ref quot(object_ref const l, object_ref const r);
   object_ref inc(object_ref const l);
+  object_ref unchecked_inc(object_ref const l);
   object_ref promoting_inc(object_ref const l);
   object_ref dec(object_ref const l);
   object_ref promoting_dec(object_ref const l);
@@ -1049,54 +1185,56 @@ namespace jank::runtime
   native_big_integer numerator(object_ref const o);
   native_big_integer denominator(object_ref const o);
 
-  i64 to_int(object_ref const l);
-  i64 to_int(obj::nil_ref const l);
-  i64 to_int(obj::integer_ref const l);
-  i64 to_int(obj::real_ref const l);
-
-  template <typename T>
-  requires detail::primitive_number<T>
+  template <typename L>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  i64 to_int(T const l)
+  i64 to_int(L const l)
   {
-    return static_cast<i64>(l);
-  }
-
-  f64 to_real(object_ref const o);
-
-  template <typename T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  static f64 to_real(T const &val)
-  {
-    if constexpr(jtl::is_any_same<T, i32, i64>)
+    if constexpr(detail::primitive_number<L>)
     {
-      return static_cast<f64>(val);
+      return static_cast<i64>(l);
     }
-    else if constexpr(std::is_same_v<T, native_big_integer>
-                      || std::is_same_v<T, native_big_decimal>)
+    else if constexpr(!detail::valid_boxed_math<L>)
     {
-      return val.template convert_to<f64>();
+      throw std::runtime_error{ util::format("Can't convert {} to integer.",
+                                             object_type_str(l.get_type())) };
+      return 0;
     }
-    else if constexpr(std::is_same_v<T, f64>)
+    else if constexpr(jtl::is_same<L, object_ref>)
     {
-      return val;
-    }
-    else if constexpr(std::is_same_v<T, obj::ratio_data>)
-    {
-      return val.to_real();
-    }
-    else if constexpr(jtl::is_any_same<T,
-                                       obj::integer_ref,
-                                       obj::small_integer_ref,
-                                       obj::real_ref,
-                                       obj::small_real_ref>)
-    {
-      return val->to_real();
+      return l.to_integer();
     }
     else
     {
-      static_assert(!sizeof(T *), "Unsupported type for to_real conversion.");
+      return l->to_integer();
+    }
+  }
+
+  template <typename L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  f64 to_real(L const &l)
+  {
+    if constexpr(detail::primitive_number<L>)
+    {
+      return static_cast<f64>(l);
+    }
+    else if constexpr(std::is_same_v<L, native_big_integer>
+                      || std::is_same_v<L, native_big_decimal>)
+    {
+      return l.template convert_to<f64>();
+    }
+    else if constexpr(jtl::is_any_same<L, object_ref, obj::ratio_data>)
+    {
+      return l.to_real();
+    }
+    else if constexpr(!detail::valid_boxed_math<L>)
+    {
+      throw std::runtime_error{ util::format("Can't convert {} to real.",
+                                             object_type_str(l.get_type())) };
       return 0.0;
+    }
+    else
+    {
+      return l->to_real();
     }
   }
 

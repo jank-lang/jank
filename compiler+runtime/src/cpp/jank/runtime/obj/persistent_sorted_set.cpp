@@ -30,6 +30,13 @@ namespace jank::runtime::obj
   {
   }
 
+  persistent_sorted_set::persistent_sorted_set(lazy_meta const &meta, value_type &&d)
+    : object{ obj_type, obj_behaviors }
+    , data{ std::move(d) }
+    , meta{ meta }
+  {
+  }
+
   persistent_sorted_set_ref persistent_sorted_set::empty()
   {
     static persistent_sorted_set const ret;
@@ -135,7 +142,13 @@ namespace jank::runtime::obj
 
   object_ref persistent_sorted_set::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void persistent_sorted_set::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   persistent_sorted_set_ref persistent_sorted_set::conj(object_ref const head) const

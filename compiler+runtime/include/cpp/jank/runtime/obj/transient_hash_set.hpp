@@ -33,6 +33,7 @@ namespace jank::runtime::obj
 
     /* behavior::persistentable */
     persistent_type_ref to_persistent();
+    persistent_type_ref to_persistent(jtl::immutable_string const &meta);
 
     /* behavior::callable */
     using object::call;
@@ -40,6 +41,7 @@ namespace jank::runtime::obj
     object_ref call(object_ref const, object_ref const fallback) const override;
 
     /* behavior::get */
+    using object::get;
     object_ref get(object_ref const elem) const override;
     object_ref get(object_ref const elem, object_ref const fallback) const override;
     bool contains(object_ref const elem) const override;

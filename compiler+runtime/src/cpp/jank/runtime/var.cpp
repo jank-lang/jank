@@ -163,16 +163,116 @@ namespace jank::runtime
     return expect_object<var_thread_binding>(ret);
   }
 
-  object_ref var::call(object_ref const args) const
+  object_ref var::call() const
   {
-    auto const val{ deref() };
-    return apply_to(val, args);
+    return deref().call();
   }
 
-  callable_arity_flags var::get_arity_flags() const
+  object_ref var::call(object_ref const a1) const
   {
-    /* Vars are always [& args], which they then apply to the proxied fn. */
-    return build_arity_flags(0, true, false);
+    return deref().call(a1);
+  }
+
+  object_ref var::call(object_ref const a1, object_ref const a2) const
+  {
+    return deref().call(a1, a2);
+  }
+
+  object_ref var::call(object_ref const a1, object_ref const a2, object_ref const a3) const
+  {
+    return deref().call(a1, a2, a3);
+  }
+
+  object_ref var::call(object_ref const a1,
+                       object_ref const a2,
+                       object_ref const a3,
+                       object_ref const a4) const
+  {
+    return deref().call(a1, a2, a3, a4);
+  }
+
+  object_ref var::call(object_ref const a1,
+                       object_ref const a2,
+                       object_ref const a3,
+                       object_ref const a4,
+                       object_ref const a5) const
+  {
+    return deref().call(a1, a2, a3, a4, a5);
+  }
+
+  object_ref var::call(object_ref const a1,
+                       object_ref const a2,
+                       object_ref const a3,
+                       object_ref const a4,
+                       object_ref const a5,
+                       object_ref const a6) const
+  {
+    return deref().call(a1, a2, a3, a4, a5, a6);
+  }
+
+  object_ref var::call(object_ref const a1,
+                       object_ref const a2,
+                       object_ref const a3,
+                       object_ref const a4,
+                       object_ref const a5,
+                       object_ref const a6,
+                       object_ref const a7) const
+  {
+    return deref().call(a1, a2, a3, a4, a5, a6, a7);
+  }
+
+  object_ref var::call(object_ref const a1,
+                       object_ref const a2,
+                       object_ref const a3,
+                       object_ref const a4,
+                       object_ref const a5,
+                       object_ref const a6,
+                       object_ref const a7,
+                       object_ref const a8) const
+  {
+    return deref().call(a1, a2, a3, a4, a5, a6, a7, a8);
+  }
+
+  object_ref var::call(object_ref const a1,
+                       object_ref const a2,
+                       object_ref const a3,
+                       object_ref const a4,
+                       object_ref const a5,
+                       object_ref const a6,
+                       object_ref const a7,
+                       object_ref const a8,
+                       object_ref const a9) const
+  {
+    return deref().call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+  }
+
+  object_ref var::call(object_ref const a1,
+                       object_ref const a2,
+                       object_ref const a3,
+                       object_ref const a4,
+                       object_ref const a5,
+                       object_ref const a6,
+                       object_ref const a7,
+                       object_ref const a8,
+                       object_ref const a9,
+                       object_ref const a10) const
+  {
+    return deref().call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+  }
+
+  object_ref var::call(object_ref const a1,
+                       object_ref const a2,
+                       object_ref const a3,
+                       object_ref const a4,
+                       object_ref const a5,
+                       object_ref const a6,
+                       object_ref const a7,
+                       object_ref const a8,
+                       object_ref const a9,
+                       object_ref const a10,
+                       object_ref const more) const
+  {
+    return deref().call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
   }
 
   object_ref var::deref() const
@@ -188,20 +288,25 @@ namespace jank::runtime
   var_ref var::with_meta(object_ref const m)
   {
     auto const new_meta(behavior::detail::validate_meta(m));
-    auto const locked_meta{ meta.wlock() };
-    *locked_meta = new_meta;
+    meta.set(new_meta);
+    return detail::untagged(this);
+  }
+
+  var_ref var::with_lazy_meta(jtl::immutable_string const &source)
+  {
+    meta = lazy_meta{ source, n };
     return detail::untagged(this);
   }
 
   object_ref var::get_meta() const
   {
-    auto const locked_meta{ meta.rlock() };
-    return *locked_meta;
+    return meta.get();
   }
 
-  void var::set_meta(object_ref const m)
+  void var::set_meta(object_ref const o)
   {
-    with_meta(m);
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   var_ref var::clone() const

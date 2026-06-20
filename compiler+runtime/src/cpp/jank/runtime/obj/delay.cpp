@@ -31,7 +31,7 @@ namespace jank::runtime::obj
 
     try
     {
-      val = dynamic_call(fn);
+      val = fn.call();
     }
     catch(std::exception const &e)
     {

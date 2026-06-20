@@ -30,7 +30,7 @@ namespace jank::runtime::obj
 
   void jit_function::to_string(jtl::string_builder &buff) const
   {
-    auto const name(meta.get(__rt_ctx->intern_keyword("name").expect_ok()));
+    auto const name(meta.get().get(__rt_ctx->intern_keyword("name").expect_ok()));
     util::format_to(
       buff,
       "#object [{} {} {}]",
@@ -49,7 +49,13 @@ namespace jank::runtime::obj
 
   object_ref jit_function::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void jit_function::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 
   object_ref jit_function::call() const
@@ -191,10 +197,5 @@ namespace jank::runtime::obj
       throw invalid_arity<10>{ runtime::to_code_string(runtime::detail::untagged(this)) };
     }
     return arity_10(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
-  }
-
-  callable_arity_flags jit_function::get_arity_flags() const
-  {
-    return arity_flags;
   }
 }

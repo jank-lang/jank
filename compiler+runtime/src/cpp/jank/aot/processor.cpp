@@ -37,11 +37,15 @@ using jank_object_ref = void*;
 using jank_bool = char;
 using jank_usize = unsigned long long;
 
-extern "C" int jank_init_with_pch(int const argc,
+extern "C" int jank_init_dynamic(int const argc,
                          char const ** const argv,
                          jank_bool const init_default_ctx,
                          char const * const pch_data,
                          jank_usize pch_size,
+                         int (*fn)(int const, char const ** const));
+extern "C" int jank_init_static(int const argc,
+                         char const ** const argv,
+                         jank_bool const init_default_ctx,
                          int (*fn)(int const, char const ** const));
 extern "C" void jank_load_clojure_core_native();
 extern "C" void jank_load_clojure_core();
@@ -64,8 +68,10 @@ extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
     }
 
     /* TODO: Embed all registered resources. */
-    auto const pch_path{ util::find_pch(util::binary_version()) };
-    sb(util::format(R"(
+    if(util::cli::opts.target_runtime == util::cli::compilation_runtime::dynamic)
+    {
+      auto const pch_path{ util::find_pch(util::binary_version()) };
+      sb(util::format(R"(
 namespace
 {
   char const incremental_pch[]
@@ -74,7 +80,8 @@ namespace
   };
 }
         )",
-                    pch_path.unwrap()));
+                      pch_path.unwrap()));
+    }
 
     sb(R"(
 
@@ -109,10 +116,31 @@ int main(int argc, const char** argv)
     return 0;
 
   } };
+  )");
 
-  return jank_init_with_pch(argc, argv, true, incremental_pch, sizeof(incremental_pch), fn);
+    if(util::cli::opts.target_runtime == util::cli::compilation_runtime::static_)
+    {
+      sb(R"(
+
+  return jank_init_static(argc, argv, true, fn);
 }
   )");
+    }
+    else
+    {
+      sb(R"(
+
+  return jank_init_dynamic(argc, argv, true, incremental_pch, sizeof(incremental_pch), fn);
+}
+  )");
+    }
+
+    jtl::immutable_string_view const print_settings{ getenv("JANK_PRINT_CODEGEN") ?: "" };
+    if(print_settings == "1")
+    {
+      auto const formatted{ util::format_cpp_source(sb.view()).expect_ok() };
+      util::println("\n{}\n", formatted);
+    }
 
     auto const tmp_dir{ std::filesystem::temp_directory_path() };
     std::string main_file_path{ (tmp_dir / "jank-main-XXXXXX").string() };
@@ -214,16 +242,24 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(util::format("-D{}", define).c_str()));
     }
 
+    /* We always enable debug info. Users can later strip the binary, if they want. */
+    compiler_args.push_back(strdup("-g"));
+
     compiler_args.push_back(strdup("-std=c++20"));
     compiler_args.push_back(strdup("-Wno-c23-extensions"));
-    if constexpr(jtl::current_platform == jtl::platform::linux_like)
-    {
-      compiler_args.push_back(strdup("-Wl,--export-dynamic"));
-    }
 
-#ifndef JANK_WINDOWS_LIKE
-    compiler_args.push_back(strdup("-rdynamic"));
-#endif
+    if(util::cli::opts.target_runtime == util::cli::compilation_runtime::dynamic)
+    {
+      if constexpr(jtl::current_platform == jtl::platform::linux_like)
+      {
+        compiler_args.push_back(strdup("-Wl,--export-dynamic"));
+      }
+
+      if constexpr(jtl::current_platform != jtl::platform::windows_like)
+      {
+        compiler_args.push_back(strdup("-rdynamic"));
+      }
+    }
 
     switch(util::cli::opts.codegen_optimization_level)
     {
@@ -276,8 +312,10 @@ int main(int argc, const char** argv)
         continue;
       }
 
-      auto const &module_path{ util::format("{}.o",
-                                            relative_to_cache_dir(module::module_to_path(mod))) };
+      auto const &module_path{ util::format(
+        "{}.{}",
+        relative_to_cache_dir(module::module_to_path(mod)),
+        util::cli::compilation_target_extension(util::cli::opts.output_target)) };
 
       if(std::filesystem::exists(module_path.c_str()))
       {
@@ -286,11 +324,26 @@ int main(int argc, const char** argv)
       else
       {
         auto const find_res{ __rt_ctx->module_loader.find(mod, module::origin::latest) };
-        if(find_res.is_ok() && find_res.expect_ok().sources.o.is_some())
+        bool found{};
+
+        if(util::cli::opts.output_target == util::cli::compilation_target::object)
         {
-          compiler_args.push_back(strdup(find_res.expect_ok().sources.o.unwrap().path.c_str()));
+          if(find_res.is_ok() && find_res.expect_ok().sources.o.is_some())
+          {
+            compiler_args.push_back(strdup(find_res.expect_ok().sources.o.unwrap().path.c_str()));
+            found = true;
+          }
         }
         else
+        {
+          if(find_res.is_ok() && find_res.expect_ok().sources.cpp.is_some())
+          {
+            compiler_args.push_back(strdup(find_res.expect_ok().sources.cpp.unwrap().path.c_str()));
+            found = true;
+          }
+        }
+
+        if(!found)
         {
           return error::internal_aot_failure(util::format("Compiled module '{}' not found.", mod));
         }
@@ -302,20 +355,25 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("c++"));
     compiler_args.push_back(strdup(entrypoint_path.c_str()));
 
-    for(auto const &lib : { "-ljank-standalone",
-                            /* Default libraries that jank depends on. */
-                            "-lm",
-                            "-lLLVM",
-                            "-lclang-cpp",
-                            "-lcrypto",
-#if defined(__MINGW64__)
-                            "-lpthread",
-#endif
-                            "-lz",
-                            "-lzstd" })
+    if(util::cli::opts.target_runtime == util::cli::compilation_runtime::static_)
     {
-      compiler_args.push_back(strdup(lib));
+      for(auto const &lib : { "-ljank-static-runtime", "-lm", "-lz", "-lzstd" })
+      {
+        compiler_args.push_back(strdup(lib));
+      }
     }
+    else
+    {
+      for(auto const &lib :
+          { "-ljank-dynamic-runtime", "-lLLVM", "-lclang-cpp", "-lcrypto", "-lm", "-lz", "-lzstd" })
+      {
+        compiler_args.push_back(strdup(lib));
+      }
+    }
+
+#if defined(__MINGW64__)
+    compiler_args.push_back(strdup("-lpthread"));
+#endif
 
     for(auto const &lib : util::cli::opts.libs)
     {

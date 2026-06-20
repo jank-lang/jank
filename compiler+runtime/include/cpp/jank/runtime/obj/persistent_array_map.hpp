@@ -23,13 +23,13 @@ namespace jank::runtime::obj
                                                          persistent_array_map_sequence,
                                                          runtime::detail::native_array_map>;
 
-
     persistent_array_map() = default;
     persistent_array_map(persistent_array_map &&) noexcept = default;
     persistent_array_map(persistent_array_map const &) = default;
     persistent_array_map(value_type &&d);
     persistent_array_map(value_type const &d);
     persistent_array_map(object_ref const meta, value_type &&d);
+    persistent_array_map(lazy_meta const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_array_map(runtime::detail::in_place_unique, Args &&...args)
@@ -70,8 +70,18 @@ namespace jank::runtime::obj
     }
 
     /* behavior::get */
-    object_ref get(object_ref const key) const override;
-    object_ref get(object_ref const key, object_ref const fallback) const override;
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    object_ref get(object_ref const key) const override
+    {
+      return data.find(key).unwrap_or(jank_nil);
+    }
+
+    [[gnu::always_inline, gnu::flatten, gnu::hot]]
+    object_ref get(object_ref const key, object_ref const fallback) const override
+    {
+      return data.find(key).unwrap_or(fallback);
+    }
+
     bool contains(object_ref const key) const override;
 
     /* behavior::find */

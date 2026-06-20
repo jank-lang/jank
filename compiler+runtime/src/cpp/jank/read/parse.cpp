@@ -1423,12 +1423,36 @@ namespace jank::read::parse
       form);
   }
 
+  static bool is_special(object_ref const form)
+  {
+    if(form.get_type() != runtime::object_type::symbol)
+    {
+      return false;
+    }
+
+    auto const sym(runtime::expect_object<runtime::obj::symbol>(form));
+    if(sym->ns.empty() && (sym->name == "finally" || sym->name == "catch"))
+    {
+      return true;
+    }
+
+    static native_set<jtl::immutable_string> const specials{
+      "def",     "fn*",       "recur",   "do",         "let*",     "letfn*",
+      "loop*",   "if",        "quote",   "var",        "throw",    "try",
+      "case*",   "cpp/raw",   "cpp/dsl", "cpp/value",  "cpp/cast", "cpp/unsafe-cast",
+      "cpp/box", "cpp/unbox", "cpp/new", "cpp/delete",
+    };
+
+    auto const found_special(specials.find(sym->name));
+    return found_special != specials.end();
+  }
+
   jtl::result<object_ref, error_ref> processor::syntax_quote(object_ref const form)
   {
     object_ref ret{};
 
     /* Specials, such as fn*, let*, try, etc. just get left alone. We can't qualify them more. */
-    if(analyze::processor::is_special(form))
+    if(is_special(form))
     {
       ret = make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("quote"), form);
     }

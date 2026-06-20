@@ -9,7 +9,8 @@ namespace jank::runtime::obj
   struct big_integer : object
   {
     static constexpr object_type obj_type{ object_type::big_integer };
-    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare
+                                                    | object_behavior::number_like };
     static constexpr bool pointer_free{ true };
 
     big_integer();
@@ -36,8 +37,8 @@ namespace jank::runtime::obj
     i64 compare(big_integer const &) const;
 
     /* behavior::number_like */
-    i64 to_integer() const;
-    f64 to_real() const;
+    i64 to_integer() const override;
+    f64 to_real() const override;
 
     static native_big_integer gcd(native_big_integer const &, native_big_integer const &);
     static i64 to_i64(native_big_integer const &);

@@ -39,7 +39,9 @@
 #include <jank/runtime/obj/repeat.hpp>
 #include <jank/runtime/obj/ratio.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
+#include <jank/runtime/obj/jit_variadic_function.hpp>
 #include <jank/runtime/obj/jit_closure.hpp>
+#include <jank/runtime/obj/jit_variadic_closure.hpp>
 #include <jank/runtime/obj/deferred_cpp_function.hpp>
 #include <jank/runtime/obj/multi_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
@@ -86,11 +88,11 @@ namespace jank::runtime
   [[gnu::hot]]
   auto visit_object(F const &fn, object_ref const erased, Args &&...args)
   {
-    if(detail::is_small_int(erased.raw()))
+    if(detail::is_tagged_small_int(erased.raw()))
     {
       return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
     }
-    if(detail::is_small_real(erased.raw()))
+    if(detail::is_tagged_small_real(erased.raw()))
     {
       return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
     }
@@ -198,8 +200,12 @@ namespace jank::runtime
         return fn(expect_object<obj::native_pointer_wrapper>(erased), std::forward<Args>(args)...);
       case object_type::jit_function:
         return fn(expect_object<obj::jit_function>(erased), std::forward<Args>(args)...);
+      case object_type::jit_variadic_function:
+        return fn(expect_object<obj::jit_variadic_function>(erased), std::forward<Args>(args)...);
       case object_type::jit_closure:
         return fn(expect_object<obj::jit_closure>(erased), std::forward<Args>(args)...);
+      case object_type::jit_variadic_closure:
+        return fn(expect_object<obj::jit_variadic_closure>(erased), std::forward<Args>(args)...);
       case object_type::deferred_cpp_function:
         return fn(expect_object<obj::deferred_cpp_function>(erased), std::forward<Args>(args)...);
       case object_type::multi_function:
@@ -429,11 +435,11 @@ namespace jank::runtime
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
   auto visit_number_like(F1 const &fn, F2 const &else_fn, object_ref const erased, Args &&...args)
   {
-    if(detail::is_small_int(erased.raw()))
+    if(detail::is_tagged_small_int(erased.raw()))
     {
       return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
     }
-    if(detail::is_small_real(erased.raw()))
+    if(detail::is_tagged_small_real(erased.raw()))
     {
       return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
     }

@@ -35,7 +35,8 @@ namespace jank::runtime::obj
   struct big_decimal : object
   {
     static constexpr object_type obj_type{ object_type::big_decimal };
-    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare
+                                                    | object_behavior::number_like };
     static constexpr bool pointer_free{ true };
 
     big_decimal();
@@ -59,8 +60,8 @@ namespace jank::runtime::obj
     i64 compare(object const &) const override;
 
     /* behavior::number_like */
-    i64 to_integer() const;
-    f64 to_real() const;
+    i64 to_integer() const override;
+    f64 to_real() const override;
 
     static object_ref create(jtl::immutable_string const &);
 

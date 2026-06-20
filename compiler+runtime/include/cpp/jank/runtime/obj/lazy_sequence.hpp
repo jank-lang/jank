@@ -5,6 +5,7 @@
 #include <jtl/option.hpp>
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 
 namespace jank::runtime::obj
@@ -49,6 +50,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     lazy_sequence_ref with_meta(object_ref const m) const;
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
   private:
     object_ref resolve_fn() const;
@@ -61,10 +63,8 @@ namespace jank::runtime::obj
     object_ref unwrap(object_ref ls) const;
 
   public:
-    /*** XXX: Everything here is immutable after initialization. ***/
-    object_ref meta;
-
     /*** XXX: Everything here is thread-safe. ***/
+    lazy_meta meta;
     mutable std::recursive_mutex mutex;
     mutable object_ref fn{};
     mutable object_ref sv{};

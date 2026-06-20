@@ -333,16 +333,17 @@ extern "C"
   void jank_module_register(char const *module, void (*fn)());
   void jank_module_set_loaded(char const *module);
 
-  int jank_init(int const argc,
-                char const ** const argv,
-                jank_bool const init_default_ctx,
-                int (*fn)(int const, char const ** const));
-  int jank_init_with_pch(int const argc,
-                         char const ** const argv,
-                         jank_bool const init_default_ctx,
-                         char const * const pch_data,
-                         jank_usize pch_size,
-                         int (*fn)(int const, char const ** const));
+  void jank_init_base();
+  int jank_init_static(int const argc,
+                       char const ** const argv,
+                       jank_bool const init_default_ctx,
+                       int (*fn)(int const, char const ** const));
+  int jank_init_dynamic(int const argc,
+                        char const ** const argv,
+                        jank_bool const init_default_ctx,
+                        char const * const pch_data,
+                        jank_usize pch_size,
+                        int (*fn)(int const, char const ** const));
 
   jank_object_ref jank_parse_command_line_args(int const argc, char const **argv);
 

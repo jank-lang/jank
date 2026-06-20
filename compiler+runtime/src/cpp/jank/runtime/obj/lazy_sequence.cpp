@@ -132,7 +132,7 @@ namespace jank::runtime::obj
   {
     if(fn.is_some())
     {
-      sv = dynamic_call(fn);
+      sv = fn.call();
       fn = jank_nil;
     }
   }
@@ -176,6 +176,12 @@ namespace jank::runtime::obj
 
   object_ref lazy_sequence::get_meta() const
   {
-    return meta;
+    return meta.get();
+  }
+
+  void lazy_sequence::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
   }
 }

@@ -1,7 +1,9 @@
 (defproject test-project "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
-  :plugins [[org.jank-lang/lein-jank "0.6"]]
+  :plugins [[org.jank-lang/lein-jank "0.7"]]
+  ;; include a native dependency for testing
+  :dependencies [[org.clojars.kylc/jank-glfw3 "0.1-SNAPSHOT"]]
   :main test-project.core
   :jank {;:disable-locals-clearing false
          ;:elide-meta false
@@ -17,5 +19,5 @@
          ;; -l
          ;:linked-libraries []
          }
-  :profiles {:release {:jank {:codegen :cpp}}
+  :profiles {:release {:jank {}}
              :test {:test-paths ["tests"]}})

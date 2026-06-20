@@ -1,0 +1,47 @@
+; Verify JIT resolves CRT symbols from ucrtbase.dll (the host CRT),
+; not msvcrt.dll (legacy CRT loaded by system DLLs).
+; https://github.com/jank-lang/jank/discussions/803
+(cpp/raw "
+#include <cstdio>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <cstring>
+#endif
+
+namespace jank::cpp::cppinterop::pass_windows_crt_resolution
+{
+  // Return the full DLL path that provides the tmpfile function.
+  const char* tmpfile_dll() {
+#ifdef _WIN32
+    static char path[MAX_PATH];
+    HMODULE hMod = nullptr;
+    GetModuleHandleExA(
+      GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+      reinterpret_cast<LPCSTR>(&tmpfile), &hMod);
+    GetModuleFileNameA(hMod, path, MAX_PATH);
+    return path;
+#else
+    return \"\";
+#endif
+  }
+
+  // True if PATH contains ucrtbase (case-insensitive).
+  bool is_ucrtbase(const char* path) {
+#ifdef _WIN32
+    for (const char* p = path; *p; ++p) {
+      if ((*p == 'u' || *p == 'U') &&
+          _strnicmp(p, \"ucrtbase\", 8) == 0)
+        return true;
+    }
+#endif
+    return false;
+  }
+}
+")
+
+(if (= cpp/jtl.current_platform cpp/jtl.platform.windows_like)
+  (if (cpp/jank.cpp.cppinterop.pass_windows_crt_resolution.is_ucrtbase
+        (cpp/jank.cpp.cppinterop.pass_windows_crt_resolution.tmpfile_dll))
+    :success)
+  :success)

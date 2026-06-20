@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime::obj
 {
@@ -25,6 +26,7 @@ namespace jank::runtime::obj
     /* behavior::metadatable */
     jit_function_ref with_meta(object_ref const m);
     object_ref get_meta() const;
+    void set_meta(object_ref const o);
 
     /* behavior::callable */
     object_ref call() const override;
@@ -79,8 +81,6 @@ namespace jank::runtime::obj
                     object_ref const,
                     object_ref const) const override;
 
-    callable_arity_flags get_arity_flags() const override;
-
     /*** XXX: Everything here is immutable after initialization. ***/
     object_ref (*arity_0)(object_ref){};
     object_ref (*arity_1)(object_ref, object_ref){};
@@ -133,7 +133,9 @@ namespace jank::runtime::obj
                            object_ref,
                            object_ref,
                            object_ref){};
-    object_ref meta;
     callable_arity_flags arity_flags{};
+
+  private:
+    lazy_meta meta;
   };
 }

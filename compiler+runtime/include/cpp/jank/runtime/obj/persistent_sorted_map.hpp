@@ -30,6 +30,7 @@ namespace jank::runtime::obj
     persistent_sorted_map(value_type &&d);
     persistent_sorted_map(value_type const &d);
     persistent_sorted_map(object_ref const meta, value_type &&d);
+    persistent_sorted_map(lazy_meta const &meta, value_type &&d);
 
     template <typename... Args>
     persistent_sorted_map(runtime::detail::in_place_unique, Args &&...args)
@@ -66,6 +67,7 @@ namespace jank::runtime::obj
     static persistent_sorted_map_ref create_from_seq(object_ref const seq);
 
     /* behavior::get */
+    using object::get;
     object_ref get(object_ref const key) const override;
     object_ref get(object_ref const key, object_ref const fallback) const override;
     bool contains(object_ref const key) const override;

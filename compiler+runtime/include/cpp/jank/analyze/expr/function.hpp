@@ -76,6 +76,7 @@ namespace jank::analyze::expr
     jtl::immutable_string unique_name;
     native_vector<function_arity> arities;
     runtime::obj::persistent_hash_map_ref meta{};
+    bool is_variadic{};
   };
 }
 

@@ -7,15 +7,6 @@
   #include <windows.h>
 #endif
 
-#include <llvm-c/Target.h>
-#include <llvm/ExecutionEngine/Orc/AbsoluteSymbols.h>
-#include <llvm/Support/CommandLine.h>
-#include <llvm/Support/ManagedStatic.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/ExecutionEngine/Orc/Mangling.h>
-
-#include <CppInterOp/Compatibility.h>
-
 #include <jank/c_api.h>
 #include <jank/gc.hpp>
 #include <jank/runtime/visit.hpp>
@@ -141,14 +132,14 @@ extern "C"
   jank_object_ref jank_call0(jank_object_ref const f)
   {
     object_ref const f_obj(reinterpret_cast<object *>(f));
-    return dynamic_call(f_obj).erase().raw();
+    return f_obj.call().erase().raw();
   }
 
   jank_object_ref jank_call1(jank_object_ref const f, jank_object_ref const a1)
   {
     object_ref const f_obj(reinterpret_cast<object *>(f));
     object_ref const a1_obj(reinterpret_cast<object *>(a1));
-    return dynamic_call(f_obj, a1_obj).erase().raw();
+    return f_obj.call(a1_obj).erase().raw();
   }
 
   jank_object_ref
@@ -157,7 +148,7 @@ extern "C"
     object_ref const f_obj(reinterpret_cast<object *>(f));
     object_ref const a1_obj(reinterpret_cast<object *>(a1));
     object_ref const a2_obj(reinterpret_cast<object *>(a2));
-    return dynamic_call(f_obj, a1_obj, a2_obj).erase().raw();
+    return f_obj.call(a1_obj, a2_obj).erase().raw();
   }
 
   jank_object_ref jank_call3(jank_object_ref const f,
@@ -169,7 +160,7 @@ extern "C"
     object_ref const a1_obj(reinterpret_cast<object *>(a1));
     object_ref const a2_obj(reinterpret_cast<object *>(a2));
     object_ref const a3_obj(reinterpret_cast<object *>(a3));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj).erase().raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj).erase().raw();
   }
 
   jank_object_ref jank_call4(jank_object_ref const f,
@@ -183,7 +174,7 @@ extern "C"
     object_ref const a2_obj(reinterpret_cast<object *>(a2));
     object_ref const a3_obj(reinterpret_cast<object *>(a3));
     object_ref const a4_obj(reinterpret_cast<object *>(a4));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj).erase().raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj).erase().raw();
   }
 
   jank_object_ref jank_call5(jank_object_ref const f,
@@ -199,7 +190,7 @@ extern "C"
     object_ref const a3_obj(reinterpret_cast<object *>(a3));
     object_ref const a4_obj(reinterpret_cast<object *>(a4));
     object_ref const a5_obj(reinterpret_cast<object *>(a5));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj).erase().raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj).erase().raw();
   }
 
   jank_object_ref jank_call6(jank_object_ref const f,
@@ -217,7 +208,7 @@ extern "C"
     object_ref const a4_obj(reinterpret_cast<object *>(a4));
     object_ref const a5_obj(reinterpret_cast<object *>(a5));
     object_ref const a6_obj(reinterpret_cast<object *>(a6));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj).erase().raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj).erase().raw();
   }
 
   jank_object_ref jank_call7(jank_object_ref const f,
@@ -237,9 +228,7 @@ extern "C"
     object_ref const a5_obj(reinterpret_cast<object *>(a5));
     object_ref const a6_obj(reinterpret_cast<object *>(a6));
     object_ref const a7_obj(reinterpret_cast<object *>(a7));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj)
-      .erase()
-      .raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj).erase().raw();
   }
 
   jank_object_ref jank_call8(jank_object_ref const f,
@@ -261,9 +250,7 @@ extern "C"
     object_ref const a6_obj(reinterpret_cast<object *>(a6));
     object_ref const a7_obj(reinterpret_cast<object *>(a7));
     object_ref const a8_obj(reinterpret_cast<object *>(a8));
-    return dynamic_call(f_obj, a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj)
-      .erase()
-      .raw();
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj).erase().raw();
   }
 
   jank_object_ref jank_call9(jank_object_ref const f,
@@ -287,16 +274,7 @@ extern "C"
     object_ref const a7_obj(reinterpret_cast<object *>(a7));
     object_ref const a8_obj(reinterpret_cast<object *>(a8));
     object_ref const a9_obj(reinterpret_cast<object *>(a9));
-    return dynamic_call(f_obj,
-                        a1_obj,
-                        a2_obj,
-                        a3_obj,
-                        a4_obj,
-                        a5_obj,
-                        a6_obj,
-                        a7_obj,
-                        a8_obj,
-                        a9_obj)
+    return f_obj.call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj, a9_obj)
       .erase()
       .raw();
   }
@@ -324,17 +302,8 @@ extern "C"
     object_ref const a8_obj(reinterpret_cast<object *>(a8));
     object_ref const a9_obj(reinterpret_cast<object *>(a9));
     object_ref const a10_obj(reinterpret_cast<object *>(a10));
-    return dynamic_call(f_obj,
-                        a1_obj,
-                        a2_obj,
-                        a3_obj,
-                        a4_obj,
-                        a5_obj,
-                        a6_obj,
-                        a7_obj,
-                        a8_obj,
-                        a9_obj,
-                        a10_obj)
+    return f_obj
+      .call(a1_obj, a2_obj, a3_obj, a4_obj, a5_obj, a6_obj, a7_obj, a8_obj, a9_obj, a10_obj)
       .erase()
       .raw();
   }
@@ -364,18 +333,18 @@ extern "C"
     object_ref const a9_obj(reinterpret_cast<object *>(a9));
     object_ref const a10_obj(reinterpret_cast<object *>(a10));
     object_ref const rest_obj(reinterpret_cast<object *>(rest));
-    return dynamic_call(f_obj,
-                        a1_obj,
-                        a2_obj,
-                        a3_obj,
-                        a4_obj,
-                        a5_obj,
-                        a6_obj,
-                        a7_obj,
-                        a8_obj,
-                        a9_obj,
-                        a10_obj,
-                        try_object<obj::persistent_list>(rest_obj))
+    return f_obj
+      .call(a1_obj,
+            a2_obj,
+            a3_obj,
+            a4_obj,
+            a5_obj,
+            a6_obj,
+            a7_obj,
+            a8_obj,
+            a9_obj,
+            a10_obj,
+            try_object<obj::persistent_list>(rest_obj))
       .erase()
       .raw();
   }
@@ -1046,57 +1015,49 @@ extern "C"
     runtime::__rt_ctx->module_loader.set_is_loaded(module);
   }
 
-  int jank_init(int const argc,
-                char const ** const argv,
-                jank_bool const init_default_ctx,
-                int (*fn)(int const, char const ** const))
+  void jank_init_base()
   {
-    return jank_init_with_pch(argc, argv, init_default_ctx, nullptr, 0, fn);
+#ifdef JANK_WINDOWS_LIKE
+    std::setlocale(LC_CTYPE, ".UTF8");
+    std::locale::global(std::locale(".UTF-8"));
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#else
+    /* To handle UTF-8, we set the locale to the current environment locale.
+     * Usage of the local locale allows better localization.
+     * Notably, this might make text encoding become more platform dependent. */
+    std::locale::global(std::locale(""));
+
+    /* Number parsing needs to remain as the US default of decimal separators so that folks
+     * in other locales can have their numbers parsed properly. Otherwise, someone with a
+     * locale which uses comma as the decimal point might input 3.14 in some jank source
+     * and not have it parse properly. */
+    std::setlocale(LC_NUMERIC, "C");
+#endif
+
+    /* The GC needs to initialized even before arg parsing, since our native types,
+     * like strings, use the GC for allocations. It can still be configured later. */
+    GC_set_all_interior_pointers(1);
+    GC_init();
+    GC_allow_register_threads();
+
+    {
+      GC_word bm[GC_BITMAP_SIZE(jank::runtime::obj::persistent_string)]{ 0 };
+      GC_set_bit(bm, GC_OFFSETOF_IN_PTRS(jank::runtime::obj::persistent_string, data));
+      jank::runtime::obj::persistent_string::gc_descriptor
+        = GC_make_descriptor(bm, GC_SIZEOF_IN_PTRS(jank::runtime::obj::persistent_string));
+    }
   }
 
-  int jank_init_with_pch(int const argc,
-                         char const ** const argv,
-                         jank_bool const init_default_ctx,
-                         char const * const pch_data,
-                         jank_usize const pch_size,
-                         int (*fn)(int const, char const ** const))
+  int jank_init_static(int const argc,
+                       char const ** const argv,
+                       jank_bool const init_default_ctx,
+                       int (*fn)(int const, char const ** const))
   {
     JANK_TRY
     {
-#ifdef JANK_WINDOWS_LIKE
-      std::setlocale(LC_CTYPE, ".UTF8");
-      std::locale::global(std::locale(".UTF-8"));
-      SetConsoleOutputCP(CP_UTF8);
-      SetConsoleCP(CP_UTF8);
-#else
-      /* To handle UTF-8, we set the locale to the current environment locale.
-       * Usage of the local locale allows better localization.
-       * Notably, this might make text encoding become more platform dependent. */
-      std::locale::global(std::locale(""));
+      jank_init_base();
 
-      /* Number parsing needs to remain as the US default of decimal separators so that folks
-       * in other locales can have their numbers parsed properly. Otherwise, someone with a
-       * locale which uses comma as the decimal point might input 3.14 in some jank source
-       * and not have it parse properly. */
-      std::setlocale(LC_NUMERIC, "C");
-#endif
-
-      /* The GC needs to initialized even before arg parsing, since our native types,
-       * like strings, use the GC for allocations. It can still be configured later. */
-      GC_set_all_interior_pointers(1);
-      GC_init();
-      GC_allow_register_threads();
-
-      llvm::llvm_shutdown_obj const Y{};
-
-      llvm::InitializeNativeTarget();
-      llvm::InitializeNativeTargetAsmParser();
-      llvm::InitializeNativeTargetAsmPrinter();
-
-      if(pch_data)
-      {
-        aot::register_resource("incremental.pch", { pch_data, pch_size });
-      }
       if(init_default_ctx)
       {
         runtime::__rt_ctx = new(UseGC) runtime::context{};

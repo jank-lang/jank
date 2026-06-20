@@ -124,7 +124,7 @@ namespace jank::ir
 
   identifier builder::persistent_list(analyze::expression_position const pos,
                                       native_vector<identifier> &&values,
-                                      jtl::option<identifier> const &meta)
+                                      runtime::object_ref const meta)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
@@ -138,7 +138,7 @@ namespace jank::ir
 
   identifier builder::persistent_vector(analyze::expression_position const pos,
                                         native_vector<identifier> &&values,
-                                        jtl::option<identifier> const &meta)
+                                        runtime::object_ref const meta)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
@@ -153,7 +153,7 @@ namespace jank::ir
   identifier
   builder::persistent_array_map(analyze::expression_position const pos,
                                 native_vector<std::pair<identifier, identifier>> &&values,
-                                jtl::option<identifier> const &meta)
+                                runtime::object_ref const meta)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
@@ -167,7 +167,7 @@ namespace jank::ir
 
   identifier builder::persistent_hash_map(analyze::expression_position const pos,
                                           native_vector<std::pair<identifier, identifier>> &&values,
-                                          jtl::option<identifier> const &meta)
+                                          runtime::object_ref const meta)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
@@ -181,7 +181,7 @@ namespace jank::ir
 
   identifier builder::persistent_hash_set(analyze::expression_position const pos,
                                           native_vector<identifier> &&values,
-                                          jtl::option<identifier> const &meta)
+                                          runtime::object_ref const meta)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
@@ -195,11 +195,12 @@ namespace jank::ir
 
   identifier builder::function(analyze::expression_position const pos,
                                native_unordered_map<u8, jtl::immutable_string> &&arities,
-                               runtime::callable_arity_flags const arity_flags)
+                               runtime::callable_arity_flags const arity_flags,
+                               bool const is_variadic)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::function>(name, location, jtl::move(arities), arity_flags));
+      jtl::make_ref<inst::function>(name, location, jtl::move(arities), arity_flags, is_variadic));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, current_function()->blocks[block_index].instructions.back()->type);
@@ -212,7 +213,8 @@ namespace jank::ir
                    jtl::immutable_string const &context,
                    native_unordered_map<u8, jtl::immutable_string> &&arities,
                    native_unordered_map<jtl::immutable_string, detail::typed_identifier> &&captures,
-                   runtime::callable_arity_flags const arity_flags)
+                   runtime::callable_arity_flags const arity_flags,
+                   bool const is_variadic)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
@@ -221,7 +223,8 @@ namespace jank::ir
                                    context,
                                    jtl::move(arities),
                                    jtl::move(captures),
-                                   arity_flags));
+                                   arity_flags,
+                                   is_variadic));
     if(pos == analyze::expression_position::tail)
     {
       return ret(name, current_function()->blocks[block_index].instructions.back()->type);
@@ -240,7 +243,7 @@ namespace jank::ir
   identifier builder::def(analyze::expression_position const pos,
                           jtl::immutable_string const &qualified_var,
                           jtl::option<identifier> const &value,
-                          identifier const &meta,
+                          runtime::object_ref const meta,
                           bool const is_dynamic)
   {
     auto name{ next_ident() };
