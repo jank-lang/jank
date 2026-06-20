@@ -206,7 +206,7 @@
     clojure.core-test.take-last
     ; clojure.core-test.take-nth ; FIXME: Failing tests.
     clojure.core-test.take-while
-    ; clojure.core-test.taps ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.IPending'.
+    clojure.core-test.taps
     ; clojure.core-test.transient ; analyze/macro-expansion-exception error: invalid call to #object [unknown jit_function 0x104434c80] with 3 args provided
     clojure.core-test.true-qmark
     clojure.core-test.underive
