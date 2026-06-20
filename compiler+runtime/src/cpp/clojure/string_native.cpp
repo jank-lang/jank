@@ -14,53 +14,44 @@ namespace clojure::string_native
   using namespace jank;
   using namespace jank::runtime;
 
-  object_ref blank(object_ref const s)
+  bool blank(object_ref const s)
   {
     if(runtime::is_nil(s))
     {
-      return jank_true;
+      return true;
     }
     auto const s_str(runtime::to_string(s));
-    return make_box(s_str.is_blank());
+    return s_str.is_blank();
   }
 
-  object_ref reverse(object_ref const s)
+  jtl::immutable_string reverse(jtl::immutable_string const &s)
   {
-    auto const s_str(runtime::to_string(s));
-    return make_box<obj::persistent_string>(jtl::immutable_string{ s_str.rbegin(), s_str.rend() });
+    return { s.rbegin(), s.rend() };
   }
 
-  object_ref lower_case(object_ref const s)
+  jtl::immutable_string lower_case(jtl::immutable_string const &s)
   {
-    auto const s_str(runtime::to_string(s));
-    return make_box(util::to_lowercase(s_str));
+    return util::to_lowercase(s);
   }
 
-  object_ref starts_with(object_ref const s, object_ref const substr)
+  bool starts_with(jtl::immutable_string const &s, jtl::immutable_string const &substr)
   {
-    auto const s_str(runtime::to_string(s));
-    auto const substr_str(runtime::to_string(substr));
-    return make_box(s_str.starts_with(substr_str));
+    return s.starts_with(substr);
   }
 
-  object_ref ends_with(object_ref const s, object_ref const substr)
+  bool ends_with(jtl::immutable_string const &s, jtl::immutable_string const &substr)
   {
-    auto const s_str(runtime::to_string(s));
-    auto const substr_str(runtime::to_string(substr));
-    return make_box(s_str.ends_with(substr_str));
+    return s.ends_with(substr);
   }
 
-  object_ref includes(object_ref const s, object_ref const substr)
+  bool includes(jtl::immutable_string const &s, jtl::immutable_string const &substr)
   {
-    auto const s_str(runtime::to_string(s));
-    auto const substr_str(runtime::to_string(substr));
-    return make_box(s_str.contains(substr_str));
+    return s.contains(substr);
   }
 
-  object_ref upper_case(object_ref const s)
+  jtl::immutable_string upper_case(jtl::immutable_string const &s)
   {
-    auto const s_str(runtime::to_string(s));
-    return make_box(util::to_uppercase(s_str));
+    return util::to_uppercase(s);
   }
 
   static jtl::immutable_string replace_first(jtl::immutable_string const &s,
@@ -179,26 +170,18 @@ namespace clojure::string_native
     return is_string && output_str == s_str ? s : make_box(output_str);
   }
 
-  i64 index_of(object_ref const s, object_ref const value, object_ref const from_index)
+  i64 index_of(jtl::immutable_string const &s,
+               jtl::immutable_string const &value,
+               i64 const from_index)
   {
-    auto const s_str(runtime::to_string(s));
-    auto const value_str(runtime::to_string(value));
-    auto const pos(to_i64(from_index));
-    return static_cast<i64>(s_str.find(value_str, pos));
+    return static_cast<i64>(s.find(value, from_index));
   }
 
-  i64 last_index_of(object_ref const s, object_ref const value, object_ref const from_index)
+  i64 last_index_of(jtl::immutable_string const &s,
+                    jtl::immutable_string const &value,
+                    i64 const from_index)
   {
-    auto const s_str(runtime::to_string(s));
-    auto const value_str(runtime::to_string(value));
-    auto const pos(to_i64(from_index));
-    return static_cast<i64>(s_str.rfind(value_str, pos));
-  }
-
-  static object_ref empty_string()
-  {
-    static auto const s(make_box(jtl::immutable_string{}));
-    return s;
+    return static_cast<i64>(s.rfind(value, from_index));
   }
 
   static jtl::immutable_string::size_type triml_index(jtl::immutable_string const &s)
@@ -217,22 +200,21 @@ namespace clojure::string_native
     return i;
   }
 
-  object_ref triml(object_ref const s)
+  jtl::immutable_string triml(jtl::immutable_string const &s)
   {
-    auto const s_str(runtime::to_string(s));
-    auto const l(triml_index(s_str));
+    auto const l(triml_index(s));
 
     if(l == 0)
     {
       return s;
     }
 
-    if(l == s_str.size())
+    if(l == s.size())
     {
-      return empty_string();
+      return {};
     }
 
-    return make_box(s_str.substr(l));
+    return s.substr(l);
   }
 
   static jtl::immutable_string::size_type trimr_index(jtl::immutable_string const &s)
@@ -251,42 +233,40 @@ namespace clojure::string_native
     return i;
   }
 
-  object_ref trimr(object_ref const s)
+  jtl::immutable_string trimr(jtl::immutable_string const &s)
   {
-    auto const s_str(try_object<obj::persistent_string>(s)->data);
-    auto const r(trimr_index(s_str));
+    auto const r(trimr_index(s));
 
-    if(r == s_str.size())
+    if(r == s.size())
     {
       return s;
     }
 
     if(r == 0)
     {
-      return empty_string();
+      return {};
     }
 
-    return make_box(s_str.substr(0, r));
+    return s.substr(0, r);
   }
 
-  object_ref trim(object_ref const s)
+  jtl::immutable_string trim(jtl::immutable_string const &s)
   {
-    auto const s_str(try_object<obj::persistent_string>(s)->data);
-    auto const r(trimr_index(s_str));
+    auto const r(trimr_index(s));
 
     if(r == 0)
     {
-      return empty_string();
+      return {};
     }
 
-    auto const l(triml_index(s_str));
+    auto const l(triml_index(s));
 
-    if(l == 0 && r == s_str.size())
+    if(l == 0 && r == s.size())
     {
       return s;
     }
 
-    return make_box(s_str.substr(l, r - l));
+    return s.substr(l, r - l);
   }
 
   static jtl::immutable_string::size_type trim_newline_index(jtl::immutable_string const &s)
@@ -306,25 +286,23 @@ namespace clojure::string_native
     return i;
   }
 
-  object_ref trim_newline(object_ref const s)
+  jtl::immutable_string trim_newline(jtl::immutable_string const &s)
   {
-    auto const s_str(try_object<obj::persistent_string>(s)->data);
-    auto const r(trim_newline_index(s_str));
+    auto const r(trim_newline_index(s));
 
-    if(r == s_str.size())
+    if(r == s.size())
     {
       return s;
     }
 
-    return make_box(s_str.substr(0, r));
+    return s.substr(0, r);
   }
 
-  object_ref split(object_ref const s, object_ref const re)
+  obj::persistent_vector_ref split(jtl::immutable_string const &s, obj::re_pattern_ref const re)
   {
-    auto const s_str(try_object<obj::persistent_string>(s)->data);
-    auto const regex(try_object<obj::re_pattern>(re)->regex);
+    auto const regex(re->regex);
 
-    std::string const search_str{ s_str.c_str() };
+    std::string const search_str{ s.c_str() };
 
     detail::native_transient_vector vec;
     std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
@@ -338,19 +316,17 @@ namespace clojure::string_native
     return make_box<obj::persistent_vector>(vec.persistent());
   }
 
-  object_ref split(object_ref const s, object_ref const re, object_ref const limit)
+  obj::persistent_vector_ref
+  split(jtl::immutable_string const &s, obj::re_pattern_ref const re, i64 const limit)
   {
-    auto const limit_int(to_i64(limit));
-
-    if(limit_int < 1)
+    if(limit < 1)
     {
       return split(s, re);
     }
 
-    auto const s_str(try_object<obj::persistent_string>(s)->data);
-    auto const regex(try_object<obj::re_pattern>(re)->regex);
+    auto const regex(re->regex);
 
-    std::string const search_str{ s_str.c_str() };
+    std::string const search_str{ s.c_str() };
 
     detail::native_transient_vector vec;
 
@@ -358,14 +334,14 @@ namespace clojure::string_native
     std::sregex_token_iterator const end;
 
     int i{ 1 };
-    for(; i < limit_int && iter != end; ++i, ++iter)
+    for(; i < limit && iter != end; ++i, ++iter)
     {
       vec.push_back(make_box<obj::persistent_string>(iter->str().c_str()));
     }
 
-    if(i == limit_int)
+    if(i == limit)
     {
-      vec.push_back(make_box(s_str.substr(iter->first - search_str.begin())));
+      vec.push_back(make_box(s.substr(iter->first - search_str.begin())));
     }
 
     return make_box<obj::persistent_vector>(vec.persistent());
