@@ -626,6 +626,7 @@ add_library(
   # Native module sources.
   src/cpp/clojure/core_native.cpp
   src/cpp/clojure/string_native.cpp
+  src/cpp/clojure/data/json_native.cpp
 )
 set_target_properties(jank_common_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
 
@@ -656,6 +657,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-process/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/json/include>"
   ${OPENSSL_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
 )

@@ -9,9 +9,8 @@ namespace jank::runtime::obj
 {
   static jtl::ref<uuids::uuid> random()
   {
-    static std::random_device rd;
-    std::mt19937 g(rd());
-    uuids::uuid_random_generator gen{ g };
+    thread_local std::mt19937 g(std::random_device{}());
+    thread_local uuids::uuid_random_generator gen{ g };
     return jtl::make_ref<uuids::uuid>(gen());
   }
 
