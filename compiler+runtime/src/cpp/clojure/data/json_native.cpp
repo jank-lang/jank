@@ -109,10 +109,16 @@ namespace clojure::data::json_native
 
           for(auto const &[k, v] : json.items())
           {
-            auto const key(make_box<obj::persistent_string>(k));
-            auto const value(read(v, opts));
-            m.assoc_in_place(truthy(opts.key_fn) ? opts.key_fn.call(key) : key,
-                             truthy(opts.value_fn) ? opts.value_fn.call(key, value) : value);
+            auto const key_initial(make_box<obj::persistent_string>(k));
+            auto const value_initial(read(v, opts));
+
+            auto const key(truthy(opts.key_fn) ? opts.key_fn.call(key_initial) : key_initial);
+            auto const value(truthy(opts.value_fn) ? opts.value_fn.call(key, value_initial)
+                                                   : value_initial);
+            if(opts.value_fn != value)
+            {
+              m.assoc_in_place(key, value);
+            }
           }
 
           return m.to_persistent();
