@@ -30,9 +30,13 @@ namespace clojure::data::json_native
           return {};
         }
 
-        if constexpr(std::same_as<T, obj::boolean> || std::same_as<T, obj::persistent_string>
-                     || std::same_as<T, obj::integer> || std::same_as<T, obj::small_integer>
-                     || std::same_as<T, obj::real> || std::same_as<T, obj::small_real>)
+        if constexpr(jtl::is_any_same<T,
+                                      obj::boolean,
+                                      obj::persistent_string,
+                                      obj::integer,
+                                      obj::small_integer,
+                                      obj::real,
+                                      obj::small_real>)
         {
           return typed_o->data;
         }
@@ -108,7 +112,7 @@ namespace clojure::data::json_native
           return make_box(json.get<jtl::f64>());
         }
       case nlohmann::json::value_t::boolean:
-        return json.get<bool>() ? jank_true : jank_false;
+        return make_box(json.get<bool>());
       case nlohmann::json::value_t::array:
         {
           obj::transient_vector v{};

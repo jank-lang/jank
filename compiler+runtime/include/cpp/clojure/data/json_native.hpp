@@ -11,11 +11,10 @@ namespace clojure::data::json_native
   struct read_options
   {
     bool eof_error{ true };
-    object_ref eof_value{ jank_nil };
     bool bigdec{ false };
-    object_ref key_fn{ jank_nil };
-    object_ref value_fn{ jank_nil };
-    object_ref extra_data_fn{ jank_nil };
+    object_ref eof_value{};
+    object_ref key_fn{};
+    object_ref value_fn{};
   };
 
   jtl::immutable_string write_str(object_ref const x);

@@ -6,12 +6,8 @@
                            :key-fn nil
                            :value-fn nil})
 
-(defn read
-  "Reads a single item of JSON data from a java.io.Reader.
-
-  If you wish to repeatedly read items from the same reader, you must
-  supply a PushbackReader with buffer size >= 64, and reuse it on
-  subsequent calls.
+(defn read-str
+  "Reads one JSON value from input String.
 
   Options are key-value pairs, valid options are:
 
@@ -26,7 +22,7 @@
 
      :bigdec boolean
 
-        If true use BigDecimal for decimal numbers instead of Double.
+        If true use big_decimal for decimal numbers instead of Double.
         Default is false.
 
      :key-fn function
@@ -45,36 +41,22 @@
         in the output. If value-fn returns itself, the property will
         be omitted from the output. The default value-fn returns the
         value unchanged. This option does not apply to non-map
-        collections.
-
-     :extra-data-fn function
-
-       If :extra-data-fn is not nil, then the reader will be checked
-       for extra data after the read. If found, the extra-data-fn will
-       be invoked with the read value and the reader. The result of
-       the extra-data-fn will be returned."
-  [reader & {:as options}]
-  (throw "TODO: port clojure.data.json/read"))
-
-(defn read-str
-  "Reads one JSON value from input String. Options are the same as for
-  read."
+        collections."
   [string & {:as options}]
   (cpp/clojure.data.json_native.read_str
    string
    (let [options (merge default-read-options options)]
      (cpp/clojure.data.json_native.read_options.
       (cpp/jank.runtime.truthy (:eof-error? options))
-      (:eof-value options)
       (cpp/jank.runtime.truthy (:bigdec options))
+      (:eof-value options)
       (:key-fn options)
-      (:value-fn options)
-      (:extra-data-fn options)))))
+      (:value-fn options)))))
 
 (defn write-str
   "Converts x to a JSON-formatted string. Options are the same as
   write."
-  ^String [x & {:as options}]
+  [x & {:as options}]
   (cpp/clojure.data.json_native.write_str x))
 
 (comment
