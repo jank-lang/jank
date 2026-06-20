@@ -18,6 +18,7 @@
 (def parent-project (load-project "test-data/test-parent/project.clj"))
 (def child-project (load-project "test-data/test-child/project.clj"))
 (def grandchild-project (load-project "test-data/test-grandchild/project.clj"))
+(def grandchild2-project (load-project "test-data/test-grandchild2/project.clj"))
 (def build-dependency-project (load-project "test-data/test-build-dependency/project.clj"))
 
 ;; Children need to be installed into the maven cache to be properly picked up
@@ -26,6 +27,7 @@
   (binding [build/*disable-sandbox* true]
     (install build-dependency-project)
     (install grandchild-project)
+    (install grandchild2-project)
     (install child-project)
     (install parent-project)
     (f)))
@@ -48,7 +50,11 @@
                  {:op           :compile
                   :dep          '[org.jank-lang/test-grandchild "0.1.0"]
                   :build-inputs [(m/regex #".*\.jar")]
-                  :inputs       (m/equals {})}]
+                  :inputs       (m/equals {})}
+                 {:op  :extract-src
+                  :dep '[org.jank-lang/test-grandchild2 "0.1.0"]}
+                 {:op  :compile
+                  :dep '[org.jank-lang/test-grandchild2 "0.1.0"]}]
                 ops))))
 
 (deftest plan-build-with-root-jank-build-test
