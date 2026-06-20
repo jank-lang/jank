@@ -99,7 +99,14 @@ namespace clojure::data::json_native
       case nlohmann::json::value_t::number_integer:
         return make_box(json.get<jtl::i64>());
       case nlohmann::json::value_t::number_float:
-        return make_box(json.get<jtl::f64>());
+        {
+          if(opts.bigdec)
+          {
+            return make_box<obj::big_decimal>(json.get<jtl::f64>());
+          }
+
+          return make_box(json.get<jtl::f64>());
+        }
       case nlohmann::json::value_t::boolean:
         return json.get<bool>() ? jank_true : jank_false;
       case nlohmann::json::value_t::array:
