@@ -1,13 +1,12 @@
 (ns clojure.string
-  (:refer-clojure :exclude [replace reverse]))
-
-(cpp/raw "#include <clojure/string_native.hpp>")
+  (:refer-clojure :exclude [replace reverse])
+  (:include "clojure/string_native.hpp"))
 
 (defn reverse
   "returns s with its characters reversed."
   [s]
   (cpp/clojure.string_native.reverse s))
-  
+
 (defn re-quote-replacement
   "Given a replacement string that you wish to be a literal
   replacement for a pattern match in replace or replace-first, do the
@@ -54,17 +53,36 @@
   (clojure.string/replace \"Almost Pig Latin\" #\"\\b(\\w)(\\w+)\\b\" \"$2$1ay\")
   -> \"lmostAay igPay atinLay\""
   [s match replacement]
-  #_
-  (let [s (.toString s)]
+  (let [s (cpp/cast jtl.immutable_string (str s))]
     (cond
-      (instance? Character match) (.replace s match replacement)
-      (instance? CharSequence match) (.replace s match replacement)
-      (instance? Pattern match) (if (instance? CharSequence replacement)
-                                  (.replaceAll (re-matcher match s)
-                                               (.toString replacement))
-                                  (replace-by s match replacement))
-      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match)))))
-  (throw "TODO: port clojure.string/replace"))
+      (char? match)
+      (cpp/clojure.string_native.replace
+       s
+       (cpp/jank.runtime.to_char match)
+       (cpp/jank.runtime.to_char replacement))
+
+      (string? match)
+      (cpp/clojure.string_native.replace
+       s
+       (cpp/jank.runtime.to_string match)
+       (cpp/jank.runtime.to_string replacement))
+
+      (cpp/== cpp/jank.runtime.object_type.re_pattern (.get_type match))
+      (if (string? replacement)
+        (cpp/clojure.string_native.replace
+         s
+         (cpp/jank.runtime.re_pattern match)
+         (cpp/jank.runtime.to_string replacement))
+        (cpp/clojure.string_native.replace
+         s
+         (cpp/jank.runtime.re_pattern match)
+         replacement))
+      #_#_(instance? Pattern match)
+        (if (instance? CharSequence replacement)
+          (.replaceAll (re-matcher match s)
+                       (.toString replacement))
+          (replace-by s match replacement))
+      :else (throw (str "Invalid match arg: " match)))))
 
 ;(defn- replace-first-by
 ;  [s re f]
