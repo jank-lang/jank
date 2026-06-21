@@ -31,7 +31,7 @@ namespace jank::runtime
         else
         {
           auto v{ typed_o->to_string() };
-          auto str{ v.c_str() };
+          std::string_view str{ v.view() };
           std::vformat_to(out, fmt, std::make_format_args(str, std::forward<Args>(args)...));
         }
       },
