@@ -53,6 +53,8 @@
   (clojure.string/replace \"Almost Pig Latin\" #\"\\b(\\w)(\\w+)\\b\" \"$2$1ay\")
   -> \"lmostAay igPay atinLay\""
   [s match replacement]
+  (when (nil? s)
+    (throw "replace does not support nil"))
   (let [s (cpp/cast jtl.immutable_string (str s))]
     (cond
       (char? match)
