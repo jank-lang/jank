@@ -243,8 +243,8 @@ namespace jank::runtime
     {
       auto peek = std::next(it) != format.end() ? *std::next(it) : '\0';
 
-      // {{ or }} escape sequences
-      if((*it == '{' && peek == '{') || (*it == '}' && peek == '}'))
+      // {{ or }} escape sequences, ignored inside a replacement field
+      if(depth == 0 && ((*it == '{' && peek == '{') || (*it == '}' && peek == '}')))
       {
         out(*it);
         ++it;
