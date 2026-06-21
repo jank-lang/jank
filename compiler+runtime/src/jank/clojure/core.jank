@@ -6900,9 +6900,8 @@
 (defn format
   "Formats a string using java.lang.String.format, see java.util.Formatter for format
   string syntax"
-  #_String [fmt & args]
-  ;; (String/format fmt (to-array args))
-  (throw "TODO: port format"))
+  [fmt & args]
+  (cpp/clojure.core_native.format fmt args))
 
 (defn printf
   "Prints formatted output, as per format"
