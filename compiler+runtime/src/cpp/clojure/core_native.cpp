@@ -287,7 +287,8 @@ namespace clojure::core_native
 
   jtl::immutable_string format(jtl::immutable_string const &format, object_ref const args)
   {
-    auto args_list = list(args);
+    auto args_seq = make_sequence_range(args);
+    auto args_it = args_seq.begin();
 
     jtl::string_builder out;
     jtl::string_builder fmt;
@@ -337,8 +338,8 @@ namespace clojure::core_native
         {
           // depending on the number of embedded replacement fields we
           // encountered, pop the right number of values off the argument stack.
-          auto v1{ args_list->peek() };
-          args_list = args_list->pop();
+          auto v1{ *args_it };
+          ++args_it;
 
           // only width and precision support nested field replacement, so we
           // only need to support up to 1 value + 2 nested arguments (always
@@ -349,17 +350,17 @@ namespace clojure::core_native
           }
           else if(nargs == 2)
           {
-            auto v2{ args_list->peek().to_integer() };
-            args_list = args_list->pop();
+            auto v2{ (*args_it).to_integer() };
+            ++args_it;
 
             vformat_object_to(std::back_inserter(out), fmt.view(), v1, v2);
           }
           else if(nargs == 3)
           {
-            auto v2{ args_list->peek().to_integer() };
-            args_list = args_list->pop();
-            auto v3{ args_list->peek().to_integer() };
-            args_list = args_list->pop();
+            auto v2{ (*args_it).to_integer() };
+            ++args_it;
+            auto v3{ (*args_it).to_integer() };
+            ++args_it;
 
             vformat_object_to(std::back_inserter(out), fmt.view(), v1, v2, v3);
           }
@@ -380,7 +381,7 @@ namespace clojure::core_native
       throw std::runtime_error("unclosed brace in format string");
     }
 
-    if(args_list->count() > 0)
+    if(args_it != args_seq.end())
     {
       throw std::runtime_error("leftover format arguments");
     }
