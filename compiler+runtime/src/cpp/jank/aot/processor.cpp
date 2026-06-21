@@ -404,7 +404,8 @@ int main(int argc, const char** argv)
     } };
 
     compiler_args.push_back(strdup("-o"));
-    compiler_args.push_back(strdup(util::cli::opts.output_filename.c_str()));
+    compiler_args.push_back(strdup(
+      util::format("{}/{}", util::cli::opts.output_dir, util::cli::opts.output_filename).c_str()));
 
     //util::println("compilation command: {} ", compiler_args);
 

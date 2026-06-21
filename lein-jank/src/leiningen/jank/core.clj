@@ -26,8 +26,8 @@
     :output-dir
     ["--output-dir" (fs/path value project-name)]
 
-    :output
-    ["--output" value]
+    :output-name
+    ["--output-name" value]
 
     ; TODO: Refactor into :optimizations #{:direct-call}
     :direct-call

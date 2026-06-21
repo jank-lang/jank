@@ -114,7 +114,7 @@
       (lmain/exit 1))))
 
 (defn default-project [project]
-  {:jank {:output (:name project)}
+  {:jank {:output-name (:name project)}
    :aliases {"run" ^{:doc "Run your project, starting at the main entrypoint."}
              ["jank" "run"]
 

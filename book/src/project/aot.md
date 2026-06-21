@@ -6,12 +6,9 @@ code and dependencies to an executable using this command.
 lein compile
 ```
 
-As with GCC, Clang, etc, the default output name is `a.out`. When you invoke
-your executable, your `-main` function will be called.
-
-> [!NOTE]
-> There is not yet a way to change the output name using Leiningen, but this
-> will be implemented.
+Your executable will be named based on your current project and can be found
+within `target/debug/<project name>` by default. When you invoke your
+executable, your `-main` function will be called.
 
 ## Building for release
 By default, `lein compile` will build you a debug executable with fewer
@@ -19,7 +16,7 @@ optimizations enabled. To get a release executable, you can enable the `release`
 profile.
 
 ```bash
-lein with-profile release compile
+lein with-profile +release compile
 ```
 
 ## AOT runtime selection
