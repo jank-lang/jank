@@ -86,8 +86,8 @@
       (let [min-str    (format-duration (:min hist) {:pad false})
             max-str    (format-duration (:max hist) {:pad false})
             half-width (/ nbins 2)]
-        (print (format "{:<{}}" min-str half-width))
-        (print (format "{:>{}}" max-str half-width)))
+        (printf "{:<{}}" min-str half-width)
+        (printf "{:>{}}" max-str half-width))
       (println))))
 
 (defn print-timing [report]
@@ -99,22 +99,20 @@
         stddev  (color :green (format-duration (standard-deviation (:variance report))))
         min     (bold :cyan (format-duration (:min report)))
         max     (color :magenta (format-duration (:max report)))]
-    (println (str label ": " (count samples) " samples from " (:evaluations report) " evaluations collected in " sum))
-    (println (str " Time  (" (bold :blue "median") ")   : " median))
-    (println (str " Time  (" (bold :green "mean") " ± " (color :green "σ") ") : " mean " ± " stddev))
-    (println (str " Range (" (bold :cyan "min") " … " (color :magenta "max") "): " min " … " max))))
+    (printf "{}: {} samples from {} evaluations collected in {}\n" label (count samples) (:evaluations report) sum)
+    (printf " Time  ({})   : {}\n" (bold :blue "median") median)
+    (printf " Time  ({} ± {}) : {} ± {}\n" (bold :green "mean") (color :green "σ") mean stddev)
+    (printf " Range ({} … {}): {} … {}\n" (bold :cyan "min") (color :magenta "max") min max)))
 
 (defn print-gc [report]
   (let [{:keys [allocated-bytes collections collection-time]} (:gc report)
         gc-percent (int (* 100 (/ collection-time (:sum report))))]
-    (println (str " Memory estimate: "
-                  (color :yellow (str (format-size allocated-bytes)))
-                  " with "
-                  (color :yellow (str collections " garbage collections"))
-                  " in "
-                  (color :yellow (format-duration collection-time {:pad false}))
-                  " (" (color :yellow (str gc-percent "%"))
-                  " of total runtime)"))))
+
+    (printf " Memory estimate: {} with {} in {} ({} of total runtime)\n"
+            (color :yellow (str (format-size allocated-bytes)))
+            (color :yellow (str collections " garbage collections"))
+            (color :yellow (format-duration collection-time {:pad false}))
+            (color :yellow (str gc-percent "%")))))
 
 (defn print-summary [report]
   (print-timing report)
