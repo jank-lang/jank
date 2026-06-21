@@ -76,7 +76,5 @@ namespace clojure::core_native
   jtl::u32 hash_unordered(object_ref const coll);
   jtl::immutable_string jank_version();
 
-  jtl::immutable_string format(jtl::immutable_string const &format, object_ref const args);
-
   obj::delay_ref delay(object_ref const fn);
 }

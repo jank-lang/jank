@@ -6901,7 +6901,7 @@
   "Formats a string using java.lang.String.format, see java.util.Formatter for format
   string syntax"
   [fmt & args]
-  (cpp/clojure.core_native.format fmt args))
+  (cpp/jank.runtime.format fmt args))
 
 (defn printf
   "Prints formatted output, as per format"

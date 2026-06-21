@@ -12,6 +12,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt/print.hpp>
+#include <jank/util/std_fmt.hpp>
 #include <jank/util/scope_exit.hpp>
 
 namespace jank::runtime
@@ -226,6 +227,110 @@ namespace jank::runtime
       },
       args);
     return {};
+  }
+
+  jtl::immutable_string format(jtl::immutable_string const &format, object_ref const args)
+  {
+    auto args_seq = make_sequence_range(args);
+    auto args_it = args_seq.begin();
+
+    jtl::string_builder out;
+    jtl::string_builder fmt;
+    int depth{ 0 };
+    int nargs{ 0 };
+
+    for(auto it = format.begin(); it != format.end(); ++it)
+    {
+      auto peek = std::next(it) != format.end() ? *std::next(it) : '\0';
+
+      // {{ or }} escape sequences
+      if((*it == '{' && peek == '{') || (*it == '}' && peek == '}'))
+      {
+        out(*it);
+        ++it;
+        continue;
+      }
+
+      if(*it == '{')
+      {
+        ++depth;
+        ++nargs;
+
+        if(std::isdigit(peek))
+        {
+          throw std::runtime_error("format positional specifiers not supported");
+        }
+      }
+
+      if(depth > 0)
+      {
+        // inside a replacement field
+        fmt(*it);
+      }
+      else
+      {
+        // ordinary character
+        out(*it);
+      }
+
+      if(*it == '}')
+      {
+        --depth;
+
+        // end of a format specification, process it
+        if(depth == 0)
+        {
+          // depending on the number of embedded replacement fields we
+          // encountered, pop the right number of values off the argument stack.
+          auto v1{ *args_it };
+          ++args_it;
+
+          // only width and precision support nested field replacement, so we
+          // only need to support up to 1 value + 2 nested arguments (always
+          // integral).
+          if(nargs == 1)
+          {
+            vformat_object_to(std::back_inserter(out), fmt.view(), v1);
+          }
+          else if(nargs == 2)
+          {
+            auto v2{ (*args_it).to_integer() };
+            ++args_it;
+
+            vformat_object_to(std::back_inserter(out), fmt.view(), v1, v2);
+          }
+          else if(nargs == 3)
+          {
+            auto v2{ (*args_it).to_integer() };
+            ++args_it;
+            auto v3{ (*args_it).to_integer() };
+            ++args_it;
+
+            vformat_object_to(std::back_inserter(out), fmt.view(), v1, v2, v3);
+          }
+          else
+          {
+            throw std::runtime_error("too many variable format specifiers");
+          }
+
+          // reset for the next format specification
+          nargs = 0;
+          fmt.clear();
+        }
+      }
+    }
+
+    if(depth != 0)
+    {
+      throw std::runtime_error("unclosed brace in format string");
+    }
+
+    if(args_it != args_seq.end())
+    {
+      throw std::runtime_error("leftover format arguments");
+    }
+
+    return out.release();
   }
 
   obj::persistent_string_ref subs(object_ref const s, object_ref const start)
