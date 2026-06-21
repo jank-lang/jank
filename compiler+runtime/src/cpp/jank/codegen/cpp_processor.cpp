@@ -43,6 +43,23 @@ namespace jank::codegen
     {
     }
 
+    void enter_cpp_def()
+    {
+      if(!temp_buffer.empty())
+      {
+        jank_panic("temp_buffer is not empty during codegen. It should only be usable by a single "
+                   "form at a time.")
+      }
+
+      temp_buffer(body_buffer.release());
+    }
+
+    void exit_cpp_def()
+    {
+      body_buffer.clear();
+      body_buffer(temp_buffer.release());
+    }
+
     void enter_block(ir::identifier const &block)
     {
       block_index = function->find_block(block);
@@ -113,6 +130,7 @@ namespace jank::codegen
     jtl::string_builder deps_buffer{};
     jtl::string_builder header_buffer{};
     jtl::string_builder body_buffer{};
+    jtl::string_builder temp_buffer{};
     jtl::string_builder footer_buffer{};
     jtl::string_builder expression_buffer{};
 
@@ -769,6 +787,11 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::parameter_ref const &inst, builder &b)
   {
     b.next_instruction();
+    // TODO: Is there a better way we can figure out when cpp_def codegen starts?
+    if(inst->name == "cpp_def")
+    {
+      b.enter_cpp_def();
+    }
     return inst->name;
   }
 
@@ -1743,17 +1766,19 @@ namespace jank::codegen
     auto const munged_current_ns{ runtime::munge(__rt_ctx->current_ns()->name->name) };
     auto const munged_var_name{ runtime::munge(inst->expr->name->get_name()) };
 
-    auto const native_ns{ module::module_to_native_ns(munged_current_ns) };
+    util::format_to(b.cpp_def_buffer, "{} {}{", type_name, munged_var_name);
 
-    util::format_to(b.cpp_def_buffer, "{} {}{ };", type_name, munged_var_name);
     if(inst->value.is_some())
     {
-      util::format_to(b.body_buffer,
-                      "{}::{} = {};",
-                      native_ns,
-                      munged_var_name,
+      util::format_to(b.cpp_def_buffer,
+                      "([](){ {} return {}; })()",
+                      b.body_buffer.data(),
                       inst->value.unwrap());
     }
+
+    util::format_to(b.cpp_def_buffer, " };");
+
+    b.exit_cpp_def();
 
     util::format_to(b.body_buffer,
                     R"(_jank_refer_global("{}.{}", "{}");)",

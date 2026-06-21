@@ -1,5 +1,3 @@
-(ns jank.cpp.def.fail-has-identifier-missing-type)
-
-(cpp/def hello 1)
+(cpp/def fhimt-hello 1)
 
 :success
