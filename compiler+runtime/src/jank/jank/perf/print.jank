@@ -17,21 +17,13 @@
                    :else      [s "bytes"])]
     ;; bytes cannot be fractional
     (if (= "bytes" unit)
-      (str s " bytes")
-      (->
-       (doto (cpp/std.ostringstream)
-         (cpp/<< cpp/std.fixed)
-         (cpp/<< (cpp/std.setprecision (cpp/int precision)))
-         (cpp/<< (cpp/double (double v)))
-         (cpp/<< #cpp " ")
-         (cpp/<< (cpp/cast cpp/std.string unit)))
-       (.str)))))
+      (format "{} bytes")
+      (format "{:.{}f} {}" v precision unit))))
 
 (defn format-duration
   "Format a duration given in floating point seconds as a human-readable string
   with reasonable units."
   [s & {:keys [precision pad] :or {precision 3 pad true}}]
-  ;; TODO: Use clojure.core/format once it's ready...
   (let [[v unit] (cond
                    (< s 1e-6) [(* 1e9 s) "ns"]
                    (< s 1e-3) [(* 1e6 s) "µs"]
@@ -39,15 +31,7 @@
                    :else      [s "s"])
         ;; max 3 digits + dot + `precision` digits
         width    (if pad (+ 3 1 precision) 0)]
-    (->
-     (doto (cpp/std.ostringstream)
-       (cpp/<< (cpp/std.setw width))
-       (cpp/<< cpp/std.fixed)
-       (cpp/<< (cpp/std.setprecision (cpp/int precision)))
-       (cpp/<< (cpp/double (double v)))
-       (cpp/<< #cpp " ")
-       (cpp/<< (cpp/cast cpp/std.string unit)))
-     (.str))))
+    (format "{:>{}.{}f} {}" v width precision unit)))
 
 (def color-map
   {:none       ""
@@ -98,13 +82,12 @@
                          :else              bar-char)))))
       (println))
     (when legend?
-      ;; TODO: Use clojure.core/format once it's ready...
       (print " ")
       (let [min-str    (format-duration (:min hist) {:pad false})
             max-str    (format-duration (:max hist) {:pad false})
-            half-width (cpp/int (/ nbins 2))]
-        (cpp/printf #cpp "%-*s" half-width (.c_str (cpp/cast cpp/std.string min-str)))
-        (cpp/printf #cpp "%*s" half-width (.c_str (cpp/cast cpp/std.string max-str))))
+            half-width (/ nbins 2)]
+        (print (format "{:<{}}" min-str half-width))
+        (print (format "{:>{}}" max-str half-width)))
       (println))))
 
 (defn print-timing [report]
