@@ -1,9 +1,6 @@
-(ns jank.cpp.def.pass-mutate-cpp-def)
+(cpp/def (std.vector int) pmcd-my-vec [1 2])
 
-(cpp/def (std.vector int) my-vec [1 2])
+(.emplace_back pmcd-my-vec (cpp/int 5))
 
-(.emplace_back my-vec (cpp/int 5))
-
-(if (= my-vec [1 2 5])
-    :success
-    (throw :failure))
+(if (= pmcd-my-vec [1 2 5])
+    :success)

@@ -1,6 +1,4 @@
-(ns jank.cpp.def.fail-clash-with-other-cpp-def)
-
-(cpp/def int foo 5)
-(cpp/def std.string foo "my-string")
+(cpp/def int fcwocd-foo 5)
+(cpp/def std.string fcwocd-foo "my-string")
 
 :success

@@ -1,4 +1,2 @@
-(ns jank.cpp.def.fail-type-mismatch)
-
-(cpp/def int foo "bar")
+(cpp/def int ftm-foo "bar")
 :success
