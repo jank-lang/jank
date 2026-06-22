@@ -2706,7 +2706,7 @@ namespace jank::analyze
 
     /* If we have a typed object on one side, and anything other than that same typed object
      * on the other side, we need to type-erase to find the common type. */
-    auto if_type{ then_expr.expect_ok()->get_type() };
+    auto if_type{ then_type };
     if(cpp_util::is_typed_object(if_type)
        && Cpp::GetCanonicalType(if_type) != Cpp::GetCanonicalType(else_type))
     {
