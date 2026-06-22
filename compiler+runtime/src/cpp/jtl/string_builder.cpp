@@ -159,6 +159,12 @@ namespace jtl
 
       std::memcpy(buffer + pos, tmp, required);
       pos += required;
+
+      jtl::immutable_string_view const view(tmp, required);
+      if(!(view.contains('.') || view.contains('e')))
+      {
+        (*this)(".0");
+      }
     }
 
     return *this;
