@@ -231,13 +231,22 @@ namespace jank::runtime
 
   jtl::immutable_string format(jtl::immutable_string const &format, object_ref const args)
   {
-    auto args_seq = make_sequence_range(args);
-    auto args_it = args_seq.begin();
+    enum class indexing_mode : u8
+    {
+      unspecified,
+      automatic,
+      manual
+    };
+
+    auto args_vec = vec(args);
 
     jtl::string_builder out;
     jtl::string_builder fmt;
-    int depth{ 0 };
-    int nargs{ 0 };
+    i64 depth{};
+
+    indexing_mode mode{ indexing_mode::unspecified };
+    std::deque<u64> arg_indices{};
+    i64 auto_idx{};
 
     for(auto it = format.begin(); it != format.end(); ++it)
     {
@@ -254,11 +263,47 @@ namespace jank::runtime
       if(*it == '{')
       {
         ++depth;
-        ++nargs;
 
         if(std::isdigit(peek))
         {
-          throw std::runtime_error("format positional specifiers not supported");
+          // manual indexing
+          switch(mode)
+          {
+            case indexing_mode::unspecified:
+              mode = indexing_mode::manual;
+              break;
+            case indexing_mode::automatic:
+              throw std::format_error("cannot mix automatic and manual indexing");
+            case indexing_mode::manual:
+              break;
+          }
+
+          auto start = std::next(it);
+          auto end = std::find_if(start, format.end(), [](auto c) { return !std::isdigit(c); });
+
+          jtl::i64 idx{};
+          std::from_chars(start, end, idx);
+
+          fmt(*it);
+          std::advance(it, std::distance(it, end));
+
+          arg_indices.push_back(idx);
+        }
+        else
+        {
+          // automatic indexing
+          switch(mode)
+          {
+            case indexing_mode::unspecified:
+              mode = indexing_mode::automatic;
+              break;
+            case indexing_mode::automatic:
+              break;
+            case indexing_mode::manual:
+              throw std::format_error("cannot mix automatic and manual indexing");
+          }
+
+          arg_indices.push_back(auto_idx++);
         }
       }
 
@@ -280,10 +325,21 @@ namespace jank::runtime
         // end of a format specification, process it
         if(depth == 0)
         {
+          auto nargs{ arg_indices.size() };
+          auto next_arg = [&]() -> jank::runtime::object_ref {
+            auto idx{ arg_indices.front() };
+            arg_indices.pop_front();
+
+            if(idx >= args_vec->count())
+            {
+              throw std::format_error("invalid manual index");
+            }
+            return args_vec->nth(make_box(idx));
+          };
+
           // depending on the number of embedded replacement fields we
           // encountered, pop the right number of values off the argument stack.
-          auto v1{ *args_it };
-          ++args_it;
+          auto v1{ next_arg() };
 
           // only width and precision support nested field replacement, so we
           // only need to support up to 1 value + 2 nested arguments (always
@@ -294,40 +350,33 @@ namespace jank::runtime
           }
           else if(nargs == 2)
           {
-            auto v2{ (*args_it).to_integer() };
-            ++args_it;
-
+            auto v2{ next_arg().to_integer() };
             vformat_object_to(std::back_inserter(out), fmt.view(), v1, v2);
           }
           else if(nargs == 3)
           {
-            auto v2{ (*args_it).to_integer() };
-            ++args_it;
-            auto v3{ (*args_it).to_integer() };
-            ++args_it;
-
+            auto v2{ next_arg().to_integer() };
+            auto v3{ next_arg().to_integer() };
             vformat_object_to(std::back_inserter(out), fmt.view(), v1, v2, v3);
           }
           else
           {
-            throw std::runtime_error("too many variable format specifiers");
+            throw std::format_error("too many variable format specifiers");
           }
 
           // reset for the next format specification
-          nargs = 0;
           fmt.clear();
+          if(!arg_indices.empty())
+          {
+            throw std::format_error("leftover format arguments");
+          }
         }
       }
     }
 
     if(depth != 0)
     {
-      throw std::runtime_error("unclosed brace in format string");
-    }
-
-    if(args_it != args_seq.end())
-    {
-      throw std::runtime_error("leftover format arguments");
+      throw std::format_error("unclosed brace in format string");
     }
 
     return out.release();
