@@ -170,7 +170,9 @@ namespace jank::codegen
         }
         else if(runtime::detail::is_tagged_small_real(ptr))
         {
-          fmt_str = util::format("{}{ {} }", get_qualified_type_name(type), o.to_string());
+          fmt_str = util::format("{}{ {} }",
+                                 get_qualified_type_name(type),
+                                 runtime::detail::as_real(ptr));
         }
       }
       else
