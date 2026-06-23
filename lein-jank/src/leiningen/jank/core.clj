@@ -16,13 +16,6 @@
 
 (defn build-declarative-flag [flag value]
   (case flag
-    ;; When a user specifies an :output-dir in the project.clj, this is the
-    ;; output for all artifacts. All dependency sources and builds will go into
-    ;; subdirectories in :output-dir.
-    ;;
-    ;; To prevent jank from placing artifacts for _this_ project in the
-    ;; top-level output-dir and potentially trampling files from dependencies,
-    ;; we pass it an output directory suffixed by the project name.
     :target-dir
     ["--target-dir" value]
 
@@ -30,6 +23,9 @@
     (do
       (lmain/warn ":output-dir is deprecated. Please rename the key in project.clj to :target-dir.")
       ["--target-dir" value])
+
+    :build-dir
+    ["--build-dir" value]
 
     :name
     ["--name" value]

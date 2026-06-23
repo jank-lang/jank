@@ -19,7 +19,7 @@
   {:target-dir         "target"
    :optimization-level 2
    :static-build       true
-   :verbose-build      true})
+   :verbose-build      false})
 
 (defn merge-native-flags
   ([] {})

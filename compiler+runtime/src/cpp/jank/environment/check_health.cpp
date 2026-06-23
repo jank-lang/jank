@@ -353,6 +353,7 @@ namespace jank::environment
       util::cli::opts.target_module = "health";
       util::cli::opts.output_target = util::cli::compilation_target::object;
       util::cli::opts.target_dir = path_tmp;
+      util::cli::opts.build_dir = util::format("{}/_cache", path_tmp);
       util::cli::opts.output_filename = exe;
       util::cli::opts.module_path = path_tmp;
       util::scope_exit const finally{ /* NOLINTNEXTLINE(bugprone-exception-escape) */

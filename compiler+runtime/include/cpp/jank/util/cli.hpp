@@ -144,6 +144,7 @@ namespace jank::util::cli
     jtl::immutable_string target_module;
     jtl::immutable_string output_filename{ "a.out" };
     jtl::immutable_string target_dir{ "target" };
+    jtl::immutable_string build_dir;
 
     /* Compile-module command. */
     jtl::immutable_string output_module_filename;

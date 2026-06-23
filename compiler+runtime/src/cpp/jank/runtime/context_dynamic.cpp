@@ -243,8 +243,8 @@ namespace jank::runtime
   context::get_output_module_name(jtl::immutable_string const &module_name) const
   {
     return util::cli::opts.output_module_filename.empty()
-      ? util::format("{}/_cache/{}.{}",
-                     util::cli::opts.target_dir,
+      ? util::format("{}/{}.{}",
+                     util::cli::opts.build_dir,
                      module::module_to_path(module_name),
                      util::cli::compilation_target_extension(util::cli::opts.output_target))
       : jtl::immutable_string{ util::cli::opts.output_module_filename };

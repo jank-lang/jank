@@ -134,17 +134,19 @@ OPTIONS
                               all functionality and does not link to Clang/LLVM for easier
                               distribution.
           --target-dir <path> [default: target]
-                              The prefix to use for object files.
+                              The directory to use for storing final artifacts.
+          --build-dir <path> [default: <target dir>/_cache]
+                              The prefix to use for intermediate build files.
           --name <name> [default: a.out]
-                              The name of the output file, in the output directory.
-          --output-target <cpp, llvm-ir, object> [default: object]
+                              The name of the output file, in the target directory.
+          --output-target <cpp, object> [default: object]
                               The target of each compiled module artifact.
   -I,     --include-dir <path>
                               Absolute or relative path to the directory for includes
                               resolution. Can be specified multiple times.
   -D,     --define-macro <name>
                               Defines a macro. The value will be 1, if omitted. Can be specified
-                              multiple times.
+                              multiple times. (example: -DFOO -DBAR=meow)
   -L,     --library-dir <path>
                               Absolute or relative path to the directory to search dynamic
                               libraries in. Can be specified multiple times.
@@ -159,6 +161,8 @@ OPTIONS
     /* TODO: Enum for these. */
     jtl::option<u8> runtime_optimization_level;
     jtl::option<u8> codegen_optimization_level;
+
+    jtl::option<jtl::immutable_string> build_dir;
 
     /* Optimization passes. */
     /*** O1 ***/
@@ -188,6 +192,8 @@ OPTIONS
     opts.runtime_optimization_level = scratch.runtime_optimization_level.unwrap_or(0);
     opts.codegen_optimization_level = scratch.codegen_optimization_level.unwrap_or(0);
     opts.direct_call = scratch.direct_call.unwrap_or(false);
+
+    opts.build_dir = scratch.build_dir.unwrap_or(util::format("{}/_cache", opts.target_dir));
 
     /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */
     switch(opts.codegen_optimization_level)
@@ -366,6 +372,10 @@ OPTIONS
         else if(check_flag(it, end, value, "--target-dir", true))
         {
           opts.target_dir = value;
+        }
+        else if(check_flag(it, end, value, "--build-dir", true))
+        {
+          scratch.build_dir = value;
         }
 
         /**** These are command-specific flags which we will store until we know the command. ****/
