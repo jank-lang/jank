@@ -66,24 +66,20 @@
       (string? match)
       (cpp/clojure.string_native.replace
        s
-       (cpp/jank.runtime.to_string match)
-       (cpp/jank.runtime.to_string replacement))
+       (.to_string match)
+       (.to_string replacement))
 
-      (cpp/== cpp/jank.runtime.object_type.re_pattern (.get_type match))
-      (if (string? replacement)
-        (cpp/clojure.string_native.replace
-         s
-         (cpp/jank.runtime.re_pattern match)
-         (cpp/jank.runtime.to_string replacement))
-        (cpp/clojure.string_native.replace
-         s
-         (cpp/jank.runtime.re_pattern match)
-         replacement))
-      #_#_(instance? Pattern match)
-        (if (instance? CharSequence replacement)
-          (.replaceAll (re-matcher match s)
-                       (.toString replacement))
-          (replace-by s match replacement))
+      ;; TODO: Add regex support to replace
+      ;; (cpp/== cpp/jank.runtime.object_type.re_pattern (.get_type match))
+      ;; (if (string? replacement)
+      ;;   (cpp/clojure.string_native.replace
+      ;;    s
+      ;;    (cpp/jank.runtime.re_pattern match)
+      ;;    (.to_string replacement))
+      ;;   (cpp/clojure.string_native.replace
+      ;;    s
+      ;;    (cpp/jank.runtime.re_pattern match)
+      ;;    replacement))
       :else (throw (str "Invalid match arg: " match)))))
 
 ;(defn- replace-first-by

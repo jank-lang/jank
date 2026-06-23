@@ -225,24 +225,19 @@ namespace clojure::string_native
     return replace(s, match->data, replacement->data);
   }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
-
-  jtl::immutable_string replace(jtl::immutable_string const &s,
-                                obj::re_pattern_ref const match,
-                                jtl::immutable_string const &replacement)
+  // TODO: Add regex support to replace
+  jtl::immutable_string
+  replace(jtl::immutable_string const &, obj::re_pattern_ref const, jtl::immutable_string const &)
   {
     return {};
   }
 
-  jtl::immutable_string replace(jtl::immutable_string const &s,
-                                obj::re_pattern_ref const match,
-                                object_ref const replacement)
+  // TODO: Add regex support to replace
+  jtl::immutable_string
+  replace(jtl::immutable_string const &, obj::re_pattern_ref const, object_ref const)
   {
     return {};
   }
-
-#pragma clang diagnostic pop
 
   i64 index_of(jtl::immutable_string const &s,
                jtl::immutable_string const &value,
