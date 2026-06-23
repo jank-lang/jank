@@ -243,8 +243,8 @@ namespace jank::runtime
   context::get_output_module_name(jtl::immutable_string const &module_name) const
   {
     return util::cli::opts.output_module_filename.empty()
-      ? util::format("{}/{}.{}",
-                     util::cli::opts.output_dir,
+      ? util::format("{}/_cache/{}.{}",
+                     util::cli::opts.target_dir,
                      module::module_to_path(module_name),
                      util::cli::compilation_target_extension(util::cli::opts.output_target))
       : jtl::immutable_string{ util::cli::opts.output_module_filename };
@@ -297,6 +297,25 @@ namespace jank::runtime
             return err(target_error);
           }
           llvm::TargetOptions const opt;
+          llvm::CodeGenOptLevel level{ llvm::CodeGenOptLevel::Default };
+          switch(util::cli::opts.codegen_optimization_level)
+          {
+            case 0:
+              level = llvm::CodeGenOptLevel::None;
+              break;
+            case 1:
+              level = llvm::CodeGenOptLevel::Less;
+              break;
+            case 2:
+              level = llvm::CodeGenOptLevel::Default;
+              break;
+            case 3:
+              level = llvm::CodeGenOptLevel::Aggressive;
+              break;
+            default:
+              break;
+          }
+
           auto const target_machine{ target->createTargetMachine(
             llvm::Triple{ target_triple.c_str() },
             "generic",
@@ -304,7 +323,7 @@ namespace jank::runtime
             opt,
             llvm::Reloc::PIC_,
             llvm::CodeModel::Large,
-            llvm::CodeGenOptLevel::Default) };
+            level) };
           if(!target_machine)
           {
             return err(util::format("Failed to create target machine for '{}'.", target_triple));

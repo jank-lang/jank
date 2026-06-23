@@ -133,9 +133,9 @@ OPTIONS
                               The AOT runtime to target. The static runtime bakes in
                               all functionality and does not link to Clang/LLVM for easier
                               distribution.
-          --output-dir <path> [default: target]
+          --target-dir <path> [default: target]
                               The prefix to use for object files.
-          --output-name <name> [default: a.out]
+          --name <name> [default: a.out]
                               The name of the output file, in the output directory.
           --output-target <cpp, llvm-ir, object> [default: object]
                               The target of each compiled module artifact.
@@ -363,19 +363,15 @@ OPTIONS
         {
           opts.libs.emplace_back(value);
         }
-        else if(check_flag(it, end, value, "--output-dir", true))
+        else if(check_flag(it, end, value, "--target-dir", true))
         {
-          opts.output_dir = value;
+          opts.target_dir = value;
         }
 
         /**** These are command-specific flags which we will store until we know the command. ****/
-        else if(check_flag(it, end, value, "--output-name", true))
+        else if(check_flag(it, end, value, "--name", true))
         {
-          pending_flags["--output-name"] = value;
-        }
-        else if(check_flag(it, end, value, "--output-dir", true))
-        {
-          pending_flags["--output-dir"] = value;
+          pending_flags["--name"] = value;
         }
         else if(check_flag(it, end, value, "--output-target", true))
         {
@@ -425,12 +421,11 @@ OPTIONS
       else if(command == "compile-module" || command == "compile")
       {
         opts.target_module = get_positional_arg(command, "module", pending_positional_args);
-        if(check_pending_flag("--output-name", value, pending_flags))
+        if(check_pending_flag("--name", value, pending_flags))
         {
           if(value.contains('/'))
           {
-            throw util::format(
-              "The argument to --output-name must be a file name, not a directory.");
+            throw util::format("The argument to --name must be a file name, not a directory.");
           }
 
           if(command == "compile-module")

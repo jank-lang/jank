@@ -24,7 +24,7 @@ namespace jank::aot
 
   static jtl::immutable_string relative_to_cache_dir(jtl::immutable_string const &file_path)
   {
-    return util::format("{}/{}", util::cli::opts.output_dir, file_path);
+    return util::format("{}/_cache/{}", util::cli::opts.target_dir, file_path);
   }
 
   // TODO: Generate an object file instead of a cpp
@@ -405,7 +405,7 @@ int main(int argc, const char** argv)
 
     compiler_args.push_back(strdup("-o"));
     compiler_args.push_back(strdup(
-      util::format("{}/{}", util::cli::opts.output_dir, util::cli::opts.output_filename).c_str()));
+      util::format("{}/{}", util::cli::opts.target_dir, util::cli::opts.output_filename).c_str()));
 
     //util::println("compilation command: {} ", compiler_args);
 
@@ -432,7 +432,7 @@ int main(int argc, const char** argv)
     /* TODO: Use runtime::context::get_output_module_name. */
     std::filesystem::path const module_path{
       util::cli::opts.output_module_filename.empty()
-        ? util::format("{}/{}.o", util::cli::opts.output_dir, module::module_to_path(module_name))
+        ? util::format("{}/{}.o", util::cli::opts.target_dir, module::module_to_path(module_name))
             .c_str()
         : jtl::immutable_string{ util::cli::opts.output_module_filename }.c_str()
     };

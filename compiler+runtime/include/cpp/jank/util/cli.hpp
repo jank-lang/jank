@@ -143,8 +143,7 @@ namespace jank::util::cli
     /* Compile command. */
     jtl::immutable_string target_module;
     jtl::immutable_string output_filename{ "a.out" };
-    /* TODO: Add automatic cleaning when hash changes. */
-    jtl::immutable_string output_dir{ "target" };
+    jtl::immutable_string target_dir{ "target" };
 
     /* Compile-module command. */
     jtl::immutable_string output_module_filename;

@@ -122,7 +122,7 @@ namespace jank::runtime::module
 
   static jtl::immutable_string binary_version_path()
   {
-    auto const path{ util::format("{}/.jank-binary-version", util::cli::opts.output_dir) };
+    auto const path{ util::format("{}/.jank-binary-version", util::cli::opts.target_dir) };
     return path;
   }
 
@@ -138,7 +138,7 @@ namespace jank::runtime::module
 
   static binary_version_status check_binary_version_status()
   {
-    if(!std::filesystem::exists(util::cli::opts.output_dir.c_str()))
+    if(!std::filesystem::exists(util::cli::opts.target_dir.c_str()))
     {
       return binary_version_status::needs_write;
     }
@@ -164,7 +164,7 @@ namespace jank::runtime::module
 
   static void write_binary_version()
   {
-    std::filesystem::create_directories(util::cli::opts.output_dir.c_str());
+    std::filesystem::create_directories(util::cli::opts.target_dir.c_str());
 
     auto const &binary_version{ util::binary_version() };
     auto const &path{ binary_version_path() };
@@ -174,7 +174,7 @@ namespace jank::runtime::module
 
   static void clean_output_directory()
   {
-    std::filesystem::remove_all(util::cli::opts.output_dir.c_str());
+    std::filesystem::remove_all(util::cli::opts.target_dir.c_str());
     write_binary_version();
   }
 
@@ -468,11 +468,11 @@ namespace jank::runtime::module
   {
     std::filesystem::path const jank_path{ jank::util::process_dir().c_str() };
     std::filesystem::path const resource_dir{ jank::util::resource_dir().c_str() };
-    auto const binary_cache_dir{ util::cli::opts.output_dir };
+    std::filesystem::path const binary_cache_dir{ util::cli::opts.target_dir.c_str() };
     native_transient_string paths{ util::cli::opts.module_path };
 
     /* These paths are used by an installed jank. */
-    paths += util::format("{}{}", module_separator, binary_cache_dir);
+    paths += util::format("{}{}", module_separator, (binary_cache_dir / "_cache").string());
     paths += util::format("{}{}", module_separator, (resource_dir / "src/jank").string());
 
     /* These paths below are only used during development. */
