@@ -476,7 +476,7 @@ namespace jank::runtime::module
     paths += util::format("{}{}", module_separator, (resource_dir / "src/jank").string());
 
     /* These paths below are only used during development. */
-    paths += util::format("{}{}", module_separator, (jank_path / "core-libs").string());
+    paths += util::format("{}{}", module_separator, (jank_path / "core-libs/_cache").string());
     paths
       += util::format("{}{}", module_separator, (jank_path / binary_cache_dir.c_str()).string());
     paths += util::format("{}{}", module_separator, (jank_path / "../src/jank").string());
