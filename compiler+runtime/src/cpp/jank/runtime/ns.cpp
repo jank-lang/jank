@@ -119,7 +119,8 @@ namespace jank::runtime
   {
     if(!sym->ns.empty())
     {
-      return __rt_ctx->find_var(sym);
+      auto const qualified_sym(__rt_ctx->qualify_symbol(sym));
+      return __rt_ctx->find_var(qualified_sym);
     }
 
     auto const locked_vars(vars.rlock());

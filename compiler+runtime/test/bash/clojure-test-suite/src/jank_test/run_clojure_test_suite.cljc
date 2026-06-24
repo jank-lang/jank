@@ -16,7 +16,7 @@
     ; clojure.core-test.atom ; libc++abi: terminating due to uncaught exception of type jank::runtime::invalid_arity<3ull>: invalid call to #object [unknown jit_function 0x1041da080] with 3 args provided
     clojure.core-test.bigdec
     ; clojure.core-test.bigint ; FIXME: Failing tests.
-    ; clojure.core-test.binding ; TODO: port future
+    clojure.core-test.binding
     clojure.core-test.bit-and
     clojure.core-test.bit-and-not
     clojure.core-test.bit-clear
@@ -30,12 +30,12 @@
     clojure.core-test.bit-xor
     clojure.core-test.boolean
     clojure.core-test.boolean-qmark
-    ; clojure.core-test.bound-fn ; TODO: port future
-    ; clojure.core-test.bound-fn-star ; TODO: port future
+    clojure.core-test.bound-fn
+    clojure.core-test.bound-fn-star
     clojure.core-test.butlast
     ; clojure.core-test.byte ; TODO: port byte, Expecting whitespace after the last token. due to M.
     ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
-    clojure.core-test.char
+    ; clojure.core-test.char
     clojure.core-test.char-qmark
     ; clojure.core-test.coll-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.comment
@@ -160,7 +160,7 @@
     clojure.core-test.rand-int
     clojure.core-test.rand-nth
     clojure.core-test.random-sample
-    ; clojure.core-test.random-uuid ; FIXME: Failing test.
+    clojure.core-test.random-uuid
     ; clojure.core-test.ratio-qmark ; FIXME: Failing test.
     ; clojure.core-test.rational-qmark ; FIXME: Failing test.
     ; clojure.core-test.rationalize ; TODO: port rationalize
@@ -206,7 +206,7 @@
     clojure.core-test.take-last
     ; clojure.core-test.take-nth ; FIXME: Failing tests.
     clojure.core-test.take-while
-    ; clojure.core-test.taps ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.IPending'.
+    clojure.core-test.taps
     ; clojure.core-test.transient ; analyze/macro-expansion-exception error: invalid call to #object [unknown jit_function 0x104434c80] with 3 args provided
     clojure.core-test.true-qmark
     clojure.core-test.underive
@@ -227,6 +227,15 @@
     ; clojure.core-test.with-precision ; TODO: port with-precision, INFO: SKIP - defprotocol
     clojure.core-test.zero-qmark
     clojure.core-test.zipmap
+
+    ; clojure.string-test.blank-qmark ; error: String contains invalid escape sequence '\u'.
+    ; clojure.string-test.capitalize  ; Uncaught exception: wstring_convert::from_bytes
+    clojure.string-test.ends-with-qmark
+    ; clojure.string-test.escape ; Uncaught exception: Can't convert character to integer.
+    clojure.string-test.lower-case
+    ; clojure.string-test.reverse ; issues with unicode
+    clojure.string-test.starts-with-qmark
+    clojure.string-test.upper-case
   ])
 
 (def windows? (= cpp/jtl.current_platform cpp/jtl.platform.windows_like))

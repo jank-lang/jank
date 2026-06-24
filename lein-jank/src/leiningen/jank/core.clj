@@ -14,17 +14,21 @@
        lcp/get-classpath
        (string/join File/pathSeparatorChar)))
 
-(defn build-declarative-flag [project-name flag value]
+(defn build-declarative-flag [flag value]
   (case flag
-    ;; When a user specifies an :output-dir in the project.clj, this is the
-    ;; output for all artifacts. All dependency sources and builds will go into
-    ;; subdirectories in :output-dir.
-    ;;
-    ;; To prevent jank from placing artifacts for _this_ project in the
-    ;; top-level output-dir and potentially trampling files from dependencies,
-    ;; we pass it an output directory suffixed by the project name.
+    :target-dir
+    ["--target-dir" value]
+
     :output-dir
-    ["--output-dir" (fs/path value project-name)]
+    (do
+      (lmain/warn ":output-dir is deprecated. Please rename the key in project.clj to :target-dir.")
+      ["--target-dir" value])
+
+    :build-dir
+    ["--build-dir" value]
+
+    :name
+    ["--name" value]
 
     ; TODO: Refactor into :optimizations #{:direct-call}
     :direct-call
@@ -54,13 +58,22 @@
 
 (defn build-declarative-flags [project]
   (flatten (map (fn [[flag value]]
-                  (build-declarative-flag (:name project) flag value))
+                  (build-declarative-flag flag value))
                 (:jank project))))
 
 (defn shell-out! [project classpath command compiler-args runtime-args]
   (let [jank (fs/which "jank")
         env (System/getenv)
         args (concat [jank command "--module-path" classpath]
+                     ; The normal build dir would be <target dir>/_cache, but we want
+                     ; to nest one level deeper, so that files from this project don't
+                     ; interfere with files from the dependencies. So we specify our
+                     ; own build dir to be <target dir>/_cache/<project name>. However,
+                     ; we do this before processing the args, so that it can still
+                     ; be overridden from the project.
+                     ["--build-dir" (str (get-in project [:jank :target-dir] "target")
+                                         "/_cache/"
+                                         (:name project))]
                      (build-declarative-flags project)
                      compiler-args
                      ["--"]

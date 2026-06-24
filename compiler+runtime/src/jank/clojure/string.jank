@@ -139,17 +139,23 @@
 (defn upper-case
   "Converts string to all upper-case."
   [s]
-  (cpp/clojure.string_native.upper_case s))
+  (when (nil? s)
+    (throw "upper-case does not support nil"))
+  (cpp/clojure.string_native.upper_case (.to_string s)))
 
 (defn lower-case
   "Converts string to all lower-case."
   [s]
-  (cpp/clojure.string_native.lower_case s))
+  (when (nil? s)
+    (throw "lower-case does not support nil"))
+  (cpp/clojure.string_native.lower_case (.to_string s)))
 
 (defn capitalize
   "Converts first character of the string to upper-case, all other
   characters to lower-case."
   [s]
+  (when (nil? s)
+    (throw "capitalize does not support nil"))
   (let [s (str s)]
     (if (< (count s) 2)
       (upper-case s)
@@ -221,8 +227,8 @@
    (index-of s value 0))
   ([s value from-index]
    (let [result (if (char? value)
-                  (cpp/clojure.string_native.index_of s (str value) from-index)
-                  (cpp/clojure.string_native.index_of s value from-index))]
+                  (cpp/clojure.string_native.index_of (.to_string s) (str value) from-index)
+                  (cpp/clojure.string_native.index_of (.to_string s) value from-index))]
      (if (= result -1)
        nil
        result))))
@@ -234,8 +240,8 @@
    (last-index-of s value (count s)))
   ([s value from-index]
    (let [result (if (char? value)
-                  (cpp/clojure.string_native.last_index_of s (str value) from-index)
-                  (cpp/clojure.string_native.last_index_of s value from-index))]
+                  (cpp/clojure.string_native.last_index_of (.to_string s) (.to_string value) from-index)
+                  (cpp/clojure.string_native.last_index_of (.to_string s) value from-index))]
      (if (= result -1)
        nil
        result))))
@@ -243,14 +249,18 @@
 (defn starts-with?
   "True if s starts with substr."
   [s substr]
-  (cpp/clojure.string_native.starts_with s substr))
+  (when (nil? s)
+    (throw "starts-with? does not support nil"))
+  (cpp/clojure.string_native.starts_with (.to_string s) substr))
 
 (defn ends-with?
   "True if s ends with substr."
   [s substr]
-  (cpp/clojure.string_native.ends_with s substr))
+  (when (nil? s)
+    (throw "ends-with? does not support nil"))
+  (cpp/clojure.string_native.ends_with (.to_string s) substr))
 
 (defn includes?
   "True if s includes substr."
   [s substr]
-  (cpp/clojure.string_native.includes s substr))
+  (cpp/clojure.string_native.includes (.to_string s) substr))

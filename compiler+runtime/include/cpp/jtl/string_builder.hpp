@@ -84,6 +84,7 @@ namespace jtl
     void push_back(std::string const &d) &;
     void push_back(jtl::immutable_string const &d) &;
 
+    void clear();
     void reserve(usize capacity);
     value_type *data() const;
     usize size() const;

@@ -2704,10 +2704,20 @@ namespace jank::analyze
                         .expect_ok();
     }
 
+    /* If we have a typed object on one side, and anything other than that same typed object
+     * on the other side, we need to type-erase to find the common type. */
+    auto if_type{ then_expr.expect_ok()->get_type() };
+    if(cpp_util::is_typed_object(if_type) && is_else_object
+       && Cpp::GetCanonicalType(if_type) != Cpp::GetCanonicalType(else_type))
+    {
+      if_type = cpp_util::untyped_object_ref_type();
+    }
+
     return jtl::make_ref<expr::if_>(position,
                                     current_frame,
                                     needs_box,
                                     o,
+                                    if_type,
                                     condition_expr.expect_ok(),
                                     then_expr.expect_ok(),
                                     else_expr_opt);

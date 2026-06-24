@@ -1,4 +1,4 @@
-(defproject org.jank-lang/test-grandchild "0.1.0"
+(defproject org.jank-lang/test-grandchild2 "0.1.0"
   :description "FIXME: write description"
   :url "https://example.com/FIXME"
   :license {:name "MPL 2.0"

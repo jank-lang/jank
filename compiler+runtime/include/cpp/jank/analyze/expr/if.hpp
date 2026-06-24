@@ -16,6 +16,7 @@ namespace jank::analyze::expr
         local_frame_ptr frame,
         bool needs_box,
         runtime::object_ref form,
+        jtl::ptr<void> const type,
         expression_ref condition,
         expression_ref then,
         jtl::option<expression_ref> const &else_);
@@ -25,6 +26,7 @@ namespace jank::analyze::expr
     void walk(std::function<void(jtl::ref<expression>)> const &f) override;
     jtl::ptr<void> get_type() const override;
 
+    jtl::ptr<void> type;
     /* TODO: Rename to have _expr suffixes. */
     expression_ref condition;
     /* The then/else exprs are expected to have the same type. We handle this during analysis. */

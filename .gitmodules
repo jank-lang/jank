@@ -40,3 +40,6 @@
 [submodule "example/cli/imgui+glfw/lib/imgui-sys/lib/imgui"]
 	path = example/cli/imgui+glfw/lib/imgui-sys/lib/imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "compiler+runtime/third-party/json"]
+	path = compiler+runtime/third-party/json
+	url = https://github.com/jank-lang/json

@@ -179,34 +179,34 @@ set(
   "${CMAKE_SOURCE_DIR}/src/jank/jank/nrepl/server/handler/lookup.jank"
 )
 
-set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.o")
+set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/_cache/clojure/core.o")
 set(jank_clojure_core_binary_output "${jank_clojure_core_output}")
 set(
   jank_nrepl_server_outputs
-  "${CMAKE_BINARY_DIR}/core-libs/clojure/string.o"
-  "${CMAKE_BINARY_DIR}/core-libs/clojure/walk.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/clojure/string.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/clojure/walk.o"
 
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/inspect.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/core.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/bencode.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/capture.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/util.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/eval.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/parsec.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/close.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/clone.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/describe.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/completions.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/eval.o"
-  "${CMAKE_BINARY_DIR}/core-libs/jank/nrepl/server/handler/lookup.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/inspect.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/core.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/handler.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/bencode.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/capture.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/util.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/eval.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/parsec.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/handler/close.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/handler/clone.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/handler/describe.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/handler/completions.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/handler/eval.o"
+  "${CMAKE_BINARY_DIR}/core-libs/_cache/jank/nrepl/server/handler/lookup.o"
 )
 
 list(JOIN jank_nrepl_server_outputs " " jank_nrepl_server_outputs_str)
 if(jank_enable_phase_2)
   set(jank_core_lib_output_target --output-target cpp)
-  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/clojure/core.cpp")
-  set(jank_clojure_core_binary_output "${CMAKE_BINARY_DIR}/CMakeFiles/jank_exe_phase_2.dir/core-libs/clojure/core.cpp${CMAKE_CXX_OUTPUT_EXTENSION}")
+  set(jank_clojure_core_output "${CMAKE_BINARY_DIR}/core-libs/_cache/clojure/core.cpp")
+  set(jank_clojure_core_binary_output "${CMAKE_BINARY_DIR}/CMakeFiles/jank_exe_phase_2.dir/core-libs/_cache/clojure/core.cpp${CMAKE_CXX_OUTPUT_EXTENSION}")
 
   list(
     TRANSFORM jank_nrepl_server_outputs
@@ -626,6 +626,7 @@ add_library(
   # Native module sources.
   src/cpp/clojure/core_native.cpp
   src/cpp/clojure/string_native.cpp
+  src/cpp/clojure/data/json_native.cpp
 )
 set_target_properties(jank_common_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
 
@@ -656,6 +657,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-multiprecision/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-process/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/json/include>"
   ${OPENSSL_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
 )
@@ -1078,9 +1080,9 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_clojure_core_sources} ${jank_other_core_sources} ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output} ${jank_nrepl_server_outputs}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} clojure.core
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --output-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(

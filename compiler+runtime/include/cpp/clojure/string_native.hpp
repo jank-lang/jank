@@ -1,30 +1,43 @@
 #pragma once
 
+#include <jtl/immutable_string.hpp>
+
 #include <jank/runtime/object.hpp>
+
+namespace jank::runtime::obj
+{
+  using persistent_vector_ref = oref<struct persistent_vector>;
+  using re_pattern_ref = oref<struct re_pattern>;
+}
 
 namespace clojure::string_native
 {
   using namespace jank;
   using namespace jank::runtime;
 
-  object_ref blank(object_ref const s);
-  object_ref reverse(object_ref const s);
-  object_ref lower_case(object_ref const s);
-  object_ref starts_with(object_ref const s, object_ref const substr);
-  object_ref ends_with(object_ref const s, object_ref const substr);
-  object_ref includes(object_ref const s, object_ref const substr);
-  object_ref upper_case(object_ref const s);
+  bool blank(object_ref const s);
+  jtl::immutable_string reverse(jtl::immutable_string const &s);
+  jtl::immutable_string lower_case(jtl::immutable_string const &s);
+  bool starts_with(jtl::immutable_string const &s, jtl::immutable_string const &substr);
+  bool ends_with(jtl::immutable_string const &s, jtl::immutable_string const &substr);
+  bool includes(jtl::immutable_string const &s, jtl::immutable_string const &substr);
+  jtl::immutable_string upper_case(jtl::immutable_string const &s);
   object_ref
   replace_first(object_ref const s, object_ref const match, object_ref const replacement);
 
-  i64 index_of(object_ref const s, object_ref const value, object_ref const from_index);
-  i64 last_index_of(object_ref const s, object_ref const value, object_ref const from_index);
+  i64 index_of(jtl::immutable_string const &s,
+               jtl::immutable_string const &value,
+               i64 const from_index);
+  i64 last_index_of(jtl::immutable_string const &s,
+                    jtl::immutable_string const &value,
+                    i64 const from_index);
 
-  object_ref triml(object_ref const s);
-  object_ref trimr(object_ref const s);
-  object_ref trim(object_ref const s);
-  object_ref trim_newline(object_ref const s);
+  jtl::immutable_string triml(jtl::immutable_string const &s);
+  jtl::immutable_string trimr(jtl::immutable_string const &s);
+  jtl::immutable_string trim(jtl::immutable_string const &s);
+  jtl::immutable_string trim_newline(jtl::immutable_string const &s);
 
-  object_ref split(object_ref const s, object_ref const re);
-  object_ref split(object_ref const s, object_ref const re, object_ref const limit);
+  obj::persistent_vector_ref split(jtl::immutable_string const &s, obj::re_pattern_ref const re);
+  obj::persistent_vector_ref
+  split(jtl::immutable_string const &s, obj::re_pattern_ref const re, i64 const limit);
 }

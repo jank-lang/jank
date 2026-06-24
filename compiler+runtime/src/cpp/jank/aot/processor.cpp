@@ -22,9 +22,9 @@ namespace jank::aot
 {
   using namespace jank::runtime;
 
-  static jtl::immutable_string relative_to_cache_dir(jtl::immutable_string const &file_path)
+  static jtl::immutable_string relative_to_build_dir(jtl::immutable_string const &file_path)
   {
-    return util::format("{}/{}", util::cli::opts.output_dir, file_path);
+    return util::format("{}/{}", util::cli::opts.build_dir, file_path);
   }
 
   // TODO: Generate an object file instead of a cpp
@@ -314,7 +314,7 @@ int main(int argc, const char** argv)
 
       auto const &module_path{ util::format(
         "{}.{}",
-        relative_to_cache_dir(module::module_to_path(mod)),
+        relative_to_build_dir(module::module_to_path(mod)),
         util::cli::compilation_target_extension(util::cli::opts.output_target)) };
 
       if(std::filesystem::exists(module_path.c_str()))
@@ -375,6 +375,11 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("-lpthread"));
 #endif
 
+    for(auto const &library_dir : util::cli::opts.library_dirs)
+    {
+      compiler_args.push_back(strdup(util::format("-Wl,-rpath,{}", library_dir).c_str()));
+    }
+
     for(auto const &lib : util::cli::opts.libs)
     {
       compiler_args.push_back(strdup(util::format("-l{}", lib).c_str()));
@@ -399,7 +404,8 @@ int main(int argc, const char** argv)
     } };
 
     compiler_args.push_back(strdup("-o"));
-    compiler_args.push_back(strdup(util::cli::opts.output_filename.c_str()));
+    compiler_args.push_back(strdup(
+      util::format("{}/{}", util::cli::opts.target_dir, util::cli::opts.output_filename).c_str()));
 
     //util::println("compilation command: {} ", compiler_args);
 
@@ -426,7 +432,7 @@ int main(int argc, const char** argv)
     /* TODO: Use runtime::context::get_output_module_name. */
     std::filesystem::path const module_path{
       util::cli::opts.output_module_filename.empty()
-        ? util::format("{}/{}.o", util::cli::opts.output_dir, module::module_to_path(module_name))
+        ? util::format("{}/{}.o", util::cli::opts.build_dir, module::module_to_path(module_name))
             .c_str()
         : jtl::immutable_string{ util::cli::opts.output_module_filename }.c_str()
     };
