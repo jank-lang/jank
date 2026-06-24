@@ -122,7 +122,7 @@ namespace jank::runtime::module
 
   static jtl::immutable_string binary_version_path()
   {
-    auto const path{ util::format("{}/.jank-binary-version", util::cli::opts.target_dir) };
+    auto const path{ util::format("{}/.jank-binary-version", util::cli::opts.build_dir) };
     return path;
   }
 
@@ -138,7 +138,7 @@ namespace jank::runtime::module
 
   static binary_version_status check_binary_version_status()
   {
-    if(!std::filesystem::exists(util::cli::opts.target_dir.c_str()))
+    if(!std::filesystem::exists(util::cli::opts.build_dir.c_str()))
     {
       return binary_version_status::needs_write;
     }
@@ -164,7 +164,7 @@ namespace jank::runtime::module
 
   static void write_binary_version()
   {
-    std::filesystem::create_directories(util::cli::opts.target_dir.c_str());
+    std::filesystem::create_directories(util::cli::opts.build_dir.c_str());
 
     auto const &binary_version{ util::binary_version() };
     auto const &path{ binary_version_path() };
@@ -172,9 +172,9 @@ namespace jank::runtime::module
     ofs << binary_version.c_str();
   }
 
-  static void clean_target_directory()
+  static void clean_build_directory()
   {
-    std::filesystem::remove_all(util::cli::opts.target_dir.c_str());
+    std::filesystem::remove_all(util::cli::opts.build_dir.c_str());
     write_binary_version();
   }
 
@@ -190,8 +190,8 @@ namespace jank::runtime::module
         break;
       case binary_version_status::needs_clean:
         error::warn(
-          "Cleaning output directory before compiling, since the configuration has changed.");
-        clean_target_directory();
+          "Cleaning build directory before compiling, since the configuration has changed.");
+        clean_build_directory();
         break;
     }
   }
