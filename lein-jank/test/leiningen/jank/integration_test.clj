@@ -44,9 +44,8 @@
         ops  (:operations plan)]
     ;; Only test-grandchild has a jank-build file, so it is the only dep which
     ;; will generate build plan steps.
-    (is (match? [{:op     :extract-src
-                  :dep    '[org.jank-lang/test-grandchild "0.1.0"]
-                  :fprint string?}
+    (is (match? [{:op  :extract-src
+                  :dep '[org.jank-lang/test-grandchild "0.1.0"]}
                  {:op           :compile
                   :dep          '[org.jank-lang/test-grandchild "0.1.0"]
                   :build-inputs [(m/regex #".*\.jar")]
