@@ -415,6 +415,11 @@ namespace jtl
     (*this)(d);
   }
 
+  void string_builder::clear()
+  {
+    pos = 0;
+  }
+
   void string_builder::reserve(usize const new_capacity)
   {
     if(capacity < new_capacity)

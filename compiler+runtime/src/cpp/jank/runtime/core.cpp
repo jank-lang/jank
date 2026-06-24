@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <iterator>
+#include <deque>
 #include <pthread.h>
 #include <cxxabi.h>
 
@@ -11,6 +14,7 @@
 #include <jank/runtime/core/call.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/sequence_range.hpp>
+#include <jank/runtime/detail/std_format.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 
@@ -90,8 +94,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("can't convert {} to a symbol",
-                                                 typed_o.to_code_string()) };
+          throw std::runtime_error{
+            util::format("can't convert {} to a symbol", typed_o.to_code_string()).c_str()
+          };
         }
       },
       o);
@@ -226,6 +231,169 @@ namespace jank::runtime
       },
       args);
     return {};
+  }
+
+  jtl::immutable_string format(jtl::immutable_string const &format, object_ref const args)
+  {
+    enum class indexing_mode : u8
+    {
+      unspecified,
+      /* Argument indices are automatically incremented as they are encountered,
+       * specifiers are bare e.g. {} or {:}. */
+      automatic,
+      /* User specifies the argument index, e.g. {2}. */
+      manual
+    };
+
+    auto const args_vec{ vec(args) };
+
+    jtl::string_builder out;
+    jtl::string_builder fmt;
+    i64 depth{};
+
+    indexing_mode mode{ indexing_mode::unspecified };
+    std::deque<u64> arg_indices{};
+    u64 auto_idx{};
+
+    for(auto it{ format.begin() }; it != format.end(); ++it)
+    {
+      auto const peek{ std::next(it) != format.end() ? *std::next(it) : '\0' };
+
+      /* Top-level {{ or }} escape sequences. */
+      if(depth == 0 && ((*it == '{' && peek == '{') || (*it == '}' && peek == '}')))
+      {
+        out(*it);
+        ++it;
+      }
+      else if(*it == '{')
+      {
+        fmt(*it);
+        ++depth;
+
+        if(std::isdigit(peek))
+        {
+          /* Manual indexing. */
+          switch(mode)
+          {
+            case indexing_mode::unspecified:
+              mode = indexing_mode::manual;
+              break;
+            case indexing_mode::automatic:
+              throw std::format_error{
+                "Cannot mix automatic (i.e. {}) and manual indexing (i.e. {1})."
+              };
+            case indexing_mode::manual:
+              break;
+          }
+
+          auto start{ std::next(it) };
+          auto end{ std::find_if(start, format.end(), [](auto c) { return !std::isdigit(c); }) };
+
+          u64 idx{};
+          std::from_chars(start, end, idx);
+          arg_indices.push_back(idx);
+
+          /* Don't add the index to the format string passed to std::format, we
+           * will deal with indexing ourselves. */
+          it = std::prev(end);
+        }
+        else
+        {
+          /* Automatic indexing. */
+          switch(mode)
+          {
+            case indexing_mode::unspecified:
+              mode = indexing_mode::automatic;
+              break;
+            case indexing_mode::automatic:
+              break;
+            case indexing_mode::manual:
+              throw std::format_error{
+                "Cannot mix automatic (i.e. {}) and manual indexing (i.e. {1})."
+              };
+          }
+
+          arg_indices.push_back(auto_idx++);
+        }
+      }
+      else if(*it == '}')
+      {
+        fmt(*it);
+        --depth;
+
+        /* End of a top-level format specification, process it in-situ. */
+        if(depth == 0)
+        {
+          auto nargs{ arg_indices.size() };
+          auto next_arg{ [&]() {
+            auto idx{ arg_indices.front() };
+            arg_indices.pop_front();
+
+            if(idx >= args_vec->count())
+            {
+              throw std::format_error{
+                util::format("Format arg index {} out of range.", idx).c_str()
+              };
+            }
+            return args_vec->nth(make_box(idx));
+          } };
+
+          /* Depending on the number of embedded replacement fields we
+           * encountered, pop the right number of values off the argument stack. */
+          auto v1{ next_arg() };
+
+          /* Width and precision are the only supported nested field
+           * replacements in std::format as of C++20, so we only need to support
+           * up to 1 value + 2 nested arguments (always integral). */
+          if(nargs == 1)
+          {
+            detail::vformat_object_to(std::back_inserter(out), fmt.view(), v1);
+          }
+          else if(nargs == 2)
+          {
+            auto v2{ next_arg().to_integer() };
+            detail::vformat_object_to(std::back_inserter(out), fmt.view(), v1, v2);
+          }
+          else if(nargs == 3)
+          {
+            auto v2{ next_arg().to_integer() };
+            auto v3{ next_arg().to_integer() };
+            detail::vformat_object_to(std::back_inserter(out), fmt.view(), v1, v2, v3);
+          }
+          else
+          {
+            throw std::format_error{ util::format(
+              "There are too many embedded format specifiers in {}.",
+              v1.to_code_string()) };
+          }
+
+          /* Reset for the next format specification. */
+          fmt.clear();
+          /* Ignore extra args. */
+          arg_indices.clear();
+        }
+      }
+      else
+      {
+        if(depth > 0)
+        {
+          /* We're inside a replacement field. */
+          fmt(*it);
+        }
+        else
+        {
+          /* This is an ordinary character. */
+          out(*it);
+        }
+      }
+    }
+
+    if(depth != 0)
+    {
+      throw std::format_error{ "There's a brace mismatch in this format string." };
+    }
+
+    return out.release();
   }
 
   obj::persistent_string_ref subs(object_ref const s, object_ref const start)

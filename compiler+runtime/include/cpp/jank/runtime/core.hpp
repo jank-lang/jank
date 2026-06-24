@@ -38,6 +38,7 @@ namespace jank::runtime
   object_ref println(object_ref const args);
   object_ref pr(object_ref const args);
   object_ref prn(object_ref const args);
+  jtl::immutable_string format(jtl::immutable_string const &format, object_ref const args);
 
   obj::persistent_string_ref subs(object_ref const s, object_ref const start);
   obj::persistent_string_ref subs(object_ref const s, object_ref const start, object_ref const end);
