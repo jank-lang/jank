@@ -305,3 +305,16 @@ _jank_vclosure(jank::runtime::callable_arity_flags const flags, void * const ctx
 {
   return jank::runtime::make_box<jank::runtime::obj::jit_variadic_closure>(flags, ctx);
 }
+
+void _jank_refer_global(char const *fully_qualified_sym, char const *renamed_sym)
+{
+  auto const only_sym{ _jank_symbol("", fully_qualified_sym) };
+
+  _jank_var("clojure.core/refer-global")
+    ->deref()
+    .call(_jank_keyword("", "only"),
+          jank::runtime::make_box<jank::runtime::obj::persistent_vector>(std::in_place, only_sym),
+          _jank_keyword("", "rename"),
+          jank::runtime::obj::persistent_hash_map::create_unique(
+            std::make_pair(only_sym, _jank_symbol("", renamed_sym))));
+}

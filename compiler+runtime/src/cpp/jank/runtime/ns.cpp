@@ -199,9 +199,7 @@ namespace jank::runtime
     runtime::detail::native_transient_hash_set referred_names_without_renames;
     auto locked_globals(referred_cpp_globals.wlock());
 
-    /* We want to clear all previous renames so that the new rename map is all that we have.
-     * This is important for REPL-based development, where we re-evaluated the ns form with
-     * different renames. However, we want to keep :only names as they are. */
+    /* Consecutive calls to `refer-global` will retain the old renames. */
     for(auto const p : (*locked_globals)->data)
     {
       if(p.first == p.second)
@@ -209,8 +207,6 @@ namespace jank::runtime
         referred_names_without_renames.insert(p.first);
         continue;
       }
-
-      *locked_globals = (*locked_globals)->dissoc(p.first);
     }
 
     auto res{ visit_map_like(

@@ -545,6 +545,15 @@ namespace jank::ir::inst
   {
   }
 
+  cpp_def::cpp_def(identifier const &name,
+                   jtl::option<identifier> const &value,
+                   analyze::expr::cpp_def_ref const expr)
+    : instruction{ instruction_kind::cpp_def, name, expression_type(expr) }
+    , value{ value }
+    , expr{ expr }
+  {
+  }
+
   cpp_delete::cpp_delete(identifier const &name,
                          read::source const &location,
                          identifier const &value,
