@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-5ce6ac35.js";
+            window.path_to_searchindex_js = "../searchindex-d18a5872.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f18007b9.js"></script>
@@ -183,18 +183,14 @@
 code and dependencies to an executable using this command.</p>
 <pre><code class="language-bash">lein compile
 </code></pre>
-<p>As with GCC, Clang, etc, the default output name is <code>a.out</code>. When you invoke
-your executable, your <code>-main</code> function will be called.</p>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>There is not yet a way to change the output name using Leiningen, but this
-will be implemented.</p>
-</blockquote>
+<p>Your executable will be named based on your current project and can be found
+within <code>target/debug/&lt;project name&gt;</code> by default. When you invoke your
+executable, your <code>-main</code> function will be called.</p>
 <h2 id="building-for-release"><a class="header" href="#building-for-release">Building for release</a></h2>
 <p>By default, <code>lein compile</code> will build you a debug executable with fewer
 optimizations enabled. To get a release executable, you can enable the <code>release</code>
 profile.</p>
-<pre><code class="language-bash">lein with-profile release compile
+<pre><code class="language-bash">lein with-profile +release compile
 </code></pre>
 <h2 id="aot-runtime-selection"><a class="header" href="#aot-runtime-selection">AOT runtime selection</a></h2>
 <p>By default, AOT compilation will target jank’s <code>static</code> runtime. This means that
