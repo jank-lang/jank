@@ -16,10 +16,10 @@
 (def jank-build-cache-file "jank-build-cache.txt")
 
 (def default-build-opts
-  {:output-dir         "target"
+  {:target-dir         "target"
    :optimization-level 2
    :static-build       true
-   :verbose-build      true})
+   :verbose-build      false})
 
 (defn merge-native-flags
   ([] {})
@@ -53,7 +53,7 @@
   [data]
   ;; TODO: We should implement something like Cargo's fingerprint to better
   ;; react to changes in the environment:
-  ;; 
+  ;;
   ;; https://doc.rust-lang.org/nightly/nightly-rustc/cargo/core/compiler/fingerprint/index.html
   (let [md     (MessageDigest/getInstance "SHA-256")
         baos   (java.io.ByteArrayOutputStream.)]
@@ -75,8 +75,8 @@
   `type`, the dependency's name, and the dependency's fingerprint."
   [base-dir type dep-name fprint]
   (-> base-dir
-      (fs/path (str dep-name "-" type "-" fprint))
-      (fs/absolutize)))
+      (fs/path "_cache" (str dep-name "-" type "-" fprint))
+      fs/absolutize))
 
 (defn process-build-directives
   "Process a sequence of output lines from a build script, parsing those that
@@ -232,7 +232,7 @@
   Returns a map, including the build operations and additional build metadata,
   which can be executed by `run-build!`."
   [project]
-  (let [{:keys [output-dir] :as build-opts} (merge default-build-opts (:jank project))]
+  (let [{:keys [target-dir] :as build-opts} (merge default-build-opts (:jank project))]
     (when *disable-sandbox*
       (println "\u001b[1;31mBuilding with sandboxing disabled is potentially dangerous!\u001b[0m"))
 
@@ -241,7 +241,7 @@
                                (apply merge))
                  ;; Plan the build steps just for the child dependencies,
                  ;; recursively resolving their dependencies and so on.
-                 dep-ops  (vec (mapcat #(plan-subtree-build build-opts output-dir %) tree))
+                 dep-ops  (vec (mapcat #(plan-subtree-build build-opts target-dir %) tree))
                  ;; Special handling when the root project has a build script.
                  ;; 
                  ;; TODO: For now we always run the root build script, but we
@@ -251,7 +251,7 @@
                             [{:op           :compile
                               :dep          [(symbol (:group project) (:name project)) (:version project)]
                               :src-dir      (str (:root project))
-                              :out-dir      (str (target-subdir output-dir "out" (:name project) "XXX"))
+                              :out-dir      (str (target-subdir target-dir "out" (:name project) "XXX"))
                               :build-inputs (collect-build-deps tree)
                               :inputs       (collect-out-dirs dep-ops)
                               :always-build true}])]
