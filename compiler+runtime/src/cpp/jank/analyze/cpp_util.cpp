@@ -855,6 +855,41 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
+  /* Returns the two types, in a pair, ordered with the first type being the "most native".
+   * The ordering is based on these rules:
+   *
+   * 1. (most native) Non-jank object (i.e. int, std::string, etc)
+   * 2. Typed jank object
+   * 3. (least native) Untyped jank object
+   */
+  std::pair<jtl::ptr<void>, jtl::ptr<void>>
+  select_most_native_type(jtl::ptr<void> const left, jtl::ptr<void> const right)
+  {
+    auto const is_left_any_object{ cpp_util::is_any_object(left) };
+    auto const is_right_any_object{ cpp_util::is_any_object(right) };
+    auto const is_left_typed_object{ cpp_util::is_typed_object(left) };
+    auto const is_right_typed_object{ cpp_util::is_typed_object(right) };
+
+    if(!is_left_any_object)
+    {
+      return { left, right };
+    }
+    if(!is_right_any_object)
+    {
+      return { right, left };
+    }
+    if(is_left_typed_object)
+    {
+      return { left, right };
+    }
+    if(is_right_typed_object)
+    {
+      return { right, left };
+    }
+
+    return { left, right };
+  }
+
   jtl::ptr<void> expression_scope(expression_ref const expr)
   {
     return visit_expr(
