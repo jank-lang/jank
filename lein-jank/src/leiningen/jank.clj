@@ -114,8 +114,7 @@
       (lmain/exit 1))))
 
 (defn default-project [project]
-  {:jank {:name (:name project)
-          :build-dir (str (:target-dir project) "/_cache/" (:name project))}
+  {:jank {:name (:name project)}
    :aliases {"run" ^{:doc "Run your project, starting at the main entrypoint."}
              ["jank" "run"]
 

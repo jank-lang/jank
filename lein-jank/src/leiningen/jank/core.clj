@@ -65,6 +65,15 @@
   (let [jank (fs/which "jank")
         env (System/getenv)
         args (concat [jank command "--module-path" classpath]
+                     ; The normal build dir would be <target dir>/_cache, but we want
+                     ; to nest one level deeper, so that files from this project don't
+                     ; interfere with files from the dependencies. So we specify our
+                     ; own build dir to be <target dir>/_cache/<project name>. However,
+                     ; we do this before processing the args, so that it can still
+                     ; be overridden from the project.
+                     ["--build-dir" (str (get-in project [:jank :target-dir] "target")
+                                         "/_cache/"
+                                         (:name project))]
                      (build-declarative-flags project)
                      compiler-args
                      ["--"]
