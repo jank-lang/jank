@@ -107,7 +107,6 @@
 (defn print-gc [report]
   (let [{:keys [allocated-bytes collections collection-time]} (:gc report)
         gc-percent (int (* 100 (/ collection-time (:sum report))))]
-
     (printf " Memory estimate: {} with {} in {} ({} of total runtime)\n"
             (color :yellow (str (format-size allocated-bytes)))
             (color :yellow (str collections " garbage collections"))

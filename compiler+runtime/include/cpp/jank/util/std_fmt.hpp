@@ -5,6 +5,7 @@
 #include <jtl/immutable_string.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/number.hpp>
+#include <jank/runtime/visit.hpp>
 
 namespace jank::runtime
 {

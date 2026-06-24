@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <iterator>
+#include <deque>
 #include <pthread.h>
 #include <cxxabi.h>
 
@@ -235,7 +237,10 @@ namespace jank::runtime
     enum class indexing_mode : u8
     {
       unspecified,
+      /* Argument indices are automatically incremented as they are encountered,
+       * specifiers are bare e.g. {} or {:}. */
       automatic,
+      /* User specifies the argument index, e.g. {2}. */
       manual
     };
 
@@ -258,11 +263,10 @@ namespace jank::runtime
       {
         out(*it);
         ++it;
-        continue;
       }
-
-      if(*it == '{')
+      else if(*it == '{')
       {
+        fmt(*it);
         ++depth;
 
         if(std::isdigit(peek))
@@ -274,7 +278,7 @@ namespace jank::runtime
               mode = indexing_mode::manual;
               break;
             case indexing_mode::automatic:
-              throw std::format_error("cannot mix automatic and manual indexing");
+              throw std::format_error{ "cannot mix automatic and manual indexing" };
             case indexing_mode::manual:
               break;
           }
@@ -282,14 +286,13 @@ namespace jank::runtime
           auto start = std::next(it);
           auto end = std::find_if(start, format.end(), [](auto c) { return !std::isdigit(c); });
 
-          jtl::u64 idx{};
+          u64 idx{};
           std::from_chars(start, end, idx);
           arg_indices.push_back(idx);
 
           /* Don't add the index to the format string passed to std::format, we
            * will deal with indexing ourselves */
-          fmt(*it);
-          std::advance(it, std::distance(it, end));
+          it = std::prev(end);
         }
         else
         {
@@ -302,26 +305,15 @@ namespace jank::runtime
             case indexing_mode::automatic:
               break;
             case indexing_mode::manual:
-              throw std::format_error("cannot mix automatic and manual indexing");
+              throw std::format_error{ "cannot mix automatic and manual indexing" };
           }
 
           arg_indices.push_back(auto_idx++);
         }
       }
-
-      if(depth > 0)
+      else if(*it == '}')
       {
-        /* inside a replacement field */
         fmt(*it);
-      }
-      else
-      {
-        /* ordinary character */
-        out(*it);
-      }
-
-      if(*it == '}')
-      {
         --depth;
 
         /* End of a top-level format specification, process it in-situ. */
@@ -334,7 +326,7 @@ namespace jank::runtime
 
             if(idx >= args_vec->count())
             {
-              throw std::format_error("invalid format arg index");
+              throw std::format_error{ "format arg index out of range" };
             }
             return args_vec->nth(make_box(idx));
           };
@@ -343,9 +335,9 @@ namespace jank::runtime
            * encountered, pop the right number of values off the argument stack. */
           auto v1{ next_arg() };
 
-          /* Width and precision are the only support nested field replacements,
-           * so we only need to support up to 1 value + 2 nested arguments
-           * (always integral). */
+          /* Width and precision are the only supported nested field
+           * replacements in std::format as of C++20, so we only need to support
+           * up to 1 value + 2 nested arguments (always integral). */
           if(nargs == 1)
           {
             vformat_object_to(std::back_inserter(out), fmt.view(), v1);
@@ -363,7 +355,7 @@ namespace jank::runtime
           }
           else
           {
-            throw std::format_error("too many embedded format specifiers");
+            throw std::format_error{ "too many embedded format specifiers" };
           }
 
           /* Reset for the next format specification. */
@@ -371,11 +363,24 @@ namespace jank::runtime
           arg_indices.clear(); // ignore extra args
         }
       }
+      else
+      {
+        if(depth > 0)
+        {
+          /* inside a replacement field */
+          fmt(*it);
+        }
+        else
+        {
+          /* ordinary character */
+          out(*it);
+        }
+      }
     }
 
     if(depth != 0)
     {
-      throw std::format_error("format string brace mismatch");
+      throw std::format_error{ "format string brace mismatch" };
     }
 
     return out.release();
