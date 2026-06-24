@@ -2746,8 +2746,9 @@ namespace jank::analyze
     auto const final_then_type{ then_expr.expect_ok()->get_type() };
     auto const final_else_type{ else_expr_opt.is_some() ? else_expr_opt.unwrap()->get_type()
                                                         : cpp_util::untyped_object_ref_type() };
-    auto [chosen_type,
-          other_type]{ cpp_util::select_most_native_type(final_else_type, final_then_type) };
+    auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
+      cpp_util::non_void_type(final_else_type),
+      cpp_util::non_void_type(final_then_type)) };
 
     /* If we have a typed object on one side, and anything other than that same typed object
      * on the other side, we need to type-erase to find the common type.

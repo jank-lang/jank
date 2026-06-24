@@ -920,6 +920,15 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
+  jtl::ptr<void> non_void_type(jtl::ptr<void> const type)
+  {
+    if(Cpp::IsVoid(type))
+    {
+      return untyped_object_ref_type();
+    }
+    return type;
+  }
+
   jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
                                        std::vector<Cpp::TemplateArgInfo> const &arg_types,

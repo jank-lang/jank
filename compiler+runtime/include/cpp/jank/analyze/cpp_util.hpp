@@ -37,6 +37,7 @@ namespace jank::analyze::cpp_util
   std::pair<jtl::ptr<void>, jtl::ptr<void>>
   select_most_native_type(jtl::ptr<void> const left, jtl::ptr<void> const right);
   jtl::ptr<void> non_void_expression_type(expression_ref expr);
+  jtl::ptr<void> non_void_type(jtl::ptr<void> const type);
   jtl::ptr<void> expression_scope(expression_ref const expr);
 
   jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
