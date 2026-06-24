@@ -7,7 +7,7 @@
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/visit.hpp>
 
-namespace jank::runtime
+namespace jank::runtime::detail
 {
   template <typename Out, typename... Args>
   void vformat_object_to(Out out,

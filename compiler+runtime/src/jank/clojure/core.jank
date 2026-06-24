@@ -6898,8 +6898,7 @@
   (throw "TODO: port enumeration-seq"))
 
 (defn format
-  "Formats a string using java.lang.String.format, see java.util.Formatter for format
-  string syntax"
+  "Formats a string using std::format."
   [fmt & args]
   (cpp/jank.runtime.format fmt args))
 
