@@ -152,7 +152,7 @@ namespace jank::runtime
   {
     jtl::string_builder buff;
     runtime::to_string(o, buff);
-    std::fwrite(buff.data(), 1, buff.size(), stdout);
+    std::fwrite(buff.data(), 1, buff.size(), get_stdout());
     return {};
   }
 

@@ -6277,14 +6277,31 @@
   StringWriter.  Returns the string created by any nested printing
   calls."
   [& body]
-  `(let [buff# (cpp/cast (:* char) cpp/nullptr)
-         size# (cpp/size_t. 0)
-         out#  (cpp/open_memstream (cpp/& buff#) (cpp/& size#))]
-     (binding [*out* (cpp/box out#)]
-       ~@body
-       (cpp/fflush out#)
-       (cpp/fclose out#)
-       (cpp/jtl.immutable_string. buff# size#))))
+  ;; TODO: replace FILE*-based capture (open_memstream/tmpfile) with a
+  ;; cross platform writer based approach (jank.io/writer). See PR #794.
+  (if (= cpp/jtl.current_platform cpp/jtl.platform.windows_like)
+    `(let [tmp# (cpp/tmpfile)]
+       (binding [*out* (cpp/box tmp#)]
+         ~@body)
+       (cpp/fflush tmp#)
+       (let [size# (cpp/ftell tmp#)]
+         (cpp/fseek tmp# 0 cpp/SEEK_SET)
+         (let [buff# (cpp/malloc size#)]
+           (cpp/fread buff# 1 size# tmp#)
+           (cpp/fclose tmp#)
+           (let [is# (cpp/jtl.immutable_string.
+                      (cpp/cast (:* char) buff#)
+                      (cpp/cast cpp/size_t size#))]
+             (cpp/free buff#)
+             is#))))
+    `(let [buff# (cpp/cast (:* char) cpp/nullptr)
+           size# (cpp/size_t. 0)
+           out#  (cpp/open_memstream (cpp/& buff#) (cpp/& size#))]
+       (binding [*out* (cpp/box out#)]
+         ~@body
+         (cpp/fflush out#)
+         (cpp/fclose out#)
+         (cpp/jtl.immutable_string. buff# size#)))))
 
 (defmacro with-in-str
   "Evaluates body in a context in which *in* is bound to a fresh

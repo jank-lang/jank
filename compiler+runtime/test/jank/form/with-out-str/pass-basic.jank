@@ -1,0 +1,24 @@
+; Complementary with-out-str test while SEH exception support is pending
+; on Windows — the clojure-test-suite (which has its own with-out-str test
+; at clojure.core-test.with-out-str) has all Windows tests disabled.
+
+; Basic with-out-str: captures println output
+(assert (= "hi\n" (with-out-str (println "hi"))))
+
+; Multiple prints
+(assert (= "abc" (with-out-str (print "a") (print "b") (print "c"))))
+
+; Empty body
+(assert (= "" (with-out-str)))
+
+; print single arg
+(assert (= "hello" (with-out-str (print "hello"))))
+
+; Nested with-out-str
+(assert (= "outer\ninner\n"
+           (with-out-str
+             (println "outer")
+             (let [inner (with-out-str (println "inner"))]
+               (print inner)))))
+
+:success
