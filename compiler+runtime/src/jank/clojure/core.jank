@@ -2292,19 +2292,23 @@
   "Returns a sequence of the map's keys, in the same order as (seq map)."
   [m]
   ; TODO: Use a proper key seq instead.
-  (reduce (fn [acc kv]
-            (conj acc (first kv)))
-          []
-          m))
+  (seq
+   (persistent!
+    (reduce (fn [acc kv]
+              (conj! acc (first kv)))
+            (transient [])
+            m))))
 
 (defn vals
   "Returns a sequence of the map's values, in the same order as (seq map)."
   [m]
   ; TODO: Use a proper val seq instead.
-  (reduce (fn [acc kv]
-            (conj acc (second kv)))
-          []
-          m))
+  (seq
+   (persistent!
+    (reduce (fn [acc kv]
+              (conj! acc (second kv)))
+            (transient [])
+            m))))
 
 (defn
   ^{:inline (fn* [map key & more]

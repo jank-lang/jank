@@ -96,7 +96,7 @@
     clojure.core-test.interpose
     ; clojure.core-test.juxt ; Program hangs.
     ; clojure.core-test.key ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
-    ; clojure.core-test.keys ; FIXME: Failing tests.
+    clojure.core-test.keys
     clojure.core-test.keyword
     clojure.core-test.keyword-qmark
     clojure.core-test.last
@@ -214,7 +214,7 @@
     ; clojure.core-test.update ; FIXME: Failing tests, Program hangs.
     clojure.core-test.uuid-qmark
     ; clojure.core-test.val ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
-    ; clojure.core-test.vals ; FIXME: Failing tests.
+    clojure.core-test.vals
     clojure.core-test.var-qmark
     ; clojure.core-test.vec ; analyze/invalid-cpp-operator-call error: Binary operator aget is not supported for 'jank::runtime::object *' and 'jank::runtime::object *'.
     clojure.core-test.vector
