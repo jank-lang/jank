@@ -70,10 +70,10 @@ namespace jank::runtime
     return o.get_type() == object_type::symbol && !expect_object<obj::symbol>(o)->ns.empty();
   }
 
-  object_ref to_unqualified_symbol(object_ref const o)
+  obj::symbol_ref to_unqualified_symbol(object_ref const o)
   {
     return runtime::visit_object(
-      [&](auto const typed_o) -> object_ref {
+      [&](auto const typed_o) -> obj::symbol_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(std::same_as<T, obj::symbol>)
@@ -102,7 +102,7 @@ namespace jank::runtime
       o);
   }
 
-  object_ref to_qualified_symbol(object_ref const ns, object_ref const name)
+  obj::symbol_ref to_qualified_symbol(object_ref const ns, object_ref const name)
   {
     return make_box<obj::symbol>(ns, name);
   }
@@ -501,7 +501,7 @@ namespace jank::runtime
     return make_box<obj::native_vector_sequence>(jtl::move(v));
   }
 
-  object_ref keyword(object_ref const ns, object_ref const name)
+  obj::keyword_ref keyword(object_ref const ns, object_ref const name)
   {
     if(!ns.is_nil() && ns.get_type() != object_type::persistent_string)
     {
@@ -559,80 +559,80 @@ namespace jank::runtime
     return __rt_ctx->macroexpand(o);
   }
 
-  object_ref gensym(object_ref const o)
+  obj::symbol_ref gensym(object_ref const o)
   {
     return __rt_ctx->unique_symbol(to_string(o));
   }
 
-  object_ref atom(object_ref const o)
+  obj::atom_ref atom(object_ref const o)
   {
     return make_box<obj::atom>(o);
   }
 
-  object_ref swap_atom(object_ref const atom, object_ref const fn)
+  object_ref swap_atom(obj::atom_ref const atom, object_ref const fn)
   {
-    return try_object<obj::atom>(atom)->swap(fn);
+    return atom->swap(fn);
   }
 
-  object_ref swap_atom(object_ref const atom, object_ref const fn, object_ref const a1)
+  object_ref swap_atom(obj::atom_ref const atom, object_ref const fn, object_ref const a1)
   {
-    return try_object<obj::atom>(atom)->swap(fn, a1);
+    return atom->swap(fn, a1);
   }
 
   object_ref
-  swap_atom(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
+  swap_atom(obj::atom_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
   {
-    return try_object<obj::atom>(atom)->swap(fn, a1, a2);
+    return atom->swap(fn, a1, a2);
   }
 
-  object_ref swap_atom(object_ref const atom,
+  object_ref swap_atom(obj::atom_ref const atom,
                        object_ref const fn,
                        object_ref const a1,
                        object_ref const a2,
                        object_ref const rest)
   {
-    return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
+    return atom->swap(fn, a1, a2, rest);
   }
 
-  object_ref swap_vals(object_ref const atom, object_ref const fn)
+  object_ref swap_vals(obj::atom_ref const atom, object_ref const fn)
   {
-    return try_object<obj::atom>(atom)->swap_vals(fn);
+    return atom->swap_vals(fn);
   }
 
-  object_ref swap_vals(object_ref const atom, object_ref const fn, object_ref const a1)
+  object_ref swap_vals(obj::atom_ref const atom, object_ref const fn, object_ref const a1)
   {
-    return try_object<obj::atom>(atom)->swap_vals(fn, a1);
+    return atom->swap_vals(fn, a1);
   }
 
   object_ref
-  swap_vals(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
+  swap_vals(obj::atom_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
   {
-    return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2);
+    return atom->swap_vals(fn, a1, a2);
   }
 
-  object_ref swap_vals(object_ref const atom,
+  object_ref swap_vals(obj::atom_ref const atom,
                        object_ref const fn,
                        object_ref const a1,
                        object_ref const a2,
                        object_ref const rest)
   {
-    return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest);
+    return atom->swap_vals(fn, a1, a2, rest);
   }
 
   object_ref
-  compare_and_set(object_ref const atom, object_ref const old_val, object_ref const new_val)
+  compare_and_set(obj::atom_ref const atom, object_ref const old_val, object_ref const new_val)
   {
-    return try_object<obj::atom>(atom)->compare_and_set(old_val, new_val);
+    return atom->compare_and_set(old_val, new_val);
   }
 
-  object_ref reset(object_ref const atom, object_ref const new_val)
+  object_ref reset(obj::atom_ref const atom, object_ref const new_val)
   {
-    return try_object<obj::atom>(atom)->reset(new_val);
+    return atom->reset(new_val);
   }
 
-  object_ref reset_vals(object_ref const atom, object_ref const new_val)
+  object_ref reset_vals(obj::atom_ref const atom, object_ref const new_val)
   {
-    return try_object<obj::atom>(atom)->reset_vals(new_val);
+    return atom->reset_vals(new_val);
   }
 
   object_ref deref(object_ref const o)
@@ -683,21 +683,19 @@ namespace jank::runtime
     return o.get_type() == object_type::volatile_;
   }
 
-  object_ref vswap(object_ref const v, object_ref const fn)
+  object_ref vswap(obj::volatile_ref const v, object_ref const fn)
   {
-    auto const v_obj(try_object<obj::volatile_>(v));
-    return v_obj->reset(fn.call(v_obj->deref()));
+    return v->reset(fn.call(v->deref()));
   }
 
-  object_ref vswap(object_ref const v, object_ref const fn, object_ref const args)
+  object_ref vswap(obj::volatile_ref const v, object_ref const fn, object_ref const args)
   {
-    auto const v_obj(try_object<obj::volatile_>(v));
-    return v_obj->reset(apply_to(fn, make_box<obj::cons>(v_obj->deref(), args)));
+    return v->reset(apply_to(fn, make_box<obj::cons>(v->deref(), args)));
   }
 
-  object_ref vreset(object_ref const v, object_ref const new_val)
+  object_ref vreset(obj::volatile_ref const v, object_ref const new_val)
   {
-    return try_object<obj::volatile_>(v)->reset(new_val);
+    return v->reset(new_val);
   }
 
   void push_thread_bindings(object_ref const o)
@@ -724,7 +722,7 @@ namespace jank::runtime
     return o;
   }
 
-  object_ref tagged_literal(object_ref const tag, object_ref const form)
+  obj::tagged_literal_ref tagged_literal(object_ref const tag, object_ref const form)
   {
     return make_box<obj::tagged_literal>(tag, form);
   }
@@ -845,7 +843,7 @@ namespace jank::runtime
     return o.get_type() == object_type::uuid;
   }
 
-  object_ref random_uuid()
+  obj::uuid_ref random_uuid()
   {
     return make_box<obj::uuid>();
   }
@@ -912,7 +910,7 @@ namespace jank::runtime
     return reference;
   }
 
-  object_ref future(object_ref const fn)
+  obj::future_ref future(object_ref const fn)
   {
     auto const bindings{ __rt_ctx->get_thread_bindings() };
     auto const ret{ make_box<obj::future>() };
@@ -973,28 +971,24 @@ namespace jank::runtime
     return ret;
   }
 
-  void cancel_future(object_ref const future)
+  void cancel_future(obj::future_ref const future)
   {
-    auto const fut{ try_object<obj::future>(future) };
-
     /* We need to hold this lock the whole time we're checking, to ensure the thread
      * doesn't finish while we're here checking. */
-    auto const locked_state{ fut->state.rlock() };
+    auto const locked_state{ future->state.rlock() };
     if(locked_state->status == obj::future_status::running)
     {
-      auto const locked_thread{ fut->thread.wlock() };
+      auto const locked_thread{ future->thread.wlock() };
       auto const thread_handle{ locked_thread->native_handle() };
       pthread_cancel(reinterpret_cast<pthread_t>(thread_handle));
     }
   }
 
-  bool is_future_cancelled(object_ref const future)
+  bool is_future_cancelled(obj::future_ref const future)
   {
-    auto const fut{ try_object<obj::future>(future) };
-
     /* We need to hold this lock the whole time we're checking, to ensure the thread
      * doesn't finish while we're here checking. */
-    auto locked_state{ fut->state.ulock() };
+    auto locked_state{ future->state.ulock() };
     switch(locked_state->status)
     {
       case obj::future_status::done:
@@ -1018,7 +1012,7 @@ namespace jank::runtime
     /* It's undefined behavior to have multiple threads join a single thread object at the
      * same time, so we need to synchronize here. */
     {
-      auto const locked_thread{ fut->thread.wlock() };
+      auto const locked_thread{ future->thread.wlock() };
       auto const thread_handle{ locked_thread->native_handle() };
       code = pthread_tryjoin_np(thread_handle, &thread_state);
     }
