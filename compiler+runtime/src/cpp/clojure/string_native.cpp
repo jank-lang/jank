@@ -1,3 +1,6 @@
+#include <regex>
+#include <string>
+
 #include <clojure/string_native.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/call.hpp>
@@ -225,18 +228,43 @@ namespace clojure::string_native
     return replace(s, match->data, replacement->data);
   }
 
-  // TODO: Add regex support to replace
-  jtl::immutable_string
-  replace(jtl::immutable_string const &, obj::re_pattern_ref const, jtl::immutable_string const &)
+  jtl::immutable_string replace(jtl::immutable_string const &s,
+                                obj::re_pattern_ref const match,
+                                jtl::immutable_string const &replacement)
   {
-    return {};
+    std::string const s_str{ s.c_str() };
+    std::string const replacement_str{ replacement.c_str() };
+    return std::regex_replace(s_str, match->regex, replacement_str);
   }
 
-  // TODO: Add regex support to replace
-  jtl::immutable_string
-  replace(jtl::immutable_string const &, obj::re_pattern_ref const, object_ref const)
+  jtl::immutable_string replace(jtl::immutable_string const &s,
+                                obj::re_pattern_ref const match,
+                                object_ref const replacement)
   {
-    return {};
+    std::string const s_str{ s.c_str() };
+    std::sregex_iterator const end{};
+    std::sregex_iterator it(s_str.begin(), s_str.end(), match->regex);
+
+    if(it == end)
+    {
+      return s;
+    }
+
+    std::string suffix{};
+    jtl::string_builder buff{};
+
+    for(; it != end; ++it)
+    {
+      buff((*it).prefix().str());
+      auto const match_str(make_box<obj::persistent_string>((*it)[0].str()));
+      auto const replacement_value(replacement.call(make_box<obj::persistent_string>(match_str)));
+      buff(try_object<obj::persistent_string>(replacement_value)->data);
+      suffix = (*it).suffix().str();
+    }
+
+    buff(suffix);
+
+    return buff.release();
   }
 
   i64 index_of(jtl::immutable_string const &s,
