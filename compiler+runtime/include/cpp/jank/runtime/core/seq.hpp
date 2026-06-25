@@ -39,6 +39,7 @@ namespace jank::runtime
   }
 
   object_ref next(object_ref const s);
+  object_ref more(object_ref const s);
 
   template <typename T>
   requires behavior::sequenceable_in_place<T>
