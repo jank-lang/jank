@@ -221,7 +221,7 @@
     ; clojure.core-test.vector-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.when
     clojure.core-test.when-first
-    ; clojure.core-test.when-let ; FIXME: Failing tests.
+    clojure.core-test.when-let
     clojure.core-test.when-not
     ; clojure.core-test.with-out-str ; TODO: port with-out-str
     ; clojure.core-test.with-precision ; TODO: port with-precision, INFO: SKIP - defprotocol
