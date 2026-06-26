@@ -60,8 +60,8 @@ jobs:
     steps:
       - name: Install packages
         run: |
-          pacman -Syu
-          pacman -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr libxml2 libedit boost
+          pacman -Syu --noconfirm
+          pacman --noconfirm -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr libxml2 libedit boost
       - uses: actions/checkout@v4
         with:
           submodules: true
@@ -332,8 +332,8 @@ jobs:
     steps:
       - name: Install packages
         run: |
-          pacman -Syu
-          pacman -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr libxml2 libedit boost
+          pacman -Syu --noconfirm
+          pacman --noconfirm -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr libxml2 libedit boost
       - uses: actions/checkout@v4
         with:
           submodules: true
