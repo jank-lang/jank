@@ -147,6 +147,7 @@
   The result will be a cached build result file located at
   `out-dir/jank-build-cache.txt` plus the artifacts of the build in `out-dir`."
   [{:keys [src-dir out-dir] :as op}]
+  (fs/delete-tree out-dir)
   (fs/create-dirs out-dir)
   (let [dep-name     (first (:dep op))
         build-dir    (fs/create-temp-dir {:prefix "jank-build-"})
