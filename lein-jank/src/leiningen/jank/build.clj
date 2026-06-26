@@ -24,10 +24,9 @@
    :static-build       false})
 
 (defn merge-native-flags
-  ([] {})
-  ([& maps]
-   (let [valid-keys [:defines :include-dirs :library-dirs :linked-libraries]]
-     (reduce (fn [a b] (merge-with into a (select-keys b valid-keys))) maps))))
+  [& maps]
+  (let [valid-keys [:defines :include-dirs :library-dirs :linked-libraries]]
+    (reduce (fn [a b] (merge-with into a (select-keys b valid-keys))) {} maps)))
 
 (defn has-build-file?
   "Returns true if the given directory or jar file has a `jank-build.bb` file in
@@ -38,10 +37,10 @@
     (with-open [jar (JarFile. path)]
       (some? (.getEntry jar jank-build-file)))))
 
-(defn is-already-built?
+(defn has-build-cache-file?
   "Returns true if the given directory has a jank build cache file."
-  [out-dir]
-  (fs/regular-file? (fs/path out-dir jank-build-cache-file)))
+  [path]
+  (fs/regular-file? (fs/path path jank-build-cache-file)))
 
 (defn extract-jar!
   "Extract the jar file into `out-dir`, creating it if it does not exist."
@@ -56,9 +55,7 @@
     (.encodeToString enc bs)))
 
 (defn fingerprint
-  "Compute a fingerprint of the dependency. When the fingerprint changes (due to
-  some change in the descendant dependencies or environment) the dependency
-  needs to be recompiled."
+  "Compute a fingerprint of some printable data structure."
   [data]
   ;; TODO: We should implement something like Cargo's fingerprint to better
   ;; react to changes in the environment:
@@ -87,32 +84,26 @@
       (fs/path "_cache" (str dep-name "-" type "-" fprint))
       fs/absolutize))
 
-(defn process-build-directives
-  "Process a sequence of output lines from a build script, parsing those that
-  begin with the jank-build:: prefix and discarding all others."
-  [lines]
-  (->>
-   (for [line  lines
-         :when (and (string/starts-with? line "jank-build::")
-                    (string/includes? line "="))
-         :let  [[k v] (string/split line #"=" 2)]]
-     (case k
-       "jank-build::define"       (let [[a b] (string/split v #"=" 2)]
-                                    {:defines {a b}})
-       "jank-build::include-dir"  {:include-dirs [v]}
-       "jank-build::link-dir"     {:library-dirs [v]}
-       "jank-build::link-library" {:linked-libraries [v]}
-       (do (lmain/warn "invalid jank-build directive:" k)
-           nil)))
-   (remove nil?)))
+(defn process-build-directive
+  "Process an output line from a build script, parsing it if it begins with the
+  jank-build:: prefix. Otherwise returns nil. "
+  [line]
+  (when-let [[_ k v] (re-matches #"jank-build::(.*?)=(.*)" line)]
+    (case k
+      "define"       (let [[a b] (string/split v #"=" 2)] {:defines {a b}})
+      "include-dir"  {:include-dirs [v]}
+      "link-dir"     {:library-dirs [v]}
+      "link-library" {:linked-libraries [v]}
+      (do (lmain/warn "invalid jank-build directive:" line)
+          nil))))
 
 (defn wrap-stream
   "Wrap an IO stream, redirecting the output to stdout with a prefix. Returns a
   vector of the recorded lines (without the prefix)."
-  [stream lines-atom {:keys [prefix echo]}]
+  [stream lines-atom echo? prefix]
   (with-open [rdr (io/reader stream)]
     (doseq [line (line-seq rdr)]
-      (when echo (println (str prefix " " line)))
+      (when echo? (println (str prefix " " line)))
       (swap! lines-atom conj line))))
 
 (defn build-script-input
@@ -174,10 +165,8 @@
                       {:in       (pr-str build-input)
                        :continue true})
         out-lines    (atom [])]
-    (future (wrap-stream (:out proc) out-lines {:echo   *verbose-build*
-                                                :prefix (str "  \u001b[0;34m" dep-name ">\u001b[0m")}))
-    (future (wrap-stream (:err proc) out-lines {:echo   *verbose-build*
-                                                :prefix (str "  \u001b[0;31m" dep-name ">\u001b[0m")}))
+    (future (wrap-stream (:out proc) out-lines *verbose-build* (str "  \u001b[0;34m" dep-name ">\u001b[0m")))
+    (future (wrap-stream (:err proc) out-lines *verbose-build* (str "  \u001b[0;31m" dep-name ">\u001b[0m")))
     (if (zero? (:exit @proc))
       ;; Build succeeded. Cache all of the build stdout output. Later we will
       ;; parse the build directives.
@@ -189,17 +178,6 @@
           (println (string/join "\n" @out-lines))
           (println (string/join "\n" @out-lines)))
         (lmain/abort "failed to run build command")))))
-
-(defn collect-out-dirs
-  "Collect the output directories from all build steps in the given operations
-  list."
-  [plan-ops]
-  (letfn [(simple-dep-name [coord] (-> coord first str))]
-    (->> plan-ops
-         (keep (fn [op] (when (:out-dir op)
-                          [(simple-dep-name (:dep op))
-                           (str (:out-dir op))])))
-         (into {}))))
 
 (defn build-scoped? [coord]
   (let [m (apply hash-map coord)]
@@ -216,6 +194,17 @@
        (filter (fn [[k v]] (build-scoped? k)))
        (into {})
        (resolve/dependency-files)))
+
+(defn collect-out-dirs
+  "Collect the output directories from all build steps in the given operations
+  list."
+  [plan-ops]
+  (letfn [(simple-dep-name [coord] (-> coord first str))]
+    (->> plan-ops
+         (keep (fn [op] (when (:out-dir op)
+                          [(simple-dep-name (:dep op))
+                           (str (:out-dir op))])))
+         (into {}))))
 
 (defn plan-subtree-build [build-opts target-dir [dep subtree]]
   (let [subtree-ops (vec (mapcat #(plan-subtree-build build-opts target-dir %) subtree))
@@ -248,7 +237,7 @@
             out-fprint (fingerprint compile-op)
             out-dir    (target-subdir target-dir "out" jar-name out-fprint)]
         (into subtree-ops
-              [(assoc extract-op :dir (str src-dir))
+              [(assoc extract-op :out-dir (str src-dir))
                (assoc compile-op :out-dir (str out-dir))])))))
 
 (defn plan-build
@@ -263,53 +252,58 @@
     (when *disable-sandbox*
       (println "\u001b[1;31mBuilding with sandboxing disabled is potentially dangerous!\u001b[0m"))
 
-    {:operations
-     (let [tree     (->> (mapv #(resolve/dependency-hierarchy project %) (:dependencies project))
-                         (apply merge))
+    (let [tree     (->> (mapv #(resolve/dependency-hierarchy project %) (:dependencies project))
+                        (apply merge))
            ;; Plan the build steps just for the child dependencies,
            ;; recursively resolving their dependencies and so on.
-           dep-ops  (vec (mapcat #(plan-subtree-build build-opts target-dir %) tree))
+          dep-ops  (vec (mapcat #(plan-subtree-build build-opts target-dir %) tree))
            ;; Special handling when the root project has a build script.
            ;; 
            ;; TODO: For now we always run the root build script, but we
            ;; could cache it if we knew its input files. Cargo does this
            ;; by outputting rerun-if-changed flags from the build script.
-           root-ops (when (has-build-file? (:root project))
-                      [{:op           :compile
-                        :dep          [(symbol (:group project) (:name project)) (:version project)]
-                        :src-dir      (str (:root project))
-                        :out-dir      (str (target-subdir target-dir "out" (:name project) "XXX"))
-                        :build-opts   build-opts
-                        :build-inputs (collect-build-deps tree)
-                        :inputs       (collect-out-dirs dep-ops)
-                        :always-build true}])]
-       (into dep-ops root-ops))}))
+          root-ops (when (has-build-file? (:root project))
+                     [{:op           :compile
+                       :dep          [(symbol (:group project) (:name project)) (:version project)]
+                       :src-dir      (str (:root project))
+                       :out-dir      (str (target-subdir target-dir "out" (:name project) "XXX"))
+                       :build-opts   build-opts
+                       :build-inputs (collect-build-deps tree)
+                       :inputs       (collect-out-dirs dep-ops)
+                       :always-build true}])]
+      (into dep-ops root-ops))))
 
 (defmulti run-build-op! (fn [_ op] (:op op)))
 
 (defmethod run-build-op! :extract-src
-  [plan {:keys [dep jar dir]}]
+  [plan {:keys [dep jar out-dir]}]
   ;; If the output dir already exists then the jar has already been extracted.
-  (when-not (fs/exists? dir)
+  ;; Since the out-dir name includes the jar fingerprint, we know that the
+  ;; contents will be the same and we can skip the step.
+  (when-not (fs/exists? out-dir)
     (println (str "\u001b[1;36m" (format "%10s" "Extracting") "\u001b[0m") dep)
-    (extract-jar! jar dir))
+    (extract-jar! jar out-dir))
 
   ;; does not produce any jank flags
   nil)
 
 (defmethod run-build-op! :compile
   [plan {:keys [dep out-dir always-build] :as op}]
-  (let [needs-build? (or always-build (not (is-already-built? out-dir)))]
-    (when needs-build?
-      (println (str "\u001b[1;32m" (format "%10s" "Compiling") "\u001b[0m") dep)
-      (build-dep! op))
+  ;; Just like the extract-src case, if the build artifacts already exist in the
+  ;; fingerprinted output dir, then we know the inputs have not changed and
+  ;; there is no need to rebuild.
+  (when (or always-build (not (has-build-cache-file? out-dir)))
+    (println (str "\u001b[1;32m" (format "%10s" "Compiling") "\u001b[0m") dep)
+    (build-dep! op))
 
-    ;; jank flags are extracted from the build cache file
-    (process-build-directives (fs/read-all-lines (fs/path out-dir jank-build-cache-file)))))
+  ;; jank flags are extracted from the build cache file
+  (->> (fs/path out-dir jank-build-cache-file)
+       (fs/read-all-lines)
+       (keep process-build-directive)))
 
 (defn run-build!
   "Run the sequence of build steps planned by `plan-build`."
   [plan]
-  (->> (mapv #(run-build-op! plan %) (:operations plan))
+  (->> (mapv #(run-build-op! plan %) plan)
        (flatten)
        (apply merge-native-flags)))
