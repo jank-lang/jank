@@ -149,9 +149,9 @@
     clojure.core-test.pos-int-qmark
     clojure.core-test.pos-qmark
     ; clojure.core-test.pr-str ; Uncaught exception: invalid call to #object [clojure.core/pr-str jit_function 0x112436c68] with 2 args provided
-    ; clojure.core-test.print-str ; TODO: port print-str
-    ; clojure.core-test.println-str ; TODO: port println-str
-    ; clojure.core-test.prn-str ; TODO: port prn-str
+    clojure.core-test.print-str
+    clojure.core-test.println-str
+    clojure.core-test.prn-str
     clojure.core-test.qualified-ident-qmark
     clojure.core-test.qualified-keyword-qmark
     clojure.core-test.qualified-symbol-qmark

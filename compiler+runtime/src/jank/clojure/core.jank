@@ -583,6 +583,8 @@
      (cpp/jank.runtime.print1 x))
     ([x & more]
      (cpp/jank.runtime.print1 x)
+     (if (seq more)
+       (cpp/jank.runtime.print1 " "))
      (cpp/jank.runtime.print more))))
 
 (def ^{:arglists '([& more])
