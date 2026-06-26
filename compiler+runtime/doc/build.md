@@ -125,5 +125,5 @@ JIT compilation.
 ```bash
 cd compiler+runtime
 ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release
-./bin/install
+DESTDIR=inst ./bin/install
 ```
