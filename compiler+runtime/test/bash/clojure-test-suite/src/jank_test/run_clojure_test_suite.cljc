@@ -44,7 +44,7 @@
     clojure.core-test.conj-bang
     clojure.core-test.cons
     clojure.core-test.constantly
-    ; clojure.core-test.contains-qmark ; FIXME: Failing tests. 
+    clojure.core-test.contains-qmark
     clojure.core-test.count
     ; clojure.core-test.counted-qmark ; TODO: port array-map, TODO: port object-array
     ; clojure.core-test.cycle ; Program hangs.
