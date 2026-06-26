@@ -134,7 +134,7 @@ namespace jank::runtime
   object_ref remove_watch(object_ref const reference, object_ref const key);
 
   obj::future_ref future(object_ref const fn);
-  void cancel_future(obj::future_ref const future);
+  bool cancel_future(obj::future_ref const future);
   bool is_future_cancelled(obj::future_ref const future);
 
   obj::promise_ref promise();
