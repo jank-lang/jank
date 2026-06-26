@@ -53,7 +53,9 @@ jobs:
 
   arch-build-clang:
     name: Arch - clang
-    runs-on: archlinux:latest
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
     timeout-minutes: 200
     steps:
       - uses: actions/checkout@v4
@@ -321,7 +323,9 @@ jobs:
   publish-arch-package:
     needs:
       - arch-build-clang
-    runs-on: archlinux:latest
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
     name: Publish Arch package
     timeout-minutes: 60
     steps:
