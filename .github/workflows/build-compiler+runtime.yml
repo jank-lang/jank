@@ -53,7 +53,7 @@ jobs:
 
   arch-build-clang:
     name: Arch - clang
-    runs-on: archlinux/latest
+    runs-on: archlinux:latest
     timeout-minutes: 200
     steps:
       - uses: actions/checkout@v4
@@ -319,7 +319,7 @@ jobs:
   #        scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/
 
   publish-arch-package:
-    runs-on: archlinux/latest
+    runs-on: archlinux:latest
     name: Publish Arch package
     timeout-minutes: 60
     steps:
