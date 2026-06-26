@@ -1,5 +1,5 @@
 (ns leiningen.jank.test-build
-  (:require [clojure.test :refer [deftest testing is]]
+  (:require [clojure.test :refer [deftest is]]
             [babashka.fs :as fs]
             [leiningen.core.project :as proj]
             [leiningen.jank.build :as build]))
@@ -43,3 +43,16 @@
   (is (false? (build/build-scoped? '[org.jank/some-dependency "1.0.0"])))
   (is (false? (build/build-scoped? '[org.jank/some-dependency "1.0.0" :exclusions [foo] :classifier "asdf"])))
   (is (true? (build/build-scoped? '[org.jank/some-dependency "1.0.0" :scope "jank-build"]))))
+
+(deftest fingerprint
+  (is (string? (build/fingerprint [1 2 3])))
+  (is (not= (build/fingerprint [1 2 3])
+            (build/fingerprint [3 2 1])))
+  (let [f       (fs/create-temp-file)
+        fprint0 (do (fs/write-lines f ["Hello" "world"])
+                    (build/fingerprint-file f))
+        fprint1 (do (fs/write-lines f ["world" "Hello"])
+                    (build/fingerprint-file f))]
+    (is (string? fprint0))
+    (is (string? fprint1))
+    (is (not= fprint0 fprint1))))
