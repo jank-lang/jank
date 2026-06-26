@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d18a5872.js";
+            window.path_to_searchindex_js = "searchindex-46a6cda8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f18007b9.js"></script>
@@ -227,7 +227,8 @@ developer. If you are able to help with this, please reach out.</p>
 <p>Moving on.</p>
 <p>The performance of jank, during this alpha stage, will be quite bad. Depending
 on the benchmark, you might find jank to be 2x or even 10x slower than Clojure
-JVM. Maybe more.</p>
+JVM. Maybe more. We have <a href="https://kylc.github.io/is-jank-fast-yet/">continuous benchmarks</a>
+tracking jank’s performance.</p>
 <p><strong>Do not be concerned by this. I am not concerned by this.</strong></p>
 <p>I have not had the luxury to focus on performance much beyond some early design
 decisions. Clojure JVM, aside from leaning on the JVM for much of its
@@ -381,12 +382,12 @@ will look similar to this:</p>
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
   :dependencies []
-  :plugins [[org.jank-lang/lein-jank "0.8"]]
+  :plugins [[org.jank-lang/lein-jank "2026.06-2"]]
   :middleware [leiningen.jank/middleware]
   :main hello-lein.main
-  :profiles {:debug {:output-dir "target/debug"
+  :profiles {:debug {:target-dir "target/debug"
                      :jank {:optimization-level 0}}
-             :release {:output-dir "target/release"
+             :release {:target-dir "target/release"
                        :jank {:optimization-level 3}}})
 </code></pre>
 <p>Your versions may differ, but the overall structure will remain. Our
@@ -436,10 +437,10 @@ within those directories, recursively, and ensure their tests run.</p>
 executable. This involves compiling every one of our source files and
 dependencies and then linking them all together. Leiningen makes this easy.</p>
 <pre><code class="language-bash">$ lein compile
-$ ./target/debug/hello_lein/hello_lein
+$ ./target/debug/hello_lein
 Hello, world!
 </code></pre>
-<p>Our binary has been named based on our project and is placed within our output
+<p>Our binary has been named based on our project and is placed within our target
 directory. When we invoke it, we see our printed hello world.</p>
 <p>You can read more about AOT compiling projects <a href="#aot-compiling">here</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -1295,7 +1296,7 @@ pointer types, <code>cpp/cast</code> will not work, but <code>cpp/unsafe-cast</c
 note that <code>cpp/unsafe-cast</code> does not support trait conversions. It is solely
 dedicated to native type construction and reinterpretation.</p>
 <pre><code class="language-clojure">(let [s #cpp "meow"
-      us (cpp/cast (:* (:unsigned char)) s)])
+      us (cpp/unsafe-cast (:* (:unsigned char)) s)])
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="embedding-raw-c"><a class="header" href="#embedding-raw-c">Embedding raw C++</a></h1>
@@ -1485,7 +1486,6 @@ reliable way to check this with pthread</li>
 <ul>
 <li>No stable boxes for small integers (the JVM pre-allocates <code>1</code>, <code>2</code>, <code>3</code>, etc)</li>
 <li><code>persistent_string</code> is expected to be UTF-8</li>
-<li>No inheritance (currently)</li>
 <li>No records (yet)</li>
 <li>No protocols (yet)</li>
 <li>Sequences
@@ -1506,7 +1506,7 @@ on your module path, jank will load it</li>
 <li>jank uses the term “module path” instead of “class path”
 <ul>
 <li>We don’t have <code>.class</code> files</li>
-<li>A module is backed by either a <code>.jank</code>, <code>.cljc</code> or <code>.cpp</code> source file,
+<li>A module is backed by either a <code>.jank</code> or <code>.cljc</code> source file,
 optionally with a <code>.o</code> file cached for quick loading</li>
 </ul>
 </li>

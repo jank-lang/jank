@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-d18a5872.js";
+            window.path_to_searchindex_js = "../searchindex-46a6cda8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-f18007b9.js"></script>
@@ -229,12 +229,12 @@ will look similar to this:</p>
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
   :dependencies []
-  :plugins [[org.jank-lang/lein-jank "0.8"]]
+  :plugins [[org.jank-lang/lein-jank "2026.06-2"]]
   :middleware [leiningen.jank/middleware]
   :main hello-lein.main
-  :profiles {:debug {:output-dir "target/debug"
+  :profiles {:debug {:target-dir "target/debug"
                      :jank {:optimization-level 0}}
-             :release {:output-dir "target/release"
+             :release {:target-dir "target/release"
                        :jank {:optimization-level 3}}})
 </code></pre>
 <p>Your versions may differ, but the overall structure will remain. Our
@@ -284,10 +284,10 @@ within those directories, recursively, and ensure their tests run.</p>
 executable. This involves compiling every one of our source files and
 dependencies and then linking them all together. Leiningen makes this easy.</p>
 <pre><code class="language-bash">$ lein compile
-$ ./target/debug/hello_lein/hello_lein
+$ ./target/debug/hello_lein
 Hello, world!
 </code></pre>
-<p>Our binary has been named based on our project and is placed within our output
+<p>Our binary has been named based on our project and is placed within our target
 directory. When we invoke it, we see our printed hello world.</p>
 <p>You can read more about AOT compiling projects <a href="../project/aot.html">here</a>.</p>
 

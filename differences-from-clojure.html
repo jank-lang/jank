@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d18a5872.js";
+            window.path_to_searchindex_js = "searchindex-46a6cda8.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f18007b9.js"></script>
@@ -225,7 +225,6 @@ reliable way to check this with pthread</li>
 <ul>
 <li>No stable boxes for small integers (the JVM pre-allocates <code>1</code>, <code>2</code>, <code>3</code>, etc)</li>
 <li><code>persistent_string</code> is expected to be UTF-8</li>
-<li>No inheritance (currently)</li>
 <li>No records (yet)</li>
 <li>No protocols (yet)</li>
 <li>Sequences
@@ -246,7 +245,7 @@ on your module path, jank will load it</li>
 <li>jank uses the term “module path” instead of “class path”
 <ul>
 <li>We don’t have <code>.class</code> files</li>
-<li>A module is backed by either a <code>.jank</code>, <code>.cljc</code> or <code>.cpp</code> source file,
+<li>A module is backed by either a <code>.jank</code> or <code>.cljc</code> source file,
 optionally with a <code>.o</code> file cached for quick loading</li>
 </ul>
 </li>
