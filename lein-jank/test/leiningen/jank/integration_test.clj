@@ -40,13 +40,11 @@
   (is (true? (build/has-build-file? (:root grandchild-project)))))
 
 (deftest plan-build-test
-  (let [plan (build/plan-build parent-project)
-        ops  (:operations plan)]
+  (let [ops (build/plan-build parent-project)]
     ;; Only test-grandchild has a jank-build file, so it is the only dep which
     ;; will generate build plan steps.
-    (is (match? [{:op     :extract-src
-                  :dep    '[org.jank-lang/test-grandchild "0.1.0"]
-                  :fprint string?}
+    (is (match? [{:op  :extract-src
+                  :dep '[org.jank-lang/test-grandchild "0.1.0"]}
                  {:op           :compile
                   :dep          '[org.jank-lang/test-grandchild "0.1.0"]
                   :build-inputs [(m/regex #".*\.jar")]
@@ -58,8 +56,7 @@
                 ops))))
 
 (deftest plan-build-with-root-jank-build-test
-  (let [plan (build/plan-build grandchild-project)
-        ops  (:operations plan)]
+  (let [ops (build/plan-build grandchild-project)]
     (is (match? [;; no extract-src since we are building the root from source
                  {:op           :compile
                   :dep          '[org.jank-lang/test-grandchild "0.1.0"]

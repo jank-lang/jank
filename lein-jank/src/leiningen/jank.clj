@@ -23,7 +23,8 @@
     [opts extra]))
 
 (defn native-build [project opts]
-  (binding [ljb/*disable-sandbox* (or ljb/*disable-sandbox* (:disable-sandbox opts))]
+  (binding [ljb/*disable-sandbox* (or ljb/*disable-sandbox* (:disable-sandbox opts))
+            ljb/*verbose-build*   @ljc/verbose?]
     (let [native-flags (ljb/run-build! (ljb/plan-build project))]
       (update project :jank ljb/merge-native-flags native-flags))))
 
