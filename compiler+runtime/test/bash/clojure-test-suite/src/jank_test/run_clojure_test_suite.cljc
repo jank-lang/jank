@@ -164,7 +164,7 @@
     ; clojure.core-test.ratio-qmark ; FIXME: Failing test.
     ; clojure.core-test.rational-qmark ; FIXME: Failing test.
     ; clojure.core-test.rationalize ; TODO: port rationalize
-    ; clojure.core-test.realized-qmark ; TODO: port promise
+    clojure.core-test.realized-qmark
     ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map. TODO: into-array.
     ; clojure.core-test.rem ; FIXME: Failing tests.
     ; clojure.core-test.remove-watch ; TODO: port sync
