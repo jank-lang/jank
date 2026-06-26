@@ -24,9 +24,10 @@
    :static-build       false})
 
 (defn merge-native-flags
-  [& maps]
-  (let [valid-keys [:defines :include-dirs :library-dirs :linked-libraries]]
-    (reduce (fn [a b] (merge-with into a (select-keys b valid-keys))) {} maps)))
+  ([] {})
+  ([& maps]
+   (let [valid-keys [:defines :include-dirs :library-dirs :linked-libraries]]
+     (reduce (fn [a b] (merge-with into a (select-keys b valid-keys))) maps))))
 
 (defn has-build-file?
   "Returns true if the given directory or jar file has a `jank-build.bb` file in
