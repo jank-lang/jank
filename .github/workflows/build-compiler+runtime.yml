@@ -61,25 +61,26 @@ jobs:
       - name: Install packages
         run: |
           pacman -Syu --noconfirm
-          pacman --noconfirm -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr libxml2 libedit boost
+          pacman --noconfirm -S gcc git pkg-config cmake ninja make python3 libffi libxml2 libedit
+
       - uses: actions/checkout@v4
-        with:
-          submodules: true
+
       - name: Cache Clang/LLVM
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
-            ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+            ${{ env.GITHUB_WORKSPACE }}/compiler+runtime/build/llvm-install
+          key: clang-Arch-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+
       - name: Build Clang/LLVM
         run: |
-          if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
+          if [[ ! -e ${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
           then
-            pushd ${{ github.workspace }}/compiler+runtime
+            pushd ${GITHUB_WORKSPACE}/compiler+runtime
               ./bin/build-clang
             popd
           fi
-          ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
+          ${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
 
   macos-build-clang:
     name: macOS - clang
@@ -93,7 +94,7 @@ jobs:
           submodules: true
       - name: Install Homebrew deps
         run: |
-          brew install git git-lfs pkg-config ninja python cmake gnupg zlib
+          brew install git pkg-config ninja python cmake gnupg zlib
       - name: Cache Clang/LLVM
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
@@ -213,9 +214,9 @@ jobs:
   #      if: runner.os == 'Linux'
   #      uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
   #      with:
-  #        packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev gcc g++ libgc-dev libboost-all-dev
+  #        packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev gcc g++ libgc-dev libboost-all-dev
   #        # Increment this when the package list changes.
-  #        version: 13
+  #        version: 14
   #    # Boost doesn't get cached properly with the above action.
   #    # https://github.com/awalsh128/cache-apt-pkgs-action/issues/151
   #    - name: Install boost
@@ -333,7 +334,7 @@ jobs:
       - name: Install packages
         run: |
           pacman -Syu --noconfirm
-          pacman --noconfirm -S gcc git git-lfs pkg-config cmake ninja make python3 libffi entr libxml2 libedit boost
+          pacman --noconfirm -S gcc git pkg-config cmake ninja make python3 libffi libxml2 libedit boost
       - uses: actions/checkout@v4
         with:
           submodules: true
@@ -341,14 +342,8 @@ jobs:
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
-            ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
-      - name: Cache ccache object files
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
-        with:
-          path: |
-            ${{ github.workspace }}/compiler+runtime/.ctcache
-          key: ccache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
+            ${{ env.GITHUB_WORKSPACE }}/compiler+runtime/build/llvm-install
+          key: clang-Arch-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
       - uses: thejerrybao/setup-swap-space@466d59798fb9263b9c2331c83cf71f9b7bfd0c78
         with:
           swap-space-path: /swapfile
@@ -357,8 +352,8 @@ jobs:
       - name: Build and test jank
         id: jank-build-step
         run: |
-          export CC=$PWD/build/llvm-install/usr/local/bin/clang;
-          export CXX=$PWD/build/llvm-install/usr/local/bin/clang++
+          export CC=${GITHUB_WORKSPACE}/build/llvm-install/usr/local/bin/clang;
+          export CXX=${GITHUB_WORKSPACE}/build/llvm-install/usr/local/bin/clang++
           ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_local_clang=on
           DESTDIR=inst ./bin/install
 
