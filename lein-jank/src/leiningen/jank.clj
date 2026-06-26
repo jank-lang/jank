@@ -14,9 +14,6 @@
   (let [[args extra] (lmain/parse-options args)
         opts         (reduce (fn [opts arg]
                                (case arg
-                                 [:--verbose-build true]
-                                 (assoc opts :verbose-build true)
-
                                  [:--disable-sandbox true]
                                  (assoc opts :disable-sandbox true)
 
@@ -27,7 +24,7 @@
 
 (defn native-build [project opts]
   (binding [ljb/*disable-sandbox* (or ljb/*disable-sandbox* (:disable-sandbox opts))
-            ljb/*verbose-build*   (:verbose-build opts)]
+            ljb/*verbose-build*   @ljc/verbose?]
     (let [native-flags (ljb/run-build! (ljb/plan-build project))]
       (update project :jank ljb/merge-native-flags native-flags))))
 
