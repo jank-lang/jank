@@ -16,7 +16,7 @@
         lib,
         ...
       }: let
-        llvmPackages = pkgs.llvmPackages_22;
+        llvmPackages = pkgs.llvmPackages_git;
         # for cpptrace; versions from cpptrace/cmake/OptionVariables.cmake
         libdwarf-lite-src = pkgs.fetchFromGitHub {
           owner = "jeremy-rifkin";
