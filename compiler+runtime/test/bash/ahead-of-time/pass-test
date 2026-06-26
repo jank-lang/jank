@@ -7,10 +7,11 @@
             [clojure.test :as t :refer [deftest is testing use-fixtures]]))
 
 (def this-nsym (ns-name *ns*))
-(def default-output-file
-  (cond-> "target/cli"
+(def default-output-file-name
+  (cond-> "cli"
     (fs/windows?)
     (str ".exe")))
+(def default-output-file-path (str "target/" default-output-file-name))
 
 (defn module-path [alias]
   (-> (proc/sh "clojure" (str "-A:" alias) "-Spath") :out str/trim))
@@ -18,11 +19,11 @@
 (defn compile-command [module-path main-module {:keys [optimization-flag
                                                        output-file]
                                                 :or {optimization-flag "-O0"
-                                                     output-file default-output-file}}]
+                                                     output-file default-output-file-name}}]
   (str "jank " optimization-flag
        " --module-path " module-path
        " compile " main-module
-       " -o " output-file))
+       " --name " output-file))
 
 (use-fixtures
   :each
@@ -53,11 +54,11 @@
                       (proc/sh {:out *out*
                                 :err *out*})
                       :exit)))
-        (is (string= expected-output (->> args (str default-output-file)
+        (is (string= expected-output (->> args (str default-output-file-path)
                                           proc/sh :out))))
       (testing "Executable in temp directory"
         (fs/with-temp-dir [dir {}]
-          (fs/move default-output-file dir)
+          (fs/move default-output-file-path dir)
           (is (string= expected-output (->> (str "./cli " args)
                                             (proc/sh {:dir dir})
                                             :out))))))))
@@ -67,7 +68,7 @@
         module-path (module-path alias-name)
         module "core"
         args " Admin 3000"
-        output-filename "target/my-cli"
+        output-filename "my-cli"
         expected-output (slurp (str "expected-output/" alias-name "/" module))
         compile-command (compile-command module-path module {:output-file output-filename})]
     (testing (str alias-name " & core")
@@ -75,15 +76,17 @@
                     (proc/sh {:out *out*
                               :err *out*})
                     :exit)))
-      (is (string= expected-output (-> output-filename (str args)
-                                       proc/sh :out))))))
+      (is (string= expected-output (-> (str "target/" output-filename)
+                                       (str args)
+                                       proc/sh
+                                       :out))))))
 
 (deftest aot-multiple-jank-modules-release-build
   (let [alias-name "only-jank-modules"
         module-path (module-path alias-name)
         module "core"
         args " Admin 3000"
-        output-filename "target/my-cli"
+        output-filename "my-cli"
         expected-output (slurp (str "expected-output/" alias-name "/" module))
         compile-command (compile-command module-path module {:output-file output-filename
                                                              :optimization-flag "-O3"})]
@@ -92,8 +95,10 @@
                     (proc/sh {:out *out*
                               :err *out*})
                     :exit)))
-      (is (string= expected-output (-> output-filename (str args)
-                                       proc/sh :out))))))
+      (is (string= expected-output (-> (str "target/" output-filename)
+                                       (str args)
+                                       proc/sh
+                                       :out))))))
 
 (deftest aot-cpp-raw-inline
   (let [alias-name "cpp-raw-inline"
@@ -106,7 +111,7 @@
                     (proc/sh {:out *out*
                               :err *out*})
                     :exit)))
-      (is (string= expected-output (-> default-output-file proc/sh :out))))))
+      (is (string= expected-output (-> default-output-file-path proc/sh :out))))))
 
 (defn -main []
   (when (empty? (System/getenv "JANK_SKIP_AOT_CHECK"))

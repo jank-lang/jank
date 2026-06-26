@@ -141,17 +141,23 @@
 (defn upper-case
   "Converts string to all upper-case."
   [s]
+  (when (nil? s)
+    (throw "upper-case does not support nil"))
   (cpp/clojure.string_native.upper_case (.to_string s)))
 
 (defn lower-case
   "Converts string to all lower-case."
   [s]
+  (when (nil? s)
+    (throw "lower-case does not support nil"))
   (cpp/clojure.string_native.lower_case (.to_string s)))
 
 (defn capitalize
   "Converts first character of the string to upper-case, all other
   characters to lower-case."
   [s]
+  (when (nil? s)
+    (throw "capitalize does not support nil"))
   (let [s (str s)]
     (if (< (count s) 2)
       (upper-case s)
@@ -245,11 +251,15 @@
 (defn starts-with?
   "True if s starts with substr."
   [s substr]
+  (when (nil? s)
+    (throw "starts-with? does not support nil"))
   (cpp/clojure.string_native.starts_with (.to_string s) substr))
 
 (defn ends-with?
   "True if s ends with substr."
   [s substr]
+  (when (nil? s)
+    (throw "ends-with? does not support nil"))
   (cpp/clojure.string_native.ends_with (.to_string s) substr))
 
 (defn includes?

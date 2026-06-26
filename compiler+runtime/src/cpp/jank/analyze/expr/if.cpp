@@ -9,10 +9,12 @@ namespace jank::analyze::expr
            local_frame_ptr const frame,
            bool const needs_box,
            object_ref const form,
+           jtl::ptr<void> const type,
            expression_ref const condition,
            expression_ref const then,
            jtl::option<expression_ref> const &else_)
     : expression{ expr_kind, position, frame, needs_box, form }
+    , type{ type }
     , condition{ condition }
     , then{ then }
     , else_{ else_ }
@@ -53,6 +55,6 @@ namespace jank::analyze::expr
 
   jtl::ptr<void> if_::get_type() const
   {
-    return then->get_type();
+    return type;
   }
 }

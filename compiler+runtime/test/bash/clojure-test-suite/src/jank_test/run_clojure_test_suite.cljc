@@ -16,7 +16,7 @@
     ; clojure.core-test.atom ; libc++abi: terminating due to uncaught exception of type jank::runtime::invalid_arity<3ull>: invalid call to #object [unknown jit_function 0x1041da080] with 3 args provided
     clojure.core-test.bigdec
     ; clojure.core-test.bigint ; FIXME: Failing tests.
-    ; clojure.core-test.binding ; TODO: port future
+    clojure.core-test.binding
     clojure.core-test.bit-and
     clojure.core-test.bit-and-not
     clojure.core-test.bit-clear
@@ -30,12 +30,12 @@
     clojure.core-test.bit-xor
     clojure.core-test.boolean
     clojure.core-test.boolean-qmark
-    ; clojure.core-test.bound-fn ; TODO: port future
-    ; clojure.core-test.bound-fn-star ; TODO: port future
+    clojure.core-test.bound-fn
+    clojure.core-test.bound-fn-star
     clojure.core-test.butlast
     ; clojure.core-test.byte ; TODO: port byte, Expecting whitespace after the last token. due to M.
     ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
-    clojure.core-test.char
+    ; clojure.core-test.char
     clojure.core-test.char-qmark
     ; clojure.core-test.coll-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.comment
@@ -96,7 +96,7 @@
     clojure.core-test.interpose
     ; clojure.core-test.juxt ; Program hangs.
     ; clojure.core-test.key ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
-    ; clojure.core-test.keys ; FIXME: Failing tests.
+    clojure.core-test.keys
     clojure.core-test.keyword
     clojure.core-test.keyword-qmark
     clojure.core-test.last
@@ -206,7 +206,7 @@
     clojure.core-test.take-last
     ; clojure.core-test.take-nth ; FIXME: Failing tests.
     clojure.core-test.take-while
-    ; clojure.core-test.taps ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.IPending'.
+    clojure.core-test.taps
     ; clojure.core-test.transient ; analyze/macro-expansion-exception error: invalid call to #object [unknown jit_function 0x104434c80] with 3 args provided
     clojure.core-test.true-qmark
     clojure.core-test.underive
@@ -214,19 +214,28 @@
     ; clojure.core-test.update ; FIXME: Failing tests, Program hangs.
     clojure.core-test.uuid-qmark
     ; clojure.core-test.val ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
-    ; clojure.core-test.vals ; FIXME: Failing tests.
+    clojure.core-test.vals
     clojure.core-test.var-qmark
     ; clojure.core-test.vec ; analyze/invalid-cpp-operator-call error: Binary operator aget is not supported for 'jank::runtime::object *' and 'jank::runtime::object *'.
     clojure.core-test.vector
     ; clojure.core-test.vector-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.when
     clojure.core-test.when-first
-    ; clojure.core-test.when-let ; FIXME: Failing tests.
+    clojure.core-test.when-let
     clojure.core-test.when-not
     ; clojure.core-test.with-out-str ; TODO: port with-out-str
     ; clojure.core-test.with-precision ; TODO: port with-precision, INFO: SKIP - defprotocol
     clojure.core-test.zero-qmark
     clojure.core-test.zipmap
+
+    ; clojure.string-test.blank-qmark ; error: String contains invalid escape sequence '\u'.
+    ; clojure.string-test.capitalize  ; Uncaught exception: wstring_convert::from_bytes
+    clojure.string-test.ends-with-qmark
+    ; clojure.string-test.escape ; Uncaught exception: Can't convert character to integer.
+    clojure.string-test.lower-case
+    ; clojure.string-test.reverse ; issues with unicode
+    clojure.string-test.starts-with-qmark
+    clojure.string-test.upper-case
   ])
 
 (def windows? (= cpp/jtl.current_platform cpp/jtl.platform.windows_like))

@@ -61,13 +61,13 @@ will look similar to this:
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
   :dependencies []
-  :plugins [[org.jank-lang/lein-jank "0.2"]]
+  :plugins [[org.jank-lang/lein-jank "0.8"]]
   :middleware [leiningen.jank/middleware]
   :main hello-lein.main
   :profiles {:debug {:output-dir "target/debug"
                      :jank {:optimization-level 0}}
              :release {:output-dir "target/release"
-                       :jank {:optimization-level 2}}})
+                       :jank {:optimization-level 3}}})
 ```
 
 Your versions may differ, but the overall structure will remain. Our
@@ -132,15 +132,11 @@ dependencies and then linking them all together. Leiningen makes this easy.
 
 ```bash
 $ lein compile
-$ ./a.out
+$ ./target/debug/hello_lein/hello_lein
 Hello, world!
 ```
 
-As with GCC, Clang, etc, the default output name is `a.out`. When we invoke
-that, we see our printed hello world.
+Our binary has been named based on our project and is placed within our output
+directory. When we invoke it, we see our printed hello world.
 
 You can read more about AOT compiling projects [here](../project/aot.md).
-
-> [!NOTE]
-> There is not yet a way to change the output name using Leiningen, but this
-> will be implemented.

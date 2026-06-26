@@ -436,6 +436,16 @@ namespace jank::runtime
       s);
   }
 
+  object_ref more(object_ref const s)
+  {
+    if(s.get_type() == object_type::cons)
+    {
+      return expect_object<obj::cons>(s)->tail;
+    }
+
+    return next(s);
+  }
+
   object_ref rest(object_ref const s)
   {
     if(s.is_nil())
@@ -449,7 +459,7 @@ namespace jank::runtime
         {
           return obj::persistent_list::empty();
         }
-        auto ret(next(seq));
+        auto ret(more(seq));
         if(ret.is_nil())
         {
           return obj::persistent_list::empty();
