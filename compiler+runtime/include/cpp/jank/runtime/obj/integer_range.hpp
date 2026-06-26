@@ -9,6 +9,7 @@ namespace jank::runtime::obj
 {
   using cons_ref = oref<struct cons>;
   using integer_range_ref = oref<struct integer_range>;
+  using persistent_list_ref = oref<struct persistent_list>;
 
   /* An integer range from X to Y, exclusive, incrementing by S. */
   /* For non-integer values, use the range object */
@@ -65,6 +66,9 @@ namespace jank::runtime::obj
 
     /* behavior::conjable */
     cons_ref conj(object_ref const head) const;
+
+    /* behavior::collection_like */
+    static persistent_list_ref empty();
 
     /* behavior::metadatable */
     integer_range_ref with_meta(object_ref const m) const;

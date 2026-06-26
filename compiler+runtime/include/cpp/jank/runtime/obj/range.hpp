@@ -11,6 +11,7 @@ namespace jank::runtime::obj
 {
   using array_chunk_ref = oref<struct array_chunk>;
   using cons_ref = oref<struct cons>;
+  using persistent_list_ref = oref<struct persistent_list>;
   using range_ref = oref<struct range>;
 
   /* A range from X to Y, exclusive, incrementing by S. This is for non-integer values.
@@ -71,6 +72,9 @@ namespace jank::runtime::obj
 
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head) const;
+
+    /* behavior::collection_like */
+    static persistent_list_ref empty();
 
     /* behavior::metadatable */
     range_ref with_meta(object_ref const m) const;

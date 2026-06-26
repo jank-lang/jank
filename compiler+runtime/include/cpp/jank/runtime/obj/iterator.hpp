@@ -7,6 +7,7 @@ namespace jank::runtime::obj
 {
   using cons_ref = oref<struct cons>;
   using iterator_ref = oref<struct iterator>;
+  using persistent_list_ref = oref<struct persistent_list>;
 
   /* TODO: Rename to iterator_sequence. */
   struct iterator : object
@@ -34,6 +35,9 @@ namespace jank::runtime::obj
     object_ref first() const;
     iterator_ref next() const;
     obj::cons_ref conj(object_ref const head) const;
+
+    /* behavior::collection_like */
+    static persistent_list_ref empty();
 
     /* behavior::sequenceable_in_place */
     iterator_ref next_in_place();

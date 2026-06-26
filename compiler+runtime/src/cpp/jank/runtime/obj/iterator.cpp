@@ -93,4 +93,9 @@ namespace jank::runtime::obj
   {
     return make_box<cons>(head, runtime::detail::untagged(this));
   }
+
+  persistent_list_ref iterator::empty()
+  {
+    return persistent_list::empty();
+  }
 }

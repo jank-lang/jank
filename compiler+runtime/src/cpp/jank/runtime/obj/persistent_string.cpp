@@ -99,7 +99,8 @@ namespace jank::runtime::obj
       auto const i(to_i64(key));
       return 0 <= i && static_cast<size_t>(i) < data.size();
     }
-    return false;
+    throw std::runtime_error{ util::format("contains? not supported for argument: {}",
+                                           key.to_code_string()) };
   }
 
   object_ref persistent_string::nth(object_ref const index) const

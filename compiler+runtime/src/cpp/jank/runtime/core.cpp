@@ -107,10 +107,29 @@ namespace jank::runtime
     return make_box<obj::symbol>(ns, name);
   }
 
+  static FILE *get_stdout()
+  {
+    static auto const stream_val{ __rt_ctx->stream_var->deref() };
+    static auto const stream_box{ try_object<obj::opaque_box>(stream_val) };
+
+    auto const out_val{ __rt_ctx->current_out_var->deref() };
+    auto const out_box{ try_object<obj::opaque_box>(out_val) };
+
+    if(stream_box->canonical_type != out_box->canonical_type)
+    {
+      throw std::runtime_error{ util::format("Invalid binding for *out*: {}",
+                                             out_box->canonical_type) };
+    }
+
+    return reinterpret_cast<FILE *>(out_box->data.data);
+  }
+
   object_ref print(object_ref const args)
   {
+    auto const out{ get_stdout() };
+
     visit_object(
-      [](auto const typed_args) {
+      [&](auto const typed_args) {
         using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -122,7 +141,7 @@ namespace jank::runtime
             buff(' ');
             runtime::to_string(e.erase(), buff);
           }
-          std::fwrite(buff.data(), 1, buff.size(), stdout);
+          std::fwrite(buff.data(), 1, buff.size(), out);
         }
         else
         {
@@ -138,19 +157,21 @@ namespace jank::runtime
   {
     jtl::string_builder buff;
     runtime::to_string(o, buff);
-    std::fwrite(buff.data(), 1, buff.size(), stdout);
+    std::fwrite(buff.data(), 1, buff.size(), get_stdout());
     return {};
   }
 
   object_ref println(object_ref const args)
   {
+    auto const out{ get_stdout() };
+
     visit_object(
-      [](auto const typed_more) {
+      [&](auto const typed_more) {
         using T = typename jtl::decay_t<decltype(typed_more)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
-          std::putc('\n', stdout);
+          std::putc('\n', out);
         }
         else if constexpr(behavior::sequenceable<T>)
         {
@@ -161,8 +182,8 @@ namespace jank::runtime
             buff(' ');
             runtime::to_string(e.erase(), buff);
           }
-          std::fwrite(buff.data(), 1, buff.size(), stdout);
-          std::putc('\n', stdout);
+          std::fwrite(buff.data(), 1, buff.size(), out);
+          std::putc('\n', out);
         }
         else
         {
@@ -176,8 +197,10 @@ namespace jank::runtime
 
   object_ref pr(object_ref const args)
   {
+    auto const out{ get_stdout() };
+
     visit_object(
-      [](auto const typed_args) {
+      [&](auto const typed_args) {
         using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -189,7 +212,7 @@ namespace jank::runtime
             buff(' ');
             runtime::to_code_string(e.erase(), buff);
           }
-          std::fwrite(buff.data(), 1, buff.size(), stdout);
+          std::fwrite(buff.data(), 1, buff.size(), out);
         }
         else
         {
@@ -203,13 +226,15 @@ namespace jank::runtime
 
   object_ref prn(object_ref const args)
   {
+    auto const out{ get_stdout() };
+
     visit_object(
-      [](auto const typed_args) {
+      [&](auto const typed_args) {
         using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
-          std::putc('\n', stdout);
+          std::putc('\n', out);
         }
         else if constexpr(behavior::sequenceable<T>)
         {
@@ -220,8 +245,8 @@ namespace jank::runtime
             buff(' ');
             runtime::to_code_string(e.erase(), buff);
           }
-          std::fwrite(buff.data(), 1, buff.size(), stdout);
-          std::putc('\n', stdout);
+          std::fwrite(buff.data(), 1, buff.size(), out);
+          std::putc('\n', out);
         }
         else
         {

@@ -47,6 +47,17 @@ namespace jank::runtime
     current_ns_var->bind_root(core);
     current_ns_var->dynamic.store(true);
 
+    auto const stream_sym(make_box<obj::symbol>("stream*"));
+    stream_var = core->intern_var(stream_sym);
+
+    auto const out_sym(make_box<obj::symbol>("*out*"));
+    current_out_var = core->intern_var(out_sym);
+    current_out_var->dynamic.store(true);
+
+    auto const err_sym(make_box<obj::symbol>("*err*"));
+    current_err_var = core->intern_var(err_sym);
+    current_err_var->dynamic.store(true);
+
     auto const compile_files_sym(make_box<obj::symbol>("*compile-files*"));
     compile_files_var = core->intern_var(compile_files_sym);
     compile_files_var->bind_root(jank_false);

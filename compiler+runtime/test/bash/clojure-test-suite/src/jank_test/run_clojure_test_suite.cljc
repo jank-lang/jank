@@ -44,7 +44,7 @@
     clojure.core-test.conj-bang
     clojure.core-test.cons
     clojure.core-test.constantly
-    ; clojure.core-test.contains-qmark ; FIXME: Failing tests. 
+    clojure.core-test.contains-qmark
     clojure.core-test.count
     ; clojure.core-test.counted-qmark ; TODO: port array-map, TODO: port object-array
     ; clojure.core-test.cycle ; Program hangs.
@@ -63,7 +63,7 @@
     clojure.core-test.drop
     clojure.core-test.drop-last
     clojure.core-test.drop-while
-    ; clojure.core-test.empty ; FIXME: Failing tests.
+    clojure.core-test.empty
     clojure.core-test.empty-qmark
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
     ; clojure.core-test.eval ; libc++abi: terminating due to uncaught exception of type jtl::ref<jank::error::base>
@@ -149,9 +149,9 @@
     clojure.core-test.pos-int-qmark
     clojure.core-test.pos-qmark
     ; clojure.core-test.pr-str ; Uncaught exception: invalid call to #object [clojure.core/pr-str jit_function 0x112436c68] with 2 args provided
-    ; clojure.core-test.print-str ; TODO: port print-str
-    ; clojure.core-test.println-str ; TODO: port println-str
-    ; clojure.core-test.prn-str ; TODO: port prn-str
+    clojure.core-test.print-str
+    clojure.core-test.println-str
+    clojure.core-test.prn-str
     clojure.core-test.qualified-ident-qmark
     clojure.core-test.qualified-keyword-qmark
     clojure.core-test.qualified-symbol-qmark
@@ -223,7 +223,7 @@
     clojure.core-test.when-first
     clojure.core-test.when-let
     clojure.core-test.when-not
-    ; clojure.core-test.with-out-str ; TODO: port with-out-str
+    clojure.core-test.with-out-str
     ; clojure.core-test.with-precision ; TODO: port with-precision, INFO: SKIP - defprotocol
     clojure.core-test.zero-qmark
     clojure.core-test.zipmap

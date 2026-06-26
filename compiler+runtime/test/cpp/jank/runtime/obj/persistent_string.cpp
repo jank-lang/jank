@@ -45,7 +45,6 @@ namespace jank::runtime::obj
       CHECK(s.contains(max));
       CHECK(!s.contains(over));
       CHECK(!s.contains(under));
-      CHECK(!s.contains(non_int));
     }
     TEST_CASE("to_code_string")
     {
