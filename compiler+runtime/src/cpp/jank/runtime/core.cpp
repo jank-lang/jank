@@ -971,17 +971,22 @@ namespace jank::runtime
     return ret;
   }
 
-  void cancel_future(obj::future_ref const future)
+  bool cancel_future(obj::future_ref const future)
   {
     /* We need to hold this lock the whole time we're checking, to ensure the thread
      * doesn't finish while we're here checking. */
-    auto const locked_state{ future->state.rlock() };
+    auto const locked_state{ future->state.wlock() };
     if(locked_state->status == obj::future_status::running)
     {
       auto const locked_thread{ future->thread.wlock() };
       auto const thread_handle{ locked_thread->native_handle() };
-      pthread_cancel(reinterpret_cast<pthread_t>(thread_handle));
+      if(pthread_cancel(reinterpret_cast<pthread_t>(thread_handle)) == 0)
+      {
+        locked_state->status = obj::future_status::cancelled;
+        return true;
+      }
     }
+    return false;
   }
 
   bool is_future_cancelled(obj::future_ref const future)
