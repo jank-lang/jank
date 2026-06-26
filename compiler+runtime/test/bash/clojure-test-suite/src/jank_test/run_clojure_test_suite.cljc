@@ -63,7 +63,7 @@
     ; clojure.core-test.drop ; Assertion failed! val.is_some(), https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
     clojure.core-test.drop-last
     ; clojure.core-test.drop-while ; Assertion failed! val.is_some(), https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/212
-    ; clojure.core-test.empty ; FIXME: Failing tests.
+    clojure.core-test.empty
     clojure.core-test.empty-qmark
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
     ; clojure.core-test.eval ; libc++abi: terminating due to uncaught exception of type jtl::ref<jank::error::base>
