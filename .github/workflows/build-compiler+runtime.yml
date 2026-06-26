@@ -319,6 +319,8 @@ jobs:
   #        scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/
 
   publish-arch-package:
+    needs:
+      - arch-build-clang
     runs-on: archlinux:latest
     name: Publish Arch package
     timeout-minutes: 60
