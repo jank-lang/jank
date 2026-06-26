@@ -60,9 +60,9 @@
     clojure.core-test.doseq
     clojure.core-test.double
     clojure.core-test.double-qmark
-    ; clojure.core-test.drop ; Assertion failed! val.is_some(), https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
+    clojure.core-test.drop
     clojure.core-test.drop-last
-    ; clojure.core-test.drop-while ; Assertion failed! val.is_some(), https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/212
+    clojure.core-test.drop-while
     ; clojure.core-test.empty ; FIXME: Failing tests.
     clojure.core-test.empty-qmark
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
