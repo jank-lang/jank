@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::if_::pass_void_then_and_else
+          {
+            void foo()
+            { }
+          }")
+(let* [r (if false
+           (cpp/jank.cpp.if_.pass_void_then_and_else.foo)
+           (cpp/jank.cpp.if_.pass_void_then_and_else.foo))]
+  (if (= nil r)
+    :success))

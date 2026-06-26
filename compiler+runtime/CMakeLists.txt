@@ -105,6 +105,7 @@ set(
   jank_common_compiler_flags
   -std=gnu++20
   -DJANK_VERSION="${jank_version}"
+  -DJANK_CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
   # https://groups.google.com/g/llvm-dev/c/W-OweiAjDcU?pli=1
   -femulated-tls
   -DGC_THREADS -DPOINTER_MASK=0x0000FFFFFFFFFFFF

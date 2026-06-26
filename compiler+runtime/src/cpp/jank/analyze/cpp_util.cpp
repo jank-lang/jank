@@ -706,6 +706,12 @@ namespace jank::analyze::cpp_util
         }
       case jank::runtime::object_type::var:
         return var_type();
+      case jank::runtime::object_type::re_pattern:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.re_pattern_ref").expect_ok()) };
+          return type;
+        }
       default:
         {
           static auto const type{ untyped_object_ref_type() };
@@ -839,8 +845,49 @@ namespace jank::analyze::cpp_util
     {
       return Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type));
     }
+    /* void & => object_ref */
+    /* void => object_ref */
+    if(Cpp::IsVoid(Cpp::GetNonReferenceType(type)))
+    {
+      return untyped_object_ref_type();
+    }
 
     return type;
+  }
+
+  /* Returns the two types, in a pair, ordered with the first type being the "most native".
+   * The ordering is based on these rules:
+   *
+   * 1. (most native) Non-jank object (i.e. int, std::string, etc)
+   * 2. Typed jank object
+   * 3. (least native) Untyped jank object
+   */
+  std::pair<jtl::ptr<void>, jtl::ptr<void>>
+  select_most_native_type(jtl::ptr<void> const left, jtl::ptr<void> const right)
+  {
+    auto const is_left_any_object{ cpp_util::is_any_object(left) };
+    auto const is_right_any_object{ cpp_util::is_any_object(right) };
+    auto const is_left_typed_object{ cpp_util::is_typed_object(left) };
+    auto const is_right_typed_object{ cpp_util::is_typed_object(right) };
+
+    if(!is_left_any_object)
+    {
+      return { left, right };
+    }
+    if(!is_right_any_object)
+    {
+      return { right, left };
+    }
+    if(is_left_typed_object)
+    {
+      return { left, right };
+    }
+    if(is_right_typed_object)
+    {
+      return { right, left };
+    }
+
+    return { left, right };
   }
 
   jtl::ptr<void> expression_scope(expression_ref const expr)
@@ -866,6 +913,15 @@ namespace jank::analyze::cpp_util
   {
     auto const type{ expression_type(expr) };
     jank_debug_assert(type);
+    if(Cpp::IsVoid(type))
+    {
+      return untyped_object_ref_type();
+    }
+    return type;
+  }
+
+  jtl::ptr<void> non_void_type(jtl::ptr<void> const type)
+  {
     if(Cpp::IsVoid(type))
     {
       return untyped_object_ref_type();

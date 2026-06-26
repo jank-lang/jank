@@ -37,7 +37,6 @@ Clojure.
 ## Object model
 * No stable boxes for small integers (the JVM pre-allocates `1`, `2`, `3`, etc)
 * `persistent_string` is expected to be UTF-8
-* No inheritance (currently)
 * No records (yet)
 * No protocols (yet)
 * Sequences
@@ -50,7 +49,7 @@ Clojure.
     on your module path, jank will load it
 * jank uses the term "module path" instead of "class path"
   * We don't have `.class` files
-  * A module is backed by either a `.jank`, `.cljc` or `.cpp` source file,
+  * A module is backed by either a `.jank` or `.cljc` source file,
     optionally with a `.o` file cached for quick loading
 
 ## Math

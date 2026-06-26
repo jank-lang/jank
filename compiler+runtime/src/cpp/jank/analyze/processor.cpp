@@ -2590,6 +2590,32 @@ namespace jank::analyze
     return let;
   }
 
+  /* We use this to find `recur` expressions. We need to recursively dig into `do` and `let`
+   * expressions to see if their tail expression is a `recur`. Every other expression is
+   * just returned as is. */
+  static expression_ref resolve_tail_expression(expression_ref const expr)
+  {
+    if(expr->kind == expression_kind::do_)
+    {
+      auto const do_{ static_box_cast<expr::do_>(expr) };
+      if(!do_->values.empty())
+      {
+        return resolve_tail_expression(do_->values.back());
+      }
+      return expr;
+    }
+    if(expr->kind == expression_kind::let)
+    {
+      auto const let{ static_box_cast<expr::let>(expr) };
+      if(!let->body->values.empty())
+      {
+        return resolve_tail_expression(let->body->values.back());
+      }
+      return expr;
+    }
+    return expr;
+  }
+
   processor::expression_result
   processor::analyze_if(runtime::obj::persistent_list_ref const o,
                         local_frame_ptr const current_frame,
@@ -2643,6 +2669,8 @@ namespace jank::analyze
       return condition_expr.expect_err()->add_usage(read::parse::reparse_nth(o, 1));
     }
 
+    bool has_recur{};
+
     auto const then(o->data.rest().rest().first().unwrap());
     auto then_expr(analyze(then, current_frame, position, fn_ctx, needs_box));
     if(then_expr.is_err())
@@ -2650,6 +2678,11 @@ namespace jank::analyze
       return then_expr.expect_err();
     }
     auto const then_type{ cpp_util::non_void_expression_type(then_expr.expect_ok()) };
+
+    if(resolve_tail_expression(then_expr.expect_ok())->kind == expression_kind::recur)
+    {
+      has_recur = true;
+    }
 
     jtl::option<expression_ref> else_expr_opt;
     if(form_count == 4)
@@ -2659,6 +2692,11 @@ namespace jank::analyze
       if(else_expr.is_err())
       {
         return else_expr.expect_err();
+      }
+
+      if(resolve_tail_expression(else_expr.expect_ok())->kind == expression_kind::recur)
+      {
+        has_recur = true;
       }
 
       else_expr_opt = else_expr.expect_ok();
@@ -2679,7 +2717,8 @@ namespace jank::analyze
        *
        * If neither of these are the case, we have an error. */
     if((Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
-       && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible))
+       && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible)
+       && !has_recur)
     {
       return error::analyze_mismatched_if_types(
         util::format("Mismatched 'if' branch types '{}' and '{}'. Each branch of an 'if' must have "
@@ -2704,20 +2743,29 @@ namespace jank::analyze
                         .expect_ok();
     }
 
+    auto const final_then_type{ then_expr.expect_ok()->get_type() };
+    auto const final_else_type{ else_expr_opt.is_some() ? else_expr_opt.unwrap()->get_type()
+                                                        : cpp_util::untyped_object_ref_type() };
+    auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
+      cpp_util::non_void_type(final_else_type),
+      cpp_util::non_void_type(final_then_type)) };
+
     /* If we have a typed object on one side, and anything other than that same typed object
-     * on the other side, we need to type-erase to find the common type. */
-    auto if_type{ then_expr.expect_ok()->get_type() };
-    if(cpp_util::is_typed_object(if_type) && is_else_object
-       && Cpp::GetCanonicalType(if_type) != Cpp::GetCanonicalType(else_type))
+     * on the other side, we need to type-erase to find the common type.
+     *
+     * We also calculate the types again, since they may have changed due to the implicit
+     * conversions above. */
+    if(cpp_util::is_typed_object(chosen_type) && cpp_util::is_any_object(other_type)
+       && Cpp::GetCanonicalType(chosen_type) != Cpp::GetCanonicalType(other_type))
     {
-      if_type = cpp_util::untyped_object_ref_type();
+      chosen_type = cpp_util::untyped_object_ref_type();
     }
 
     return jtl::make_ref<expr::if_>(position,
                                     current_frame,
                                     needs_box,
                                     o,
-                                    if_type,
+                                    chosen_type,
                                     condition_expr.expect_ok(),
                                     then_expr.expect_ok(),
                                     else_expr_opt);

@@ -27,7 +27,8 @@ Moving on.
 
 The performance of jank, during this alpha stage, will be quite bad. Depending
 on the benchmark, you might find jank to be 2x or even 10x slower than Clojure
-JVM. Maybe more.
+JVM. Maybe more. We have [continuous benchmarks](https://kylc.github.io/is-jank-fast-yet/)
+tracking jank's performance.
 
 **Do not be concerned by this. I am not concerned by this.**
 

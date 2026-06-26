@@ -86,6 +86,14 @@ namespace jank::environment
                         JANK_VERSION);
   }
 
+  static jtl::immutable_string jank_cmake_build_type()
+  {
+    return util::format("{}─ ✅{} jank cmake build type: {}",
+                        terminal_style::green,
+                        terminal_style::reset,
+                        JANK_CMAKE_BUILD_TYPE);
+  }
+
   static jtl::immutable_string jank_asserts()
   {
 #ifndef NDEBUG
@@ -450,6 +458,7 @@ namespace jank::environment
 
     util::println("{}", header("jank install", max_width));
     util::println("{}", jank_version());
+    util::println("{}", jank_cmake_build_type());
     util::print("{}", jank_asserts());
     util::println("{}", jank_resource_dir());
     util::println("{}", jank_user_cache_dir());

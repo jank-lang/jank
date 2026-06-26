@@ -290,8 +290,9 @@ namespace jank::runtime
 
           auto const target_triple{ util::default_target_triple() };
           std::string target_error;
-          auto const target{ llvm::TargetRegistry::lookupTarget(target_triple.c_str(),
-                                                                target_error) };
+          auto const target{
+            llvm::TargetRegistry::lookupTarget(llvm::Triple{ target_triple.c_str() }, target_error)
+          };
           if(!target)
           {
             return err(target_error);

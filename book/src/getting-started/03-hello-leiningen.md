@@ -61,12 +61,12 @@ will look similar to this:
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
   :dependencies []
-  :plugins [[org.jank-lang/lein-jank "0.8"]]
+  :plugins [[org.jank-lang/lein-jank "2026.06-2"]]
   :middleware [leiningen.jank/middleware]
   :main hello-lein.main
-  :profiles {:debug {:output-dir "target/debug"
+  :profiles {:debug {:target-dir "target/debug"
                      :jank {:optimization-level 0}}
-             :release {:output-dir "target/release"
+             :release {:target-dir "target/release"
                        :jank {:optimization-level 3}}})
 ```
 
@@ -132,11 +132,11 @@ dependencies and then linking them all together. Leiningen makes this easy.
 
 ```bash
 $ lein compile
-$ ./target/debug/hello_lein/hello_lein
+$ ./target/debug/hello_lein
 Hello, world!
 ```
 
-Our binary has been named based on our project and is placed within our output
+Our binary has been named based on our project and is placed within our target
 directory. When we invoke it, we see our printed hello world.
 
 You can read more about AOT compiling projects [here](../project/aot.md).

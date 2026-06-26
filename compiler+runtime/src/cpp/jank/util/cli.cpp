@@ -431,22 +431,6 @@ OPTIONS
       else if(command == "compile-module" || command == "compile")
       {
         opts.target_module = get_positional_arg(command, "module", pending_positional_args);
-        if(check_pending_flag("--name", value, pending_flags))
-        {
-          if(value.contains('/'))
-          {
-            throw util::format("The argument to --name must be a file name, not a directory.");
-          }
-
-          if(command == "compile-module")
-          {
-            opts.output_module_filename = value;
-          }
-          else
-          {
-            opts.output_filename = value;
-          }
-        }
         if(check_pending_flag("--output-target", value, pending_flags))
         {
           if(value == "cpp")
@@ -470,6 +454,24 @@ OPTIONS
         if(command == "compile" && opts.output_target == compilation_target::unspecified)
         {
           opts.output_target = compilation_target::object;
+        }
+      }
+
+      /* We allow --name to be passed for any command, since lein-jank passes it.*/
+      if(check_pending_flag("--name", value, pending_flags))
+      {
+        if(value.contains('/'))
+        {
+          throw util::format("The argument to --name must be a file name, not a directory.");
+        }
+
+        if(command == "compile-module")
+        {
+          opts.output_module_filename = value;
+        }
+        else
+        {
+          opts.output_filename = value;
         }
       }
 
