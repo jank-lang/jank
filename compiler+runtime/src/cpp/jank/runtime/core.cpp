@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <iterator>
+#include <deque>
 #include <pthread.h>
 #include <cxxabi.h>
 
@@ -11,6 +14,7 @@
 #include <jank/runtime/core/call.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/sequence_range.hpp>
+#include <jank/runtime/detail/std_format.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 
@@ -66,10 +70,10 @@ namespace jank::runtime
     return o.get_type() == object_type::symbol && !expect_object<obj::symbol>(o)->ns.empty();
   }
 
-  object_ref to_unqualified_symbol(object_ref const o)
+  obj::symbol_ref to_unqualified_symbol(object_ref const o)
   {
     return runtime::visit_object(
-      [&](auto const typed_o) -> object_ref {
+      [&](auto const typed_o) -> obj::symbol_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
         if constexpr(std::same_as<T, obj::symbol>)
@@ -90,14 +94,15 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("can't convert {} to a symbol",
-                                                 typed_o.to_code_string()) };
+          throw std::runtime_error{
+            util::format("can't convert {} to a symbol", typed_o.to_code_string()).c_str()
+          };
         }
       },
       o);
   }
 
-  object_ref to_qualified_symbol(object_ref const ns, object_ref const name)
+  obj::symbol_ref to_qualified_symbol(object_ref const ns, object_ref const name)
   {
     return make_box<obj::symbol>(ns, name);
   }
@@ -253,6 +258,169 @@ namespace jank::runtime
     return {};
   }
 
+  jtl::immutable_string format(jtl::immutable_string const &format, object_ref const args)
+  {
+    enum class indexing_mode : u8
+    {
+      unspecified,
+      /* Argument indices are automatically incremented as they are encountered,
+       * specifiers are bare e.g. {} or {:}. */
+      automatic,
+      /* User specifies the argument index, e.g. {2}. */
+      manual
+    };
+
+    auto const args_vec{ vec(args) };
+
+    jtl::string_builder out;
+    jtl::string_builder fmt;
+    i64 depth{};
+
+    indexing_mode mode{ indexing_mode::unspecified };
+    std::deque<u64> arg_indices{};
+    u64 auto_idx{};
+
+    for(auto it{ format.begin() }; it != format.end(); ++it)
+    {
+      auto const peek{ std::next(it) != format.end() ? *std::next(it) : '\0' };
+
+      /* Top-level {{ or }} escape sequences. */
+      if(depth == 0 && ((*it == '{' && peek == '{') || (*it == '}' && peek == '}')))
+      {
+        out(*it);
+        ++it;
+      }
+      else if(*it == '{')
+      {
+        fmt(*it);
+        ++depth;
+
+        if(std::isdigit(peek))
+        {
+          /* Manual indexing. */
+          switch(mode)
+          {
+            case indexing_mode::unspecified:
+              mode = indexing_mode::manual;
+              break;
+            case indexing_mode::automatic:
+              throw std::format_error{
+                "Cannot mix automatic (i.e. {}) and manual indexing (i.e. {1})."
+              };
+            case indexing_mode::manual:
+              break;
+          }
+
+          auto start{ std::next(it) };
+          auto end{ std::find_if(start, format.end(), [](auto c) { return !std::isdigit(c); }) };
+
+          u64 idx{};
+          std::from_chars(start, end, idx);
+          arg_indices.push_back(idx);
+
+          /* Don't add the index to the format string passed to std::format, we
+           * will deal with indexing ourselves. */
+          it = std::prev(end);
+        }
+        else
+        {
+          /* Automatic indexing. */
+          switch(mode)
+          {
+            case indexing_mode::unspecified:
+              mode = indexing_mode::automatic;
+              break;
+            case indexing_mode::automatic:
+              break;
+            case indexing_mode::manual:
+              throw std::format_error{
+                "Cannot mix automatic (i.e. {}) and manual indexing (i.e. {1})."
+              };
+          }
+
+          arg_indices.push_back(auto_idx++);
+        }
+      }
+      else if(*it == '}')
+      {
+        fmt(*it);
+        --depth;
+
+        /* End of a top-level format specification, process it in-situ. */
+        if(depth == 0)
+        {
+          auto nargs{ arg_indices.size() };
+          auto next_arg{ [&]() {
+            auto idx{ arg_indices.front() };
+            arg_indices.pop_front();
+
+            if(idx >= args_vec->count())
+            {
+              throw std::format_error{
+                util::format("Format arg index {} out of range.", idx).c_str()
+              };
+            }
+            return args_vec->nth(make_box(idx));
+          } };
+
+          /* Depending on the number of embedded replacement fields we
+           * encountered, pop the right number of values off the argument stack. */
+          auto v1{ next_arg() };
+
+          /* Width and precision are the only supported nested field
+           * replacements in std::format as of C++20, so we only need to support
+           * up to 1 value + 2 nested arguments (always integral). */
+          if(nargs == 1)
+          {
+            detail::vformat_object_to(std::back_inserter(out), fmt.view(), v1);
+          }
+          else if(nargs == 2)
+          {
+            auto v2{ next_arg().to_integer() };
+            detail::vformat_object_to(std::back_inserter(out), fmt.view(), v1, v2);
+          }
+          else if(nargs == 3)
+          {
+            auto v2{ next_arg().to_integer() };
+            auto v3{ next_arg().to_integer() };
+            detail::vformat_object_to(std::back_inserter(out), fmt.view(), v1, v2, v3);
+          }
+          else
+          {
+            throw std::format_error{ util::format(
+              "There are too many embedded format specifiers in {}.",
+              v1.to_code_string()) };
+          }
+
+          /* Reset for the next format specification. */
+          fmt.clear();
+          /* Ignore extra args. */
+          arg_indices.clear();
+        }
+      }
+      else
+      {
+        if(depth > 0)
+        {
+          /* We're inside a replacement field. */
+          fmt(*it);
+        }
+        else
+        {
+          /* This is an ordinary character. */
+          out(*it);
+        }
+      }
+    }
+
+    if(depth != 0)
+    {
+      throw std::format_error{ "There's a brace mismatch in this format string." };
+    }
+
+    return out.release();
+  }
+
   obj::persistent_string_ref subs(object_ref const s, object_ref const start)
   {
     return visit_type<obj::persistent_string>(
@@ -358,7 +526,7 @@ namespace jank::runtime
     return make_box<obj::native_vector_sequence>(jtl::move(v));
   }
 
-  object_ref keyword(object_ref const ns, object_ref const name)
+  obj::keyword_ref keyword(object_ref const ns, object_ref const name)
   {
     if(!ns.is_nil() && ns.get_type() != object_type::persistent_string)
     {
@@ -416,80 +584,80 @@ namespace jank::runtime
     return __rt_ctx->macroexpand(o);
   }
 
-  object_ref gensym(object_ref const o)
+  obj::symbol_ref gensym(object_ref const o)
   {
     return __rt_ctx->unique_symbol(to_string(o));
   }
 
-  object_ref atom(object_ref const o)
+  obj::atom_ref atom(object_ref const o)
   {
     return make_box<obj::atom>(o);
   }
 
-  object_ref swap_atom(object_ref const atom, object_ref const fn)
+  object_ref swap_atom(obj::atom_ref const atom, object_ref const fn)
   {
-    return try_object<obj::atom>(atom)->swap(fn);
+    return atom->swap(fn);
   }
 
-  object_ref swap_atom(object_ref const atom, object_ref const fn, object_ref const a1)
+  object_ref swap_atom(obj::atom_ref const atom, object_ref const fn, object_ref const a1)
   {
-    return try_object<obj::atom>(atom)->swap(fn, a1);
+    return atom->swap(fn, a1);
   }
 
   object_ref
-  swap_atom(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
+  swap_atom(obj::atom_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
   {
-    return try_object<obj::atom>(atom)->swap(fn, a1, a2);
+    return atom->swap(fn, a1, a2);
   }
 
-  object_ref swap_atom(object_ref const atom,
+  object_ref swap_atom(obj::atom_ref const atom,
                        object_ref const fn,
                        object_ref const a1,
                        object_ref const a2,
                        object_ref const rest)
   {
-    return try_object<obj::atom>(atom)->swap(fn, a1, a2, rest);
+    return atom->swap(fn, a1, a2, rest);
   }
 
-  object_ref swap_vals(object_ref const atom, object_ref const fn)
+  object_ref swap_vals(obj::atom_ref const atom, object_ref const fn)
   {
-    return try_object<obj::atom>(atom)->swap_vals(fn);
+    return atom->swap_vals(fn);
   }
 
-  object_ref swap_vals(object_ref const atom, object_ref const fn, object_ref const a1)
+  object_ref swap_vals(obj::atom_ref const atom, object_ref const fn, object_ref const a1)
   {
-    return try_object<obj::atom>(atom)->swap_vals(fn, a1);
+    return atom->swap_vals(fn, a1);
   }
 
   object_ref
-  swap_vals(object_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
+  swap_vals(obj::atom_ref const atom, object_ref const fn, object_ref const a1, object_ref const a2)
   {
-    return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2);
+    return atom->swap_vals(fn, a1, a2);
   }
 
-  object_ref swap_vals(object_ref const atom,
+  object_ref swap_vals(obj::atom_ref const atom,
                        object_ref const fn,
                        object_ref const a1,
                        object_ref const a2,
                        object_ref const rest)
   {
-    return try_object<obj::atom>(atom)->swap_vals(fn, a1, a2, rest);
+    return atom->swap_vals(fn, a1, a2, rest);
   }
 
   object_ref
-  compare_and_set(object_ref const atom, object_ref const old_val, object_ref const new_val)
+  compare_and_set(obj::atom_ref const atom, object_ref const old_val, object_ref const new_val)
   {
-    return try_object<obj::atom>(atom)->compare_and_set(old_val, new_val);
+    return atom->compare_and_set(old_val, new_val);
   }
 
-  object_ref reset(object_ref const atom, object_ref const new_val)
+  object_ref reset(obj::atom_ref const atom, object_ref const new_val)
   {
-    return try_object<obj::atom>(atom)->reset(new_val);
+    return atom->reset(new_val);
   }
 
-  object_ref reset_vals(object_ref const atom, object_ref const new_val)
+  object_ref reset_vals(obj::atom_ref const atom, object_ref const new_val)
   {
-    return try_object<obj::atom>(atom)->reset_vals(new_val);
+    return atom->reset_vals(new_val);
   }
 
   object_ref deref(object_ref const o)
@@ -540,21 +708,19 @@ namespace jank::runtime
     return o.get_type() == object_type::volatile_;
   }
 
-  object_ref vswap(object_ref const v, object_ref const fn)
+  object_ref vswap(obj::volatile_ref const v, object_ref const fn)
   {
-    auto const v_obj(try_object<obj::volatile_>(v));
-    return v_obj->reset(fn.call(v_obj->deref()));
+    return v->reset(fn.call(v->deref()));
   }
 
-  object_ref vswap(object_ref const v, object_ref const fn, object_ref const args)
+  object_ref vswap(obj::volatile_ref const v, object_ref const fn, object_ref const args)
   {
-    auto const v_obj(try_object<obj::volatile_>(v));
-    return v_obj->reset(apply_to(fn, make_box<obj::cons>(v_obj->deref(), args)));
+    return v->reset(apply_to(fn, make_box<obj::cons>(v->deref(), args)));
   }
 
-  object_ref vreset(object_ref const v, object_ref const new_val)
+  object_ref vreset(obj::volatile_ref const v, object_ref const new_val)
   {
-    return try_object<obj::volatile_>(v)->reset(new_val);
+    return v->reset(new_val);
   }
 
   void push_thread_bindings(object_ref const o)
@@ -581,7 +747,7 @@ namespace jank::runtime
     return o;
   }
 
-  object_ref tagged_literal(object_ref const tag, object_ref const form)
+  obj::tagged_literal_ref tagged_literal(object_ref const tag, object_ref const form)
   {
     return make_box<obj::tagged_literal>(tag, form);
   }
@@ -702,7 +868,7 @@ namespace jank::runtime
     return o.get_type() == object_type::uuid;
   }
 
-  object_ref random_uuid()
+  obj::uuid_ref random_uuid()
   {
     return make_box<obj::uuid>();
   }
@@ -769,7 +935,7 @@ namespace jank::runtime
     return reference;
   }
 
-  object_ref future(object_ref const fn)
+  obj::future_ref future(object_ref const fn)
   {
     auto const bindings{ __rt_ctx->get_thread_bindings() };
     auto const ret{ make_box<obj::future>() };
@@ -830,28 +996,24 @@ namespace jank::runtime
     return ret;
   }
 
-  void cancel_future(object_ref const future)
+  void cancel_future(obj::future_ref const future)
   {
-    auto const fut{ try_object<obj::future>(future) };
-
     /* We need to hold this lock the whole time we're checking, to ensure the thread
      * doesn't finish while we're here checking. */
-    auto const locked_state{ fut->state.rlock() };
+    auto const locked_state{ future->state.rlock() };
     if(locked_state->status == obj::future_status::running)
     {
-      auto const locked_thread{ fut->thread.wlock() };
+      auto const locked_thread{ future->thread.wlock() };
       auto const thread_handle{ locked_thread->native_handle() };
       pthread_cancel(reinterpret_cast<pthread_t>(thread_handle));
     }
   }
 
-  bool is_future_cancelled(object_ref const future)
+  bool is_future_cancelled(obj::future_ref const future)
   {
-    auto const fut{ try_object<obj::future>(future) };
-
     /* We need to hold this lock the whole time we're checking, to ensure the thread
      * doesn't finish while we're here checking. */
-    auto locked_state{ fut->state.ulock() };
+    auto locked_state{ future->state.ulock() };
     switch(locked_state->status)
     {
       case obj::future_status::done:
@@ -875,7 +1037,7 @@ namespace jank::runtime
     /* It's undefined behavior to have multiple threads join a single thread object at the
      * same time, so we need to synchronize here. */
     {
-      auto const locked_thread{ fut->thread.wlock() };
+      auto const locked_thread{ future->thread.wlock() };
       auto const thread_handle{ locked_thread->native_handle() };
       code = pthread_tryjoin_np(thread_handle, &thread_state);
     }

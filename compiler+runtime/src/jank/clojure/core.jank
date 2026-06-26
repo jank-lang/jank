@@ -2297,19 +2297,23 @@
   "Returns a sequence of the map's keys, in the same order as (seq map)."
   [m]
   ; TODO: Use a proper key seq instead.
-  (reduce (fn [acc kv]
-            (conj acc (first kv)))
-          []
-          m))
+  (seq
+   (persistent!
+    (reduce (fn [acc kv]
+              (conj! acc (first kv)))
+            (transient [])
+            m))))
 
 (defn vals
   "Returns a sequence of the map's values, in the same order as (seq map)."
   [m]
   ; TODO: Use a proper val seq instead.
-  (reduce (fn [acc kv]
-            (conj acc (second kv)))
-          []
-          m))
+  (seq
+   (persistent!
+    (reduce (fn [acc kv]
+              (conj! acc (second kv)))
+            (transient [])
+            m))))
 
 (defn
   ^{:inline (fn* [map key & more]
@@ -5032,8 +5036,7 @@
 (defn delay?
   "returns true if x is a Delay created with delay"
   [x]
-  ;; (instance? clojure.lang.Delay x)
-  (throw "TODO: port delay?"))
+  (cpp/== cpp/jank.runtime.object_type.delay (.get_type x)))
 
 (defn compare
   "Comparator. Returns a negative number, zero, or a positive number
@@ -6921,11 +6924,9 @@
   (throw "TODO: port enumeration-seq"))
 
 (defn format
-  "Formats a string using java.lang.String.format, see java.util.Formatter for format
-  string syntax"
-  #_String [fmt & args]
-  ;; (String/format fmt (to-array args))
-  (throw "TODO: port format"))
+  "Formats a string using std::format."
+  [fmt & args]
+  (cpp/jank.runtime.format fmt args))
 
 (defn printf
   "Prints formatted output, as per format"

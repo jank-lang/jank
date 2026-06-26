@@ -87,6 +87,18 @@ namespace jtl
       CHECK_EQ(4, sb.pos);
       CHECK_EQ(initial_capacity, sb.capacity);
       CHECK_EQ("3.14", sb.view());
+
+      sb.pos = 0;
+      sb(2989000001.0);
+      CHECK_EQ(12, sb.pos);
+      CHECK_EQ(initial_capacity, sb.capacity);
+      CHECK_EQ("2989000001.0", sb.view());
+
+      sb.pos = 0;
+      sb(9007199254740992.0);
+      CHECK_EQ(18, sb.pos);
+      CHECK_EQ(initial_capacity, sb.capacity);
+      CHECK_EQ("9007199254740992.0", sb.view());
     }
 
     TEST_CASE("float / double scientific")

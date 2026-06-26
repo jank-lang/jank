@@ -159,6 +159,15 @@ namespace jtl
 
       std::memcpy(buffer + pos, tmp, required);
       pos += required;
+
+      /* Ensure that we either have a decimal or scientific notation. Otherwise,
+       * this value will look like an int. This is needed because to_chars will
+       * not include a decimal for whole values. */
+      jtl::immutable_string_view const view(tmp, required);
+      if(!(view.contains('.') || view.contains('e')))
+      {
+        (*this)(".0");
+      }
     }
 
     return *this;
@@ -404,6 +413,11 @@ namespace jtl
   void string_builder::push_back(jtl::immutable_string const &d) &
   {
     (*this)(d);
+  }
+
+  void string_builder::clear()
+  {
+    pos = 0;
   }
 
   void string_builder::reserve(usize const new_capacity)

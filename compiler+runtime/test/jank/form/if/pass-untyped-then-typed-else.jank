@@ -1,0 +1,4 @@
+((fn* [a]
+   (let* [r (* (if false a 1) 2)]
+     (if (= r 2)
+       :success))) 0)

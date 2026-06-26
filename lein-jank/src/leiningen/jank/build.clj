@@ -4,8 +4,8 @@
             [clojure.java.io :as io]
             [babashka.fs :as fs]
             [leiningen.core.main :as lmain]
-            [leiningen.core.classpath :as lcp]
-            [leiningen.jank.sandbox.core :as sandbox])
+            [leiningen.jank.sandbox.core :as sandbox]
+            [leiningen.jank.resolve :as resolve])
   (:import (java.security MessageDigest)
            (java.util HexFormat)
            (java.util.jar JarFile)))
@@ -16,10 +16,10 @@
 (def jank-build-cache-file "jank-build-cache.txt")
 
 (def default-build-opts
-  {:output-dir         "target"
+  {:target-dir         "target"
    :optimization-level 2
    :static-build       true
-   :verbose-build      true})
+   :verbose-build      false})
 
 (defn merge-native-flags
   ([] {})
@@ -53,7 +53,7 @@
   [data]
   ;; TODO: We should implement something like Cargo's fingerprint to better
   ;; react to changes in the environment:
-  ;; 
+  ;;
   ;; https://doc.rust-lang.org/nightly/nightly-rustc/cargo/core/compiler/fingerprint/index.html
   (let [md     (MessageDigest/getInstance "SHA-256")
         baos   (java.io.ByteArrayOutputStream.)]
@@ -75,8 +75,8 @@
   `type`, the dependency's name, and the dependency's fingerprint."
   [base-dir type dep-name fprint]
   (-> base-dir
-      (fs/path (str dep-name "-" type "-" fprint))
-      (fs/absolutize)))
+      (fs/path "_cache" (str dep-name "-" type "-" fprint))
+      fs/absolutize))
 
 (defn process-build-directives
   "Process a sequence of output lines from a build script, parsing those that
@@ -187,13 +187,13 @@
   searched. Deeper build-scoped dependencies will be ignored."
   [tree]
   (->> tree
-       keys
-       (filter build-scoped?)
-       (mapv #(-> % meta :file str))))
+       (filter (fn [[k v]] (build-scoped? k)))
+       (into {})
+       (resolve/dependency-files)))
 
 (defn plan-subtree-build [build-opts target-dir [dep subtree]]
   (let [subtree-ops (vec (mapcat #(plan-subtree-build build-opts target-dir %) subtree))
-        src-jar     (:file (meta dep))
+        src-jar     (first (resolve/dependency-files {dep nil}))
         jar-name    (-> src-jar fs/file-name fs/strip-ext)]
     ;; NOTE: make sure all outputs here are pure Clojure data. We use (pr ops)
     ;; to compute a subtree hash to determine if the build has changed and needs
@@ -204,7 +204,7 @@
       ;; still may have native dependencies in the subtree.
       subtree-ops
       ;; If this is a native build then we must add its build step and all of
-      ;; the its descendant build steps.
+      ;; its descendants' build steps.
       (let [src-fprint (fingerprint-file src-jar)
             src-dir    (target-subdir target-dir "src" jar-name src-fprint)
             ;; Output is fingerprinted on the source jar contents and all of the
@@ -232,13 +232,16 @@
   Returns a map, including the build operations and additional build metadata,
   which can be executed by `run-build!`."
   [project]
-  (let [{:keys [output-dir] :as build-opts} (merge default-build-opts (:jank project))]
+  (let [{:keys [target-dir] :as build-opts} (merge default-build-opts (:jank project))]
     (when *disable-sandbox*
       (println "\u001b[1;31mBuilding with sandboxing disabled is potentially dangerous!\u001b[0m"))
 
     (assoc build-opts :operations
-           (let [tree     (lcp/managed-dependency-hierarchy :dependencies :managed-dependencies project)
-                 dep-ops  (vec (mapcat #(plan-subtree-build build-opts output-dir %) tree))
+           (let [tree     (->> (mapv #(resolve/dependency-hierarchy project %) (:dependencies project))
+                               (apply merge))
+                 ;; Plan the build steps just for the child dependencies,
+                 ;; recursively resolving their dependencies and so on.
+                 dep-ops  (vec (mapcat #(plan-subtree-build build-opts target-dir %) tree))
                  ;; Special handling when the root project has a build script.
                  ;; 
                  ;; TODO: For now we always run the root build script, but we
@@ -248,7 +251,7 @@
                             [{:op           :compile
                               :dep          [(symbol (:group project) (:name project)) (:version project)]
                               :src-dir      (str (:root project))
-                              :out-dir      (str (target-subdir output-dir "out" (:name project) "XXX"))
+                              :out-dir      (str (target-subdir target-dir "out" (:name project) "XXX"))
                               :build-inputs (collect-build-deps tree)
                               :inputs       (collect-out-dirs dep-ops)
                               :always-build true}])]

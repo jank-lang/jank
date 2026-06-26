@@ -15,13 +15,13 @@ namespace clojure::core_native
   using namespace jank;
   using namespace jank::runtime;
 
-  object_ref not_(object_ref const o)
+  bool not_(object_ref const o)
   {
     if(runtime::is_nil(o))
     {
-      return jank_true;
+      return true;
     }
-    return make_box(runtime::is_false(o));
+    return runtime::is_false(o);
   }
 
   object_ref lazy_seq(object_ref const o)
@@ -29,9 +29,9 @@ namespace clojure::core_native
     return make_box<obj::lazy_sequence>(o);
   }
 
-  object_ref is_var(object_ref const o)
+  bool is_var(object_ref const o)
   {
-    return make_box(o.get_type() == object_type::var);
+    return o.get_type() == object_type::var;
   }
 
   object_ref var_get(object_ref const o)
@@ -59,34 +59,34 @@ namespace clojure::core_native
     return try_object<var>(o)->alter_root(fn, args);
   }
 
-  object_ref is_var_bound(object_ref const o)
+  bool is_var_bound(object_ref const o)
   {
-    return make_box(try_object<runtime::var>(o)->is_bound());
+    return try_object<runtime::var>(o)->is_bound();
   }
 
-  object_ref is_var_thread_bound(object_ref const o)
+  bool is_var_thread_bound(object_ref const o)
   {
-    return make_box(try_object<runtime::var>(o)->get_thread_binding().is_some());
+    return try_object<runtime::var>(o)->get_thread_binding().is_some();
   }
 
-  object_ref delay(object_ref const fn)
+  obj::delay_ref delay(object_ref const fn)
   {
     return make_box<obj::delay>(fn);
   }
 
-  object_ref is_fn(object_ref const o)
+  bool is_fn(object_ref const o)
   {
-    return make_box(o.get_type() == object_type::native_function_wrapper
-                    || o.get_type() == object_type::jit_function
-                    || o.get_type() == object_type::jit_variadic_function
-                    || o.get_type() == object_type::jit_closure
-                    || o.get_type() == object_type::jit_variadic_closure
-                    || o.get_type() == object_type::deferred_cpp_function);
+    return o.get_type() == object_type::native_function_wrapper
+      || o.get_type() == object_type::jit_function
+      || o.get_type() == object_type::jit_variadic_function
+      || o.get_type() == object_type::jit_closure
+      || o.get_type() == object_type::jit_variadic_closure
+      || o.get_type() == object_type::deferred_cpp_function;
   }
 
-  object_ref is_multi_fn(object_ref const o)
+  bool is_multi_fn(object_ref const o)
   {
-    return make_box(o.get_type() == object_type::multi_function);
+    return o.get_type() == object_type::multi_function;
   }
 
   object_ref multi_fn(object_ref const name,
@@ -173,9 +173,9 @@ namespace clojure::core_native
     return __rt_ctx->remove_ns(try_object<obj::symbol>(sym));
   }
 
-  object_ref is_ns(object_ref const ns_or_sym)
+  bool is_ns(object_ref const ns_or_sym)
   {
-    return make_box(ns_or_sym.get_type() == object_type::ns);
+    return ns_or_sym.get_type() == object_type::ns;
   }
 
   object_ref ns_name(object_ref const ns)
@@ -274,14 +274,14 @@ namespace clojure::core_native
     return __rt_ctx->eval(expr);
   }
 
-  object_ref hash_unordered(object_ref const coll)
+  jtl::u32 hash_unordered(object_ref const coll)
   {
-    return make_box(hash::unordered(coll)).erase();
+    return hash::unordered(coll);
   }
 
-  object_ref jank_version()
+  jtl::immutable_string jank_version()
   {
-    return make_box(JANK_VERSION);
+    return JANK_VERSION;
   }
 }
 

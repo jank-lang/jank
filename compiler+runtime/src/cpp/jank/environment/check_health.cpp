@@ -346,12 +346,15 @@ namespace jank::environment
         std::ofstream ofs{ std::filesystem::path{ path_tmp } / "health.jank" };
         ofs << "(ns health)\n(defn -main [& args] (println \"healthy\"))";
       }
-      auto const exe_output{ std::filesystem::path{ path_tmp } / "a.out" };
+      auto const exe{ "a.out" };
+      auto const exe_path{ std::filesystem::path{ path_tmp } / exe };
 
       auto const saved_opts{ util::cli::opts };
       util::cli::opts.target_module = "health";
       util::cli::opts.output_target = util::cli::compilation_target::object;
-      util::cli::opts.output_filename = exe_output.string();
+      util::cli::opts.target_dir = path_tmp;
+      util::cli::opts.build_dir = util::format("{}/_cache", path_tmp);
+      util::cli::opts.output_filename = exe;
       util::cli::opts.module_path = path_tmp;
       util::scope_exit const finally{ /* NOLINTNEXTLINE(bugprone-exception-escape) */
                                       [=] { util::cli::opts = saved_opts; }
@@ -372,8 +375,8 @@ namespace jank::environment
       auto const stdout_file{ std::filesystem::path{ path_tmp } / "stdout" };
       std::string const stdout_file_str{ stdout_file.string() };
       auto const proc_code{ llvm::sys::ExecuteAndWait(
-        exe_output.string(),
-        { exe_output.string() },
+        exe_path.string(),
+        { exe_path.string() },
         std::nullopt,
         { std::nullopt, stdout_file_str.c_str(), std::nullopt },
         5) };
