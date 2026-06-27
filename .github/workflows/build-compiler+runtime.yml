@@ -344,11 +344,6 @@ jobs:
           path: |
             ${{ env.GITHUB_WORKSPACE }}/compiler+runtime/build/llvm-install
           key: clang-Arch-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
-      - uses: thejerrybao/setup-swap-space@466d59798fb9263b9c2331c83cf71f9b7bfd0c78
-        with:
-          swap-space-path: /swapfile
-          swap-size-gb: 8
-          remove-existing-swap-files: true
       - name: Build and test jank
         id: jank-build-step
         run: |
