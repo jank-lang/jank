@@ -334,7 +334,7 @@ jobs:
       - name: Install packages
         run: |
           pacman -Syu --noconfirm
-          pacman --noconfirm -S gcc git pkg-config cmake ninja make python3 libffi libxml2 libedit boost
+          pacman --noconfirm -S gcc git pkg-config cmake ninja make python3 libffi libxml2 libedit boost scp
       - uses: actions/checkout@v4
         with:
           submodules: true
