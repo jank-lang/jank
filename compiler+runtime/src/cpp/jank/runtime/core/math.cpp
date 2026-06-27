@@ -177,8 +177,15 @@ namespace jank::runtime
             }
             else
             {
-              auto const l_real{ to_real(typed_l_data) };
               auto const r_real{ to_real(typed_r->data) };
+
+              if(r_real == 0)
+              {
+                throw std::runtime_error{ "Illegal divide by zero in 'rem'" };
+              }
+
+              auto const l_real{ to_real(typed_l_data) };
+
               return make_box(std::fmod(l_real, r_real)).erase();
             }
           },

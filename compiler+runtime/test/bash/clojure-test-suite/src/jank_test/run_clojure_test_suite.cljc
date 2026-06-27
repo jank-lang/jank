@@ -202,7 +202,7 @@
     ; clojure.core-test.subvec ; libc++abi: terminating due to uncaught exception of type std::runtime_error: invalid object type (expected integer found real).
     ; clojure.core-test.symbol ; lex/invalid-ratio error: A ratio denominator must be an integer.
     clojure.core-test.symbol-qmark
-    ; clojure.core-test.take ; Assertion failed! val.is_some()., https://github.com/jank-lang/jank/issues/245 , https://github.com/jank-lang/jank/issues/243
+    clojure.core-test.take
     clojure.core-test.take-last
     ; clojure.core-test.take-nth ; FIXME: Failing tests.
     clojure.core-test.take-while
