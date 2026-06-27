@@ -6252,14 +6252,9 @@
   "Constructs an array-map. If any keys are equal, they are handled as
   if by repeated uses of assoc."
   ([]
-  ;;  (. clojure.lang.PersistentArrayMap EMPTY)
-   (throw "TODO: port array-map"))
+   (cpp/jank.runtime.obj.persistent_array_map.empty))
   ([& keyvals]
-    ;;  (let [ary (to-array keyvals)]
-    ;;    (if (odd? (alength ary))
-    ;;      (throw (IllegalArgumentException. (str "No value supplied for key: " (last keyvals))))
-    ;;      (clojure.lang.PersistentArrayMap/createAsIfByAssoc ary)))
-   (throw "TODO: port array-map")))
+   (cpp/jank.runtime.obj.persistent_array_map.create_from_seq keyvals)))
 
 (defn seq-to-map-for-destructuring
   "Builds a map from a seq as described in
