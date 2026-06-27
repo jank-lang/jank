@@ -53,7 +53,7 @@ namespace jank::runtime::obj
   transient_vector_ref transient_vector::assoc_in_place(object_ref const key, object_ref const val)
   {
     assert_active();
-    if(!is_integer(key))
+    if(!is_integral(key))
     {
       throw std::runtime_error{ "Key must be an integer." };
     }
@@ -100,7 +100,7 @@ namespace jank::runtime::obj
   object_ref transient_vector::call(object_ref const idx) const
   {
     assert_active();
-    if(is_integer(idx))
+    if(is_integral(idx))
     {
       auto const i(to_i64(idx));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
@@ -122,7 +122,7 @@ namespace jank::runtime::obj
   object_ref transient_vector::get(object_ref const idx) const
   {
     assert_active();
-    if(is_integer(idx))
+    if(is_integral(idx))
     {
       auto const i(to_i64(idx));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
@@ -142,7 +142,7 @@ namespace jank::runtime::obj
   object_ref transient_vector::get(object_ref const idx, object_ref const fallback) const
   {
     assert_active();
-    if(is_integer(idx))
+    if(is_integral(idx))
     {
       auto const i(to_i64(idx));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
@@ -161,7 +161,7 @@ namespace jank::runtime::obj
 
   object_ref transient_vector::find(object_ref const idx) const
   {
-    if(is_integer(idx))
+    if(is_integral(idx))
     {
       auto const i(to_i64(idx));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
@@ -180,7 +180,7 @@ namespace jank::runtime::obj
 
   bool transient_vector::contains(object_ref const elem) const
   {
-    if(is_integer(elem))
+    if(is_integral(elem))
     {
       auto const i(to_i64(elem));
       return i >= 0 && static_cast<size_t>(i) < data.size();

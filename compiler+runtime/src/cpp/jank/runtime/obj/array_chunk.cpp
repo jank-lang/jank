@@ -59,7 +59,7 @@ namespace jank::runtime::obj
 
   object_ref array_chunk::nth(object_ref const index) const
   {
-    if(is_integer(index))
+    if(is_integral(index))
     {
       auto const i(to_i64(index));
       if(i < 0 || buffer.size() - offset <= static_cast<size_t>(i))
@@ -81,7 +81,7 @@ namespace jank::runtime::obj
 
   object_ref array_chunk::nth(object_ref const index, object_ref const fallback) const
   {
-    if(is_integer(index))
+    if(is_integral(index))
     {
       auto const i(to_i64(index));
       if(i < 0 || buffer.size() - offset <= static_cast<size_t>(i))

@@ -15,8 +15,8 @@
     ; clojure.core-test.associative-qmark ; TODO: port to-array
     ; clojure.core-test.atom ; libc++abi: terminating due to uncaught exception of type jank::runtime::invalid_arity<3ull>: invalid call to #object [unknown jit_function 0x1041da080] with 3 args provided
     clojure.core-test.bigdec
-    ; clojure.core-test.bigint ; FIXME: Failing tests.
-    clojure.core-test.binding
+    clojure.core-test.bigint
+    clojure.core-test.binding ; TODO: port future
     clojure.core-test.bit-and
     clojure.core-test.bit-and-not
     clojure.core-test.bit-clear
@@ -35,7 +35,7 @@
     clojure.core-test.butlast
     ; clojure.core-test.byte ; TODO: port byte, Expecting whitespace after the last token. due to M.
     ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
-    ; clojure.core-test.char
+    ; clojure.core-test.char ; FIXME: Failing unicode character tests.
     clojure.core-test.char-qmark
     ; clojure.core-test.coll-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.comment
@@ -72,7 +72,7 @@
     clojure.core-test.ffirst
     clojure.core-test.find
     clojure.core-test.first
-    ; clojure.core-test.float ; FIXME: Failing tests.
+    clojure.core-test.float
     clojure.core-test.float-qmark
     clojure.core-test.fn-qmark
     clojure.core-test.fnext
@@ -88,8 +88,8 @@
     clojure.core-test.identical-qmark
     ; clojure.core-test.ifn-qmark ; TODO: port promise
     clojure.core-test.inc
-    ; clojure.core-test.int ; FIXME: Failing tests.
-    ; clojure.core-test.int-qmark ; FIXME: Failing tests.
+    ; clojure.core-test.int ; FIXME: Codegen bug.
+    clojure.core-test.int-qmark
     ; clojure.core-test.integer-qmark ; FIXME: Failing tests.
     clojure.core-test.interleave
     clojure.core-test.intern
@@ -116,7 +116,7 @@
     clojure.core-test.name
     clojure.core-test.namespace
     clojure.core-test.nan-qmark
-    ; clojure.core-test.neg-int-qmark ; FIXME: Failing test.
+    clojure.core-test.neg-int-qmark
     clojure.core-test.neg-qmark
     clojure.core-test.next
     clojure.core-test.nfirst
@@ -162,7 +162,7 @@
     clojure.core-test.random-sample
     clojure.core-test.random-uuid
     ; clojure.core-test.ratio-qmark ; FIXME: Failing test.
-    ; clojure.core-test.rational-qmark ; FIXME: Failing test.
+    clojure.core-test.rational-qmark
     ; clojure.core-test.rationalize ; TODO: port rationalize
     ; clojure.core-test.realized-qmark ; TODO: port promise
     ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map. TODO: into-array.
