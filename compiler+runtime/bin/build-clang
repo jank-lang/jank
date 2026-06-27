@@ -54,10 +54,9 @@ echo "Using ${make_j} cores to build"
 srcdir="${PWD}"
 
 llvm_url="https://github.com/jank-lang/llvm-project.git"
-llvm_version=22
+llvm_version=23
 llvm_branch="jank-snapshot/llvm${llvm_version}"
-# 8164f1a0c17b192e133817436bdb07598b7402a3
-llvm_commit="8164f1a0c17b192e133817436bdb07598b7402a3"
+llvm_commit="106644f6c835f9d2137aeb9cbfe1b9a60d03d17f"
 llvm_branch="jank"
 llvm_dest_dir="${srcdir}/llvm-install"
 llvm_build_dir="${srcdir}/llvm-build"
