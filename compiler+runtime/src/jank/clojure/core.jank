@@ -3133,7 +3133,9 @@
   "Returns a lazy (infinite!) sequence of repetitions of the items in coll."
   [coll]
   ; TODO: Custom cycle object
-  (lazy-seq (concat coll (cycle coll))))
+  (if-not (seq coll)
+    '()
+    (lazy-seq (concat coll (cycle coll)))))
 
 (defn repeat
   "Returns a lazy (infinite!, or length n if supplied) sequence of val."
