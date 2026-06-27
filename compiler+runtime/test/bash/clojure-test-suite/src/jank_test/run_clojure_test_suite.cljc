@@ -47,7 +47,7 @@
     clojure.core-test.contains-qmark
     clojure.core-test.count
     ; clojure.core-test.counted-qmark ; TODO: port array-map, TODO: port object-array
-    ; clojure.core-test.cycle ; Program hangs.
+    clojure.core-test.cycle
     clojure.core-test.dec
     clojure.core-test.decimal-qmark
     clojure.core-test.denominator
