@@ -343,7 +343,7 @@ jobs:
         with:
           path: |
             ${{ env.GITHUB_WORKSPACE }}/compiler+runtime/build/llvm-install
-          key: clang-Arch-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
+          key: clang-Arch-${{ hashFiles('compiler+runtime/bin/build-clang') }}
       - name: Build and test jank
         id: jank-build-step
         run: |
