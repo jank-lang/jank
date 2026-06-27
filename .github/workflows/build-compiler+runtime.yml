@@ -69,7 +69,7 @@ jobs:
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
-            ${{ env.GITHUB_WORKSPACE }}/compiler+runtime/build/llvm-install
+            compiler+runtime/build/llvm-install
           key: clang-Arch-${{ hashFiles('compiler+runtime/bin/build-clang') }}
 
       - name: Build Clang/LLVM
@@ -342,7 +342,7 @@ jobs:
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
-            ${{ env.GITHUB_WORKSPACE }}/compiler+runtime/build/llvm-install
+            compiler+runtime/build/llvm-install
           key: clang-Arch-${{ hashFiles('compiler+runtime/bin/build-clang') }}
       - name: Build and test jank
         id: jank-build-step
