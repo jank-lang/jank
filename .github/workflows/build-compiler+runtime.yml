@@ -351,6 +351,7 @@ jobs:
           export CXX=${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++
           pushd ${GITHUB_WORKSPACE}/compiler+runtime
             ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_local_clang=on
+            ./bin/compile
             DESTDIR=inst ./bin/install
           popd
 
