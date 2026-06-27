@@ -353,7 +353,16 @@ jobs:
             ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_local_clang=on
             ./bin/compile
             DESTDIR=inst ./bin/install
+            tar czf ~/jank-arch-x86-64.tar.gz inst
           popd
+      - name: Import SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+          chmod 400 ~/.ssh/jank_id_ed25519
+      - name: Publish to cache
+        run: |
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/
 
   #build-nix:
   #  name: "Nix - release"
