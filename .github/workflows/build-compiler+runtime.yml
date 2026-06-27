@@ -51,6 +51,37 @@ jobs:
           fi
           ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
 
+  arch-build-clang:
+    name: Arch - clang
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    timeout-minutes: 200
+    steps:
+      - name: Install packages
+        run: |
+          pacman -Syu --noconfirm
+          pacman --noconfirm -S gcc git clang pkg-config cmake ninja make python3 libffi libxml2 libedit
+
+      - uses: actions/checkout@v4
+
+      - name: Cache Clang/LLVM
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            compiler+runtime/build/llvm-install
+          key: clang-Arch-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+
+      - name: Build Clang/LLVM
+        run: |
+          if [[ ! -e ${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
+          then
+            pushd ${GITHUB_WORKSPACE}/compiler+runtime
+              ./bin/build-clang
+            popd
+          fi
+          ${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
+
   macos-build-clang:
     name: macOS - clang
     runs-on: macos-26
@@ -63,7 +94,7 @@ jobs:
           submodules: true
       - name: Install Homebrew deps
         run: |
-          brew install git git-lfs pkg-config ninja python cmake gnupg zlib
+          brew install git pkg-config ninja python cmake gnupg zlib
       - name: Cache Clang/LLVM
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
@@ -80,208 +111,250 @@ jobs:
           fi
           ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
 
-  build-jank:
+  #build-jank:
+  #  needs:
+  #    - ubuntu-build-clang
+  #    - macos-build-clang
+  #  strategy:
+  #    fail-fast: false
+  #    matrix:
+  #      include:
+  #        # Ubuntu
+  #        ## Lint all sources
+  #        - name: Ubuntu - lint
+  #          os: ubuntu-24.04
+  #          lint: true
+  #        ## Debug + clang-tidy + coverage
+  #        - name: Ubuntu - debug, analysis, coverage
+  #          os: ubuntu-24.04
+  #          build_type: Debug
+  #          sanitize: none
+  #          coverage: on
+  #          analyze: on
+
+  #        ## Debug + sanitization
+  #        # TODO: Fix this. GC issue: https://github.com/bdwgc/bdwgc/issues/772
+  #        #- name: Ubuntu - address sanitizer
+  #        #  os: ubuntu-24.04
+  #        #  build_type: Debug
+  #        #  sanitize: address
+
+  #        - name: Ubuntu - undefined behavior sanitizer
+  #          os: ubuntu-24.04
+  #          build_type: Debug
+  #          sanitize: undefined
+
+  #        ## TODO: Fix this. Causes linker issues.
+  #        # https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
+  #        #- name: Ubuntu - thread sanitizer
+  #        #  os: ubuntu-24.04
+  #        #  build_type: Debug
+  #        #  sanitize: thread
+
+  #        ## Release
+  #        - name: Ubuntu - release
+  #          os: ubuntu-24.04
+  #          build_type: Release
+  #          sanitize: none
+  #          package: on
+
+  #        # macOS
+  #        ## Debug + clang-tidy
+  #        - name: macOS - debug, analysis
+  #          os: macos-26
+  #          build_type: Debug
+  #          sanitize: none
+  #          analyze: on
+
+  #        ## Debug + sanitization
+  #        ## TODO: Fails, but looks like a false positive.
+  #        # https://github.com/jank-lang/jank/actions/runs/21684803696/job/62528872227?pr=677
+  #        #- name: macOS - address sanitizer
+  #        #  os: macos-26
+  #        #  build_type: Debug
+  #        #  sanitize: address
+
+  #        - name: macOS - undefined behavior sanitizer
+  #          os: macos-26
+  #          build_type: Debug
+  #          sanitize: undefined
+
+  #        # TODO: Fix this. It hangs in CI.
+  #        #- name: macOS - thread sanitizer
+  #        #  os: macos-26
+  #        #  build_type: Debug
+  #        #  sanitize: thread
+
+  #        ## Release
+  #        - name: macOS - release
+  #          os: macos-26
+  #          build_type: Release
+  #          sanitize: none
+  #          package: on
+  #  runs-on: ${{ matrix.os }}
+  #  name: ${{ matrix.name }}
+  #  env:
+  #    JANK_MATRIX_ID: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.sanitize }}
+  #    JANK_BUILD_TYPE: ${{ matrix.build_type }}
+  #    JANK_LINT: ${{ matrix.lint }}
+  #    JANK_COVERAGE: ${{ matrix.coverage }}
+  #    JANK_ANALYZE: ${{ matrix.analyze }}
+  #    JANK_SANITIZE: ${{ matrix.sanitize }}
+  #    JANK_PACKAGE: ${{ matrix.package }}
+  #    ASAN_OPTIONS: detect_leaks=0
+  #    TERM: xterm
+  #    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  #    HOMEBREW_NO_AUTO_UPDATE: 1
+  #  timeout-minutes: 60
+  #  steps:
+  #    - uses: actions/checkout@v4
+  #      with:
+  #        submodules: true
+  #    - name: Install apt packages
+  #      if: runner.os == 'Linux'
+  #      uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
+  #      with:
+  #        packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev gcc g++ libgc-dev libboost-all-dev
+  #        # Increment this when the package list changes.
+  #        version: 14
+  #    # Boost doesn't get cached properly with the above action.
+  #    # https://github.com/awalsh128/cache-apt-pkgs-action/issues/151
+  #    - name: Install boost
+  #      if: runner.os == 'Linux'
+  #      run: |
+  #        sudo apt install -y libboost-all-dev
+  #    - name: Install Homebrew packages
+  #      if: runner.os == 'macOS'
+  #      run: |
+  #        brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib boost clojure/tools/clojure
+  #    - name: Cache Clang/LLVM
+  #      uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
+  #      with:
+  #        path: |
+  #          ${{ github.workspace }}/compiler+runtime/build/llvm-install
+  #        key: clang-${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
+  #    - name: Cache ccache object files
+  #      if: matrix.analyze == 'off'
+  #      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+  #      with:
+  #        path: |
+  #          ${{ github.workspace }}/compiler+runtime/.ctcache
+  #        key: ccache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
+  #    - name: Cache ctcache object files
+  #      if: matrix.analyze == 'on'
+  #      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+  #      with:
+  #        path: |
+  #          ${{ github.workspace }}/compiler+runtime/.ctcache
+  #        key: ctcache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
+  #    - uses: thejerrybao/setup-swap-space@466d59798fb9263b9c2331c83cf71f9b7bfd0c78
+  #      if: runner.os == 'Linux'
+  #      with:
+  #        swap-space-path: /swapfile
+  #        swap-size-gb: 8
+  #        remove-existing-swap-files: true
+  #    - name: Build and test jank
+  #      id: jank-build-step
+  #      run: |
+  #        curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
+  #        chmod +x install-bb
+  #        sudo ./install-bb
+  #        if [[ "${RUNNER_OS}" == "macOS" ]];
+  #        then
+  #          export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
+  #        fi
+  #        if [[ "${JANK_SANITIZE}" != "none" || "${JANK_COVERAGE}" == "on" ]];
+  #        then
+  #          export JANK_SKIP_AOT_CHECK=1
+  #        fi
+  #        JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
+  #    - name: Upload .deb for publishing
+  #      if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.deb
+  #      uses: actions/upload-artifact@v4
+  #      with:
+  #        name: jank-deb
+  #        path: ${{ steps.jank-build-step.outputs.deb }}
+  #    - name: Upload Homebrew tarball for publishing
+  #      if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.homebrew-tarball
+  #      uses: actions/upload-artifact@v4
+  #      with:
+  #        name: jank-homebrew-tarball
+  #        path: ${{ steps.jank-build-step.outputs.homebrew-tarball }}
+
+  #publish-deb:
+  #  if: github.ref == 'refs/heads/main'
+  #  needs: build-jank
+  #  name: Publish .deb
+  #  runs-on: ubuntu-24.04
+  #  timeout-minutes: 5
+  #  steps:
+  #    - uses: actions/download-artifact@v5
+  #      with:
+  #        name: jank-deb
+  #        path: ~/
+  #    - name: Import SSH key
+  #      run: |
+  #        mkdir -p ~/.ssh
+  #        echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+  #        chmod 400 ~/.ssh/jank_id_ed25519
+  #    - name: Publish to PPA
+  #      run: |
+  #        scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
+  #        ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
+
+  #publish-homebrew-tarball:
+  #  if: github.ref == 'refs/heads/main'
+  #  needs: build-jank
+  #  name: Publish Homebrew package
+  #  runs-on: macos-26
+  #  timeout-minutes: 5
+  #  steps:
+  #    - uses: actions/download-artifact@v5
+  #      with:
+  #        name: jank-homebrew-tarball
+  #        path: ~/
+  #    - name: Import SSH key
+  #      run: |
+  #        mkdir -p ~/.ssh
+  #        echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+  #        chmod 400 ~/.ssh/jank_id_ed25519
+  #    - name: Publish to cache
+  #      run: |
+  #        scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/
+
+  publish-arch-package:
     needs:
-      - ubuntu-build-clang
-      - macos-build-clang
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Ubuntu
-          ## Lint all sources
-          - name: Ubuntu - lint
-            os: ubuntu-24.04
-            lint: true
-          ## Debug + clang-tidy + coverage
-          - name: Ubuntu - debug, analysis, coverage
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: none
-            coverage: on
-            analyze: on
-
-          ## Debug + sanitization
-          # TODO: Fix this. GC issue: https://github.com/bdwgc/bdwgc/issues/772
-          #- name: Ubuntu - address sanitizer
-          #  os: ubuntu-24.04
-          #  build_type: Debug
-          #  sanitize: address
-
-          - name: Ubuntu - undefined behavior sanitizer
-            os: ubuntu-24.04
-            build_type: Debug
-            sanitize: undefined
-
-          ## TODO: Fix this. Causes linker issues.
-          # https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
-          #- name: Ubuntu - thread sanitizer
-          #  os: ubuntu-24.04
-          #  build_type: Debug
-          #  sanitize: thread
-
-          ## Release
-          - name: Ubuntu - release
-            os: ubuntu-24.04
-            build_type: Release
-            sanitize: none
-            package: on
-
-          # macOS
-          ## Debug + clang-tidy
-          - name: macOS - debug, analysis
-            os: macos-26
-            build_type: Debug
-            sanitize: none
-            analyze: on
-
-          ## Debug + sanitization
-          ## TODO: Fails, but looks like a false positive.
-          # https://github.com/jank-lang/jank/actions/runs/21684803696/job/62528872227?pr=677
-          #- name: macOS - address sanitizer
-          #  os: macos-26
-          #  build_type: Debug
-          #  sanitize: address
-
-          - name: macOS - undefined behavior sanitizer
-            os: macos-26
-            build_type: Debug
-            sanitize: undefined
-
-          # TODO: Fix this. It hangs in CI.
-          #- name: macOS - thread sanitizer
-          #  os: macos-26
-          #  build_type: Debug
-          #  sanitize: thread
-
-          ## Release
-          - name: macOS - release
-            os: macos-26
-            build_type: Release
-            sanitize: none
-            package: on
-    runs-on: ${{ matrix.os }}
-    name: ${{ matrix.name }}
-    env:
-      JANK_MATRIX_ID: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.sanitize }}
-      JANK_BUILD_TYPE: ${{ matrix.build_type }}
-      JANK_LINT: ${{ matrix.lint }}
-      JANK_COVERAGE: ${{ matrix.coverage }}
-      JANK_ANALYZE: ${{ matrix.analyze }}
-      JANK_SANITIZE: ${{ matrix.sanitize }}
-      JANK_PACKAGE: ${{ matrix.package }}
-      ASAN_OPTIONS: detect_leaks=0
-      TERM: xterm
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      HOMEBREW_NO_AUTO_UPDATE: 1
+      - arch-build-clang
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    name: Publish Arch package
     timeout-minutes: 60
     steps:
+      - name: Install packages
+        run: |
+          pacman -Syu --noconfirm
+          pacman --noconfirm -S gcc git pkg-config cmake ninja make python3 libffi libxml2 libedit boost scp
       - uses: actions/checkout@v4
         with:
           submodules: true
-      - name: Install apt packages
-        if: runner.os == 'Linux'
-        uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
-        with:
-          packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev gcc g++ libgc-dev libboost-all-dev
-          # Increment this when the package list changes.
-          version: 13
-      # Boost doesn't get cached properly with the above action.
-      # https://github.com/awalsh128/cache-apt-pkgs-action/issues/151
-      - name: Install boost
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt install -y libboost-all-dev
-      - name: Install Homebrew packages
-        if: runner.os == 'macOS'
-        run: |
-          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib boost clojure/tools/clojure
       - name: Cache Clang/LLVM
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
-            ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-${{ hashFiles('${{ github.workspace }}/compiler+runtime/bin/build-clang') }}
-      - name: Cache ccache object files
-        if: matrix.analyze == 'off'
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
-        with:
-          path: |
-            ${{ github.workspace }}/compiler+runtime/.ctcache
-          key: ccache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
-      - name: Cache ctcache object files
-        if: matrix.analyze == 'on'
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
-        with:
-          path: |
-            ${{ github.workspace }}/compiler+runtime/.ctcache
-          key: ctcache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
-      - uses: thejerrybao/setup-swap-space@466d59798fb9263b9c2331c83cf71f9b7bfd0c78
-        if: runner.os == 'Linux'
-        with:
-          swap-space-path: /swapfile
-          swap-size-gb: 8
-          remove-existing-swap-files: true
+            compiler+runtime/build/llvm-install
+          key: clang-Arch-${{ hashFiles('compiler+runtime/bin/build-clang') }}
       - name: Build and test jank
         id: jank-build-step
         run: |
-          curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
-          chmod +x install-bb
-          sudo ./install-bb
-          if [[ "${RUNNER_OS}" == "macOS" ]];
-          then
-            export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
-          fi
-          if [[ "${JANK_SANITIZE}" != "none" || "${JANK_COVERAGE}" == "on" ]];
-          then
-            export JANK_SKIP_AOT_CHECK=1
-          fi
-          JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
-      - name: Upload .deb for publishing
-        if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.deb
-        uses: actions/upload-artifact@v4
-        with:
-          name: jank-deb
-          path: ${{ steps.jank-build-step.outputs.deb }}
-      - name: Upload Homebrew tarball for publishing
-        if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.homebrew-tarball
-        uses: actions/upload-artifact@v4
-        with:
-          name: jank-homebrew-tarball
-          path: ${{ steps.jank-build-step.outputs.homebrew-tarball }}
-
-  publish-deb:
-    if: github.ref == 'refs/heads/main'
-    needs: build-jank
-    name: Publish .deb
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - uses: actions/download-artifact@v5
-        with:
-          name: jank-deb
-          path: ~/
-      - name: Import SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
-          chmod 400 ~/.ssh/jank_id_ed25519
-      - name: Publish to PPA
-        run: |
-          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
-          ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
-
-  publish-homebrew-tarball:
-    if: github.ref == 'refs/heads/main'
-    needs: build-jank
-    name: Publish Homebrew package
-    runs-on: macos-26
-    timeout-minutes: 5
-    steps:
-      - uses: actions/download-artifact@v5
-        with:
-          name: jank-homebrew-tarball
-          path: ~/
+          export CC=${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang
+          export CXX=${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++
+          pushd ${GITHUB_WORKSPACE}/compiler+runtime
+            ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_local_clang=on
+            ./bin/compile
+            DESTDIR=inst ./bin/install
+            tar czf ~/jank-arch-x86-64.tar.gz inst
+          popd
       - name: Import SSH key
         run: |
           mkdir -p ~/.ssh
@@ -291,32 +364,32 @@ jobs:
         run: |
           scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/
 
-  build-nix:
-    name: "Nix - release"
-    runs-on: ubuntu-latest
-    steps:
-    - name: "Set up nix"
-      uses: cachix/install-nix-action@v31
-      with:
-        nix_path: nixpkgs=channel:nixos-unstable
-    - name: "Set up cachix"
-      uses: cachix/cachix-action@v16
-      with:
-        name: jank-lang
-        # If you chose API tokens for write access OR if you have a private cache
-        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-        # Only push to cache on main branch, not PRs
-        skipPush: "${{ github.ref != 'refs/heads/main' }}"
-    - uses: actions/checkout@v4
-      with:
-        submodules: 'recursive'
-    - uses: thejerrybao/setup-swap-space@466d59798fb9263b9c2331c83cf71f9b7bfd0c78
-      if: runner.os == 'Linux'
-      with:
-        swap-space-path: /swapfile
-        swap-size-gb: 8
-        remove-existing-swap-files: true
-    - name: "Build jank"
-      run: nix build .?submodules=1 -L
-    - name: "Check health"
-      run: nix run .?submodules=1 check-health
+  #build-nix:
+  #  name: "Nix - release"
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #  - name: "Set up nix"
+  #    uses: cachix/install-nix-action@v31
+  #    with:
+  #      nix_path: nixpkgs=channel:nixos-unstable
+  #  - name: "Set up cachix"
+  #    uses: cachix/cachix-action@v16
+  #    with:
+  #      name: jank-lang
+  #      # If you chose API tokens for write access OR if you have a private cache
+  #      authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+  #      # Only push to cache on main branch, not PRs
+  #      skipPush: "${{ github.ref != 'refs/heads/main' }}"
+  #  - uses: actions/checkout@v4
+  #    with:
+  #      submodules: 'recursive'
+  #  - uses: thejerrybao/setup-swap-space@466d59798fb9263b9c2331c83cf71f9b7bfd0c78
+  #    if: runner.os == 'Linux'
+  #    with:
+  #      swap-space-path: /swapfile
+  #      swap-size-gb: 8
+  #      remove-existing-swap-files: true
+  #  - name: "Build jank"
+  #    run: nix build .?submodules=1 -L
+  #  - name: "Check health"
+  #    run: nix run .?submodules=1 check-health
