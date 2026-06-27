@@ -121,7 +121,7 @@
     clojure.core-test.next
     clojure.core-test.nfirst
     clojure.core-test.nil-qmark
-    ; clojure.core-test.nnext ; Uncaught exception: {:error :not-an-ns-or-sym, :data {:value clojure.core-test.not_eq}}
+    clojure.core-test.nnext
     clojure.core-test.not
     ; clojure.core-test.not_empty ; libc++abi: terminating due to uncaught exception of type jank::runtime::oref<jank::runtime::object>.
     ; clojure.core-test.not-eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
@@ -204,7 +204,7 @@
     clojure.core-test.symbol-qmark
     clojure.core-test.take
     clojure.core-test.take-last
-    ; clojure.core-test.take-nth ; FIXME: Failing tests.
+    clojure.core-test.take-nth
     clojure.core-test.take-while
     clojure.core-test.taps
     ; clojure.core-test.transient ; analyze/macro-expansion-exception error: invalid call to #object [unknown jit_function 0x104434c80] with 3 args provided
