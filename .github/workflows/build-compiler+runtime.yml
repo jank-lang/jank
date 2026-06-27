@@ -349,8 +349,10 @@ jobs:
         run: |
           export CC=${GITHUB_WORKSPACE}/build/llvm-install/usr/local/bin/clang;
           export CXX=${GITHUB_WORKSPACE}/build/llvm-install/usr/local/bin/clang++
-          ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_local_clang=on
-          DESTDIR=inst ./bin/install
+          pushd ${GITHUB_WORKSPACE}/compiler+runtime
+            ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_local_clang=on
+            DESTDIR=inst ./bin/install
+          popd
 
   #build-nix:
   #  name: "Nix - release"
