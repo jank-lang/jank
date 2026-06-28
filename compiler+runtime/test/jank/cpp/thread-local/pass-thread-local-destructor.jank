@@ -1,9 +1,8 @@
-(cpp/raw "
-#include <string.h>
-namespace jank::cpp::thread_local::destructor
+(cpp/raw "#include <string.h>
+namespace jank::cpp::thread_local_::destructor
 {
   void hello () { thread_local std::string _{ \"hello\" }; }
 } 
 ")
 
-(let [_ (cpp/jank.cpp.thread_local.destructor.hello)])
+(let [_ (cpp/jank.cpp.thread_local_.destructor.hello)])
