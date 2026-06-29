@@ -79,7 +79,7 @@
     clojure.core-test.fnil
     ; clojure.core-test.format ; TODO: port format
     ; clojure.core-test.get ; TODO: port to-array
-    ; clojure.core-test.get-in ; FIXME: Failing tests. 
+    clojure.core-test.get-in
     clojure.core-test.gt
     clojure.core-test.gt-eq
     clojure.core-test.hash-map
