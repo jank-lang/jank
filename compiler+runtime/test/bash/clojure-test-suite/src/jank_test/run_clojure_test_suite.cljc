@@ -55,7 +55,7 @@
     ; clojure.core-test.descendants ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
     clojure.core-test.disj
     clojure.core-test.disj-bang
-    ; clojure.core-test.dissoc ; analyze/unresolved-symbol error: Unable to resolve symbol 'defrecord'.
+    clojure.core-test.dissoc
     clojure.core-test.dissoc-bang
     clojure.core-test.doseq
     clojure.core-test.double
