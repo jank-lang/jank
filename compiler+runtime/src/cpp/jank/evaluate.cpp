@@ -344,7 +344,7 @@ namespace jank::evaluate
           arg_vals.emplace_back(eval(arg_expr));
         }
 
-        return apply_to(source, make_box<obj::native_vector_sequence>(jtl::move(arg_vals)));
+        return apply_to(source, make_box<obj::native_vector_sequence>(jtl::move(arg_vals)), true);
       }
     }
     catch(error_ref const e)
