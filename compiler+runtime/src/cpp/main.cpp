@@ -72,8 +72,6 @@ namespace jank
       .expect_ok()
       .call(make_box<obj::symbol>("clojure.core"));
 
-    jank::runtime::module::verify_binary_version();
-
     {
       profile::timer const timer{ "eval user code" };
       __rt_ctx->eval_file(util::cli::opts.target_file);
@@ -105,8 +103,6 @@ namespace jank
       profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
-
-    jank::runtime::module::verify_binary_version();
 
     {
       profile::timer const timer{ "eval user code" };
@@ -183,8 +179,6 @@ namespace jank
     {
       __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
-
-    jank::runtime::module::verify_binary_version();
 
     __rt_ctx->compile_module(opts.target_module).expect_ok();
   }
@@ -367,8 +361,6 @@ namespace jank
       __rt_ctx->compile_module("clojure.core").expect_ok();
     }
 #endif
-
-    jank::runtime::module::verify_binary_version();
 
     __rt_ctx->compile_module(opts.target_module).expect_ok();
 

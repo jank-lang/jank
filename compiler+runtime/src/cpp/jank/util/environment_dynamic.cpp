@@ -159,4 +159,9 @@ namespace jank::util
       args.emplace_back(strdup(sdk_path.c_str()));
     }
   }
+
+  jtl::immutable_string build_dir()
+  {
+    return util::format("{}/{}", util::cli::opts.build_dir, binary_version());
+  }
 }

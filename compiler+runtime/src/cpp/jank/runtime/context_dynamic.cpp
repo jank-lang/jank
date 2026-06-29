@@ -244,7 +244,7 @@ namespace jank::runtime
   {
     return util::cli::opts.output_module_filename.empty()
       ? util::format("{}/{}.{}",
-                     util::cli::opts.build_dir,
+                     util::build_dir(),
                      module::module_to_path(module_name),
                      util::cli::compilation_target_extension(util::cli::opts.output_target))
       : jtl::immutable_string{ util::cli::opts.output_module_filename };
