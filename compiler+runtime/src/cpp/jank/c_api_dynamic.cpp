@@ -19,16 +19,18 @@ extern "C"
                         jank_usize const pch_size,
                         int (*fn)(int const, char const ** const))
   {
+    jank_init_base();
+
+    llvm::llvm_shutdown_obj const Y{};
+
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmParser();
+    llvm::InitializeNativeTargetAsmPrinter();
+
+    /* This try needs to come AFTER we initialize LLVM. If we have it before, we'll be
+     * unable to catch some exceptions thrown by JIT-compiled frames. */
     JANK_TRY
     {
-      jank_init_base();
-
-      llvm::llvm_shutdown_obj const Y{};
-
-      llvm::InitializeNativeTarget();
-      llvm::InitializeNativeTargetAsmParser();
-      llvm::InitializeNativeTargetAsmPrinter();
-
       if(pch_data)
       {
         jank::aot::register_resource("incremental.pch", { pch_data, pch_size });
