@@ -26,6 +26,12 @@ namespace jank::runtime::obj
     jtl::immutable_string to_code_string() const override;
     uhash to_hash() const override;
 
+    /* behavior::comparable */
+    i64 compare(object const &) const override;
+
+    /* behavior::comparable extended */
+    i64 compare(character const &) const;
+
     /* Character does not fully support `behavior::number_like`, but can be converted to an integer. */
     i64 to_integer() const override;
 

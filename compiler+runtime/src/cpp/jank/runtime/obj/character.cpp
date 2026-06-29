@@ -115,6 +115,16 @@ namespace jank::runtime::obj
     return data.to_hash();
   }
 
+  i64 character::compare(object const &o) const
+  {
+    return compare(*try_object<character>(runtime::detail::untagged(&o)));
+  }
+
+  i64 character::compare(character const &s) const
+  {
+    return data.compare(s.data);
+  }
+
   i64 character::to_integer() const
   {
     std::mbstate_t state{};

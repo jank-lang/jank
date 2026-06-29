@@ -39,7 +39,7 @@
     clojure.core-test.char-qmark
     ; clojure.core-test.coll-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.comment
-    ; clojure.core-test.compare ; libc++abi: terminating due to uncaught exception of type std::runtime_error: not comparable: a
+    clojure.core-test.compare
     clojure.core-test.conj
     clojure.core-test.conj-bang
     clojure.core-test.cons
