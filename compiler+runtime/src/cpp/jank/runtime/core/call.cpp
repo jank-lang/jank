@@ -12,6 +12,11 @@ namespace jank::runtime
 
   object_ref apply_to(object_ref const source, object_ref const args)
   {
+    return apply_to(source, args, false);
+  }
+
+  object_ref apply_to(object_ref const source, object_ref const args, bool const already_packed)
+  {
     return visit_seqable(
       [=](auto const typed_args) -> object_ref {
         auto const s(typed_args->fresh_seq());
@@ -133,6 +138,20 @@ namespace jank::runtime
               auto const a8{ *(++it) };
               auto const a9{ *(++it) };
               auto const a10{ *(++it) };
+              if(already_packed)
+              {
+                return source.call(a1,
+                                   a2,
+                                   a3,
+                                   a4,
+                                   a5,
+                                   a6,
+                                   a7,
+                                   a8,
+                                   a9,
+                                   a10,
+                                   try_object<obj::persistent_list>(*(++it)));
+              }
               return source.call(a1,
                                  a2,
                                  a3,

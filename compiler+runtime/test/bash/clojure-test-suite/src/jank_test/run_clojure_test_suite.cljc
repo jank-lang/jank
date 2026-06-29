@@ -39,7 +39,7 @@
     clojure.core-test.char-qmark
     ; clojure.core-test.coll-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.comment
-    ; clojure.core-test.compare ; libc++abi: terminating due to uncaught exception of type std::runtime_error: not comparable: a
+    clojure.core-test.compare
     clojure.core-test.conj
     clojure.core-test.conj-bang
     clojure.core-test.cons
@@ -55,7 +55,7 @@
     ; clojure.core-test.descendants ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
     clojure.core-test.disj
     clojure.core-test.disj-bang
-    ; clojure.core-test.dissoc ; analyze/unresolved-symbol error: Unable to resolve symbol 'defrecord'.
+    clojure.core-test.dissoc
     clojure.core-test.dissoc-bang
     clojure.core-test.doseq
     clojure.core-test.double
@@ -79,7 +79,7 @@
     clojure.core-test.fnil
     ; clojure.core-test.format ; TODO: port format
     ; clojure.core-test.get ; TODO: port to-array
-    ; clojure.core-test.get-in ; FIXME: Failing tests. 
+    clojure.core-test.get-in
     clojure.core-test.gt
     clojure.core-test.gt-eq
     clojure.core-test.hash-map

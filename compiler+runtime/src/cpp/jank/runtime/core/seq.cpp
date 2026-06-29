@@ -597,6 +597,8 @@ namespace jank::runtime
 
   object_ref get_in(object_ref const m, object_ref const keys, object_ref const fallback)
   {
+    static auto const sentinel(make_box<obj::reduced>(jank_true));
+
     if(m.has_behavior(object_behavior::get))
     {
       return visit_seqable(
@@ -604,12 +606,11 @@ namespace jank::runtime
           object_ref ret{ m };
           for(auto const &e : make_sequence_range(typed_keys))
           {
-            ret = get(ret, e.erase());
-          }
-
-          if(ret.is_nil())
-          {
-            return fallback;
+            ret = get(ret, e.erase(), sentinel);
+            if(ret == sentinel)
+            {
+              return fallback;
+            }
           }
           return ret;
         },

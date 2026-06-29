@@ -1,0 +1,3 @@
+(let* [m {:foo (fn* [] :success)}
+       a ((:foo m))]
+  a)
