@@ -597,7 +597,7 @@ namespace jank::runtime
 
   object_ref get_in(object_ref const m, object_ref const keys, object_ref const fallback)
   {
-    static auto const sentinel(make_box<obj::cons>(jank_nil, jank_nil));
+    static auto const sentinel(make_box<obj::reduced>(jank_true));
 
     if(m.has_behavior(object_behavior::get))
     {
