@@ -18,6 +18,7 @@ namespace jank::runtime
   constexpr usize const max_params{ 10 };
 
   object_ref apply_to(object_ref const source, object_ref const args);
+  object_ref apply_to(object_ref const source, object_ref const args, bool const already_packed);
 
   static constexpr callable_arity_flags mask_variadic_arity(u8 const pos)
   {
