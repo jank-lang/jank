@@ -3489,10 +3489,7 @@ namespace jank::analyze
         return analyze_cpp_call(o, value, current_frame, position, fn_ctx, needs_box);
       }
 
-      if((source->kind >= expression_kind::cpp_value_min
-          && source->kind <= expression_kind::cpp_value_max
-          && !cpp_util::is_any_object(cpp_util::expression_type(source.data)))
-         || !cpp_util::is_any_object(cpp_util::expression_type(source.data)))
+      if(!cpp_util::is_any_object(cpp_util::expression_type(source.data)))
       {
         return analyze_cpp_call(o, source.data, current_frame, position, fn_ctx, needs_box);
       }
