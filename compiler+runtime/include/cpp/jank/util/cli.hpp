@@ -12,7 +12,8 @@ namespace jank::util::cli
     repl,
     cpp_repl,
     run_main,
-    check_health
+    check_health,
+    print_binary_version,
   };
 
   enum class compilation_target : u8
@@ -145,6 +146,7 @@ namespace jank::util::cli
     jtl::immutable_string output_filename{ "a.out" };
     jtl::immutable_string target_dir{ "target" };
     jtl::immutable_string build_dir;
+    jtl::immutable_string forced_binary_version;
 
     /* Compile-module command. */
     jtl::immutable_string output_module_filename;

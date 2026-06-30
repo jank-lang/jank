@@ -112,6 +112,7 @@ COMMANDS
   compile                     Ahead of time compile project with entrypoint module containing
                               -main.
   check-health                Provide a status report on the jank installation.
+  print-binary-version        Print the current binary version to stdout and exit.
 
 OPTIONS
   -h,     --help              Print this help message and exit.
@@ -137,6 +138,8 @@ OPTIONS
                               The directory to use for storing final artifacts.
           --build-dir <path> [default: <target dir>/_cache]
                               The prefix to use for intermediate build files.
+          --force-binary-version <version>
+                              Override jank's binary version hashing to provide your own.
           --name <name> [default: a.out]
                               The name of the output file, in the target directory.
           --output-target <cpp, object> [default: object]
@@ -163,6 +166,7 @@ OPTIONS
     jtl::option<u8> codegen_optimization_level;
 
     jtl::option<jtl::immutable_string> build_dir;
+    jtl::option<jtl::immutable_string> forced_binary_version;
 
     /* Optimization passes. */
     /*** O1 ***/
@@ -194,6 +198,7 @@ OPTIONS
     opts.direct_call = scratch.direct_call.unwrap_or(false);
 
     opts.build_dir = scratch.build_dir.unwrap_or(util::format("{}/_cache", opts.target_dir));
+    opts.forced_binary_version = scratch.forced_binary_version.unwrap_or("");
 
     /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */
     switch(opts.codegen_optimization_level)
@@ -215,13 +220,14 @@ OPTIONS
     auto const flags{ parse_into_vector(argc, argv) };
 
     static native_unordered_map<jtl::immutable_string, command> valid_commands{
-      {            "run",            command::run },
-      {       "run-main",       command::run_main },
-      {           "repl",           command::repl },
-      {       "cpp-repl",       command::cpp_repl },
-      {        "compile",        command::compile },
-      { "compile-module", command::compile_module },
-      {   "check-health",   command::check_health }
+      {                  "run",                  command::run },
+      {             "run-main",             command::run_main },
+      {                 "repl",                 command::repl },
+      {             "cpp-repl",             command::cpp_repl },
+      {              "compile",              command::compile },
+      {       "compile-module",       command::compile_module },
+      {         "check-health",         command::check_health },
+      { "print-binary-version", command::print_binary_version },
     };
 
     options_scratchpad scratch;
@@ -376,6 +382,10 @@ OPTIONS
         else if(check_flag(it, end, value, "--build-dir", true))
         {
           scratch.build_dir = value;
+        }
+        else if(check_flag(it, end, value, "--force-binary-version", true))
+        {
+          scratch.forced_binary_version = value;
         }
 
         /**** These are command-specific flags which we will store until we know the command. ****/
