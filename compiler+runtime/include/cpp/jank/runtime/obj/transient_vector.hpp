@@ -32,6 +32,10 @@ namespace jank::runtime::obj
     /* behavior::conjable_in_place */
     transient_vector_ref conj_in_place(object_ref const head);
 
+    /* behavior::indexable */
+    object_ref nth(object_ref const index) const;
+    object_ref nth(object_ref const index, object_ref const fallback) const;
+
     /* behavior::associatively_writable_in_place */
     transient_vector_ref assoc_in_place(object_ref const key, object_ref const val);
     transient_vector_ref dissoc_in_place(object_ref const key);

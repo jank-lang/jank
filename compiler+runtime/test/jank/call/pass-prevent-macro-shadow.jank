@@ -1,0 +1,1 @@
+(let* [amap (fn* [] :success)] (amap))

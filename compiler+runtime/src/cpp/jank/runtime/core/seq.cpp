@@ -167,7 +167,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not transientable: {}",
-                                                 typed_o.to_code_string()) };
+                                                 object_type_str(typed_o.get_type())) };
         }
       },
       o);

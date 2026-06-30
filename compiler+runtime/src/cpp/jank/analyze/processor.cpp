@@ -3405,28 +3405,30 @@ namespace jank::analyze
         return analyze_cpp_call(o, source.data, current_frame, position, fn_ctx, needs_box);
       }
 
-      object_ref expanded{ o };
-      jtl::ptr<error::base> expansion_error{};
-      JANK_TRY
+      if(source->kind != expression_kind::local_reference)
       {
-        expanded = __rt_ctx->macroexpand(o);
-      }
-      JANK_CATCH_THEN(
-        [&](auto const &e) {
-          expansion_error
-            = error::analyze_macro_expansion_exception(e,
-                                                       cpptrace::from_current_exception(),
-                                                       object_source(o),
-                                                       latest_expansion(macro_expansions));
-        },
-        return expansion_error.as_ref())
+        object_ref expanded{ o };
+        jtl::ptr<error::base> expansion_error{};
+        JANK_TRY
+        {
+          expanded = __rt_ctx->macroexpand(o);
+        }
+        JANK_CATCH_THEN(
+          [&](auto const &e) {
+            expansion_error
+              = error::analyze_macro_expansion_exception(e,
+                                                         cpptrace::from_current_exception(),
+                                                         object_source(o),
+                                                         latest_expansion(macro_expansions));
+          },
+          return expansion_error.as_ref())
 
-      if(expanded != o)
-      {
-        return analyze(expanded, current_frame, position, fn_ctx, needs_box);
+        if(expanded != o)
+        {
+          return analyze(expanded, current_frame, position, fn_ctx, needs_box);
+        }
       }
 
-      source = sym_result.expect_ok();
       auto const var_deref(llvm::dyn_cast<expr::var_deref>(source.data));
 
       /* Some vars have meta which defines how calls to it can be inlined. This works similarly

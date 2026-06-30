@@ -207,7 +207,7 @@
     clojure.core-test.take-nth
     clojure.core-test.take-while
     clojure.core-test.taps
-    ; clojure.core-test.transient ; analyze/macro-expansion-exception error: invalid call to #object [unknown jit_function 0x104434c80] with 3 args provided
+    clojure.core-test.transient
     clojure.core-test.true-qmark
     clojure.core-test.underive
     clojure.core-test.unsigned-bit-shift-right
