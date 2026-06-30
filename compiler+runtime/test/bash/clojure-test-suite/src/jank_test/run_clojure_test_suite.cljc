@@ -106,7 +106,7 @@
     clojure.core-test.lt-eq
     clojure.core-test.make-hierarchy
     ; clojure.core-test.map-qmark ; TODO: port array-map, TODO: port object-array
-    ; clojure.core-test.mapcat ; Program hangs.
+    clojure.core-test.mapcat
     ; clojure.core-test.max ; FIXME: Failing tests.
     ; clojure.core-test.merge ; Program hangs.
     ; clojure.core-test.min ; FIXME: Failing tests.
