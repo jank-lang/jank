@@ -1,1 +1,1 @@
-(let* [amap {:x :success}] (amap :x))
+(let* [amap (fn* [] :success)] (amap))
