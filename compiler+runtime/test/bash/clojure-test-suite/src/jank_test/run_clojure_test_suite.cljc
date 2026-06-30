@@ -86,7 +86,7 @@
     clojure.core-test.hash-set
     clojure.core-test.ident-qmark
     clojure.core-test.identical-qmark
-    ; clojure.core-test.ifn-qmark ; TODO: port promise
+    clojure.core-test.ifn-qmark
     clojure.core-test.inc
     ; clojure.core-test.int ; FIXME: Codegen bug.
     clojure.core-test.int-qmark
