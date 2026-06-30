@@ -53,6 +53,7 @@ jobs:
 
   arch-build-clang:
     name: Arch - clang
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     container:
       image: archlinux:latest
