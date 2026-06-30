@@ -211,7 +211,7 @@
     clojure.core-test.true-qmark
     clojure.core-test.underive
     clojure.core-test.unsigned-bit-shift-right
-    ; clojure.core-test.update ; FIXME: Failing tests, Program hangs.
+    clojure.core-test.update
     clojure.core-test.uuid-qmark
     ; clojure.core-test.val ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
     clojure.core-test.vals

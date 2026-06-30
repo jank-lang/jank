@@ -549,7 +549,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not associatively writable: {}",
-                                                 typed_m.to_code_string()) };
+                                                 object_type_str(typed_m.get_type())) };
         }
       },
       m);
@@ -568,7 +568,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not associatively writable: {}",
-                                                 typed_m.to_code_string()) };
+                                                 object_type_str(typed_m.get_type())) };
         }
       },
       m);

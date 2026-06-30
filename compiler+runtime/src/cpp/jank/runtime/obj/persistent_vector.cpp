@@ -190,7 +190,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::call(object_ref const o) const
   {
-    return get(o);
+    return nth(o);
   }
 
   transient_vector_ref persistent_vector::to_transient() const
