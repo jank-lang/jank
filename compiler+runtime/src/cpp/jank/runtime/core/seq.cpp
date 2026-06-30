@@ -469,6 +469,16 @@ namespace jank::runtime
       s);
   }
 
+  object_ref drop(i64 const n, object_ref const coll)
+  {
+    object_ref head{ coll };
+    for(auto i{ 0 }; i < n; ++i)
+    {
+      head = rest(head);
+    }
+    return head;
+  }
+
   object_ref cons(object_ref const head, object_ref const tail)
   {
     return visit_seqable(

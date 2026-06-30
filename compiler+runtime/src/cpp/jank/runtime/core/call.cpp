@@ -1,4 +1,5 @@
 #include <jank/runtime/core/call.hpp>
+#include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core.hpp>
@@ -140,29 +141,9 @@ namespace jank::runtime
               auto const a10{ *(++it) };
               if(already_packed)
               {
-                return source.call(a1,
-                                   a2,
-                                   a3,
-                                   a4,
-                                   a5,
-                                   a6,
-                                   a7,
-                                   a8,
-                                   a9,
-                                   a10,
-                                   try_object<obj::persistent_list>(*(++it)));
+                return source.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, seq(*(++it)));
               }
-              return source.call(a1,
-                                 a2,
-                                 a3,
-                                 a4,
-                                 a5,
-                                 a6,
-                                 a7,
-                                 a8,
-                                 a9,
-                                 a10,
-                                 obj::persistent_list::create((++it).data));
+              return source.call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, drop(10, args));
             }
         }
       },
