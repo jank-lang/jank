@@ -362,7 +362,7 @@ jobs:
           chmod 400 ~/.ssh/jank_id_ed25519
       - name: Publish to cache
         run: |
-          rsync -avz -e "ssh -i $HOME/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no" --progress ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/
+          rsync -avz -e "ssh -i $HOME/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no" --progress ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/arch
 
   #build-nix:
   #  name: "Nix - release"
