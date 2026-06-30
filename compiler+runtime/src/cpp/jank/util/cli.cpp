@@ -138,6 +138,8 @@ OPTIONS
                               The directory to use for storing final artifacts.
           --build-dir <path> [default: <target dir>/_cache]
                               The prefix to use for intermediate build files.
+          --force-binary-version <version>
+                              Override jank's binary version hashing to provide your own.
           --name <name> [default: a.out]
                               The name of the output file, in the target directory.
           --output-target <cpp, object> [default: object]
@@ -164,6 +166,7 @@ OPTIONS
     jtl::option<u8> codegen_optimization_level;
 
     jtl::option<jtl::immutable_string> build_dir;
+    jtl::option<jtl::immutable_string> forced_binary_version;
 
     /* Optimization passes. */
     /*** O1 ***/
@@ -195,6 +198,7 @@ OPTIONS
     opts.direct_call = scratch.direct_call.unwrap_or(false);
 
     opts.build_dir = scratch.build_dir.unwrap_or(util::format("{}/_cache", opts.target_dir));
+    opts.forced_binary_version = scratch.forced_binary_version.unwrap_or("");
 
     /* NOLINTNEXTLINE(bugprone-switch-missing-default-case) */
     switch(opts.codegen_optimization_level)
@@ -378,6 +382,10 @@ OPTIONS
         else if(check_flag(it, end, value, "--build-dir", true))
         {
           scratch.build_dir = value;
+        }
+        else if(check_flag(it, end, value, "--force-binary-version", true))
+        {
+          scratch.forced_binary_version = value;
         }
 
         /**** These are command-specific flags which we will store until we know the command. ****/

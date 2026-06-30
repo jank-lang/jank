@@ -9,7 +9,7 @@ namespace jank::util
     return res;
   }
 
-  jtl::immutable_string build_version()
+  jtl::immutable_string build_dir()
   {
     throw error::runtime_static_feature_disabled("eval");
   }
