@@ -757,8 +757,13 @@ namespace jank::runtime
     return o.get_type() == object_type::tagged_literal;
   }
 
-  object_ref re_pattern(object_ref const o)
+  obj::re_pattern_ref re_pattern(object_ref const o)
   {
+    if(o.get_type() == object_type::re_pattern)
+    {
+      return expect_object<obj::re_pattern>(o);
+    }
+
     return make_box<obj::re_pattern>(try_object<obj::persistent_string>(o)->data);
   }
 

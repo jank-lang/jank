@@ -1,6 +1,10 @@
+#include <regex>
+#include <string>
+
 #include <clojure/string_native.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/call.hpp>
+#include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/native_function_wrapper.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
@@ -168,6 +172,99 @@ namespace clojure::string_native
     auto const output_str(replace_first(s_str, match, replacement));
 
     return is_string && output_str == s_str ? s : make_box(output_str);
+  }
+
+  jtl::immutable_string replace(jtl::immutable_string const &s,
+                                jtl::immutable_string const &match,
+                                jtl::immutable_string const &replacement)
+  {
+    auto const s_size(s.size());
+    auto const match_size(match.size());
+
+    if(match_size == 0)
+    {
+      jtl::string_builder buff{ s_size + ((s_size + 1) * replacement.size()) };
+      for(usize i{}; i < s_size; ++i)
+      {
+        buff(replacement);
+        buff(s[i]);
+      }
+      buff(replacement);
+      return buff.release();
+    }
+
+    usize back_index{};
+    auto front_index{ s.find(match) };
+
+    if(front_index == jtl::immutable_string::npos)
+    {
+      return s;
+    }
+
+    jtl::string_builder buff{ s_size };
+
+    for(; front_index != jtl::immutable_string::npos;
+        back_index = front_index + match_size, front_index = s.find(match, back_index))
+    {
+      if(back_index < front_index)
+      {
+        buff(s.substr(back_index, front_index - back_index));
+      }
+      buff(replacement);
+    }
+
+    if(back_index < s_size)
+    {
+      buff(s.substr(back_index));
+    }
+
+    return buff.release();
+  }
+
+  jtl::immutable_string replace(jtl::immutable_string const &s,
+                                obj::character_ref const match,
+                                obj::character_ref const replacement)
+  {
+    return replace(s, match->data, replacement->data);
+  }
+
+  jtl::immutable_string replace(jtl::immutable_string const &s,
+                                obj::re_pattern_ref const match,
+                                jtl::immutable_string const &replacement)
+  {
+    std::string const s_str{ s.c_str() };
+    std::string const replacement_str{ replacement.c_str() };
+    return std::regex_replace(s_str, match->regex, replacement_str);
+  }
+
+  jtl::immutable_string replace(jtl::immutable_string const &s,
+                                obj::re_pattern_ref const match,
+                                object_ref const replacement)
+  {
+    std::string const s_str{ s.c_str() };
+    std::sregex_iterator const end{};
+    std::sregex_iterator it(s_str.begin(), s_str.end(), match->regex);
+
+    if(it == end)
+    {
+      return s;
+    }
+
+    std::string suffix{};
+    jtl::string_builder buff{};
+
+    for(; it != end; ++it)
+    {
+      buff((*it).prefix().str());
+      auto const match_str(make_box<obj::persistent_string>((*it)[0].str()));
+      auto const replacement_value(replacement.call(make_box<obj::persistent_string>(match_str)));
+      buff(try_object<obj::persistent_string>(replacement_value)->data);
+      suffix = (*it).suffix().str();
+    }
+
+    buff(suffix);
+
+    return buff.release();
   }
 
   i64 index_of(jtl::immutable_string const &s,
