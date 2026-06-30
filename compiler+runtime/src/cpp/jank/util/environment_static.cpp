@@ -11,6 +11,6 @@ namespace jank::util
 
   jtl::immutable_string build_dir()
   {
-    throw error::runtime_static_feature_disabled("eval");
+    throw error::runtime_static_feature_disabled("build_dir");
   }
 }
