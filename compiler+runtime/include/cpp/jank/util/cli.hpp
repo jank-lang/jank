@@ -12,7 +12,8 @@ namespace jank::util::cli
     repl,
     cpp_repl,
     run_main,
-    check_health
+    check_health,
+    print_binary_version,
   };
 
   enum class compilation_target : u8

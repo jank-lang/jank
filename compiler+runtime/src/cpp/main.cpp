@@ -25,6 +25,7 @@
 #include <jank/util/string.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
+#include <jank/util/environment.hpp>
 #include <jank/error/report.hpp>
 #include <jank/environment/check_health.hpp>
 #include <jank/runtime/convert/builtin.hpp>
@@ -403,6 +404,11 @@ int main(int const argc, char const **argv)
       {
         return jank::environment::check_health() ? 0 : 1;
       }
+      if(util::cli::opts.command == util::cli::command::print_binary_version)
+      {
+        util::println("{}", util::binary_version());
+        return 0;
+      }
 
       __rt_ctx = new(UseGC) runtime::context{};
 
@@ -478,6 +484,7 @@ int main(int const argc, char const **argv)
           compile();
           break;
         case util::cli::command::check_health:
+        case util::cli::command::print_binary_version:
           break;
       }
       return 0;

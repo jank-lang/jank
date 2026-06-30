@@ -112,6 +112,7 @@ COMMANDS
   compile                     Ahead of time compile project with entrypoint module containing
                               -main.
   check-health                Provide a status report on the jank installation.
+  print-binary-version        Print the current binary version to stdout and exit.
 
 OPTIONS
   -h,     --help              Print this help message and exit.
@@ -215,13 +216,14 @@ OPTIONS
     auto const flags{ parse_into_vector(argc, argv) };
 
     static native_unordered_map<jtl::immutable_string, command> valid_commands{
-      {            "run",            command::run },
-      {       "run-main",       command::run_main },
-      {           "repl",           command::repl },
-      {       "cpp-repl",       command::cpp_repl },
-      {        "compile",        command::compile },
-      { "compile-module", command::compile_module },
-      {   "check-health",   command::check_health }
+      {                  "run",                  command::run },
+      {             "run-main",             command::run_main },
+      {                 "repl",                 command::repl },
+      {             "cpp-repl",             command::cpp_repl },
+      {              "compile",              command::compile },
+      {       "compile-module",       command::compile_module },
+      {         "check-health",         command::check_health },
+      { "print-binary-version", command::print_binary_version },
     };
 
     options_scratchpad scratch;
