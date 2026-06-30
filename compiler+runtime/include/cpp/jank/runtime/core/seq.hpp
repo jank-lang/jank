@@ -60,7 +60,6 @@ namespace jank::runtime
   object_ref next_in_place(object_ref const s);
 
   object_ref rest(object_ref const s);
-  object_ref drop(i64 const n, object_ref const coll);
 
   template <typename T>
   requires behavior::sequenceable<T>
