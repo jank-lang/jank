@@ -224,7 +224,11 @@ int main(int argc, const char** argv)
 
     if constexpr(jtl::current_platform == jtl::platform::macos_like)
     {
+      /* Homebrew's prefix differs by architecture: /opt/homebrew on Apple
+       * Silicon, /usr/local on Intel. Add both; an absent -L path is a
+       * harmless no-op for the linker. */
       compiler_args.push_back(strdup("-L/opt/homebrew/lib"));
+      compiler_args.push_back(strdup("-L/usr/local/lib"));
     }
 
     for(auto const &library_dir : util::cli::opts.library_dirs)

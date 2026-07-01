@@ -289,15 +289,28 @@ namespace jank::runtime
           //module->print(llvm::outs(), nullptr);
 
           auto const target_triple{ util::default_target_triple() };
+          llvm::Triple const triple{ target_triple.c_str() };
           std::string target_error;
-          auto const target{
-            llvm::TargetRegistry::lookupTarget(llvm::Triple{ target_triple.c_str() }, target_error)
-          };
+          auto const target{ llvm::TargetRegistry::lookupTarget(triple, target_error) };
           if(!target)
           {
             return err(target_error);
           }
           llvm::TargetOptions const opt;
+          /* CodeModel::Large combined with Reloc::PIC_ produces object code
+           * with absolute-address text relocations on x86-64 Darwin, which
+           * the linker rejects ("illegal text-relocations") when that code
+           * is reused during AOT linking of a position-independent
+           * executable. Every other target we support handles Large+PIC_
+           * fine, so we only narrow the code model here. */
+          constexpr auto code_model{
+#if defined(__x86_64__)
+            jtl::current_platform == jtl::platform::macos_like ? llvm::CodeModel::Small
+                                                               : llvm::CodeModel::Large
+#else
+            llvm::CodeModel::Large
+#endif
+          };
           llvm::CodeGenOptLevel level{ llvm::CodeGenOptLevel::Default };
           switch(util::cli::opts.codegen_optimization_level)
           {
@@ -317,14 +330,13 @@ namespace jank::runtime
               break;
           }
 
-          auto const target_machine{ target->createTargetMachine(
-            llvm::Triple{ target_triple.c_str() },
-            "generic",
-            "",
-            opt,
-            llvm::Reloc::PIC_,
-            llvm::CodeModel::Large,
-            level) };
+          auto const target_machine{ target->createTargetMachine(triple,
+                                                                 "generic",
+                                                                 "",
+                                                                 opt,
+                                                                 llvm::Reloc::PIC_,
+                                                                 code_model,
+                                                                 level) };
           if(!target_machine)
           {
             return err(util::format("Failed to create target machine for '{}'.", target_triple));
