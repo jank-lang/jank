@@ -174,7 +174,7 @@
     ; clojure.core-test.reversible-qmark ; TODO: port reversible?, TODO: port object-array
     ; clojure.core-test.rseq ; TODO: port rseq
     clojure.core-test.second
-    ; clojure.core-test.select-keys ; FIXME: Failing tests.
+    clojure.core-test.select-keys
     ; clojure.core-test.seq ; TODO: port int-array
     ; clojure.core-test.seq-qmark ; TODO: port rseq, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.seqable-qmark ; TODO: port array-map, TODO: port object-array

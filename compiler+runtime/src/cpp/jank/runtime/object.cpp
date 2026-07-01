@@ -206,7 +206,9 @@ namespace jank::runtime
 
   object_ref object::find(object_ref const) const
   {
-    return {};
+    throw error::runtime_unsupported_behavior(type,
+                                              "find",
+                                              object_source(runtime::detail::untagged(this)));
   }
 
   i64 object::compare(object const &) const
