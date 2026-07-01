@@ -891,6 +891,46 @@ namespace jank::runtime
       .count();
   }
 
+  void set_validator(object_ref const reference, object_ref const validator_fn)
+  {
+    visit_object(
+      [=](auto const typed_reference) -> void {
+        using T = typename jtl::decay_t<decltype(typed_reference)>::value_type;
+
+        if constexpr(behavior::ref_like<T>)
+        {
+          typed_reference->set_validator(validator_fn);
+        }
+        else
+        {
+          throw std::runtime_error{ util::format(
+            "Value does not support 'set-validator!' because it is not ref_like: {}",
+            object_type_str(typed_reference.get_type())) };
+        }
+      },
+      reference);
+  }
+
+  object_ref get_validator(object_ref const reference)
+  {
+    return visit_object(
+      [=](auto const typed_reference) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_reference)>::value_type;
+
+        if constexpr(behavior::ref_like<T>)
+        {
+          return typed_reference->get_validator();
+        }
+        else
+        {
+          throw std::runtime_error{ util::format(
+            "Value does not support 'get-validator' because it is not ref_like: {}",
+            object_type_str(typed_reference.get_type())) };
+        }
+      },
+      reference);
+  }
+
   object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn)
   {
     visit_object(
@@ -905,7 +945,7 @@ namespace jank::runtime
         {
           throw std::runtime_error{ util::format(
             "Value does not support 'add-watch' because it is not ref_like: {}",
-            typed_reference.to_code_string()) };
+            object_type_str(typed_reference.get_type())) };
         }
       },
       reference);
@@ -927,7 +967,7 @@ namespace jank::runtime
         {
           throw std::runtime_error{ util::format(
             "Value does not support 'remove-watch' because it is not ref_like: {}",
-            typed_reference.to_code_string()) };
+            object_type_str(typed_reference.get_type())) };
         }
       },
       reference);

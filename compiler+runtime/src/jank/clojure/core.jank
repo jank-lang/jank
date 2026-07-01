@@ -1228,6 +1228,14 @@
   (reset-meta! o (apply f (meta o) args)))
 
 ;; Atoms.
+(defn- setup-reference [r options]
+  (let [opts (apply hash-map options)]
+    (when (:meta opts)
+      (cpp/jank.runtime.reset_meta r (:meta opts)))
+    (when (:validator opts)
+      (cpp/jank.runtime.set_validator r (:validator opts)))
+    r))
+
 (defn atom
   "Creates and returns an Atom with an initial value of x and zero or
    more options (in any order):
@@ -1243,9 +1251,8 @@
    return false or throw an exception."
   ([x]
    (cpp/jank.runtime.atom x))
-  ; TODO: Validators.
-  #_([x & options]
-     (setup-reference (atom x) options)))
+  ([x & options]
+   (setup-reference (atom x) options)))
 
 (defn swap!
   "Atomically swaps the value of atom to be:
@@ -5142,15 +5149,6 @@
   `(bound-fn* (fn ~@fntail)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Refs ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn-
-  setup-reference [#_clojure.lang.ARef r options]
-  ;; (let [opts (apply hash-map options)]
-  ;;   (when (:meta opts)
-  ;;     (.resetMeta r (:meta opts)))
-  ;;   (when (:validator opts)
-  ;;     (.setValidator r (:validator opts)))
-  ;;   r)
-  (throw "TODO: port setup-reference"))
 
 (defn agent
   "Creates and returns an agent with an initial value of state and
@@ -5398,15 +5396,13 @@
   validator-fn should return false or throw an exception. If the current state (root
   value if var) is not acceptable to the new validator, an exception
   will be thrown and the validator will not be changed."
-  [#_clojure.lang.IRef iref validator-fn]
-  ;; (. iref (setValidator validator-fn))
-  (throw "TODO: port set-validator!"))
+  [iref validator-fn]
+  (cpp/jank.runtime.set_validator iref validator-fn))
 
 (defn get-validator
   "Gets the validator-fn for a var/ref/agent/atom."
- [#_clojure.lang.IRef iref]
-  ;; (. iref (getValidator))
-  (throw "TODO: port get-validator"))
+  [iref]
+  (cpp/jank.runtime.get_validator iref))
 
 (defn commute
   "Must be called in a transaction. Sets the in-transaction-value of

@@ -130,6 +130,8 @@ namespace jank::runtime
   object_ref re_matches(object_ref const re, object_ref const s);
   object_ref smatch_to_vector(std::smatch const &match_results);
 
+  void set_validator(object_ref const reference, object_ref const validator_fn);
+  object_ref get_validator(object_ref const reference);
   object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn);
   object_ref remove_watch(object_ref const reference, object_ref const key);
 
