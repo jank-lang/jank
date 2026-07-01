@@ -221,9 +221,24 @@ namespace jank::jit
 
     //util::println("jit flags {}", args);
 
+    /* CodeModel::Large combined with Reloc::PIC_ produces object code with
+     * absolute-address text relocations on x86-64 Darwin, which the linker
+     * rejects ("illegal text-relocations") when that code is reused during
+     * AOT linking of a position-independent executable. Every other target
+     * we support handles Large+PIC_ fine, so we only narrow the code model
+     * here. */
+    constexpr auto code_model{
+#if defined(__x86_64__)
+      jtl::current_platform == jtl::platform::macos_like ? llvm::CodeModel::Small
+                                                          : llvm::CodeModel::Large
+#else
+      llvm::CodeModel::Large
+#endif
+    };
+
     /* We don't actually own this interpreter. CppInterOp does. */
     interpreter.reset(static_cast<CppInternal::Interpreter *>(
-      Cpp::CreateInterpreter(args, {}, vfs, static_cast<int>(llvm::CodeModel::Large))));
+      Cpp::CreateInterpreter(args, {}, vfs, static_cast<int>(code_model))));
 
     /* Enabling perf support requires registering a couple of plugins with LLVM. These
      * plugins will generate files which perf can then use to inject additional info
