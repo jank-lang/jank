@@ -22,6 +22,11 @@ namespace jank::runtime::obj
     /* behavior::derefable */
     object_ref deref() const;
 
+    /* behavior::metadatable */
+    object_ref with_meta(object_ref const m);
+    object_ref get_meta() const;
+    void set_meta(object_ref const o);
+
     /* Replaces the old value with the specified value. Returns the new value. */
     object_ref reset(object_ref const o);
     /* Same as reset, but returns a vector of the old value and the new value. */
@@ -44,8 +49,11 @@ namespace jank::runtime::obj
     object_ref compare_and_set(object_ref const old_val, object_ref const new_val);
 
     /* behavior::ref_like */
+    void set_validator(object_ref const vf);
+    object_ref get_validator();
     void add_watch(object_ref const key, object_ref const fn);
     void remove_watch(object_ref const key);
+    void validate(object_ref const val);
 
     /*** XXX: Everything here is thread-safe. ***/
 
@@ -55,5 +63,9 @@ namespace jank::runtime::obj
     /* Since watches is a `persistent_hash_map`, there in no guarantee in which
      * order watches are invoked. */
     folly::Synchronized<persistent_hash_map_ref> watches{};
+    folly::Synchronized<object_ref> validator{};
+
+  protected:
+    lazy_meta meta;
   };
 }
