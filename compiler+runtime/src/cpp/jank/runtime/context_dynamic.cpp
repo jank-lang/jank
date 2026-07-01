@@ -306,7 +306,7 @@ namespace jank::runtime
           constexpr auto code_model{
 #if defined(__x86_64__)
             jtl::current_platform == jtl::platform::macos_like ? llvm::CodeModel::Small
-                                                                : llvm::CodeModel::Large
+                                                               : llvm::CodeModel::Large
 #else
             llvm::CodeModel::Large
 #endif
