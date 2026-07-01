@@ -5,7 +5,8 @@
             [babashka.fs :as fs]
             [leiningen.core.main :as lmain]
             [leiningen.jank.sandbox.core :as sandbox]
-            [leiningen.jank.resolve :as resolve])
+            [leiningen.jank.resolve :as resolve]
+            [leiningen.jank.changed :as changed])
   (:import (java.security MessageDigest)
            (java.util Base64)
            (java.util.jar JarFile)))
@@ -16,6 +17,7 @@
 
 (def jank-build-file "jank-build.bb")
 (def jank-build-cache-file "jank-build-cache.txt")
+(def jank-build-fingerprint-file "jank-build-fingerprint.txt")
 
 (def default-build-opts
   {:target-dir         "target"
@@ -29,6 +31,12 @@
    (let [valid-keys [:defines :include-dirs :library-dirs :linked-libraries]]
      (reduce (fn [a b] (merge-with into a (select-keys b valid-keys))) maps))))
 
+(defn merge-rerun-flags
+  ([] {})
+  ([& maps]
+   (let [valid-keys [:rerun-if-changed :rerun-if-env-changed]]
+     (reduce (fn [a b] (merge-with into a (select-keys b valid-keys))) maps))))
+
 (defn has-build-file?
   "Returns true if the given directory or jar file has a `jank-build.bb` file in
   the root."
@@ -37,11 +45,6 @@
     (fs/regular-file? (fs/path path jank-build-file))
     (with-open [jar (JarFile. path)]
       (some? (.getEntry jar jank-build-file)))))
-
-(defn has-build-cache-file?
-  "Returns true if the given directory has a jank build cache file."
-  [path]
-  (fs/regular-file? (fs/path path jank-build-cache-file)))
 
 (defn extract-jar!
   "Extract the jar file into `out-dir`, creating it if it does not exist."
@@ -91,10 +94,12 @@
   [line]
   (when-let [[_ k v] (re-matches #"jank-build::(.*?)=(.*)" line)]
     (case k
-      "define"       (let [[a b] (string/split v #"=" 2)] {:defines {a b}})
-      "include-dir"  {:include-dirs [v]}
-      "link-dir"     {:library-dirs [v]}
-      "link-library" {:linked-libraries [v]}
+      "define"               (let [[a b] (string/split v #"=" 2)] {:defines {a b}})
+      "include-dir"          {:include-dirs [v]}
+      "link-dir"             {:library-dirs [v]}
+      "link-library"         {:linked-libraries [v]}
+      "rerun-if-changed"     {:rerun-if-changed [v]}
+      "rerun-if-env-changed" {:rerun-if-env-changed [v]}
       (do (lmain/warn "invalid jank-build directive:" line)
           nil))))
 
@@ -259,10 +264,6 @@
            ;; recursively resolving their dependencies and so on.
           dep-ops  (vec (mapcat #(plan-subtree-build build-opts target-dir %) tree))
            ;; Special handling when the root project has a build script.
-           ;; 
-           ;; TODO: For now we always run the root build script, but we
-           ;; could cache it if we knew its input files. Cargo does this
-           ;; by outputting rerun-if-changed flags from the build script.
           root-ops (when (has-build-file? (:root project))
                      [{:op           :compile
                        :dep          [(symbol (:group project) (:name project)) (:version project)]
@@ -270,10 +271,48 @@
                        :out-dir      (str (target-subdir target-dir "out" (:name project) "XXX"))
                        :build-opts   build-opts
                        :build-inputs (collect-build-deps tree)
-                       :inputs       (collect-out-dirs dep-ops)
-                       :always-build true}])
+                       :inputs       (collect-out-dirs dep-ops)}])
           plan (into dep-ops root-ops)]
       plan)))
+
+(defn read-build-result
+  [out-dir]
+  (let [path (fs/path out-dir jank-build-cache-file)]
+    (when (fs/regular-file? path)
+      (->> path
+           (fs/read-all-lines)
+           (keep process-build-directive)))))
+
+(defn rerun-fingerprint
+  "Compute the fingerprint of a compile operation based on its declared
+  rerun-if*-changed flags.
+
+  Returns nil if the build output cannot be read."
+  [compile-op]
+  (when-let [build-directives (read-build-result (:out-dir compile-op))]
+    (let [rerun-directives (apply merge-rerun-flags build-directives)
+          paths            (:rerun-if-changed rerun-directives)
+          vars             (:rerun-if-env-changed rerun-directives)]
+      (fingerprint {:paths (->> paths
+                                (map #(fs/path (:src-dir compile-op) %))
+                                (map changed/maximum-mtime)
+                                (apply max 0))
+                    :vars  (mapv changed/getenv vars)}))))
+
+(defn needs-compile?
+  "Determine if a compile operation can be skipped based on a matching target
+  cache."
+  [compile-op]
+  (let [fingerprint-path (fs/path (:out-dir compile-op) jank-build-fingerprint-file)]
+    (or
+      ;; No build cache means a successful build has not been performed.
+      (not (fs/regular-file? (fs/path (:out-dir compile-op) jank-build-cache-file)))
+
+      ;; No fingerprint file or a mismatched fingerprint means something in the
+      ;; source or env has changed.
+      (not (fs/regular-file? fingerprint-path))
+      (not= (fs/read-all-lines fingerprint-path)
+            [(rerun-fingerprint compile-op)]))))
 
 (defmulti run-build-op! (fn [_ op] (:op op)))
 
@@ -282,7 +321,7 @@
   ;; If the output dir already exists then the jar has already been extracted.
   ;; Since the out-dir name includes the jar fingerprint, we know that the
   ;; contents will be the same and we can skip the step.
-  (when-not (fs/exists? out-dir)
+  (when-not (fs/directory? out-dir)
     (println (str "\u001b[1;36m" (format "%10s" "Extracting") "\u001b[0m") dep)
     (extract-jar! jar out-dir))
 
@@ -290,18 +329,18 @@
   nil)
 
 (defmethod run-build-op! :compile
-  [plan {:keys [dep out-dir always-build] :as op}]
-  ;; Just like the extract-src case, if the build artifacts already exist in the
-  ;; fingerprinted output dir, then we know the inputs have not changed and
-  ;; there is no need to rebuild.
-  (when (or always-build (not (has-build-cache-file? out-dir)))
+  [plan {:keys [dep out-dir] :as op}]
+  (when (needs-compile? op)
     (println (str "\u001b[1;32m" (format "%10s" "Compiling") "\u001b[0m") dep)
     (build-dep! op))
 
+  ;; Write a fingerprint file to detect any changes in the watched files or env
+  ;; vars on subsequent builds.
+  (when-let [fprint (rerun-fingerprint op)]
+    (fs/write-lines (fs/path (:out-dir op) jank-build-fingerprint-file) [fprint]))
+
   ;; jank flags are extracted from the build cache file
-  (->> (fs/path out-dir jank-build-cache-file)
-       (fs/read-all-lines)
-       (keep process-build-directive)))
+  (read-build-result out-dir))
 
 (defn run-build!
   "Run the sequence of build steps planned by `plan-build`."
