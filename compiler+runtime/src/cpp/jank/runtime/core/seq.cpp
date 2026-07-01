@@ -1153,7 +1153,7 @@ namespace jank::runtime
     return visit_seqable(
       [](auto const typed_coll) -> object_ref {
         native_vector<object_ref> vec;
-        for(auto const &e : make_sequence_range(typed_coll))
+        for(auto const e : make_sequence_range(typed_coll))
         {
           vec.push_back(e);
         }
@@ -1186,7 +1186,7 @@ namespace jank::runtime
     return visit_seqable(
       [=](auto const typed_coll) -> object_ref {
         native_vector<object_ref> vec;
-        for(auto const &e : make_sequence_range(typed_coll))
+        for(auto const e : make_sequence_range(typed_coll))
         {
           vec.push_back(e);
         }
