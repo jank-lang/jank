@@ -181,6 +181,7 @@ namespace jank::runtime
   object_ref repeat(object_ref const n, object_ref const val);
 
   object_ref sort(object_ref const coll);
+  object_ref sort(object_ref const comp, object_ref const coll);
 
   object_ref shuffle(object_ref const coll);
 }

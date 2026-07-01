@@ -5654,8 +5654,10 @@
   java.util.Comparator.  Guaranteed to be stable: equal elements will
   not be reordered.  If coll is a Java array, it will be modified.  To
   avoid this, sort a copy of the array."
-  [coll]
-  (cpp/jank.runtime.sort coll))
+  ([coll]
+   (cpp/jank.runtime.sort coll))
+  ([comp coll]
+   (cpp/jank.runtime.sort comp coll)))
 
 (defn sort-by
   "Returns a sorted sequence of the items in coll, where the sort
