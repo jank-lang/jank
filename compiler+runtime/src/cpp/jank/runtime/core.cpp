@@ -3,6 +3,7 @@
 #include <deque>
 #include <pthread.h>
 #include <cxxabi.h>
+#include <charconv>
 
 #include <jank/gc.hpp>
 #include <jank/runtime/core.hpp>

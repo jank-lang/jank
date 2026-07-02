@@ -1,5 +1,8 @@
 #pragma once
 
+/* libc++ needs this. */
+#include <exception>
+
 #include <immer/vector.hpp>
 #include <immer/vector_transient.hpp>
 #include <immer/map.hpp>

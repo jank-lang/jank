@@ -16,6 +16,7 @@ namespace jank::util
   {
   }
 
+  /* NOLINTNEXTLINE(bugprone-exception-escape): This is allowed, in some cases. */
   scope_exit::~scope_exit()
   {
     if(!active)
