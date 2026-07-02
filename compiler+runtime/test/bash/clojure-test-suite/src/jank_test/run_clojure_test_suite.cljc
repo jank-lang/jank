@@ -174,7 +174,7 @@
     ; clojure.core-test.reversible-qmark ; TODO: port reversible?, TODO: port object-array
     ; clojure.core-test.rseq ; TODO: port rseq
     clojure.core-test.second
-    ; clojure.core-test.select-keys ; FIXME: Failing tests.
+    clojure.core-test.select-keys
     ; clojure.core-test.seq ; TODO: port int-array
     ; clojure.core-test.seq-qmark ; TODO: port rseq, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.seqable-qmark ; TODO: port array-map, TODO: port object-array
@@ -190,7 +190,7 @@
     ; clojure.core-test.some ; TODO: port int-array, TODO: port long-array, TODO: port double-array & TODO: port float-array.
     clojure.core-test.some-fn
     clojure.core-test.some-qmark
-    ; clojure.core-test.sort ; Assertion failed! !this->data.empty().
+    clojure.core-test.sort
     ; clojure.core-test.sort-by ; Assertion failed! !this->data.empty().
     ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?

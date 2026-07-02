@@ -61,6 +61,11 @@ namespace jank::runtime::obj
     return false;
   }
 
+  object_ref nil::find(object_ref const) const
+  {
+    return {};
+  }
+
   persistent_array_map_ref nil::assoc(object_ref const key, object_ref const val) const
   {
     return persistent_array_map::create_unique(key, val);

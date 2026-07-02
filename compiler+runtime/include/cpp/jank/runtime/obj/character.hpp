@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   struct character : object
   {
     static constexpr object_type obj_type{ object_type::character };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
     static constexpr bool pointer_free{ false };
 
     character();

@@ -1145,16 +1145,54 @@ namespace jank::runtime
 
   object_ref sort(object_ref const coll)
   {
+    if(coll.is_nil())
+    {
+      return obj::persistent_list::empty();
+    }
+
     return visit_seqable(
       [](auto const typed_coll) -> object_ref {
         native_vector<object_ref> vec;
-        for(auto const &e : make_sequence_range(typed_coll))
+        for(auto const e : make_sequence_range(typed_coll))
         {
           vec.push_back(e);
         }
 
         std::stable_sort(vec.begin(), vec.end(), [](object_ref const a, object_ref const b) {
           return runtime::compare(a, b) < 0;
+        });
+
+        using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
+
+        if constexpr(behavior::metadatable<T>)
+        {
+          return make_box<obj::native_vector_sequence>(typed_coll->get_meta(), std::move(vec));
+        }
+        else
+        {
+          return make_box<obj::native_vector_sequence>(std::move(vec));
+        }
+      },
+      coll);
+  }
+
+  object_ref sort(object_ref const comp, object_ref const coll)
+  {
+    if(coll.is_nil())
+    {
+      return obj::persistent_list::empty();
+    }
+
+    return visit_seqable(
+      [=](auto const typed_coll) -> object_ref {
+        native_vector<object_ref> vec;
+        for(auto const e : make_sequence_range(typed_coll))
+        {
+          vec.push_back(e);
+        }
+
+        std::stable_sort(vec.begin(), vec.end(), [=](object_ref const a, object_ref const b) {
+          return to_int(comp.call(a, b)) < 0;
         });
 
         using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
