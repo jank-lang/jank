@@ -891,47 +891,25 @@ namespace jank::runtime
       .count();
   }
 
-  object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn)
+  void set_validator(object_ref reference, object_ref const validator_fn)
   {
-    visit_object(
-      [=](auto const typed_reference) -> void {
-        using T = typename jtl::decay_t<decltype(typed_reference)>::value_type;
+    reference.set_validator(validator_fn);
+  }
 
-        if constexpr(behavior::ref_like<T>)
-        {
-          typed_reference->add_watch(key, fn);
-        }
-        else
-        {
-          throw std::runtime_error{ util::format(
-            "Value does not support 'add-watch' because it is not ref_like: {}",
-            typed_reference.to_code_string()) };
-        }
-      },
-      reference);
+  object_ref get_validator(object_ref const reference)
+  {
+    return reference.get_validator();
+  }
 
+  object_ref add_watch(object_ref reference, object_ref const key, object_ref const fn)
+  {
+    reference.add_watch(key, fn);
     return reference;
   }
 
-  object_ref remove_watch(object_ref const reference, object_ref const key)
+  object_ref remove_watch(object_ref reference, object_ref const key)
   {
-    visit_object(
-      [=](auto const typed_reference) -> void {
-        using T = typename jtl::decay_t<decltype(typed_reference)>::value_type;
-
-        if constexpr(behavior::ref_like<T>)
-        {
-          typed_reference->remove_watch(key);
-        }
-        else
-        {
-          throw std::runtime_error{ util::format(
-            "Value does not support 'remove-watch' because it is not ref_like: {}",
-            typed_reference.to_code_string()) };
-        }
-      },
-      reference);
-
+    reference.remove_watch(key);
     return reference;
   }
 

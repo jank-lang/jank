@@ -218,6 +218,34 @@ namespace jank::runtime
                                               object_source(runtime::detail::untagged(this)));
   }
 
+  void object::set_validator(object_ref const)
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "ref_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  object_ref object::get_validator() const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "ref_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  void object::add_watch(object_ref const, object_ref const)
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "ref_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  void object::remove_watch(object_ref const)
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "ref_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
   i64 object::to_integer() const
   {
     throw error::runtime_unsupported_behavior(type,
