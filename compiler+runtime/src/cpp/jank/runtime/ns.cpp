@@ -231,13 +231,6 @@ namespace jank::runtime
             return error::runtime_invalid_referred_global_symbol(object_source(new_name));
           }
 
-          if(!referred_names_without_renames.find(old_name))
-          {
-            return error::runtime_invalid_referred_global_rename(
-              "Symbols in :rename must also be referred in :only.",
-              object_source(old_name));
-          }
-
           auto const existing_var{ find_var(expect_object<obj::symbol>(new_name)) };
           if(existing_var.is_some())
           {
