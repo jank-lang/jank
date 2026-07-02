@@ -65,7 +65,7 @@ namespace jank::runtime::obj
     folly::Synchronized<persistent_hash_map_ref> watches{};
     folly::Synchronized<object_ref> validator{};
 
-  protected:
+  private:
     lazy_meta meta;
   };
 }
