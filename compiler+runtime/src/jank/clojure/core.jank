@@ -4748,7 +4748,7 @@
                       (cpp/clojure.core_native.throw_runtime_invalid_referred_global_rename (str "Referred global '" k "' is being renamed to '" v "', but '" v "' is already a referred global.")
                                                                                             v existing)
                                                                                                                                                                                                  (conj acc v)))
-                    (into #{} (:only actions))
+                    (into #{} (concat (:only actions) (keys (:rename actions))))
                                                                                                                                                                                                  (:rename actions))]
     (doseq [only (:only actions)]
       (cpp/clojure.core_native.refer_global only))
