@@ -893,7 +893,7 @@ namespace jank::runtime
 
   void set_validator(object_ref reference, object_ref const validator_fn)
   {
-    return reference.set_validator(validator_fn);
+    reference.set_validator(validator_fn);
   }
 
   object_ref get_validator(object_ref const reference)
