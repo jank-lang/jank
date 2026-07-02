@@ -57,8 +57,8 @@ namespace jank::runtime::obj
 
 namespace jank::runtime
 {
-  bool operator==(object *, obj::nil_ref);
-  bool operator!=(object *, obj::nil_ref);
+  bool operator==(object const *, obj::nil_ref);
+  bool operator!=(object const *, obj::nil_ref);
 
   extern obj::nil const _jank_nil;
   extern obj::nil_ref const jank_nil;

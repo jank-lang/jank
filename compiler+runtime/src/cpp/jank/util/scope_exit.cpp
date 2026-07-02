@@ -16,7 +16,7 @@ namespace jank::util
   {
   }
 
-  scope_exit::~scope_exit() noexcept(false)
+  scope_exit::~scope_exit()
   {
     if(!active)
     {

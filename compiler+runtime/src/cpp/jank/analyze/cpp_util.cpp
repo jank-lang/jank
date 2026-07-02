@@ -1050,13 +1050,10 @@ namespace jank::analyze::cpp_util
       for(size_t i{ 0 }; i < arg_types.size() - member; ++i)
       {
         auto const scope{ arg_scopes[i + member] };
-        if(scope)
+        if(scope && Cpp::IsTemplate(scope))
         {
-          if(Cpp::IsTemplate(scope))
-          {
-            auto const new_type{ Cpp::GetFunctionArgType(match, i) };
-            arg_types[i + member].m_Type = new_type;
-          }
+          auto const new_type{ Cpp::GetFunctionArgType(match, i) };
+          arg_types[i + member].m_Type = new_type;
         }
       }
 
@@ -1289,8 +1286,8 @@ namespace jank::analyze::cpp_util
     }
 
     if(/* Up cast. */
-       (Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
-                               Cpp::GetUnderlyingType(expected_type)))
+       Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
+                              Cpp::GetUnderlyingType(expected_type))
        /* Same type or adding reference. */
        || (Cpp::GetCanonicalType(expr_type)
              == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type))

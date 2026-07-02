@@ -120,7 +120,7 @@ namespace jank::codegen
     native_set<ir::identifier> seen_blocks;
   };
 
-  using identifier = ir::identifier;
+  using ir::identifier;
 
 
   static folly::Synchronized<
@@ -131,7 +131,7 @@ namespace jank::codegen
     /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
     global_vars;
 
-  static identifier lift_constant(identifier const &name, object_ref const o, builder &b)
+  static identifier lift_constant(identifier const &name, object_ref const o, builder const &b)
   {
     if(b.module->target == compilation_target::eval)
     {
@@ -187,7 +187,8 @@ namespace jank::codegen
     return name;
   }
 
-  static jtl::immutable_string lift_var(jtl::immutable_string const &qualified_var, builder &b)
+  static jtl::immutable_string
+  lift_var(jtl::immutable_string const &qualified_var, builder const &b)
   {
     if(b.module->target == compilation_target::eval)
     {

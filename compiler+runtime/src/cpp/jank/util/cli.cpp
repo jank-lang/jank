@@ -210,7 +210,7 @@ OPTIONS
     }
   }
 
-  jtl::result<void, int> parse_opts(int const argc, char const **argv)
+  jtl::result<void, int> parse_opts(int const argc, char const * const * const argv)
   {
     auto const flags{ parse_into_vector(argc, argv) };
 
@@ -260,13 +260,13 @@ OPTIONS
         {
           if(check_flag(it, end, value, util::format("-O{}", pass.first), false))
           {
-            scratch.*(pass.second) = true;
+            scratch.*pass.second = true;
             handled = true;
             break;
           }
           else if(check_flag(it, end, value, util::format("-Ono-{}", pass.first), false))
           {
-            scratch.*(pass.second) = false;
+            scratch.*pass.second = false;
             handled = true;
             break;
           }
@@ -517,7 +517,8 @@ OPTIONS
     return ok();
   }
 
-  native_vector<jtl::immutable_string> parse_into_vector(int const argc, char const **argv)
+  native_vector<jtl::immutable_string>
+  parse_into_vector(int const argc, char const * const * const argv)
   {
     native_vector<jtl::immutable_string> ret;
     ret.reserve(argc - 1);

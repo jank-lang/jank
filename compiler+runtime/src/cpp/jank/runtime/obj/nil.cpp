@@ -99,12 +99,12 @@ namespace jank::runtime::obj
 
 namespace jank::runtime
 {
-  bool operator==(object * const lhs, obj::nil_ref)
+  bool operator==(object const * const lhs, obj::nil_ref)
   {
     return lhs->type == object_type::nil;
   }
 
-  bool operator!=(object * const lhs, obj::nil_ref)
+  bool operator!=(object const * const lhs, obj::nil_ref)
   {
     return lhs->type != object_type::nil;
   }
