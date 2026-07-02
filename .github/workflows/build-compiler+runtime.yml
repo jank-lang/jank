@@ -112,35 +112,6 @@ jobs:
           fi
           ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
 
-  macos-intel-build-clang:
-    name: macOS Intel - clang
-    runs-on: macos-26-intel
-    env:
-      HOMEBREW_NO_AUTO_UPDATE: 1
-    timeout-minutes: 200
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-      - name: Install Homebrew deps
-        run: |
-          brew install git pkg-config ninja python cmake gnupg zlib
-      - name: Cache Clang/LLVM
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
-        with:
-          path: |
-            ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-intel-${{ hashFiles('compiler+runtime/bin/build-clang') }}
-      - name: Build Clang/LLVM
-        run: |
-          if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
-          then
-            pushd ${{ github.workspace }}/compiler+runtime
-              ./bin/build-clang
-            popd
-          fi
-          ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
-
   build-jank:
     needs:
       - ubuntu-build-clang
@@ -385,46 +356,6 @@ jobs:
             ./bin/compile
             DESTDIR=inst ./bin/install
             tar czf ~/jank-arch-x86-64.tar.gz inst
-          popd
-      - name: Import SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
-          chmod 400 ~/.ssh/jank_id_ed25519
-      - name: Publish to cache
-        run: |
-          rsync -avz -e "ssh -i $HOME/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no" --progress ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/arch
-
-  publish-macos-intel-package:
-    #if: github.ref == 'refs/heads/main'
-    needs:
-      - macos-intel-build-clang
-    runs-on: macos-15-intel
-    name: Publish macOS Intel package
-    timeout-minutes: 60
-    steps:
-      - name: Install packages
-        run: |
-          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib boost clojure/tools/clojure
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-      - name: Cache Clang/LLVM
-        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
-        with:
-          path: |
-            compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-intel-${{ hashFiles('compiler+runtime/bin/build-clang') }}
-      - name: Build and test jank
-        id: jank-build-step
-        run: |
-          export CC=${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang
-          export CXX=${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++
-          pushd ${GITHUB_WORKSPACE}/compiler+runtime
-            ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_local_clang=on
-            ./bin/compile
-            DESTDIR=inst ./bin/install
-            tar czf ~/jank-macos-x86-64.tar.gz inst
           popd
       - name: Import SSH key
         run: |
