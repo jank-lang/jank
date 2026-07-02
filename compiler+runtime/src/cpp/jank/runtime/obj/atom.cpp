@@ -242,7 +242,7 @@ namespace jank::runtime::obj
     *locked_validator = vf;
   }
 
-  object_ref atom::get_validator()
+  object_ref atom::get_validator() const
   {
     auto const locked_validator(validator.rlock());
     return *locked_validator;

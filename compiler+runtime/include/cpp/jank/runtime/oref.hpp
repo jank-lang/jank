@@ -873,6 +873,71 @@ namespace jank::runtime
       return ptr()->compare(*o.ptr());
     }
 
+    /* behavior::ref_like */
+    void set_validator(object_ref const vf)
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer i{ detail::as_integer(data) };
+        return i.set_validator(vf);
+      }
+      if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.set_validator(vf);
+      }
+
+      return ptr()->set_validator(vf);
+    }
+
+    object_ref get_validator() const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer const i{ detail::as_integer(data) };
+        return i.get_validator();
+      }
+      if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
+        return i.get_validator();
+      }
+
+      return ptr()->get_validator();
+    }
+
+    void add_watch(object_ref const key, object_ref const fn)
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer i{ detail::as_integer(data) };
+        return i.add_watch(key, fn);
+      }
+      if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.add_watch(key, fn);
+      }
+
+      return ptr()->add_watch(key, fn);
+    }
+
+    void remove_watch(object_ref const key)
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer i{ detail::as_integer(data) };
+        return i.remove_watch(key);
+      }
+      if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.remove_watch(key);
+      }
+
+      return ptr()->remove_watch(key);
+    }
+
     /* behavior::number_like */
     i64 to_integer() const
     {

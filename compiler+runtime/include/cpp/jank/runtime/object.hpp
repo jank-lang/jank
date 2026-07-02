@@ -312,7 +312,7 @@ namespace jank::runtime
     //metadatable,
     //nameable,
     //realizable,
-    //ref_like,
+    ref_like = 1 << 5,
     //seqable,
     //sequential,
     //set_like,
@@ -443,6 +443,12 @@ namespace jank::runtime
      * For sequences, all values need to be considered for comparison.
      */
     virtual i64 compare(object const &) const;
+
+    /* behavior::ref_like */
+    virtual void set_validator(object_ref const vf);
+    virtual object_ref get_validator() const;
+    virtual void add_watch(object_ref const key, object_ref const fn);
+    virtual void remove_watch(object_ref const key);
 
     virtual i64 to_integer() const;
     virtual f64 to_real() const;

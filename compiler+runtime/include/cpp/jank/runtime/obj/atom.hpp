@@ -13,7 +13,8 @@ namespace jank::runtime::obj
   struct atom : object
   {
     static constexpr object_type obj_type{ object_type::atom };
-    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{ object_behavior::compare
+                                                    | object_behavior::ref_like };
     static constexpr bool pointer_free{ false };
 
     atom();
@@ -49,10 +50,10 @@ namespace jank::runtime::obj
     object_ref compare_and_set(object_ref const old_val, object_ref const new_val);
 
     /* behavior::ref_like */
-    void set_validator(object_ref const vf);
-    object_ref get_validator();
-    void add_watch(object_ref const key, object_ref const fn);
-    void remove_watch(object_ref const key);
+    void set_validator(object_ref const vf) override;
+    object_ref get_validator() const override;
+    void add_watch(object_ref const key, object_ref const fn) override;
+    void remove_watch(object_ref const key) override;
     void validate(object_ref const val);
 
     /*** XXX: Everything here is thread-safe. ***/
