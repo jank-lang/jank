@@ -79,28 +79,28 @@ namespace jank::runtime
   /* callable */
   object_ref object::call() const
   {
-    throw invalid_arity<0>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+    throw invalid_arity<0>{ object_type_str(type) };
   }
 
   object_ref object::call(object_ref const) const
   {
-    throw invalid_arity<1>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+    throw invalid_arity<1>{ object_type_str(type) };
   }
 
   object_ref object::call(object_ref const, object_ref const) const
   {
-    throw invalid_arity<2>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+    throw invalid_arity<2>{ object_type_str(type) };
   }
 
   object_ref object::call(object_ref const, object_ref const, object_ref const) const
   {
-    throw invalid_arity<3>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+    throw invalid_arity<3>{ object_type_str(type) };
   }
 
   object_ref
   object::call(object_ref const, object_ref const, object_ref const, object_ref const) const
   {
-    throw invalid_arity<4>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+    throw invalid_arity<4>{ object_type_str(type) };
   }
 
   object_ref object::call(object_ref const,
@@ -109,7 +109,7 @@ namespace jank::runtime
                           object_ref const,
                           object_ref const) const
   {
-    throw invalid_arity<5>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+    throw invalid_arity<5>{ object_type_str(type) };
   }
 
   object_ref object::call(object_ref const,
@@ -119,7 +119,7 @@ namespace jank::runtime
                           object_ref const,
                           object_ref const) const
   {
-    throw invalid_arity<6>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+    throw invalid_arity<6>{ object_type_str(type) };
   }
 
   object_ref object::call(object_ref const,
@@ -130,19 +130,7 @@ namespace jank::runtime
                           object_ref const,
                           object_ref const) const
   {
-    throw invalid_arity<7>{ runtime::to_code_string(runtime::detail::untagged(this)) };
-  }
-
-  object_ref object::call(object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const,
-                          object_ref const) const
-  {
-    throw invalid_arity<8>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+    throw invalid_arity<7>{ object_type_str(type) };
   }
 
   object_ref object::call(object_ref const,
@@ -152,10 +140,9 @@ namespace jank::runtime
                           object_ref const,
                           object_ref const,
                           object_ref const,
-                          object_ref const,
                           object_ref const) const
   {
-    throw invalid_arity<9>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+    throw invalid_arity<8>{ object_type_str(type) };
   }
 
   object_ref object::call(object_ref const,
@@ -166,10 +153,9 @@ namespace jank::runtime
                           object_ref const,
                           object_ref const,
                           object_ref const,
-                          object_ref const,
                           object_ref const) const
   {
-    throw invalid_arity<10>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+    throw invalid_arity<9>{ object_type_str(type) };
   }
 
   object_ref object::call(object_ref const,
@@ -181,10 +167,24 @@ namespace jank::runtime
                           object_ref const,
                           object_ref const,
                           object_ref const,
+                          object_ref const) const
+  {
+    throw invalid_arity<10>{ object_type_str(type) };
+  }
+
+  object_ref object::call(object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
+                          object_ref const,
                           object_ref const,
                           object_ref const) const
   {
-    throw invalid_arity<11>{ runtime::to_code_string(runtime::detail::untagged(this)) };
+    throw invalid_arity<11>{ object_type_str(type) };
   }
 
   object_ref object::get(object_ref const) const
