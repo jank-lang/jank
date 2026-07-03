@@ -1,2 +1,3 @@
-(cpp/def int ftm-foo "bar")
+(cpp/def int jank-cpp-def-fail-type-mismatch-foo "bar")
+
 :success

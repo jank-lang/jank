@@ -1,4 +1,6 @@
-(cpp/def int fcwocd-foo 5)
-(cpp/def std.string fcwocd-foo "my-string")
+(cpp/def int jank-cpp-def-fail-clash-with-other-cpp-def 5)
+
+;; TODO: This should pass with a warning
+(cpp/def std.string jank-cpp-def-fail-clash-with-other-cpp-def "my-string")
 
 :success

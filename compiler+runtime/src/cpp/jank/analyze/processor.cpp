@@ -4696,6 +4696,8 @@ namespace jank::analyze
 
     if(__rt_ctx->current_ns()->find_referred_global(name_sym).is_some())
     {
+      // TODO: warn user about duplicate definition and what they can do to achieve reevaluation
+      // Return primitive_literal expression
       return error::analyze_invalid_cpp_def(
                util::format("'{}' already exists as global in namespace '{}'",
                             name_sym->name,

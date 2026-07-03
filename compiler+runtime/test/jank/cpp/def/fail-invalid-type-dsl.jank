@@ -1,3 +1,3 @@
-(cpp/def :ivalid-type my-var)
+(cpp/def :invalid-type jank-cpp-def-fail-invalid-type-dsl)
 
 :success

@@ -11,6 +11,7 @@
 
 #include <jtl/format/style.hpp>
 
+#include <jank/error.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/read/lex.hpp>
@@ -188,6 +189,15 @@ namespace jank::jit
           {
             failures.push_back(
               { dir_entry.path(), util::format("Exception thrown: {}", runtime::to_string(e)) });
+            passed = false;
+          }
+        }
+        catch(error_ref const e)
+        {
+          if(expect_success || expect_throw)
+          {
+            failures.push_back(
+              { dir_entry.path(), util::format("Exception thrown: {}", e->message) });
             passed = false;
           }
         }
