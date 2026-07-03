@@ -1,6 +1,6 @@
-(cpp/def int pmd-my-number 5)
-(cpp/def (std.vector int) pmd-my-vec [1 2])
+(cpp/def int jank-cpp-def-pass-multiple-defs-num 5)
+(cpp/def (std.vector int) jank-cpp-def-pass-multiple-defs-vec [1 2])
 
-(if (and (= (+ pmd-my-number 1) 6)
-         (= pmd-my-vec [1 2]))
+(if (and (= (+ jank-cpp-def-pass-multiple-defs-num 1) 6)
+         (= jank-cpp-def-pass-multiple-defs-vec [1 2]))
   :success)
