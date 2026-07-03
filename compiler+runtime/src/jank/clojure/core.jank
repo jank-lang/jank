@@ -3152,7 +3152,7 @@
   ([x]
    (cpp/jank.runtime.obj.repeat.create x))
   ([n x]
-   (cpp/jank.runtime.obj.repeat.create n x)))
+   (cpp/jank.runtime.obj.repeat.create (cpp/jank.runtime.to_int n) x)))
 
 (defn split-at
   "Returns a vector of [(take n coll) (drop n coll)]"
