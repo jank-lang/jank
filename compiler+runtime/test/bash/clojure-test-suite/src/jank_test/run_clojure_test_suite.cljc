@@ -108,7 +108,7 @@
     ; clojure.core-test.map-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.mapcat
     ; clojure.core-test.max ; FIXME: Failing tests.
-    ; clojure.core-test.merge ; Program hangs.
+    clojure.core-test.merge
     ; clojure.core-test.min ; FIXME: Failing tests.
     clojure.core-test.min-key
     ; clojure.core-test.minus ; FIXME: Failing tests.

@@ -181,15 +181,15 @@ namespace jank::runtime::obj::detail
 
     if(head.get_type() != object_type::persistent_vector)
     {
-      throw std::runtime_error{ util::format("invalid map entry: {}",
-                                             runtime::to_code_string(head)) };
+      throw std::runtime_error{ util::format("invalid map entry: '{}'",
+                                             runtime::object_type_str(head.get_type())) };
     }
 
     auto const vec(expect_object<obj::persistent_vector>(head));
     if(vec->count() != 2)
     {
-      throw std::runtime_error{ util::format("invalid map entry: {}",
-                                             runtime::to_code_string(head)) };
+      throw std::runtime_error{ util::format("invalid map entry: '{}'",
+                                             runtime::object_type_str(head.get_type())) };
     }
 
     return static_cast<PT const *>(this)->assoc(vec->data[0], vec->data[1]);
