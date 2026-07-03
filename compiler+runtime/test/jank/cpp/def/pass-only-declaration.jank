@@ -1,5 +1,4 @@
-(cpp/def std.string pod-foo)
+(cpp/def std.string jank-cpp-def-pass-only-declaration-str)
 
-
-(if (.empty pod-foo)
+(if (.empty jank-cpp-def-pass-only-declaration-str)
   :success)
