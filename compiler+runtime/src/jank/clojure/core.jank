@@ -368,7 +368,10 @@
     ([v start]
      (subvec v start (count v)))
     ([v start end]
-     (cpp/jank.runtime.subvec v start end))))
+     (cpp/jank.runtime.subvec
+      v
+      (cpp/jank.runtime.to_int start)
+      (cpp/jank.runtime.to_int end)))))
 
 (def ^{:arglists '([] [coll] [coll x] [coll x & xs])
        :doc "conj[oin]. Returns a new collection with the xs

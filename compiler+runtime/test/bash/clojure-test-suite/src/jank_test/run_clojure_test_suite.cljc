@@ -199,7 +199,7 @@
     ; clojure.core-test.str ; FIXME: Failing tests.
     clojure.core-test.string-qmark
     ; clojure.core-test.subs ; FIXME: Failing tests.
-    ; clojure.core-test.subvec ; libc++abi: terminating due to uncaught exception of type std::runtime_error: invalid object type (expected integer found real).
+    clojure.core-test.subvec
     ; clojure.core-test.symbol ; lex/invalid-ratio error: A ratio denominator must be an integer.
     clojure.core-test.symbol-qmark
     clojure.core-test.take
