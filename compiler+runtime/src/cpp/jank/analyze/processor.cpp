@@ -4779,19 +4779,6 @@ namespace jank::analyze
         {
           return analyze_set(typed_o, current_frame, position, fn_ctx, needs_box);
         }
-        else if constexpr((T::obj_behaviors & runtime::object_behavior::number_like)
-                            != object_behavior::none
-                          || jtl::is_any_same<T,
-                                              runtime::obj::keyword,
-                                              runtime::obj::nil,
-                                              runtime::obj::persistent_string,
-                                              runtime::obj::character,
-                                              runtime::obj::uuid,
-                                              runtime::obj::inst,
-                                              runtime::obj::re_pattern>)
-        {
-          return analyze_primitive_literal(o, current_frame, position, fn_ctx, needs_box);
-        }
         else if constexpr(std::same_as<T, runtime::obj::symbol>)
         {
           return analyze_symbol(typed_o, current_frame, position, fn_ctx, needs_box);
@@ -4810,13 +4797,11 @@ namespace jank::analyze
         {
           return analyze_var_val(typed_o, current_frame, position, fn_ctx, needs_box);
         }
+        // https://clojure.org/reference/evaluation
+        // > Any object other than those discussed above will evaluate to itself.
         else
         {
-          return error::internal_analyze_failure(
-            util::format("Unimplemented analysis for object type '{}'.",
-                         object_type_str(typed_o.get_type())),
-            object_source(o),
-            latest_expansion(macro_expansions));
+          return analyze_primitive_literal(o, current_frame, position, fn_ctx, needs_box);
         }
       },
       o);

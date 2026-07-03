@@ -66,7 +66,7 @@
     clojure.core-test.empty
     clojure.core-test.empty-qmark
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
-    ; clojure.core-test.eval ; libc++abi: terminating due to uncaught exception of type jtl::ref<jank::error::base>
+    clojure.core-test.eval
     clojure.core-test.even-qmark
     clojure.core-test.false-qmark
     clojure.core-test.ffirst
