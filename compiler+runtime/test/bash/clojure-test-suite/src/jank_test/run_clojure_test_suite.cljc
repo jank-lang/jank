@@ -191,7 +191,7 @@
     clojure.core-test.some-fn
     clojure.core-test.some-qmark
     clojure.core-test.sort
-    ; clojure.core-test.sort-by ; Assertion failed! !this->data.empty().
+    clojure.core-test.sort-by
     ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?
     ; clojure.core-test.star ; FIXME: Failing tests.
