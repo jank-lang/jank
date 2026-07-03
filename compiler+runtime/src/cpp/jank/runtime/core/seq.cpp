@@ -1227,6 +1227,19 @@ namespace jank::runtime
   {
     return visit_seqable(
       [](auto const typed_coll) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
+
+        if constexpr(!behavior::collection_like<T>
+                     || jtl::is_any_same<T,
+                                         obj::persistent_hash_map,
+                                         obj::persistent_array_map,
+                                         obj ::persistent_sorted_map>)
+        {
+          throw std::runtime_error{
+            util::format("cannot shuffle: '{}'", object_type_str(typed_coll.get_type())),
+          };
+        }
+
         native_vector<object_ref> vec;
         for(auto const &e : make_sequence_range(typed_coll))
         {
