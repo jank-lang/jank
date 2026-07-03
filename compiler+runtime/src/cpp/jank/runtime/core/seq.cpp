@@ -10,6 +10,7 @@
 #include <jank/runtime/behavior/set_like.hpp>
 #include <jank/runtime/behavior/sequential.hpp>
 #include <jank/runtime/behavior/collection_like.hpp>
+#include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/transientable.hpp>
 #include <jank/runtime/behavior/indexable.hpp>
 #include <jank/runtime/behavior/stackable.hpp>
@@ -1229,11 +1230,7 @@ namespace jank::runtime
       [](auto const typed_coll) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
 
-        if constexpr(!behavior::collection_like<T>
-                     || jtl::is_any_same<T,
-                                         obj::persistent_hash_map,
-                                         obj::persistent_array_map,
-                                         obj ::persistent_sorted_map>)
+        if constexpr(!behavior::collection_like<T> || behavior::map_like<T>)
         {
           throw std::runtime_error{
             util::format("cannot shuffle: '{}'", object_type_str(typed_coll.get_type())),
