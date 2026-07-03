@@ -20,10 +20,10 @@ namespace jank::runtime::obj
 
     repeat();
     repeat(object_ref const value);
-    repeat(object_ref const count, object_ref const value);
+    repeat(i64 const count, object_ref const value);
 
     static object_ref create(object_ref const value);
-    static object_ref create(object_ref const count, object_ref const value);
+    static object_ref create(i64 const count, object_ref const value);
 
     /* behavior::object_like */
     bool equal(object const &) const override;
@@ -53,7 +53,7 @@ namespace jank::runtime::obj
 
     /*** XXX: Everything here is immutable after initialization. ***/
     object_ref value{};
-    object_ref count{};
+    i64 count{};
 
   private:
     /*** XXX: Everything here is thread-safe. ***/

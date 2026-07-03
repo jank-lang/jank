@@ -1138,7 +1138,7 @@ namespace jank::runtime
     return obj::repeat::create(val);
   }
 
-  object_ref repeat(object_ref const n, object_ref const val)
+  object_ref repeat(i64 const n, object_ref const val)
   {
     return obj::repeat::create(n, val);
   }
