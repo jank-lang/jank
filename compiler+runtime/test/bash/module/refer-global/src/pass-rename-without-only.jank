@@ -1,0 +1,5 @@
+(ns test
+  (:refer-global :rename {std.string.npos foo}))
+
+(if (= -1 foo)
+  (println :success))
