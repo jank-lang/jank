@@ -94,7 +94,7 @@
     clojure.core-test.interleave
     clojure.core-test.intern
     clojure.core-test.interpose
-    ; clojure.core-test.juxt ; Program hangs.
+    clojure.core-test.juxt
     ; clojure.core-test.key ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
     clojure.core-test.keys
     clojure.core-test.keyword
