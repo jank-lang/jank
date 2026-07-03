@@ -5664,9 +5664,8 @@
   avoid this, sort a copy of the array."
   ([keyfn coll]
    (sort-by keyfn compare coll))
-  ([keyfn #_java.util.Comparator comp coll]
-  ;;  (sort (fn [x y] (. comp (compare (keyfn x) (keyfn y)))) coll)
-   (throw "TODO: port sort-by")))
+  ([keyfn comp coll]
+   (sort (fn [x y] (comp (keyfn x) (keyfn y))) coll)))
 
 ;; evaluation
 

@@ -1192,7 +1192,21 @@ namespace jank::runtime
         }
 
         std::stable_sort(vec.begin(), vec.end(), [=](object_ref const a, object_ref const b) {
-          return to_int(comp.call(a, b)) < 0;
+          auto const o(comp.call(a, b));
+
+          // coerce output as clojure.lang.AFunction/compare would
+          if(o == jank_true)
+          {
+            return true;
+          }
+          else if(o == jank_false)
+          {
+            return false;
+          }
+          else
+          {
+            return to_int(o) < 0;
+          }
         });
 
         using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;

@@ -32,17 +32,12 @@ namespace jank::runtime
 
   i64 compare(object_ref const l, object_ref const r)
   {
-    if(l.is_some())
+    if(l.is_some() && r.is_nil())
     {
-      if(r.is_nil())
-      {
-        return 1;
-      }
-
-      return l.compare(r);
+      return 1;
     }
 
-    return -1;
+    return l.compare(r);
   }
 
   bool is_identical(object_ref const lhs, object_ref const rhs)
