@@ -12,27 +12,20 @@ namespace jank::runtime::obj
   {
     TEST_CASE("equal")
     {
-      CHECK(
-        equal(repeat::create(make_box(5), make_box(5)), repeat::create(make_box(5), make_box(5))));
-      CHECK(
-        equal(repeat::create(make_box(1), make_box(1)), repeat::create(make_box(1), make_box(1))));
-      CHECK(
-        !equal(repeat::create(make_box(6), make_box(5)), repeat::create(make_box(5), make_box(5))));
-      CHECK(
-        !equal(repeat::create(make_box(5), make_box(5)), repeat::create(make_box(5), make_box(6))));
-      CHECK(
-        equal(repeat::create(make_box(0), make_box(0)), repeat::create(make_box(0), make_box(0))));
-      CHECK(
-        !equal(repeat::create(make_box(0), make_box(0)), repeat::create(make_box(5), make_box(0))));
-      CHECK(
-        !equal(repeat::create(make_box(1), make_box(1)), repeat::create(make_box(0), make_box(1))));
+      CHECK(equal(repeat::create(5, make_box(5)), repeat::create(5, make_box(5))));
+      CHECK(equal(repeat::create(1, make_box(1)), repeat::create(1, make_box(1))));
+      CHECK(!equal(repeat::create(6, make_box(5)), repeat::create(5, make_box(5))));
+      CHECK(!equal(repeat::create(5, make_box(5)), repeat::create(5, make_box(6))));
+      CHECK(equal(repeat::create(0, make_box(0)), repeat::create(0, make_box(0))));
+      CHECK(!equal(repeat::create(0, make_box(0)), repeat::create(5, make_box(0))));
+      CHECK(!equal(repeat::create(1, make_box(1)), repeat::create(0, make_box(1))));
 
-      CHECK(equal(repeat::create(make_box(0), make_box(0)), persistent_list::empty()));
-      CHECK(equal(seq(repeat::create(make_box(0), make_box(0))), jank_nil));
+      CHECK(equal(repeat::create(0, make_box(0)), persistent_list::empty()));
+      CHECK(equal(seq(repeat::create(0, make_box(0))), jank_nil));
     }
     TEST_CASE("seq")
     {
-      CHECK(equal(seq(repeat::create(make_box(0), make_box(0))), jank_nil));
+      CHECK(equal(seq(repeat::create(0, make_box(0))), jank_nil));
     }
   }
 }

@@ -168,7 +168,7 @@
     ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map. TODO: into-array.
     ; clojure.core-test.rem ; FIXME: Failing tests.
     ; clojure.core-test.remove-watch ; TODO: port sync
-    ; clojure.core-test.repeat ; libc++abi: terminating due to uncaught exception of type std::runtime_error: not a number: true
+    clojure.core-test.repeat
     clojure.core-test.rest
     clojure.core-test.reverse
     ; clojure.core-test.reversible-qmark ; TODO: port reversible?, TODO: port object-array
