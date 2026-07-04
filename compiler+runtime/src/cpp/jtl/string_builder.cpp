@@ -274,6 +274,17 @@ namespace jtl
     return (*this)(d.str());
   }
 
+  string_builder &string_builder::operator()(jank::native_big_decimal const &d) &
+  {
+    auto const s(d.str());
+    (*this)(s);
+    if(s.find('.') == std::string::npos)
+    {
+      (*this)(".0");
+    }
+    return *this;
+  }
+
   string_builder &string_builder::operator()(jank::runtime::obj::ratio_data const &r) &
   {
     (*this)(r.numerator);
