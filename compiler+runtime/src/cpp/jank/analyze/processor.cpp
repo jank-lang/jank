@@ -28,6 +28,7 @@
 #include <jank/util/string.hpp>
 #include <jank/util/escape.hpp>
 #include <jank/error/analyze.hpp>
+#include <jank/error/report.hpp>
 #include <jank/analyze/expr/def.hpp>
 #include <jank/analyze/expr/var_deref.hpp>
 #include <jank/analyze/expr/var_ref.hpp>
@@ -4696,15 +4697,17 @@ namespace jank::analyze
 
     if(__rt_ctx->current_ns()->find_referred_global(name_sym).is_some())
     {
-      // TODO: warn user about duplicate definition and what they can do to achieve reevaluation
-      // Return primitive_literal expression
-      return error::analyze_invalid_cpp_def(
-               util::format("'{}' already exists as global in namespace '{}'",
-                            name_sym->name,
-                            __rt_ctx->current_ns()->to_string()),
-               meta_source(name_sym->get_meta()),
-               latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 2));
+      error::warn(
+        util::format("'{}' already exists as global in namespace '{}'. "
+                     "If you want to modify the variable's value either use `cpp/=` to re-assign "
+                     "or restart the repl session.",
+                     name_sym->name,
+                     __rt_ctx->current_ns()->to_string()));
+      return jtl::make_ref<expr::primitive_literal>(position,
+                                                    current_frame,
+                                                    needs_box,
+                                                    l,
+                                                    jank_nil);
     }
 
     auto const type{ type_expr_res.expect_ok() };
