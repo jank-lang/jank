@@ -296,16 +296,16 @@ namespace jank::runtime::obj
     {
       if(data < 0)
       {
-        buff("##-Inf");
+        buff("-Infinity");
       }
       else
       {
-        buff("##Inf");
+        buff("Infinity");
       }
     }
     else if(std::isnan(data))
     {
-      buff("##NaN");
+      buff("NaN");
     }
     else
     {
@@ -315,7 +315,25 @@ namespace jank::runtime::obj
 
   jtl::immutable_string real::to_code_string() const
   {
-    return to_string();
+    if(std::isinf(data))
+    {
+      if(data < 0)
+      {
+        return "##-Inf";
+      }
+      else
+      {
+        return "##Inf";
+      }
+    }
+    else if(std::isnan(data))
+    {
+      return "##NaN";
+    }
+    else
+    {
+      return to_string();
+    }
   }
 
   uhash real::to_hash() const
