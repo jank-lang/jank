@@ -13,7 +13,7 @@
     clojure.core-test.assoc
     clojure.core-test.assoc-bang
     ; clojure.core-test.associative-qmark ; TODO: port to-array
-    ; clojure.core-test.atom ; libc++abi: terminating due to uncaught exception of type jank::runtime::invalid_arity<3ull>: invalid call to #object [unknown jit_function 0x1041da080] with 3 args provided
+    clojure.core-test.atom
     clojure.core-test.bigdec
     clojure.core-test.bigint
     clojure.core-test.binding ; TODO: port future
@@ -66,7 +66,7 @@
     clojure.core-test.empty
     clojure.core-test.empty-qmark
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
-    ; clojure.core-test.eval ; libc++abi: terminating due to uncaught exception of type jtl::ref<jank::error::base>
+    clojure.core-test.eval
     clojure.core-test.even-qmark
     clojure.core-test.false-qmark
     clojure.core-test.ffirst
@@ -94,7 +94,7 @@
     clojure.core-test.interleave
     clojure.core-test.intern
     clojure.core-test.interpose
-    ; clojure.core-test.juxt ; Program hangs.
+    clojure.core-test.juxt
     ; clojure.core-test.key ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
     clojure.core-test.keys
     clojure.core-test.keyword
@@ -108,7 +108,7 @@
     ; clojure.core-test.map-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.mapcat
     ; clojure.core-test.max ; FIXME: Failing tests.
-    ; clojure.core-test.merge ; Program hangs.
+    clojure.core-test.merge
     ; clojure.core-test.min ; FIXME: Failing tests.
     clojure.core-test.min-key
     ; clojure.core-test.minus ; FIXME: Failing tests.
@@ -168,7 +168,7 @@
     ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map. TODO: into-array.
     ; clojure.core-test.rem ; FIXME: Failing tests.
     ; clojure.core-test.remove-watch ; TODO: port sync
-    ; clojure.core-test.repeat ; libc++abi: terminating due to uncaught exception of type std::runtime_error: not a number: true
+    clojure.core-test.repeat
     clojure.core-test.rest
     clojure.core-test.reverse
     ; clojure.core-test.reversible-qmark ; TODO: port reversible?, TODO: port object-array
@@ -191,7 +191,7 @@
     clojure.core-test.some-fn
     clojure.core-test.some-qmark
     clojure.core-test.sort
-    ; clojure.core-test.sort-by ; Assertion failed! !this->data.empty().
+    clojure.core-test.sort-by
     ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?
     ; clojure.core-test.star ; FIXME: Failing tests.
@@ -199,7 +199,7 @@
     ; clojure.core-test.str ; FIXME: Failing tests.
     clojure.core-test.string-qmark
     ; clojure.core-test.subs ; FIXME: Failing tests.
-    ; clojure.core-test.subvec ; libc++abi: terminating due to uncaught exception of type std::runtime_error: invalid object type (expected integer found real).
+    clojure.core-test.subvec
     ; clojure.core-test.symbol ; lex/invalid-ratio error: A ratio denominator must be an integer.
     clojure.core-test.symbol-qmark
     clojure.core-test.take

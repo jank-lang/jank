@@ -14,19 +14,19 @@ namespace jank::runtime::obj
   repeat::repeat(object_ref const value)
     : object{ obj_type, obj_behaviors }
     , value{ value }
-    , count{ make_box(infinite) }
+    , count{ infinite }
   {
   }
 
-  repeat::repeat(object_ref const count, object_ref const value)
+  repeat::repeat(i64 const count, object_ref const value)
     : object{ obj_type, obj_behaviors }
     , value{ value }
     , count{ count }
   {
-    if(0 >= to_int(count))
+    if(0 >= count)
     {
       throw std::runtime_error{ "repeat must be constructed with positive count: "
-                                + std::to_string(to_int(count)) };
+                                + std::to_string(count) };
     }
   }
 
@@ -35,9 +35,9 @@ namespace jank::runtime::obj
     return make_box<repeat>(value);
   }
 
-  object_ref repeat::create(object_ref const count, object_ref const value)
+  object_ref repeat::create(i64 const count, object_ref const value)
   {
-    if(lte(count, make_box(0)))
+    if(count <= 0)
     {
       return persistent_list::empty();
     }
@@ -51,7 +51,7 @@ namespace jank::runtime::obj
 
   repeat_ref repeat::fresh_seq() const
   {
-    if(runtime::equal(count, make_box(infinite)))
+    if(count == infinite)
     {
       return runtime::detail::untagged(this);
     }
@@ -65,28 +65,28 @@ namespace jank::runtime::obj
 
   repeat_ref repeat::next() const
   {
-    if(runtime::equal(count, make_box(infinite)))
+    if(count == infinite)
     {
       return runtime::detail::untagged(this);
     }
-    if(lte(count, make_box(1)))
+    if(count <= 1)
     {
       return {};
     }
-    return make_box<repeat>(make_box(add(count, make_box(-1))), value);
+    return make_box<repeat>(count - 1, value);
   }
 
   repeat_ref repeat::next_in_place()
   {
-    if(runtime::equal(count, make_box(infinite)))
+    if(count == infinite)
     {
       return runtime::detail::untagged(this);
     }
-    if(lte(count, make_box(1)))
+    if(count <= 1)
     {
       return {};
     }
-    count = add(count, make_box(-1));
+    count = count - 1;
     return runtime::detail::untagged(this);
   }
 

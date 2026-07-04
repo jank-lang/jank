@@ -69,5 +69,8 @@ namespace jank::runtime
 
   private:
     lazy_meta meta;
+
+    jtl::result<void, error_ref>
+    refer_global_impl(decltype(referred_cpp_globals)::LockedPtr &, object_ref const sym);
   };
 }
