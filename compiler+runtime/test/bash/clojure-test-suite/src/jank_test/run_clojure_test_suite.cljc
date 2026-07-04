@@ -182,7 +182,7 @@
     clojure.core-test.set
     ; clojure.core-test.set-qmark ; TODO: port array-map, TODO: port object-array
     ; clojure.core-test.short ; analyze/macro-expansion-exception error: index out of bounds: 2,  TODO: port short, TODO: Port instance?
-    ; clojure.core-test.shuffle ; FIXME: Failing tests.
+    clojure.core-test.shuffle
     clojure.core-test.simple-ident-qmark
     clojure.core-test.simple-keyword-qmark
     clojure.core-test.simple-symbol-qmark
