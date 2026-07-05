@@ -29,8 +29,8 @@ namespace jtl
 
       iterator()
         : data{}
-        , i{ 0 }
-        , n{ 0 }
+        , i{}
+        , n{}
       {
       }
 
@@ -41,7 +41,7 @@ namespace jtl
       {
       }
 
-      constexpr value_type::size_type prev_char_size()
+      constexpr value_type::size_type prev_char_size() const
       {
         if(!is_continuation_byte(data, i - 1))
         {
