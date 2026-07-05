@@ -163,7 +163,7 @@ namespace jank::runtime::obj
   bool lazy_sequence::is_realized() const
   {
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
-    return fn.is_some() || sv.is_some();
+    return fn.is_nil() || sv.is_some();
   }
 
   lazy_sequence_ref lazy_sequence::with_meta(object_ref const m) const
