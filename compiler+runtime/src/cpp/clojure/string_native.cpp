@@ -24,9 +24,48 @@ namespace clojure::string_native
     return s_str.is_blank();
   }
 
+  static bool is_continuation_byte(jtl::immutable_string const &s, usize const i)
+  {
+    if(i == jtl::immutable_string::npos)
+    {
+      throw std::runtime_error{ "Invalid unicode string." };
+    }
+
+    return (s[i] & 0xC0) == 0x80;
+  }
+
   jtl::immutable_string reverse(jtl::immutable_string const &s)
   {
-    return { s.rbegin(), s.rend() };
+    usize i{ s.size() };
+    jtl::string_builder buff{ s.size() };
+    while(i > 0)
+    {
+      if(!is_continuation_byte(s, i - 1))
+      {
+        buff(s[i - 1]);
+        i -= 1;
+      }
+      else if(!is_continuation_byte(s, i - 2))
+      {
+        buff(s.substr(i - 2, 2));
+        i -= 2;
+      }
+      else if(!is_continuation_byte(s, i - 3))
+      {
+        buff(s.substr(i - 3, 3));
+        i -= 3;
+      }
+      else if(!is_continuation_byte(s, i - 4))
+      {
+        buff(s.substr(i - 4, 4));
+        i -= 4;
+      }
+      else
+      {
+        throw std::runtime_error{ "Invalid unicode string." };
+      }
+    }
+    return buff.release();
   }
 
   jtl::immutable_string lower_case(jtl::immutable_string const &s)

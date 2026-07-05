@@ -233,7 +233,7 @@
     clojure.string-test.ends-with-qmark
     ; clojure.string-test.escape ; Uncaught exception: Can't convert character to integer.
     clojure.string-test.lower-case
-    ; clojure.string-test.reverse ; issues with unicode
+    clojure.string-test.reverse
     clojure.string-test.starts-with-qmark
     clojure.string-test.upper-case
   ])
