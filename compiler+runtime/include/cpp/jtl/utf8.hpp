@@ -86,8 +86,8 @@ namespace jtl
       }
 
       value_type data;
-      value_type::size_type i{};
-      value_type::size_type n{};
+      value_type::size_type i;
+      value_type::size_type n;
     };
 
     iterator begin() const
