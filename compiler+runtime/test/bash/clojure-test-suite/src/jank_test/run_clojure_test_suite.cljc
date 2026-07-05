@@ -196,7 +196,7 @@
     ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?
     ; clojure.core-test.star ; FIXME: Failing tests.
     clojure.core-test.star-squote
-    ; clojure.core-test.str ; FIXME: Failing tests.
+    clojure.core-test.str
     clojure.core-test.string-qmark
     ; clojure.core-test.subs ; FIXME: Failing tests.
     clojure.core-test.subvec

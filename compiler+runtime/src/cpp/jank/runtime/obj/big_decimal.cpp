@@ -155,17 +155,22 @@ namespace jank::runtime::obj
 
   jtl::immutable_string big_decimal::to_string() const
   {
-    return data.str();
+    jtl::string_builder sb;
+    sb(data);
+    return sb.release();
   }
 
   void big_decimal::to_string(jtl::string_builder &buff) const
   {
-    buff(data.str());
+    buff(data);
   }
 
   jtl::immutable_string big_decimal::to_code_string() const
   {
-    return to_string() + 'M';
+    jtl::string_builder sb;
+    sb(data);
+    sb('M');
+    return sb.release();
   }
 
   uhash big_decimal::to_hash() const

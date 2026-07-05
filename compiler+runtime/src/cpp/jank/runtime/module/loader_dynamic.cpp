@@ -760,7 +760,7 @@ namespace jank::runtime::module
       case module_type::cpp:
       default:
         res = error::internal_runtime_failure(
-          util::format("Unknown module type '{}'.", module_type_to_load));
+          util::format("Unknown module type '{}'.", module_type_str(module_type_to_load)));
     }
 
     if(res.is_err())
