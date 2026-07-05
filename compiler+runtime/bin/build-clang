@@ -1,6 +1,34 @@
 #!/usr/bin/env bash
+# build-clang -- Checks out and builds a pinned Clang/LLVM for jank.
+#
+# See -h for all options.
+#
+# Configuration (edit below):
+#   llvm_url / llvm_branch / llvm_commit
+#       Source repository to check out from, pinned to a specific commit.
+#   llvm_version
+#       Major version number, used for lib install paths.
+#   llvm_mingw_pkg_url / llvm_mingw_pkg_branch / llvm_mingw_pkg_commit
+#       MSYS2 package definition used to build and package LLVM.
+#       Contains placeholder values that this script needs to replace
+#       before building. See PKGBUILD for details (Windows only).
+#
+# Output (in build/llvm-install/):
+#   Linux/Mac  - installed LLVM tree (headers, libs, binaries)
+#   Windows    - pacman .tar.zst packages (use -i to install into MSYS2)
 
 set -euo pipefail
+
+llvm_url="https://github.com/jank-lang/llvm-project.git"
+llvm_version=23
+llvm_branch="jank-snapshot/llvm${llvm_version}"
+llvm_branch="jank"
+llvm_commit="106644f6c835f9d2137aeb9cbfe1b9a60d03d17f"
+
+# Windows only (MSYS2):
+llvm_mingw_pkg_url="https://github.com/ikappaki/MINGW-packages"
+llvm_mingw_pkg_branch="maint/llvm-up-resilience"
+llvm_mingw_pkg_commit="6b27133534fb696e39996154fea565f3bb0bd331"
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 build_dir="${here}/../build"
@@ -53,32 +81,17 @@ echo "Using ${make_j} cores to build"
 
 srcdir="${PWD}"
 
-llvm_url="https://github.com/jank-lang/llvm-project.git"
-llvm_version=23
-llvm_branch="jank-snapshot/llvm${llvm_version}"
-llvm_commit="106644f6c835f9d2137aeb9cbfe1b9a60d03d17f"
-llvm_branch="jank"
 llvm_dest_dir="${srcdir}/llvm-install"
 llvm_build_dir="${srcdir}/llvm-build"
 
 if [[ -n "${MSYSTEM:-}" ]]; then
-
     # Keeping Windows on 22 for now, since the mingw package relies on Github releases and 23
     # is still unreleased.
     llvm_version=22
     llvm_commit="8164f1a0c17b192e133817436bdb07598b7402a3"
 
-    # Building LLVM on MSYS2 requires a pacman package definition.  a
-    # patched version of MINGW-packages/mingw-w64-llvm is used, which
-    # is maintain separately.
-    llvm_mingw_pkg_gen=1  # Increment this whenever the LLVM version is updated
-    llvm_mingw_pkg_url="https://github.com/jank-lang/MINGW-packages"
-    llvm_mingw_pkg_branch="master"
-    llvm_mingw_pkg_commit="70ffe41c3d45164a497b7cac65448057dcebf4ae"
     llvm_mingw_pkg_repo_dir="${build_dir}/MINGW-packages"
-    # The package definition  copied into ${llvm_build_dir} and
-    # expects the LLVM source tree to be available at
-    # ${llvm_build_dir}/src
+    # makepkg expects the source tree at ${llvm_build_dir}/src
     llvm_mingw_pkg_build_dir="${llvm_build_dir}"
     llvm_src_dir="${llvm_mingw_pkg_build_dir}/src"
 else
@@ -122,7 +135,7 @@ function prepare()
       echo "Cloning MINGW-packages repo to ${llvm_mingw_pkg_repo_dir}..."
       rm -fr ${llvm_mingw_pkg_repo_dir}
       # Clone the repo shallowly and check out only the mingw-w64-llvm directory
-      git clone --depth 1 --filter=blob:none --no-checkout ${llvm_mingw_pkg_url} ${llvm_mingw_pkg_repo_dir}
+      git clone --depth 1 --branch ${llvm_mingw_pkg_branch} --filter=blob:none --no-checkout ${llvm_mingw_pkg_url} ${llvm_mingw_pkg_repo_dir}
       cd ${llvm_mingw_pkg_repo_dir}
         git sparse-checkout init --cone
         git sparse-checkout set mingw-w64-llvm
@@ -130,9 +143,15 @@ function prepare()
       cd -
       cp ${llvm_mingw_pkg_repo_dir}/mingw-w64-llvm/* ${llvm_mingw_pkg_build_dir}
 
-      llvm_git_hash=$(git -C ${llvm_src_dir} rev-parse --short HEAD)
-      # so that the llvm packages include the hash in their names
-      sed -i "s/^pkgrel=0\.jank$/pkgrel=${llvm_mingw_pkg_gen}.jank_${llvm_git_hash}/" ${llvm_mingw_pkg_build_dir}/PKGBUILD
+      # e.g.   set(LLVM_VERSION_MAJOR 22)
+      LLVM_VERSION_MAJOR=$(sed -n 's/^[[:space:]]*set(LLVM_VERSION_MAJOR \([0-9]*\))/\1/p' ${llvm_src_dir}/cmake/Modules/LLVMVersion.cmake)
+      LLVM_VERSION_MINOR=$(sed -n 's/^[[:space:]]*set(LLVM_VERSION_MINOR \([0-9]*\))/\1/p' ${llvm_src_dir}/cmake/Modules/LLVMVersion.cmake)
+      LLVM_VERSION_PATCH=$(sed -n 's/^[[:space:]]*set(LLVM_VERSION_PATCH \([0-9]*\))/\1/p' ${llvm_src_dir}/cmake/Modules/LLVMVersion.cmake)
+      LLVM_VERSION_SUFFIX=$(sed -n 's/^[[:space:]]*set(LLVM_VERSION_SUFFIX \(.*\))/\1/p'   ${llvm_src_dir}/cmake/Modules/LLVMVersion.cmake)
+      LLVM_COMMIT_HASH=$(git -C ${llvm_src_dir} rev-parse --short HEAD)
+
+      sed -i "s/PLACEHOLDER-PKGVER/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}${LLVM_VERSION_SUFFIX}/" ${llvm_mingw_pkg_build_dir}/PKGBUILD
+      sed -i "s/PLACEHOLDER-PKGREL/jank_${LLVM_COMMIT_HASH}/" ${llvm_mingw_pkg_build_dir}/PKGBUILD
   fi
 }
 
