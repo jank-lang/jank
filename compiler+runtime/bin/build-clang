@@ -22,7 +22,6 @@ set -euo pipefail
 llvm_url="https://github.com/jank-lang/llvm-project.git"
 llvm_version=23
 llvm_branch="jank-snapshot/llvm${llvm_version}"
-llvm_branch="jank"
 llvm_commit="106644f6c835f9d2137aeb9cbfe1b9a60d03d17f"
 
 # Windows only (MSYS2):
@@ -187,7 +186,7 @@ function build()
 function build_mingw()
 {
     cd ${llvm_build_dir}
-    makepkg-mingw -sLf --nocheck
+    makepkg-mingw --noconfirm -sLf --nocheck
     rm -fr ${llvm_dest_dir}
     mkdir -p ${llvm_dest_dir}
     mv ${llvm_build_dir}/*.tar.zst ${llvm_dest_dir}

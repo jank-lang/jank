@@ -42,7 +42,7 @@ jobs:
         if: steps.clang-cache.outputs.cache-hit != 'true'
         with:
           msystem: CLANG64
-          install: base-devel git mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-ninja mingw-w64-clang-x86_64-pkgconf mingw-w64-clang-x86_64-libunwind mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-z3 mingw-w64-clang-x86_64-python mingw-w64-clang-x86_64-compiler-rt mingw-w64-clang-x86_64-libc++
+          install: base-devel git
           update: true
 
       - name: Build Clang/LLVM
