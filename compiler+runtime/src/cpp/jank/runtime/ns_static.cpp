@@ -6,4 +6,9 @@ namespace jank::runtime
   {
     return ok();
   }
+
+  jtl::result<void, error_ref> ns::rename_referred_globals(object_ref const)
+  {
+    return ok();
+  }
 }

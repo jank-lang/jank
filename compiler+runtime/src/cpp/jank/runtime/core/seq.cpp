@@ -10,6 +10,7 @@
 #include <jank/runtime/behavior/set_like.hpp>
 #include <jank/runtime/behavior/sequential.hpp>
 #include <jank/runtime/behavior/collection_like.hpp>
+#include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/transientable.hpp>
 #include <jank/runtime/behavior/indexable.hpp>
 #include <jank/runtime/behavior/stackable.hpp>
@@ -167,7 +168,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not transientable: {}",
-                                                 typed_o.to_code_string()) };
+                                                 object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -549,7 +550,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not associatively writable: {}",
-                                                 typed_m.to_code_string()) };
+                                                 object_type_str(typed_m.get_type())) };
         }
       },
       m);
@@ -568,7 +569,7 @@ namespace jank::runtime
         else
         {
           throw std::runtime_error{ util::format("not associatively writable: {}",
-                                                 typed_m.to_code_string()) };
+                                                 object_type_str(typed_m.get_type())) };
         }
       },
       m);
@@ -597,6 +598,8 @@ namespace jank::runtime
 
   object_ref get_in(object_ref const m, object_ref const keys, object_ref const fallback)
   {
+    static auto const sentinel(make_box<obj::reduced>(jank_true));
+
     if(m.has_behavior(object_behavior::get))
     {
       return visit_seqable(
@@ -604,12 +607,11 @@ namespace jank::runtime
           object_ref ret{ m };
           for(auto const &e : make_sequence_range(typed_keys))
           {
-            ret = get(ret, e.erase());
-          }
-
-          if(ret.is_nil())
-          {
-            return fallback;
+            ret = get(ret, e.erase(), sentinel);
+            if(ret == sentinel)
+            {
+              return fallback;
+            }
           }
           return ret;
         },
@@ -1137,17 +1139,22 @@ namespace jank::runtime
     return obj::repeat::create(val);
   }
 
-  object_ref repeat(object_ref const n, object_ref const val)
+  object_ref repeat(i64 const n, object_ref const val)
   {
     return obj::repeat::create(n, val);
   }
 
   object_ref sort(object_ref const coll)
   {
+    if(coll.is_nil())
+    {
+      return obj::persistent_list::empty();
+    }
+
     return visit_seqable(
       [](auto const typed_coll) -> object_ref {
         native_vector<object_ref> vec;
-        for(auto const &e : make_sequence_range(typed_coll))
+        for(auto const e : make_sequence_range(typed_coll))
         {
           vec.push_back(e);
         }
@@ -1170,10 +1177,66 @@ namespace jank::runtime
       coll);
   }
 
+  object_ref sort(object_ref const comp, object_ref const coll)
+  {
+    if(coll.is_nil())
+    {
+      return obj::persistent_list::empty();
+    }
+
+    return visit_seqable(
+      [=](auto const typed_coll) -> object_ref {
+        native_vector<object_ref> vec;
+        for(auto const e : make_sequence_range(typed_coll))
+        {
+          vec.push_back(e);
+        }
+
+        std::stable_sort(vec.begin(), vec.end(), [=](object_ref const a, object_ref const b) {
+          auto const o(comp.call(a, b));
+
+          // coerce output as clojure.lang.AFunction/compare would
+          if(o == jank_true)
+          {
+            return true;
+          }
+          else if(o == jank_false)
+          {
+            return false;
+          }
+          else
+          {
+            return to_int(o) < 0;
+          }
+        });
+
+        using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
+
+        if constexpr(behavior::metadatable<T>)
+        {
+          return make_box<obj::native_vector_sequence>(typed_coll->get_meta(), std::move(vec));
+        }
+        else
+        {
+          return make_box<obj::native_vector_sequence>(std::move(vec));
+        }
+      },
+      coll);
+  }
+
   object_ref shuffle(object_ref const coll)
   {
     return visit_seqable(
       [](auto const typed_coll) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
+
+        if constexpr(!behavior::collection_like<T> || behavior::map_like<T>)
+        {
+          throw std::runtime_error{
+            util::format("cannot shuffle: '{}'", object_type_str(typed_coll.get_type())),
+          };
+        }
+
         native_vector<object_ref> vec;
         for(auto const &e : make_sequence_range(typed_coll))
         {

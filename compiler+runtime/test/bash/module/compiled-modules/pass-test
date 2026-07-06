@@ -19,6 +19,8 @@
 
 ;; --- Helper functions for isolated paths ---
 
+(def binary-version (string/trim (:out (proc/sh ["jank" "print-binary-version"]))))
+
 (defn src-dir []
   (fs/path *test-env* "src"))
 
@@ -26,7 +28,7 @@
   (fs/path *test-env* "target"))
 
 (defn build-dir []
-  (fs/path *test-env* "target/_cache"))
+  (fs/path *test-env* "target/_cache/" binary-version))
 
 (defn module-a-path []
   (fs/path (src-dir) "jank_test/a.cljc"))

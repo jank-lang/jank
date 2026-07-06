@@ -190,7 +190,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::call(object_ref const o) const
   {
-    return get(o);
+    return nth(o);
   }
 
   transient_vector_ref persistent_vector::to_transient() const
@@ -224,7 +224,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::get(object_ref const key, object_ref const fallback) const
   {
-    if(is_integer(key))
+    if(is_integral(key))
     {
       auto const i(to_i64(key));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
@@ -241,7 +241,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::find(object_ref const key) const
   {
-    if(is_integer(key))
+    if(is_integral(key))
     {
       auto const i(to_i64(key));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
@@ -259,7 +259,7 @@ namespace jank::runtime::obj
 
   bool persistent_vector::contains(object_ref const key) const
   {
-    if(is_integer(key))
+    if(is_integral(key))
     {
       auto const i(to_i64(key));
       return i >= 0 && static_cast<size_t>(i) < data.size();
@@ -272,7 +272,7 @@ namespace jank::runtime::obj
 
   persistent_vector_ref persistent_vector::assoc(object_ref const key, object_ref const val) const
   {
-    if(!is_integer(key))
+    if(!is_integral(key))
     {
       throw std::runtime_error{ "Key must be integer." };
     }
@@ -322,7 +322,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_vector::nth(object_ref const index) const
   {
-    if(is_integer(index))
+    if(is_integral(index))
     {
       auto const i(to_i64(index));
       if(i < 0 || data.size() <= static_cast<size_t>(i))

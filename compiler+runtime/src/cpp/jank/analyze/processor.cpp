@@ -1518,7 +1518,7 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const shift_obj{ it.first().unwrap() };
-    if(!runtime::is_integer(shift_obj))
+    if(!runtime::is_integral(shift_obj))
     {
       return error::analyze_invalid_case("Shift value must be an integer.",
                                          meta_source(o->get_meta()),
@@ -1534,7 +1534,7 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const mask_obj{ it.first().unwrap() };
-    if(!runtime::is_integer(mask_obj))
+    if(!runtime::is_integral(mask_obj))
     {
       return error::analyze_invalid_case("Mask value must be an integer.",
                                          meta_source(o->get_meta()),
@@ -1577,7 +1577,7 @@ namespace jank::analyze
           auto const e{ seq->first() };
           auto const k_obj{ e->data[0] };
           auto const v_obj{ e->data[1] };
-          if(!runtime::is_integer(k_obj))
+          if(!runtime::is_integral(k_obj))
           {
             return err("Map key for case* is expected to be an integer.");
           }
@@ -3398,28 +3398,30 @@ namespace jank::analyze
         return analyze_cpp_call(o, source.data, current_frame, position, fn_ctx, needs_box);
       }
 
-      object_ref expanded{ o };
-      jtl::ptr<error::base> expansion_error{};
-      JANK_TRY
+      if(source->kind != expression_kind::local_reference)
       {
-        expanded = __rt_ctx->macroexpand(o);
-      }
-      JANK_CATCH_THEN(
-        [&](auto const &e) {
-          expansion_error
-            = error::analyze_macro_expansion_exception(e,
-                                                       cpptrace::from_current_exception(),
-                                                       object_source(o),
-                                                       latest_expansion(macro_expansions));
-        },
-        return expansion_error.as_ref())
+        object_ref expanded{ o };
+        jtl::ptr<error::base> expansion_error{};
+        JANK_TRY
+        {
+          expanded = __rt_ctx->macroexpand(o);
+        }
+        JANK_CATCH_THEN(
+          [&](auto const &e) {
+            expansion_error
+              = error::analyze_macro_expansion_exception(e,
+                                                         cpptrace::from_current_exception(),
+                                                         object_source(o),
+                                                         latest_expansion(macro_expansions));
+          },
+          return expansion_error.as_ref())
 
-      if(expanded != o)
-      {
-        return analyze(expanded, current_frame, position, fn_ctx, needs_box);
+        if(expanded != o)
+        {
+          return analyze(expanded, current_frame, position, fn_ctx, needs_box);
+        }
       }
 
-      source = sym_result.expect_ok();
       auto const var_deref(llvm::dyn_cast<expr::var_deref>(source.data));
 
       /* Some vars have meta which defines how calls to it can be inlined. This works similarly
@@ -3482,9 +3484,7 @@ namespace jank::analyze
         return analyze_cpp_call(o, value, current_frame, position, fn_ctx, needs_box);
       }
 
-      if((source->kind >= expression_kind::cpp_value_min
-          && source->kind <= expression_kind::cpp_value_max)
-         || !cpp_util::is_any_object(cpp_util::expression_type(source.data)))
+      if(!cpp_util::is_any_object(cpp_util::expression_type(source.data)))
       {
         return analyze_cpp_call(o, source.data, current_frame, position, fn_ctx, needs_box);
       }
@@ -4772,19 +4772,6 @@ namespace jank::analyze
         {
           return analyze_set(typed_o, current_frame, position, fn_ctx, needs_box);
         }
-        else if constexpr((T::obj_behaviors & runtime::object_behavior::number_like)
-                            != object_behavior::none
-                          || jtl::is_any_same<T,
-                                              runtime::obj::keyword,
-                                              runtime::obj::nil,
-                                              runtime::obj::persistent_string,
-                                              runtime::obj::character,
-                                              runtime::obj::uuid,
-                                              runtime::obj::inst,
-                                              runtime::obj::re_pattern>)
-        {
-          return analyze_primitive_literal(o, current_frame, position, fn_ctx, needs_box);
-        }
         else if constexpr(std::same_as<T, runtime::obj::symbol>)
         {
           return analyze_symbol(typed_o, current_frame, position, fn_ctx, needs_box);
@@ -4803,13 +4790,11 @@ namespace jank::analyze
         {
           return analyze_var_val(typed_o, current_frame, position, fn_ctx, needs_box);
         }
+        // https://clojure.org/reference/evaluation
+        // > Any object other than those discussed above will evaluate to itself.
         else
         {
-          return error::internal_analyze_failure(
-            util::format("Unimplemented analysis for object type '{}'.",
-                         object_type_str(typed_o.get_type())),
-            object_source(o),
-            latest_expansion(macro_expansions));
+          return analyze_primitive_literal(o, current_frame, position, fn_ctx, needs_box);
         }
       },
       o);
@@ -5183,7 +5168,7 @@ namespace jank::analyze
                 }
 
                 auto const size_obj{ runtime::second(next(seq)) };
-                if(runtime::is_integer(size_obj))
+                if(runtime::is_integral(size_obj))
                 {
                   auto const size{ runtime::to_i64(size_obj) };
                   if(size < 0)
@@ -5512,7 +5497,7 @@ namespace jank::analyze
           native_vector<Cpp::TemplateArgInfo> args;
           for(auto const arg : make_sequence_range(rest(typed_o)))
           {
-            if(runtime::is_integer(arg))
+            if(runtime::is_integral(arg))
             {
               auto const int_arg{ runtime::to_i64(arg) };
               static auto const int_type{ cpp_util::resolve_literal_type("long long").expect_ok() };

@@ -19,6 +19,11 @@ namespace jank::runtime
       return i->data;
     }
 
+    if(auto const bi{ dyn_cast<obj::big_integer>(o) }; bi.is_some())
+    {
+      return bi->to_integer();
+    }
+
     throw std::runtime_error{ util::format("An integer was required here, but a {} was provided.",
                                            object_type_str(o.get_type())) };
   }
@@ -177,8 +182,15 @@ namespace jank::runtime
             }
             else
             {
-              auto const l_real{ to_real(typed_l_data) };
               auto const r_real{ to_real(typed_r->data) };
+
+              if(r_real == 0)
+              {
+                throw std::runtime_error{ "Illegal divide by zero in 'rem'" };
+              }
+
+              auto const l_real{ to_real(typed_l_data) };
+
               return make_box(std::fmod(l_real, r_real)).erase();
             }
           },
@@ -539,6 +551,11 @@ namespace jank::runtime
     return detail::is_tagged_small_int(o.raw()) || o.get_type() == object_type::integer;
   }
 
+  bool is_integral(object_ref const o)
+  {
+    return is_integer(o) || is_big_integer(o);
+  }
+
   bool is_real(object_ref const o)
   {
     return detail::is_tagged_small_real(o.raw()) || o.get_type() == object_type::real;
@@ -677,8 +694,12 @@ namespace jank::runtime
         {
           return make_box<obj::big_integer>(typed_o->data);
         }
-        else if constexpr(
-          jtl::is_any_same<T, obj::real, obj::small_real, obj::ratio, obj::big_decimal>)
+        else if constexpr(jtl::is_any_same<T, obj::real, obj::small_real, obj::big_decimal>)
+        {
+          return make_box<obj::big_integer>(
+            native_big_decimal(typed_o->data).convert_to<native_big_integer>());
+        }
+        else if constexpr(jtl::is_same<T, obj::ratio>)
         {
           return make_box<obj::big_integer>(typed_o->to_integer());
         }

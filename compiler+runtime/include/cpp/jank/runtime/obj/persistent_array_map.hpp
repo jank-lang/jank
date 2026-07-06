@@ -69,6 +69,8 @@ namespace jank::runtime::obj
                                             sizeof...(args));
     }
 
+    static persistent_array_map_ref create_from_seq(object_ref const seq);
+
     /* behavior::get */
     [[gnu::always_inline, gnu::flatten, gnu::hot]]
     object_ref get(object_ref const key) const override

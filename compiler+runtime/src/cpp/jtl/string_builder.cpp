@@ -133,12 +133,24 @@ namespace jtl
   {
     if(std::isinf(d))
     {
-      constexpr jtl::immutable_string_view const infinity{ "INFINITY" };
-      maybe_realloc(*this, infinity.size());
+      if(d < 0)
+      {
+        constexpr jtl::immutable_string_view const minus_infinity{ "-INFINITY" };
+        maybe_realloc(*this, minus_infinity.size());
 
-      /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
-      snprintf(buffer + pos, capacity - pos, "%s", infinity.data());
-      pos += infinity.size();
+        /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+        snprintf(buffer + pos, capacity - pos, "%s", minus_infinity.data());
+        pos += minus_infinity.size();
+      }
+      else
+      {
+        constexpr jtl::immutable_string_view const infinity{ "INFINITY" };
+        maybe_realloc(*this, infinity.size());
+
+        /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+        snprintf(buffer + pos, capacity - pos, "%s", infinity.data());
+        pos += infinity.size();
+      }
     }
     else if(std::isnan(d))
     {
@@ -272,6 +284,17 @@ namespace jtl
   string_builder &string_builder::operator()(jank::native_big_integer const &d) &
   {
     return (*this)(d.str());
+  }
+
+  string_builder &string_builder::operator()(jank::native_big_decimal const &d) &
+  {
+    auto const s(d.str());
+    (*this)(s);
+    if(s.find('.') == std::string::npos)
+    {
+      (*this)(".0");
+    }
+    return *this;
   }
 
   string_builder &string_builder::operator()(jank::runtime::obj::ratio_data const &r) &

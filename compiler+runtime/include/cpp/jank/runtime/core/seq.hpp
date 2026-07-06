@@ -178,9 +178,10 @@ namespace jank::runtime
   object_ref iterate(object_ref const fn, object_ref const o);
 
   object_ref repeat(object_ref const val);
-  object_ref repeat(object_ref const n, object_ref const val);
+  object_ref repeat(i64 const n, object_ref const val);
 
   object_ref sort(object_ref const coll);
+  object_ref sort(object_ref const comp, object_ref const coll);
 
   object_ref shuffle(object_ref const coll);
 }

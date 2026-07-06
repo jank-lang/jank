@@ -262,9 +262,9 @@ namespace jank::runtime
     }
     else
     {
-      jtl::panic("invalid object type: {}, raw value {}",
-                 object_type_str(erased.get_type()),
-                 static_cast<int>(erased.get_type()));
+      throw std::runtime_error{ util::format("invalid object type: {}, raw value {}",
+                                             object_type_str(erased.get_type()),
+                                             static_cast<int>(erased.get_type())) };
     }
   }
 

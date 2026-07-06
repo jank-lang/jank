@@ -1,4 +1,5 @@
 #include <jank/runtime/obj/symbol.hpp>
+#include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/visit.hpp>
 
@@ -175,6 +176,16 @@ namespace jank::runtime::obj
   jtl::immutable_string const &symbol::get_namespace() const
   {
     return ns;
+  }
+
+  object_ref symbol::call(object_ref const m) const
+  {
+    return runtime::get(m, symbol_ref{ runtime::detail::untagged(this) });
+  }
+
+  object_ref symbol::call(object_ref const m, object_ref const fallback) const
+  {
+    return runtime::get(m, symbol_ref{ runtime::detail::untagged(this) }, fallback);
   }
 
   bool symbol::operator==(symbol const &rhs) const
