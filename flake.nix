@@ -181,6 +181,8 @@
             clangbuildanalyzer
             openjdk
             leiningen
+            expect
+            nodejs
 
             # Examples.
             pkg-config
