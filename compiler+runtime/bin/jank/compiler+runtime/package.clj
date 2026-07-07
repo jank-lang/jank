@@ -23,9 +23,10 @@
         control (format "Package: jank
 Version: %s
 Architecture: amd64
+Section: devel
 Maintainer: Jeaye Wilkerson <jeaye@jank-lang.org>
 Depends: libssl-dev, gcc, libbz2-dev, libzstd-dev, libxml2-dev, libstdc++-14-dev, zlib1g-dev, libboost-all-dev
-Description: The native Clojure dialect hosted on LLVM with seamless C++ interop.
+Description: The native Clojure dialect with seamless C++ interop.
 " jank-version)]
     (util/quiet-shell {:dir compiler+runtime-dir
                        :extra-env {"DESTDIR" dir}}
