@@ -6,6 +6,9 @@
 /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
 #define GC_NAME_CONFLICT 1
 
+/* libc++ needs this. */
+#include <cstddef>
+
 #include <gc/gc_cpp.h>
 #include <gc/gc_allocator.h>
 #include <gc/gc_typed.h>
