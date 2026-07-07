@@ -248,17 +248,23 @@
   "Compute the fingerprint of a compile operation based on its declared
   rerun-if*-changed flags.
 
+  If no :rerun-if-changed paths are given, then ALL source paths will be
+  tracked. If no :rerun-if-env-changed variables are given, then NO variables
+  are tracked.
+
   Returns nil if the build output cannot be read."
   [compile-op]
   (when-let [directives (read-build-directives (:out-dir compile-op))]
-    (let [paths (->> (:rerun-if-changed directives)
-                     (map #(fs/path (:src-dir compile-op) %)))
+    (let [paths (if (empty? (:rerun-if-changed directives))
+                  [(:src-dir compile-op)]
+                  (->> (:rerun-if-changed directives)
+                       (map #(fs/path (:src-dir compile-op) %))))
           vars  (:rerun-if-env-changed directives)]
       (change-fingerprint paths vars))))
 
 (defn needs-compile?
-  "Determine if a compile operation can be skipped based on a matching target
-  cache."
+  "Determine if a compile operation can be skipped based on whether it has
+  already been compiled and all of the tracked rerun-if-* have not changed. "
   [compile-op]
   (let [fingerprint-path (fs/path (:out-dir compile-op) jank-build-fingerprint-file)]
     (or
