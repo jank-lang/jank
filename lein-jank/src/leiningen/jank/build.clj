@@ -250,8 +250,7 @@
 
   Returns nil if the build output cannot be read."
   [compile-op]
-  (when-let [directives (-> (read-build-directives (:out-dir compile-op))
-                            (select-keys [:rerun-if-changed :rerun-if-env-changed]))]
+  (when-let [directives (read-build-directives (:out-dir compile-op))]
     (let [paths (->> (:rerun-if-changed directives)
                      (map #(fs/path (:src-dir compile-op) %)))
           vars  (:rerun-if-env-changed directives)]
