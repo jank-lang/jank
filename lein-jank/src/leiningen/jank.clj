@@ -34,25 +34,43 @@ Calls the -main function in the given namespace."
 
 (defn repl!
   "Start a terminal REPL and nREPL server in your :main ns, or the user ns if no
-  :main is specified."
+:main is specified."
   [project & args]
   (let [[opts args] (ljc/parse-opts #'repl! args ljc/standard-options)
         main        (:main project)]
     (dispatch-jank project opts "repl" (if main [main] []) args)))
 
 (defn compile!
-  "Compile your project to an executable."
+  "Ahead of time compile your project to an executable, starting at the :main
+entrypoint."
   [project & args]
   (let [[opts args] (ljc/parse-opts #'compile! args ljc/standard-options)]
     (if-let [main (:main project)]
       (dispatch-jank project opts "compile" [main] args)
       (lmain/warn "No :main entrypoint for project."))))
 
+(def compile-module-cli-options
+  [["-m" "--module NAMESPACE" "the jank namespace to compile"
+    :missing "Must provide namespace to compile"]
+   ["-o" "--output FILE" "the output file name (*.cpp, *.o)"
+    :missing "Must provide output file name"]
+   [nil "--output-target TYPE" "'cpp' or 'object', inferred by default"]])
+
 (defn compile-module!
-  "Compile a single module and its dependencies to object files."
+  "Ahead of time compile a module (given its namespace) and its dependencies.
+
+USAGE: lein compile-module -m/--module NAMESPACE -o/--output FILE
+
+To override the inferred output target, you can pass `--output-target TARGET`
+(TARGET is either 'cpp' or 'object')."
   [project & args]
-  (let [[opts args] (ljc/parse-opts #'compile-module! args ljc/standard-options)]
-    (dispatch-jank project opts "compile-module" [] args)))
+  (let [cli-options (into ljc/standard-options compile-module-cli-options)
+        [opts args] (ljc/parse-opts #'compile-module! args cli-options)
+        output-opts ["--name" (:output opts)]
+        target-opts (when-let [target (:output-target opts)] ["--output-target" target])]
+    (dispatch-jank project opts "compile-module"
+                   (concat [(:module opts)] output-opts target-opts)
+                   args)))
 
 (defn check-health!
   "Perform a health check on your jank install."
