@@ -19,12 +19,12 @@
 (defn run!
   "Run your project, starting at the :main entrypoint.
 
-  USAGE: lein run [--] [ARGS...]
-  Calls the -main function in the namespace specified as :main in project.clj.
-  ARGS are forwarded to -main.
+USAGE: lein run [--] [ARGS...]
+Calls the -main function in the namespace specified as :main in project.clj.
+ARGS are forwarded to -main.
 
-  USAGE: lein run -m/--main NAMESPACE [--] [ARGS...]
-  Calls the -main function in the given namespace."
+USAGE: lein run -m/--main NAMESPACE [--] [ARGS...]
+Calls the -main function in the given namespace."
   [project & args]
   (let [cli-options (into ljc/standard-options run-cli-options)
         [opts args] (ljc/parse-opts #'run! args cli-options)]
