@@ -52,24 +52,24 @@ entrypoint."
 (def compile-module-cli-options
   [["-m" "--module NAMESPACE" "the jank namespace to compile"
     :missing "Must provide namespace to compile"]
-   ["-o" "--output FILE" "the output file name (*.cpp, *.o)"
+   ["-n" "--name FILE" "the output file name (*.cpp, *.o)"
     :missing "Must provide output file name"]
    [nil "--output-target TYPE" "'cpp' or 'object', inferred by default"]])
 
 (defn compile-module!
   "Ahead of time compile a module (given its namespace) and its dependencies.
 
-USAGE: lein compile-module -m/--module NAMESPACE -o/--output FILE
+USAGE: lein compile-module -n/--name NAMESPACE -o/--output FILE
 
 To override the inferred output target, you can pass `--output-target TARGET`
 (TARGET is either 'cpp' or 'object')."
   [project & args]
   (let [cli-options (into ljc/standard-options compile-module-cli-options)
         [opts args] (ljc/parse-opts #'compile-module! args cli-options)
-        output-opts ["--name" (:output opts)]
+        name-opts   ["--name" (:name opts)]
         target-opts (when-let [target (:output-target opts)] ["--output-target" target])]
     (dispatch-jank project opts "compile-module"
-                   (concat [(:module opts)] output-opts target-opts)
+                   (concat [(:module opts)] name-opts target-opts)
                    args)))
 
 (defn check-health!
