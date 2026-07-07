@@ -1441,15 +1441,14 @@ namespace jank::read::lex
           auto const result(peek());
           auto const [character, len](result.unwrap_or(codepoint{ ' ', 1 }));
           pos += len;
-          switch(character)
+          if(character == '@')
           {
-            case '@':
-              {
-                ++pos;
-                return ok(token{ token_start, pos, token_kind::unquote_splice });
-              }
-            default:
-              return ok(token{ token_start, pos, token_kind::unquote });
+            ++pos;
+            return ok(token{ token_start, pos, token_kind::unquote_splice });
+          }
+          else
+          {
+            return ok(token{ token_start, pos, token_kind::unquote });
           }
         }
         /* Deref macro. */

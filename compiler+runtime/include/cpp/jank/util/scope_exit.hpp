@@ -10,7 +10,7 @@ namespace jank::util
 
     scope_exit(function_type &&f);
     scope_exit(function_type &&f, bool should_propagate_exceptions);
-    ~scope_exit() noexcept(false);
+    ~scope_exit();
 
     void release()
     {

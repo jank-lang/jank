@@ -76,7 +76,7 @@ namespace jank::jit
 
         auto const filename(dir_entry.path().filename().string());
 
-        if(filename.starts_with("."))
+        if(filename.starts_with('.'))
         {
           continue;
         }

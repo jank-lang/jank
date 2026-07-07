@@ -271,8 +271,9 @@
                        :build-opts   build-opts
                        :build-inputs (collect-build-deps tree)
                        :inputs       (collect-out-dirs dep-ops)
-                       :always-build true}])]
-      (into dep-ops root-ops))))
+                       :always-build true}])
+          plan (into dep-ops root-ops)]
+      plan)))
 
 (defmulti run-build-op! (fn [_ op] (:op op)))
 

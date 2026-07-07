@@ -217,15 +217,13 @@ namespace jank::analyze
                                          expr::cpp_value_ref const val,
                                          native_vector<runtime::object_ref> const &macro_expansions)
   {
-    if(args.size() == 2)
+    if(args.size() == 2
+       && ((Cpp::IsPointerType(Cpp::GetNonReferenceType(args[0].m_Type))
+            && !Cpp::IsIntegral(Cpp::GetNonReferenceType(args[1].m_Type)))
+           || (Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type))
+               && !Cpp::IsIntegral(Cpp::GetNonReferenceType(args[0].m_Type)))))
     {
-      if((Cpp::IsPointerType(Cpp::GetNonReferenceType(args[0].m_Type))
-          && !Cpp::IsIntegral(Cpp::GetNonReferenceType(args[1].m_Type)))
-         || (Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type))
-             && !Cpp::IsIntegral(Cpp::GetNonReferenceType(args[0].m_Type))))
-      {
-        return invalid_binary(args, op_name, val, macro_expansions);
-      }
+      return invalid_binary(args, op_name, val, macro_expansions);
     }
 
     return ok();
@@ -236,14 +234,11 @@ namespace jank::analyze
                                        expr::cpp_value_ref const val,
                                        native_vector<runtime::object_ref> const &macro_expansions)
   {
-    if(args.size() == 2)
+    if(args.size() == 2 && Cpp::IsIntegral(Cpp::GetNonReferenceType(args[0].m_Type))
+       && Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type)))
     {
-      if(Cpp::IsIntegral(Cpp::GetNonReferenceType(args[0].m_Type))
-         && Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type)))
-      {
-        /* TODO: Add a note to swap the arguments. */
-        return invalid_binary(args, op_name, val, macro_expansions);
-      }
+      /* TODO: Add a note to swap the arguments. */
+      return invalid_binary(args, op_name, val, macro_expansions);
     }
 
     return ok();
@@ -848,14 +843,12 @@ namespace jank::analyze
        * Nothing else could have an unresolved template up until now. */
       for(size_t i{}; i < arg_types.size(); ++i)
       {
-        if(auto const value = llvm::dyn_cast<expr::cpp_value>(arg_exprs[i].data))
+        /* Just adding a reference to the same type is not worthy of change.
+         * For some situations, this would fuck up codegen. For example, with enum constants. */
+        if(auto const value{ llvm::dyn_cast<expr::cpp_value>(arg_exprs[i].data) };
+           value && value->type.data != Cpp::GetNonReferenceType(arg_types[i].m_Type))
         {
-          /* Just adding a reference to the same type is not worthy of change.
-           * For some situations, this would fuck up codegen. For example, with enum constants. */
-          if(value->type.data != Cpp::GetNonReferenceType(arg_types[i].m_Type))
-          {
-            value->type = arg_types[i].m_Type;
-          }
+          value->type = arg_types[i].m_Type;
         }
       }
 
