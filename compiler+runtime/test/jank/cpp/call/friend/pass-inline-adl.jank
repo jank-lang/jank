@@ -8,5 +8,5 @@
           }")
 
 (let [f (cpp/jank.cpp.call.friend_.pass_inline_adl.foo)]
-  (if (= 6 (cpp/bar f))
+  (if (= 6 (cpp/jank.cpp.call.friend_.pass_inline_adl.bar f))
     :success))

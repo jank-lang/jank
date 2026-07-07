@@ -146,7 +146,7 @@ namespace jank::analyze::cpp_util
                 util::format("Unable to find '{}' within namespace '{}'.", subs, old_scope_name));
             }
           }
-          if(auto const res = instantiate_if_needed(fns[0]); res.is_err())
+          if(auto const res{ instantiate_if_needed(fns[0]) }; res.is_err())
           {
             return res.expect_err();
           }

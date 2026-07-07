@@ -1245,7 +1245,14 @@ namespace jank::codegen
         util::format_to(b.body_buffer, "auto &&{}(", inst->name);
       }
 
-      util::format_to(b.body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
+      if(Cpp::IsInlineFriendFunction(source->scope))
+      {
+        util::format_to(b.body_buffer, "{}(", Cpp::GetName(source->scope));
+      }
+      else
+      {
+        util::format_to(b.body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
+      }
 
       bool need_comma{};
       for(usize arg_idx{}; arg_idx < inst->expr->arg_exprs.size(); ++arg_idx)
