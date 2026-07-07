@@ -87,18 +87,14 @@
                        (assoc-in [:jank :target-dir] target-dir)
                        (build/plan-build))
         compile-op (last plan)]
-    (with-redefs [changed/getenv (fn [k] (case k
-                                           "WATCHED_VAR" "a_value"
-                                           "anything"))]
+    (with-redefs [changed/env (fn [ks] {"WATCHED_VAR" "a_value"})]
       ;; Dependency which is not build yet causes a rebuild to trigger.
       (is (build/needs-compile? compile-op))
       (binding [build/*disable-sandbox* true] (build/run-build! plan))
       (is (not (build/needs-compile? compile-op)))
 
       ;; Changing a rerun-if-env-changed variable causes a rebuild to trigger.
-      (with-redefs [changed/getenv (fn [k] (case k
-                                             "WATCHED_VAR" "a_different_value"
-                                             "anything"))]
+      (with-redefs [changed/env (fn [ks] {"WATCHED_VAR" "a_different_value"})]
         (is (build/needs-compile? compile-op)))
 
       ;; Touching a rerun-if-changed file causes a rebuild to trigger.

@@ -6,10 +6,9 @@
             [leiningen.core.main :as lmain]
             [leiningen.jank.sandbox.core :as sandbox]
             [leiningen.jank.resolve :as resolve]
-            [leiningen.jank.changed :as changed])
-  (:import (java.security MessageDigest)
-           (java.util Base64)
-           (java.util.jar JarFile)))
+            [leiningen.jank.fingerprint :refer [fingerprint fingerprint-file]]
+            [leiningen.jank.changed :refer [change-fingerprint]])
+  (:import (java.util.jar JarFile)))
 
 (def ^:dynamic *disable-sandbox* false)
 
@@ -25,18 +24,6 @@
    ;; TODO: enable when jank can link to .a files via -L and -l flags.
    :static-build       false})
 
-(defn merge-native-flags
-  ([] {})
-  ([& maps]
-   (let [valid-keys [:defines :include-dirs :library-dirs :linked-libraries]]
-     (reduce (fn [a b] (merge-with into a (select-keys b valid-keys))) maps))))
-
-(defn merge-rerun-flags
-  ([] {})
-  ([& maps]
-   (let [valid-keys [:rerun-if-changed :rerun-if-env-changed]]
-     (reduce (fn [a b] (merge-with into a (select-keys b valid-keys))) maps))))
-
 (defn has-build-file?
   "Returns true if the given directory or jar file has a `jank-build.bb` file in
   the root."
@@ -50,35 +37,6 @@
   "Extract the jar file into `out-dir`, creating it if it does not exist."
   [file out-dir]
   (fs/unzip file out-dir {:replace-existing true}))
-
-(defn base64
-  "Modified base64 encoding which is safe for URLs/file paths."
-  [^bytes bs]
-  (let [enc (-> (Base64/getUrlEncoder)
-                .withoutPadding)]
-    (.encodeToString enc bs)))
-
-(defn fingerprint
-  "Compute a fingerprint of some printable data structure."
-  [data]
-  ;; TODO: We should implement something like Cargo's fingerprint to better
-  ;; react to changes in the environment:
-  ;;
-  ;; https://doc.rust-lang.org/nightly/nightly-rustc/cargo/core/compiler/fingerprint/index.html
-  (let [md     (MessageDigest/getInstance "MD5")
-        baos   (java.io.ByteArrayOutputStream.)]
-    (with-open [writer (io/writer baos)]
-      (binding [*out* writer]
-        (pr data)))
-    (.update md (.toByteArray baos))
-    (base64 (.digest md))))
-
-(defn fingerprint-file
-  "Like `fingerprint` but for the contents of a file."
-  [f]
-  (let [md (MessageDigest/getInstance "MD5")]
-    (.update md (fs/read-all-bytes f))
-    (base64 (.digest md))))
 
 (defn target-subdir
   "Returns a path located in the target directory which is unique based on the
@@ -275,13 +233,16 @@
           plan (into dep-ops root-ops)]
       plan)))
 
-(defn read-build-result
+(defn read-build-directives
+  "Read the jank-build cache file and return a map of the parsed build
+  directives."
   [out-dir]
   (let [path (fs/path out-dir jank-build-cache-file)]
     (when (fs/regular-file? path)
       (->> path
            (fs/read-all-lines)
-           (keep process-build-directive)))))
+           (keep process-build-directive)
+           (apply merge-with into)))))
 
 (defn rerun-fingerprint
   "Compute the fingerprint of a compile operation based on its declared
@@ -289,15 +250,12 @@
 
   Returns nil if the build output cannot be read."
   [compile-op]
-  (when-let [build-directives (read-build-result (:out-dir compile-op))]
-    (let [rerun-directives (apply merge-rerun-flags build-directives)
-          paths            (:rerun-if-changed rerun-directives)
-          vars             (:rerun-if-env-changed rerun-directives)]
-      (fingerprint {:paths (->> paths
-                                (map #(fs/path (:src-dir compile-op) %))
-                                (map changed/maximum-mtime)
-                                (apply max 0))
-                    :vars  (mapv changed/getenv vars)}))))
+  (when-let [directives (-> (read-build-directives (:out-dir compile-op))
+                            (select-keys [:rerun-if-changed :rerun-if-env-changed]))]
+    (let [paths (->> (:rerun-if-changed directives)
+                     (map #(fs/path (:src-dir compile-op) %)))
+          vars  (:rerun-if-env-changed directives)]
+      (change-fingerprint paths vars))))
 
 (defn needs-compile?
   "Determine if a compile operation can be skipped based on a matching target
@@ -340,11 +298,13 @@
     (fs/write-lines (fs/path (:out-dir op) jank-build-fingerprint-file) [fprint]))
 
   ;; jank flags are extracted from the build cache file
-  (read-build-result out-dir))
+  (select-keys (read-build-directives out-dir)
+               [:defines :include-dirs :library-dirs :linked-libraries]))
 
 (defn run-build!
-  "Run the sequence of build steps planned by `plan-build`."
+  "Run the sequence of build steps planned by `plan-build`.
+
+  Returns a map of :defines, :include-dirs, :library-dirs, and :linked-libraries
+  to be passed to the jank compiler."
   [plan]
-  (->> (mapv #(run-build-op! plan %) plan)
-       (flatten)
-       (apply merge-native-flags)))
+  (apply merge (mapv #(run-build-op! plan %) plan)))

@@ -41,7 +41,7 @@
   (binding [ljb/*disable-sandbox* (or ljb/*disable-sandbox* (:disable-sandbox opts))
             ljb/*verbose-build*   @verbose?]
     (let [native-flags (ljb/run-build! (ljb/plan-build project))]
-      (update project :jank ljb/merge-native-flags native-flags))))
+      (update project :jank #(merge-with into % native-flags)))))
 
 (defn build-module-path [project]
   (->> project
