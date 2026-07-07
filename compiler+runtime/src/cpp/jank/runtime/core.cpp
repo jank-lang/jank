@@ -920,6 +920,24 @@ namespace jank::runtime
     auto const ret{ make_box<obj::future>() };
     /* NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage): False positive. */
     ret->thread = std::thread{ [=]() {
+      /* GC threads should be explicitly registered so that the GC is prepared to perform
+       * allocations from this thread. Unregistering is equally important.
+       *
+       * We don't do this on macOS, since experimentation has found that BDWGC does it
+       * for us. */
+      if constexpr(jtl::current_platform != jtl::platform::macos_like)
+      {
+        GC_stack_base sb{};
+        GC_get_stack_base(&sb);
+        GC_register_my_thread(&sb);
+      }
+      util::scope_exit const unregister{ []() {
+        if constexpr(jtl::current_platform != jtl::platform::macos_like)
+        {
+          GC_unregister_my_thread();
+        }
+      } };
+
       __rt_ctx->push_thread_bindings(bindings).expect_ok();
 
       try
