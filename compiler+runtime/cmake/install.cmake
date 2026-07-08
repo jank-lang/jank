@@ -144,19 +144,26 @@ if(jank_local_clang AND jank_install_local_clang)
     DESTINATION lib/jank/${PROJECT_VERSION}/bin
   )
 
-  if(APPLE AND ${LLVM_VERSION_MAJOR} EQUAL 22)
-    install(
+  # Ensure that symlinks to linked shared libs get brought in and completely
+  # resolved.
+  function(jank_install_dylib_chain)
+    set(one_value_args DESTINATION)
+    set(multi_value_args FILES)
+    cmake_parse_arguments(jank_dylib "" "${one_value_args}" "${multi_value_args}" ${ARGN})
+    foreach(f ${jank_dylib_FILES})
+      install(CODE "
+      file(INSTALL \"${f}\" DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${jank_dylib_DESTINATION}\" FOLLOW_SYMLINK_CHAIN)
+      ")
+    endforeach()
+  endfunction()
+
+  if(APPLE)
+    jank_install_dylib_chain(
       FILES
       ${llvm_dir}/lib/libLLVM.dylib
       ${llvm_dir}/lib/libclang-cpp.dylib
-      ${llvm_dir}/lib/libc++.1.0.dylib
-      ${llvm_dir}/lib/libc++.1.dylib
       ${llvm_dir}/lib/libc++.dylib
-      ${llvm_dir}/lib/libc++abi.1.0.dylib
-      ${llvm_dir}/lib/libc++abi.1.dylib
       ${llvm_dir}/lib/libc++abi.dylib
-      ${llvm_dir}/lib/libunwind.1.0.dylib
-      ${llvm_dir}/lib/libunwind.1.dylib
       ${llvm_dir}/lib/libunwind.dylib
       DESTINATION lib/jank/${PROJECT_VERSION}/lib
     )
