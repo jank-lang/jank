@@ -450,7 +450,7 @@ jobs:
           chmod 400 ~/.ssh/jank_id_ed25519
       - name: Publish to cache
         run: |
-          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${{ steps.jank-build-step.outputs.deb }} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${GITHUB_WORKSPACE}/compiler+runtime/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
 
   #build-nix:
   #  name: "Nix - release"

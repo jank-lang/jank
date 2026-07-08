@@ -1,4 +1,4 @@
-# We don't have any dynamic lib deps which are installed alongside jank.
+# By default, we don't have any dynamic lib deps which are installed alongside jank.
 set(CMAKE_SKIP_INSTALL_RPATH ON)
 install(TARGETS jank_exe_phase_2 DESTINATION bin)
 install(
