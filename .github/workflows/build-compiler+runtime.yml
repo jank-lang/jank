@@ -51,7 +51,7 @@ jobs:
           fi
           ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
 
-  ubuntu-26.04-build-clang:
+  ubuntu-2604-build-clang:
     name: Ubuntu 26.04 - clang
     #if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -72,7 +72,7 @@ jobs:
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-ubuntu-26.04-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+          key: clang-ubuntu-2604-${{ hashFiles('compiler+runtime/bin/build-clang') }}
       - name: Build Clang/LLVM
         run: |
           if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
@@ -399,10 +399,10 @@ jobs:
   #      run: |
   #        rsync -avz -e "ssh -i $HOME/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no" --progress ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/arch
 
-  publish-ubuntu-26.04-package:
+  publish-ubuntu-2604-package:
     #if: github.ref == 'refs/heads/main'
     needs:
-      - ubuntu-26.04-build-clang
+      - ubuntu-2604-build-clang
     runs-on: ubuntu-latest
     container:
       image: ubuntu:26.04
@@ -426,7 +426,7 @@ jobs:
         with:
           path: |
             compiler+runtime/build/llvm-install
-          key: clang-ubuntu-26.04-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+          key: clang-ubuntu-2604-${{ hashFiles('compiler+runtime/bin/build-clang') }}
       - name: Build and test jank
         id: jank-build-step
         run: |
