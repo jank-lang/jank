@@ -63,7 +63,7 @@ jobs:
       - name: Install apt packages
         run: |
           apt update
-          apt install -y curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev
+          apt install -y curl git build-essential clang libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev
 
       - uses: actions/checkout@v4
 
