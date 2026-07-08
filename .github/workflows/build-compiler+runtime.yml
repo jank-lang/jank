@@ -405,6 +405,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:26.04
+    defaults:
+      run:
+        shell: bash
     name: Publish Ubuntu 26.04 package
     timeout-minutes: 60
     env:
