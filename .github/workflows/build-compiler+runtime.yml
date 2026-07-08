@@ -55,13 +55,15 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:26.04
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 200
     steps:
       - name: Install apt packages
         run: |
           apt update
-          apt install -y bash curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev
-          chsh -s /bin/bash
+          apt install -y curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev
       - uses: actions/checkout@v4
       - name: Cache Clang/LLVM
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
