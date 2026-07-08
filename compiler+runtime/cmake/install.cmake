@@ -144,34 +144,34 @@ if(jank_local_clang AND jank_install_local_clang)
     DESTINATION lib/jank/${PROJECT_VERSION}/bin
   )
 
-if(APPLE)
-  install(
-    FILES
-    ${llvm_dir}/lib/libLLVM.dylib
-    ${llvm_dir}/lib/libclang-cpp.dylib
-    ${llvm_dir}/lib/libc++.1.0.dylib
-    ${llvm_dir}/lib/libc++.1.dylib
-    ${llvm_dir}/lib/libc++.dylib
-    ${llvm_dir}/lib/libc++abi.1.0.dylib
-    ${llvm_dir}/lib/libc++abi.1.dylib
-    ${llvm_dir}/lib/libc++abi.dylib
-    ${llvm_dir}/lib/libunwind.1.0.dylib
-    ${llvm_dir}/lib/libunwind.1.dylib
-    ${llvm_dir}/lib/libunwind.dylib
-    DESTINATION lib/jank/${PROJECT_VERSION}/lib
-  )
-else()
-  file(
-    GLOB jank_llvm_install_libs
-    LIST_DIRECTORIES false
-    ${llvm_dir}/lib/libLLVM.*
-    ${llvm_dir}/lib/libclang-cpp.*)
-  install(
-    FILES
-    ${jank_llvm_install_libs}
-    DESTINATION lib/jank/${PROJECT_VERSION}/lib
-  )
-endif()
+  if(APPLE AND ${LLVM_VERSION_MAJOR} EQUAL 22)
+    install(
+      FILES
+      ${llvm_dir}/lib/libLLVM.dylib
+      ${llvm_dir}/lib/libclang-cpp.dylib
+      ${llvm_dir}/lib/libc++.1.0.dylib
+      ${llvm_dir}/lib/libc++.1.dylib
+      ${llvm_dir}/lib/libc++.dylib
+      ${llvm_dir}/lib/libc++abi.1.0.dylib
+      ${llvm_dir}/lib/libc++abi.1.dylib
+      ${llvm_dir}/lib/libc++abi.dylib
+      ${llvm_dir}/lib/libunwind.1.0.dylib
+      ${llvm_dir}/lib/libunwind.1.dylib
+      ${llvm_dir}/lib/libunwind.dylib
+      DESTINATION lib/jank/${PROJECT_VERSION}/lib
+    )
+  else()
+    file(
+      GLOB jank_llvm_install_libs
+      LIST_DIRECTORIES false
+      ${llvm_dir}/lib/libLLVM.*
+      ${llvm_dir}/lib/libclang-cpp.*)
+    install(
+      FILES
+      ${jank_llvm_install_libs}
+      DESTINATION lib/jank/${PROJECT_VERSION}/lib
+    )
+  endif()
 
   jank_glob_install_without_prefix(
     INPUT_PREFIX "${llvm_dir}/"
