@@ -419,7 +419,7 @@ jobs:
       - name: Install apt packages
         run: |
           apt update
-          apt install -y git default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev gcc libstdc++-16-dev libboost-all-dev
+          apt install -y sudo git default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev gcc libstdc++-16-dev libboost-all-dev
       - uses: actions/checkout@v4
         with:
           submodules: true
