@@ -36,7 +36,7 @@
 
 namespace jank::jit
 {
-  static jtl::immutable_string default_shared_lib_name(jtl::immutable_string const &lib)
+  static jtl::immutable_string shared_lib_name(jtl::immutable_string const &lib)
 #if defined(__APPLE__)
   {
     return util::format("lib{}.dylib", lib);
@@ -50,6 +50,16 @@ namespace jank::jit
     return util::format("{}.dll", lib);
   }
 #endif
+
+  static jtl::immutable_string static_lib_name(jtl::immutable_string const &lib)
+  {
+    return util::format("lib{}.a", lib);
+  }
+
+  static bool is_static_lib(jtl::immutable_string const &lib)
+  {
+    return lib.ends_with(".a");
+  }
 
   [[maybe_unused]]
   static void
@@ -262,7 +272,7 @@ namespace jank::jit
                                                                    true));
     }
 
-    auto const &load_result{ load_dynamic_libs(util::cli::opts.libs) };
+    auto const &load_result{ load_libs(util::cli::opts.libs) };
     if(load_result.is_err())
     {
       throw error::system_failure(load_result.expect_err().c_str());
@@ -512,13 +522,11 @@ namespace jank::jit
     return err(util::format("Failed to find symbol: '{}'", name));
   }
 
-  jtl::option<jtl::immutable_string>
-  processor::find_dynamic_lib(jtl::immutable_string const &lib) const
+  jtl::option<jtl::immutable_string> processor::find_lib(jtl::immutable_string const &lib) const
   {
-    auto const &default_lib_name{ default_shared_lib_name(lib) };
     for(auto const &lib_dir : library_dirs)
     {
-      auto default_lib_abs_path{ util::format("{}/{}", lib_dir.string(), default_lib_name) };
+      auto default_lib_abs_path{ util::format("{}/{}", lib_dir.string(), lib) };
       if(std::filesystem::exists(default_lib_abs_path.c_str()))
       {
         return default_lib_abs_path;
@@ -537,20 +545,50 @@ namespace jank::jit
   }
 
   jtl::result<void, jtl::immutable_string>
-  processor::load_dynamic_libs(native_vector<jtl::immutable_string> const &libs) const
+  processor::load_libs(native_vector<jtl::immutable_string> const &libs) const
   {
     for(auto const &lib : libs)
     {
       if(std::filesystem::path{ lib.c_str() }.is_absolute())
       {
-        load_dynamic_library(lib);
+        if(is_static_lib(lib))
+        {
+          load_static_library(lib);
+        }
+        else
+        {
+          load_dynamic_library(lib);
+        }
+      }
+      else if(lib.starts_with(':'))
+      {
+        auto const &stat{ static_lib_name(lib.substr(1)) };
+        auto const result{ processor::find_lib(stat) };
+        if(result.is_none())
+        {
+          return err(util::format("Failed to load static library '{}'.", lib.substr(1)));
+        }
+        else
+        {
+          load_static_library(result.unwrap());
+        }
       }
       else
       {
-        auto const result{ processor::find_dynamic_lib(lib) };
+        auto const &shared{ shared_lib_name(lib) };
+        auto result{ processor::find_lib(shared) };
         if(result.is_none())
         {
-          return err(util::format("Failed to load dynamic library '{}'.", lib));
+          auto const &stat{ static_lib_name(lib) };
+          result = processor::find_lib(stat);
+          if(result.is_none())
+          {
+            return err(util::format("Failed to load library '{}'.", lib));
+          }
+          else
+          {
+            load_static_library(result.unwrap());
+          }
         }
         else
         {
@@ -565,5 +603,11 @@ namespace jank::jit
   void processor::load_dynamic_library(jtl::immutable_string const &path) const
   {
     llvm::cantFail(static_cast<clang::Interpreter &>(*interpreter).LoadDynamicLibrary(path.data()));
+  }
+
+  void processor::load_static_library(jtl::immutable_string const &path) const
+  {
+    auto const ee{ interpreter->getExecutionEngine() };
+    llvm::cantFail(ee->linkStaticLibraryInto(ee->getMainJITDylib(), path.c_str()));
   }
 }
