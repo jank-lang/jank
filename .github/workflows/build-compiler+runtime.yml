@@ -64,22 +64,25 @@ jobs:
         run: |
           apt update
           apt install -y curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev
+
       - uses: actions/checkout@v4
+
       - name: Cache Clang/LLVM
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
           path: |
-            ${{ github.workspace }}/compiler+runtime/build/llvm-install
+            compiler+runtime/build/llvm-install
           key: clang-ubuntu-2604-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+
       - name: Build Clang/LLVM
         run: |
-          if [[ ! -e ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
+          if [[ ! -e ${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
           then
-            pushd ${{ github.workspace }}/compiler+runtime
+            pushd ${GITHUB_WORKSPACE}/compiler+runtime
               ./bin/build-clang
             popd
           fi
-          ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
+          ${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
 
   arch-build-clang:
     name: Arch - clang
