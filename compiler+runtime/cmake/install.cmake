@@ -167,6 +167,17 @@ if(jank_local_clang AND jank_install_local_clang)
       ${llvm_dir}/lib/libunwind.dylib
       DESTINATION lib/jank/${PROJECT_VERSION}/lib
     )
+  else()
+    file(
+      GLOB jank_llvm_install_libs
+      LIST_DIRECTORIES false
+      ${llvm_dir}/lib/libLLVM.*
+      ${llvm_dir}/lib/libclang-cpp.*)
+    install(
+      FILES
+      ${jank_llvm_install_libs}
+      DESTINATION lib/jank/${PROJECT_VERSION}/lib
+    )
   endif()
 
   jank_glob_install_without_prefix(
