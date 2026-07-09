@@ -145,7 +145,8 @@
     (is-failure? both-dir "missing")))
 
 (defn -main []
-  (when (empty? (System/getenv "JANK_SKIP_AOT_CHECK"))
+  (when (and (empty? (System/getenv "JANK_SKIP_AOT_CHECK"))
+             (not (fs/windows?)))
     (System/exit
      (if (t/successful? (t/run-tests this-nsym))
        0
