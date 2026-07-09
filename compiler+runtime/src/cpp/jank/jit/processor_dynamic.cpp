@@ -534,7 +534,7 @@ namespace jank::jit
     {
       if(std::filesystem::is_regular_file(lib.c_str()))
       {
-        return std::filesystem::absolute(lib.c_str());
+        return std::filesystem::absolute(lib.c_str()).string();
       }
       return none;
     }
