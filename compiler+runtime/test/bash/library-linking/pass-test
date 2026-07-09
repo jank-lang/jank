@@ -92,6 +92,7 @@
 ;     -l:foo (with static lib)
 ;     -l:./libfoo.a
 ;     -l:libfoo.a
+;     -l:/foo/bar/libfoo.a
 ;
 ;     -l:foo (with dynamic lib)
 ;     -l:./libfoo.so
@@ -129,6 +130,7 @@
     (is-static? both-dir ":foo")
     (is-static? both-dir (str ":" (fs/path "./" relative-both-dir static-lib)))
     (is-static? nil (str ":" (fs/path "./" relative-both-dir static-lib)))
+    (is-static? both-dir (str ":" (fs/path both-dir static-lib)))
 
     (is-failure? dynamic-dir ":foo")
     (is-failure? both-dir (str ":" (fs/path "./" relative-both-dir dynamic-lib)))

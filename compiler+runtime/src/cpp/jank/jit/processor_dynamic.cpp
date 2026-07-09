@@ -530,6 +530,18 @@ namespace jank::jit
 
   jtl::option<jtl::immutable_string> processor::find_lib(jtl::immutable_string const &lib) const
   {
+    std::filesystem::path const lib_path{ lib.c_str() };
+    if(lib_path.is_absolute())
+    {
+      if(!std::filesystem::is_regular_file(lib_path))
+      {
+        return none;
+      }
+      return lib_path.string();
+
+      return none;
+    }
+
     if(lib.starts_with("./"))
     {
       if(std::filesystem::is_regular_file(lib.c_str()))
@@ -556,29 +568,8 @@ namespace jank::jit
   {
     for(auto const &lib : libs)
     {
-      /* If we have an absolue path, there's nothing more to search for. Just load.
-       * Example: -l/foo/bar/libfoo.so */
-      std::filesystem::path const lib_path{ lib.c_str() };
-      if(lib_path.is_absolute())
-      {
-        if(!std::filesystem::is_regular_file(lib_path))
-        {
-          return err(util::format("Failed to find library '{}'.", lib));
-        }
-        if(is_static_lib(lib))
-        {
-          load_static_library(lib);
-        }
-        else
-        {
-          load_dynamic_library(lib);
-        }
-
-        continue;
-      }
-
-      /* Try finding the lib literally, in case it contains a file name or a relative path.
-       * Example: -llibfoo.a or -l./libfoo.so */
+      /* Try finding the lib literally, in case it contains a file name or a path.
+       * Example: -llibfoo.a or -l./libfoo.so or -l/path/to/libfoo.a */
       {
         auto const result{ processor::find_lib(lib) };
         if(result.is_some())
@@ -598,7 +589,7 @@ namespace jank::jit
 
       /* If the lib starts with a colon, force static lib loading, by still try to find it
        * normally.
-       * Example: -l:foo or -l:libfoo.a or -l:./libfoo.so */
+       * Example: -l:foo or -l:libfoo.a or -l:./libfoo.so or -l:/path/to/libfoo.a */
       if(lib.starts_with(':'))
       {
         auto result{ processor::find_lib(lib.substr(1)) };
