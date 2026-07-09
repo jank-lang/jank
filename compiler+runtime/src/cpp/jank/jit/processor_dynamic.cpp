@@ -52,9 +52,15 @@ namespace jank::jit
 #endif
 
   static jtl::immutable_string static_lib_name(jtl::immutable_string const &lib)
+#if defined(JANK_WINDOWS_LIKE)
+  {
+    return util::format("lib{}.lib", lib);
+  }
+#else
   {
     return util::format("lib{}.a", lib);
   }
+#endif
 
   static bool is_static_lib(jtl::immutable_string const &lib)
   {
@@ -524,20 +530,21 @@ namespace jank::jit
 
   jtl::option<jtl::immutable_string> processor::find_lib(jtl::immutable_string const &lib) const
   {
+    if(lib.starts_with("./"))
+    {
+      if(std::filesystem::is_regular_file(lib.c_str()))
+      {
+        return std::filesystem::absolute(lib.c_str());
+      }
+      return none;
+    }
+
     for(auto const &lib_dir : library_dirs)
     {
-      auto default_lib_abs_path{ util::format("{}/{}", lib_dir.string(), lib) };
-      if(std::filesystem::exists(default_lib_abs_path.c_str()))
+      auto lib_abs_path{ util::format("{}/{}", lib_dir.string(), lib) };
+      if(std::filesystem::is_regular_file(lib_abs_path.c_str()))
       {
-        return default_lib_abs_path;
-      }
-      else
-      {
-        auto lib_abs_path{ util::format("{}/{}", lib_dir.string(), lib) };
-        if(std::filesystem::exists(lib_abs_path.c_str()))
-        {
-          return lib_abs_path;
-        }
+        return lib_abs_path;
       }
     }
 
@@ -549,8 +556,15 @@ namespace jank::jit
   {
     for(auto const &lib : libs)
     {
-      if(std::filesystem::path{ lib.c_str() }.is_absolute())
+      /* If we have an absolue path, there's nothing more to search for. Just load.
+       * Example: -l/foo/bar/libfoo.so */
+      std::filesystem::path const lib_path{ lib.c_str() };
+      if(lib_path.is_absolute())
       {
+        if(!std::filesystem::is_regular_file(lib_path))
+        {
+          return err(util::format("Failed to find library '{}'.", lib));
+        }
         if(is_static_lib(lib))
         {
           load_static_library(lib);
@@ -559,20 +573,67 @@ namespace jank::jit
         {
           load_dynamic_library(lib);
         }
+
+        continue;
       }
-      else if(lib.starts_with(':'))
+
+      /* Try finding the lib literally, in case it contains a file name or a relative path.
+       * Example: -llibfoo.a or -l./libfoo.so */
       {
+        auto const result{ processor::find_lib(lib) };
+        if(result.is_some())
+        {
+          auto const &found_lib{ result.unwrap() };
+          if(is_static_lib(found_lib))
+          {
+            load_static_library(found_lib);
+          }
+          else
+          {
+            load_dynamic_library(found_lib);
+          }
+          continue;
+        }
+      }
+
+      /* If the lib starts with a colon, force static lib loading, by still try to find it
+       * normally.
+       * Example: -l:foo or -l:libfoo.a or -l:./libfoo.so */
+      if(lib.starts_with(':'))
+      {
+        auto result{ processor::find_lib(lib.substr(1)) };
+        if(result.is_some())
+        {
+          if(!is_static_lib(result.unwrap()))
+          {
+            return err(
+              util::format("Failed to find static library '{}'. This library is not static.",
+                           lib.substr(1)));
+          }
+          load_static_library(result.unwrap());
+          continue;
+        }
+
         auto const &stat{ static_lib_name(lib.substr(1)) };
-        auto const result{ processor::find_lib(stat) };
+        result = processor::find_lib(stat);
         if(result.is_none())
         {
-          return err(util::format("Failed to load static library '{}'.", lib.substr(1)));
+          return err(util::format("Failed to find static library '{}'.", lib.substr(1)));
         }
         else
         {
+          if(!is_static_lib(result.unwrap()))
+          {
+            return err(
+              util::format("Failed to find static library '{}'. This library is not static.",
+                           lib.substr(1)));
+          }
           load_static_library(result.unwrap());
         }
       }
+      /* Otherwise, just try to find the lib as first a dynamic lib and then a static lib.
+       * This is the typical case.
+       * Example: -lfoo */
       else
       {
         auto const &shared{ shared_lib_name(lib) };
@@ -583,7 +644,7 @@ namespace jank::jit
           result = processor::find_lib(stat);
           if(result.is_none())
           {
-            return err(util::format("Failed to load library '{}'.", lib));
+            return err(util::format("Failed to find library '{}'.", lib));
           }
           else
           {

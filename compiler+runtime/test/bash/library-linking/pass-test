@@ -1,0 +1,153 @@
+#!/usr/bin/env bb
+
+(ns jank.test.library-linking
+  (:require [babashka.fs :as fs]
+            [babashka.process :as proc]
+            [clojure.string :as str]
+            [clojure.test :as t :refer [deftest is testing use-fixtures]]))
+
+(def this-nsym (ns-name *ns*))
+
+(def os-name (str/lower-case (System/getProperty "os.name")))
+(def os (cond
+          (str/includes? os-name "win") :windows
+          (str/includes? os-name "mac") :macos
+          (or (str/includes? os-name "nix")
+              (str/includes? os-name "nux")
+              (str/includes? os-name "linux")) :linux
+          :else (throw (ex-info "Unknown OS" {:os os-name}))))
+
+(def relative-both-dir "target/both")
+(def both-dir (fs/path (fs/cwd) relative-both-dir))
+(def relative-dynamic-dir "target/dynamic")
+(def dynamic-dir (fs/path (fs/cwd) relative-dynamic-dir))
+(def relative-static-dir "target/static")
+(def static-dir (fs/path (fs/cwd) relative-static-dir))
+(def dynamic-lib (case os
+                   :linux "libfoo.so"
+                   :macos "libfoo.dylib"
+                   :windows "libfoo.dll"))
+(def static-lib (case os
+                   :linux "libfoo.a"
+                   :macos "libfoo.a"
+                   :windows "libfoo.lib"))
+(def missing-lib (case os
+                   :linux "libmissing.a"
+                   :macos "libmissing.a"
+                   :windows "libmissing.lib"))
+
+(defn jank [link-dir lib]
+  (let [command (str "jank "
+                     (when link-dir
+                       (str "-L " link-dir))
+                     " -l" lib " run src/main.jank")]
+    ;(println command)
+    (:out (proc/sh {:err :out} command))))
+
+(defn is-dynamic? [link-dir lib]
+  (is (str/includes? (jank link-dir lib) "loaded dynamic lib")))
+
+(defn is-static? [link-dir lib]
+  (is (str/includes? (jank link-dir lib) "loaded static lib")))
+
+(defn is-failure? [link-dir lib]
+  (is (str/includes? (jank link-dir lib) "Failed to find")))
+
+(defn compile-libs []
+  (fs/delete-tree "./target")
+  (fs/create-dirs both-dir)
+  (proc/sh (format "clang++ -fPIC -shared src/dynamic.cpp -o %s/%s" both-dir dynamic-lib))
+  (proc/sh (format "clang++ -c src/static.cpp -o %s/static.o" both-dir))
+  (proc/sh (format "ar qc %s/%s %s/static.o" both-dir static-lib both-dir))
+
+  (fs/create-dirs static-dir)
+  (fs/copy (format "%s/%s" both-dir static-lib) (format "%s/%s" static-dir static-lib))
+  (fs/create-dirs dynamic-dir)
+  (fs/copy (format "%s/%s" both-dir dynamic-lib) (format "%s/%s" dynamic-dir dynamic-lib)))
+
+(use-fixtures :once
+              (fn [f]
+                (compile-libs)
+                (f)))
+
+; Cases
+;   Absolute
+;     -l/foo/bar/libfoo.so
+;     -l/foo/bar/libfoo.a
+;
+;     -l/foo/bar/libmissing.a
+;     -l/foo/bar
+;   Relative
+;     -l./libfoo.so
+;     -l./libfoo.a
+;
+;     -l./libmissing.so
+;     -l./
+;   File
+;     -llibfoo.so
+;     -llibfoo.a
+;
+;     -llibmissing.so
+;   Static
+;     -l:foo (with static lib)
+;     -l:./libfoo.a
+;     -l:libfoo.a
+;
+;     -l:foo (with dynamic lib)
+;     -l:./libfoo.so
+;     -l:libfoo.so
+;     -l:libmissing.a
+;   General
+;     -lfoo (with static lib)
+;     -lfoo (with dynamic lib)
+;     -lfoo (with both libs)
+;
+;     -lmissing
+
+(deftest library-linking
+  (testing "Absolute"
+    (is-dynamic? both-dir (fs/path both-dir dynamic-lib))
+    (is-static? both-dir (fs/path both-dir static-lib))
+
+    (is-failure? both-dir (fs/path both-dir missing-lib))
+    (is-failure? both-dir both-dir))
+
+  (testing "Relative"
+    (is-dynamic? nil (fs/path "./" relative-both-dir dynamic-lib))
+    (is-static? nil (fs/path "./" relative-both-dir static-lib))
+
+    (is-failure? nil (fs/path "./" relative-both-dir missing-lib))
+    (is-failure? nil (fs/path "./" relative-both-dir)))
+
+  (testing "File"
+    (is-dynamic? both-dir dynamic-lib)
+    (is-static? both-dir static-lib)
+
+    (is-failure? both-dir missing-lib))
+
+  (testing "Static"
+    (is-static? both-dir ":foo")
+    (is-static? both-dir (str ":" (fs/path "./" relative-both-dir static-lib)))
+    (is-static? nil (str ":" (fs/path "./" relative-both-dir static-lib)))
+
+    (is-failure? dynamic-dir ":foo")
+    (is-failure? both-dir (str ":" (fs/path "./" relative-both-dir dynamic-lib)))
+    (is-failure? both-dir (str ":" dynamic-lib))
+    (is-failure? both-dir (str ":" missing-lib)))
+
+  (testing "General"
+    (is-static? static-dir "foo")
+    (is-dynamic? dynamic-dir "foo")
+    (is-dynamic? both-dir "foo")
+
+    (is-failure? both-dir "missing")))
+
+(defn -main []
+  (when (empty? (System/getenv "JANK_SKIP_AOT_CHECK"))
+    (System/exit
+     (if (t/successful? (t/run-tests this-nsym))
+       0
+       1))))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))

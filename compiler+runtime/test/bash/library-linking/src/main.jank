@@ -1,0 +1,3 @@
+(cpp/raw "extern \"C\" void foo();")
+
+(cpp/foo)
