@@ -162,8 +162,9 @@ namespace jank::util::cli
   extern options opts;
 
   /* Affects the global opts. */
-  jtl::result<void, int> parse_opts(int const argc, char const **argv);
+  jtl::result<void, int> parse_opts(int const argc, char const * const * const argv);
 
   /* Takes the CLI args and puts 'em in a vector. */
-  native_vector<jtl::immutable_string> parse_into_vector(int const argc, char const **argv);
+  native_vector<jtl::immutable_string>
+  parse_into_vector(int const argc, char const * const * const argv);
 }

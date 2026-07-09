@@ -34,13 +34,13 @@ namespace jank::runtime
         {
           return true;
         }
-        else if constexpr(behavior::seqable<T>)
-        {
-          return typed_o->seq().is_nil();
-        }
         else if constexpr(behavior::countable<T>)
         {
           return typed_o->count() == 0;
+        }
+        else if constexpr(behavior::seqable<T>)
+        {
+          return typed_o->seq().is_nil();
         }
         else
         {

@@ -258,7 +258,7 @@ namespace jank
         continue;
       }
 
-      if(line.ends_with("\\"))
+      if(line.ends_with('\\'))
       {
         input.append(line.substr(0, line.size() - 1));
         input.append("\n");
@@ -326,7 +326,7 @@ namespace jank
         continue;
       }
 
-      if(line.ends_with("\\"))
+      if(line.ends_with('\\'))
       {
         input.append(line.substr(0, line.size() - 1));
         le.setPrompt("native>... ");
