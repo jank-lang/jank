@@ -118,6 +118,7 @@ namespace jank::codegen
     usize block_index{}, instruction_index{};
     native_vector<std::pair<jtl::immutable_string, jtl::immutable_string>> deferred_bindings;
     native_set<ir::identifier> seen_blocks;
+    native_set<ir::identifier> locals;
   };
 
   using ir::identifier;
@@ -902,9 +903,17 @@ namespace jank::codegen
     return none;
   }
 
+  jtl::option<identifier> gen(ir::inst::local_ref const &inst, builder &b)
+  {
+    b.next_instruction();
+    util::format_to(b.body_buffer, "{} {}{ };\n", get_qualified_type_name(inst->type), inst->value);
+    b.locals.insert(inst->value);
+    return inst->value;
+  }
+
   jtl::option<identifier> gen(ir::inst::branch_ref const &inst, builder &b)
   {
-    if(inst->shadow.is_some())
+    if(inst->shadow.is_some() && !b.locals.contains(inst->shadow.unwrap().name))
     {
       util::format_to(b.body_buffer,
                       "{} {}{ };\n",
@@ -1103,6 +1112,22 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "return {};\n", inst->value);
+
+    return none;
+  }
+
+  jtl::option<identifier> gen(ir::inst::cpp_scope_open_ref const &, builder &b)
+  {
+    b.next_instruction();
+    util::format_to(b.body_buffer, "{");
+
+    return none;
+  }
+
+  jtl::option<identifier> gen(ir::inst::cpp_scope_close_ref const &, builder &b)
+  {
+    b.next_instruction();
+    util::format_to(b.body_buffer, "}");
 
     return none;
   }

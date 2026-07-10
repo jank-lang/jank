@@ -131,6 +131,8 @@ namespace jank::ir
     identifier throw_(identifier const &value);
     identifier ret(identifier const &value, jtl::ptr<void> const type);
 
+    identifier cpp_scope_open();
+    identifier cpp_scope_close(identifier const &scope);
     identifier cpp_raw(analyze::expr::cpp_raw_ref const expr);
     identifier cpp_value(analyze::expr::cpp_value_ref const expr);
     identifier

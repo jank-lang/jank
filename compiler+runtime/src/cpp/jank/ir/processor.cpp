@@ -58,7 +58,21 @@ namespace jank::ir
 
   bool block::has_terminator() const
   {
-    return !instructions.empty() && instructions.back()->is_terminator();
+    if(instructions.empty())
+    {
+      return false;
+    }
+
+    for(auto it{ instructions.rbegin() }; it != instructions.rend(); ++it)
+    {
+      if((*it)->kind == instruction_kind::cpp_scope_close)
+      {
+        continue;
+      }
+      return (*it)->is_terminator();
+    }
+
+    return false;
   }
 
   jtl::option<identifier> gen(analyze::expression_ref const expr, builder &b);
@@ -446,6 +460,9 @@ namespace jank::ir
     auto old_locals{ b.locals };
     util::scope_exit const finally{ [&] { b.locals = jtl::move(old_locals); } };
 
+    auto const scope{ b.cpp_scope_open() };
+    auto const scope_open_block_index{ b.current_block()->index };
+
     for(auto const &pair : expr->pairs)
     {
       auto const name{ runtime::munge(pair.first->name->get_name()) };
@@ -506,16 +523,20 @@ namespace jank::ir
       {
         b.enter_block(merge_blk);
         b.branch_get(loop_shadow, expression_type(expr));
+        b.cpp_scope_close(scope);
         return loop_shadow;
       }
 
       b.remove_block(merge_blk);
 
+      b.cpp_scope_close(scope);
       return loop_shadow;
     }
     else
     {
-      return gen(expr->body, b);
+      auto const ret{ gen(expr->body, b) };
+      b.cpp_scope_close(scope);
+      return ret;
     }
   }
 

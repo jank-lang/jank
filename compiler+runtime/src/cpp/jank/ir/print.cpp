@@ -332,6 +332,15 @@ namespace jank::ir
                     get_qualified_type_name(type));
   }
 
+  void inst::local::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :local :value {} :type \"{}\"}",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
   void inst::branch::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(
@@ -455,6 +464,23 @@ namespace jank::ir
                     "{:name {} :op :ret :value {} :type \"{}\"}",
                     name,
                     value,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_scope_open::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :cpp/scope-open :type \"{}\"}",
+                    name,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_scope_close::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :cpp/scope-close :scope {} :type \"{}\"}",
+                    name,
+                    scope,
                     get_qualified_type_name(type));
   }
 

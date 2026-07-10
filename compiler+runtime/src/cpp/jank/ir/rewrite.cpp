@@ -31,11 +31,14 @@ namespace jank::ir
       case instruction_kind::capture:
       case instruction_kind::literal:
       case instruction_kind::function:
+      case instruction_kind::local:
       case instruction_kind::letfn:
       case instruction_kind::var_deref:
       case instruction_kind::var_ref:
       case instruction_kind::recursion_reference:
       case instruction_kind::branch_get:
+      case instruction_kind::cpp_scope_open:
+      case instruction_kind::cpp_scope_close:
       case instruction_kind::cpp_raw:
       case instruction_kind::cpp_value:
         break;

@@ -46,6 +46,7 @@ namespace jank::ir
     function,
     closure,
     letfn,
+    local,
     def,
     var_deref,
     var_ref,
@@ -65,6 +66,8 @@ namespace jank::ir
     finally,
     throw_,
     ret,
+    cpp_scope_open,
+    cpp_scope_close,
     cpp_raw,
     cpp_value,
     cpp_into_object,
@@ -285,6 +288,35 @@ namespace jank::ir
     };
 
     using letfn_ref = jtl::ref<letfn>;
+
+    struct local : instruction
+    {
+      local(identifier const &name,
+            read::source const &location,
+            identifier const &value,
+            jtl::ptr<void> const type);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier value;
+    };
+
+    using local_ref = jtl::ref<local>;
+
+    struct set_local : instruction
+    {
+      set_local(identifier const &name,
+                read::source const &location,
+                identifier const &local,
+                identifier const &value);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier local;
+      identifier value;
+    };
+
+    using set_local_ref = jtl::ref<set_local>;
 
     struct def : instruction
     {
@@ -611,6 +643,28 @@ namespace jank::ir
     };
 
     using ret_ref = jtl::ref<ret>;
+
+    struct cpp_scope_open : instruction
+    {
+      cpp_scope_open(identifier const &name, read::source const &location);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+    };
+
+    using cpp_scope_open_ref = jtl::ref<cpp_scope_open>;
+
+    struct cpp_scope_close : instruction
+    {
+      cpp_scope_close(identifier const &name,
+                      read::source const &location,
+                      identifier const &scope);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier scope;
+    };
+
+    using cpp_scope_close_ref = jtl::ref<cpp_scope_close>;
 
     struct cpp_raw : instruction
     {

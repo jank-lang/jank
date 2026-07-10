@@ -509,6 +509,22 @@ namespace jank::ir
     return name;
   }
 
+  identifier builder::cpp_scope_open()
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_scope_open>(name, location));
+    return name;
+  }
+
+  identifier builder::cpp_scope_close(identifier const &scope)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_scope_close>(name, location, scope));
+    return name;
+  }
+
   identifier builder::cpp_raw(analyze::expr::cpp_raw_ref const expr)
   {
     auto name{ next_ident() };

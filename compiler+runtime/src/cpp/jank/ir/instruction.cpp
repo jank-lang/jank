@@ -169,6 +169,25 @@ namespace jank::ir::inst
   {
   }
 
+  local::local(identifier const &name,
+               read::source const &location,
+               identifier const &value,
+               jtl::ptr<void> const type)
+    : instruction{ instruction_kind::local, name, type, location }
+    , value{ value }
+  {
+  }
+
+  set_local::set_local(identifier const &name,
+                       read::source const &location,
+                       identifier const &local,
+                       identifier const &value)
+    : instruction{ instruction_kind::local, name, Cpp::GetVoidType(), location }
+    , local{ local }
+    , value{ value }
+  {
+  }
+
   def::def(identifier const &name,
            jtl::ptr<void> const type,
            read::source const &location,
@@ -409,6 +428,19 @@ namespace jank::ir::inst
   bool ret::is_terminator() const
   {
     return true;
+  }
+
+  cpp_scope_open::cpp_scope_open(identifier const &name, read::source const &location)
+    : instruction{ instruction_kind::cpp_scope_open, name, Cpp::GetVoidType(), location }
+  {
+  }
+
+  cpp_scope_close::cpp_scope_close(identifier const &name,
+                                   read::source const &location,
+                                   identifier const &scope)
+    : instruction{ instruction_kind::cpp_scope_close, name, Cpp::GetVoidType(), location }
+    , scope{ scope }
+  {
   }
 
   cpp_raw::cpp_raw(identifier const &name,
