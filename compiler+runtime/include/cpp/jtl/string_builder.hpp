@@ -41,6 +41,7 @@ namespace jtl
     string_builder &operator()(unsigned long d) &;
     string_builder &operator()(unsigned long long d) &;
     string_builder &operator()(jank::native_big_integer const &d) &;
+    string_builder &operator()(jank::native_big_decimal const &d) &;
     string_builder &operator()(jank::runtime::obj::ratio_data const &r) &;
     string_builder &operator()(char d) &;
     string_builder &operator()(char32_t d) &;

@@ -311,7 +311,7 @@ namespace jank::ir
 
   /* Rewrite all uses of `old_name` in the function to use `new_name` instead.
    * This covers all instruction operands in every block. */
-  void rewrite_uses(function &fn, identifier const &old_name, identifier const &new_name)
+  void rewrite_uses(function const &fn, identifier const &old_name, identifier const &new_name)
   {
     for(auto const &block : fn.blocks)
     {

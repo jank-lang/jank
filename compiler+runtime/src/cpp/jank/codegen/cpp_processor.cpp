@@ -120,7 +120,7 @@ namespace jank::codegen
     native_set<ir::identifier> seen_blocks;
   };
 
-  using identifier = ir::identifier;
+  using ir::identifier;
 
 
   static folly::Synchronized<
@@ -131,7 +131,7 @@ namespace jank::codegen
     /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
     global_vars;
 
-  static identifier lift_constant(identifier const &name, object_ref const o, builder &b)
+  static identifier lift_constant(identifier const &name, object_ref const o, builder const &b)
   {
     if(b.module->target == compilation_target::eval)
     {
@@ -187,7 +187,8 @@ namespace jank::codegen
     return name;
   }
 
-  static jtl::immutable_string lift_var(jtl::immutable_string const &qualified_var, builder &b)
+  static jtl::immutable_string
+  lift_var(jtl::immutable_string const &qualified_var, builder const &b)
   {
     if(b.module->target == compilation_target::eval)
     {
@@ -1244,7 +1245,14 @@ namespace jank::codegen
         util::format_to(b.body_buffer, "auto &&{}(", inst->name);
       }
 
-      util::format_to(b.body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
+      if(Cpp::IsInlineFriendFunction(source->scope))
+      {
+        util::format_to(b.body_buffer, "{}(", Cpp::GetName(source->scope));
+      }
+      else
+      {
+        util::format_to(b.body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
+      }
 
       bool need_comma{};
       for(usize arg_idx{}; arg_idx < inst->expr->arg_exprs.size(); ++arg_idx)

@@ -253,7 +253,8 @@
     (when *disable-sandbox*
       (println "\u001b[1;31mBuilding with sandboxing disabled is potentially dangerous!\u001b[0m"))
 
-    (let [tree     (->> (mapv #(resolve/dependency-hierarchy project %) (:dependencies project))
+    (let [tree     (->> (mapv #(resolve/dependency-hierarchy project (:managed-dependencies project) %)
+                              (:dependencies project))
                         (apply merge))
            ;; Plan the build steps just for the child dependencies,
            ;; recursively resolving their dependencies and so on.
@@ -271,8 +272,9 @@
                        :build-opts   build-opts
                        :build-inputs (collect-build-deps tree)
                        :inputs       (collect-out-dirs dep-ops)
-                       :always-build true}])]
-      (into dep-ops root-ops))))
+                       :always-build true}])
+          plan (into dep-ops root-ops)]
+      plan)))
 
 (defmulti run-build-op! (fn [_ op] (:op op)))
 

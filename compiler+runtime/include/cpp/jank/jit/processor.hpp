@@ -56,6 +56,7 @@ namespace jank::jit
     void eval_string(jtl::immutable_string const &s, clang::Value *) const;
     void load_object(jtl::immutable_string_view const &path) const;
     void load_dynamic_library(jtl::immutable_string const &path) const;
+    void load_static_library(jtl::immutable_string const &path) const;
     void load_ir_module(llvm::orc::ThreadSafeModule &&m) const;
     void load_bitcode(jtl::immutable_string const &module,
                       jtl::immutable_string_view const &bitcode) const;
@@ -64,8 +65,8 @@ namespace jank::jit
     jtl::string_result<void *> find_symbol(jtl::immutable_string const &name) const;
 
     jtl::result<void, jtl::immutable_string>
-    load_dynamic_libs(native_vector<jtl::immutable_string> const &libs) const;
-    jtl::option<jtl::immutable_string> find_dynamic_lib(jtl::immutable_string const &lib) const;
+    load_libs(native_vector<jtl::immutable_string> const &libs) const;
+    jtl::option<jtl::immutable_string> find_lib(jtl::immutable_string const &lib) const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     /*** XXX: Calls through the interpreter and LLVM JIT runtime are thread-safe. ***/

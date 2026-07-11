@@ -345,7 +345,7 @@ extern "C"
                         jank_usize pch_size,
                         int (*fn)(int const, char const ** const));
 
-  jank_object_ref jank_parse_command_line_args(int const argc, char const **argv);
+  jank_object_ref jank_parse_command_line_args(int const argc, char const * const * const argv);
 
 #ifdef __cplusplus
 }

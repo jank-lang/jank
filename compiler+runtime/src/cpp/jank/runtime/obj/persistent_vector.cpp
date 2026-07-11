@@ -51,8 +51,11 @@ namespace jank::runtime::obj
     return visit_object(
       [](auto const typed_s) -> persistent_vector_ref {
         using T = typename decltype(typed_s)::value_type;
-
-        if constexpr(behavior::sequenceable<T>)
+        if constexpr(std::same_as<T, obj::persistent_vector>)
+        {
+          return typed_s->with_meta(jank_nil);
+        }
+        else if constexpr(behavior::seqable<T>)
         {
           runtime::detail::native_transient_vector v;
           for(auto const e : make_sequence_range(typed_s))

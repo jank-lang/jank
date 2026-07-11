@@ -16,7 +16,8 @@ namespace jank::util
   {
   }
 
-  scope_exit::~scope_exit() noexcept(false)
+  /* NOLINTNEXTLINE(bugprone-exception-escape): This is allowed, in some cases. */
+  scope_exit::~scope_exit()
   {
     if(!active)
     {
