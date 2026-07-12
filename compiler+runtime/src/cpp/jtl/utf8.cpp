@@ -66,14 +66,14 @@ namespace jtl
 
   utf8_iterator::utf8_iterator(immutable_string const &s)
     : data{ s }
-    , i{ s.size() == 0 ? value_type::npos : 0 }
+    , i{ s.empty() ? value_type::npos : 0 }
     , n{ i == value_type::npos ? 0 : next_char_size(s, i) }
   {
   }
 
   utf8_iterator::utf8_iterator(immutable_string const &s, value_type::size_type const i)
     : data{ s }
-    , i{ s.size() == 0 ? value_type::npos : i }
+    , i{ s.empty() ? value_type::npos : i }
     , n{ i == value_type::npos ? 0 : next_char_size(s, i) }
   {
   }
@@ -147,12 +147,12 @@ namespace jtl
     return i == it.i && (data.data() == it.data.data() || data == it.data);
   }
 
-  utf8_iterator utf8_iterator::begin()
+  utf8_iterator utf8_iterator::begin() const
   {
     return { data, 0 };
   }
 
-  utf8_iterator utf8_iterator::end()
+  utf8_iterator utf8_iterator::end() const
   {
     return { data, value_type::npos };
   }

@@ -20,8 +20,8 @@ namespace jtl
     utf8_iterator operator--(int);
     bool operator==(utf8_iterator const &it) const;
 
-    utf8_iterator begin();
-    utf8_iterator end();
+    utf8_iterator begin() const;
+    utf8_iterator end() const;
 
     value_type data;
     value_type::size_type i{};
