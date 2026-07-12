@@ -37,6 +37,7 @@ namespace jank::ir
     identifier next_ident();
     identifier next_ident(jtl::immutable_string const &prefix);
     identifier next_shadow();
+    identifier next_local();
 
     jtl::ref<function> current_function() const;
 
@@ -79,6 +80,8 @@ namespace jank::ir
             runtime::callable_arity_flags const arity_flags,
             bool const is_variadic);
     identifier letfn(native_vector<jtl::immutable_string> &&bindings);
+    identifier local(jtl::ptr<void> const type);
+    identifier set_local(identifier const &local, identifier const &value);
     identifier def(analyze::expression_position const pos,
                    jtl::immutable_string const &qualified_var,
                    jtl::option<identifier> const &value,

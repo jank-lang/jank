@@ -47,6 +47,7 @@ namespace jank::ir
     closure,
     letfn,
     local,
+    set_local,
     def,
     var_deref,
     var_ref,
@@ -291,14 +292,9 @@ namespace jank::ir
 
     struct local : instruction
     {
-      local(identifier const &name,
-            read::source const &location,
-            identifier const &value,
-            jtl::ptr<void> const type);
+      local(identifier const &name, read::source const &location, jtl::ptr<void> const type);
 
       void print(jtl::string_builder &sb, usize indent) const override;
-
-      identifier value;
     };
 
     using local_ref = jtl::ref<local>;

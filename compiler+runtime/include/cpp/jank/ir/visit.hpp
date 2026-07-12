@@ -35,6 +35,8 @@ namespace jank::ir
         return f(jtl::static_ref_cast<inst::letfn>(i), std::forward<Args>(args)...);
       case instruction_kind::local:
         return f(jtl::static_ref_cast<inst::local>(i), std::forward<Args>(args)...);
+      case instruction_kind::set_local:
+        return f(jtl::static_ref_cast<inst::set_local>(i), std::forward<Args>(args)...);
       case instruction_kind::def:
         return f(jtl::static_ref_cast<inst::def>(i), std::forward<Args>(args)...);
       case instruction_kind::var_deref:

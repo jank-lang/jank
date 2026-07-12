@@ -240,6 +240,22 @@ namespace jank::ir
     return name;
   }
 
+  identifier builder::local(jtl::ptr<void> const type)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::local>(name, location, type));
+    return name;
+  }
+
+  identifier builder::set_local(identifier const &local, identifier const &value)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::set_local>(name, location, local, value));
+    return name;
+  }
+
   identifier builder::def(analyze::expression_position const pos,
                           jtl::immutable_string const &qualified_var,
                           jtl::option<identifier> const &value,
@@ -511,7 +527,7 @@ namespace jank::ir
 
   identifier builder::cpp_scope_open()
   {
-    auto name{ next_ident() };
+    auto name{ next_ident("s") };
     current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::cpp_scope_open>(name, location));
     return name;

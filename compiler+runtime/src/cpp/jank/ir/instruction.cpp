@@ -169,12 +169,8 @@ namespace jank::ir::inst
   {
   }
 
-  local::local(identifier const &name,
-               read::source const &location,
-               identifier const &value,
-               jtl::ptr<void> const type)
+  local::local(identifier const &name, read::source const &location, jtl::ptr<void> const type)
     : instruction{ instruction_kind::local, name, type, location }
-    , value{ value }
   {
   }
 
@@ -182,7 +178,7 @@ namespace jank::ir::inst
                        read::source const &location,
                        identifier const &local,
                        identifier const &value)
-    : instruction{ instruction_kind::local, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::set_local, name, Cpp::GetVoidType(), location }
     , local{ local }
     , value{ value }
   {

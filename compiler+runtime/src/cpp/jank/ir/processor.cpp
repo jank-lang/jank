@@ -1,6 +1,7 @@
 #include <jank/ir/processor.hpp>
 #include <jank/ir/print.hpp>
 #include <jank/ir/dominance.hpp>
+#include <jank/ir/opt/hoist_locals.hpp>
 #include <jank/ir/opt/hoist_literals.hpp>
 #include <jank/ir/opt/hoist_var_derefs.hpp>
 #include <jank/ir/opt/remove_nops.hpp>
@@ -212,6 +213,8 @@ namespace jank::ir
 
     builder b{ &mod, mod.functions.size() - 1 };
 
+    auto const fn_scope{ b.cpp_scope_open() };
+
     b.locals[runtime::munge(fn_expr->name)]
       = b.parameter(analyze::expression_position::value, runtime::munge(fn_expr->name));
     for(auto const &param : arity.params)
@@ -280,7 +283,11 @@ namespace jank::ir
       {
         auto const fn{ b.current_function() };
         fn->remove_block(merge_blk);
-        dynamic_cast<inst::loop &>(*fn->blocks[0].instructions.back()).merge_block = none;
+        if(b.block_index >= merge_blk)
+        {
+          --b.block_index;
+        }
+        static_cast<inst::loop &>(*fn->blocks[0].instructions.back()).merge_block = none;
       }
     }
     else
@@ -295,6 +302,8 @@ namespace jank::ir
     {
       b.literal(analyze::expression_position::tail, runtime::jank_nil);
     }
+
+    b.cpp_scope_close(fn_scope);
 
     return name;
   }
@@ -461,7 +470,6 @@ namespace jank::ir
     util::scope_exit const finally{ [&] { b.locals = jtl::move(old_locals); } };
 
     auto const scope{ b.cpp_scope_open() };
-    auto const scope_open_block_index{ b.current_block()->index };
 
     for(auto const &pair : expr->pairs)
     {
@@ -601,7 +609,7 @@ namespace jank::ir
     auto const else_blk{ b.block(b.next_ident("else")) };
     auto const merge_blk{ b.block(b.next_ident("if-merge")) };
     auto const condition_name{ gen(expr->condition, b).unwrap() };
-    auto const shadow{ b.next_shadow() };
+    auto local{ b.local(expr->get_type()) };
 
     identifier bool_condition{ condition_name };
     if(is_any_object(expression_type(expr->condition)))
@@ -614,14 +622,14 @@ namespace jank::ir
              (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
                                                                     : jtl::option<identifier>{},
              (expr->position != analyze::expression_position::tail)
-               ? detail::typed_identifier{ shadow, expr->get_type() }
+               ? detail::typed_identifier{ local, expr->get_type() }
                : jtl::option<detail::typed_identifier>{});
 
     b.enter_block(then_blk);
     auto const then_name{ gen(expr->then, b) };
     if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
     {
-      b.branch_set(shadow, then_name.unwrap());
+      b.set_local(local, then_name.unwrap());
       b.jump(merge_blk);
     }
 
@@ -637,14 +645,14 @@ namespace jank::ir
     }
     if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
     {
-      b.branch_set(shadow, else_name.unwrap());
+      b.set_local(local, else_name.unwrap());
       b.jump(merge_blk);
     }
 
     if(expr->position != analyze::expression_position::tail)
     {
       b.enter_block(merge_blk);
-      return b.branch_get(shadow, expression_type(expr));
+      return local;
     }
 
     b.remove_block(merge_blk);
@@ -924,6 +932,8 @@ namespace jank::ir
     for(auto &fn : mod.functions)
     {
       build_dominance(fn);
+
+      hoist_locals(fn);
 
       if(util::cli::opts.hoist_literals)
       {

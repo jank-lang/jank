@@ -4,6 +4,7 @@
 #include <jank/runtime/core/munge.hpp>
 #include <jank/ir/processor.hpp>
 #include <jank/ir/rewrite.hpp>
+#include <jank/ir/util.hpp>
 #include <jank/util/fmt/print.hpp>
 
 namespace jank::ir
@@ -133,13 +134,7 @@ namespace jank::ir
 
         rewrite_uses(fn, occurrence.second, canonical_name);
 
-        auto &owning_block{ fn.blocks[fn.find_block(occurrence.first)] };
-        auto const it{ std::ranges::find_if(owning_block.instructions, [&](auto const &i) {
-          return i->name == occurrence.second;
-        }) };
-        jank_debug_assert(it != owning_block.instructions.end());
-        /* TODO: Better name. */
-        *it = jtl::make_ref<inst::nop>(runtime::munge(runtime::__rt_ctx->unique_string()));
+        replace_with_nop(fn, occurrence.first, occurrence.second);
       }
     }
   }

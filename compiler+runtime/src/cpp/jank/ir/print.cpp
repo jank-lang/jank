@@ -334,9 +334,15 @@ namespace jank::ir
 
   void inst::local::print(jtl::string_builder &sb, usize const) const
   {
+    util::format_to(sb, "{:name {} :op :local :type \"{}\"}", name, get_qualified_type_name(type));
+  }
+
+  void inst::set_local::print(jtl::string_builder &sb, usize const) const
+  {
     util::format_to(sb,
-                    "{:name {} :op :local :value {} :type \"{}\"}",
+                    "{:name {} :op :set-local :local {} :value {} :type \"{}\"}",
                     name,
+                    local,
                     value,
                     get_qualified_type_name(type));
   }
