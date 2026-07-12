@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Build and package LLVM on Windows from the jank source LLVM repo
-# using the MSYS2 toolchain.
+# using the MSYS2 toolchain. Mirros build-clang and shuld be kept in
+# sync.
 #
 # See -h for usage.
 #
