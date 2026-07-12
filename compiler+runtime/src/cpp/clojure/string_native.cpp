@@ -1,3 +1,5 @@
+#include <ranges>
+
 #include <jtl/utf8.hpp>
 
 #include <clojure/string_native.hpp>
@@ -29,7 +31,7 @@ namespace clojure::string_native
   jtl::immutable_string reverse(jtl::immutable_string const &s)
   {
     jtl::string_builder buff{ s.size() };
-    for(auto const &c : jtl::utf8_reverse_range(s))
+    for(auto const &c : jtl::utf8_iterator(s) | std::views::reverse)
     {
       buff(c);
     }
