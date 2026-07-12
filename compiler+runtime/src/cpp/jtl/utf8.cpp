@@ -71,9 +71,9 @@ namespace jtl
   {
   }
 
-  utf8_iterator::utf8_iterator(immutable_string const &s, value_type::size_type const i)
+  utf8_iterator::utf8_iterator(immutable_string const &s, value_type::size_type const position)
     : data{ s }
-    , i{ s.empty() ? value_type::npos : i }
+    , i{ s.empty() ? value_type::npos : position }
     , n{ i == value_type::npos ? 0 : next_char_size(s, i) }
   {
   }

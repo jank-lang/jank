@@ -11,7 +11,7 @@ namespace jtl
 
     utf8_iterator() = default;
     utf8_iterator(immutable_string const &s);
-    utf8_iterator(immutable_string const &s, value_type::size_type const i);
+    utf8_iterator(immutable_string const &s, value_type::size_type const position);
 
     value_type operator*() const;
     utf8_iterator &operator++();
