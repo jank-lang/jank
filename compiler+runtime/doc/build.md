@@ -80,12 +80,20 @@ Now configure and build jank as normal, but pass `-Djank_local_clang=on` when yo
 
 For Windows:
 
-Run the same commands from the [MSYS2](https://www.msys2.org/) CLANG64 shell.
+Run the same commands from the [MSYS2](https://www.msys2.org/) CLANG64 shell, but use the **bin/build-clang-msys2** script instead.
 
-Rather than passing `-Djank_local_clang=on`, install the built toolchain into the environment, which will replace the existing LLVM installation:
+```
+cd compiler+runtime
+mkdir -p build
+export CC=clang; export CXX=clang++;
+./bin/build-clang-msys2
+export CC=$PWD/build/llvm-install/usr/local/bin/clang; export CXX=$PWD/build/llvm-install/usr/local/bin/clang++
+```
+
+Install the built toolchain into the environment, which will replace the existing LLVM installation.
 
 ```bash
-./bin/build-clang -i
+./bin/build-clang-msys2 -i
 ```
 
 ## Compiling jank
