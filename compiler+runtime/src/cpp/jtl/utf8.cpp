@@ -147,12 +147,17 @@ namespace jtl
     return i == it.i && (data.data() == it.data.data() || data == it.data);
   }
 
-  utf8_iterator utf8_iterator::begin() const
+  utf8_range::utf8_range(immutable_string const &s)
+    : data{ s }
+  {
+  }
+
+  utf8_iterator utf8_range::begin() const
   {
     return { data, 0 };
   }
 
-  utf8_iterator utf8_iterator::end() const
+  utf8_iterator utf8_range::end() const
   {
     return { data, value_type::npos };
   }
