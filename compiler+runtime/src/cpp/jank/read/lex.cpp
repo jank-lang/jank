@@ -653,7 +653,7 @@ namespace jank::read::lex
               hit_non_semi = true;
             }
 
-            ++pos;
+            pos += oc.expect_ok().len;
           }
           if(pos == token_start)
           {
@@ -1396,7 +1396,7 @@ namespace jank::read::lex
                     break;
                   }
 
-                  ++pos;
+                  pos += oc.expect_ok().len;
                 }
 
                 ++pos;

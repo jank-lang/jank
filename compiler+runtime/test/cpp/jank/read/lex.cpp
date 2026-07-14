@@ -259,6 +259,27 @@ namespace jank::read::lex
                 { { { 9, 2, 1 } }, { { 10, 2, 2 } }, token_kind::integer,       2ll }
         }));
       }
+
+      SUBCASE("Multi-byte UTF-8 content")
+      {
+        processor p{ "; a ▀ comment\n1" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                {  { { 0, 1, 1 } }, { { 15, 1, 16 } }, token_kind::comment, " a ▀ comment"sv },
+                { { { 16, 2, 1 } }, { { 17, 2, 2 } },  token_kind::integer,              1ll }
+        }));
+      }
+
+      SUBCASE("Multi-byte UTF-8 content at end of file")
+      {
+        processor p{ "; ▀é🍜" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 11, token_kind::comment, " ▀é🍜"sv }
+        }));
+      }
     }
 
     TEST_CASE("List")
@@ -2137,6 +2158,16 @@ namespace jank::read::lex
           CHECK(tokens
                 == make_tokens({
                   { 0, 9, token_kind::comment, "#!#!foo"sv }
+          }));
+        }
+
+        SUBCASE("Multi-byte UTF-8 content")
+        {
+          processor p{ "#! ▀é🍜" };
+          native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+          CHECK(tokens
+                == make_tokens({
+                  { 0, 12, token_kind::comment, " ▀é🍜"sv }
           }));
         }
 
