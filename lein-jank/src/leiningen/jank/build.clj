@@ -253,7 +253,8 @@
     (when *disable-sandbox*
       (println "\u001b[1;31mBuilding with sandboxing disabled is potentially dangerous!\u001b[0m"))
 
-    (let [tree     (->> (mapv #(resolve/dependency-hierarchy project %) (:dependencies project))
+    (let [tree     (->> (mapv #(resolve/dependency-hierarchy project (:managed-dependencies project) %)
+                              (:dependencies project))
                         (apply merge))
            ;; Plan the build steps just for the child dependencies,
            ;; recursively resolving their dependencies and so on.

@@ -5,21 +5,25 @@
             [babashka.fs :as fs]
             [leiningen.install :refer [install]]
             [leiningen.core.project :as lproj]
-            [leiningen.jank.build :as build]))
+            [leiningen.jank.build :as build]
+            [leiningen.jank.resolve :as resolve]))
 
 (def temp-m2-repo (str (fs/create-temp-dir {:prefix "lein-jank-test-m2"})))
 
-(defn load-project [path]
-  (-> (lproj/read path)
+(defn read-test-project [name]
+  (-> (lproj/read (format "test-data/%s/project.clj" name))
       (assoc :local-repo temp-m2-repo)))
 
 ;; Set up an example dependency tree where parent-project -> child-project ->
 ;; grandchild-project -> (build dep) build-dependency.
-(def parent-project (load-project "test-data/test-parent/project.clj"))
-(def child-project (load-project "test-data/test-child/project.clj"))
-(def grandchild-project (load-project "test-data/test-grandchild/project.clj"))
-(def grandchild2-project (load-project "test-data/test-grandchild2/project.clj"))
-(def build-dependency-project (load-project "test-data/test-build-dependency/project.clj"))
+(def parent-project (read-test-project "test-parent"))
+(def child-project (read-test-project "test-child"))
+(def grandchild-project (read-test-project "test-grandchild"))
+(def grandchild2-project (read-test-project "test-grandchild2"))
+
+;; Other top-level projects useful for testing different features.
+(def build-dependency-project (read-test-project "test-build-dependency"))
+(def managed-deps-project (read-test-project "test-managed-deps"))
 
 ;; Children need to be installed into the maven cache to be properly picked up
 ;; by parents.
@@ -30,6 +34,7 @@
     (install grandchild2-project)
     (install child-project)
     (install parent-project)
+    (install managed-deps-project)
     (f)))
 
 (use-fixtures :once setup-fixture)
@@ -65,6 +70,21 @@
                   ;; root project always builds
                   :always-build true}]
                 ops))))
+
+(deftest plan-build-with-managed-deps
+  (let [tree (resolve/dependency-hierarchy
+              managed-deps-project
+              (:managed-dependencies managed-deps-project)
+              '[org.jank-lang/test-managed-deps "0.1.0"])]
+    ;; The project declares an imgui-sys managed dependency version of
+    ;; 2026.06-1. This overrides the nested imgui-sys depenencies, which are on
+    ;; version 2026.06-6.
+    (is (match?
+         {['org.jank-lang/test-managed-deps "0.1.0"]
+          {['org.jank-lang.commons/imgui-glfw-sys "2026.06-1"]    {['org.jank-lang.commons/imgui-sys "2026.06-1"] {}}
+           ['org.jank-lang.commons/imgui-opengl2-sys "2026.06-6"] {['org.jank-lang.commons/imgui-sys "2026.06-1"] {}}
+           ['org.jank-lang.commons/imgui-sys "2026.06-1"]         {}}}
+       tree))))
 
 (deftest run-build-test
   (let [output-dir (fs/create-temp-dir {:prefix "lein-jank-test-out"})
