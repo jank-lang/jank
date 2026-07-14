@@ -306,14 +306,12 @@ namespace jank::ir::inst
                  identifier const &condition,
                  identifier const &then_block,
                  identifier const &else_block,
-                 jtl::option<identifier> const &merge_block,
-                 jtl::option<detail::typed_identifier> const &shadow)
+                 identifier const &merge_block)
     : instruction{ instruction_kind::branch, name, Cpp::GetVoidType(), location }
     , condition{ condition }
     , then_block{ then_block }
     , else_block{ else_block }
     , merge_block{ merge_block }
-    , shadow{ shadow }
   {
   }
 

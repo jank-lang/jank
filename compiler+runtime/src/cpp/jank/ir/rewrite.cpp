@@ -166,10 +166,6 @@ namespace jank::ir
       case instruction_kind::branch:
         {
           auto &i{ static_cast<inst::branch &>(*inst.data) };
-          if(i.shadow.is_some())
-          {
-            rewritten |= rewrite(i.shadow.unwrap().name, old_name, new_name);
-          }
           rewritten |= rewrite(i.condition, old_name, new_name);
           rewritten |= rewrite(i.then_block, old_name, new_name);
           rewritten |= rewrite(i.else_block, old_name, new_name);
@@ -276,7 +272,6 @@ namespace jank::ir
       case instruction_kind::cpp_member_call:
         {
           auto &i{ static_cast<inst::cpp_member_call &>(*inst.data) };
-          rewritten |= rewrite(i.value, old_name, new_name);
           for(auto &arg : i.args)
           {
             rewritten |= rewrite(arg, old_name, new_name);

@@ -865,14 +865,19 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::local_ref const inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer, "{} {}{ };\n", get_qualified_type_name(inst->type), inst->name);
+    auto type{ inst->type };
+    if(Cpp::GetValueKind(type) == Cpp::ValueKind::LValue)
+    {
+      type = Cpp::GetNonReferenceType(type);
+    }
+    util::format_to(b.body_buffer, "{} {}{ };\n", get_qualified_type_name(type), inst->name);
     return inst->name;
   }
 
   jtl::option<identifier> gen(ir::inst::set_local_ref const inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer, "{} = {};\n", inst->local, inst->value);
+    util::format_to(b.body_buffer, "{} = std::move({});\n", inst->local, inst->value);
     return none;
   }
 
@@ -883,6 +888,13 @@ namespace jank::codegen
     if(inst->loop)
     {
       util::format_to(b.body_buffer, "continue;\n");
+    }
+
+    /* If there are any instructions after the jump, like scope closes, we need to handle
+     * them, too. */
+    while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
+    {
+      gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
     }
 
     if(b.seen_blocks.contains(inst->block))
@@ -927,10 +939,7 @@ namespace jank::codegen
     gen_until_jump(inst->merge_block, b);
     util::format_to(b.body_buffer, "}\n");
 
-    if(inst->merge_block.is_some())
-    {
-      b.enter_block(inst->merge_block.unwrap());
-    }
+    b.enter_block(inst->merge_block);
 
     return none;
   }
@@ -938,14 +947,6 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::loop_ref const inst, builder &b)
   {
     b.next_instruction();
-
-    if(inst->shadow.is_some())
-    {
-      util::format_to(b.body_buffer,
-                      "{} {};\n",
-                      get_qualified_type_name(inst->shadow.unwrap().type),
-                      inst->shadow.unwrap().name);
-    }
 
     for(auto const &shadow : inst->binding_shadows)
     {

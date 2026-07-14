@@ -485,8 +485,7 @@ namespace jank::ir
              identifier const &condition,
              identifier const &then_block,
              identifier const &else_block,
-             jtl::option<identifier> const &merge_block,
-             jtl::option<detail::typed_identifier> const &shadow);
+             identifier const &merge_block);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;
@@ -494,8 +493,7 @@ namespace jank::ir
       identifier condition;
       identifier then_block;
       identifier else_block;
-      jtl::option<identifier> merge_block;
-      jtl::option<detail::typed_identifier> shadow;
+      identifier merge_block;
     };
 
     using branch_ref = jtl::ref<branch>;
@@ -774,7 +772,6 @@ namespace jank::ir
 
       void print(jtl::string_builder &sb, usize) const override;
 
-      identifier value;
       native_vector<identifier> args;
       analyze::expr::cpp_member_call_ref expr;
     };

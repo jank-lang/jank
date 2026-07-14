@@ -426,18 +426,11 @@ namespace jank::ir
   identifier builder::branch(identifier const &condition,
                              identifier const &then_blk,
                              identifier const &else_blk,
-                             jtl::option<identifier> const &merge_blk,
-                             jtl::option<detail::typed_identifier> const &shadow)
+                             identifier const &merge_blk)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::branch>(name,
-                                  location,
-                                  condition,
-                                  then_blk,
-                                  else_blk,
-                                  merge_blk,
-                                  shadow));
+      jtl::make_ref<inst::branch>(name, location, condition, then_blk, else_blk, merge_blk));
     return name;
   }
 
@@ -571,8 +564,15 @@ namespace jank::ir
     auto name{ next_ident() };
     if(expr->policy == analyze::conversion_policy::into_object)
     {
-      current_function()->blocks[block_index].instructions.emplace_back(
-        jtl::make_ref<inst::cpp_into_object>(name, location, value, expr));
+      if(Cpp::IsVoid(expr->type))
+      {
+        literal(expr->position, runtime::jank_nil);
+      }
+      else
+      {
+        current_function()->blocks[block_index].instructions.emplace_back(
+          jtl::make_ref<inst::cpp_into_object>(name, location, value, expr));
+      }
     }
     else
     {

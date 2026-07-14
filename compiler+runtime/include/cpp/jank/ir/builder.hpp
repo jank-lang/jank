@@ -109,8 +109,7 @@ namespace jank::ir
     identifier branch(identifier const &condition,
                       identifier const &then_blk,
                       identifier const &else_blk,
-                      jtl::option<identifier> const &merge_blk,
-                      jtl::option<detail::typed_identifier> const &shadow);
+                      identifier const &merge_blk);
     identifier loop(identifier const &loop_blk,
                     jtl::option<identifier> const &merge_blk,
                     jtl::option<detail::typed_identifier> const &shadow,

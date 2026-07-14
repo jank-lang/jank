@@ -486,7 +486,7 @@ namespace jank::ir
 
     if(expr->loop_kind == analyze::expr::let::loop_kind::loop_with_recur)
     {
-      auto loop_shadow{ b.next_shadow() };
+      auto loop_local{ b.local(analyze::cpp_util::mutable_type(expr->get_type())) };
       native_vector<inst::loop::binding_shadow_details> shadows;
       shadows.reserve(expr->pairs.size());
       for(auto const &pair : expr->pairs)
@@ -506,9 +506,7 @@ namespace jank::ir
       b.loop(b.block_name(loop_blk),
              (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
                                                                     : jtl::option<identifier>{},
-             (expr->position != analyze::expression_position::tail)
-               ? detail::typed_identifier{ loop_shadow, mutable_type(expr->get_type()) }
-               : jtl::option<detail::typed_identifier>{},
+             jtl::option<detail::typed_identifier>{},
              jtl::move(shadows));
       b.enter_block(loop_blk);
 
@@ -523,22 +521,21 @@ namespace jank::ir
       if(expr->position != analyze::expression_position::tail
          && !b.current_block()->has_terminator())
       {
-        b.branch_set(loop_shadow, body_res.unwrap());
+        b.set_local(loop_local, body_res.unwrap());
         b.jump(merge_blk);
       }
 
       if(expr->position != analyze::expression_position::tail)
       {
         b.enter_block(merge_blk);
-        b.branch_get(loop_shadow, expression_type(expr));
         b.cpp_scope_close(scope);
-        return loop_shadow;
+        return loop_local;
       }
 
       b.remove_block(merge_blk);
 
       b.cpp_scope_close(scope);
-      return loop_shadow;
+      return loop_local;
     }
     else
     {
@@ -609,7 +606,11 @@ namespace jank::ir
     auto const else_blk{ b.block(b.next_ident("else")) };
     auto const merge_blk{ b.block(b.next_ident("if-merge")) };
     auto const condition_name{ gen(expr->condition, b).unwrap() };
-    auto local{ b.local(expr->get_type()) };
+    auto local{ b.local(analyze::cpp_util::mutable_type(expr->get_type())) };
+    auto const original_pos{ expr->position };
+
+    /* Force value position, since we're going to use a merge block regardless. */
+    expr->propagate_position(analyze::expression_position::value);
 
     identifier bool_condition{ condition_name };
     if(is_any_object(expression_type(expr->condition)))
@@ -619,15 +620,11 @@ namespace jank::ir
     b.branch(bool_condition,
              b.block_name(then_blk),
              b.block_name(else_blk),
-             (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
-                                                                    : jtl::option<identifier>{},
-             (expr->position != analyze::expression_position::tail)
-               ? detail::typed_identifier{ local, expr->get_type() }
-               : jtl::option<detail::typed_identifier>{});
+             b.block_name(merge_blk));
 
     b.enter_block(then_blk);
     auto const then_name{ gen(expr->then, b) };
-    if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
+    if(!b.current_block()->has_terminator())
     {
       b.set_local(local, then_name.unwrap());
       b.jump(merge_blk);
@@ -643,20 +640,18 @@ namespace jank::ir
     {
       else_name = b.literal(expr->position, runtime::jank_nil);
     }
-    if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
+    if(!b.current_block()->has_terminator())
     {
       b.set_local(local, else_name.unwrap());
       b.jump(merge_blk);
     }
 
-    if(expr->position != analyze::expression_position::tail)
+    b.enter_block(merge_blk);
+    if(original_pos == analyze::expression_position::tail)
     {
-      b.enter_block(merge_blk);
-      return local;
+      return b.ret(local, untyped_object_ref_type());
     }
-
-    b.remove_block(merge_blk);
-    return none;
+    return local;
   }
 
   jtl::option<identifier> gen(analyze::expr::throw_ref const expr, builder &b)
