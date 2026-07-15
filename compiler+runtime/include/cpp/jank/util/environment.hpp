@@ -17,6 +17,7 @@ namespace jank::util
   jtl::immutable_string process_path();
   jtl::immutable_string process_dir();
 
+  extern jtl::immutable_string resource_dir_override;
   jtl::immutable_string resource_dir();
   jtl::result<jtl::immutable_string, error_ref> prelude_hpp_path();
 
