@@ -68,8 +68,15 @@ namespace jank::util
     return res;
   }
 
+  jtl::immutable_string resource_dir_override;
+
   jtl::immutable_string resource_dir()
   {
+    if(!resource_dir_override.empty())
+    {
+      return resource_dir_override;
+    }
+
     std::filesystem::path const dir{ JANK_RESOURCE_DIR };
     if(dir.is_absolute())
     {

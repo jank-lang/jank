@@ -30,28 +30,10 @@
 #include <jank/environment/check_health.hpp>
 #include <jank/runtime/convert/builtin.hpp>
 
-#include <jank/compiler_native.hpp>
-#include <clojure/core_native.hpp>
-#include <clojure/string_native.hpp>
+extern "C" void jank_init_core_libs_phase_1();
 
 #ifdef JANK_PHASE_2
-extern "C" void jank_load_clojure_core();
-extern "C" void jank_load_clojure_string();
-extern "C" void jank_load_clojure_walk();
-extern "C" void jank_load_jank_nrepl_server_core();
-extern "C" void jank_load_jank_nrepl_server_inspect();
-extern "C" void jank_load_jank_nrepl_server_handler();
-extern "C" void jank_load_jank_nrepl_server_bencode();
-extern "C" void jank_load_jank_nrepl_server_capture();
-extern "C" void jank_load_jank_nrepl_server_util();
-extern "C" void jank_load_jank_nrepl_server_eval();
-extern "C" void jank_load_jank_nrepl_server_parsec();
-extern "C" void jank_load_jank_nrepl_server_handler_close();
-extern "C" void jank_load_jank_nrepl_server_handler_clone();
-extern "C" void jank_load_jank_nrepl_server_handler_describe();
-extern "C" void jank_load_jank_nrepl_server_handler_completions();
-extern "C" void jank_load_jank_nrepl_server_handler_eval();
-extern "C" void jank_load_jank_nrepl_server_handler_lookup();
+extern "C" void jank_init_core_libs();
 #endif
 
 namespace jank
@@ -412,42 +394,10 @@ int main(int const argc, char const **argv)
 
       __rt_ctx = new(UseGC) runtime::context{};
 
-      jank_load_clojure_core_native();
-
-      __rt_ctx->module_loader.add_load_fn("jank.compiler-native", &jank_load_jank_compiler_native);
+      jank_init_core_libs_phase_1();
 
 #ifdef JANK_PHASE_2
-      __rt_ctx->module_loader.add_load_fn("clojure.core", &jank_load_clojure_core);
-      __rt_ctx->module_loader.add_load_fn("clojure.string", &jank_load_clojure_string);
-      __rt_ctx->module_loader.add_load_fn("clojure.walk", &jank_load_clojure_walk);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.core",
-                                          &jank_load_jank_nrepl_server_core);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.inspect",
-                                          &jank_load_jank_nrepl_server_inspect);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler",
-                                          &jank_load_jank_nrepl_server_handler);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.bencode",
-                                          &jank_load_jank_nrepl_server_bencode);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.capture",
-                                          &jank_load_jank_nrepl_server_capture);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.util",
-                                          &jank_load_jank_nrepl_server_util);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.eval",
-                                          &jank_load_jank_nrepl_server_eval);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.parsec",
-                                          &jank_load_jank_nrepl_server_parsec);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.close",
-                                          &jank_load_jank_nrepl_server_handler_close);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.clone",
-                                          &jank_load_jank_nrepl_server_handler_clone);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.describe",
-                                          &jank_load_jank_nrepl_server_handler_describe);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.completions",
-                                          &jank_load_jank_nrepl_server_handler_completions);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.eval",
-                                          &jank_load_jank_nrepl_server_handler_eval);
-      __rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.lookup",
-                                          &jank_load_jank_nrepl_server_handler_lookup);
+      jank_init_core_libs();
 #endif
 
       Cpp::EnableDebugOutput(false);

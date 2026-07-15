@@ -9,9 +9,65 @@
 #include <jank/util/try.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/aot/resource.hpp>
+#include <jank/util/environment.hpp>
+#include <jank/util/fmt/print.hpp>
+#include <jank/environment/check_health.hpp>
+
+#include <jank/compiler_native.hpp>
+#include <clojure/core_native.hpp>
+#include <clojure/string_native.hpp>
 
 extern "C"
 {
+  void jank_override_resource_dir(char const * const jank_resource_dir)
+  {
+    jank::util::resource_dir_override = jank_resource_dir;
+  }
+
+  void jank_init_core_libs_phase_1()
+  {
+    jank::util::println("jank_init_core_libs_phase_1");
+    jank_load_clojure_core_native();
+
+    jank::runtime::__rt_ctx->module_loader.add_load_fn("jank.compiler-native",
+                                                       &jank_load_jank_compiler_native);
+  }
+
+  int jank_init_dynamic_embedded(jank_bool const init_default_ctx,
+                                 char const * const pch_data,
+                                 jank_usize pch_size)
+  {
+    jank_init_base();
+
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmParser();
+    llvm::InitializeNativeTargetAsmPrinter();
+
+    /* This try needs to come AFTER we initialize LLVM. If we have it before, we'll be
+     * unable to catch some exceptions thrown by JIT-compiled frames. */
+    JANK_TRY
+    {
+      if(pch_data)
+      {
+        jank::aot::register_resource("incremental.pch", { pch_data, pch_size });
+      }
+      if(init_default_ctx)
+      {
+        jank::runtime::__rt_ctx = new(UseGC) jank::runtime::context{};
+      }
+
+      jank_init_core_libs_phase_1();
+    }
+    JANK_CATCH_THEN(jank::util::print_exception, return 1)
+
+    return 0;
+  }
+
+  void jank_shutdown_dynamic_embedded()
+  {
+    llvm::llvm_shutdown_obj const Y{};
+  }
+
   int jank_init_dynamic(int const argc,
                         char const ** const argv,
                         jank_bool const init_default_ctx,
@@ -45,5 +101,10 @@ extern "C"
     JANK_CATCH_THEN(jank::util::print_exception, return 1)
 
     return 0;
+  }
+
+  bool jank_check_health()
+  {
+    return jank::environment::check_health();
   }
 }

@@ -14,6 +14,7 @@ namespace jank::util
   jtl::immutable_string process_path();
   jtl::immutable_string process_dir();
 
+  extern jtl::immutable_string resource_dir_override;
   jtl::immutable_string resource_dir();
 
   void add_system_flags(std::vector<char const *> &args);

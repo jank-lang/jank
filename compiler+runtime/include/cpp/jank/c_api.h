@@ -46,8 +46,12 @@ extern "C"
   typedef jank_u8 jank_arity_flags;
 
   jank_object_ref jank_eval(jank_object_ref o);
+  jank_object_ref jank_eval_file(jank_object_ref path);
+  jank_object_ref jank_eval_file_c(char const * const path);
   jank_object_ref jank_read_string(jank_object_ref s);
   jank_object_ref jank_read_string_c(char const * const s);
+
+  void jank_require_c(char const * const ns);
 
   jank_object_ref jank_ns_intern(jank_object_ref sym);
   jank_object_ref jank_ns_intern_c(char const * const sym);
@@ -318,7 +322,11 @@ extern "C"
   char const *jank_to_string(jank_object_ref o);
   char const *jank_to_code_string(jank_object_ref o);
   jank_i64 jank_to_integer(jank_object_ref o);
+  jank_f64 jank_to_real(jank_object_ref o);
   jank_i64 jank_shift_mask_case_integer(jank_object_ref o, jank_i64 shift, jank_i64 mask);
+
+  jank_object_ref jank_first(jank_object_ref o);
+  jank_object_ref jank_second(jank_object_ref o);
 
   void jank_set_meta(jank_object_ref o, jank_object_ref meta);
 
@@ -344,6 +352,16 @@ extern "C"
                         char const * const pch_data,
                         jank_usize pch_size,
                         int (*fn)(int const, char const ** const));
+
+  void jank_override_resource_dir(char const * const jank_resource_dir);
+  int jank_init_dynamic_embedded(jank_bool const init_default_ctx,
+                                 char const * const pch_data,
+                                 jank_usize pch_size);
+  void jank_shutdown_dynamic_embedded();
+
+  void jank_init_core_libs();
+
+  bool jank_check_health();
 
   jank_object_ref jank_parse_command_line_args(int const argc, char const * const * const argv);
 

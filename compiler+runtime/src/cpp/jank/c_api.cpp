@@ -56,6 +56,17 @@ extern "C"
     return __rt_ctx->eval(o_obj).erase().raw();
   }
 
+  jank_object_ref jank_eval_file(jank_object_ref const path)
+  {
+    object_ref const path_obj(reinterpret_cast<object *>(path));
+    return __rt_ctx->eval_file(path_obj.to_string()).unwrap_or(jank_nil).erase().raw();
+  }
+
+  jank_object_ref jank_eval_file_c(char const * const path)
+  {
+    return __rt_ctx->eval_file(path).unwrap_or(jank_nil).erase().raw();
+  }
+
   jank_object_ref jank_read_string(jank_object_ref const s)
   {
     auto const s_obj(try_object<obj::persistent_string>(reinterpret_cast<object *>(s)));
@@ -65,6 +76,11 @@ extern "C"
   jank_object_ref jank_read_string_c(char const * const s)
   {
     return __rt_ctx->read_string(s).erase().raw();
+  }
+
+  void jank_require_c(char const * const ns)
+  {
+    __rt_ctx->load_module(ns, module::origin::latest).expect_ok();
   }
 
   jank_object_ref jank_ns_intern(jank_object_ref const sym)
@@ -946,6 +962,12 @@ extern "C"
     return to_integer_or_hash(o_obj);
   }
 
+  jank_f64 jank_to_real(jank_object_ref const o)
+  {
+    object_ref const o_obj(reinterpret_cast<object *>(o));
+    return to_real(o_obj);
+  }
+
   jank_i64
   jank_shift_mask_case_integer(jank_object_ref const o, jank_i64 const shift, jank_i64 const mask)
   {
@@ -965,6 +987,18 @@ extern "C"
       integer = (integer >> shift) & mask;
     }
     return integer;
+  }
+
+  jank_object_ref jank_first(jank_object_ref o)
+  {
+    object_ref const o_obj(reinterpret_cast<object *>(o));
+    return runtime::first(o_obj).raw();
+  }
+
+  jank_object_ref jank_second(jank_object_ref o)
+  {
+    object_ref const o_obj(reinterpret_cast<object *>(o));
+    return runtime::second(o_obj).raw();
   }
 
   void jank_set_meta(jank_object_ref const o, jank_object_ref const meta)
