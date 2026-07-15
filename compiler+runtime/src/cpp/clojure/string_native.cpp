@@ -18,16 +18,6 @@ namespace clojure::string_native
   using namespace jank;
   using namespace jank::runtime;
 
-  bool blank(object_ref const s)
-  {
-    if(runtime::is_nil(s))
-    {
-      return true;
-    }
-    auto const s_str(runtime::to_string(s));
-    return s_str.is_blank();
-  }
-
   jtl::immutable_string reverse(jtl::immutable_string const &s)
   {
     jtl::string_builder buff{ s.size() };
