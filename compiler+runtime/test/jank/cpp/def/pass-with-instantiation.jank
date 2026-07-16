@@ -1,0 +1,8 @@
+(cpp/raw "namespace jank::cpp::def::pass_with_instantiation { struct Point { int x; int y; }; }")
+(cpp/def (:* cpp/jank.cpp.def.pass_with_instantiation.Point)
+  jank-cpp-def-pass-with-instantiation
+  (cpp/new cpp/jank.cpp.def.pass_with_instantiation.Point #cpp 1 #cpp 2))
+
+(if (and (= (.-x jank-cpp-def-pass-with-instantiation) 1)
+         (= (.-y jank-cpp-def-pass-with-instantiation) 2))
+  :success)

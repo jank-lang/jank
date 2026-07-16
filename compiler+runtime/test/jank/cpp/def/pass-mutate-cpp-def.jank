@@ -1,0 +1,6 @@
+(cpp/def (std.vector int) jank-cpp-def-pass-mutate-cpp-def-vec [1 2])
+
+(.emplace_back jank-cpp-def-pass-mutate-cpp-def-vec (cpp/int 5))
+
+(if (= jank-cpp-def-pass-mutate-cpp-def-vec [1 2 5])
+  :success)

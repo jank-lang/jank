@@ -83,6 +83,7 @@ namespace jank::analyze
     cpp_box,
     cpp_unbox,
     cpp_new,
+    cpp_def,
     cpp_delete,
     cpp_value_max = cpp_delete,
   };
@@ -161,6 +162,8 @@ namespace jank::analyze
         return "cpp_unbox";
       case expression_kind::cpp_new:
         return "cpp_new";
+      case expression_kind::cpp_def:
+        return "cpp_def";
       case expression_kind::cpp_delete:
         return "cpp_delete";
     }

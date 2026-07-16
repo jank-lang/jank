@@ -153,6 +153,7 @@ namespace jank::ir
                          identifier const &meta,
                          analyze::expr::cpp_unbox_ref const expr);
     identifier cpp_new(identifier const &value, analyze::expr::cpp_new_ref const expr);
+    identifier cpp_def(jtl::option<identifier> const &value, analyze::expr::cpp_def_ref const expr);
     identifier cpp_delete(identifier const &value, analyze::expr::cpp_delete_ref const expr);
     identifier source_location(read::source const &location);
 
