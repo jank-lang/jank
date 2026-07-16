@@ -114,12 +114,9 @@ namespace jank::ir
             auto &default_block{ fn.blocks[fn.find_block(default_block_name)] };
             build_rpo(fn, default_block, rpo, seen);
 
-            if(i.merge_block.is_some())
-            {
-              auto const &merge_block_name{ i.merge_block.unwrap() };
-              auto &merge_block{ fn.blocks[fn.find_block(merge_block_name)] };
-              build_rpo(fn, merge_block, rpo, seen);
-            }
+            auto const &merge_block_name{ i.merge_block };
+            auto &merge_block{ fn.blocks[fn.find_block(merge_block_name)] };
+            build_rpo(fn, merge_block, rpo, seen);
           }
           break;
         case instruction_kind::try_:
@@ -213,10 +210,7 @@ namespace jank::ir
                 preds[p.second].push_back(b.name);
               }
               preds[i.default_block].push_back(b.name);
-              if(i.merge_block.is_some())
-              {
-                preds[i.merge_block.unwrap()].push_back(b.name);
-              }
+              preds[i.merge_block].push_back(b.name);
             }
             break;
           case instruction_kind::try_:

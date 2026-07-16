@@ -450,8 +450,7 @@ namespace jank::ir
                             identifier const &value,
                             native_unordered_map<i64, identifier> &&cases,
                             identifier const &default_block,
-                            jtl::option<identifier> const &merge_block,
-                            jtl::option<identifier> const &shadow)
+                            identifier const &merge_block)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
@@ -462,8 +461,7 @@ namespace jank::ir
                                  value,
                                  jtl::move(cases),
                                  default_block,
-                                 merge_block,
-                                 shadow));
+                                 merge_block));
     return name;
   }
 

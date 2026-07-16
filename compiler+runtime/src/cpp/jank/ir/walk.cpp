@@ -265,6 +265,7 @@ namespace jank::ir
   {
     s.next_instruction();
     f(instr, s.current_block());
+
     s.enter_block(instr->loop_block);
     walk_until_jump(instr->merge_block, f, s);
 
@@ -343,10 +344,7 @@ namespace jank::ir
     s.enter_block(instr->default_block);
     walk_until_jump(instr->merge_block, f, s);
 
-    if(instr->merge_block.is_some())
-    {
-      s.enter_block(instr->merge_block.unwrap());
-    }
+    s.enter_block(instr->merge_block);
   }
 
   void walk_typed(ir::inst::ret_ref const instr, instruction_walk_function const &f, state &s)
@@ -636,8 +634,12 @@ namespace jank::ir
     f(instr->condition);
   }
 
-  void walk_references_typed(ir::inst::loop_ref const, reference_walk_function const &)
+  void walk_references_typed(ir::inst::loop_ref const instr, reference_walk_function const &f)
   {
+    for(auto const &shadow : instr->binding_shadows)
+    {
+      f(shadow.value);
+    }
   }
 
   void walk_references_typed(ir::inst::throw_ref const instr, reference_walk_function const &f)

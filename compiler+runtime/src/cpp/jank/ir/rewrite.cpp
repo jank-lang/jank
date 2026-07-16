@@ -186,7 +186,6 @@ namespace jank::ir
       case instruction_kind::case_:
         {
           auto &i{ static_cast<inst::case_ &>(*inst.data) };
-          rewritten |= rewrite(i.shadow, old_name, new_name);
           for(auto &b : i.case_blocks)
           {
             rewritten |= rewrite(b.second, old_name, new_name);

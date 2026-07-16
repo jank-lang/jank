@@ -538,8 +538,7 @@ namespace jank::ir
             identifier const &value,
             native_unordered_map<i64, identifier> &&case_blocks,
             identifier const &default_block,
-            jtl::option<identifier> const &merge_block,
-            jtl::option<identifier> const &shadow);
+            identifier const &merge_block);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;
@@ -549,8 +548,7 @@ namespace jank::ir
       identifier value;
       native_unordered_map<i64, identifier> case_blocks;
       identifier default_block;
-      jtl::option<identifier> merge_block;
-      jtl::option<identifier> shadow;
+      identifier merge_block;
     };
 
     using case_ref = jtl::ref<case_>;

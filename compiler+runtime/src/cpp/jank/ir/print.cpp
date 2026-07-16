@@ -403,10 +403,9 @@ namespace jank::ir
       util::format_to(sb, "{:value {} :block {}}", c.first, c.second);
     }
     util::format_to(sb,
-                    "] :default-block {} :merge-block {} :shadow {} :type \"{}\"}",
+                    "] :default-block {} :merge-block {} :type \"{}\"}",
                     default_block,
-                    merge_block.unwrap_or("nil"),
-                    shadow.unwrap_or("nil"),
+                    merge_block,
                     get_qualified_type_name(type));
   }
 

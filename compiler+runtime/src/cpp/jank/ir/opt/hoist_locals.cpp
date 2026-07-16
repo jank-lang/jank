@@ -192,10 +192,6 @@ namespace jank::ir
         auto const target_scope{ lcd_scope(info.definition_scope_stack,
                                            info.lowest_used_scope_stack) };
         auto const target_block{ collection.scope_to_block.at(target_scope) };
-        //util::println("adding local for {} in scope {}, with a set in scope {}",
-        //              local,
-        //              target_scope,
-        //              top_scope(info.definition_scope_stack));
         {
           auto &lowest_block{ fn.blocks[fn.find_block(target_block)] };
           auto const lowest_block_it{ std::ranges::find_if(
@@ -226,6 +222,14 @@ namespace jank::ir
                                                                        info.inst->location,
                                                                        info.inst->name,
                                                                        def_name));
+
+          //util::println("adding local for {} in scope {}, with a set in scope {}; original def "
+          //              "gets name {} and set is named {}",
+          //              local,
+          //              target_scope,
+          //              top_scope(info.definition_scope_stack),
+          //              def_name,
+          //              set_name);
         }
 
         info.inst->name = def_name;

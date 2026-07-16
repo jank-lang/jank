@@ -477,7 +477,7 @@ namespace jank::ir
       b.locals[name] = gen(pair.second, b).unwrap();
 
       auto const local_type{ pair.second->get_type() };
-      if(expr->loop_kind != analyze::expr::let::loop_kind::none && is_typed_object(local_type))
+      if(expr->loop_kind != analyze::expr::let::loop_kind::normal && is_typed_object(local_type))
       {
         auto &local{ b.locals[name] };
         local = b.type_erase(analyze::expression_position::value, local);
@@ -606,7 +606,7 @@ namespace jank::ir
     auto const else_blk{ b.block(b.next_ident("else")) };
     auto const merge_blk{ b.block(b.next_ident("if-merge")) };
     auto const condition_name{ gen(expr->condition, b).unwrap() };
-    auto local{ b.local(analyze::cpp_util::mutable_type(expr->get_type())) };
+    auto local{ b.local(expr->get_type()) };
     auto const original_pos{ expr->position };
 
     /* Force value position, since we're going to use a merge block regardless. */
@@ -731,8 +731,12 @@ namespace jank::ir
   {
     auto const value_ident{ gen(expr->value_expr, b).unwrap() };
     auto const starting_block{ b.current_block()->index };
-    auto const shadow{ b.next_shadow() };
+    auto local{ b.local(expr->get_type()) };
     auto const merge_blk{ b.block(b.next_ident("case-merge")) };
+    auto const original_pos{ expr->position };
+
+    /* Force value position, since we're going to use a merge block regardless. */
+    expr->propagate_position(analyze::expression_position::value);
 
     native_unordered_map<i64, identifier> cases;
     for(usize i{}; i < expr->keys.size(); ++i)
@@ -745,7 +749,7 @@ namespace jank::ir
       if(expr->position != analyze::expression_position::tail
          && !b.current_block()->has_terminator())
       {
-        b.branch_set(shadow, case_res.unwrap());
+        b.branch_set(local, case_res.unwrap());
         b.jump(merge_blk);
       }
     }
@@ -754,9 +758,9 @@ namespace jank::ir
     b.enter_block(default_block);
     auto const default_res{ gen(expr->default_expr, b) };
 
-    if(expr->position != analyze::expression_position::tail && !b.current_block()->has_terminator())
+    if(!b.current_block()->has_terminator())
     {
-      b.branch_set(shadow, default_res.unwrap());
+      b.set_local(local, default_res.unwrap());
       b.jump(merge_blk);
     }
 
@@ -766,19 +770,14 @@ namespace jank::ir
             value_ident,
             jtl::move(cases),
             b.block_name(default_block),
-            (expr->position != analyze::expression_position::tail) ? b.block_name(merge_blk)
-                                                                   : jtl::option<identifier>{},
-            (expr->position != analyze::expression_position::tail) ? shadow
-                                                                   : jtl::option<identifier>{});
+            b.block_name(merge_blk));
 
-    if(expr->position != analyze::expression_position::tail)
+    b.enter_block(merge_blk);
+    if(original_pos == analyze::expression_position::tail)
     {
-      b.enter_block(merge_blk);
-      return b.branch_get(shadow, untyped_object_ref_type());
+      return b.ret(local, untyped_object_ref_type());
     }
-
-    b.remove_block(merge_blk);
-    return none;
+    return local;
   }
 
   jtl::option<identifier> gen(analyze::expr::cpp_raw_ref const expr, builder &b)

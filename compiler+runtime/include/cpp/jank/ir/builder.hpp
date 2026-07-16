@@ -37,7 +37,6 @@ namespace jank::ir
     identifier next_ident();
     identifier next_ident(jtl::immutable_string const &prefix);
     identifier next_shadow();
-    identifier next_local();
 
     jtl::ref<function> current_function() const;
 
@@ -119,8 +118,7 @@ namespace jank::ir
                      identifier const &value,
                      native_unordered_map<i64, identifier> &&cases,
                      identifier const &default_block,
-                     jtl::option<identifier> const &merge_block,
-                     jtl::option<identifier> const &shadow);
+                     identifier const &merge_block);
     identifier try_(native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches,
                     identifier const &merge_block,
                     identifier const &shadow,

@@ -1071,11 +1071,6 @@ namespace jank::codegen
   {
     b.next_instruction();
 
-    if(inst->shadow.is_some())
-    {
-      util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->shadow.unwrap());
-    }
-
     util::format_to(b.body_buffer,
                     "switch(jank_shift_mask_case_integer(static_cast<jank::runtime::object*>({}."
                     "erase().raw()), {}, {})) {\n",
@@ -1098,10 +1093,7 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer, "}\n");
 
-    if(inst->merge_block.is_some())
-    {
-      b.enter_block(inst->merge_block.unwrap());
-    }
+    b.enter_block(inst->merge_block);
 
     return none;
   }
@@ -1114,17 +1106,29 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_scope_open_ref const &, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_scope_open_ref const &inst, builder &b)
   {
     b.next_instruction();
+
+    if(inst->name == "s0")
+    {
+      return none;
+    }
+
     util::format_to(b.body_buffer, "{");
 
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_scope_close_ref const &, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_scope_close_ref const &inst, builder &b)
   {
     b.next_instruction();
+
+    if(inst->scope == "s0")
+    {
+      return none;
+    }
+
     util::format_to(b.body_buffer, "}");
 
     return none;
