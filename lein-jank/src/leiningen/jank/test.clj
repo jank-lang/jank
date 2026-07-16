@@ -102,7 +102,7 @@
   `(distinct
     (for [ns# ~ns-sym
           [_# var#] (ns-publics ns#)
-          :when (and (clojure.test/-workaround-get-test var#)
+          :when (and (-> var# meta :test)
                      (some (fn [[selector# args#]]
 
                              (apply (if (vector? selector#)
