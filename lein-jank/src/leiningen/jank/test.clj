@@ -46,7 +46,7 @@
             vars))])
 
 (defn ^:internal read-args [args project]
-  (let [args (->> args (map convert-to-ns) (map read-string))
+  (let [args (->> args (map (comp str convert-to-ns)) (map read-string))
         [nses given-selectors] (split-selectors args)
         nses (or (seq nses)
                  (sort (d/jank-namespaces (distinct (:test-paths project)))))

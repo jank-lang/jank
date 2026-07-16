@@ -86,7 +86,7 @@ To override the inferred output target, you can pass `--output-target TARGET`
   "Run the project's tests.
 
 Keyword arguments are interpreted as test selectors and other arguments as test
-namespaces."
+namespaces or files."
   [project & args]
   (let [project          (lproj/merge-profiles project [:leiningen/test :test])
         [opts args]      (ljc/parse-opts #'test! args ljc/standard-options)
