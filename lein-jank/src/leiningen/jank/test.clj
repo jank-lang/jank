@@ -129,8 +129,9 @@
                                   (int (:fail summary#))))]
            (cpp/exit exit-code#))))))
 
-(defn- generate-test-runner! [form]
-  (let [test-runner-file (fs/create-temp-file {:prefix "jank_test_runner"
+(defn generate-test-runner! [nses selectors]
+  (let [form (form-for-testing-namespaces nses selectors)
+        test-runner-file (fs/create-temp-file {:prefix "jank_test_runner"
                                                :suffix ".jank"})]
     (spit (fs/file test-runner-file)
           (string/join
@@ -140,12 +141,3 @@
             (pr-str form)]))
 
     test-runner-file))
-
-(defn test! [project & args]
-  (let [project (p/merge-profiles project [:leiningen/test :test])
-        cp-str (ljc/build-module-path project)
-        [nses selectors] (read-args args project)
-        form (form-for-testing-namespaces nses (vec selectors))
-
-        test-runner-file (generate-test-runner! form)]
-    (ljc/shell-out! project cp-str "run" [(str test-runner-file)] [])))

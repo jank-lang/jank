@@ -1,6 +1,7 @@
 (ns leiningen.jank
   (:refer-clojure :exclude [run!])
   (:require [leiningen.core.main :as lmain]
+            [leiningen.core.project :as lproj]
             [leiningen.jank.core :as ljc]
             [leiningen.jank.test :as ljt]
             [leiningen.help :as lhelp]
@@ -81,6 +82,18 @@ To override the inferred output target, you can pass `--output-target TARGET`
                    (concat [(:module opts)] name-opts target-opts)
                    args)))
 
+(defn test!
+  "Run the project's tests.
+
+Keyword arguments are interpreted as test selectors and other arguments as test
+namespaces."
+  [project & args]
+  (let [project          (lproj/merge-profiles project [:leiningen/test :test])
+        [opts args]      (ljc/parse-opts #'test! args ljc/standard-options)
+        [nses selectors] (ljt/read-args args project)
+        test-runner      (ljt/generate-test-runner! nses (vec selectors))]
+    (dispatch-jank project opts "run" [test-runner] [])))
+
 (defn check-health!
   "Perform a health check on your jank install."
   [project & args]
@@ -92,7 +105,7 @@ To override the inferred output target, you can pass `--output-target TARGET`
                       :compile #'compile!
                       :compile-module #'compile-module!
                       :check-health #'check-health!
-                      :test #'ljt/test!})
+                      :test #'test!})
 
 (defn jank
   "Compile, run, test and repl into jank.
