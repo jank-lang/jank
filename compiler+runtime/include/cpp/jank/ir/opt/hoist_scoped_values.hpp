@@ -4,5 +4,5 @@ namespace jank::ir
 {
   struct function;
 
-  void hoist_locals(function &fn);
+  void hoist_scoped_values(function &fn);
 }

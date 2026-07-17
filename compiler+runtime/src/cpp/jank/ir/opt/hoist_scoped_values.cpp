@@ -19,7 +19,7 @@
  *
  * This is done by keeping a scope stack for the definition of each instruction, as well
  * as the "lowest" reference to that instruction. Scope stack comparison is done by a
- * least-common-denominator algorithm, so that even sibling scope stacks will find
+ * least-common-ancestor algorithm, so that even sibling scope stacks will find
  * a commonality with their parent.
  *
  * The logic in this pass is built on the assumption that every function starts with
@@ -48,7 +48,7 @@ namespace jank::ir
     return scope_stack.back();
   }
 
-  /* Given two scope stacks, this finds the least-common-denominator. For example, given these
+  /* Given two scope stacks, this finds the least-common-ancestor. For example, given these
    * two scope stacks:
    *
    * LHS: s0 s1
@@ -56,10 +56,11 @@ namespace jank::ir
    *
    * The common demoninator would be s0. */
   static identifier
-  lcd_scope(native_deque<identifier> const &lhs, native_deque<identifier> const &rhs)
+  lca_scope(native_deque<identifier> const &lhs, native_deque<identifier> const &rhs)
   {
     jank_debug_assert(!lhs.empty());
     jank_debug_assert(!rhs.empty());
+    jank_debug_assert(lhs[0] == rhs[0]);
 
     for(usize i{}; i < lhs.size(); ++i)
     {
@@ -75,16 +76,16 @@ namespace jank::ir
     return lhs.back();
   }
 
-  /* This determines if a scope stack LHS has a lower least-common-denominator than RHS, relative
+  /* This determines if a scope stack LHS has a lower least-common-ancestor than RHS, relative
    * to the definition scope stack of an IR value. */
   static bool is_scope_stack_less_nested(native_deque<identifier> const &def,
                                          native_deque<identifier> const &lhs,
                                          native_deque<identifier> const &rhs)
   {
     /* NOLINTNEXTLINE(readability-suspicious-call-argument) */
-    auto const &lhs_lcd{ lcd_scope(def, lhs) };
-    auto const &rhs_lcd{ lcd_scope(def, rhs) };
-    return std::stoi(lhs_lcd.substr(1)) < std::stoi(rhs_lcd.substr(1));
+    auto const &lhs_lca{ lca_scope(def, lhs) };
+    auto const &rhs_lca{ lca_scope(def, rhs) };
+    return std::stoi(lhs_lca.substr(1)) < std::stoi(rhs_lca.substr(1));
   }
 
   static bool is_scope_stack_less_nested_or_equal(native_deque<identifier> const &def,
@@ -92,9 +93,9 @@ namespace jank::ir
                                                   native_deque<identifier> const &rhs)
   {
     /* NOLINTNEXTLINE(readability-suspicious-call-argument) */
-    auto const &lhs_lcd{ lcd_scope(def, lhs) };
-    auto const &rhs_lcd{ lcd_scope(def, rhs) };
-    return std::stoi(lhs_lcd.substr(1)) <= std::stoi(rhs_lcd.substr(1));
+    auto const &lhs_lca{ lca_scope(def, lhs) };
+    auto const &rhs_lca{ lca_scope(def, rhs) };
+    return std::stoi(lhs_lca.substr(1)) <= std::stoi(rhs_lca.substr(1));
   }
 
   static collection collect_locals(function const &fn)
@@ -151,7 +152,7 @@ namespace jank::ir
     return ret;
   }
 
-  void hoist_locals(function &fn)
+  void hoist_scoped_values(function &fn)
   {
     auto const collection{ collect_locals(fn) };
 
@@ -183,7 +184,7 @@ namespace jank::ir
             top_scope(info.lowest_used_scope_stack));
         replace_with_nop(fn, info.definition_block, local);
 
-        auto const target_scope{ lcd_scope(info.definition_scope_stack,
+        auto const target_scope{ lca_scope(info.definition_scope_stack,
                                            info.lowest_used_scope_stack) };
         auto const target_block{ collection.scope_to_block.at(target_scope) };
         auto &lowest_block{ fn.blocks[fn.find_block(target_block)] };
@@ -193,7 +194,7 @@ namespace jank::ir
         jank_debug_assert(it + 1 != lowest_block.instructions.end());
         lowest_block.instructions.insert(it + 1, info.inst.data);
       }
-      /* For every other type of instruction, we insert a new local, at the LCD scope, and
+      /* For every other type of instruction, we insert a new local, at the LCA scope, and
        * then we insert a new set-local instruction at the previous definition scope.
        *
        * The new local has the old definition name, so we don't need to rewrite all of the
@@ -201,7 +202,7 @@ namespace jank::ir
        * only used with the set-local. */
       else
       {
-        auto const target_scope{ lcd_scope(info.definition_scope_stack,
+        auto const target_scope{ lca_scope(info.definition_scope_stack,
                                            info.lowest_used_scope_stack) };
         auto const target_block{ collection.scope_to_block.at(target_scope) };
         {

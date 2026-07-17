@@ -1,7 +1,7 @@
 #include <jank/ir/processor.hpp>
 #include <jank/ir/print.hpp>
 #include <jank/ir/dominance.hpp>
-#include <jank/ir/opt/hoist_locals.hpp>
+#include <jank/ir/opt/hoist_scoped_values.hpp>
 #include <jank/ir/opt/hoist_literals.hpp>
 #include <jank/ir/opt/hoist_var_derefs.hpp>
 #include <jank/ir/opt/remove_nops.hpp>
@@ -937,7 +937,7 @@ namespace jank::ir
         hoist_var_derefs(fn);
       }
 
-      hoist_locals(fn);
+      hoist_scoped_values(fn);
 
       if(util::cli::opts.remove_nops)
       {

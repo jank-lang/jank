@@ -827,7 +827,7 @@ add_library(
   src/cpp/jank/ir/rewrite.cpp
   src/cpp/jank/ir/util.cpp
   src/cpp/jank/ir/walk.cpp
-  src/cpp/jank/ir/opt/hoist_locals.cpp
+  src/cpp/jank/ir/opt/hoist_scoped_values.cpp
   src/cpp/jank/ir/opt/hoist_literals.cpp
   src/cpp/jank/ir/opt/hoist_var_derefs.cpp
   src/cpp/jank/ir/opt/remove_nops.cpp
