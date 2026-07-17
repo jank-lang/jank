@@ -34,3 +34,6 @@ fail-non-symbol.jank
 fail-no-quote.jank
 fail-condition-not-convertible-to-bool.jank
 throw-return-position.jank
+throw-value.jank
+throw-branch.jank
+throw-default.jank
