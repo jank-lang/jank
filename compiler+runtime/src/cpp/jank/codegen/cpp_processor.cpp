@@ -985,6 +985,14 @@ namespace jank::codegen
     util::format_to(b.body_buffer,
                     "throw static_cast<jank::runtime::object_ref>({});\n",
                     inst->value);
+
+    /* If there are any instructions after the throw, like scope closes, we need to handle
+     * them, too. */
+    while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
+    {
+      gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
+    }
+
     return none;
   }
 
@@ -1114,7 +1122,7 @@ namespace jank::codegen
       return none;
     }
 
-    util::format_to(b.body_buffer, "{");
+    util::format_to(b.body_buffer, "{ // {}\n", inst->name);
 
     return none;
   }
@@ -1128,7 +1136,7 @@ namespace jank::codegen
       return none;
     }
 
-    util::format_to(b.body_buffer, "}");
+    util::format_to(b.body_buffer, "} // {}\n", inst->scope);
 
     return none;
   }

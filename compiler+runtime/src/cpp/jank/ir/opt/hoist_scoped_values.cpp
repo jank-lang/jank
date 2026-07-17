@@ -45,6 +45,10 @@ namespace jank::ir
 
   static identifier top_scope(native_deque<identifier> const &scope_stack)
   {
+    if(scope_stack.empty())
+    {
+      return {};
+    }
     return scope_stack.back();
   }
 

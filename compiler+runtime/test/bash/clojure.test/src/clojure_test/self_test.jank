@@ -7,8 +7,7 @@
 (deftest pass-test (is (= 1 1)))
 (deftest fail-test (is (= 1 2)))
 (deftest thrown-without-throw-test (is (thrown? 1)))
-;;TODO waiting on regex support
-;(deftest thrown-with-msg-test (is (thrown-with-msg? #"a" (throw (ex-info "a" {})))))
+(deftest thrown-with-msg-test (is (thrown-with-msg? #"a" (throw (ex-info "a" {})))))
 (if windows?
   (println :skipping 'clojure-test.self-test.thrown-test 'clojure-test.self-test.error-test)
   (do
@@ -34,10 +33,10 @@
       (assert (= {:test 1, :pass 0, :fail 0, :error 1, :type :summary}
                  (t/run-test error-test)))
       (println '(t/run-tests 'clojure-test.self-test))
-      (assert (= {:test 5, :pass 2, :fail 2, :error 1, :type :summary}
+      (assert (= {:test 6, :pass 3, :fail 2, :error 1, :type :summary}
                  (t/run-tests 'clojure-test.self-test))))
     (do
       (println '(t/run-tests 'clojure-test.self-test))
-      (assert (= {:test 3, :pass 1, :fail 2, :error 0, :type :summary}
+      (assert (= {:test 4, :pass 2, :fail 2, :error 0, :type :summary}
                  (t/run-tests 'clojure-test.self-test)))))
   (println :successfully-finished-clojure-test-self-test))

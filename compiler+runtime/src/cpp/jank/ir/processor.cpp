@@ -64,6 +64,7 @@ namespace jank::ir
       return false;
     }
 
+    /* We allow scope closes to come after terminators. */
     for(auto it{ instructions.rbegin() }; it != instructions.rend(); ++it)
     {
       if((*it)->kind == instruction_kind::cpp_scope_close)
@@ -602,10 +603,16 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::if_ref const expr, builder &b)
   {
+    auto const condition_name{ gen(expr->condition, b).unwrap() };
+
+    if(b.current_block()->has_terminator())
+    {
+      return none;
+    }
+
     auto const then_blk{ b.block(b.next_ident("if")) };
     auto const else_blk{ b.block(b.next_ident("else")) };
     auto const merge_blk{ b.block(b.next_ident("if-merge")) };
-    auto const condition_name{ gen(expr->condition, b).unwrap() };
     auto local{ b.local(expr->get_type()) };
     auto const original_pos{ expr->position };
 
@@ -681,7 +688,11 @@ namespace jank::ir
       b.finally(b.block_name(merge_blk));
 
       gen(expr->finally_body.unwrap(), b);
-      b.jump(merge_blk);
+
+      if(!b.current_block()->has_terminator())
+      {
+        b.jump(merge_blk);
+      }
     }
 
     /* Force value position, since we're going to use a merge block regardless. */
@@ -730,6 +741,12 @@ namespace jank::ir
   jtl::option<identifier> gen(analyze::expr::case_ref const expr, builder &b)
   {
     auto const value_ident{ gen(expr->value_expr, b).unwrap() };
+
+    if(b.current_block()->has_terminator())
+    {
+      return none;
+    }
+
     auto const starting_block{ b.current_block()->index };
     auto local{ b.local(expr->get_type()) };
     auto const merge_blk{ b.block(b.next_ident("case-merge")) };
