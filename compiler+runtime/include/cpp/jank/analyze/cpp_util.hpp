@@ -67,6 +67,7 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> untyped_object_ref_type();
   jtl::ptr<void> char_type();
   jtl::ptr<void> bool_type();
+  jtl::ptr<void> nil_ref_type();
   jtl::ptr<void> var_type();
   jtl::ptr<void> persistent_list_ref_type();
   jtl::ptr<void> persistent_vector_ref_type();

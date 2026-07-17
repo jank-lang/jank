@@ -7,6 +7,23 @@
 #include <jank/ir/walk.hpp>
 #include <jank/util/fmt/print.hpp>
 
+/* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
+#define LOG(...) (void)0;
+/* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
+//#define LOG(...) jank::util::println(__VA_ARGS__);
+
+/* This IR pass walks through every block and instruction of a function, in lexical order,
+ * and tracks the scope information for every instruction. It then tracks each reference
+ * of each IR value and determines if any values need to be lifted up into a higher scope
+ * in order to be accessible when it comes down to C++ code generation.
+ *
+ * This is done by keeping a scope stack for the definition of each instruction, as well
+ * as the "lowest" reference to that instruction. Scope stack comparison is done by a
+ * least-common-denominator algorithm, so that even sibling scope stacks will find
+ * a commonality with their parent.
+ *
+ * The logic in this pass is built on the assumption that every function starts with
+ * its own scope open/close, so that every IR value has a non-empty scope stack. */
 namespace jank::ir
 {
   struct scope_info
@@ -18,40 +35,26 @@ namespace jank::ir
     identifier lowest_used_block{};
   };
 
+  /* This is the result of our collection, which keeps track of a map of IR names to their
+   * scope info and also a helpful map of scope names to blocks. */
   struct collection
   {
-    native_unordered_map<identifier, scope_info> locals;
+    native_unordered_map<identifier, scope_info> name_to_info;
     native_unordered_map<identifier, identifier> scope_to_block;
   };
 
   static identifier top_scope(native_deque<identifier> const &scope_stack)
   {
-    if(scope_stack.empty())
-    {
-      return {};
-    }
     return scope_stack.back();
   }
 
-  //static bool does_left_scope_stack_dominate(native_deque<identifier> const &lhs,
-  //                                           native_deque<identifier> const &rhs)
-  //{
-  //  if(rhs.size() < lhs.size())
-  //  {
-  //    return false;
-  //  }
-
-  //  for(usize i{}; i != lhs.size(); ++i)
-  //  {
-  //    if(lhs[i] != rhs[i])
-  //    {
-  //      return false;
-  //    }
-  //  }
-
-  //  return true;
-  //}
-
+  /* Given two scope stacks, this finds the least-common-denominator. For example, given these
+   * two scope stacks:
+   *
+   * LHS: s0 s1
+   * RHS: s0 s2 s3
+   *
+   * The common demoninator would be s0. */
   static identifier
   lcd_scope(native_deque<identifier> const &lhs, native_deque<identifier> const &rhs)
   {
@@ -72,9 +75,8 @@ namespace jank::ir
     return lhs.back();
   }
 
-  // def: s0 s1
-  // lhs: s0 s1 s2
-  // rhs: s0 s3
+  /* This determines if a scope stack LHS has a lower least-common-denominator than RHS, relative
+   * to the definition scope stack of an IR value. */
   static bool is_scope_stack_less_nested(native_deque<identifier> const &def,
                                          native_deque<identifier> const &lhs,
                                          native_deque<identifier> const &rhs)
@@ -106,36 +108,42 @@ namespace jank::ir
         auto const &i{ static_cast<inst::cpp_scope_open &>(*instr.data) };
         scope_stack.push_back(i.name);
         ret.scope_to_block.emplace(i.name, block);
-        //util::println("entering scope {}", i.name);
+        LOG("entering scope {}", i.name);
         return;
       }
       else if(instr->kind == instruction_kind::cpp_scope_close)
       {
-        //util::println("exiting scope {}", scope_stack.back());
+        LOG("exiting scope {}", scope_stack.back());
         scope_stack.pop_back();
         return;
       }
 
-      ret.locals[instr->name] = scope_info{ instr.data, scope_stack, block };
+      ret.name_to_info[instr->name] = scope_info{ instr.data, scope_stack, block };
 
       walk_references(instr, [&](identifier const &ref) {
-        auto &local{ ret.locals.at(ref) };
+        /* This is a special identifier used for deferred captures. Ignore it. */
+        if(ref == ":defer")
+        {
+          return;
+        }
+
+        auto &local{ ret.name_to_info.at(ref) };
         if(!scope_stack.empty()
            && (local.lowest_used_scope_stack.empty()
                || is_scope_stack_less_nested(local.definition_scope_stack,
                                              scope_stack,
                                              local.lowest_used_scope_stack)))
         {
-          //util::println("new lowest scope for local {}: {}", ref, top_scope(scope_stack));
+          LOG("new lowest scope for local {}: {}", ref, top_scope(scope_stack));
           local.lowest_used_scope_stack = scope_stack;
           local.lowest_used_block = ret.scope_to_block.at(top_scope(local.lowest_used_scope_stack));
         }
         else
         {
-          //util::println("{} already has a scope just as low as {} ({})",
-          //              ref,
-          //              top_scope(scope_stack),
-          //              top_scope(local.lowest_used_scope_stack));
+          LOG("{} already has a scope just as low as {} ({})",
+              ref,
+              top_scope(scope_stack),
+              top_scope(local.lowest_used_scope_stack));
         }
       });
     });
@@ -147,15 +155,11 @@ namespace jank::ir
   {
     auto const collection{ collect_locals(fn) };
 
-    for(auto const &[local, info] : collection.locals)
+    for(auto const &[local, info] : collection.name_to_info)
     {
+      /* TODO: We could nop this out, if we also nop out all of the corresponding set-locals. */
       if(info.lowest_used_scope_stack.empty())
       {
-        //if(info.inst->kind == instruction_kind::local)
-        //{
-        //  util::println("removing unused local {}", local);
-        //  replace_with_nop(fn, info.definition_block, local);
-        //}
         continue;
       }
 
@@ -163,18 +167,20 @@ namespace jank::ir
                                              info.definition_scope_stack,
                                              info.lowest_used_scope_stack))
       {
-        //util::println("not changing {}, since it's already in a good scope (lowest: {}, def: {})",
-        //              local,
-        //              top_scope(info.lowest_used_scope_stack),
-        //              top_scope(info.definition_scope_stack));
+        LOG("not changing {}, since it's already in a good scope (lowest: {}, def: {})",
+            local,
+            top_scope(info.lowest_used_scope_stack),
+            top_scope(info.definition_scope_stack));
         continue;
       }
 
+      /* For locals which need to be lifted, we insert a new local instruction at the new
+       * scope and then we nop out the old local. */
       if(info.inst->kind == instruction_kind::local)
       {
-        //util::println("nopping local {} and moving up to scope {}",
-        //              local,
-        //              top_scope(info.lowest_used_scope_stack));
+        LOG("nopping local {} and moving up to scope {}",
+            local,
+            top_scope(info.lowest_used_scope_stack));
         replace_with_nop(fn, info.definition_block, local);
 
         auto const target_scope{ lcd_scope(info.definition_scope_stack,
@@ -187,6 +193,12 @@ namespace jank::ir
         jank_debug_assert(it + 1 != lowest_block.instructions.end());
         lowest_block.instructions.insert(it + 1, info.inst.data);
       }
+      /* For every other type of instruction, we insert a new local, at the LCD scope, and
+       * then we insert a new set-local instruction at the previous definition scope.
+       *
+       * The new local has the old definition name, so we don't need to rewrite all of the
+       * names. We just replace the old definition name with a placeholder, which is then
+       * only used with the set-local. */
       else
       {
         auto const target_scope{ lcd_scope(info.definition_scope_stack,
@@ -202,7 +214,7 @@ namespace jank::ir
             lowest_block_it + 1,
             jtl::make_ref<inst::local>(info.inst->name,
                                        info.inst->location,
-                                       analyze::cpp_util::mutable_type(info.inst->type)));
+                                       analyze::cpp_util::non_void_type(info.inst->type)));
         }
 
         /* TODO: Better name. */
@@ -223,13 +235,13 @@ namespace jank::ir
                                                                        info.inst->name,
                                                                        def_name));
 
-          //util::println("adding local for {} in scope {}, with a set in scope {}; original def "
-          //              "gets name {} and set is named {}",
-          //              local,
-          //              target_scope,
-          //              top_scope(info.definition_scope_stack),
-          //              def_name,
-          //              set_name);
+          LOG("adding local for {} in scope {}, with a set in scope {}; original def "
+              "gets name {} and set is named {}",
+              local,
+              target_scope,
+              top_scope(info.definition_scope_stack),
+              def_name,
+              set_name);
         }
 
         info.inst->name = def_name;

@@ -572,8 +572,12 @@ namespace jank::ir
   {
   }
 
-  void walk_references_typed(ir::inst::closure_ref const, reference_walk_function const &)
+  void walk_references_typed(ir::inst::closure_ref const instr, reference_walk_function const &f)
   {
+    for(auto const &c : instr->captures)
+    {
+      f(c.second.name);
+    }
   }
 
   void walk_references_typed(ir::inst::nop_ref const, reference_walk_function const &)

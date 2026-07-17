@@ -486,7 +486,7 @@ namespace jank::ir
 
     if(expr->loop_kind == analyze::expr::let::loop_kind::loop_with_recur)
     {
-      auto loop_local{ b.local(analyze::cpp_util::mutable_type(expr->get_type())) };
+      auto loop_local{ b.local(expr->get_type()) };
       native_vector<inst::loop::binding_shadow_details> shadows;
       shadows.reserve(expr->pairs.size());
       for(auto const &pair : expr->pairs)
@@ -662,11 +662,12 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::try_ref const expr, builder &b)
   {
+    auto local{ b.local(expr->get_type()) };
+
     auto const try_blk{ b.block(b.next_ident("try")) };
     b.jump(try_blk);
 
     auto const merge_blk{ b.block(b.next_ident("try-merge")) };
-    auto const shadow{ b.next_shadow() };
     auto const original_pos{ expr->position };
 
     auto jump_blk{ merge_blk };
@@ -695,36 +696,35 @@ namespace jank::ir
       auto old_locals{ b.locals };
       util::scope_exit const finally{ [&] { b.locals = jtl::move(old_locals); } };
       b.locals[runtime::munge(catch_.sym->get_name())]
-        = b.catch_(catch_.type, b.block_name(merge_blk), shadow, finally_blk);
+        = b.catch_(catch_.type, b.block_name(merge_blk), local, finally_blk);
 
       auto const catch_res{ gen(catch_.body, b) };
       catch_blocks.emplace_back(catch_.type, b.block_name(catch_blk));
 
       if(!b.current_block()->has_terminator())
       {
-        b.branch_set(shadow, catch_res.unwrap());
+        b.set_local(local, catch_res.unwrap());
         b.jump(jump_blk);
       }
     }
 
     b.enter_block(try_blk);
-    b.try_(jtl::move(catch_blocks), b.block_name(merge_blk), shadow, finally_blk);
+    b.try_(jtl::move(catch_blocks), b.block_name(merge_blk), local, finally_blk);
 
     auto try_res{ gen(expr->body, b) };
 
     if(!b.current_block()->has_terminator())
     {
-      b.branch_set(shadow, try_res.unwrap());
+      b.set_local(local, try_res.unwrap());
       b.jump(jump_blk);
     }
 
     b.enter_block(merge_blk);
-    auto phi{ b.branch_get(shadow, untyped_object_ref_type()) };
     if(original_pos == analyze::expression_position::tail)
     {
-      return b.ret(phi, untyped_object_ref_type());
+      return b.ret(local, untyped_object_ref_type());
     }
-    return phi;
+    return local;
   }
 
   jtl::option<identifier> gen(analyze::expr::case_ref const expr, builder &b)
@@ -927,8 +927,6 @@ namespace jank::ir
     {
       build_dominance(fn);
 
-      hoist_locals(fn);
-
       if(util::cli::opts.hoist_literals)
       {
         hoist_literals(fn);
@@ -938,6 +936,8 @@ namespace jank::ir
       {
         hoist_var_derefs(fn);
       }
+
+      hoist_locals(fn);
 
       if(util::cli::opts.remove_nops)
       {

@@ -993,7 +993,6 @@ namespace jank::codegen
     b.next_instruction();
     auto const has_finally{ inst->finally_block.is_some() };
     identifier finally_guard_name;
-    util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->shadow);
 
     if(has_finally)
     {
@@ -1265,7 +1264,7 @@ namespace jank::codegen
       auto const is_void{ Cpp::IsVoid(Cpp::GetFunctionReturnType(source->scope)) };
       if(is_void)
       {
-        util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->name);
+        util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {};\n", inst->name);
       }
       else
       {
@@ -1334,7 +1333,7 @@ namespace jank::codegen
       auto const is_void{ Cpp::IsVoid(inst->expr->type) };
       if(is_void)
       {
-        util::format_to(b.body_buffer, "jank::runtime::object_ref const {};\n", inst->name);
+        util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref const {};\n", inst->name);
       }
       else
       {
@@ -1368,7 +1367,7 @@ namespace jank::codegen
       auto const is_void{ Cpp::IsVoid(inst->expr->type) };
       if(is_void)
       {
-        util::format_to(b.body_buffer, "jank::runtime::object_ref const {};\n", inst->name);
+        util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref const {};\n", inst->name);
       }
       else
       {
@@ -1415,7 +1414,7 @@ namespace jank::codegen
       auto const is_void{ Cpp::IsVoid(inst->expr->type) };
       if(is_void)
       {
-        util::format_to(b.body_buffer, "jank::runtime::object_ref const {};", inst->name);
+        util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref const {};", inst->name);
       }
       else
       {
@@ -1613,7 +1612,7 @@ namespace jank::codegen
 
     if(is_void)
     {
-      util::format_to(b.body_buffer, "jank::runtime::object_ref {}{ };\n", inst->name);
+      util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {}{ };\n", inst->name);
       util::format_to(b.body_buffer,
                       "{}{}{}(",
                       inst->args[0],

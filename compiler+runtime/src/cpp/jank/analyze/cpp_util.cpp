@@ -430,6 +430,13 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
+  jtl::ptr<void> nil_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.nil_ref").expect_ok()) };
+    return type;
+  }
+
   jtl::ptr<void> var_type()
   {
     static auto const type{ Cpp::GetTypeFromScope(
@@ -924,7 +931,7 @@ namespace jank::analyze::cpp_util
   {
     if(Cpp::IsVoid(type))
     {
-      return untyped_object_ref_type();
+      return nil_ref_type();
     }
     return type;
   }

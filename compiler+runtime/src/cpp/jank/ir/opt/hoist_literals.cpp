@@ -98,7 +98,8 @@ namespace jank::ir
         auto insert_pos{ target_block.instructions.begin() };
         while(insert_pos != target_block.instructions.end()
               && ((*insert_pos)->kind == instruction_kind::parameter
-                  || (*insert_pos)->kind == instruction_kind::capture))
+                  || (*insert_pos)->kind == instruction_kind::capture
+                  || (*insert_pos)->kind == instruction_kind::cpp_scope_open))
         {
           ++insert_pos;
         }
