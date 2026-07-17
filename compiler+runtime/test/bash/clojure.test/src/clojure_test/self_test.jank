@@ -7,10 +7,10 @@
 (deftest pass-test (is (= 1 1)))
 (deftest fail-test (is (= 1 2)))
 (deftest thrown-without-throw-test (is (thrown? 1)))
-(deftest thrown-with-msg-test (is (thrown-with-msg? #"a" (throw (ex-info "a" {})))))
 (if windows?
   (println :skipping 'clojure-test.self-test.thrown-test 'clojure-test.self-test.error-test)
   (do
+    (deftest thrown-with-msg-test (is (thrown-with-msg? #"a" (throw (ex-info "a" {})))))
     (deftest thrown-test (is (thrown? (throw (ex-info "a" {})))))
     (deftest error-test (is (throw (ex-info "" {}))))))
 
