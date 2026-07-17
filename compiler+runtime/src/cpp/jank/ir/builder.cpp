@@ -99,7 +99,7 @@ namespace jank::ir
   identifier
   builder::literal(analyze::expression_position const pos, runtime::object_ref const value)
   {
-    auto const type{ literal_type(value) };
+    auto const type{ literal_codegen_type(value) };
     jtl::immutable_string lifted_literal_name;
     auto const found{ mod->lifted_constants.find(value) };
     if(found == mod->lifted_constants.end())
