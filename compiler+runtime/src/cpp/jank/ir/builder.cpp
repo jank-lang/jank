@@ -564,7 +564,7 @@ namespace jank::ir
     {
       if(Cpp::IsVoid(expr->type))
       {
-        literal(expr->position, runtime::jank_nil);
+        name = literal(expr->position, runtime::jank_nil);
       }
       else
       {

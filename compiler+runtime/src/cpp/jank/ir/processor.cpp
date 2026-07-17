@@ -766,7 +766,7 @@ namespace jank::ir
       if(expr->position != analyze::expression_position::tail
          && !b.current_block()->has_terminator())
       {
-        b.branch_set(local, case_res.unwrap());
+        b.set_local(local, case_res.unwrap());
         b.jump(merge_blk);
       }
     }
