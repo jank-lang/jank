@@ -6,6 +6,7 @@
             [leiningen.install :refer [install]]
             [leiningen.core.project :as lproj]
             [leiningen.jank.build :as build]
+            [leiningen.jank.changed :as changed]
             [leiningen.jank.resolve :as resolve]))
 
 (def temp-m2-repo (str (fs/create-temp-dir {:prefix "lein-jank-test-m2"})))
@@ -24,6 +25,7 @@
 ;; Other top-level projects useful for testing different features.
 (def build-dependency-project (read-test-project "test-build-dependency"))
 (def managed-deps-project (read-test-project "test-managed-deps"))
+(def change-detection-project (read-test-project "test-change-detection"))
 
 ;; Children need to be installed into the maven cache to be properly picked up
 ;; by parents.
@@ -66,9 +68,7 @@
                  {:op           :compile
                   :dep          '[org.jank-lang/test-grandchild "0.1.0"]
                   :build-inputs [(m/regex #".*\.jar")]
-                  :inputs       (m/equals {})
-                  ;; root project always builds
-                  :always-build true}]
+                  :inputs       (m/equals {})}]
                 ops))))
 
 (deftest plan-build-with-managed-deps
@@ -87,9 +87,9 @@
        tree))))
 
 (deftest run-build-test
-  (let [output-dir (fs/create-temp-dir {:prefix "lein-jank-test-out"})
+  (let [target-dir (fs/create-temp-dir {:prefix "lein-jank-test-out"})
         plan       (-> parent-project
-                       (assoc-in [:jank :output-dir] output-dir)
+                       (assoc-in [:jank :target-dir] target-dir)
                        (build/plan-build))
         result     (binding [build/*disable-sandbox* true]
                      (build/run-build! plan))]
@@ -100,3 +100,27 @@
           :library-dirs     ["somepath"]
           :linked-libraries ["foolib" "barlib"]}
          result))))
+
+(deftest rerun-if-changed-test
+  (let [target-dir (fs/create-temp-dir {:prefix "lein-jank-test-out"})
+        plan       (-> change-detection-project
+                       (assoc-in [:jank :target-dir] target-dir)
+                       (build/plan-build))
+        compile-op (last plan)]
+    (with-redefs [changed/env (fn [ks] {"WATCHED_VAR" "a_value"})]
+      ;; Dependency which is not build yet causes a rebuild to trigger.
+      (is (build/needs-compile? compile-op))
+      (binding [build/*disable-sandbox* true] (build/run-build! plan))
+      (is (not (build/needs-compile? compile-op)))
+
+      ;; Changing a rerun-if-env-changed variable causes a rebuild to trigger.
+      (with-redefs [changed/env (fn [ks] {"WATCHED_VAR" "a_different_value"})]
+        (is (build/needs-compile? compile-op)))
+
+      ;; Touching a rerun-if-changed file causes a rebuild to trigger.
+      (fs/touch (fs/path (:src-dir compile-op) "test-file"))
+      (is (build/needs-compile? compile-op))
+
+      ;; After building the rebuild trigger is cleared.
+      (binding [build/*disable-sandbox* true] (build/run-build! plan))
+      (is (not (build/needs-compile? compile-op))))))
