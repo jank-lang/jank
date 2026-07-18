@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-46a6cda8.js";
+            window.path_to_searchindex_js = "searchindex-382819c5.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f18007b9.js"></script>
@@ -2088,6 +2088,25 @@ IR. Notice how the <code>bar</code> capture’s value name is <code>:defer</code
 {:name v2 :op :closure :context user_bar_82688_ctx :arities {0 user_bar_82688_0} :captures {foo {:name v1 :type jank::runtime::object_ref}} :arity-flags 0 :type "jank::runtime::obj::jit_closure_ref"}
 </code></pre>
 <h2 id="c-interop"><a class="header" href="#c-interop">C++ interop</a></h2>
+<h3 id="cppscope-open"><a class="header" href="#cppscope-open"><code>cpp/scope-open</code></a></h3>
+<p>The <code>cpp/scope-open</code> instruction introduces a new C++ scope, which controls the
+lifetimes of values defined within the scope. This is used to ensure C++ value
+destructors are executed at the correct time. Each <code>cpp/scope-open</code> has a
+corresponding <code>cpp/scope-close</code>. The name of scopes is unique in that they start
+with <code>s</code>, rather than <code>v</code>.</p>
+<p>This instruction always has the type <code>void</code>.</p>
+<pre><code class="language-clojure">{:name s0 :op :cpp/scope-open :type "void"}
+</code></pre>
+<h3 id="cppscope-close"><a class="header" href="#cppscope-close"><code>cpp/scope-close</code></a></h3>
+<p>The <code>cpp/scope-close</code> instruction corresponds to a <code>cpp/scope-open</code>, which then
+closes the corresponding C++ scope, representing the lexically location where
+destructors will run for values defined within that scope. Note that every scope
+must only be closed exactly once.</p>
+<p>While <code>cpp/scope-close</code> is not a terminator, it is permitted to appear after
+terminators, within IR blocks.</p>
+<p>This instruction always has the type <code>void</code>.</p>
+<pre><code class="language-clojure">{:name v11 :op :cpp/scope-close :scope s0 :type "void"}
+</code></pre>
 <h3 id="cppraw"><a class="header" href="#cppraw"><code>cpp/raw</code></a></h3>
 <p>The <code>cpp/raw</code> instruction introduces some global C++ which needs to be compiled
 alongside this module.</p>
