@@ -99,7 +99,7 @@ namespace jank::ir
   identifier
   builder::literal(analyze::expression_position const pos, runtime::object_ref const value)
   {
-    auto const type{ literal_type(value) };
+    auto const type{ literal_codegen_type(value) };
     jtl::immutable_string lifted_literal_name;
     auto const found{ mod->lifted_constants.find(value) };
     if(found == mod->lifted_constants.end())
@@ -237,6 +237,22 @@ namespace jank::ir
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::letfn>(name, location, jtl::move(bindings)));
+    return name;
+  }
+
+  identifier builder::local(jtl::ptr<void> const type)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::local>(name, location, type));
+    return name;
+  }
+
+  identifier builder::set_local(identifier const &local, identifier const &value)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::set_local>(name, location, local, value));
     return name;
   }
 
@@ -410,18 +426,11 @@ namespace jank::ir
   identifier builder::branch(identifier const &condition,
                              identifier const &then_blk,
                              identifier const &else_blk,
-                             jtl::option<identifier> const &merge_blk,
-                             jtl::option<detail::typed_identifier> const &shadow)
+                             identifier const &merge_blk)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::branch>(name,
-                                  location,
-                                  condition,
-                                  then_blk,
-                                  else_blk,
-                                  merge_blk,
-                                  shadow));
+      jtl::make_ref<inst::branch>(name, location, condition, then_blk, else_blk, merge_blk));
     return name;
   }
 
@@ -441,8 +450,7 @@ namespace jank::ir
                             identifier const &value,
                             native_unordered_map<i64, identifier> &&cases,
                             identifier const &default_block,
-                            jtl::option<identifier> const &merge_block,
-                            jtl::option<identifier> const &shadow)
+                            identifier const &merge_block)
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
@@ -453,8 +461,7 @@ namespace jank::ir
                                  value,
                                  jtl::move(cases),
                                  default_block,
-                                 merge_block,
-                                 shadow));
+                                 merge_block));
     return name;
   }
 
@@ -509,6 +516,22 @@ namespace jank::ir
     return name;
   }
 
+  identifier builder::cpp_scope_open()
+  {
+    auto name{ next_ident("s") };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_scope_open>(name, location));
+    return name;
+  }
+
+  identifier builder::cpp_scope_close(identifier const &scope)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_scope_close>(name, location, scope));
+    return name;
+  }
+
   identifier builder::cpp_raw(analyze::expr::cpp_raw_ref const expr)
   {
     auto name{ next_ident() };
@@ -539,8 +562,15 @@ namespace jank::ir
     auto name{ next_ident() };
     if(expr->policy == analyze::conversion_policy::into_object)
     {
-      current_function()->blocks[block_index].instructions.emplace_back(
-        jtl::make_ref<inst::cpp_into_object>(name, location, value, expr));
+      if(Cpp::IsVoid(expr->type))
+      {
+        name = literal(expr->position, runtime::jank_nil);
+      }
+      else
+      {
+        current_function()->blocks[block_index].instructions.emplace_back(
+          jtl::make_ref<inst::cpp_into_object>(name, location, value, expr));
+      }
     }
     else
     {

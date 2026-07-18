@@ -169,6 +169,21 @@ namespace jank::ir::inst
   {
   }
 
+  local::local(identifier const &name, read::source const &location, jtl::ptr<void> const type)
+    : instruction{ instruction_kind::local, name, type, location }
+  {
+  }
+
+  set_local::set_local(identifier const &name,
+                       read::source const &location,
+                       identifier const &local,
+                       identifier const &value)
+    : instruction{ instruction_kind::set_local, name, Cpp::GetVoidType(), location }
+    , local{ local }
+    , value{ value }
+  {
+  }
+
   def::def(identifier const &name,
            jtl::ptr<void> const type,
            read::source const &location,
@@ -291,14 +306,12 @@ namespace jank::ir::inst
                  identifier const &condition,
                  identifier const &then_block,
                  identifier const &else_block,
-                 jtl::option<identifier> const &merge_block,
-                 jtl::option<detail::typed_identifier> const &shadow)
+                 identifier const &merge_block)
     : instruction{ instruction_kind::branch, name, Cpp::GetVoidType(), location }
     , condition{ condition }
     , then_block{ then_block }
     , else_block{ else_block }
     , merge_block{ merge_block }
-    , shadow{ shadow }
   {
   }
 
@@ -333,8 +346,7 @@ namespace jank::ir::inst
                identifier const &value,
                native_unordered_map<i64, identifier> &&case_blocks,
                identifier const &default_block,
-               jtl::option<identifier> const &merge_block,
-               jtl::option<identifier> const &shadow)
+               identifier const &merge_block)
     : instruction{ instruction_kind::case_, name, Cpp::GetVoidType(), location }
     , shift{ shift }
     , mask{ mask }
@@ -342,7 +354,6 @@ namespace jank::ir::inst
     , case_blocks{ jtl::move(case_blocks) }
     , default_block{ default_block }
     , merge_block{ merge_block }
-    , shadow{ shadow }
   {
   }
 
@@ -409,6 +420,19 @@ namespace jank::ir::inst
   bool ret::is_terminator() const
   {
     return true;
+  }
+
+  cpp_scope_open::cpp_scope_open(identifier const &name, read::source const &location)
+    : instruction{ instruction_kind::cpp_scope_open, name, Cpp::GetVoidType(), location }
+  {
+  }
+
+  cpp_scope_close::cpp_scope_close(identifier const &name,
+                                   read::source const &location,
+                                   identifier const &scope)
+    : instruction{ instruction_kind::cpp_scope_close, name, Cpp::GetVoidType(), location }
+    , scope{ scope }
+  {
   }
 
   cpp_raw::cpp_raw(identifier const &name,
