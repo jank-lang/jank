@@ -1,0 +1,2 @@
+(case (throw :success)
+  :success)

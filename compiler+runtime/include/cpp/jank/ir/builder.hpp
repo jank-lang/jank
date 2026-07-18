@@ -79,6 +79,8 @@ namespace jank::ir
             runtime::callable_arity_flags const arity_flags,
             bool const is_variadic);
     identifier letfn(native_vector<jtl::immutable_string> &&bindings);
+    identifier local(jtl::ptr<void> const type);
+    identifier set_local(identifier const &local, identifier const &value);
     identifier def(analyze::expression_position const pos,
                    jtl::immutable_string const &qualified_var,
                    jtl::option<identifier> const &value,
@@ -106,8 +108,7 @@ namespace jank::ir
     identifier branch(identifier const &condition,
                       identifier const &then_blk,
                       identifier const &else_blk,
-                      jtl::option<identifier> const &merge_blk,
-                      jtl::option<detail::typed_identifier> const &shadow);
+                      identifier const &merge_blk);
     identifier loop(identifier const &loop_blk,
                     jtl::option<identifier> const &merge_blk,
                     jtl::option<detail::typed_identifier> const &shadow,
@@ -117,8 +118,7 @@ namespace jank::ir
                      identifier const &value,
                      native_unordered_map<i64, identifier> &&cases,
                      identifier const &default_block,
-                     jtl::option<identifier> const &merge_block,
-                     jtl::option<identifier> const &shadow);
+                     identifier const &merge_block);
     identifier try_(native_vector<std::pair<jtl::ptr<void>, identifier>> &&catches,
                     identifier const &merge_block,
                     identifier const &shadow,
@@ -131,6 +131,8 @@ namespace jank::ir
     identifier throw_(identifier const &value);
     identifier ret(identifier const &value, jtl::ptr<void> const type);
 
+    identifier cpp_scope_open();
+    identifier cpp_scope_close(identifier const &scope);
     identifier cpp_raw(analyze::expr::cpp_raw_ref const expr);
     identifier cpp_value(analyze::expr::cpp_value_ref const expr);
     identifier

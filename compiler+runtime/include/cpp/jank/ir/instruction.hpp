@@ -46,6 +46,8 @@ namespace jank::ir
     function,
     closure,
     letfn,
+    local,
+    set_local,
     def,
     var_deref,
     var_ref,
@@ -65,6 +67,8 @@ namespace jank::ir
     finally,
     throw_,
     ret,
+    cpp_scope_open,
+    cpp_scope_close,
     cpp_raw,
     cpp_value,
     cpp_into_object,
@@ -286,6 +290,30 @@ namespace jank::ir
 
     using letfn_ref = jtl::ref<letfn>;
 
+    struct local : instruction
+    {
+      local(identifier const &name, read::source const &location, jtl::ptr<void> const type);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+    };
+
+    using local_ref = jtl::ref<local>;
+
+    struct set_local : instruction
+    {
+      set_local(identifier const &name,
+                read::source const &location,
+                identifier const &local,
+                identifier const &value);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier local;
+      identifier value;
+    };
+
+    using set_local_ref = jtl::ref<set_local>;
+
     struct def : instruction
     {
       def(identifier const &name,
@@ -457,8 +485,7 @@ namespace jank::ir
              identifier const &condition,
              identifier const &then_block,
              identifier const &else_block,
-             jtl::option<identifier> const &merge_block,
-             jtl::option<detail::typed_identifier> const &shadow);
+             identifier const &merge_block);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;
@@ -466,8 +493,7 @@ namespace jank::ir
       identifier condition;
       identifier then_block;
       identifier else_block;
-      jtl::option<identifier> merge_block;
-      jtl::option<detail::typed_identifier> shadow;
+      identifier merge_block;
     };
 
     using branch_ref = jtl::ref<branch>;
@@ -512,8 +538,7 @@ namespace jank::ir
             identifier const &value,
             native_unordered_map<i64, identifier> &&case_blocks,
             identifier const &default_block,
-            jtl::option<identifier> const &merge_block,
-            jtl::option<identifier> const &shadow);
+            identifier const &merge_block);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;
@@ -523,8 +548,7 @@ namespace jank::ir
       identifier value;
       native_unordered_map<i64, identifier> case_blocks;
       identifier default_block;
-      jtl::option<identifier> merge_block;
-      jtl::option<identifier> shadow;
+      identifier merge_block;
     };
 
     using case_ref = jtl::ref<case_>;
@@ -611,6 +635,28 @@ namespace jank::ir
     };
 
     using ret_ref = jtl::ref<ret>;
+
+    struct cpp_scope_open : instruction
+    {
+      cpp_scope_open(identifier const &name, read::source const &location);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+    };
+
+    using cpp_scope_open_ref = jtl::ref<cpp_scope_open>;
+
+    struct cpp_scope_close : instruction
+    {
+      cpp_scope_close(identifier const &name,
+                      read::source const &location,
+                      identifier const &scope);
+
+      void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier scope;
+    };
+
+    using cpp_scope_close_ref = jtl::ref<cpp_scope_close>;
 
     struct cpp_raw : instruction
     {
@@ -724,7 +770,6 @@ namespace jank::ir
 
       void print(jtl::string_builder &sb, usize) const override;
 
-      identifier value;
       native_vector<identifier> args;
       analyze::expr::cpp_member_call_ref expr;
     };

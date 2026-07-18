@@ -62,7 +62,7 @@ jobs:
       - name: Bootstrap system
         run: |
           pacman -Syu --noconfirm
-          pacman -S --noconfirm base-devel git jdk-openjdk clojure
+          pacman -S --noconfirm base-devel git jdk-openjdk clojure clang
 
       - uses: actions/checkout@v4
         with:

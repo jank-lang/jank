@@ -2575,7 +2575,7 @@ namespace jank::analyze
     /* If no recur is found, we still need to note that this is a loop, since loop bindings
      * are type-erased. During IR gen, this is crucial information to ensure the IR matches
      * what was analyzed. */
-    if(let->loop_kind == expr::let::loop_kind::none)
+    if(let->loop_kind == expr::let::loop_kind::normal)
     {
       let->loop_kind = expr::let::loop_kind::loop_without_recur;
     }
