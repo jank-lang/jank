@@ -1,7 +1,8 @@
-(ns leiningen.jank.changed
-  "For tracking changes in the environment and in build source files."
+(ns jank-build.change-detection
+  "For tracking changes in the environment and in build source files, which can
+  be used to determine if a rebuild is necessary."
   (:require [babashka.fs :as fs]
-            [leiningen.jank.fingerprint :refer [fingerprint]]))
+            [jank-build.fingerprint :refer [fingerprint]]))
 
 (defn env
   "Return a map of resolved environment variables."

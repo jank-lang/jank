@@ -1,13 +1,12 @@
-(ns leiningen.jank.build
+(ns jank-build.core
   "Tools for building jank libraries which include native code."
   (:require [clojure.string :as string]
             [clojure.java.io :as io]
             [babashka.fs :as fs]
-            [leiningen.core.main :as lmain]
-            [leiningen.jank.sandbox.core :as sandbox]
-            [leiningen.jank.resolve :as resolve]
-            [leiningen.jank.fingerprint :refer [fingerprint fingerprint-file]]
-            [leiningen.jank.changed :refer [change-fingerprint]])
+            [jank-build.change-detection :refer [change-fingerprint]]
+            [jank-build.fingerprint :refer [fingerprint fingerprint-file]]
+            [jank-build.sandbox.core :as sandbox]
+            [jank-build.util :as util])
   (:import (java.util.jar JarFile)))
 
 (def ^:dynamic *disable-sandbox* false)
@@ -58,7 +57,7 @@
       "link-library"         {:linked-libraries [v]}
       "rerun-if-changed"     {:rerun-if-changed [v]}
       "rerun-if-env-changed" {:rerun-if-env-changed [v]}
-      (do (lmain/warn "invalid jank-build directive:" line)
+      (do (util/warn "invalid jank-build directive:" line)
           nil))))
 
 (defn wrap-stream
@@ -104,7 +103,7 @@
   [{:keys [src-dir out-dir] :as op}]
   (fs/delete-tree out-dir)
   (fs/create-dirs out-dir)
-  (let [dep-name     (first (:dep op))
+  (let [dep-name     (first (:coord (:dep op)))
         build-dir    (fs/create-temp-dir {:prefix "jank-build-"})
         op           (assoc op :build-dir (str build-dir))
         ;; The sandbox gets standard mounts for a scratch directory and build
@@ -141,11 +140,7 @@
         (when-not *verbose-build*
           (println (string/join "\n" @out-lines))
           (println (string/join "\n" @out-lines)))
-        (lmain/abort "failed to run build command")))))
-
-(defn build-scoped? [coord]
-  (let [m (apply hash-map coord)]
-    (= (:scope m) "jank-build")))
+        (util/abort "failed to run build command")))))
 
 (defn collect-build-deps
   "Given a dependency tree, identify its jank-build scoped elements and resolve
@@ -154,10 +149,7 @@
   Build dependencies are not transitive, so only the first layer of the tree is
   searched. Deeper build-scoped dependencies will be ignored."
   [tree]
-  (->> tree
-       (filter (fn [[k v]] (build-scoped? k)))
-       (into {})
-       (resolve/dependency-files)))
+  (keep #(when (:build-scoped %) (:file %)) tree))
 
 (defn collect-out-dirs
   "Collect the output directories from all build steps in the given operations
@@ -166,13 +158,14 @@
   (letfn [(simple-dep-name [coord] (-> coord first str))]
     (->> plan-ops
          (keep (fn [op] (when (:out-dir op)
-                          [(simple-dep-name (:dep op))
+                          [(simple-dep-name (:coord (:dep op)))
                            (str (:out-dir op))])))
          (into {}))))
 
-(defn plan-subtree-build [build-opts target-dir [dep subtree]]
-  (let [subtree-ops (vec (mapcat #(plan-subtree-build build-opts target-dir %) subtree))
-        src-jar     (first (resolve/dependency-files {dep nil}))
+(defn plan-subtree-build [build-opts target-dir dep]
+  (let [subtree     (:children dep)
+        subtree-ops (vec (mapcat #(plan-subtree-build build-opts target-dir %) subtree))
+        src-jar     (:file dep)
         jar-name    (-> src-jar fs/file-name fs/strip-ext)]
     ;; NOTE: make sure all outputs here are pure Clojure data. We use (pr ops)
     ;; to compute a subtree hash to determine if the build has changed and needs
@@ -210,28 +203,26 @@
 
   Returns a map, including the build operations and additional build metadata,
   which can be executed by `run-build!`."
-  [project]
+  [project dependency-tree]
   (let [build-opts (merge default-build-opts (:jank project))
         target-dir (:target-dir build-opts)]
     (when *disable-sandbox*
       (println "\u001b[1;31mBuilding with sandboxing disabled is potentially dangerous!\u001b[0m"))
 
-    (let [tree     (->> (mapv #(resolve/dependency-hierarchy project (:managed-dependencies project) %)
-                              (:dependencies project))
-                        (apply merge))
-           ;; Plan the build steps just for the child dependencies,
-           ;; recursively resolving their dependencies and so on.
-          dep-ops  (vec (mapcat #(plan-subtree-build build-opts target-dir %) tree))
-           ;; Special handling when the root project has a build script.
-          root-ops (when (has-build-file? (:root project))
-                     [{:op           :compile
-                       :dep          [(symbol (:group project) (:name project)) (:version project)]
-                       :src-dir      (str (:root project))
-                       :out-dir      (str (target-subdir target-dir "out" (:name project) "XXX"))
-                       :build-opts   build-opts
-                       :build-inputs (collect-build-deps tree)
-                       :inputs       (collect-out-dirs dep-ops)}])
-          plan (into dep-ops root-ops)]
+    (let [;; Plan the build steps just for the child dependencies,
+          ;; recursively resolving their dependencies and so on.
+          subtree-ops (vec (mapcat #(plan-subtree-build build-opts target-dir %)
+                                   (filter some? dependency-tree)))
+          ;; Special handling when the root project has a build script.
+          root-ops    (when (has-build-file? (:root project))
+                        [{:op           :compile
+                          :dep          {:coord [(symbol (:group project) (:name project)) (:version project)]}
+                          :src-dir      (str (:root project))
+                          :out-dir      (str (target-subdir target-dir "out" (:name project) "XXX"))
+                          :build-opts   build-opts
+                          :build-inputs (collect-build-deps dependency-tree)
+                          :inputs       (collect-out-dirs subtree-ops)}])
+          plan        (into subtree-ops root-ops)]
       plan)))
 
 (defn read-build-directives
@@ -265,7 +256,7 @@
 
 (defn needs-compile?
   "Determine if a compile operation can be skipped based on whether it has
-  already been compiled and all of the tracked rerun-if-* have not changed. "
+  already been compiled and all of the tracked rerun-if-* have not changed."
   [compile-op]
   (let [fingerprint-path (fs/path (:out-dir compile-op) jank-build-fingerprint-file)]
     (or
@@ -286,7 +277,7 @@
   ;; Since the out-dir name includes the jar fingerprint, we know that the
   ;; contents will be the same and we can skip the step.
   (when-not (fs/directory? out-dir)
-    (println (str "\u001b[1;36m" (format "%10s" "Extracting") "\u001b[0m") dep)
+    (println (str "\u001b[1;36m" (format "%10s" "Extracting") "\u001b[0m") (:coord dep))
     (extract-jar! jar out-dir))
 
   ;; does not produce any jank flags
@@ -295,7 +286,7 @@
 (defmethod run-build-op! :compile
   [plan {:keys [dep out-dir] :as op}]
   (when (needs-compile? op)
-    (println (str "\u001b[1;32m" (format "%10s" "Compiling") "\u001b[0m") dep)
+    (println (str "\u001b[1;32m" (format "%10s" "Compiling") "\u001b[0m") (:coord dep))
     (build-dep! op))
 
   ;; Write a fingerprint file to detect any changes in the watched files or env
@@ -313,4 +304,7 @@
   Returns a map of :defines, :include-dirs, :library-dirs, and :linked-libraries
   to be passed to the jank compiler."
   [plan]
-  (apply merge (mapv #(run-build-op! plan %) plan)))
+  (reduce
+   (fn [m op] (merge-with into m (run-build-op! plan op)))
+   {}
+   plan))

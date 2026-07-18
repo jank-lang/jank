@@ -1,7 +1,7 @@
-(ns leiningen.jank.sandbox.core
+(ns jank-build.sandbox.core
   (:require [babashka.process :as proc]
-            [leiningen.jank.sandbox.bwrap :as bwrap]
-            [leiningen.core.main :as lmain]))
+            [jank-build.sandbox.bwrap :as bwrap]
+            [jank-build.util :as util]))
 
 (defn process
   "Pass `cmd` and `sh-opts` to `babashka.process/process` running inside of a
@@ -17,7 +17,7 @@
     (proc/process cmd sh-opts)
 
     (not (bwrap/which-bwrap))
-    (lmain/abort
+    (util/abort
      (str "No 'bwrap' executable found. If bubblewrap is not available on your"
           " platform then you can build with the lein option :disable-sandbox,"
           " however this allows potentially nefarious build scripts free rein"

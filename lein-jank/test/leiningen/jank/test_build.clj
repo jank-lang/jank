@@ -1,7 +1,8 @@
 (ns leiningen.jank.test-build
   (:require [clojure.test :refer [deftest is]]
             [leiningen.core.project :as proj]
-            [leiningen.jank.build :as build]))
+            [leiningen.jank.resolve :as resolve]
+            [jank-build.core :as build]))
 
 (def test-project (proj/read "test-project/project.clj"))
 
@@ -15,6 +16,6 @@
   (is (= (build/process-build-directive "jank-build::link-library=a-lib") {:linked-libraries ["a-lib"]})))
 
 (deftest build-scoped
-  (is (false? (build/build-scoped? '[org.jank/some-dependency "1.0.0"])))
-  (is (false? (build/build-scoped? '[org.jank/some-dependency "1.0.0" :exclusions [foo] :classifier "asdf"])))
-  (is (true? (build/build-scoped? '[org.jank/some-dependency "1.0.0" :scope "jank-build"]))))
+  (is (false? (resolve/build-scoped? '[org.jank/some-dependency "1.0.0"])))
+  (is (false? (resolve/build-scoped? '[org.jank/some-dependency "1.0.0" :exclusions [foo] :classifier "asdf"])))
+  (is (true? (resolve/build-scoped? '[org.jank/some-dependency "1.0.0" :scope "jank-build"]))))
