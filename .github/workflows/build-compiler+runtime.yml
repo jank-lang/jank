@@ -233,6 +233,7 @@ jobs:
   #    JANK_ANALYZE: ${{ matrix.analyze }}
   #    JANK_SANITIZE: ${{ matrix.sanitize }}
   #    JANK_PACKAGE: ${{ matrix.package }}
+  #    JANK_PACKAGE_GROUP: noble
   #    ASAN_OPTIONS: detect_leaks=0
   #    TERM: xterm
   #    CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -332,8 +333,9 @@ jobs:
   #        chmod 400 ~/.ssh/jank_id_ed25519
   #    - name: Publish to PPA
   #      run: |
-  #        scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
-  #        ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
+  #        file=${GITHUB_WORKSPACE}/compiler+runtime/*.deb
+  #        scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${file} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/repo
+  #        ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/publish $(basename "${file}") noble oracular plucky"
 
   #publish-homebrew-tarball:
   #  if: github.ref == 'refs/heads/main'
@@ -415,6 +417,7 @@ jobs:
     timeout-minutes: 60
     env:
       JANK_PACKAGE: on
+      JANK_PACKAGE_GROUP: questing
     steps:
       - name: Install apt packages
         run: |
@@ -450,8 +453,9 @@ jobs:
           chmod 400 ~/.ssh/jank_id_ed25519
       - name: Publish to cache
         run: |
-          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${GITHUB_WORKSPACE}/compiler+runtime/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/repo
-          #ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
+          file=${GITHUB_WORKSPACE}/compiler+runtime/*.deb
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${file} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/repo
+          ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/publish $(basename "${file}") questing resolute stonking"
 
   #build-nix:
   #  name: "Nix - release"

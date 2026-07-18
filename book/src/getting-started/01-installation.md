@@ -29,7 +29,7 @@ If you'd like to install from source using brew, you can use `jank-lang/jank/jan
 We have a binary jank package in our own repo, so installation is quick and easy.
 
 ```bash
-sudo apt install -y curl gnupg
+sudo apt install -y sudo curl gnupg lsb-release
 curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
 sudo curl -s -o /etc/apt/sources.list.d/jank.list "https://ppa.jank-lang.org/jank.list"
 sudo apt update
