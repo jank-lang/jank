@@ -31,7 +31,7 @@ We have a binary jank package in our own repo, so installation is quick and easy
 ```bash
 sudo apt install -y sudo curl gnupg lsb-release
 curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
-echo "deb [signed-by=/etc/apt/trusted.gpg.d/jank.gpg] https://ppa.jank-lang.org/repo $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/jank.list >/dev/null
+echo "deb [signed-by=/etc/apt/trusted.gpg.d/jank.gpg] https://ppa.jank-lang.org $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/jank.list >/dev/null
 sudo apt update
 sudo apt install -y jank
 ```
