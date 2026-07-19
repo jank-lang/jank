@@ -19,6 +19,7 @@ namespace jank::runtime
     using keyword_ref = oref<struct keyword>;
     using native_vector_sequence_ref = oref<struct native_vector_sequence>;
     using promise_ref = oref<struct promise>;
+    using re_pattern_ref = oref<struct re_pattern>;
     using symbol_ref = oref<struct symbol>;
     using tagged_literal_ref = oref<struct tagged_literal>;
     using uuid_ref = oref<struct uuid>;
@@ -123,7 +124,7 @@ namespace jank::runtime
   bool is_inst(object_ref const o);
   i64 inst_ms(object_ref const o);
 
-  object_ref re_pattern(object_ref const o);
+  obj::re_pattern_ref re_pattern(object_ref const o);
   object_ref re_matcher(object_ref const re, object_ref const s);
   object_ref re_find(object_ref const m);
   object_ref re_groups(object_ref const m);
