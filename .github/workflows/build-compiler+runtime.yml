@@ -318,7 +318,7 @@ jobs:
   publish-deb:
     if: github.ref == 'refs/heads/main'
     needs: build-jank
-    name: Publish .deb
+    name: Publish Ubuntu 24.04 package
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -333,7 +333,7 @@ jobs:
           chmod 400 ~/.ssh/jank_id_ed25519
       - name: Publish to PPA
         run: |
-          file="$(ls -1 ${GITHUB_WORKSPACE}/compiler+runtime/*.deb)"
+          file="$(ls -1 ~/*.deb)"
           scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${file} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html
           ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/publish $(basename "${file}") noble oracular plucky"
 
