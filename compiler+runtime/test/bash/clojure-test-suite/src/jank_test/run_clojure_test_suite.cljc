@@ -228,7 +228,7 @@
     clojure.core-test.zero-qmark
     clojure.core-test.zipmap
 
-    ; clojure.string-test.blank-qmark ; error: String contains invalid escape sequence '\u'.
+    clojure.string-test.blank-qmark
     ; clojure.string-test.capitalize  ; Uncaught exception: wstring_convert::from_bytes
     clojure.string-test.ends-with-qmark
     ; clojure.string-test.escape ; Uncaught exception: Can't convert character to integer.

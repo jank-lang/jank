@@ -200,7 +200,8 @@
 (defn blank?
   "True if s is nil, empty, or contains only whitespace."
   [s]
-  (cpp/clojure.string_native.blank s))
+  (or (nil? s)
+      (.is_blank (cpp/cast jtl.immutable_string s))))
 
 (defn escape
   "Return a new string, using cmap to escape each character ch

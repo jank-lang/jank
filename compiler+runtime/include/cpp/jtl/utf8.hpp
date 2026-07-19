@@ -34,4 +34,8 @@ namespace jtl
 
     immutable_string data;
   };
+
+  jtl::immutable_string to_char(i64 const ch);
+  bool is_surrogate_pairs(u16 const high);
+  u32 combine_surrogate_pairs(u16 const high, u16 const low);
 }
