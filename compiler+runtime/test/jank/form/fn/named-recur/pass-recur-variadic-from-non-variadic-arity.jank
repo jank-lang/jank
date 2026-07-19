@@ -1,0 +1,6 @@
+(let* [foo (fn* foo
+             ([]
+              (foo :success))
+             ([& args]
+              (first args)))]
+  (foo))

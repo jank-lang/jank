@@ -439,7 +439,7 @@ namespace jank::ir
     }
 
     bool needs_dynamic_call{ true };
-    if(!expr->recursion_ref.fn_ctx->is_variadic)
+    if(!expr->recursion_ref.fn_ctx->fn->is_variadic)
     {
       needs_dynamic_call = false;
     }
