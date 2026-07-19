@@ -1,4 +1,4 @@
-(ns leiningen.jank.fingerprint
+(ns jank-build.fingerprint
   (:require [clojure.java.io :as io]
             [babashka.fs :as fs])
   (:import (java.security MessageDigest)
