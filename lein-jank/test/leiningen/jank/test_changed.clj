@@ -2,7 +2,7 @@
   (:require [clojure.test :refer [deftest is]]
             [babashka.fs :as fs]
             [leiningen.core.project :as proj]
-            [leiningen.jank.changed :as changed]))
+            [jank-build.change-detection :as changed]))
 
 (def test-project (proj/read "test-project/project.clj"))
 

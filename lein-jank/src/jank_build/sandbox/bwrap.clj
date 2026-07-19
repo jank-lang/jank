@@ -1,6 +1,5 @@
-(ns leiningen.jank.sandbox.bwrap
-  (:require [babashka.fs :as fs]
-            [babashka.process :as proc]))
+(ns jank-build.sandbox.bwrap
+  (:require [babashka.fs :as fs]))
 
 ;; TODO: consider the merits of an allowlist vs. denylist of mounts. Per the
 ;; bwrap documentation, we definitely want to avoid mounting /var which may

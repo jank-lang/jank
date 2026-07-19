@@ -6,7 +6,8 @@
    [babashka.fs :as fs]
    [babashka.process :as ps]
    [leiningen.core.main :as lmain]
-   [leiningen.jank.build :as ljb])
+   [leiningen.jank.resolve :as resolve]
+   [jank-build.core :as build])
   (:import [java.io File]))
 
 (defonce verbose? (atom false))
@@ -38,9 +39,14 @@
   ensure the native libraries are up-to-date. Any work which doesn't need to be
   recomputed will be cached."
   [project opts]
-  (binding [ljb/*disable-sandbox* (or ljb/*disable-sandbox* (:disable-sandbox opts))
-            ljb/*verbose-build*   @verbose?]
-    (let [native-flags (ljb/run-build! (ljb/plan-build project))]
+  (binding [build/*disable-sandbox* (or build/*disable-sandbox* (:disable-sandbox opts))
+            build/*verbose-build*   @verbose?]
+    (let [deps-tree    (resolve/dependency-hierarchies
+                        project
+                        (:managed-dependencies project)
+                        (:dependencies project))
+          build-plan   (build/plan-build project deps-tree)
+          native-flags (build/run-build! build-plan)]
       (update project :jank #(merge-with into % native-flags)))))
 
 (defn build-module-path [project]

@@ -2,7 +2,7 @@
   (:require [clojure.test :refer [deftest is]]
             [babashka.fs :as fs]
             [leiningen.core.project :as proj]
-            [leiningen.jank.fingerprint :as fprint]))
+            [jank-build.fingerprint :as fprint]))
 
 (def test-project (proj/read "test-project/project.clj"))
 
