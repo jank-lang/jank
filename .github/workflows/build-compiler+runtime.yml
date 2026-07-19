@@ -51,7 +51,7 @@ jobs:
 
   ubuntu-2604-build-clang:
     name: Ubuntu 26.04 - clang
-    #if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     container:
       image: ubuntu:26.04
@@ -303,7 +303,7 @@ jobs:
           ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
           JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
       - name: Upload .deb for publishing
-        #if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.deb
+        if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.deb
         uses: actions/upload-artifact@v4
         with:
           name: jank-deb
@@ -316,7 +316,7 @@ jobs:
           path: ${{ steps.jank-build-step.outputs.homebrew-tarball }}
 
   publish-deb:
-    #if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     needs: build-jank
     name: Publish .deb
     runs-on: ubuntu-24.04
@@ -334,7 +334,7 @@ jobs:
       - name: Publish to PPA
         run: |
           file="$(ls -1 ${GITHUB_WORKSPACE}/compiler+runtime/*.deb)"
-          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${file} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/repo
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${file} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html
           ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/publish $(basename "${file}") noble oracular plucky"
 
   publish-homebrew-tarball:
@@ -401,7 +401,7 @@ jobs:
           rsync -avz -e "ssh -i $HOME/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no" --progress ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/arch
 
   publish-ubuntu-2604-package:
-    #if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     needs:
       - ubuntu-2604-build-clang
     runs-on: ubuntu-latest
@@ -454,7 +454,7 @@ jobs:
       - name: Publish to cache
         run: |
           file="$(ls -1 ${GITHUB_WORKSPACE}/compiler+runtime/*.deb)"
-          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${file} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/repo
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${file} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html
           ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/publish $(basename "${file}") questing resolute"
 
   build-nix:
