@@ -12,7 +12,8 @@ namespace jank::util::cli
     repl,
     cpp_repl,
     run_main,
-    check_health
+    check_health,
+    print_binary_version,
   };
 
   enum class compilation_target : u8
@@ -145,6 +146,7 @@ namespace jank::util::cli
     jtl::immutable_string output_filename{ "a.out" };
     jtl::immutable_string target_dir{ "target" };
     jtl::immutable_string build_dir;
+    jtl::immutable_string forced_binary_version;
 
     /* Compile-module command. */
     jtl::immutable_string output_module_filename;
@@ -160,8 +162,9 @@ namespace jank::util::cli
   extern options opts;
 
   /* Affects the global opts. */
-  jtl::result<void, int> parse_opts(int const argc, char const **argv);
+  jtl::result<void, int> parse_opts(int const argc, char const * const * const argv);
 
   /* Takes the CLI args and puts 'em in a vector. */
-  native_vector<jtl::immutable_string> parse_into_vector(int const argc, char const **argv);
+  native_vector<jtl::immutable_string>
+  parse_into_vector(int const argc, char const * const * const argv);
 }

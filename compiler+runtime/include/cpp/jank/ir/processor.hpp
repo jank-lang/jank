@@ -95,7 +95,7 @@ namespace jank::ir
     native_unordered_map<jtl::immutable_string, lifted_var> lifted_vars{};
   };
 
-  module create(analyze::expr::function_ref,
-                jtl::immutable_string const &module_name,
-                codegen::compilation_target target);
+  ir::module create(analyze::expr::function_ref,
+                    jtl::immutable_string const &module_name,
+                    codegen::compilation_target target);
 }

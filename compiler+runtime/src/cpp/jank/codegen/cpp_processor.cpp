@@ -120,7 +120,7 @@ namespace jank::codegen
     native_set<ir::identifier> seen_blocks;
   };
 
-  using identifier = ir::identifier;
+  using ir::identifier;
 
 
   static folly::Synchronized<
@@ -131,7 +131,7 @@ namespace jank::codegen
     /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
     global_vars;
 
-  static identifier lift_constant(identifier const &name, object_ref const o, builder &b)
+  static identifier lift_constant(identifier const &name, object_ref const o, builder const &b)
   {
     if(b.module->target == compilation_target::eval)
     {
@@ -187,7 +187,8 @@ namespace jank::codegen
     return name;
   }
 
-  static jtl::immutable_string lift_var(jtl::immutable_string const &qualified_var, builder &b)
+  static jtl::immutable_string
+  lift_var(jtl::immutable_string const &qualified_var, builder const &b)
   {
     if(b.module->target == compilation_target::eval)
     {
@@ -306,9 +307,8 @@ namespace jank::codegen
           else if constexpr(std::same_as<T, obj::re_pattern>)
           {
             util::format_to(buffer,
-                            R"(jank::runtime::make_box<jank::runtime::obj::re_pattern>({}))",
-                            /* We remove the # prefix here. */
-                            typed_o->to_code_string().substr(1));
+                            R"(jank::runtime::make_box<jank::runtime::obj::re_pattern>("{}"))",
+                            util::escape(typed_o->to_string()));
           }
           else if constexpr(std::same_as<T, obj::uuid>)
           {
@@ -443,7 +443,7 @@ namespace jank::codegen
     }
   }
 
-  jtl::option<identifier> gen(ir::instruction_ref const &, builder &);
+  jtl::option<identifier> gen(ir::instruction_ref const, builder &);
 
   void gen_until_jump(jtl::option<identifier> const &jump_block, builder &b)
   {
@@ -481,7 +481,7 @@ namespace jank::codegen
     }
   }
 
-  jtl::option<identifier> gen(ir::inst::def_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::def_ref const inst, builder &b)
   {
     b.next_instruction();
     /* def uses a var, but we don't lift it. Even if it's lifted by another usage,
@@ -514,7 +514,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::var_deref_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::var_deref_ref const inst, builder &b)
   {
     b.next_instruction();
     auto const lifted{ lift_var(inst->qualified_var, b) };
@@ -522,7 +522,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::var_ref_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::var_ref_ref const inst, builder &b)
   {
     b.next_instruction();
 
@@ -531,7 +531,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::type_erase_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::type_erase_ref const inst, builder &b)
   {
     b.next_instruction();
 
@@ -542,7 +542,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::dynamic_call_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::dynamic_call_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}({}.call(", inst->name, inst->fn);
@@ -561,7 +561,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::literal_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::literal_ref const inst, builder &b)
   {
     b.next_instruction();
     auto const lifted{ lift_constant(inst->value, inst->obj, b) };
@@ -569,7 +569,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::persistent_list_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::persistent_list_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_list(", inst->name);
@@ -587,7 +587,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::persistent_vector_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::persistent_vector_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_vec(", inst->name);
@@ -605,7 +605,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::persistent_array_map_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::persistent_array_map_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_amap(", inst->name);
@@ -624,7 +624,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::persistent_hash_map_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::persistent_hash_map_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_hmap(", inst->name);
@@ -643,7 +643,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::persistent_hash_set_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::persistent_hash_set_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_hset(", inst->name);
@@ -662,7 +662,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::function_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::function_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(", inst->name);
@@ -691,7 +691,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::closure_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::closure_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.deps_buffer, "struct {}{", inst->context);
@@ -766,13 +766,13 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::parameter_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::parameter_ref const inst, builder &b)
   {
     b.next_instruction();
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::capture_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::capture_ref const inst, builder &b)
   {
     b.next_instruction();
     auto const &closure_ctx{ munge(b.function->arity->fn_ctx->fn->unique_name + "_ctx") };
@@ -784,7 +784,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::recursion_reference_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::recursion_reference_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer,
@@ -794,7 +794,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::named_recursion_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::named_recursion_ref const inst, builder &b)
   {
     b.next_instruction();
 
@@ -839,7 +839,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::letfn_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::letfn_ref const inst, builder &b)
   {
     b.next_instruction();
 
@@ -862,13 +862,39 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::jump_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::local_ref const inst, builder &b)
+  {
+    b.next_instruction();
+    auto type{ inst->type };
+    if(Cpp::GetValueKind(type) == Cpp::ValueKind::LValue)
+    {
+      type = Cpp::GetNonReferenceType(type);
+    }
+    util::format_to(b.body_buffer, "{} {}{ };\n", get_qualified_type_name(type), inst->name);
+    return inst->name;
+  }
+
+  jtl::option<identifier> gen(ir::inst::set_local_ref const inst, builder &b)
+  {
+    b.next_instruction();
+    util::format_to(b.body_buffer, "{} = std::move({});\n", inst->local, inst->value);
+    return none;
+  }
+
+  jtl::option<identifier> gen(ir::inst::jump_ref const inst, builder &b)
   {
     b.next_instruction();
 
     if(inst->loop)
     {
       util::format_to(b.body_buffer, "continue;\n");
+    }
+
+    /* If there are any instructions after the jump, like scope closes, we need to handle
+     * them, too. */
+    while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
+    {
+      gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
     }
 
     if(b.seen_blocks.contains(inst->block))
@@ -879,7 +905,7 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::truthy_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::truthy_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer,
@@ -889,29 +915,21 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::branch_get_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::branch_get_ref const inst, builder &b)
   {
     b.next_instruction();
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::branch_set_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::branch_set_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "{} = {};\n", inst->shadow, inst->value);
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::branch_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::branch_ref const inst, builder &b)
   {
-    if(inst->shadow.is_some())
-    {
-      util::format_to(b.body_buffer,
-                      "{} {}{ };\n",
-                      get_qualified_type_name(inst->shadow.unwrap().type),
-                      inst->shadow.unwrap().name);
-    }
-
     util::format_to(b.body_buffer, "if({}){\n", inst->condition);
     b.enter_block(inst->then_block);
     gen_until_jump(inst->merge_block, b);
@@ -921,25 +939,14 @@ namespace jank::codegen
     gen_until_jump(inst->merge_block, b);
     util::format_to(b.body_buffer, "}\n");
 
-    if(inst->merge_block.is_some())
-    {
-      b.enter_block(inst->merge_block.unwrap());
-    }
+    b.enter_block(inst->merge_block);
 
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::loop_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::loop_ref const inst, builder &b)
   {
     b.next_instruction();
-
-    if(inst->shadow.is_some())
-    {
-      util::format_to(b.body_buffer,
-                      "{} {};\n",
-                      get_qualified_type_name(inst->shadow.unwrap().type),
-                      inst->shadow.unwrap().name);
-    }
 
     for(auto const &shadow : inst->binding_shadows)
     {
@@ -969,7 +976,7 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::throw_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::throw_ref const inst, builder &b)
   {
     b.next_instruction();
     /* We static_cast to object_ref here, since we'll be trying to catch an object_ref in any
@@ -978,15 +985,22 @@ namespace jank::codegen
     util::format_to(b.body_buffer,
                     "throw static_cast<jank::runtime::object_ref>({});\n",
                     inst->value);
+
+    /* If there are any instructions after the throw, like scope closes, we need to handle
+     * them, too. */
+    while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
+    {
+      gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
+    }
+
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::try_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::try_ref const inst, builder &b)
   {
     b.next_instruction();
     auto const has_finally{ inst->finally_block.is_some() };
     identifier finally_guard_name;
-    util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->shadow);
 
     if(has_finally)
     {
@@ -1033,7 +1047,7 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::catch_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::catch_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer,
@@ -1048,7 +1062,7 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::finally_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::finally_ref const inst, builder &b)
   {
     b.next_instruction();
 
@@ -1060,14 +1074,9 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::case_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::case_ref const inst, builder &b)
   {
     b.next_instruction();
-
-    if(inst->shadow.is_some())
-    {
-      util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->shadow.unwrap());
-    }
 
     util::format_to(b.body_buffer,
                     "switch(jank_shift_mask_case_integer(static_cast<jank::runtime::object*>({}."
@@ -1091,15 +1100,12 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer, "}\n");
 
-    if(inst->merge_block.is_some())
-    {
-      b.enter_block(inst->merge_block.unwrap());
-    }
+    b.enter_block(inst->merge_block);
 
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::ret_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::ret_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "return {};\n", inst->value);
@@ -1107,7 +1113,35 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_raw_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_scope_open_ref const &inst, builder &b)
+  {
+    b.next_instruction();
+
+    if(inst->name == "s0")
+    {
+      return none;
+    }
+
+    util::format_to(b.body_buffer, "{ // {}\n", inst->name);
+
+    return none;
+  }
+
+  jtl::option<identifier> gen(ir::inst::cpp_scope_close_ref const &inst, builder &b)
+  {
+    b.next_instruction();
+
+    if(inst->scope == "s0")
+    {
+      return none;
+    }
+
+    util::format_to(b.body_buffer, "} // {}\n", inst->scope);
+
+    return none;
+  }
+
+  jtl::option<identifier> gen(ir::inst::cpp_raw_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.cpp_raw_buffer, "\n{}\n", inst->expr->code);
@@ -1115,7 +1149,7 @@ namespace jank::codegen
     return none;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_value_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_value_ref const inst, builder &b)
   {
     b.next_instruction();
 
@@ -1169,7 +1203,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_into_object_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_into_object_ref const inst, builder &b)
   {
     b.next_instruction();
     /* There's no need to do a conversion for void, since we always just
@@ -1201,13 +1235,13 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_from_object_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_from_object_ref const inst, builder &b)
   {
     ir::inst::cpp_into_object from{ inst->name, inst->location, inst->value, inst->expr };
     return gen(ir::inst::cpp_into_object_ref{ &from }, b);
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_unsafe_cast_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_unsafe_cast_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(b.body_buffer,
@@ -1219,7 +1253,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_call_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_call_ref const inst, builder &b)
   {
     b.next_instruction();
     if((b.module->target == compilation_target::module
@@ -1238,14 +1272,21 @@ namespace jank::codegen
       auto const is_void{ Cpp::IsVoid(Cpp::GetFunctionReturnType(source->scope)) };
       if(is_void)
       {
-        util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->name);
+        util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {};\n", inst->name);
       }
       else
       {
         util::format_to(b.body_buffer, "auto &&{}(", inst->name);
       }
 
-      util::format_to(b.body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
+      if(Cpp::IsInlineFriendFunction(source->scope))
+      {
+        util::format_to(b.body_buffer, "{}(", Cpp::GetName(source->scope));
+      }
+      else
+      {
+        util::format_to(b.body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
+      }
 
       bool need_comma{};
       for(usize arg_idx{}; arg_idx < inst->expr->arg_exprs.size(); ++arg_idx)
@@ -1300,7 +1341,7 @@ namespace jank::codegen
       auto const is_void{ Cpp::IsVoid(inst->expr->type) };
       if(is_void)
       {
-        util::format_to(b.body_buffer, "jank::runtime::object_ref const {};\n", inst->name);
+        util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref const {};\n", inst->name);
       }
       else
       {
@@ -1334,7 +1375,7 @@ namespace jank::codegen
       auto const is_void{ Cpp::IsVoid(inst->expr->type) };
       if(is_void)
       {
-        util::format_to(b.body_buffer, "jank::runtime::object_ref const {};\n", inst->name);
+        util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref const {};\n", inst->name);
       }
       else
       {
@@ -1381,7 +1422,7 @@ namespace jank::codegen
       auto const is_void{ Cpp::IsVoid(inst->expr->type) };
       if(is_void)
       {
-        util::format_to(b.body_buffer, "jank::runtime::object_ref const {};", inst->name);
+        util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref const {};", inst->name);
       }
       else
       {
@@ -1416,7 +1457,7 @@ namespace jank::codegen
     }
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_constructor_call_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_constructor_call_ref const inst, builder &b)
   {
     b.next_instruction();
     auto const non_ref_type{ Cpp::GetNonReferenceType(inst->expr->type) };
@@ -1571,7 +1612,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_member_call_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_member_call_ref const inst, builder &b)
   {
     b.next_instruction();
     auto const fn_name{ Cpp::GetName(inst->expr->fn) };
@@ -1579,7 +1620,7 @@ namespace jank::codegen
 
     if(is_void)
     {
-      util::format_to(b.body_buffer, "jank::runtime::object_ref {}{ };\n", inst->name);
+      util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {}{ };\n", inst->name);
       util::format_to(b.body_buffer,
                       "{}{}{}(",
                       inst->args[0],
@@ -1619,7 +1660,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_member_access_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_member_access_ref const inst, builder &b)
   {
     b.next_instruction();
     util::format_to(
@@ -1634,7 +1675,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_builtin_operator_call_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_builtin_operator_call_ref const inst, builder &b)
   {
     b.next_instruction();
     auto const op_name{ operator_name(static_cast<Cpp::Operator>(inst->expr->op)).unwrap() };
@@ -1664,7 +1705,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_box_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_box_ref const inst, builder &b)
   {
     b.next_instruction();
     auto const value_expr_type{ expression_type(inst->expr->value_expr) };
@@ -1688,7 +1729,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_unbox_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_unbox_ref const inst, builder &b)
   {
     b.next_instruction();
     auto const type_name{ get_qualified_type_name(Cpp::GetCanonicalType(inst->expr->type)) };
@@ -1705,7 +1746,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_new_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_new_ref const inst, builder &b)
   {
     b.next_instruction();
     auto finalizer_name{ munge(__rt_ctx->unique_string("finalizer")) };
@@ -1736,7 +1777,7 @@ namespace jank::codegen
     return inst->name;
   }
 
-  jtl::option<identifier> gen(ir::inst::cpp_delete_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::inst::cpp_delete_ref const inst, builder &b)
   {
     b.next_instruction();
     auto const value_type{ Cpp::GetPointeeType(expression_type(inst->expr->value_expr)) };
@@ -1759,7 +1800,7 @@ namespace jank::codegen
     return "jank::runtime::jank_nil";
   }
 
-  jtl::option<identifier> gen(ir::instruction_ref const &inst, builder &b)
+  jtl::option<identifier> gen(ir::instruction_ref const inst, builder &b)
   {
     jtl::string_builder sb;
     inst->print(sb, 0);

@@ -24,13 +24,17 @@
 (def ^:dynamic *compile-files*)
 (def ^:dynamic *file*)
 
+(def ^:dynamic *out* (cpp/box cpp/stdout))
+(def ^:dynamic *err* (cpp/box cpp/stderr))
+(def ^:private stream*
+  "A static box to a FILE* to get the platform specific canonical-type."
+  (cpp/box cpp/stdout))
+
 (def ^:dynamic *in* nil)
-(def ^:dynamic *out* nil)
 (def ^:dynamic *warn-on-reflection* nil)
 (def ^:dynamic *compile-path* nil)
 (def ^:dynamic *unchecked-math* nil)
 (def ^:dynamic *compiler-options* nil)
-(def ^:dynamic *err* nil)
 (def ^:dynamic *flush-on-newline* nil)
 (def ^:dynamic *print-meta* nil)
 (def ^:dynamic *print-dup* nil)
@@ -57,6 +61,7 @@
   ^{:doc "Bound to true in a repl thread"}
   *repl* false)
 
+(cpp/raw "#include <stdio.h>")
 (cpp/raw "#include <fstream>")
 (cpp/raw "#include <sstream>")
 (cpp/raw "#include <filesystem>")
@@ -363,7 +368,10 @@
     ([v start]
      (subvec v start (count v)))
     ([v start end]
-     (cpp/jank.runtime.subvec v start end))))
+     (cpp/jank.runtime.subvec
+      v
+      (cpp/jank.runtime.to_int start)
+      (cpp/jank.runtime.to_int end)))))
 
 (def ^{:arglists '([] [coll] [coll x] [coll x & xs])
        :doc "conj[oin]. Returns a new collection with the xs
@@ -578,6 +586,8 @@
      (cpp/jank.runtime.print1 x))
     ([x & more]
      (cpp/jank.runtime.print1 x)
+     (if (seq more)
+       (cpp/jank.runtime.print1 " "))
      (cpp/jank.runtime.print more))))
 
 (def ^{:arglists '([& more])
@@ -1221,6 +1231,14 @@
   (reset-meta! o (apply f (meta o) args)))
 
 ;; Atoms.
+(defn- setup-reference [r options]
+  (let [opts (apply hash-map options)]
+    (when (:meta opts)
+      (cpp/jank.runtime.reset_meta r (:meta opts)))
+    (when (:validator opts)
+      (cpp/jank.runtime.set_validator r (:validator opts)))
+    r))
+
 (defn atom
   "Creates and returns an Atom with an initial value of x and zero or
    more options (in any order):
@@ -1236,9 +1254,8 @@
    return false or throw an exception."
   ([x]
    (cpp/jank.runtime.atom x))
-  ; TODO: Validators.
-  #_([x & options]
-     (setup-reference (atom x) options)))
+  ([x & options]
+   (setup-reference (atom x) options)))
 
 (defn swap!
   "Atomically swaps the value of atom to be:
@@ -1684,11 +1701,11 @@
 ;; Numbers.
 (defn
   ^{:inline (fn* [x]
-             (list 'cpp/jank.runtime.is_integer x))}
+             (list 'cpp/jank.runtime.is_integral x))}
   integer?
   "Returns true if n is an integer"
   [n]
-  (cpp/jank.runtime.is_integer n))
+  (cpp/jank.runtime.is_integral n))
 
 (defn
   ^{:inline (fn* [x]
@@ -1913,7 +1930,7 @@
 (defn int?
   "Return true if x is a fixed precision integer"
   [x]
-  (integer? x))
+  (cpp/jank.runtime.is_integer x))
 
 (defn pos-int?
   "Return true if x is a positive fixed precision integer"
@@ -3126,14 +3143,16 @@
   "Returns a lazy (infinite!) sequence of repetitions of the items in coll."
   [coll]
   ; TODO: Custom cycle object
-  (lazy-seq (concat coll (cycle coll))))
+  (if-not (seq coll)
+    '()
+    (lazy-seq (concat coll (cycle coll)))))
 
 (defn repeat
   "Returns a lazy (infinite!, or length n if supplied) sequence of val."
   ([x]
    (cpp/jank.runtime.obj.repeat.create x))
   ([n x]
-   (cpp/jank.runtime.obj.repeat.create n x)))
+   (cpp/jank.runtime.obj.repeat.create (cpp/jank.runtime.to_int n) x)))
 
 (defn split-at
   "Returns a vector of [(take n coll) (drop n coll)]"
@@ -4739,7 +4758,7 @@
                       (cpp/clojure.core_native.throw_runtime_invalid_referred_global_rename (str "Referred global '" k "' is being renamed to '" v "', but '" v "' is already a referred global.")
                                                                                             v existing)
                                                                                                                                                                                                  (conj acc v)))
-                    (into #{} (:only actions))
+                    (into #{} (concat (:only actions) (keys (:rename actions))))
                                                                                                                                                                                                  (:rename actions))]
     (doseq [only (:only actions)]
       (cpp/clojure.core_native.refer_global only))
@@ -5133,15 +5152,6 @@
   `(bound-fn* (fn ~@fntail)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; Refs ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defn-
-  setup-reference [#_clojure.lang.ARef r options]
-  ;; (let [opts (apply hash-map options)]
-  ;;   (when (:meta opts)
-  ;;     (.resetMeta r (:meta opts)))
-  ;;   (when (:validator opts)
-  ;;     (.setValidator r (:validator opts)))
-  ;;   r)
-  (throw "TODO: port setup-reference"))
 
 (defn agent
   "Creates and returns an agent with an initial value of state and
@@ -5389,15 +5399,13 @@
   validator-fn should return false or throw an exception. If the current state (root
   value if var) is not acceptable to the new validator, an exception
   will be thrown and the validator will not be changed."
-  [#_clojure.lang.IRef iref validator-fn]
-  ;; (. iref (setValidator validator-fn))
-  (throw "TODO: port set-validator!"))
+  [iref validator-fn]
+  (cpp/jank.runtime.set_validator iref validator-fn))
 
 (defn get-validator
   "Gets the validator-fn for a var/ref/agent/atom."
- [#_clojure.lang.IRef iref]
-  ;; (. iref (getValidator))
-  (throw "TODO: port get-validator"))
+  [iref]
+  (cpp/jank.runtime.get_validator iref))
 
 (defn commute
   "Must be called in a transaction. Sets the in-transaction-value of
@@ -5645,8 +5653,10 @@
   java.util.Comparator.  Guaranteed to be stable: equal elements will
   not be reordered.  If coll is a Java array, it will be modified.  To
   avoid this, sort a copy of the array."
-  [coll]
-  (cpp/jank.runtime.sort coll))
+  ([coll]
+   (cpp/jank.runtime.sort coll))
+  ([comp coll]
+   (cpp/jank.runtime.sort comp coll)))
 
 (defn sort-by
   "Returns a sorted sequence of the items in coll, where the sort
@@ -5657,9 +5667,8 @@
   avoid this, sort a copy of the array."
   ([keyfn coll]
    (sort-by keyfn compare coll))
-  ([keyfn #_java.util.Comparator comp coll]
-  ;;  (sort (fn [x y] (. comp (compare (keyfn x) (keyfn y)))) coll)
-   (throw "TODO: port sort-by")))
+  ([keyfn comp coll]
+   (sort (fn [x y] (comp (keyfn x) (keyfn y))) coll)))
 
 ;; evaluation
 
@@ -6243,14 +6252,9 @@
   "Constructs an array-map. If any keys are equal, they are handled as
   if by repeated uses of assoc."
   ([]
-  ;;  (. clojure.lang.PersistentArrayMap EMPTY)
-   (throw "TODO: port array-map"))
+   (cpp/jank.runtime.obj.persistent_array_map.empty))
   ([& keyvals]
-    ;;  (let [ary (to-array keyvals)]
-    ;;    (if (odd? (alength ary))
-    ;;      (throw (IllegalArgumentException. (str "No value supplied for key: " (last keyvals))))
-    ;;      (clojure.lang.PersistentArrayMap/createAsIfByAssoc ary)))
-   (throw "TODO: port array-map")))
+   (cpp/jank.runtime.obj.persistent_array_map.create_from_seq keyvals)))
 
 (defn seq-to-map-for-destructuring
   "Builds a map from a seq as described in
@@ -6275,11 +6279,31 @@
   StringWriter.  Returns the string created by any nested printing
   calls."
   [& body]
-  ;; `(let [s# (new java.io.StringWriter)]
-  ;;    (binding [*out* s#]
-  ;;      ~@body
-  ;;      (str s#)))
-  (throw "TODO: port with-out-str"))
+  ;; TODO: replace FILE*-based capture (open_memstream/tmpfile) with a
+  ;; cross platform writer based approach (jank.io/writer). See PR #794.
+  (if (= cpp/jtl.current_platform cpp/jtl.platform.windows_like)
+    `(let [tmp# (cpp/tmpfile)]
+       (binding [*out* (cpp/box tmp#)]
+         ~@body)
+       (cpp/fflush tmp#)
+       (let [size# (cpp/ftell tmp#)]
+         (cpp/fseek tmp# 0 cpp/SEEK_SET)
+         (let [buff# (cpp/malloc size#)]
+           (cpp/fread buff# 1 size# tmp#)
+           (cpp/fclose tmp#)
+           (let [is# (cpp/jtl.immutable_string.
+                      (cpp/cast (:* char) buff#)
+                      (cpp/cast cpp/size_t size#))]
+             (cpp/free buff#)
+             is#))))
+    `(let [buff# (cpp/cast (:* char) cpp/nullptr)
+           size# (cpp/size_t. 0)
+           out#  (cpp/open_memstream (cpp/& buff#) (cpp/& size#))]
+       (binding [*out* (cpp/box out#)]
+         ~@body
+         (cpp/fflush out#)
+         (cpp/fclose out#)
+         (cpp/jtl.immutable_string. buff# size#)))))
 
 (defmacro with-in-str
   "Evaluates body in a context in which *in* is bound to a fresh
@@ -6292,24 +6316,21 @@
 (defn prn-str
   "prn to a string, returning it"
   [& xs]
-  ;; (with-out-str
-  ;;  (apply prn xs))
-  (throw "TODO: port prn-str"))
+  (with-out-str
+   (apply prn xs)))
 
 
 (defn print-str
   "print to a string, returning it"
   [& xs]
-    ;; (with-out-str
-    ;;  (apply print xs))
-  (throw "TODO: port print-str"))
+  (with-out-str
+    (apply print xs)))
 
 (defn println-str
   "println to a string, returning it"
   [& xs]
-    ;; (with-out-str
-    ;;  (apply println xs))
-  (throw "TODO: port println-str"))
+  (with-out-str
+    (apply println xs)))
 
 (defn ^:private elide-top-frames
   [#_Throwable ex class-name]

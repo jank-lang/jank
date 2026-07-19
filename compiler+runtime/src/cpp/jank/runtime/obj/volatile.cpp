@@ -7,7 +7,6 @@ namespace jank::runtime::obj
     : object{ obj_type, obj_behaviors }
     , val{ o }
   {
-    jank_debug_assert(val.is_some());
   }
 
   object_ref volatile_::deref() const
@@ -18,7 +17,6 @@ namespace jank::runtime::obj
   object_ref volatile_::reset(object_ref const o)
   {
     val = o;
-    jank_debug_assert(val.is_some());
     return val;
   }
 }

@@ -1,4 +1,4 @@
-# We don't have any dynamic lib deps which are installed alongside jank.
+# By default, we don't have any dynamic lib deps which are installed alongside jank.
 set(CMAKE_SKIP_INSTALL_RPATH ON)
 install(TARGETS jank_exe_phase_2 DESTINATION bin)
 install(
@@ -144,34 +144,41 @@ if(jank_local_clang AND jank_install_local_clang)
     DESTINATION lib/jank/${PROJECT_VERSION}/bin
   )
 
-if(APPLE)
-  install(
-    FILES
-    ${llvm_dir}/lib/libLLVM.dylib
-    ${llvm_dir}/lib/libclang-cpp.dylib
-    ${llvm_dir}/lib/libc++.1.0.dylib
-    ${llvm_dir}/lib/libc++.1.dylib
-    ${llvm_dir}/lib/libc++.dylib
-    ${llvm_dir}/lib/libc++abi.1.0.dylib
-    ${llvm_dir}/lib/libc++abi.1.dylib
-    ${llvm_dir}/lib/libc++abi.dylib
-    ${llvm_dir}/lib/libunwind.1.0.dylib
-    ${llvm_dir}/lib/libunwind.1.dylib
-    ${llvm_dir}/lib/libunwind.dylib
-    DESTINATION lib/jank/${PROJECT_VERSION}/lib
-  )
-else()
-  file(
-    GLOB jank_llvm_install_libs
-    LIST_DIRECTORIES false
-    ${llvm_dir}/lib/libLLVM.*
-    ${llvm_dir}/lib/libclang-cpp.*)
-  install(
-    FILES
-    ${jank_llvm_install_libs}
-    DESTINATION lib/jank/${PROJECT_VERSION}/lib
-  )
-endif()
+  # Ensure that symlinks to linked shared libs get brought in and completely
+  # resolved.
+  function(jank_install_dylib_chain)
+    set(one_value_args DESTINATION)
+    set(multi_value_args FILES)
+    cmake_parse_arguments(jank_dylib "" "${one_value_args}" "${multi_value_args}" ${ARGN})
+    foreach(f ${jank_dylib_FILES})
+      install(CODE "
+      file(INSTALL \"${f}\" DESTINATION \"\${CMAKE_INSTALL_PREFIX}/${jank_dylib_DESTINATION}\" FOLLOW_SYMLINK_CHAIN)
+      ")
+    endforeach()
+  endfunction()
+
+  if(APPLE)
+    jank_install_dylib_chain(
+      FILES
+      ${llvm_dir}/lib/libLLVM.dylib
+      ${llvm_dir}/lib/libclang-cpp.dylib
+      ${llvm_dir}/lib/libc++.dylib
+      ${llvm_dir}/lib/libc++abi.dylib
+      ${llvm_dir}/lib/libunwind.dylib
+      DESTINATION lib/jank/${PROJECT_VERSION}/lib
+    )
+  else()
+    file(
+      GLOB jank_llvm_install_libs
+      LIST_DIRECTORIES false
+      ${llvm_dir}/lib/libLLVM.*
+      ${llvm_dir}/lib/libclang-cpp.*)
+    install(
+      FILES
+      ${jank_llvm_install_libs}
+      DESTINATION lib/jank/${PROJECT_VERSION}/lib
+    )
+  endif()
 
   jank_glob_install_without_prefix(
     INPUT_PREFIX "${llvm_dir}/"

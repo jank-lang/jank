@@ -217,15 +217,13 @@ namespace jank::analyze
                                          expr::cpp_value_ref const val,
                                          native_vector<runtime::object_ref> const &macro_expansions)
   {
-    if(args.size() == 2)
+    if(args.size() == 2
+       && ((Cpp::IsPointerType(Cpp::GetNonReferenceType(args[0].m_Type))
+            && !Cpp::IsIntegral(Cpp::GetNonReferenceType(args[1].m_Type)))
+           || (Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type))
+               && !Cpp::IsIntegral(Cpp::GetNonReferenceType(args[0].m_Type)))))
     {
-      if((Cpp::IsPointerType(Cpp::GetNonReferenceType(args[0].m_Type))
-          && !Cpp::IsIntegral(Cpp::GetNonReferenceType(args[1].m_Type)))
-         || (Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type))
-             && !Cpp::IsIntegral(Cpp::GetNonReferenceType(args[0].m_Type))))
-      {
-        return invalid_binary(args, op_name, val, macro_expansions);
-      }
+      return invalid_binary(args, op_name, val, macro_expansions);
     }
 
     return ok();
@@ -236,14 +234,11 @@ namespace jank::analyze
                                        expr::cpp_value_ref const val,
                                        native_vector<runtime::object_ref> const &macro_expansions)
   {
-    if(args.size() == 2)
+    if(args.size() == 2 && Cpp::IsIntegral(Cpp::GetNonReferenceType(args[0].m_Type))
+       && Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type)))
     {
-      if(Cpp::IsIntegral(Cpp::GetNonReferenceType(args[0].m_Type))
-         && Cpp::IsPointerType(Cpp::GetNonReferenceType(args[1].m_Type)))
-      {
-        /* TODO: Add a note to swap the arguments. */
-        return invalid_binary(args, op_name, val, macro_expansions);
-      }
+      /* TODO: Add a note to swap the arguments. */
+      return invalid_binary(args, op_name, val, macro_expansions);
     }
 
     return ok();
@@ -848,14 +843,12 @@ namespace jank::analyze
        * Nothing else could have an unresolved template up until now. */
       for(size_t i{}; i < arg_types.size(); ++i)
       {
-        if(auto const value = llvm::dyn_cast<expr::cpp_value>(arg_exprs[i].data))
+        /* Just adding a reference to the same type is not worthy of change.
+         * For some situations, this would fuck up codegen. For example, with enum constants. */
+        if(auto const value{ llvm::dyn_cast<expr::cpp_value>(arg_exprs[i].data) };
+           value && value->type.data != Cpp::GetNonReferenceType(arg_types[i].m_Type))
         {
-          /* Just adding a reference to the same type is not worthy of change.
-           * For some situations, this would fuck up codegen. For example, with enum constants. */
-          if(value->type.data != Cpp::GetNonReferenceType(arg_types[i].m_Type))
-          {
-            value->type = arg_types[i].m_Type;
-          }
+          value->type = arg_types[i].m_Type;
         }
       }
 
@@ -1525,7 +1518,7 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const shift_obj{ it.first().unwrap() };
-    if(!runtime::is_integer(shift_obj))
+    if(!runtime::is_integral(shift_obj))
     {
       return error::analyze_invalid_case("Shift value must be an integer.",
                                          meta_source(o->get_meta()),
@@ -1541,7 +1534,7 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const mask_obj{ it.first().unwrap() };
-    if(!runtime::is_integer(mask_obj))
+    if(!runtime::is_integral(mask_obj))
     {
       return error::analyze_invalid_case("Mask value must be an integer.",
                                          meta_source(o->get_meta()),
@@ -1584,7 +1577,7 @@ namespace jank::analyze
           auto const e{ seq->first() };
           auto const k_obj{ e->data[0] };
           auto const v_obj{ e->data[1] };
-          if(!runtime::is_integer(k_obj))
+          if(!runtime::is_integral(k_obj))
           {
             return err("Map key for case* is expected to be an integer.");
           }
@@ -2582,12 +2575,38 @@ namespace jank::analyze
     /* If no recur is found, we still need to note that this is a loop, since loop bindings
      * are type-erased. During IR gen, this is crucial information to ensure the IR matches
      * what was analyzed. */
-    if(let->loop_kind == expr::let::loop_kind::none)
+    if(let->loop_kind == expr::let::loop_kind::normal)
     {
       let->loop_kind = expr::let::loop_kind::loop_without_recur;
     }
 
     return let;
+  }
+
+  /* We use this to find `recur` expressions. We need to recursively dig into `do` and `let`
+   * expressions to see if their tail expression is a `recur`. Every other expression is
+   * just returned as is. */
+  static expression_ref resolve_tail_expression(expression_ref const expr)
+  {
+    if(expr->kind == expression_kind::do_)
+    {
+      auto const do_{ static_box_cast<expr::do_>(expr) };
+      if(!do_->values.empty())
+      {
+        return resolve_tail_expression(do_->values.back());
+      }
+      return expr;
+    }
+    if(expr->kind == expression_kind::let)
+    {
+      auto const let{ static_box_cast<expr::let>(expr) };
+      if(!let->body->values.empty())
+      {
+        return resolve_tail_expression(let->body->values.back());
+      }
+      return expr;
+    }
+    return expr;
   }
 
   processor::expression_result
@@ -2643,6 +2662,8 @@ namespace jank::analyze
       return condition_expr.expect_err()->add_usage(read::parse::reparse_nth(o, 1));
     }
 
+    bool has_recur{};
+
     auto const then(o->data.rest().rest().first().unwrap());
     auto then_expr(analyze(then, current_frame, position, fn_ctx, needs_box));
     if(then_expr.is_err())
@@ -2650,6 +2671,11 @@ namespace jank::analyze
       return then_expr.expect_err();
     }
     auto const then_type{ cpp_util::non_void_expression_type(then_expr.expect_ok()) };
+
+    if(resolve_tail_expression(then_expr.expect_ok())->kind == expression_kind::recur)
+    {
+      has_recur = true;
+    }
 
     jtl::option<expression_ref> else_expr_opt;
     if(form_count == 4)
@@ -2659,6 +2685,11 @@ namespace jank::analyze
       if(else_expr.is_err())
       {
         return else_expr.expect_err();
+      }
+
+      if(resolve_tail_expression(else_expr.expect_ok())->kind == expression_kind::recur)
+      {
+        has_recur = true;
       }
 
       else_expr_opt = else_expr.expect_ok();
@@ -2679,7 +2710,8 @@ namespace jank::analyze
        *
        * If neither of these are the case, we have an error. */
     if((Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
-       && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible))
+       && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible)
+       && !has_recur)
     {
       return error::analyze_mismatched_if_types(
         util::format("Mismatched 'if' branch types '{}' and '{}'. Each branch of an 'if' must have "
@@ -2704,20 +2736,29 @@ namespace jank::analyze
                         .expect_ok();
     }
 
+    auto const final_then_type{ then_expr.expect_ok()->get_type() };
+    auto const final_else_type{ else_expr_opt.is_some() ? else_expr_opt.unwrap()->get_type()
+                                                        : cpp_util::untyped_object_ref_type() };
+    auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
+      cpp_util::non_void_type(final_else_type),
+      cpp_util::non_void_type(final_then_type)) };
+
     /* If we have a typed object on one side, and anything other than that same typed object
-     * on the other side, we need to type-erase to find the common type. */
-    auto if_type{ then_expr.expect_ok()->get_type() };
-    if(cpp_util::is_typed_object(if_type) && is_else_object
-       && Cpp::GetCanonicalType(if_type) != Cpp::GetCanonicalType(else_type))
+     * on the other side, we need to type-erase to find the common type.
+     *
+     * We also calculate the types again, since they may have changed due to the implicit
+     * conversions above. */
+    if(cpp_util::is_typed_object(chosen_type) && cpp_util::is_any_object(other_type)
+       && Cpp::GetCanonicalType(chosen_type) != Cpp::GetCanonicalType(other_type))
     {
-      if_type = cpp_util::untyped_object_ref_type();
+      chosen_type = cpp_util::untyped_object_ref_type();
     }
 
     return jtl::make_ref<expr::if_>(position,
                                     current_frame,
                                     needs_box,
                                     o,
-                                    if_type,
+                                    chosen_type,
                                     condition_expr.expect_ok(),
                                     then_expr.expect_ok(),
                                     else_expr_opt);
@@ -3357,28 +3398,30 @@ namespace jank::analyze
         return analyze_cpp_call(o, source.data, current_frame, position, fn_ctx, needs_box);
       }
 
-      object_ref expanded{ o };
-      jtl::ptr<error::base> expansion_error{};
-      JANK_TRY
+      if(source->kind != expression_kind::local_reference)
       {
-        expanded = __rt_ctx->macroexpand(o);
-      }
-      JANK_CATCH_THEN(
-        [&](auto const &e) {
-          expansion_error
-            = error::analyze_macro_expansion_exception(e,
-                                                       cpptrace::from_current_exception(),
-                                                       object_source(o),
-                                                       latest_expansion(macro_expansions));
-        },
-        return expansion_error.as_ref())
+        object_ref expanded{ o };
+        jtl::ptr<error::base> expansion_error{};
+        JANK_TRY
+        {
+          expanded = __rt_ctx->macroexpand(o);
+        }
+        JANK_CATCH_THEN(
+          [&](auto const &e) {
+            expansion_error
+              = error::analyze_macro_expansion_exception(e,
+                                                         cpptrace::from_current_exception(),
+                                                         object_source(o),
+                                                         latest_expansion(macro_expansions));
+          },
+          return expansion_error.as_ref())
 
-      if(expanded != o)
-      {
-        return analyze(expanded, current_frame, position, fn_ctx, needs_box);
+        if(expanded != o)
+        {
+          return analyze(expanded, current_frame, position, fn_ctx, needs_box);
+        }
       }
 
-      source = sym_result.expect_ok();
       auto const var_deref(llvm::dyn_cast<expr::var_deref>(source.data));
 
       /* Some vars have meta which defines how calls to it can be inlined. This works similarly
@@ -3441,9 +3484,7 @@ namespace jank::analyze
         return analyze_cpp_call(o, value, current_frame, position, fn_ctx, needs_box);
       }
 
-      if((source->kind >= expression_kind::cpp_value_min
-          && source->kind <= expression_kind::cpp_value_max)
-         || !cpp_util::is_any_object(cpp_util::expression_type(source.data)))
+      if(!cpp_util::is_any_object(cpp_util::expression_type(source.data)))
       {
         return analyze_cpp_call(o, source.data, current_frame, position, fn_ctx, needs_box);
       }
@@ -4731,19 +4772,6 @@ namespace jank::analyze
         {
           return analyze_set(typed_o, current_frame, position, fn_ctx, needs_box);
         }
-        else if constexpr((T::obj_behaviors & runtime::object_behavior::number_like)
-                            != object_behavior::none
-                          || jtl::is_any_same<T,
-                                              runtime::obj::keyword,
-                                              runtime::obj::nil,
-                                              runtime::obj::persistent_string,
-                                              runtime::obj::character,
-                                              runtime::obj::uuid,
-                                              runtime::obj::inst,
-                                              runtime::obj::re_pattern>)
-        {
-          return analyze_primitive_literal(o, current_frame, position, fn_ctx, needs_box);
-        }
         else if constexpr(std::same_as<T, runtime::obj::symbol>)
         {
           return analyze_symbol(typed_o, current_frame, position, fn_ctx, needs_box);
@@ -4762,13 +4790,11 @@ namespace jank::analyze
         {
           return analyze_var_val(typed_o, current_frame, position, fn_ctx, needs_box);
         }
+        // https://clojure.org/reference/evaluation
+        // > Any object other than those discussed above will evaluate to itself.
         else
         {
-          return error::internal_analyze_failure(
-            util::format("Unimplemented analysis for object type '{}'.",
-                         object_type_str(typed_o.get_type())),
-            object_source(o),
-            latest_expansion(macro_expansions));
+          return analyze_primitive_literal(o, current_frame, position, fn_ctx, needs_box);
         }
       },
       o);
@@ -5142,7 +5168,7 @@ namespace jank::analyze
                 }
 
                 auto const size_obj{ runtime::second(next(seq)) };
-                if(runtime::is_integer(size_obj))
+                if(runtime::is_integral(size_obj))
                 {
                   auto const size{ runtime::to_i64(size_obj) };
                   if(size < 0)
@@ -5471,7 +5497,7 @@ namespace jank::analyze
           native_vector<Cpp::TemplateArgInfo> args;
           for(auto const arg : make_sequence_range(rest(typed_o)))
           {
-            if(runtime::is_integer(arg))
+            if(runtime::is_integral(arg))
             {
               auto const int_arg{ runtime::to_i64(arg) };
               static auto const int_type{ cpp_util::resolve_literal_type("long long").expect_ok() };

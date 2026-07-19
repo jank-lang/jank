@@ -28,6 +28,11 @@ namespace jank::util
    */
   jtl::immutable_string const &binary_version()
   {
+    if(!util::cli::opts.forced_binary_version.empty())
+    {
+      return util::cli::opts.forced_binary_version;
+    }
+
     static jtl::immutable_string res;
     if(!res.empty())
     {
@@ -158,5 +163,10 @@ namespace jank::util
       args.emplace_back(strdup("-isysroot"));
       args.emplace_back(strdup(sdk_path.c_str()));
     }
+  }
+
+  jtl::immutable_string build_dir()
+  {
+    return util::format("{}/{}", util::cli::opts.build_dir, binary_version());
   }
 }

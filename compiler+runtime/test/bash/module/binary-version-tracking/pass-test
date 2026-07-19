@@ -9,8 +9,7 @@
 
 (def this-nsym (ns-name *ns*))
 
-(defn jank [command module-name & {:keys [extra-module-path
-                                          out
+(defn jank [command module-name & {:keys [out
                                           flags
                                           env]}]
   (let [args (concat ["jank" "--module-path" "src"]

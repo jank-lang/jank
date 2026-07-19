@@ -13,10 +13,10 @@
     clojure.core-test.assoc
     clojure.core-test.assoc-bang
     ; clojure.core-test.associative-qmark ; TODO: port to-array
-    ; clojure.core-test.atom ; libc++abi: terminating due to uncaught exception of type jank::runtime::invalid_arity<3ull>: invalid call to #object [unknown jit_function 0x1041da080] with 3 args provided
+    clojure.core-test.atom
     clojure.core-test.bigdec
-    ; clojure.core-test.bigint ; FIXME: Failing tests.
-    clojure.core-test.binding
+    clojure.core-test.bigint
+    clojure.core-test.binding ; TODO: port future
     clojure.core-test.bit-and
     clojure.core-test.bit-and-not
     clojure.core-test.bit-clear
@@ -32,22 +32,22 @@
     clojure.core-test.boolean-qmark
     clojure.core-test.bound-fn
     clojure.core-test.bound-fn-star
-    clojure.core-test.butlast
+    ; clojure.core-test.butlast ; "TODO: port int-array"
     ; clojure.core-test.byte ; TODO: port byte, Expecting whitespace after the last token. due to M.
     ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
-    ; clojure.core-test.char
+    ; clojure.core-test.char ; FIXME: Failing unicode character tests.
     clojure.core-test.char-qmark
     ; clojure.core-test.coll-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.comment
-    ; clojure.core-test.compare ; libc++abi: terminating due to uncaught exception of type std::runtime_error: not comparable: a
+    clojure.core-test.compare
     clojure.core-test.conj
     clojure.core-test.conj-bang
     clojure.core-test.cons
     clojure.core-test.constantly
-    ; clojure.core-test.contains-qmark ; FIXME: Failing tests. 
+    clojure.core-test.contains-qmark
     clojure.core-test.count
     ; clojure.core-test.counted-qmark ; TODO: port array-map, TODO: port object-array
-    ; clojure.core-test.cycle ; Program hangs.
+    clojure.core-test.cycle
     clojure.core-test.dec
     clojure.core-test.decimal-qmark
     clojure.core-test.denominator
@@ -55,46 +55,46 @@
     ; clojure.core-test.descendants ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
     clojure.core-test.disj
     clojure.core-test.disj-bang
-    ; clojure.core-test.dissoc ; analyze/unresolved-symbol error: Unable to resolve symbol 'defrecord'.
+    clojure.core-test.dissoc
     clojure.core-test.dissoc-bang
     clojure.core-test.doseq
     clojure.core-test.double
     clojure.core-test.double-qmark
-    ; clojure.core-test.drop ; Assertion failed! val.is_some(), https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/245
+    clojure.core-test.drop
     clojure.core-test.drop-last
-    ; clojure.core-test.drop-while ; Assertion failed! val.is_some(), https://github.com/jank-lang/jank/issues/243 , https://github.com/jank-lang/jank/issues/212
-    ; clojure.core-test.empty ; FIXME: Failing tests.
+    clojure.core-test.drop-while
+    clojure.core-test.empty
     clojure.core-test.empty-qmark
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
-    ; clojure.core-test.eval ; libc++abi: terminating due to uncaught exception of type jtl::ref<jank::error::base>
+    clojure.core-test.eval
     clojure.core-test.even-qmark
     clojure.core-test.false-qmark
     clojure.core-test.ffirst
     clojure.core-test.find
-    clojure.core-test.first
-    ; clojure.core-test.float ; FIXME: Failing tests.
+    ; clojure.core-test.first ; "TODO: port to-array"
+    clojure.core-test.float
     clojure.core-test.float-qmark
     clojure.core-test.fn-qmark
     clojure.core-test.fnext
     clojure.core-test.fnil
     ; clojure.core-test.format ; TODO: port format
     ; clojure.core-test.get ; TODO: port to-array
-    ; clojure.core-test.get-in ; FIXME: Failing tests. 
+    clojure.core-test.get-in
     clojure.core-test.gt
     clojure.core-test.gt-eq
     clojure.core-test.hash-map
     clojure.core-test.hash-set
     clojure.core-test.ident-qmark
     clojure.core-test.identical-qmark
-    ; clojure.core-test.ifn-qmark ; TODO: port promise
+    clojure.core-test.ifn-qmark
     clojure.core-test.inc
-    ; clojure.core-test.int ; FIXME: Failing tests.
-    ; clojure.core-test.int-qmark ; FIXME: Failing tests.
+    ; clojure.core-test.int ; FIXME: Codegen bug.
+    clojure.core-test.int-qmark
     ; clojure.core-test.integer-qmark ; FIXME: Failing tests.
     clojure.core-test.interleave
     clojure.core-test.intern
     clojure.core-test.interpose
-    ; clojure.core-test.juxt ; Program hangs.
+    clojure.core-test.juxt
     ; clojure.core-test.key ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
     clojure.core-test.keys
     clojure.core-test.keyword
@@ -106,9 +106,9 @@
     clojure.core-test.lt-eq
     clojure.core-test.make-hierarchy
     ; clojure.core-test.map-qmark ; TODO: port array-map, TODO: port object-array
-    ; clojure.core-test.mapcat ; Program hangs.
+    clojure.core-test.mapcat
     ; clojure.core-test.max ; FIXME: Failing tests.
-    ; clojure.core-test.merge ; Program hangs.
+    clojure.core-test.merge
     ; clojure.core-test.min ; FIXME: Failing tests.
     clojure.core-test.min-key
     ; clojure.core-test.minus ; FIXME: Failing tests.
@@ -116,12 +116,12 @@
     clojure.core-test.name
     clojure.core-test.namespace
     clojure.core-test.nan-qmark
-    ; clojure.core-test.neg-int-qmark ; FIXME: Failing test.
+    clojure.core-test.neg-int-qmark
     clojure.core-test.neg-qmark
     clojure.core-test.next
     clojure.core-test.nfirst
     clojure.core-test.nil-qmark
-    ; clojure.core-test.nnext ; Uncaught exception: {:error :not-an-ns-or-sym, :data {:value clojure.core-test.not_eq}}
+    clojure.core-test.nnext
     clojure.core-test.not
     ; clojure.core-test.not_empty ; libc++abi: terminating due to uncaught exception of type jank::runtime::oref<jank::runtime::object>.
     ; clojure.core-test.not-eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
@@ -149,9 +149,9 @@
     clojure.core-test.pos-int-qmark
     clojure.core-test.pos-qmark
     ; clojure.core-test.pr-str ; Uncaught exception: invalid call to #object [clojure.core/pr-str jit_function 0x112436c68] with 2 args provided
-    ; clojure.core-test.print-str ; TODO: port print-str
-    ; clojure.core-test.println-str ; TODO: port println-str
-    ; clojure.core-test.prn-str ; TODO: port prn-str
+    clojure.core-test.print-str
+    clojure.core-test.println-str
+    clojure.core-test.prn-str
     clojure.core-test.qualified-ident-qmark
     clojure.core-test.qualified-keyword-qmark
     clojure.core-test.qualified-symbol-qmark
@@ -162,19 +162,19 @@
     clojure.core-test.random-sample
     clojure.core-test.random-uuid
     ; clojure.core-test.ratio-qmark ; FIXME: Failing test.
-    ; clojure.core-test.rational-qmark ; FIXME: Failing test.
+    clojure.core-test.rational-qmark
     ; clojure.core-test.rationalize ; TODO: port rationalize
     ; clojure.core-test.realized-qmark ; TODO: port promise
     ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map. TODO: into-array.
     ; clojure.core-test.rem ; FIXME: Failing tests.
     ; clojure.core-test.remove-watch ; TODO: port sync
-    ; clojure.core-test.repeat ; libc++abi: terminating due to uncaught exception of type std::runtime_error: not a number: true
-    clojure.core-test.rest
+    clojure.core-test.repeat
+    ; clojure.core-test.rest ; "TODO: port int-array"
     clojure.core-test.reverse
     ; clojure.core-test.reversible-qmark ; TODO: port reversible?, TODO: port object-array
     ; clojure.core-test.rseq ; TODO: port rseq
     clojure.core-test.second
-    ; clojure.core-test.select-keys ; FIXME: Failing tests.
+    clojure.core-test.select-keys
     ; clojure.core-test.seq ; TODO: port int-array
     ; clojure.core-test.seq-qmark ; TODO: port rseq, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.seqable-qmark ; TODO: port array-map, TODO: port object-array
@@ -182,7 +182,7 @@
     clojure.core-test.set
     ; clojure.core-test.set-qmark ; TODO: port array-map, TODO: port object-array
     ; clojure.core-test.short ; analyze/macro-expansion-exception error: index out of bounds: 2,  TODO: port short, TODO: Port instance?
-    ; clojure.core-test.shuffle ; FIXME: Failing tests.
+    clojure.core-test.shuffle
     clojure.core-test.simple-ident-qmark
     clojure.core-test.simple-keyword-qmark
     clojure.core-test.simple-symbol-qmark
@@ -190,28 +190,28 @@
     ; clojure.core-test.some ; TODO: port int-array, TODO: port long-array, TODO: port double-array & TODO: port float-array.
     clojure.core-test.some-fn
     clojure.core-test.some-qmark
-    ; clojure.core-test.sort ; Assertion failed! !this->data.empty().
-    ; clojure.core-test.sort-by ; Assertion failed! !this->data.empty().
+    clojure.core-test.sort
+    clojure.core-test.sort-by
     ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?
     ; clojure.core-test.star ; FIXME: Failing tests.
-    clojure.core-test.star-squote
-    ; clojure.core-test.str ; FIXME: Failing tests.
+    ; clojure.core-test.star-squote ; Assertion failed! is_tagged_pointer(val)
+    clojure.core-test.str
     clojure.core-test.string-qmark
     ; clojure.core-test.subs ; FIXME: Failing tests.
-    ; clojure.core-test.subvec ; libc++abi: terminating due to uncaught exception of type std::runtime_error: invalid object type (expected integer found real).
+    clojure.core-test.subvec
     ; clojure.core-test.symbol ; lex/invalid-ratio error: A ratio denominator must be an integer.
     clojure.core-test.symbol-qmark
-    ; clojure.core-test.take ; Assertion failed! val.is_some()., https://github.com/jank-lang/jank/issues/245 , https://github.com/jank-lang/jank/issues/243
+    clojure.core-test.take
     clojure.core-test.take-last
-    ; clojure.core-test.take-nth ; FIXME: Failing tests.
+    clojure.core-test.take-nth
     clojure.core-test.take-while
     clojure.core-test.taps
-    ; clojure.core-test.transient ; analyze/macro-expansion-exception error: invalid call to #object [unknown jit_function 0x104434c80] with 3 args provided
+    clojure.core-test.transient
     clojure.core-test.true-qmark
     clojure.core-test.underive
     clojure.core-test.unsigned-bit-shift-right
-    ; clojure.core-test.update ; FIXME: Failing tests, Program hangs.
+    clojure.core-test.update
     clojure.core-test.uuid-qmark
     ; clojure.core-test.val ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
     clojure.core-test.vals
@@ -223,7 +223,7 @@
     clojure.core-test.when-first
     clojure.core-test.when-let
     clojure.core-test.when-not
-    ; clojure.core-test.with-out-str ; TODO: port with-out-str
+    clojure.core-test.with-out-str
     ; clojure.core-test.with-precision ; TODO: port with-precision, INFO: SKIP - defprotocol
     clojure.core-test.zero-qmark
     clojure.core-test.zipmap
@@ -233,7 +233,7 @@
     clojure.string-test.ends-with-qmark
     ; clojure.string-test.escape ; Uncaught exception: Can't convert character to integer.
     clojure.string-test.lower-case
-    ; clojure.string-test.reverse ; issues with unicode
+    clojure.string-test.reverse
     clojure.string-test.starts-with-qmark
     clojure.string-test.upper-case
   ])
@@ -245,10 +245,9 @@
     ;; TODO: Enable once support for exception unwinding across JIT compiled frames is
     ;; added for Windows.
     (println :skip-clojure-test-suite-windows)
-    (do
-      (when (seq namespaces)
-        (apply require namespaces)
-        ;; TODO (t/run-all-tests) => Exception: "TODO: port all-ns"
-        (when-not (t/successful? (apply t/run-tests namespaces))
-          (throw "failed")))))
+    (when (seq namespaces)
+      (apply require namespaces)
+      ;; TODO (t/run-all-tests) => Exception: "TODO: port all-ns"
+      (when-not (t/successful? (apply t/run-tests namespaces))
+        (cpp/exit 1))))
   (println :clojure-test-suite-successful))

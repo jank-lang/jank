@@ -13,7 +13,8 @@ namespace jank::runtime::obj
   struct symbol : object
   {
     static constexpr object_type obj_type{ object_type::symbol };
-    static constexpr object_behavior obj_behaviors{ object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call
+                                                    | object_behavior::compare };
     static constexpr bool pointer_free{ false };
 
     symbol();
@@ -54,6 +55,11 @@ namespace jank::runtime::obj
     /* behavior::nameable */
     jtl::immutable_string const &get_name() const;
     jtl::immutable_string const &get_namespace() const;
+
+    /* behavior::callable */
+    using object::call;
+    object_ref call(object_ref const) const override;
+    object_ref call(object_ref const, object_ref const) const override;
 
     bool operator==(symbol const &rhs) const;
     bool operator<(symbol const &rhs) const;

@@ -1070,7 +1070,7 @@ extern "C"
     return 0;
   }
 
-  jank_object_ref jank_parse_command_line_args(int const argc, char const **argv)
+  jank_object_ref jank_parse_command_line_args(int const argc, char const * const * const argv)
   {
     obj::transient_vector trans;
     auto const args{ util::cli::parse_into_vector(argc, argv) };

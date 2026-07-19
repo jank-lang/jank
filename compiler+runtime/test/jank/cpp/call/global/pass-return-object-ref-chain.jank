@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::cpp::call::global::pass_return_object_ref_chain
+          {
+            runtime::object_ref foo(runtime::object_ref const o)
+            {
+              return o;
+            }
+          }")
+(let* [a ((cpp/jank.cpp.call.global.pass_return_object_ref_chain.foo (fn* [] :success)))]
+  a)

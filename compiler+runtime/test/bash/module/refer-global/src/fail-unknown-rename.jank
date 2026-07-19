@@ -1,5 +1,5 @@
 (ns test
   (:refer-global :only []
-                 :rename {std.string foo}))
+                 :rename {std.string.not_found foo}))
 
 (println :success)

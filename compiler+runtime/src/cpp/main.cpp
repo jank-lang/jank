@@ -25,6 +25,7 @@
 #include <jank/util/string.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
+#include <jank/util/environment.hpp>
 #include <jank/error/report.hpp>
 #include <jank/environment/check_health.hpp>
 #include <jank/runtime/convert/builtin.hpp>
@@ -72,8 +73,6 @@ namespace jank
       .expect_ok()
       .call(make_box<obj::symbol>("clojure.core"));
 
-    jank::runtime::module::verify_binary_version();
-
     {
       profile::timer const timer{ "eval user code" };
       __rt_ctx->eval_file(util::cli::opts.target_file);
@@ -105,8 +104,6 @@ namespace jank
       profile::timer const timer{ "require clojure.core" };
       __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
-
-    jank::runtime::module::verify_binary_version();
 
     {
       profile::timer const timer{ "eval user code" };
@@ -159,8 +156,8 @@ namespace jank
           /* TODO: Dedicated error. */
           throw error::internal_failure(
             util::format("Unable to determine the output target type, given output file name '{}'. "
-                         "If you provide a '.ll', '.cpp', or '.o' extension, this can be inferred. "
-                         "Otherwise, please provide the --output-type flag to specify.",
+                         "If you provide a '.cpp' or '.o' extension, this can be inferred. "
+                         "Otherwise, please provide the --output-target flag to specify.",
                          opts.output_module_filename));
         }
       }
@@ -183,8 +180,6 @@ namespace jank
     {
       __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
-
-    jank::runtime::module::verify_binary_version();
 
     __rt_ctx->compile_module(opts.target_module).expect_ok();
   }
@@ -263,7 +258,7 @@ namespace jank
         continue;
       }
 
-      if(line.ends_with("\\"))
+      if(line.ends_with('\\'))
       {
         input.append(line.substr(0, line.size() - 1));
         input.append("\n");
@@ -331,7 +326,7 @@ namespace jank
         continue;
       }
 
-      if(line.ends_with("\\"))
+      if(line.ends_with('\\'))
       {
         input.append(line.substr(0, line.size() - 1));
         le.setPrompt("native>... ");
@@ -367,8 +362,6 @@ namespace jank
       __rt_ctx->compile_module("clojure.core").expect_ok();
     }
 #endif
-
-    jank::runtime::module::verify_binary_version();
 
     __rt_ctx->compile_module(opts.target_module).expect_ok();
 
@@ -410,6 +403,11 @@ int main(int const argc, char const **argv)
       if(util::cli::opts.command == util::cli::command::check_health)
       {
         return jank::environment::check_health() ? 0 : 1;
+      }
+      if(util::cli::opts.command == util::cli::command::print_binary_version)
+      {
+        util::println("{}", util::binary_version());
+        return 0;
       }
 
       __rt_ctx = new(UseGC) runtime::context{};
@@ -486,6 +484,7 @@ int main(int const argc, char const **argv)
           compile();
           break;
         case util::cli::command::check_health:
+        case util::cli::command::print_binary_version:
           break;
       }
       return 0;

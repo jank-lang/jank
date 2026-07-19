@@ -77,7 +77,7 @@ namespace jank::runtime::obj
 
   object_ref persistent_string::get(object_ref const key, object_ref const fallback) const
   {
-    if(is_integer(key))
+    if(is_integral(key))
     {
       auto const i(to_i64(key));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
@@ -94,17 +94,18 @@ namespace jank::runtime::obj
 
   bool persistent_string::contains(object_ref const key) const
   {
-    if(is_integer(key))
+    if(is_integral(key))
     {
       auto const i(to_i64(key));
       return 0 <= i && static_cast<size_t>(i) < data.size();
     }
-    return false;
+    throw std::runtime_error{ util::format("contains? not supported for argument: {}",
+                                           key.to_code_string()) };
   }
 
   object_ref persistent_string::nth(object_ref const index) const
   {
-    if(is_integer(index))
+    if(is_integral(index))
     {
       auto const i(to_i64(index));
       if(i < 0 || data.size() <= static_cast<size_t>(i))

@@ -24,7 +24,7 @@ namespace jank::aot
 
   static jtl::immutable_string relative_to_build_dir(jtl::immutable_string const &file_path)
   {
-    return util::format("{}/{}", util::cli::opts.build_dir, file_path);
+    return util::format("{}/{}", util::build_dir(), file_path);
   }
 
   // TODO: Generate an object file instead of a cpp
@@ -432,8 +432,7 @@ int main(int argc, const char** argv)
     /* TODO: Use runtime::context::get_output_module_name. */
     std::filesystem::path const module_path{
       util::cli::opts.output_module_filename.empty()
-        ? util::format("{}/{}.o", util::cli::opts.build_dir, module::module_to_path(module_name))
-            .c_str()
+        ? util::format("{}/{}.o", util::build_dir(), module::module_to_path(module_name)).c_str()
         : jtl::immutable_string{ util::cli::opts.output_module_filename }.c_str()
     };
     std::filesystem::create_directories(module_path.parent_path());

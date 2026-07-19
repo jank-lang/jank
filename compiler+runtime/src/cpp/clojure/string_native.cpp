@@ -1,5 +1,8 @@
+#include <ranges>
 #include <regex>
 #include <string>
+
+#include <jtl/utf8.hpp>
 
 #include <clojure/string_native.hpp>
 #include <jank/runtime/core.hpp>
@@ -30,7 +33,12 @@ namespace clojure::string_native
 
   jtl::immutable_string reverse(jtl::immutable_string const &s)
   {
-    return { s.rbegin(), s.rend() };
+    jtl::string_builder buff{ s.size() };
+    for(auto const &c : jtl::utf8_range(s) | std::views::reverse)
+    {
+      buff(c);
+    }
+    return buff.release();
   }
 
   jtl::immutable_string lower_case(jtl::immutable_string const &s)

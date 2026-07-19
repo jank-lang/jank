@@ -134,6 +134,11 @@ namespace jank::runtime::obj
     return make_box<cons>(head, runtime::detail::untagged(this));
   }
 
+  persistent_list_ref integer_range::empty()
+  {
+    return persistent_list::empty();
+  }
+
   bool integer_range::equal(object const &o) const
   {
     return runtime::sequence_equal(runtime::detail::untagged(this), runtime::detail::untagged(&o));

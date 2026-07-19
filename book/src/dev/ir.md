@@ -425,6 +425,34 @@ IR. Notice how the `bar` capture's value name is `:defer`.
 ```
 
 ## C++ interop
+### `cpp/scope-open`
+The `cpp/scope-open` instruction introduces a new C++ scope, which controls the
+lifetimes of values defined within the scope. This is used to ensure C++ value
+destructors are executed at the correct time. Each `cpp/scope-open` has a
+corresponding `cpp/scope-close`. The name of scopes is unique in that they start
+with `s`, rather than `v`.
+
+This instruction always has the type `void`.
+
+```clojure
+{:name s0 :op :cpp/scope-open :type "void"}
+```
+
+### `cpp/scope-close`
+The `cpp/scope-close` instruction corresponds to a `cpp/scope-open`, which then
+closes the corresponding C++ scope, representing the lexically location where
+destructors will run for values defined within that scope. Note that every scope
+must only be closed exactly once.
+
+While `cpp/scope-close` is not a terminator, it is permitted to appear after
+terminators, within IR blocks.
+
+This instruction always has the type `void`.
+
+```clojure
+{:name v11 :op :cpp/scope-close :scope s0 :type "void"}
+```
+
 ### `cpp/raw`
 The `cpp/raw` instruction introduces some global C++ which needs to be compiled
 alongside this module.

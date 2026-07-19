@@ -68,7 +68,7 @@ jobs:
             os: windows-2022
             build_type: Debug
             sanitize: none
-            analyze: on
+            analyze: off
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     env:

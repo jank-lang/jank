@@ -37,9 +37,9 @@ namespace jank::runtime::obj
     }
     else
     {
-      throw std::runtime_error{
-        util::format("Type {} cannot be used as a ratio numerator or denominator.", d.get_type())
-      };
+      throw std::runtime_error{ util::format(
+        "Type {} cannot be used as a ratio numerator or denominator.",
+        object_type_str(d.get_type())) };
     }
     return result;
   }

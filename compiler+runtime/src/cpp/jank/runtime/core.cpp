@@ -3,6 +3,7 @@
 #include <deque>
 #include <pthread.h>
 #include <cxxabi.h>
+#include <charconv>
 
 #include <jank/gc.hpp>
 #include <jank/runtime/core.hpp>
@@ -107,10 +108,29 @@ namespace jank::runtime
     return make_box<obj::symbol>(ns, name);
   }
 
+  static FILE *get_stdout()
+  {
+    static auto const stream_val{ __rt_ctx->stream_var->deref() };
+    static auto const stream_box{ try_object<obj::opaque_box>(stream_val) };
+
+    auto const out_val{ __rt_ctx->current_out_var->deref() };
+    auto const out_box{ try_object<obj::opaque_box>(out_val) };
+
+    if(stream_box->canonical_type != out_box->canonical_type)
+    {
+      throw std::runtime_error{ util::format("Invalid binding for *out*: {}",
+                                             out_box->canonical_type) };
+    }
+
+    return reinterpret_cast<FILE *>(out_box->data.data);
+  }
+
   object_ref print(object_ref const args)
   {
+    auto const out{ get_stdout() };
+
     visit_object(
-      [](auto const typed_args) {
+      [&](auto const typed_args) {
         using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -122,7 +142,7 @@ namespace jank::runtime
             buff(' ');
             runtime::to_string(e.erase(), buff);
           }
-          std::fwrite(buff.data(), 1, buff.size(), stdout);
+          std::fwrite(buff.data(), 1, buff.size(), out);
         }
         else
         {
@@ -138,19 +158,21 @@ namespace jank::runtime
   {
     jtl::string_builder buff;
     runtime::to_string(o, buff);
-    std::fwrite(buff.data(), 1, buff.size(), stdout);
+    std::fwrite(buff.data(), 1, buff.size(), get_stdout());
     return {};
   }
 
   object_ref println(object_ref const args)
   {
+    auto const out{ get_stdout() };
+
     visit_object(
-      [](auto const typed_more) {
+      [&](auto const typed_more) {
         using T = typename jtl::decay_t<decltype(typed_more)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
-          std::putc('\n', stdout);
+          std::putc('\n', out);
         }
         else if constexpr(behavior::sequenceable<T>)
         {
@@ -161,8 +183,8 @@ namespace jank::runtime
             buff(' ');
             runtime::to_string(e.erase(), buff);
           }
-          std::fwrite(buff.data(), 1, buff.size(), stdout);
-          std::putc('\n', stdout);
+          std::fwrite(buff.data(), 1, buff.size(), out);
+          std::putc('\n', out);
         }
         else
         {
@@ -176,8 +198,10 @@ namespace jank::runtime
 
   object_ref pr(object_ref const args)
   {
+    auto const out{ get_stdout() };
+
     visit_object(
-      [](auto const typed_args) {
+      [&](auto const typed_args) {
         using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
 
         if constexpr(behavior::sequenceable<T>)
@@ -189,7 +213,7 @@ namespace jank::runtime
             buff(' ');
             runtime::to_code_string(e.erase(), buff);
           }
-          std::fwrite(buff.data(), 1, buff.size(), stdout);
+          std::fwrite(buff.data(), 1, buff.size(), out);
         }
         else
         {
@@ -203,13 +227,15 @@ namespace jank::runtime
 
   object_ref prn(object_ref const args)
   {
+    auto const out{ get_stdout() };
+
     visit_object(
-      [](auto const typed_args) {
+      [&](auto const typed_args) {
         using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
 
         if constexpr(std::same_as<T, obj::nil>)
         {
-          std::putc('\n', stdout);
+          std::putc('\n', out);
         }
         else if constexpr(behavior::sequenceable<T>)
         {
@@ -220,8 +246,8 @@ namespace jank::runtime
             buff(' ');
             runtime::to_code_string(e.erase(), buff);
           }
-          std::fwrite(buff.data(), 1, buff.size(), stdout);
-          std::putc('\n', stdout);
+          std::fwrite(buff.data(), 1, buff.size(), out);
+          std::putc('\n', out);
         }
         else
         {
@@ -871,47 +897,25 @@ namespace jank::runtime
       .count();
   }
 
-  object_ref add_watch(object_ref const reference, object_ref const key, object_ref const fn)
+  void set_validator(object_ref reference, object_ref const validator_fn)
   {
-    visit_object(
-      [=](auto const typed_reference) -> void {
-        using T = typename jtl::decay_t<decltype(typed_reference)>::value_type;
+    reference.set_validator(validator_fn);
+  }
 
-        if constexpr(behavior::ref_like<T>)
-        {
-          typed_reference->add_watch(key, fn);
-        }
-        else
-        {
-          throw std::runtime_error{ util::format(
-            "Value does not support 'add-watch' because it is not ref_like: {}",
-            typed_reference.to_code_string()) };
-        }
-      },
-      reference);
+  object_ref get_validator(object_ref const reference)
+  {
+    return reference.get_validator();
+  }
 
+  object_ref add_watch(object_ref reference, object_ref const key, object_ref const fn)
+  {
+    reference.add_watch(key, fn);
     return reference;
   }
 
-  object_ref remove_watch(object_ref const reference, object_ref const key)
+  object_ref remove_watch(object_ref reference, object_ref const key)
   {
-    visit_object(
-      [=](auto const typed_reference) -> void {
-        using T = typename jtl::decay_t<decltype(typed_reference)>::value_type;
-
-        if constexpr(behavior::ref_like<T>)
-        {
-          typed_reference->remove_watch(key);
-        }
-        else
-        {
-          throw std::runtime_error{ util::format(
-            "Value does not support 'remove-watch' because it is not ref_like: {}",
-            typed_reference.to_code_string()) };
-        }
-      },
-      reference);
-
+    reference.remove_watch(key);
     return reference;
   }
 
@@ -922,11 +926,22 @@ namespace jank::runtime
     /* NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage): False positive. */
     ret->thread = std::thread{ [=]() {
       /* GC threads should be explicitly registered so that the GC is prepared to perform
-       * allocations from this thread. Unregistering is equally important. */
-      GC_stack_base sb{};
-      GC_get_stack_base(&sb);
-      GC_register_my_thread(&sb);
-      util::scope_exit const unregister{ []() { GC_unregister_my_thread(); } };
+       * allocations from this thread. Unregistering is equally important.
+       *
+       * We don't do this on macOS, since experimentation has found that BDWGC does it
+       * for us. */
+      if constexpr(jtl::current_platform != jtl::platform::macos_like)
+      {
+        GC_stack_base sb{};
+        GC_get_stack_base(&sb);
+        GC_register_my_thread(&sb);
+      }
+      util::scope_exit const unregister{ []() {
+        if constexpr(jtl::current_platform != jtl::platform::macos_like)
+        {
+          GC_unregister_my_thread();
+        }
+      } };
 
       __rt_ctx->push_thread_bindings(bindings).expect_ok();
 

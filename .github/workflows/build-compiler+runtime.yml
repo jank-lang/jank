@@ -23,13 +23,11 @@ jobs:
   # Rather than having every job in the matrix try to build its own Clang, we built it once
   # before running the matrix. Then we can just restore it from the cache in each job.
   ubuntu-build-clang:
-    name: Ubuntu - clang
+    name: Ubuntu 24.04 - clang
     runs-on: ubuntu-24.04
     timeout-minutes: 200
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
         with:
           packages: curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev
@@ -51,6 +49,73 @@ jobs:
           fi
           ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
 
+  ubuntu-2604-build-clang:
+    name: Ubuntu 26.04 - clang
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:26.04
+    defaults:
+      run:
+        shell: bash
+    timeout-minutes: 200
+    steps:
+      - name: Install apt packages
+        run: |
+          apt update
+          apt install -y curl git build-essential clang libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev
+
+      - uses: actions/checkout@v4
+
+      - name: Cache Clang/LLVM
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            compiler+runtime/build/llvm-install
+          key: clang-ubuntu-2604-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+
+      - name: Build Clang/LLVM
+        run: |
+          if [[ ! -e ${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
+          then
+            pushd ${GITHUB_WORKSPACE}/compiler+runtime
+              ./bin/build-clang
+            popd
+          fi
+          ${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
+
+  arch-build-clang:
+    name: Arch - clang
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    timeout-minutes: 200
+    steps:
+      - name: Install packages
+        run: |
+          pacman -Syu --noconfirm
+          pacman --noconfirm -S gcc git clang pkg-config cmake ninja make python3 libffi libxml2 libedit
+
+      - uses: actions/checkout@v4
+
+      - name: Cache Clang/LLVM
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            compiler+runtime/build/llvm-install
+          key: clang-Arch-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+
+      - name: Build Clang/LLVM
+        run: |
+          if [[ ! -e ${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ ]];
+          then
+            pushd ${GITHUB_WORKSPACE}/compiler+runtime
+              ./bin/build-clang
+            popd
+          fi
+          ${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
+
   macos-build-clang:
     name: macOS - clang
     runs-on: macos-26
@@ -59,11 +124,9 @@ jobs:
     timeout-minutes: 200
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
       - name: Install Homebrew deps
         run: |
-          brew install git git-lfs pkg-config ninja python cmake gnupg zlib
+          brew install git pkg-config ninja python cmake gnupg zlib
       - name: Cache Clang/LLVM
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
@@ -90,11 +153,11 @@ jobs:
         include:
           # Ubuntu
           ## Lint all sources
-          - name: Ubuntu - lint
+          - name: Ubuntu 24.04 - lint
             os: ubuntu-24.04
             lint: true
           ## Debug + clang-tidy + coverage
-          - name: Ubuntu - debug, analysis, coverage
+          - name: Ubuntu 24.04 - debug, analysis, coverage
             os: ubuntu-24.04
             build_type: Debug
             sanitize: none
@@ -103,25 +166,25 @@ jobs:
 
           ## Debug + sanitization
           # TODO: Fix this. GC issue: https://github.com/bdwgc/bdwgc/issues/772
-          #- name: Ubuntu - address sanitizer
+          #- name: Ubuntu 24.04 - address sanitizer
           #  os: ubuntu-24.04
           #  build_type: Debug
           #  sanitize: address
 
-          - name: Ubuntu - undefined behavior sanitizer
+          - name: Ubuntu 24.04 - undefined behavior sanitizer
             os: ubuntu-24.04
             build_type: Debug
             sanitize: undefined
 
           ## TODO: Fix this. Causes linker issues.
           # https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
-          #- name: Ubuntu - thread sanitizer
+          #- name: Ubuntu 24.04 - thread sanitizer
           #  os: ubuntu-24.04
           #  build_type: Debug
           #  sanitize: thread
 
           ## Release
-          - name: Ubuntu - release
+          - name: Ubuntu 24.04 - release
             os: ubuntu-24.04
             build_type: Release
             sanitize: none
@@ -170,6 +233,7 @@ jobs:
       JANK_ANALYZE: ${{ matrix.analyze }}
       JANK_SANITIZE: ${{ matrix.sanitize }}
       JANK_PACKAGE: ${{ matrix.package }}
+      JANK_PACKAGE_GROUP: noble
       ASAN_OPTIONS: detect_leaks=0
       TERM: xterm
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -183,9 +247,9 @@ jobs:
         if: runner.os == 'Linux'
         uses: awalsh128/cache-apt-pkgs-action@5902b33ae29014e6ca012c5d8025d4346556bd40
         with:
-          packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev gcc g++ libgc-dev libboost-all-dev
+          packages: default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev gcc g++ libgc-dev libboost-all-dev
           # Increment this when the package list changes.
-          version: 13
+          version: 14
       # Boost doesn't get cached properly with the above action.
       # https://github.com/awalsh128/cache-apt-pkgs-action/issues/151
       - name: Install boost
@@ -236,6 +300,7 @@ jobs:
           then
             export JANK_SKIP_AOT_CHECK=1
           fi
+          ${{ github.workspace }}/compiler+runtime/build/llvm-install/usr/local/bin/clang++ --version
           JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
       - name: Upload .deb for publishing
         if: github.ref == 'refs/heads/main' && steps.jank-build-step.outputs.deb
@@ -253,7 +318,7 @@ jobs:
   publish-deb:
     if: github.ref == 'refs/heads/main'
     needs: build-jank
-    name: Publish .deb
+    name: Publish Ubuntu 24.04 package
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -268,8 +333,9 @@ jobs:
           chmod 400 ~/.ssh/jank_id_ed25519
       - name: Publish to PPA
         run: |
-          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.deb root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/
-          ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/update+sign"
+          file="$(ls -1 ~/*.deb)"
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${file} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html
+          ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/publish $(basename "${file}") noble oracular plucky"
 
   publish-homebrew-tarball:
     if: github.ref == 'refs/heads/main'
@@ -290,6 +356,106 @@ jobs:
       - name: Publish to cache
         run: |
           scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/
+
+  publish-arch-package:
+    if: github.ref == 'refs/heads/main'
+    needs:
+      - arch-build-clang
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    name: Publish Arch package
+    timeout-minutes: 60
+    steps:
+      - name: Install packages
+        run: |
+          pacman -Syu --noconfirm
+          pacman --noconfirm -S gcc git pkg-config cmake ninja make python3 libffi libxml2 libedit boost openssh rsync
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Cache Clang/LLVM
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            compiler+runtime/build/llvm-install
+          key: clang-Arch-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+      - name: Build and test jank
+        id: jank-build-step
+        run: |
+          export CC=${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang
+          export CXX=${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++
+          pushd ${GITHUB_WORKSPACE}/compiler+runtime
+            ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_local_clang=on -Djank_test=off
+            ./bin/compile
+            DESTDIR=inst ./bin/install
+            tar czf ~/jank-arch-x86-64.tar.gz inst
+          popd
+      - name: Import SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+          chmod 400 ~/.ssh/jank_id_ed25519
+      - name: Publish to cache
+        run: |
+          rsync -avz -e "ssh -i $HOME/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no" --progress ~/*.tar.gz root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/arch
+
+  publish-ubuntu-2604-package:
+    if: github.ref == 'refs/heads/main'
+    needs:
+      - ubuntu-2604-build-clang
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:26.04
+      env:
+        LANG: C.UTF-8
+        LC_ALL: C.UTF-8
+    defaults:
+      run:
+        shell: bash
+    name: Publish Ubuntu 26.04 package
+    timeout-minutes: 60
+    env:
+      JANK_PACKAGE: on
+      JANK_PACKAGE_GROUP: questing
+    steps:
+      - name: Install apt packages
+        run: |
+          apt update
+          apt install -y sudo git default-jdk software-properties-common lsb-release npm lcov leiningen ccache curl git build-essential libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev gcc libstdc++-16-dev libboost-all-dev
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Cache Clang/LLVM
+        uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: |
+            compiler+runtime/build/llvm-install
+          key: clang-ubuntu-2604-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+      - name: Build and test jank
+        id: jank-build-step
+        run: |
+          export CC=${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang
+          export CXX=${GITHUB_WORKSPACE}/compiler+runtime/build/llvm-install/usr/local/bin/clang++
+          pushd ${GITHUB_WORKSPACE}/compiler+runtime
+            ./bin/configure -GNinja -DCMAKE_BUILD_TYPE=Release -Djank_local_clang=on -Djank_test=off
+            ./bin/compile
+
+            curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
+            chmod +x install-bb
+            sudo ./install-bb
+            ./bin/jank/compiler+runtime/package.clj
+          popd
+      - name: Import SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+          chmod 400 ~/.ssh/jank_id_ed25519
+      - name: Publish to cache
+        run: |
+          file="$(ls -1 ${GITHUB_WORKSPACE}/compiler+runtime/*.deb)"
+          scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${file} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html
+          ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/publish $(basename "${file}") questing resolute"
 
   build-nix:
     name: "Nix - release"

@@ -1,13 +1,47 @@
 (ns leiningen.jank.core
   (:require
    [clojure.string :as string]
+   [clojure.tools.cli :as cli]
    [leiningen.core.classpath :as lcp]
    [babashka.fs :as fs]
    [babashka.process :as ps]
-   [leiningen.core.main :as lmain])
+   [leiningen.core.main :as lmain]
+   [leiningen.jank.build :as ljb])
   (:import [java.io File]))
 
 (defonce verbose? (atom false))
+
+(def standard-options
+  "Standard command line options shared by all lein-jank tasks"
+  [["-v" "--verbose" "verbose output"]
+   [nil  "--disable-sandbox" "disable jank-build sandboxing"]])
+
+(defn parse-opts
+  "Process the args using the given clojure.tools.cli option-specs. If given
+  invalid arguments, print and exit. Otherwise, returns a vector of the parsed
+  options and any leftover arguments."
+  [task-sym args option-specs]
+  (let [{:keys [options arguments errors summary]} (cli/parse-opts args option-specs)]
+    (if-not errors
+      [options arguments]
+      (lmain/abort (str "Error parsing task arguments:\n"
+                        (string/join "\n" (map #(str "  " %) errors))
+                        "\n\nValid arguments are:\n"
+                        summary
+                        "\n\nFull task usage:\n"
+                        (-> task-sym meta :doc))))))
+
+(defn native-build
+  "Execute the native build step for the project and its dependencies.
+
+  This should be called whenever running or compiling the main project, to
+  ensure the native libraries are up-to-date. Any work which doesn't need to be
+  recomputed will be cached."
+  [project opts]
+  (binding [ljb/*disable-sandbox* (or ljb/*disable-sandbox* (:disable-sandbox opts))
+            ljb/*verbose-build*   @verbose?]
+    (let [native-flags (ljb/run-build! (ljb/plan-build project))]
+      (update project :jank #(merge-with into % native-flags)))))
 
 (defn build-module-path [project]
   (->> project

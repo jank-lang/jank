@@ -34,7 +34,10 @@ namespace jank::analyze::cpp_util
 
   jtl::ptr<void> expression_type(expression_ref expr);
   jtl::ptr<void> mutable_type(jtl::ptr<void> const type);
+  std::pair<jtl::ptr<void>, jtl::ptr<void>>
+  select_most_native_type(jtl::ptr<void> const left, jtl::ptr<void> const right);
   jtl::ptr<void> non_void_expression_type(expression_ref expr);
+  jtl::ptr<void> non_void_type(jtl::ptr<void> const type);
   jtl::ptr<void> expression_scope(expression_ref const expr);
 
   jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
@@ -64,6 +67,7 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> untyped_object_ref_type();
   jtl::ptr<void> char_type();
   jtl::ptr<void> bool_type();
+  jtl::ptr<void> nil_ref_type();
   jtl::ptr<void> var_type();
   jtl::ptr<void> persistent_list_ref_type();
   jtl::ptr<void> persistent_vector_ref_type();

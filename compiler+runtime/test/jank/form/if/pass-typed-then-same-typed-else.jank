@@ -1,0 +1,3 @@
+(let* [r (* (if true 1 1) 2)]
+  (if (= r 2)
+    :success))

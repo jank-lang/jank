@@ -1242,6 +1242,7 @@ namespace jank::runtime
   object_ref number(object_ref const o);
 
   bool is_integer(object_ref const o);
+  bool is_integral(object_ref const o);
   bool is_real(object_ref const o);
   bool is_ratio(object_ref const o);
   bool is_boolean(object_ref const o);

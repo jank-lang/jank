@@ -146,7 +146,7 @@ namespace jank::analyze::cpp_util
                 util::format("Unable to find '{}' within namespace '{}'.", subs, old_scope_name));
             }
           }
-          if(auto const res = instantiate_if_needed(fns[0]); res.is_err())
+          if(auto const res{ instantiate_if_needed(fns[0]) }; res.is_err())
           {
             return res.expect_err();
           }
@@ -430,6 +430,13 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
+  jtl::ptr<void> nil_ref_type()
+  {
+    static auto const type{ Cpp::GetTypeFromScope(
+      resolve_scope("jank.runtime.obj.nil_ref").expect_ok()) };
+    return type;
+  }
+
   jtl::ptr<void> var_type()
   {
     static auto const type{ Cpp::GetTypeFromScope(
@@ -706,6 +713,12 @@ namespace jank::analyze::cpp_util
         }
       case jank::runtime::object_type::var:
         return var_type();
+      case jank::runtime::object_type::re_pattern:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.re_pattern_ref").expect_ok()) };
+          return type;
+        }
       default:
         {
           static auto const type{ untyped_object_ref_type() };
@@ -839,8 +852,49 @@ namespace jank::analyze::cpp_util
     {
       return Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type));
     }
+    /* void & => object_ref */
+    /* void => object_ref */
+    if(Cpp::IsVoid(Cpp::GetNonReferenceType(type)))
+    {
+      return untyped_object_ref_type();
+    }
 
     return type;
+  }
+
+  /* Returns the two types, in a pair, ordered with the first type being the "most native".
+   * The ordering is based on these rules:
+   *
+   * 1. (most native) Non-jank object (i.e. int, std::string, etc)
+   * 2. Typed jank object
+   * 3. (least native) Untyped jank object
+   */
+  std::pair<jtl::ptr<void>, jtl::ptr<void>>
+  select_most_native_type(jtl::ptr<void> const left, jtl::ptr<void> const right)
+  {
+    auto const is_left_any_object{ cpp_util::is_any_object(left) };
+    auto const is_right_any_object{ cpp_util::is_any_object(right) };
+    auto const is_left_typed_object{ cpp_util::is_typed_object(left) };
+    auto const is_right_typed_object{ cpp_util::is_typed_object(right) };
+
+    if(!is_left_any_object)
+    {
+      return { left, right };
+    }
+    if(!is_right_any_object)
+    {
+      return { right, left };
+    }
+    if(is_left_typed_object)
+    {
+      return { left, right };
+    }
+    if(is_right_typed_object)
+    {
+      return { right, left };
+    }
+
+    return { left, right };
   }
 
   jtl::ptr<void> expression_scope(expression_ref const expr)
@@ -869,6 +923,15 @@ namespace jank::analyze::cpp_util
     if(Cpp::IsVoid(type))
     {
       return untyped_object_ref_type();
+    }
+    return type;
+  }
+
+  jtl::ptr<void> non_void_type(jtl::ptr<void> const type)
+  {
+    if(Cpp::IsVoid(type))
+    {
+      return nil_ref_type();
     }
     return type;
   }
@@ -994,13 +1057,10 @@ namespace jank::analyze::cpp_util
       for(size_t i{ 0 }; i < arg_types.size() - member; ++i)
       {
         auto const scope{ arg_scopes[i + member] };
-        if(scope)
+        if(scope && Cpp::IsTemplate(scope))
         {
-          if(Cpp::IsTemplate(scope))
-          {
-            auto const new_type{ Cpp::GetFunctionArgType(match, i) };
-            arg_types[i + member].m_Type = new_type;
-          }
+          auto const new_type{ Cpp::GetFunctionArgType(match, i) };
+          arg_types[i + member].m_Type = new_type;
         }
       }
 
@@ -1233,8 +1293,8 @@ namespace jank::analyze::cpp_util
     }
 
     if(/* Up cast. */
-       (Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
-                               Cpp::GetUnderlyingType(expected_type)))
+       Cpp::IsTypeDerivedFrom(Cpp::GetUnderlyingType(expr_type),
+                              Cpp::GetUnderlyingType(expected_type))
        /* Same type or adding reference. */
        || (Cpp::GetCanonicalType(expr_type)
              == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(expected_type))
