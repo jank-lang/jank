@@ -10,5 +10,5 @@
               :load-file   {}
               :lookup      {}
               :completions {}}
-   :versions {}
+   :versions {:jank {:version-string cpp/JANK_VERSION}}
    :status   [:done]})
