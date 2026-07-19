@@ -284,7 +284,10 @@ namespace jank::ir
       needs_space = true;
       sb(arg);
     }
-    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+    util::format_to(sb,
+                    "] :dynamic? {} :type \"{}\"}",
+                    needs_dynamic_call,
+                    get_qualified_type_name(type));
   }
 
   void inst::recursion_reference::print(jtl::string_builder &sb, usize const) const
