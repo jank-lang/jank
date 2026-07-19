@@ -153,11 +153,11 @@ jobs:
         include:
           # Ubuntu
           ## Lint all sources
-          - name: Ubuntu - lint
+          - name: Ubuntu 24.04 - lint
             os: ubuntu-24.04
             lint: true
           ## Debug + clang-tidy + coverage
-          - name: Ubuntu - debug, analysis, coverage
+          - name: Ubuntu 24.04 - debug, analysis, coverage
             os: ubuntu-24.04
             build_type: Debug
             sanitize: none
@@ -166,25 +166,25 @@ jobs:
 
           ## Debug + sanitization
           # TODO: Fix this. GC issue: https://github.com/bdwgc/bdwgc/issues/772
-          #- name: Ubuntu - address sanitizer
+          #- name: Ubuntu 24.04 - address sanitizer
           #  os: ubuntu-24.04
           #  build_type: Debug
           #  sanitize: address
 
-          - name: Ubuntu - undefined behavior sanitizer
+          - name: Ubuntu 24.04 - undefined behavior sanitizer
             os: ubuntu-24.04
             build_type: Debug
             sanitize: undefined
 
           ## TODO: Fix this. Causes linker issues.
           # https://github.com/jank-lang/jank/actions/runs/16657688537/job/47146758720
-          #- name: Ubuntu - thread sanitizer
+          #- name: Ubuntu 24.04 - thread sanitizer
           #  os: ubuntu-24.04
           #  build_type: Debug
           #  sanitize: thread
 
           ## Release
-          - name: Ubuntu - release
+          - name: Ubuntu 24.04 - release
             os: ubuntu-24.04
             build_type: Release
             sanitize: none
