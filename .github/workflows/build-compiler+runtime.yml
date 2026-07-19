@@ -333,7 +333,7 @@ jobs:
   #        chmod 400 ~/.ssh/jank_id_ed25519
   #    - name: Publish to PPA
   #      run: |
-  #        file=${GITHUB_WORKSPACE}/compiler+runtime/*.deb
+  #        file="$(ls -1 ${GITHUB_WORKSPACE}/compiler+runtime/*.deb)"
   #        scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${file} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/repo
   #        ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/publish $(basename "${file}") noble oracular plucky"
 
@@ -453,7 +453,7 @@ jobs:
           chmod 400 ~/.ssh/jank_id_ed25519
       - name: Publish to cache
         run: |
-          file=${GITHUB_WORKSPACE}/compiler+runtime/*.deb
+          file="$(ls -1 ${GITHUB_WORKSPACE}/compiler+runtime/*.deb)"
           scp -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no ${file} root@ppa.jank-lang.org:/var/www/ppa.jank-lang.org/html/repo
           ssh -i ~/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no root@ppa.jank-lang.org "~/publish $(basename "${file}") questing resolute"
 
