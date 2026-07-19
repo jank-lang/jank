@@ -25,7 +25,7 @@ If you'd like to install from source using brew, you can use `jank-lang/jank/jan
 > We don't yet have x86 binaries in the Homebrew package. If you'd like to help
 > with this, please reach out.
 
-## Ubuntu Linux (24.04, 24.10, 25.04)
+## Ubuntu Linux (24.04, 24.10, 25.04, 25.10, 26.04)
 We have a binary jank package in our own repo, so installation is quick and easy.
 
 ```bash
