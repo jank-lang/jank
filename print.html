@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-382819c5.js";
+            window.path_to_searchindex_js = "searchindex-d36cf6af.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-f18007b9.js"></script>
@@ -282,9 +282,9 @@ with this, please reach out.</p>
 </blockquote>
 <h2 id="ubuntu-linux-2404-2410-2504"><a class="header" href="#ubuntu-linux-2404-2410-2504">Ubuntu Linux (24.04, 24.10, 25.04)</a></h2>
 <p>We have a binary jank package in our own repo, so installation is quick and easy.</p>
-<pre><code class="language-bash">sudo apt install -y curl gnupg
+<pre><code class="language-bash">sudo apt install -y sudo curl gnupg lsb-release
 curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg &gt;/dev/null
-sudo curl -s -o /etc/apt/sources.list.d/jank.list "https://ppa.jank-lang.org/jank.list"
+echo "deb [signed-by=/etc/apt/trusted.gpg.d/jank.gpg] https://ppa.jank-lang.org/repo $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/jank.list &gt;/dev/null
 sudo apt update
 sudo apt install -y jank
 </code></pre>
