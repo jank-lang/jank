@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+# Build and package LLVM on Windows from the jank source LLVM repo
+# using the MSYS2 toolchain. Mirros build-clang and shuld be kept in
+# sync.
+#
+# See -h for usage.
+#
+# Outputs MSYS2 pacman packages to build/llvm-install, pass -i to
+# install them.
+
+set -euo pipefail
+
+# --- Configuration, edit as needed.
+
+# LLVM repo to clone.
+llvm_url="https://github.com/jank-lang/llvm-project.git"
+llvm_branch="jank"
+llvm_commit="8164f1a0c17b192e133817436bdb07598b7402a3"
+
+# Patched version of the MSYS2-package mingw-w64-llvm used to build
+# LLVM from source. Tracks the MSYS2-packages mingw-w64-llvm package.
+llvm_mingw_pkg_url="https://github.com/ikappaki/MINGW-packages"
+llvm_mingw_pkg_branch="maint/llvm-up-resilience"
+llvm_mingw_pkg_commit="6b27133534fb696e39996154fea565f3bb0bd331"
+
+### End of configuration.
+
+# Set by the script to the LLVM major version from the source repo.
+llvm_version="NOTSET"
+
+if [[ -z "${MSYSTEM:-}" ]]; then
+    echo "Error: this script must be run from an MSYS2 shell."
+    exit 1
+fi
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+build_dir="${here}/../build"
+mkdir -p "${build_dir}"
+cd "${build_dir}"
+
+# We build Clang with Clang for consistency.
+export CC=clang
+export CXX=clang++
+
+set +e
+  make_j="$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 4)"
+set -e
+
+install=0
+update=0
+
+while getopts ":hiuj:" opt; do
+  case "${opt}" in
+    h)
+      echo "Usage ${0} [-j N] [-i] [-u] [srcdir]"
+      exit 0
+      ;;
+    i)
+      install=1
+      ;;
+    j)
+      make_j="${OPTARG}"
+      ;;
+    u)
+      update=1
+      ;;
+    \?)
+      echo "Invalid option: ${OPTARG}" 1>&2
+      exit 1
+      ;;
+    :)
+      echo "Invalid option: ${OPTARG} requires an argument" 1>&2
+      exit 1
+      ;;
+    *)
+      echo "Unexpected input: ${OPTARG}" 1>&2
+      exit 1
+      ;;
+  esac
+done
+shift $((OPTIND -1))
+
+echo "Using ${make_j} cores to build"
+
+srcdir="${PWD}"
+
+llvm_dest_dir="${srcdir}/llvm-install"
+llvm_build_dir="${srcdir}/llvm-build"
+llvm_mingw_pkg_repo_dir="${build_dir}/MINGW-packages"
+# makepkg expects the source tree at ${llvm_build_dir}/src
+llvm_mingw_pkg_build_dir="${llvm_build_dir}"
+llvm_src_dir="${llvm_mingw_pkg_build_dir}/src"
+
+if [[ ${install} == 1 ]]; then
+   pacman --noconfirm -U ${llvm_dest_dir}/*.tar.zst
+   exit 0
+fi
+
+function prepare()
+{
+  if [[ ! -d "${llvm_src_dir}" ]];
+  then
+    git clone --no-checkout --filter=blob:none --depth 1 "${llvm_url}" "${llvm_src_dir}"
+    cd "${llvm_src_dir}"
+      git fetch origin "${llvm_commit}" --depth 1
+      git checkout "${llvm_commit}"
+      git submodule update --init --depth 1 --recursive
+    cd -
+  elif [[ ${update} == 1 ]];
+  then
+    cd ${llvm_src_dir}
+      git stash || true
+      git checkout "${llvm_branch}"
+      git pull origin "${llvm_branch}"
+    cd -
+  fi
+
+  mkdir -p ${llvm_build_dir}
+
+  pacman --noconfirm -S base-devel git
+
+  echo "Cloning MINGW-packages repo to ${llvm_mingw_pkg_repo_dir}..."
+  rm -fr ${llvm_mingw_pkg_repo_dir}
+  # Clone the repo shallowly and check out only the mingw-w64-llvm directory
+  git clone --depth 1 --branch ${llvm_mingw_pkg_branch} --filter=blob:none --no-checkout ${llvm_mingw_pkg_url} ${llvm_mingw_pkg_repo_dir}
+  cd ${llvm_mingw_pkg_repo_dir}
+    git sparse-checkout init --cone
+    git sparse-checkout set mingw-w64-llvm
+    git checkout ${llvm_mingw_pkg_commit}
+  cd -
+  cp ${llvm_mingw_pkg_repo_dir}/mingw-w64-llvm/* ${llvm_mingw_pkg_build_dir}
+
+  # e.g.   set(LLVM_VERSION_MAJOR 22)
+  LLVM_VERSION_MAJOR=$(sed -n 's/^[[:space:]]*set(LLVM_VERSION_MAJOR \([0-9]*\))/\1/p' ${llvm_src_dir}/cmake/Modules/LLVMVersion.cmake)
+  LLVM_VERSION_MINOR=$(sed -n 's/^[[:space:]]*set(LLVM_VERSION_MINOR \([0-9]*\))/\1/p' ${llvm_src_dir}/cmake/Modules/LLVMVersion.cmake)
+  LLVM_VERSION_PATCH=$(sed -n 's/^[[:space:]]*set(LLVM_VERSION_PATCH \([0-9]*\))/\1/p' ${llvm_src_dir}/cmake/Modules/LLVMVersion.cmake)
+  LLVM_VERSION_SUFFIX=$(sed -n 's/^[[:space:]]*set(LLVM_VERSION_SUFFIX \(.*\))/\1/p'   ${llvm_src_dir}/cmake/Modules/LLVMVersion.cmake)
+  LLVM_COMMIT_HASH=$(git -C ${llvm_src_dir} rev-parse --short HEAD)
+
+  sed -i "s/PLACEHOLDER-PKGVER/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}${LLVM_VERSION_SUFFIX}/" ${llvm_mingw_pkg_build_dir}/PKGBUILD
+  sed -i "s/PLACEHOLDER-PKGREL/jank_${LLVM_COMMIT_HASH}/" ${llvm_mingw_pkg_build_dir}/PKGBUILD
+
+  llvm_version=${LLVM_VERSION_MAJOR}
+}
+
+function build()
+{
+  mkdir -p "${llvm_build_dir}"
+  cd "${llvm_build_dir}"
+
+  cmake -DCMAKE_BUILD_TYPE=Release \
+        -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind;compiler-rt" \
+        -DLLVM_BUILD_LLVM_DYLIB=ON \
+        -DLLVM_LINK_LLVM_DYLIB=ON \
+        -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" \
+        -DLLVM_TARGETS_TO_BUILD="host" \
+        -DLLVM_ENABLE_EH=ON \
+        -DLLVM_ENABLE_RTTI=ON \
+        -DLLVM_INCLUDE_BENCHMARKS=OFF \
+        -DLLVM_ENABLE_BINDINGS=OFF \
+        -DLLVM_INCLUDE_EXAMPLES=OFF \
+        -DLLVM_INCLUDE_TESTS=OFF \
+        -DLLVM_ENABLE_ZSTD=OFF \
+        -DLLVM_BUILD_OCAML_BINDINGS=OFF \
+        -DLLVM_ENABLE_OCAMLDOC=OFF \
+        -G "Ninja" \
+        ${llvm_src_dir}/llvm
+
+  export DESTDIR="${llvm_dest_dir}"
+  ninja clang clang-repl compiler-rt clang-cpp clang-tidy install -j"${make_j}"
+  mkdir -p "${DESTDIR}/usr/local/lib/clang/${llvm_version}/lib"
+  cp -r lib/clang/"${llvm_version}"/lib/* "${DESTDIR}/usr/local/lib/clang/${llvm_version}/lib/"
+}
+
+function build_mingw()
+{
+    cd ${llvm_build_dir}
+    makepkg-mingw --noconfirm -sLf --nocheck
+    rm -fr ${llvm_dest_dir}
+    mkdir -p ${llvm_dest_dir}
+    mv ${llvm_build_dir}/*.tar.zst ${llvm_dest_dir}
+    echo "LLVM binary packages copied to ${llvm_dest_dir}."
+}
+
+prepare
+build_mingw
+
+echo
+echo "Clang/LLVM successfully compiled on MSYS2. Run with -i to install it, then build jank."
