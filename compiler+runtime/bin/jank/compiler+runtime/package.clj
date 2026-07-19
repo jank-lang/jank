@@ -20,6 +20,9 @@
 
 (defmethod create-package! :linux [_props]
   (let [group (or (System/getenv "JANK_PACKAGE_GROUP") "noble")
+        libstdc++ (case group
+                    "noble" "libstdc++-14-dev"
+                    "libstdc++-16-dev")
         dir (format "jank_%s-%s-1_amd64" jank-version group)
         control (format "Package: jank
 Version: %s-%s
@@ -27,9 +30,9 @@ Architecture: amd64
 Section: devel
 Priority: optional
 Maintainer: Jeaye Wilkerson <jeaye@jank-lang.org>
-Depends: libssl-dev, gcc, libbz2-dev, libzstd-dev, libxml2-dev, libstdc++-16-dev, zlib1g-dev, libboost-all-dev
+Depends: libssl-dev, gcc, libbz2-dev, libzstd-dev, libxml2-dev, %s, zlib1g-dev, libboost-all-dev
 Description: The native Clojure dialect with seamless C++ interop.
-" jank-version group)]
+" jank-version group libstdc++)]
     (util/quiet-shell {:dir compiler+runtime-dir
                        :extra-env {"DESTDIR" dir}}
                       "./bin/install")
