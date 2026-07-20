@@ -16,7 +16,13 @@ TODO:
   Reading error messages
   .jank, .cljc, .cpp files
     All modules need to intern the ns
-  AOT compiling programs (and distributing them)
+  jank build system
+    Overview
+      `jank-build.bb` scripts
+      Src, build, out directories
+      Sandboxing
+    Target / build directories
+    Guide: Packaging a native library
   Known issues
   Reference
    Special forms
