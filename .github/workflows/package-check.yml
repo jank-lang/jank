@@ -31,7 +31,7 @@ jobs:
 
       - uses: ./.github/actions/e2e-test
 
-  ubuntu-binary-package-test:
+  ubuntu-2404-binary-package-test:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -46,9 +46,37 @@ jobs:
 
       - name: Install jank
         run: |
-          sudo apt install -y curl gnupg
+          sudo apt install -y curl gnupg lsb-release
           curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
-          sudo curl -s -o /etc/apt/sources.list.d/jank.list "https://ppa.jank-lang.org/jank.list"
+          echo "deb [signed-by=/etc/apt/trusted.gpg.d/jank.gpg] https://ppa.jank-lang.org $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/jank.list >/dev/null
+          sudo apt update
+          sudo apt install -y jank
+
+      - uses: ./.github/actions/e2e-test
+
+  ubuntu-2604-binary-package-test:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:26.04
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Bootstrap system
+        run: |
+          curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh
+          chmod +x linux-install.sh
+          sudo ./linux-install.sh
+
+      - name: Install jank
+        run: |
+          sudo apt install -y curl gnupg lsb-release
+          curl -s "https://ppa.jank-lang.org/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/jank.gpg >/dev/null
+          echo "deb [signed-by=/etc/apt/trusted.gpg.d/jank.gpg] https://ppa.jank-lang.org $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/jank.list >/dev/null
           sudo apt update
           sudo apt install -y jank
 
