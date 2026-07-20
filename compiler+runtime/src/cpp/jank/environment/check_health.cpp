@@ -39,6 +39,7 @@ namespace jank::environment
    *
    * - ✅ for expected behavior
    * - ⚠️ for warnings
+   * - ℹ  for info
    * - ❌ for errors
    *
    * Colors for these should be green, yellow, and red. All paths should be blue. */
@@ -97,7 +98,7 @@ namespace jank::environment
   static jtl::immutable_string jank_asserts()
   {
 #ifndef NDEBUG
-    return util::format("{}─ ⚠️ jank assertions are enabled; performance will be impacted {}\n",
+    return util::format("{}─ ⚠️  jank assertions are enabled; performance will be impacted {}\n",
                         terminal_style::yellow,
                         terminal_style::reset);
 #else
@@ -182,7 +183,7 @@ namespace jank::environment
     util::format_to(sb,
                     "{}─ {}{} configured clang path: {}{}{} {}{}{}",
                     configured_path_exists ? terminal_style::green : terminal_style::yellow,
-                    configured_path_exists ? "✅" : "⚠️ ",
+                    configured_path_exists ? "✅" : "ℹ ",
                     terminal_style::reset,
                     terminal_style::blue,
                     JANK_CLANG_PATH,
@@ -227,7 +228,7 @@ namespace jank::environment
     util::format_to(sb,
                     "{}─ {}{} configured clang resource dir: {}{}{} {}{}{}",
                     configured_path_exists ? terminal_style::green : terminal_style::yellow,
-                    configured_path_exists ? "✅" : "⚠️ ",
+                    configured_path_exists ? "✅" : "ℹ ",
                     terminal_style::reset,
                     terminal_style::blue,
                     JANK_CLANG_RESOURCE_DIR,
@@ -281,7 +282,7 @@ namespace jank::environment
                           terminal_style::reset);
     }
 
-    return util::format("{}─ ⚠️{} jank pch dir: {}{}{} {}(no pch found){}",
+    return util::format("{}─ ℹ {} jank pch dir: {}{}{} {}(no pch found){}",
                         terminal_style::yellow,
                         terminal_style::reset,
                         terminal_style::blue,
@@ -334,7 +335,7 @@ namespace jank::environment
   {
     if(std::getenv("JANK_SKIP_AOT_CHECK"))
     {
-      return util::format("{}─ ⚠️ {} skipped aot check since JANK_SKIP_AOT_CHECK is defined",
+      return util::format("{}─ ℹ {} skipped aot check since JANK_SKIP_AOT_CHECK is defined",
                           terminal_style::yellow,
                           terminal_style::reset);
     }

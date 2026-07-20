@@ -115,3 +115,38 @@ JVM bytecode.
 LLVM IR, on the other hand, is much, much lower level than C++. The only way to
 turn C++ semantics into LLVM IR is with a C++ compiler, which is why jank
 generates C++ and uses Clang to then turn the C++ into LLVM IR.
+
+## How do I redefine C++ types, values, and functions?
+C++ does not support redefining types, values, functions, etc. That violates the
+[one definition rule](https://eel.is/c++draft/basic.def.odr).
+
+Clojure, on the other hand, allows redefining just about everything. That's how
+we do REPL-driven development. When using Clojure JVM, you can't jump into Java
+and start redefining Java classes. That's not how Java works. But you can still
+do REPL-driven development. Similarly, in jank, you can't jump into C++ and
+start redefining things. But you can do it the Clojure way.
+
+For example, if you define a NEW C++ function, and you have a stable
+Clojure-side var which holds a function referring to your C++ function, you can
+then redefine what's inside the var. That will work.
+
+```clojure
+(cpp/raw "int my_fn1(){ return 1; }")
+
+(defn my-fn []
+  (cpp/my_fn1))
+
+(cpp/raw "int my_fn2(){ return 2; }") ; NEW fn
+
+(defn my-fn [] ; Redefined
+  (cpp/my_fn2))
+```
+
+So, the Clojure side of things can act as a proxy into updated C++ code. This is
+actually how jank's C++ code generation works. **But this is not the recommended approach.**
+
+**The recommended approach is to keep anything you're redefining on the Clojure side.**
+That will play very nicely with the REPL. Leave the C++ stuff to be
+static, if you can. However, if you need to update C++ stuff, consider adding a
+version to the symbol or namespace so that you're always defining new things and
+not violating the one definition rule.
