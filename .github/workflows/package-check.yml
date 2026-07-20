@@ -58,6 +58,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:26.04
+      env:
+        LANG: C.UTF-8
+        LC_ALL: C.UTF-8
     defaults:
       run:
         shell: bash
