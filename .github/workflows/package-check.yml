@@ -65,7 +65,7 @@ jobs:
       - name: Install apt packages
         run: |
           apt update
-          apt install -y git sudo curl
+          apt install -y git sudo curl openjdk-25-jdk
 
       - uses: actions/checkout@v4
         with:
