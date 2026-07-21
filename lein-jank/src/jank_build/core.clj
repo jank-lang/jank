@@ -21,7 +21,7 @@
   {:target-dir         "target"
    :optimization-level 3
    ;; TODO: enable when jank can link to .a files via -L and -l flags.
-   :static-build       false})
+   :static?            false})
 
 (defn has-build-file?
   "Returns true if the given directory or jar file has a `jank-build.bb` file in
@@ -74,17 +74,16 @@
   script. This establishes the contract for the data shape which should be
   expected by a build script. "
   [build-op]
-  (let [{:keys [src-dir build-dir out-dir inputs build-inputs]} build-op
-        {:keys [optimization-level static-build]}               (:build-opts build-op)]
+  (let [{:keys [src-dir build-dir out-dir inputs]} build-op
+        {:keys [optimization-level static?]}       (:build-opts build-op)]
     ;; NOTE: spell these out so this can be used as a reference for build script
     ;; authors. This will be the *input* value in the build script.
     {:src-dir            src-dir
      :build-dir          build-dir
      :out-dir            out-dir
      :inputs             inputs
-     :build-inputs       build-inputs
      :optimization-level optimization-level
-     :static-build       static-build}))
+     :static?            static?}))
 
 (defn build-dep!
   "Run a sandboxed (unless disable-sandbox is set) build on the dependency

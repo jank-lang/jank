@@ -17,12 +17,10 @@ TODO:
   .jank, .cljc, .cpp files
     All modules need to intern the ns
   jank build system
-    Overview
-      `jank-build.bb` scripts
-      Src, build, out directories
-      Sandboxing
-    Target / build directories
     Guide: Packaging a native library
+    Deprecate top-level project flags
+    jank commons docs
+  Library linking support
   Known issues
   Reference
    Special forms
@@ -44,8 +42,13 @@ TODO:
   * [Testing](project/test.md)
   * [AOT compiling](project/aot.md)
 
+* [The jank build system](jank-build/index.md)
+  * [Build system overview](jank-build/overview.md)
+  * [The build cache](jank-build/build-cache.md)
+  * [Guide: Packaging a system library](jank-build/packaging-system-lib.md)
+  * [Guide: Packaging a source library](jank-build/packaging-source-lib.md)
+
 * [Differences from Clojure](differences-from-clojure.md)
-* [For C++ Developers](for-cpp-developers.md)
 
 * [Troubleshooting](troubleshooting/index.md)
   * [Checking jank's health](troubleshooting/health-check.md)
