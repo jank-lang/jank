@@ -37,10 +37,12 @@ In our `raylib` directory, we'll make our own build directory, just like the
 jank build system's [build directory](./build-cache.md).
 
 ```bash
-❯ cd raylib/
+❯ cd raylib
 
 ❯ mkdir build
 mkdir: created directory 'build'
+
+❯ cd build
 
 ❯ cmake .. -DBUILD_EXAMPLES=off -DBUILD_SHARED_LIBS=on
 <CMake configure output>

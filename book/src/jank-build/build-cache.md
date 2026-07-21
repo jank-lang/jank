@@ -5,8 +5,8 @@ directory is `target/_cache`, both relative to the `project.clj` or current
 directory of the `jank` execution. Within Leiningen projects, the jank
 template automatically sets up target directories per-profile. This changes the
 `debug` profile target directory to `target/debug`, for example. To change the
-target directory with `jank` directly you can use the `--target-directory` flag.
-Similarly, the `--build-directory` flag can be used, but it's not currently
+target directory with `jank` directly you can use the `--target-dir` flag.
+Similarly, the `--build-dir` flag can be used, but it's not currently
 possible to change the build directory within `project.clj`.
 
 There are two types of artifacts:
