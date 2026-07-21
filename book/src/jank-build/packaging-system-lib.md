@@ -7,7 +7,7 @@ identify these things:
 3. Where are the libraries stored?
 4. What are the libraries named?
 
-That's it! Fortuantely, `pkg-config` handles this for most system libraries.
+That's it! Fortunately, `pkg-config` handles this for most system libraries.
 Before we write a build script, let's first answer all four questions needed to
 package sqlite3. If we invoke `pkg-config` and ask for both C flags and libs,
 we'll actually get an answer to every single question above.

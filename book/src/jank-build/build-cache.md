@@ -2,7 +2,7 @@
 jank and the jank build system store the output of builds into the "target" and
 "build" directories. By default, the target directory is `target` and the build
 directory is `target/_cache`, both relative to the `project.clj` or current
-directory of the `jank` executation. Within Leiningen projects, the jank
+directory of the `jank` execution. Within Leiningen projects, the jank
 template automatically sets up target directories per-profile. This changes the
 `debug` profile target directory to `target/debug`, for example. To change the
 target directory with `jank` directly you can use the `--target-directory` flag.
@@ -45,7 +45,7 @@ Also note that the final executable is at `target/debug/json-query`.
 
 ### Direct jank invocation
 If you invoke jank directly to compile code, you'll still have a target and
-bulid directory created for you. Here's an example of compiling a local
+build directory created for you. Here's an example of compiling a local
 `hello.jank`.
 
 ```

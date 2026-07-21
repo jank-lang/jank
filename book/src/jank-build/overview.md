@@ -13,7 +13,7 @@ The foundational aspect of jank's build system is the `jank-build.bb` script.
 Each jank package may have one `jank-build.bb` script and its presence indicates
 to the jank build system that there's work to be done to build that package.
 
-The scripts itself is executed with Babashka and may use any Babashka APIs
+The script itself is executed with Babashka and may use any Babashka APIs
 available. The jank build system provides some particular APIs to aid in finding
 system packages and building projects from source.
 
@@ -26,7 +26,7 @@ Each script has two jobs, which we'll explain separately.
 By default, each build script for a dependency will run whenever any of the
 build flags change. For example, if you change your optimization level, all
 dependencies will be rebuilt. However, build scripts can also print directives
-which tell the jank build system to that package when other things change.
+which tell the jank build system to rebuild that package when other things change.
 
 ## Directives
 Each printed directive is a single line printed to `stdout` by the

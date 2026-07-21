@@ -151,7 +151,7 @@ include  jank-build-cache.txt  jank-build-fingerprint.txt  lib64
 
 Our headers will be in the `include` directory and, in this case, our libraries
 will be in `lib64`. These may end up being named different things on your
-machine, too. That's be flexibility of the jank build system: all of this is
+machine, too. That's the flexibility of the jank build system: all of this is
 handled by CMake and then the jank build system just connects the dots.
 
 Speaking of which, let's wrap this up by writing some raylib code!
