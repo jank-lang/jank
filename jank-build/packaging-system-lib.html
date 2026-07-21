@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Casting between native types - The jank Programming Language</title>
+        <title>Guide: Packaging a system library - The jank Programming Language</title>
 
 
         <!-- Custom HTML head -->
@@ -178,45 +178,116 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="casting-between-native-types"><a class="header" href="#casting-between-native-types">Casting between native types</a></h1>
-<p>jank has two primary means of casting between native types.</p>
+                        <h1 id="guide-packaging-a-system-library"><a class="header" href="#guide-packaging-a-system-library">Guide: Packaging a system library</a></h1>
+<p>Packaging a system library is generally very straight-forward. We need to
+identify these things:</p>
 <ol>
-<li><code>cpp/cast</code></li>
-<li><code>cpp/unsafe-cast</code></li>
+<li>Does this library need any preprocessor defines? Generally, the answer is no.</li>
+<li>Where are the include headers stored?</li>
+<li>Where are the libraries stored?</li>
+<li>What are the libraries named?</li>
 </ol>
-<p>They both have the same syntax, but they perform different actions.</p>
-<h2 id="cppcast"><a class="header" href="#cppcast"><code>cpp/cast</code></a></h2>
-<p>This is the most common style of cast which you’ll see in jank. It closely maps
-to C++ <code>static_cast</code>, but it has additional functionality to support jank’s
-<a href="./native-values.html#trait-convertible">trait conversions</a>. This will allow you
-to cast to/from jank runtime object and supported native C++ values.</p>
-<pre><code class="language-clojure">(fn [o]
-  (let [f #cpp 3.14
-        ; Normal static_cast support.
-        i (cpp/cast cpp/int f)
-        ; Explicit trait conversion, since `o` is a jank object.
-        oi (cpp/cast cpp/int o)])
+<p>That’s it! Fortunately, <code>pkg-config</code> handles this for most system libraries.
+Before we write a build script, let’s first answer all four questions needed to
+package sqlite3. If we invoke <code>pkg-config</code> and ask for both C flags and libs,
+we’ll actually get an answer to every single question above.</p>
+<pre><code class="language-bash">❯ pkg-config --cflags --libs sqlite3
+-I/nix/store/vyd6g9viqafhzr97dq8zsbksdf4w5avm-sqlite-3.51.2-dev/include -L/nix/store/yg1gv8db04ldrnmdhykq8zjqqg6pg5kd-sqlite-3.51.2/lib -lsqlite3
 </code></pre>
-<h2 id="cppunsafe-cast"><a class="header" href="#cppunsafe-cast"><code>cpp/unsafe-cast</code></a></h2>
-<p>When <code>cpp/cast</code> is not enough, jank supports a more cutting cast which is the
-equivalent of C-style casting in C++. This is a combination of <code>static_cast</code>,
-<code>reinterpret_cast</code>, and <code>const_cast</code>. For example, if you need to cast between unrelated
-pointer types, <code>cpp/cast</code> will not work, but <code>cpp/unsafe-cast</code> will. However,
-note that <code>cpp/unsafe-cast</code> does not support trait conversions. It is solely
-dedicated to native type construction and reinterpretation.</p>
-<pre><code class="language-clojure">(let [s #cpp "meow"
-      us (cpp/unsafe-cast (:* (:unsigned char)) s)])
+<p>Note that this is the output for my particular NixOS system. On a different
+distro, like Arch, the output may simply be <code>-lsqlite3</code> and nothing else. This is an
+important thing to note about <code>pkg-config</code>. You cannot just invoke it on your
+machine and then hard-code the results in your build script. You have to
+actually invoke <code>pkg-config</code> in the build script, so that it can fetch the
+correct flags for the user’s machine.</p>
+<h2 id="a-note-on--sys-packages"><a class="header" href="#a-note-on--sys-packages">A note on <code>-sys</code> packages</a></h2>
+<p>When we wrap system packages, we end up creating a special <code>-sys</code> package. The
+goal of <code>-sys</code> packages is just to make the system library available, without
+providing any higher level Clojure-style wrapper for the API. This allows <code>-sys</code>
+packages to be reused by different higher level abstraction libraries and it
+separates the concerns of the libraries. In our example here, for sqlite3, we’re
+writing the <code>sqlite3-sys</code> package.</p>
+<p>If you’re creating a <code>-sys</code> package, please consider adding it to the <a href="https://github.com/jank-lang/commons">jank commons</a>.</p>
+<h2 id="writing-a-small-package"><a class="header" href="#writing-a-small-package">Writing a small package</a></h2>
+<p>Our <code>sqlite3-sys</code> package only needs two things:</p>
+<ol>
+<li>A <code>project.clj</code>, defining how the package will be named and versioned</li>
+<li>A <code>jank-build.bb</code>, defining how the package will be “built”</li>
+</ol>
+<p>For us, “building” just means running <code>pkg-config</code> to answer our four questions.
+Here’s an example <code>project.clj</code>:</p>
+<pre><code class="language-clojure">(defproject org.jank-lang.guide/sqlite3-sys "2026.07-1"
+  :description "Raw package for sqlite3."
+  :license {:name "MPL 2.0"
+            :url "https://www.mozilla.org/en-US/MPL/2.0/"}
+  :plugins [[org.jank-lang/lein-jank "2026.07-1"]]
+  :middleware [leiningen.jank/middleware]
+  :build-dependencies [[org.jank-lang.commons/jank-build-pkg-config "2026.06-1"]])
 </code></pre>
+<p>Note that we add <code>:build-dependencies</code> so that we can grab
+<code>jank-build-pkg-config</code>. This is a helper for the <code>jank-build.bb</code> we’re going to
+write. It’s going to call <code>pkg-config</code> for us and then turn the output of that
+into jank build system directives. Here’s our <code>jank-build.bb</code>:</p>
+<pre><code class="language-clojure">(require '[jank.build.pkg-config :refer [pkg-config]])
+
+(pkg-config "sqlite3")
+</code></pre>
+<p>That’s it! Now, if we wanted to use this package locally, we could install it
+with <code>lein install</code> and then add it as a dependency to another project.</p>
+<pre><code class="language-bash">❯ lein install
+Created /home/jeaye/projects/sqlite3-sys/target/sqlite3-sys-2026.07-1.jar
+Wrote /home/jeaye/projects/sqlite3-sys/pom.xml
+Installed jar and pom into local repo.
+</code></pre>
+<h2 id="using-the-new-package"><a class="header" href="#using-the-new-package">Using the new package</a></h2>
+<p>Let’s create a new project and use our <code>sqlite3-sys</code> library.</p>
+<pre><code class="language-bash">❯ lein new org.jank-lang/jank hello-sqlite3
+Generating a project called hello-sqlite3 based on the 'jank' template.
+</code></pre>
+<p>Then we need to add our dependency to the <code>project.clj</code>:</p>
+<pre><code class="language-clojure">  :dependencies [[org.jank-lang.guide/sqlite3-sys "2026.07-1"]]
+</code></pre>
+<p>And we need to call sqlite3 from our jank code:</p>
+<pre><code class="language-clojure">(ns hello-sqlite3.main
+  (:include "sqlite3.h"))
+
+(defn -main [&amp; args]
+  (println (cpp/sqlite3_libversion)))
+</code></pre>
+<p>Now, when we try to run our program, the jank build system will find the
+<code>sqlite3-sys</code> package, extract it, run the <code>jank-build.bb</code> script, and propagate
+the <code>pkg-config</code> flags up to our jank invocation.</p>
+<pre><code class="language-bash">❯ lein run
+Extracting [org.jank-lang.guide/sqlite3-sys 2026.07-1]
+ Compiling [org.jank-lang.guide/sqlite3-sys 2026.07-1]
+3.51.2
+
+# Future runs won't need to extract/build anything.
+❯ lein run
+3.51.2
+</code></pre>
+<p>Note that your sqlite3 version may be different from mine here. That’s ok.</p>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>Packaging a system library for jank involves answering the four key questions.
+Tools like <code>pkg-config</code> can do a lot of this for us! Some packages don’t have
+<code>pkg-config</code> entries, which can make this work more manual. Other packages have
+their own version of <code>pkg-config</code>, like <code>curl-config</code>, which accept similar
+flags. Take a look at the <code>pkg-config</code> build script helper
+<a href="https://github.com/jank-lang/commons/blob/main/jank-build-pkg-config/src/jank/build/pkg_config.bb">here</a>
+for a peek behind the scenes of what we used for this guide.</p>
+<p>Also, take a look at the official
+<a href="https://github.com/jank-lang/commons/tree/main/sqlite3-sys">sqlite3-sys</a> jank
+commons package, since it looks just like the one we made here!</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../cpp-interop/native-exceptions.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../jank-build/build-cache.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../cpp-interop/cpp-raw.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../jank-build/packaging-source-lib.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -226,11 +297,11 @@ dedicated to native type construction and reinterpretation.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../cpp-interop/native-exceptions.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../jank-build/build-cache.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../cpp-interop/cpp-raw.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../jank-build/packaging-source-lib.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

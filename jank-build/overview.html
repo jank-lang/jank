@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>For C++ Developers - The jank Programming Language</title>
+        <title>Build system overview - The jank Programming Language</title>
 
 
         <!-- Custom HTML head -->
@@ -12,34 +12,34 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon-de23e50b.svg">
-        <link rel="shortcut icon" href="favicon-8114d1fc.png">
-        <link rel="stylesheet" href="css/variables-8adf115d.css">
-        <link rel="stylesheet" href="css/general-2459343d.css">
-        <link rel="stylesheet" href="css/chrome-ae938929.css">
-        <link rel="stylesheet" href="css/print-9e4910d8.css" media="print">
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-2459343d.css">
+        <link rel="stylesheet" href="../css/chrome-ae938929.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="fonts/fonts-9644e21d.css">
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" id="mdbook-highlight-css" href="highlight-493f70e1.css">
-        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="tomorrow-night-4c0ae647.css">
-        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="ayu-highlight-3fdfc3ac.css">
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
 
         <!-- Custom theme stylesheets -->
-        <link rel="stylesheet" href="theme/css/custom-14cc8901.css">
+        <link rel="stylesheet" href="../theme/css/custom-14cc8901.css">
 
 
         <!-- Provide site root and default themes to javascript -->
         <script>
-            const path_to_root = "";
+            const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-9f04e41c.js";
+            window.path_to_searchindex_js = "../searchindex-476ea04f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f18007b9.js"></script>
+        <script src="../toc-205a9c9d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -106,7 +106,7 @@
             <!-- populated by js -->
             <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
             <noscript>
-                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
             </noscript>
             <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -141,7 +141,7 @@
                     <h1 class="menu-title">The jank Programming Language</h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
                         </a>
                         <a href="https://github.com/jank-lang/jank" title="Git repository" aria-label="Git repository">
@@ -178,25 +178,137 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="for-c-developers"><a class="header" href="#for-c-developers">For C++ Developers</a></h1>
-<p>jank is not yet ready for C++ developers. I have not stabilized the API for
-embedding, there are GC concerns within existing C++ applications, the header
-feeding mechanisms within Clang need additional support for multiple PCHs
-(pre-compiled headers), and there is no documentation. Don’t think for a minute
-that this list is exhaustive.</p>
-<p>With that said, some have already embedded jank into existing C++ applications.
-If you’re brave, and impatient, it can work. Otherwise, wait for me to stabilize
-the Clojure side of things first. The timeline for this is more like the end of 2026.</p>
+                        <h1 id="build-system-overview"><a class="header" href="#build-system-overview">Build system overview</a></h1>
+<p>jank provides a custom native build system with the goal of making it easy to
+build your jank programs on top of C and C++ libraries.
+<a href="https://doc.rust-lang.org/cargo/">Cargo</a> is a big inspiration for the design of
+jank’s build system.</p>
+<p>Some dependencies are installed by the system and others need to be built from
+source. jank’s build system handles both of these cases. It’s important to note
+that jank’s build system doesn’t aim to replace existing native build systems
+like CMake, but it does integrate with them via custom build scripts.</p>
+<p>The foundational aspect of jank’s build system is the <code>jank-build.bb</code> script.
+Each jank package may have one <code>jank-build.bb</code> script and its presence indicates
+to the jank build system that there’s work to be done to build that package.</p>
+<p>The script itself is executed with Babashka and may use any Babashka APIs
+available. The jank build system provides some particular APIs to aid in finding
+system packages and building projects from source.</p>
+<p>Each script has two jobs, which we’ll explain separately.</p>
+<ol>
+<li>Print directives to <code>stdout</code> which tell the jank build system to add flags
+to its jank invocation</li>
+<li>Find or build files and install them in the provided <code>out</code> directory</li>
+</ol>
+<p>By default, each build script for a dependency will run whenever any of the
+build flags change. For example, if you change your optimization level, all
+dependencies will be rebuilt. However, build scripts can also print directives
+which tell the jank build system to rebuild that package when other things change.</p>
+<h2 id="directives"><a class="header" href="#directives">Directives</a></h2>
+<p>Each printed directive is a single line printed to <code>stdout</code> by the
+<code>jank-build.bb</code> script. Any lines printed which don’t start with <code>jank-build::</code>
+are ignored by the build system. Every directive can be provided any number of
+times and will always build on the previously printed directives.
+The directives fit into two categories:</p>
+<ol>
+<li>Build flags</li>
+<li>Re-run conditions</li>
+</ol>
+<h3 id="build-flags"><a class="header" href="#build-flags">Build flags</a></h3>
+<p>For the build flags, you can specify preprocessor defines, include directories
+which contain header files, link directories which contain libraries, and the
+library names to actually link.</p>
+<h4 id="jank-builddefinefoo"><a class="header" href="#jank-builddefinefoo"><code>jank-build::define=FOO</code></a></h4>
+<p>Adds the <code>-DFOO</code> flag to the jank invocation. This can also be used with a value,
+with <code>jank-build::define=FOO=1</code>, which then adds the <code>-DFOO=1</code> flag.</p>
+<h4 id="jank-buildinclude-dirpath"><a class="header" href="#jank-buildinclude-dirpath"><code>jank-build::include-dir=path</code></a></h4>
+<p>Adds the <code>-I path</code> flag to the jank invocation. The path should be absolute.</p>
+<h4 id="jank-buildlink-dirpath"><a class="header" href="#jank-buildlink-dirpath"><code>jank-build::link-dir=path</code></a></h4>
+<p>Adds the <code>-L path</code> flag to the jank invocation. The path should be absolute.</p>
+<h4 id="jank-buildlink-librarylib"><a class="header" href="#jank-buildlink-librarylib"><code>jank-build::link-library=lib</code></a></h4>
+<p>Adds the <code>-l lib</code> flag to the jank invocation. Library names, relative paths,
+file names, and absolute paths are supported.</p>
+<h3 id="re-run-conditions"><a class="header" href="#re-run-conditions">Re-run conditions</a></h3>
+<p>Re-run condition directives tell the jank build system when to re-run the build
+script. By default, it will happen whenever any files within the source
+directory of the package change.</p>
+<h4 id="jank-buildrerun-if-changedpath"><a class="header" href="#jank-buildrerun-if-changedpath"><code>jank-build::rerun-if-changed=path</code></a></h4>
+<p>Informs the jank build system to re-run this build script if a particular file
+changes. The <code>path</code> is expected to be relative to the source directory of the
+package. If the <code>path</code> is a directory, all files within that directory will be
+watched.</p>
+<p>Note: If no <code>rerun-if-changed</code> directive is provided, all files within the source
+directory will be watched.</p>
+<h4 id="jank-buildrerun-if-env-changedfoo"><a class="header" href="#jank-buildrerun-if-env-changedfoo"><code>jank-build::rerun-if-env-changed=FOO</code></a></h4>
+<p>Informs the jank build system to re-run this build script if the environment
+variable <code>FOO</code> changes. This is mainly expected to be used for variables like
+<code>CC</code> and <code>CXX</code>, but anything can work.</p>
+<p>Note: If no <code>rerun-if-env-changed</code> directive is provided, no environment
+variables will be watched.</p>
+<h2 id="finding-or-building-things"><a class="header" href="#finding-or-building-things">Finding or building things</a></h2>
+<p>The second thing build scripts can do is prepare files for jank consumption.
+This may involve building projects with CMake or similar. In order to do this
+effectively, the jank build system has the concept of three key directories per
+build script invocation:</p>
+<ol>
+<li>Source directory (<code>:src-dir</code>) – This is where the package’s source files
+are.</li>
+<li>Build directory (<code>:build-dir</code>) – This is a temporary directory where build files can be
+placed.</li>
+<li>Out directory (<code>:out-dir</code>) – This is where the final artifacts must be installed in order
+to be used by jank.</li>
+</ol>
+<p>On top of that, build scripts are provided with the following:</p>
+<ol>
+<li>A map of build inputs (<code>:inputs</code>) which maps from package name to out
+directory – This is useful when your package depends on the output of
+another package.</li>
+<li>The optimization level to use (<code>:optimization-level</code>) – This is an integer
+from <code>0</code> to <code>3</code> inclusive. <code>0</code> means no optimizations.</li>
+<li>Whether or not to build a static lib (<code>:static?</code>).</li>
+</ol>
+<p>The inputs to a build script are available via <code>*input*</code>. Here’s an example:</p>
+<pre><code class="language-clojure">{:src-dir "/path/to/project"
+ :build-dir "/tmp/jank-build-6616793965093062497"
+ :out-dir "/path/to/project/target/debug/_cache/imgui+glfw-out-XXX"
+ :inputs {"org.jank-lang.commons/imgui-sys" "/path/to/project/target/debug/_cache/imgui-sys-2026.06-6-out-HsZD6cjvMzkPAeaJZZQAKw"
+          "org.jank-lang.commons/glfw-sys" "/path/to/project/target/debug/_cache/glfw-sys-2026.06-1-out-zCGlvgSQ65jN8ZQwixkVIA"
+          "org.jank-lang.commons/imgui-glfw-sys" "/path/to/project/target/debug/_cache/imgui-glfw-sys-2026.06-6-out-DY2lSndonGjZEkhw7JE1TQ"
+          "org.jank-lang.commons/gl-sys" "/path/to/project/target/debug/_cache/gl-sys-2026.06-1-out-qCuPOQm5Ch-yJlIvZOBPqA"
+          "org.jank-lang.commons/imgui-opengl2-sys" "/path/to/project/target/debug/_cache/imgui-opengl2-sys-2026.06-6-out-OisnnGXhsy1cebbvy8iM9A"}
+ :optimization-level 0
+ :static? true}
+</code></pre>
+<h3 id="sandboxing"><a class="header" href="#sandboxing">Sandboxing</a></h3>
+<p>By default, build scripts run in a sandbox which only has write access to the
+build and out directories. In-source builds will not work. Read access is given
+to system-level directories, but not <code>/home</code>. To disable the sandbox, you can
+run Leiningen with <code>--disable-sandbox</code>. For example: <code>lein run --disable-sandbox</code>.</p>
+<h2 id="build-script-dependencies"><a class="header" href="#build-script-dependencies">Build script dependencies</a></h2>
+<p>Your build scripts may have dependencies of their own, which are not available
+to your jank application. This is handled by adding <code>:build-dependencies</code> to
+your <code>project.clj</code>. For example:</p>
+<pre><code class="language-clojure">:build-dependencies [[org.jank-lang.commons/jank-build-cmake "2026.06-6"]]
+</code></pre>
+<h2 id="top-level-build-scripts"><a class="header" href="#top-level-build-scripts">Top-level build scripts</a></h2>
+<p>Your jank project may also have a <code>jank-build.bb</code> of its own, stored in the
+top-level directory of your project, adjacent to your <code>project.clj</code>. By default,
+this build script always runs, unless you provide any <code>rerun-if-changed</code>
+directives in it. If you just want to add some <code>-D</code>, <code>-I</code>, <code>-L</code>, or <code>-l</code> flags
+to your project, this is where you should do it.</p>
+<h2 id="troubleshooting-build-failures"><a class="header" href="#troubleshooting-build-failures">Troubleshooting build failures</a></h2>
+<p>If a build script fails, the jank build system will automatically print the
+<code>stdout</code> and <code>stderr</code> from the build. You can also opt into verbose mode by
+providing <code>-v</code> to your Leiningen invocation. For example: <code>lein compile -v</code>.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="differences-from-clojure.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../jank-build/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="troubleshooting/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../jank-build/build-cache.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -206,11 +318,11 @@ the Clojure side of things first. The timeline for this is more like the end of 
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="differences-from-clojure.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../jank-build/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="troubleshooting/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../jank-build/build-cache.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
@@ -230,17 +342,17 @@ the Clojure side of things first. The timeline for this is more like the end of 
         </script>
 
 
-        <script src="elasticlunr-ef4e11c1.min.js"></script>
-        <script src="mark-09e88c2c.min.js"></script>
-        <script src="searcher-c2a407aa.js"></script>
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-c2a407aa.js"></script>
 
-        <script src="clipboard-1626706a.min.js"></script>
-        <script src="highlight-14465888.js"></script>
-        <script src="book-a0b12cfe.js"></script>
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-14465888.js"></script>
+        <script src="../book-a0b12cfe.js"></script>
 
         <!-- Custom JS scripts -->
-        <script src="asset/mermaid-eefea253.min.js"></script>
-        <script src="asset/mermaid-init-ccf746f1.js"></script>
+        <script src="../asset/mermaid-eefea253.min.js"></script>
+        <script src="../asset/mermaid-init-ccf746f1.js"></script>
 
 
 

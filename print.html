@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-9f04e41c.js";
+            window.path_to_searchindex_js = "searchindex-476ea04f.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f18007b9.js"></script>
+        <script src="toc-205a9c9d.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -1439,6 +1439,454 @@ need to enable the <code>dynamic</code> runtime. From jank’s command line, you
 <pre><code class="language-clojure">:profiles {:release {:jank {:runtime :dynamic}}}
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="the-jank-build-system"><a class="header" href="#the-jank-build-system">The jank build system</a></h1>
+<p>jank provides a powerful, sandboxed, cross-platform build system. It enables us
+to build jank programs on top of existing C and C++ libraries, in a unified way,
+regardless of the build system those libraries use. Check out the enclosed
+sections and guides to learn more!</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="build-system-overview"><a class="header" href="#build-system-overview">Build system overview</a></h1>
+<p>jank provides a custom native build system with the goal of making it easy to
+build your jank programs on top of C and C++ libraries.
+<a href="https://doc.rust-lang.org/cargo/">Cargo</a> is a big inspiration for the design of
+jank’s build system.</p>
+<p>Some dependencies are installed by the system and others need to be built from
+source. jank’s build system handles both of these cases. It’s important to note
+that jank’s build system doesn’t aim to replace existing native build systems
+like CMake, but it does integrate with them via custom build scripts.</p>
+<p>The foundational aspect of jank’s build system is the <code>jank-build.bb</code> script.
+Each jank package may have one <code>jank-build.bb</code> script and its presence indicates
+to the jank build system that there’s work to be done to build that package.</p>
+<p>The script itself is executed with Babashka and may use any Babashka APIs
+available. The jank build system provides some particular APIs to aid in finding
+system packages and building projects from source.</p>
+<p>Each script has two jobs, which we’ll explain separately.</p>
+<ol>
+<li>Print directives to <code>stdout</code> which tell the jank build system to add flags
+to its jank invocation</li>
+<li>Find or build files and install them in the provided <code>out</code> directory</li>
+</ol>
+<p>By default, each build script for a dependency will run whenever any of the
+build flags change. For example, if you change your optimization level, all
+dependencies will be rebuilt. However, build scripts can also print directives
+which tell the jank build system to rebuild that package when other things change.</p>
+<h2 id="directives"><a class="header" href="#directives">Directives</a></h2>
+<p>Each printed directive is a single line printed to <code>stdout</code> by the
+<code>jank-build.bb</code> script. Any lines printed which don’t start with <code>jank-build::</code>
+are ignored by the build system. Every directive can be provided any number of
+times and will always build on the previously printed directives.
+The directives fit into two categories:</p>
+<ol>
+<li>Build flags</li>
+<li>Re-run conditions</li>
+</ol>
+<h3 id="build-flags"><a class="header" href="#build-flags">Build flags</a></h3>
+<p>For the build flags, you can specify preprocessor defines, include directories
+which contain header files, link directories which contain libraries, and the
+library names to actually link.</p>
+<h4 id="jank-builddefinefoo"><a class="header" href="#jank-builddefinefoo"><code>jank-build::define=FOO</code></a></h4>
+<p>Adds the <code>-DFOO</code> flag to the jank invocation. This can also be used with a value,
+with <code>jank-build::define=FOO=1</code>, which then adds the <code>-DFOO=1</code> flag.</p>
+<h4 id="jank-buildinclude-dirpath"><a class="header" href="#jank-buildinclude-dirpath"><code>jank-build::include-dir=path</code></a></h4>
+<p>Adds the <code>-I path</code> flag to the jank invocation. The path should be absolute.</p>
+<h4 id="jank-buildlink-dirpath"><a class="header" href="#jank-buildlink-dirpath"><code>jank-build::link-dir=path</code></a></h4>
+<p>Adds the <code>-L path</code> flag to the jank invocation. The path should be absolute.</p>
+<h4 id="jank-buildlink-librarylib"><a class="header" href="#jank-buildlink-librarylib"><code>jank-build::link-library=lib</code></a></h4>
+<p>Adds the <code>-l lib</code> flag to the jank invocation. Library names, relative paths,
+file names, and absolute paths are supported.</p>
+<h3 id="re-run-conditions"><a class="header" href="#re-run-conditions">Re-run conditions</a></h3>
+<p>Re-run condition directives tell the jank build system when to re-run the build
+script. By default, it will happen whenever any files within the source
+directory of the package change.</p>
+<h4 id="jank-buildrerun-if-changedpath"><a class="header" href="#jank-buildrerun-if-changedpath"><code>jank-build::rerun-if-changed=path</code></a></h4>
+<p>Informs the jank build system to re-run this build script if a particular file
+changes. The <code>path</code> is expected to be relative to the source directory of the
+package. If the <code>path</code> is a directory, all files within that directory will be
+watched.</p>
+<p>Note: If no <code>rerun-if-changed</code> directive is provided, all files within the source
+directory will be watched.</p>
+<h4 id="jank-buildrerun-if-env-changedfoo"><a class="header" href="#jank-buildrerun-if-env-changedfoo"><code>jank-build::rerun-if-env-changed=FOO</code></a></h4>
+<p>Informs the jank build system to re-run this build script if the environment
+variable <code>FOO</code> changes. This is mainly expected to be used for variables like
+<code>CC</code> and <code>CXX</code>, but anything can work.</p>
+<p>Note: If no <code>rerun-if-env-changed</code> directive is provided, no environment
+variables will be watched.</p>
+<h2 id="finding-or-building-things"><a class="header" href="#finding-or-building-things">Finding or building things</a></h2>
+<p>The second thing build scripts can do is prepare files for jank consumption.
+This may involve building projects with CMake or similar. In order to do this
+effectively, the jank build system has the concept of three key directories per
+build script invocation:</p>
+<ol>
+<li>Source directory (<code>:src-dir</code>) – This is where the package’s source files
+are.</li>
+<li>Build directory (<code>:build-dir</code>) – This is a temporary directory where build files can be
+placed.</li>
+<li>Out directory (<code>:out-dir</code>) – This is where the final artifacts must be installed in order
+to be used by jank.</li>
+</ol>
+<p>On top of that, build scripts are provided with the following:</p>
+<ol>
+<li>A map of build inputs (<code>:inputs</code>) which maps from package name to out
+directory – This is useful when your package depends on the output of
+another package.</li>
+<li>The optimization level to use (<code>:optimization-level</code>) – This is an integer
+from <code>0</code> to <code>3</code> inclusive. <code>0</code> means no optimizations.</li>
+<li>Whether or not to build a static lib (<code>:static?</code>).</li>
+</ol>
+<p>The inputs to a build script are available via <code>*input*</code>. Here’s an example:</p>
+<pre><code class="language-clojure">{:src-dir "/path/to/project"
+ :build-dir "/tmp/jank-build-6616793965093062497"
+ :out-dir "/path/to/project/target/debug/_cache/imgui+glfw-out-XXX"
+ :inputs {"org.jank-lang.commons/imgui-sys" "/path/to/project/target/debug/_cache/imgui-sys-2026.06-6-out-HsZD6cjvMzkPAeaJZZQAKw"
+          "org.jank-lang.commons/glfw-sys" "/path/to/project/target/debug/_cache/glfw-sys-2026.06-1-out-zCGlvgSQ65jN8ZQwixkVIA"
+          "org.jank-lang.commons/imgui-glfw-sys" "/path/to/project/target/debug/_cache/imgui-glfw-sys-2026.06-6-out-DY2lSndonGjZEkhw7JE1TQ"
+          "org.jank-lang.commons/gl-sys" "/path/to/project/target/debug/_cache/gl-sys-2026.06-1-out-qCuPOQm5Ch-yJlIvZOBPqA"
+          "org.jank-lang.commons/imgui-opengl2-sys" "/path/to/project/target/debug/_cache/imgui-opengl2-sys-2026.06-6-out-OisnnGXhsy1cebbvy8iM9A"}
+ :optimization-level 0
+ :static? true}
+</code></pre>
+<h3 id="sandboxing"><a class="header" href="#sandboxing">Sandboxing</a></h3>
+<p>By default, build scripts run in a sandbox which only has write access to the
+build and out directories. In-source builds will not work. Read access is given
+to system-level directories, but not <code>/home</code>. To disable the sandbox, you can
+run Leiningen with <code>--disable-sandbox</code>. For example: <code>lein run --disable-sandbox</code>.</p>
+<h2 id="build-script-dependencies"><a class="header" href="#build-script-dependencies">Build script dependencies</a></h2>
+<p>Your build scripts may have dependencies of their own, which are not available
+to your jank application. This is handled by adding <code>:build-dependencies</code> to
+your <code>project.clj</code>. For example:</p>
+<pre><code class="language-clojure">:build-dependencies [[org.jank-lang.commons/jank-build-cmake "2026.06-6"]]
+</code></pre>
+<h2 id="top-level-build-scripts"><a class="header" href="#top-level-build-scripts">Top-level build scripts</a></h2>
+<p>Your jank project may also have a <code>jank-build.bb</code> of its own, stored in the
+top-level directory of your project, adjacent to your <code>project.clj</code>. By default,
+this build script always runs, unless you provide any <code>rerun-if-changed</code>
+directives in it. If you just want to add some <code>-D</code>, <code>-I</code>, <code>-L</code>, or <code>-l</code> flags
+to your project, this is where you should do it.</p>
+<h2 id="troubleshooting-build-failures"><a class="header" href="#troubleshooting-build-failures">Troubleshooting build failures</a></h2>
+<p>If a build script fails, the jank build system will automatically print the
+<code>stdout</code> and <code>stderr</code> from the build. You can also opt into verbose mode by
+providing <code>-v</code> to your Leiningen invocation. For example: <code>lein compile -v</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="the-build-cache"><a class="header" href="#the-build-cache">The build cache</a></h1>
+<p>jank and the jank build system store the output of builds into the “target” and
+“build” directories. By default, the target directory is <code>target</code> and the build
+directory is <code>target/_cache</code>, both relative to the <code>project.clj</code> or current
+directory of the <code>jank</code> execution. Within Leiningen projects, the jank
+template automatically sets up target directories per-profile. This changes the
+<code>debug</code> profile target directory to <code>target/debug</code>, for example. To change the
+target directory with <code>jank</code> directly you can use the <code>--target-dir</code> flag.
+Similarly, the <code>--build-dir</code> flag can be used, but it’s not currently
+possible to change the build directory within <code>project.clj</code>.</p>
+<p>There are two types of artifacts:</p>
+<ul>
+<li>Final build artifacts
+<ul>
+<li>These files are meant for your consumption and are placed within the target
+directory.</li>
+</ul>
+</li>
+<li>Intermediate build artifacts
+<ul>
+<li>These are internal files to the jank build system and are generally not
+consumed directly. They are stored within the build directory.</li>
+</ul>
+</li>
+</ul>
+<h2 id="example-trees"><a class="header" href="#example-trees">Example trees</a></h2>
+<h3 id="leiningen-project"><a class="header" href="#leiningen-project">Leiningen project</a></h3>
+<p>For a Leiningen project, <code>json-query</code>, an example tree with a debug build looks like this:</p>
+<pre><code>target/
+├── debug
+│   ├── _cache
+│   │   └── json-query
+│   │       ├── x86_64-unknown-linux-gnu-211eea4be7942af843e902b894e93b6cc665b2aa6943f36f5bca4ddde080972b
+│   │       │   └── json_query
+│   │       │       └── main.o
+│   │       └── x86_64-unknown-linux-gnu-5e3948b46dee3bb4f17fc699e821182481fb5465155bdbc359678f7e6a8db9da
+│   │           └── json_query
+│   │               └── main.o
+│   └── json-query
+└── stale
+    └── leiningen.core.classpath.extract-native-dependencies
+</code></pre>
+<p>Note that there are two builds of <code>json-query</code>, with two different hashes. This
+happens when your compiler flags change.</p>
+<p>Also note that the final executable is at <code>target/debug/json-query</code>.</p>
+<h3 id="direct-jank-invocation"><a class="header" href="#direct-jank-invocation">Direct jank invocation</a></h3>
+<p>If you invoke jank directly to compile code, you’ll still have a target and
+build directory created for you. Here’s an example of compiling a local
+<code>hello.jank</code>.</p>
+<pre><code>.
+├── hello.jank
+└── target
+    ├── a.out
+    └── _cache
+        └── x86_64-unknown-linux-gnu-deb515fb6fcde162c8cefee396e3090f348d5ec8e2d1a863abf325fa79682321
+            └── hello.o
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="guide-packaging-a-system-library"><a class="header" href="#guide-packaging-a-system-library">Guide: Packaging a system library</a></h1>
+<p>Packaging a system library is generally very straight-forward. We need to
+identify these things:</p>
+<ol>
+<li>Does this library need any preprocessor defines? Generally, the answer is no.</li>
+<li>Where are the include headers stored?</li>
+<li>Where are the libraries stored?</li>
+<li>What are the libraries named?</li>
+</ol>
+<p>That’s it! Fortunately, <code>pkg-config</code> handles this for most system libraries.
+Before we write a build script, let’s first answer all four questions needed to
+package sqlite3. If we invoke <code>pkg-config</code> and ask for both C flags and libs,
+we’ll actually get an answer to every single question above.</p>
+<pre><code class="language-bash">❯ pkg-config --cflags --libs sqlite3
+-I/nix/store/vyd6g9viqafhzr97dq8zsbksdf4w5avm-sqlite-3.51.2-dev/include -L/nix/store/yg1gv8db04ldrnmdhykq8zjqqg6pg5kd-sqlite-3.51.2/lib -lsqlite3
+</code></pre>
+<p>Note that this is the output for my particular NixOS system. On a different
+distro, like Arch, the output may simply be <code>-lsqlite3</code> and nothing else. This is an
+important thing to note about <code>pkg-config</code>. You cannot just invoke it on your
+machine and then hard-code the results in your build script. You have to
+actually invoke <code>pkg-config</code> in the build script, so that it can fetch the
+correct flags for the user’s machine.</p>
+<h2 id="a-note-on--sys-packages"><a class="header" href="#a-note-on--sys-packages">A note on <code>-sys</code> packages</a></h2>
+<p>When we wrap system packages, we end up creating a special <code>-sys</code> package. The
+goal of <code>-sys</code> packages is just to make the system library available, without
+providing any higher level Clojure-style wrapper for the API. This allows <code>-sys</code>
+packages to be reused by different higher level abstraction libraries and it
+separates the concerns of the libraries. In our example here, for sqlite3, we’re
+writing the <code>sqlite3-sys</code> package.</p>
+<p>If you’re creating a <code>-sys</code> package, please consider adding it to the <a href="https://github.com/jank-lang/commons">jank commons</a>.</p>
+<h2 id="writing-a-small-package"><a class="header" href="#writing-a-small-package">Writing a small package</a></h2>
+<p>Our <code>sqlite3-sys</code> package only needs two things:</p>
+<ol>
+<li>A <code>project.clj</code>, defining how the package will be named and versioned</li>
+<li>A <code>jank-build.bb</code>, defining how the package will be “built”</li>
+</ol>
+<p>For us, “building” just means running <code>pkg-config</code> to answer our four questions.
+Here’s an example <code>project.clj</code>:</p>
+<pre><code class="language-clojure">(defproject org.jank-lang.guide/sqlite3-sys "2026.07-1"
+  :description "Raw package for sqlite3."
+  :license {:name "MPL 2.0"
+            :url "https://www.mozilla.org/en-US/MPL/2.0/"}
+  :plugins [[org.jank-lang/lein-jank "2026.07-1"]]
+  :middleware [leiningen.jank/middleware]
+  :build-dependencies [[org.jank-lang.commons/jank-build-pkg-config "2026.06-1"]])
+</code></pre>
+<p>Note that we add <code>:build-dependencies</code> so that we can grab
+<code>jank-build-pkg-config</code>. This is a helper for the <code>jank-build.bb</code> we’re going to
+write. It’s going to call <code>pkg-config</code> for us and then turn the output of that
+into jank build system directives. Here’s our <code>jank-build.bb</code>:</p>
+<pre><code class="language-clojure">(require '[jank.build.pkg-config :refer [pkg-config]])
+
+(pkg-config "sqlite3")
+</code></pre>
+<p>That’s it! Now, if we wanted to use this package locally, we could install it
+with <code>lein install</code> and then add it as a dependency to another project.</p>
+<pre><code class="language-bash">❯ lein install
+Created /home/jeaye/projects/sqlite3-sys/target/sqlite3-sys-2026.07-1.jar
+Wrote /home/jeaye/projects/sqlite3-sys/pom.xml
+Installed jar and pom into local repo.
+</code></pre>
+<h2 id="using-the-new-package"><a class="header" href="#using-the-new-package">Using the new package</a></h2>
+<p>Let’s create a new project and use our <code>sqlite3-sys</code> library.</p>
+<pre><code class="language-bash">❯ lein new org.jank-lang/jank hello-sqlite3
+Generating a project called hello-sqlite3 based on the 'jank' template.
+</code></pre>
+<p>Then we need to add our dependency to the <code>project.clj</code>:</p>
+<pre><code class="language-clojure">  :dependencies [[org.jank-lang.guide/sqlite3-sys "2026.07-1"]]
+</code></pre>
+<p>And we need to call sqlite3 from our jank code:</p>
+<pre><code class="language-clojure">(ns hello-sqlite3.main
+  (:include "sqlite3.h"))
+
+(defn -main [&amp; args]
+  (println (cpp/sqlite3_libversion)))
+</code></pre>
+<p>Now, when we try to run our program, the jank build system will find the
+<code>sqlite3-sys</code> package, extract it, run the <code>jank-build.bb</code> script, and propagate
+the <code>pkg-config</code> flags up to our jank invocation.</p>
+<pre><code class="language-bash">❯ lein run
+Extracting [org.jank-lang.guide/sqlite3-sys 2026.07-1]
+ Compiling [org.jank-lang.guide/sqlite3-sys 2026.07-1]
+3.51.2
+
+# Future runs won't need to extract/build anything.
+❯ lein run
+3.51.2
+</code></pre>
+<p>Note that your sqlite3 version may be different from mine here. That’s ok.</p>
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>Packaging a system library for jank involves answering the four key questions.
+Tools like <code>pkg-config</code> can do a lot of this for us! Some packages don’t have
+<code>pkg-config</code> entries, which can make this work more manual. Other packages have
+their own version of <code>pkg-config</code>, like <code>curl-config</code>, which accept similar
+flags. Take a look at the <code>pkg-config</code> build script helper
+<a href="https://github.com/jank-lang/commons/blob/main/jank-build-pkg-config/src/jank/build/pkg_config.bb">here</a>
+for a peek behind the scenes of what we used for this guide.</p>
+<p>Also, take a look at the official
+<a href="https://github.com/jank-lang/commons/tree/main/sqlite3-sys">sqlite3-sys</a> jank
+commons package, since it looks just like the one we made here!</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="guide-packaging-a-source-library"><a class="header" href="#guide-packaging-a-source-library">Guide: Packaging a source library</a></h1>
+<p>jank can package libraries which need building from source. There is no
+limitation on the build system used, such as CMake, Automake, GNU Make, Scons,
+etc. The jank build system can work with any build system, since we just invoke
+it externally.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>If you can <a href="#guide-packaging-a-system-library">package a library using an installed system package</a> and
+<code>pkg-config</code>, prefer that. It’s much simpler, more efficient, and more portable
+than building from source.</p>
+</blockquote>
+<p>Before continuing, please read the guide on <a href="#guide-packaging-a-system-library">packaging system libraries</a>,
+since it teaches the foundational knowledge of how packaging works with jank’s
+build system.</p>
+<h2 id="hello-raylib"><a class="header" href="#hello-raylib">Hello raylib</a></h2>
+<p>For this guide, we’re going to package
+<a href="https://github.com/raysan5/raylib">raylib</a> from source. Although raylib has a
+package in Nix and Homebrew, there is no Ubuntu/Debian package, which makes the
+<code>pkg-config</code> approach far less portable. Instead, we’ll build raylib from
+source.</p>
+<h2 id="a-note-on--sys-packages-1"><a class="header" href="#a-note-on--sys-packages-1">A note on <code>-sys</code> packages</a></h2>
+<p>Even when we build from source, the pattern around <code>-sys</code> packages applies, so
+be sure to read about that <a href="#a-note-on--sys-packages">here</a>.</p>
+<h2 id="building-raylib-manually"><a class="header" href="#building-raylib-manually">Building raylib manually</a></h2>
+<p>To start with, let’s make sure we can build raylib manually. Then we’ll deal
+with hooking that same flow into the jank build system. The first step in
+building raylib is to just download it. For your package, it likely makes sense
+to add raylib as a git submodule. You could also just clone it or download a
+release from Github, as long as you have a <code>raylib-sys</code> directory for your
+package with a <code>raylib</code> directory inside, which has the actual raylib
+repository.</p>
+<p>In our <code>raylib</code> directory, we’ll make our own build directory, just like the
+jank build system’s <a href="#the-build-cache">build directory</a>.</p>
+<pre><code class="language-bash">❯ cd raylib
+
+❯ mkdir build
+mkdir: created directory 'build'
+
+❯ cd build
+
+❯ cmake .. -DBUILD_EXAMPLES=off -DBUILD_SHARED_LIBS=on
+&lt;CMake configure output&gt;
+
+❯ make
+&lt;Make output&gt;
+
+❯ ls raylib/libraylib.so
+raylib/libraylib.so
+</code></pre>
+<p>That wasn’t so bad! Now we just need to do the same from our <code>jank-build.bb</code>.</p>
+<h2 id="packaging-raylib"><a class="header" href="#packaging-raylib">Packaging raylib</a></h2>
+<p>Let’s add our basic project:</p>
+<pre><code class="language-clojure">(defproject org.jank-lang.guide/raylib-sys "2026.07-1"
+  :description "Raw package for raylib."
+  :license {:name "MPL 2.0"
+            :url "https://www.mozilla.org/en-US/MPL/2.0/"}
+  :plugins [[org.jank-lang/lein-jank "2026.07-1"]]
+  :middleware [leiningen.jank/middleware]
+  :build-dependencies [[org.jank-lang.commons/jank-build-cmake "2026.06-6"]]
+  :verbatim-paths ["raylib"])
+</code></pre>
+<p>Note the <code>jank-build-cmake</code> helper in the <code>:build-dependencies</code>. This is going
+to do the heavy lifting for us. Also note the <code>:verbatim-paths</code>, which tells
+Leiningen that we want the entire <code>raylib</code> directory to be included in our
+<code>raylib-sys</code> package.</p>
+<p>Now we just need our <code>jank-build.bb</code>.</p>
+<pre><code class="language-clojure">;; Part 1.
+(require '[babashka.fs :as fs]
+         '[jank.build.cmake :as cmake])
+
+;; Part 2.
+(let [out-dir (:out-dir *input*)
+      src-dir (fs/path (:src-dir *input*) "raylib")
+      input   (assoc *input* :src-dir src-dir)]
+  (cmake/build input {:defines {"BUILD_EXAMPLES" false}})
+
+  ;; Part 3.
+  (println (str "jank-build::include-dir=" (fs/path out-dir "include")))
+  (println (str "jank-build::link-dir=" (fs/path out-dir "lib64")))
+  (println (str "jank-build::link-library=" "raylib")))
+</code></pre>
+<p>We’ll go over this part by part. Firstly, we require <code>babashka.fs</code> so we can do
+some path manipulation. This namespace is available to all Babashka programs
+without needing to add a dependency. Then we require <code>jank.build.cmake</code>, which
+we added to our <code>:build-dependencies</code> above.</p>
+<p>In part two, we invoke the <code>jank.build.cmake</code> helper, but we change the source
+directory to be the nested <code>raylib</code> directory. The CMake helper expects the
+<code>CMakeLists.txt</code> file to be within the source directory. The CMake helper will
+automatically handle building the project in the build directory and installing
+the final artifacts to the output directory.</p>
+<p>In part three, we just print the necessary directives to tell the jank build
+system where to find headers, libraries, and which libraries to link.</p>
+<p>That’s it! Now, if we wanted to use this package locally, we could install it
+with <code>lein install</code> and then add it as a dependency to another project.</p>
+<pre><code class="language-bash">❯ lein install
+Created /home/jeaye/projects/raylib-sys/target/raylib-sys-2026.07-1.jar
+Wrote /home/jeaye/projects/raylib-sys/pom.xml
+Installed jar and pom into local repo.
+</code></pre>
+<h2 id="using-the-new-package-1"><a class="header" href="#using-the-new-package-1">Using the new package</a></h2>
+<p>Let’s create a new project and use our <code>raylib-sys</code> library.</p>
+<pre><code class="language-bash">❯ lein new org.jank-lang/jank hello-raylib
+Generating a project called hello-raylib based on the 'jank' template.
+</code></pre>
+<p>Then we need to add our dependency to the <code>project.clj</code>:</p>
+<pre><code class="language-clojure">  :dependencies [[org.jank-lang.guide/raylib-sys "2026.07-1"]]
+</code></pre>
+<p>Before we add any raylib code, let’s try to run our project and make sure
+everything builds correctly.</p>
+<pre><code class="language-bash">❯ lein run
+Extracting [org.jank-lang.guide/raylib-sys 2026.07-1]
+ Compiling [org.jank-lang.guide/raylib-sys 2026.07-1]
+Hello, world!
+</code></pre>
+<p>Nice! Let’s take a look at the generated output directory, to see what’s inside.
+Note that your directory name may be different, due to the hashing, but it’ll be
+in the same place:</p>
+<pre><code class="language-bash">❯ ls target/debug/_cache/raylib-sys-2026.07-1-out-cv799vKey7U76tllczT0Hw/
+include  jank-build-cache.txt  jank-build-fingerprint.txt  lib64
+</code></pre>
+<p>Our headers will be in the <code>include</code> directory and, in this case, our libraries
+will be in <code>lib64</code>. These may end up being named different things on your
+machine, too. That’s the flexibility of the jank build system: all of this is
+handled by CMake and then the jank build system just connects the dots.</p>
+<p>Speaking of which, let’s wrap this up by writing some raylib code!</p>
+<pre><code class="language-clojure">(ns hello-raylib.main
+  (:include "raylib.h"))
+
+(defn -main [&amp; args]
+  (cpp/InitWindow 200 100 "raylib demo")
+  (cpp/SetTargetFPS 60)
+
+  (while (cpp/! (cpp/WindowShouldClose))
+    (let [time (cpp/GetTime)
+          color (cpp/ColorFromHSV (mod (* 100.0 time) 360.0) 0.5 0.5)]
+      (cpp/BeginDrawing)
+      (cpp/ClearBackground cpp/RAYWHITE)
+      (cpp/DrawText "Hello jank!" 50 30 20 color)
+      (cpp/EndDrawing)))
+
+  (cpp/CloseWindow))
+</code></pre>
+<p>Now you should be able to run this and see a raylib window rendering some
+colored text.</p>
+<pre><code class="language-bash">❯ lein run
+INFO: Initializing raylib 6.1-dev
+INFO: Platform backend: DESKTOP (GLFW)
+&lt;bunch of other raylib output&gt;
+</code></pre>
+<h2 id="summary-1"><a class="header" href="#summary-1">Summary</a></h2>
+<p>Packaging a source library for jank involves answering the same four key
+questions as with system libraries. On top of that, we just need to utilize our
+source directory, build directory, and out directory with the project’s build
+system in order to put the files where jank can use them. Take a look at the
+CMake build script helper
+<a href="https://github.com/jank-lang/commons/blob/main/jank-build-cmake/src/jank/build/cmake.bb">here</a>
+for a peek behind the scenes of what we used for this guide.</p>
+<p>Also, take a look at the official
+<a href="https://github.com/jank-lang/commons/tree/main/raylib-sys">raylib-sys</a> jank
+commons package, since it looks just like the one we made here!</p>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="differences-from-clojure"><a class="header" href="#differences-from-clojure">Differences from Clojure</a></h1>
 <p>jank is meant to be Clojure, but Clojure itself has no specification. There are
 differences between Clojure JVM, ClojureScript, Clojure CLR, ClojureDart, and
@@ -1513,19 +1961,11 @@ optionally with a <code>.o</code> file cached for quick loading</li>
 </ul>
 <h2 id="math"><a class="header" href="#math">Math</a></h2>
 <ul>
+<li>Signed integer overflow is well defined</li>
+<li>Unsigned integer overflow is well defined</li>
 <li>Division by integer <code>0</code> is undefined behavior</li>
 <li>Division by floating point <code>0.0</code> is well defined</li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div>
-<h1 id="for-c-developers"><a class="header" href="#for-c-developers">For C++ Developers</a></h1>
-<p>jank is not yet ready for C++ developers. I have not stabilized the API for
-embedding, there are GC concerns within existing C++ applications, the header
-feeding mechanisms within Clang need additional support for multiple PCHs
-(pre-compiled headers), and there is no documentation. Don’t think for a minute
-that this list is exhaustive.</p>
-<p>With that said, some have already embedded jank into existing C++ applications.
-If you’re brave, and impatient, it can work. Otherwise, wait for me to stabilize
-the Clojure side of things first. The timeline for this is more like the end of 2026.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h1>
 <p>jank is not yet stable. Chances are, you’re going to hit some crashes, bugs,
