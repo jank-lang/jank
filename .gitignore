@@ -78,3 +78,6 @@ node_modules
 
 # Book
 /book/live
+
+# AI
+copilot-instructions.md
