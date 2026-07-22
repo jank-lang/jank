@@ -14,8 +14,8 @@
 
 (def standard-options
   "Standard command line options shared by all lein-jank tasks"
-  [["-v" "--verbose" "verbose output"]
-   [nil  "--disable-sandbox" "disable jank-build sandboxing"]])
+  [["-v" "--verbose" "Enable verbose output"]
+   [nil  "--disable-sandbox" "Disable jank-build sandboxing"]])
 
 (defn parse-opts
   "Process the args using the given clojure.tools.cli option-specs. If given
@@ -83,24 +83,16 @@
     ["--runtime" (name value)]
 
     :defines
-    (do
-      (lmain/warn ":defines from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
-      (map (fn [[k v]] (str "-D" k "=" v)) value))
+    (map (fn [[k v]] (str "-D" k "=" v)) value)
 
     :include-dirs
-    (do
-      (lmain/warn ":include-dirs from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
-      (map (fn [v] (str "-I" v)) value))
+    (map (fn [v] (str "-I" v)) value)
 
     :library-dirs
-    (do
-      (lmain/warn ":library-dirs from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
-      (map (fn [v] (str "-L" v)) value))
+    (map (fn [v] (str "-L" v)) value)
 
     :linked-libraries
-    (do
-      (lmain/warn ":linked-libraries from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
-      (map (fn [v] (str "-l" v)) value))
+    (map (fn [v] (str "-l" v)) value)
 
     (lmain/warn (str "Unknown flag " flag))))
 

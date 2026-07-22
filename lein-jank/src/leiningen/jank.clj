@@ -7,7 +7,26 @@
             [leiningen.help :as lhelp]
             [babashka.fs :as fs]))
 
+(defn find-deprecated-flags [project]
+  (doseq [[k] (:jank project)]
+    (case k
+      :defines
+      (lmain/warn ":defines from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
+
+    :include-dirs
+    (lmain/warn ":include-dirs from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
+
+    :library-dirs
+    (lmain/warn ":library-dirs from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
+
+    :linked-libraries
+    (lmain/warn ":linked-libraries from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
+
+    nil)))
+
+
 (defn- dispatch-jank [project opts cmd jank-args prog-args]
+  (find-deprecated-flags project)
   (when (:verbose opts)
     (reset! ljc/verbose? true))
   (let [project     (ljc/native-build project opts)
