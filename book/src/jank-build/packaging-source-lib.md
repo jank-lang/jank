@@ -50,8 +50,13 @@ mkdir: created directory 'build'
 ❯ make
 <Make output>
 
-❯ ls raylib/libraylib.so
+# On macOS, you'll see libraylib.dylib instead!
+❯ ls raylib/libraylib.*
 raylib/libraylib.so
+
+❯ cd ../../
+
+❯ rm -r raylib/build
 ```
 
 That wasn't so bad! Now we just need to do the same from our `jank-build.bb`.
@@ -90,6 +95,7 @@ Now we just need our `jank-build.bb`.
 
   ;; Part 3.
   (println (str "jank-build::include-dir=" (fs/path out-dir "include")))
+  (println (str "jank-build::link-dir=" (fs/path out-dir "lib")))
   (println (str "jank-build::link-dir=" (fs/path out-dir "lib64")))
   (println (str "jank-build::link-library=" "raylib")))
 ```

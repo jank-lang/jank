@@ -17,6 +17,10 @@ we'll actually get an answer to every single question above.
 -I/nix/store/vyd6g9viqafhzr97dq8zsbksdf4w5avm-sqlite-3.51.2-dev/include -L/nix/store/yg1gv8db04ldrnmdhykq8zjqqg6pg5kd-sqlite-3.51.2/lib -lsqlite3
 ```
 
+> [!NOTE]
+> If you see an error like `Package 'sqlite3' not found`, make sure that
+> you have sqlite3 installed.
+
 Note that this is the output for my particular NixOS system. On a different
 distro, like Arch, the output may simply be `-lsqlite3` and nothing else. This is an
 important thing to note about `pkg-config`. You cannot just invoke it on your
@@ -114,6 +118,15 @@ Extracting [org.jank-lang.guide/sqlite3-sys 2026.07-1]
 ```
 
 Note that your sqlite3 version may be different from mine here. That's ok.
+
+> [!NOTE]
+> If you see an error like `Failed to find library 'sqlite3'`, make sure that
+> you have sqlite3 installed. If you're on macOS, make sure that your
+> `PKG_CONFIG_PATH` can find the homebrew config for sqlite3.
+>
+> ```bash
+> export PKG_CONFIG_PATH="/opt/homebrew/opt/sqlite/lib/pkgconfig:$PKG_CONFIG_PATH"
+> ```
 
 ## Summary
 Packaging a system library for jank involves answering the four key questions.
