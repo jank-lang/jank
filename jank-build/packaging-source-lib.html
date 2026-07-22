@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-476ea04f.js";
+            window.path_to_searchindex_js = "../searchindex-9dcf376f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-205a9c9d.js"></script>
@@ -224,8 +224,13 @@ mkdir: created directory 'build'
 ❯ make
 &lt;Make output&gt;
 
-❯ ls raylib/libraylib.so
+# On macOS, you'll see libraylib.dylib instead!
+❯ ls raylib/libraylib.*
 raylib/libraylib.so
+
+❯ cd ../../
+
+❯ rm -r raylib/build
 </code></pre>
 <p>That wasn’t so bad! Now we just need to do the same from our <code>jank-build.bb</code>.</p>
 <h2 id="packaging-raylib"><a class="header" href="#packaging-raylib">Packaging raylib</a></h2>
@@ -256,6 +261,7 @@ Leiningen that we want the entire <code>raylib</code> directory to be included i
 
   ;; Part 3.
   (println (str "jank-build::include-dir=" (fs/path out-dir "include")))
+  (println (str "jank-build::link-dir=" (fs/path out-dir "lib")))
   (println (str "jank-build::link-dir=" (fs/path out-dir "lib64")))
   (println (str "jank-build::link-library=" "raylib")))
 </code></pre>

@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-476ea04f.js";
+            window.path_to_searchindex_js = "searchindex-9dcf376f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-205a9c9d.js"></script>
@@ -1641,6 +1641,11 @@ we’ll actually get an answer to every single question above.</p>
 <pre><code class="language-bash">❯ pkg-config --cflags --libs sqlite3
 -I/nix/store/vyd6g9viqafhzr97dq8zsbksdf4w5avm-sqlite-3.51.2-dev/include -L/nix/store/yg1gv8db04ldrnmdhykq8zjqqg6pg5kd-sqlite-3.51.2/lib -lsqlite3
 </code></pre>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>If you see an error like <code>Package 'sqlite3' not found</code>, make sure that
+you have sqlite3 installed.</p>
+</blockquote>
 <p>Note that this is the output for my particular NixOS system. On a different
 distro, like Arch, the output may simply be <code>-lsqlite3</code> and nothing else. This is an
 important thing to note about <code>pkg-config</code>. You cannot just invoke it on your
@@ -1714,6 +1719,14 @@ Extracting [org.jank-lang.guide/sqlite3-sys 2026.07-1]
 3.51.2
 </code></pre>
 <p>Note that your sqlite3 version may be different from mine here. That’s ok.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>If you see an error like <code>Failed to find library 'sqlite3'</code>, make sure that
+you have sqlite3 installed. If you’re on macOS, make sure that your
+<code>PKG_CONFIG_PATH</code> can find the homebrew config for sqlite3.</p>
+<pre><code class="language-bash">export PKG_CONFIG_PATH="/opt/homebrew/opt/sqlite/lib/pkgconfig:$PKG_CONFIG_PATH"
+</code></pre>
+</blockquote>
 <h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
 <p>Packaging a system library for jank involves answering the four key questions.
 Tools like <code>pkg-config</code> can do a lot of this for us! Some packages don’t have
@@ -1772,8 +1785,13 @@ mkdir: created directory 'build'
 ❯ make
 &lt;Make output&gt;
 
-❯ ls raylib/libraylib.so
+# On macOS, you'll see libraylib.dylib instead!
+❯ ls raylib/libraylib.*
 raylib/libraylib.so
+
+❯ cd ../../
+
+❯ rm -r raylib/build
 </code></pre>
 <p>That wasn’t so bad! Now we just need to do the same from our <code>jank-build.bb</code>.</p>
 <h2 id="packaging-raylib"><a class="header" href="#packaging-raylib">Packaging raylib</a></h2>
@@ -1804,6 +1822,7 @@ Leiningen that we want the entire <code>raylib</code> directory to be included i
 
   ;; Part 3.
   (println (str "jank-build::include-dir=" (fs/path out-dir "include")))
+  (println (str "jank-build::link-dir=" (fs/path out-dir "lib")))
   (println (str "jank-build::link-dir=" (fs/path out-dir "lib64")))
   (println (str "jank-build::link-library=" "raylib")))
 </code></pre>
