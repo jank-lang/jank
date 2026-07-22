@@ -6,7 +6,7 @@ The simplest case is global functions, as well as static member functions. This
 applies to both C and C++ functions. In order to call these, just take the fully
 qualified name of the function and replace `::` with `.`. For example:
 
-* `std::rand` becomes `cpp/rand`
+* `rand` becomes `cpp/rand`
 * `std::this_thread::get_id` becomes `cpp/std.this_thread.get_id`
 
 For example, we can use the C functions `srand`, `time`, and `rand` to seed the
@@ -32,8 +32,8 @@ will raise a compiler error.
 
 For example, the
 [std::to_string](https://en.cppreference.com/w/cpp/string/basic_string/to_string)
-function has many different overloads. Here, we specifically create `i` to be a
-`jank::i64`, so overload resolution can happen.
+function has many different overloads. Here, we specifically create `i` to be an
+`int`, so overload resolution can happen.
 
 ```clojure
 (defn -main [& args]

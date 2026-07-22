@@ -8,6 +8,25 @@ we need to take some extra steps in order to store arbitrary C++ values within
 the jank runtime. There are a few ways this can be done and jank tries to make
 this as easy as possible.
 
+## `let` is special
+Within a `let`, you can bind any native value to a name and jank will do no
+conversions. Furthermore, each `let` represents a lexical scope, so any values
+with non-trivial destructors will have those destructors called at the end of
+the `let`. This behaves just the same as explicit C++ scoping via `{ }`.
+
+As soon as you leave the `let`, but trying to pass the value as an argument, or
+return the value from the `let`, you may be crossing a boundary out of C++ land
+and into Clojure land. In general, this happens in two cases:
+
+1. Calling a Clojure function
+2. Returning a value in a Clojure function
+
+If you use native values in a `let` and you only call C and C++ functions, no
+conversions will happen. No hidden allocations will happen. However, when you
+start passing native values into Clojure functions or returning them from
+Clojure functions, jank will do what it can to make that work, which may involve
+conversions. More on that below.
+
 ## Tagged literals
 jank provides access to literal C++ values through the `#cpp` reader tag. Using
 this will resolve to a C++ primitive, rather than a jank runtime object. It's
@@ -46,7 +65,7 @@ then pull out the name.
 ```
 
 Whenever a member is accessed, you will get a reference to it, not a copy. Also,
-note that members can be access through a pointer to the native object, without
+note that members can be accessed through a pointer to the native object, without
 needing an explicit dereference.
 
 ```clojure

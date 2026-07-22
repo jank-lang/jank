@@ -20,7 +20,7 @@ explicitly requested by using the special `#cpp` tag. The documentation for this
 DSL is [here](./dsl.md).
 
 ```clojure
-(let [i (#cpp (:* void))] ; Stack-allocates a void*.
+(let [p (#cpp (:* void))] ; Stack-allocates a void*.
   )
 ```
 
@@ -35,4 +35,12 @@ time) compiled types will be coming soon.
           {
             std::string name;
           };")
+```
+
+Better yet, write the C++ code in a header file and include it in your jank
+project.
+
+```clojure
+(ns my.app
+  (:include "person.hpp"))
 ```
