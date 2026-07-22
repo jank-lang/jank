@@ -83,16 +83,24 @@
     ["--runtime" (name value)]
 
     :defines
-    (map (fn [[k v]] (str "-D" k "=" v)) value)
+    (do
+      (lmain/warn ":defines from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
+      (map (fn [[k v]] (str "-D" k "=" v)) value))
 
     :include-dirs
-    (map (fn [v] (str "-I" v)) value)
+    (do
+      (lmain/warn ":include-dirs from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
+      (map (fn [v] (str "-I" v)) value))
 
     :library-dirs
-    (map (fn [v] (str "-L" v)) value)
+    (do
+      (lmain/warn ":library-dirs from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
+      (map (fn [v] (str "-L" v)) value))
 
     :linked-libraries
-    (map (fn [v] (str "-l" v)) value)
+    (do
+      (lmain/warn ":linked-libraries from project.clj is deprecated and will be removed. Please use a jank-build.bb script instead. Docs are here: https://book.jank-lang.org/jank-build/overview.html")
+      (map (fn [v] (str "-l" v)) value))
 
     (lmain/warn (str "Unknown flag " flag))))
 

@@ -28,7 +28,6 @@ TODO:
 -->
 
 * [Reaching into C++](cpp-interop/index.md)
-  * [Bringing in native libraries](cpp-interop/native-libs.md)
   * [Working with native values](cpp-interop/native-values.md)
   * [Working with native types](cpp-interop/native-types.md)
   * [Working with native functions](cpp-interop/native-functions.md)
