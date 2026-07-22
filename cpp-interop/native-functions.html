@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-9dcf376f.js";
+            window.path_to_searchindex_js = "../searchindex-41e85fa6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-205a9c9d.js"></script>
+        <script src="../toc-9dcbcf57.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -185,7 +185,7 @@ The simplest case is global functions, as well as static member functions. This
 applies to both C and C++ functions. In order to call these, just take the fully
 qualified name of the function and replace <code>::</code> with <code>.</code>. For example:</p>
 <ul>
-<li><code>std::rand</code> becomes <code>cpp/rand</code></li>
+<li><code>rand</code> becomes <code>cpp/rand</code></li>
 <li><code>std::this_thread::get_id</code> becomes <code>cpp/std.this_thread.get_id</code></li>
 </ul>
 <p>For example, we can use the C functions <code>srand</code>, <code>time</code>, and <code>rand</code> to seed the
@@ -206,8 +206,8 @@ resolved to a known overload, or is ambiguous between multiple overloads, jank
 will raise a compiler error.</p>
 <p>For example, the
 <a href="https://en.cppreference.com/w/cpp/string/basic_string/to_string">std::to_string</a>
-function has many different overloads. Here, we specifically create <code>i</code> to be a
-<code>jank::i64</code>, so overload resolution can happen.</p>
+function has many different overloads. Here, we specifically create <code>i</code> to be an
+<code>int</code>, so overload resolution can happen.</p>
 <pre><code class="language-clojure">(defn -main [&amp; args]
   (let [i #cpp 42
         s (cpp/std.to_string i)]

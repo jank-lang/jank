@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-9dcf376f.js";
+            window.path_to_searchindex_js = "../searchindex-41e85fa6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-205a9c9d.js"></script>
+        <script src="../toc-9dcbcf57.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -194,7 +194,7 @@ jank supports a C++ domain-specific language (DSL).
 This is available implicitly when in type position, but it can be
 explicitly requested by using the special <code>#cpp</code> tag. The documentation for this
 DSL is <a href="./dsl.html">here</a>.</p>
-<pre><code class="language-clojure">(let [i (#cpp (:* void))] ; Stack-allocates a void*.
+<pre><code class="language-clojure">(let [p (#cpp (:* void))] ; Stack-allocates a void*.
   )
 </code></pre>
 <h2 id="defining-new-types"><a class="header" href="#defining-new-types">Defining new types</a></h2>
@@ -206,6 +206,11 @@ time) compiled types will be coming soon.</p>
           {
             std::string name;
           };")
+</code></pre>
+<p>Better yet, write the C++ code in a header file and include it in your jank
+project.</p>
+<pre><code class="language-clojure">(ns my.app
+  (:include "person.hpp"))
 </code></pre>
 
                     </main>

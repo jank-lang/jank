@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-9dcf376f.js";
+            window.path_to_searchindex_js = "searchindex-41e85fa6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-205a9c9d.js"></script>
+        <script src="toc-9dcbcf57.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -473,245 +473,6 @@ forms live in the special <code>cpp/</code> namespace.</p>
 <p>In this chapter, we’ll dive into all of the various use cases of working with
 C++ types, functions, values, and exceptions.</p>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="bringing-in-native-libraries"><a class="header" href="#bringing-in-native-libraries">Bringing in native libraries</a></h1>
-<p>Ultimately, jank exists to combine Clojure and C++. Most non-trivial jank
-programs will end up reaching into the C++ world for <em>something</em>. jank embraces
-familiar concepts from the C++ world, since it’s built entirely around Clang.</p>
-<ol>
-<li>Include search paths</li>
-<li>Preprocessor defines</li>
-<li>Linker search paths</li>
-<li>Libaries to link</li>
-</ol>
-<h2 id="using-leiningen"><a class="header" href="#using-leiningen">Using Leiningen</a></h2>
-<p>To bring in a C or C++ library, you will first need to <code>#include</code> the necessary
-header files. In order to be able to include them, you need to tell jank (and
-thus Clang) where to find them. This is done with your include search paths.</p>
-<p>Next, you may need to define some preprocessor macros in order to use or
-customize the library.</p>
-<p>Finally, you may need to link to some libraries involved. This often includes
-library search paths as well as library names, but library names can also be
-absolute paths, if that’s applicable to you.</p>
-<h3 id="creating-a-native-lib-for-testing"><a class="header" href="#creating-a-native-lib-for-testing">Creating a native lib for testing</a></h3>
-<p>Let’s make a new Leiningen project and a small C++ project within it.</p>
-<pre><code class="language-bash">$ lein new org.jank-lang/jank native-lib-tutorial
-$ cd native-lib-tutorial
-$ mkdir native-lib
-$ cd native-lib
-</code></pre>
-<p>In this <code>native-lib</code> directory, let’s make a small C++ library which uses libz
-to compress the contents of a C++ string. Create a <code>compress.hpp</code> file with
-these contents.</p>
-<pre><code class="language-cpp">#pragma once
-
-#include &lt;string&gt;
-
-namespace native_lib
-{
-  std::string compress(std::string const &amp;input);
-}
-</code></pre>
-<p>This is our header file. Now we can create a source file, <code>compress.cpp</code>, which implements our
-function.</p>
-<pre><code class="language-cpp">#include &lt;zlib.h&gt;
-
-#include &lt;stdexcept&gt;
-
-#include "compress.hpp"
-
-namespace native_lib
-{
-  std::string compress(std::string const &amp;input)
-  {
-    if(input.empty())
-    {
-      return {};
-    }
-
-    auto const input_len{ input.size() };
-    auto output_size{ compressBound(input_len) };
-
-    std::string out;
-    out.resize(output_size);
-
-    auto const res{ ::compress((unsigned char *)out.data(),
-                               &amp;output_size,
-                               (unsigned char *)input.data(),
-                               input_len) };
-    if(res != Z_OK)
-    {
-      throw std::runtime_error{ "compress failed: " + std::to_string(res) };
-    }
-
-    out.resize(output_size);
-    return out;
-  }
-}
-</code></pre>
-<p>Our source file defines this <code>compress</code> function using zlib. We can now compile
-this to a shared library so it can be used in jank.</p>
-<pre><code class="language-bash"># Linux.
-$ clang++ -shared -o libcompress.so -lz compress.cpp
-$ ls
-compress.cpp  compress.hpp  libcompress.so
-
-# macOS.
-$ clang++ -shared -o libcompress.dylib -lz compress.cpp
-$ ls
-compress.cpp  compress.hpp  libcompress.dylib
-</code></pre>
-<h3 id="linking-to-our-native-lib"><a class="header" href="#linking-to-our-native-lib">Linking to our native lib</a></h3>
-<p>Back in our jank project directory, let’s try to use our new library. We’ll
-start by doing everything incorrectly, so we can see the types of errors jank
-will raise and how to fix them.</p>
-<p>To start with, let’s update our <code>main.jank</code> to include our <code>compress.hpp</code> header
-from our native lib.</p>
-<pre><code class="language-clojure">(ns native-lib-tutorial.main
-  (:include "compress.hpp"))
-
-(defn -main [&amp; args]
-  (println "Hello, world!"))
-</code></pre>
-<p>When we try to run this project now, jank will fail to compile the code.</p>
-<pre><code class="language-bash">$ lein run
-In file included from &lt;&lt;&lt; inputs &gt;&gt;&gt;:1:
-input_line_1:4:10: fatal error: 'compress.hpp' file not found
-    4 | #include &lt;compress.hpp&gt;
-      |          ^~~~~~~~~~~~~~
-error: Parsing failed.
-─ internal/codegen-failure ─────────────────────────────────────────────────────────────────────────
-error: Unable to compile C++ source.
-</code></pre>
-<p>This is where include directories come into play. Let’s update our <code>project.clj</code>
-to fix this issue!</p>
-<pre><code class="language-clojure">(defproject native-lib-tutorial "0.1-SNAPSHOT"
-  :license {:name "MPL 2.0"
-            :url "https://www.mozilla.org/en-US/MPL/2.0/"}
-  :dependencies []
-  :plugins [[org.jank-lang/lein-jank "0.2"]]
-  :middleware [leiningen.jank/middleware]
-  :main native-lib-tutorial.main
-
-  ; Look here!
-  :jank {:include-dirs ["native-lib"]}
-  :profiles {:base {:jank {:optimization-level 0}}
-             :release {:jank {:optimization-level 2}}})
-</code></pre>
-<p>Now we can run the project again.</p>
-<pre><code class="language-bash">$ lein run
-Hello, world!
-</code></pre>
-<p>So our jank code is including the native lib header, but we’re not yet doing
-anything with it. Let’s call our actual <code>compress</code> function from jank now. Update the <code>-main</code>
-function within <code>main.jank</code> to look like the following.</p>
-<pre><code class="language-clojure">(ns native-lib-tutorial.main
-  (:include "compress.hpp")
-  (:refer-global :only [native_lib.compress]))
-
-(defn -main [&amp; args]
-  (if (empty? args)
-    (println "Try passing some data to compress!")
-    (let [input (first args)
-          output (native_lib.compress input)]
-      (println "input size" (count input) "output size" (count output)))))
-</code></pre>
-<p>Again, we’re intentionally forgetting a step so we can see what happens. Let’s
-try to run this now!</p>
-<pre><code class="language-bash">$ lein run
-Try passing some data to compress!
-
-$ lein run "This is some data to compress!"
-JIT session error: Symbols not found: [ _ZN10native_lib8compressERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE ]
-error: Failed to materialize symbols: { (main, { _ZN3jtl6detail5panicINS_6resultIN4jank7runtime4orefINS4_3varEEENS_16immutable_stringEEEEEvRKT_, __orc_init_func.incr_module_3, DW.ref.__gxx_personality_v0, __clang_call_terminate, _ZZSt26__throw_bad_variant_accessjE9__reasons, _ZTSN19native_lib_tutorial4main7_main_1E, _ZNK19native_lib_tutorial4main7_main_115get_arity_flagsEv, _ZTIN19native_lib_tutorial4main7_main_1E, _ZN4jank7runtime8make_boxINS0_3obj17persistent_stringEJRA12_KcEQsr8behaviorE11object_likeIT_EEENS0_4orefIS7_EEDpOT0_, _ZNSt18bad_variant_accessD0Ev, $.incr_module_3.__inits.0, _ZTVSt18bad_variant_access, _ZSt26__throw_bad_variant_accessj, _ZNK3jtl6resultIN4jank7runtime4orefINS2_3varEEENS_16immutable_stringEE10expect_errEv, _ZN19native_lib_tutorial4main7_main_1C2Ev, _ZTSSt18bad_variant_access, _ZTISt18bad_variant_access, _ZN4jank7runtime8make_boxINS0_3obj17persistent_stringEJRA37_KcEQsr8behaviorE11object_likeIT_EEENS0_4orefIS7_EEDpOT0_, _ZN4jank7runtime8make_boxINS0_3obj17persistent_stringEJRA11_KcEQsr8behaviorE11object_likeIT_EEENS0_4orefIS7_EEDpOT0_, _ZN4jank7runtime7convertINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEE11from_objectENS0_4orefINS0_6objectEEE, _ZNKSt18bad_variant_access4whatEv, _ZTVN19native_lib_tutorial4main7_main_1E, _ZN19native_lib_tutorial4main7_main_14callEN4jank7runtime4orefINS3_6objectEEE, _ZN4jank7runtime3obj12jit_functionD2Ev, _ZN4jank7runtime8make_boxERKN3jtl21immutable_string_viewE, _ZN19native_lib_tutorial4main7_main_1D0Ev, _ZNK4jank7runtime4orefINS0_3obj17persistent_stringEE5eraseEv }) }
-─ internal/codegen-failure ─────────────────────────────────────────────────────────────────────────
-error: Unable to compile C++ source.
-</code></pre>
-<p>Uh oh! There’s a huge JIT (just in time) linker error. If we focus on the first
-line, we can see <code>Symbols not found</code> and then this:</p>
-<pre><code class="language-cpp">_ZN10native_lib8compressERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
-</code></pre>
-<p>This is a C++ mangled symbol, so if you plug it into something like
-<a href="https://www.demangler.com/">demangler</a>, you can see that it demangles to:</p>
-<pre><code class="language-cpp">native_lib::compress(std::__cxx11::basic_string&lt;char, std::char_traits&lt;char&gt;, std::allocator&lt;char&gt;&gt; const&amp;)
-</code></pre>
-<p>That’s our <code>compress</code> function!</p>
-<p>All this means is that the C++ JIT runtime wasn’t able to find a definition for
-that symbol. The reason is that we didn’t link our shared library in. Let’s do
-that in <code>project.clj</code> now. If we expand on the include directory we added
-already, we can specify a library directory and the name of our library.</p>
-<pre><code class="language-clojure">  :jank {:include-dirs ["native-lib"]
-         :library-dirs ["native-lib"]
-         :linked-libraries ["compress"]}
-</code></pre>
-<p>With this change, we can now run our whole program.</p>
-<pre><code class="language-bash">$ lein run "This is some data to compress! Ideally, the output is smaller than the input."
-input size 77 output size 74
-
-$ lein run "Repeated strings are easier to compress. Repeated strings are easier to compress."
-input size 81 output size 52
-</code></pre>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>The way native linking works is that you link to <code>compress</code>, but the linker
-will actually look for <code>libcompress.a</code> and <code>libcompress.so</code> (or <code>libcompress.dylib</code>
-on macOS). Do not put the full file name in <code>:linked-libraries</code> unless
-you’re also specifying the absolute path.</p>
-</blockquote>
-<p>Finally, if we AOT (ahead of time) compile this project down to an executable,
-we can run it without Leiningen.</p>
-<pre><code class="language-bash">$ lein compile
-$ ./a.out
-./a.out: error while loading shared libraries: libcompress.so: cannot open shared object file: No such file or directory
-</code></pre>
-<p>Oh no! Our <code>libcompress.so</code> isn’t found, when we try to run our compiled
-executable. If we inspect the binary with <code>ldd</code> (or <code>otool -L</code> on macOS), we can
-see the linked libraries. Note how <code>libcompress.so</code> is <code>not found</code>.</p>
-<pre><code>$ ldd a.out
-	linux-vdso.so.1 (0x00007fa6f0f64000)
-	libm.so.6 =&gt; /usr/lib/libm.so.6 (0x00007fa6ebadd000)
-	libLLVM.so.22.0git =&gt; /home/jeaye/projects/jank/compiler+runtime/build/llvm-install/usr/local/bin/../lib/libLLVM.so.22.0git (0x00007fa6e7000000)
-	libclang-cpp.so.22.0git =&gt; /home/jeaye/projects/jank/compiler+runtime/build/llvm-install/usr/local/bin/../lib/libclang-cpp.so.22.0git (0x00007fa6e2c00000)
-	libcrypto.so.3 =&gt; /usr/lib/libcrypto.so.3 (0x00007fa6e268c000)
-	libz.so.1 =&gt; /usr/lib/libz.so.1 (0x00007fa6ebac4000)
-	libzstd.so.1 =&gt; /usr/lib/libzstd.so.1 (0x00007fa6e25a7000)
-	libcompress.so =&gt; not found
-	libstdc++.so.6 =&gt; /usr/lib/libstdc++.so.6 (0x00007fa6e2313000)
-	libgcc_s.so.1 =&gt; /usr/lib/libgcc_s.so.1 (0x00007fa6eba95000)
-	libc.so.6 =&gt; /usr/lib/libc.so.6 (0x00007fa6e2101000)
-	/lib64/ld-linux-x86-64.so.2 =&gt; /usr/lib64/ld-linux-x86-64.so.2 (0x00007fa6f0f66000)
-	libedit.so.0 =&gt; /usr/lib/libedit.so.0 (0x00007fa6eba59000)
-	libxml2.so.16 =&gt; /usr/lib/libxml2.so.16 (0x00007fa6e1fcc000)
-	libncursesw.so.6 =&gt; /usr/lib/libncursesw.so.6 (0x00007fa6eb9ea000)
-	libicuuc.so.78 =&gt; /usr/lib/libicuuc.so.78 (0x00007fa6e1dbe000)
-	libicudata.so.78 =&gt; /usr/lib/libicudata.so.78 (0x00007fa6dfe29000)
-</code></pre>
-<p>Getting around this varies based on situation, but a quick workaround is to
-tell the dynamic linker where else to look, when we run our program.</p>
-<pre><code class="language-bash"># Linux.
-$ LD_LIBRARY_PATH=native-lib ./a.out "ABABABABABABABABABAB"
-input size 20 output size 12
-
-# macOS.
-$ DYLD_LIBRARY_PATH=native-lib ./a.out "ABABABABABABABABABAB"
-input size 20 output size 12
-</code></pre>
-<blockquote class="blockquote-tag blockquote-tag-note">
-<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
-<p>jank does not support C++20 modules right now. In fact, most C++ compilers
-have very poor support for C++20 modules right now. This may come, in the
-future, but it will only happen once the experience is sane.</p>
-</blockquote>
-<h2 id="using-jank-directly-1"><a class="header" href="#using-jank-directly-1">Using jank directly</a></h2>
-<p>jank exposes the same flags as Clang for includes, defines, and linked
-libraries. They work in the same way, too. For all of these, you may add as many
-as you need.</p>
-<ul>
-<li>Specify <code>-I &lt;path&gt;</code> to add a new include path</li>
-<li>Specify <code>-D FOO</code> or <code>-D FOO=bar</code> to add a new preprocessor define</li>
-<li>Specify <code>-L &lt;path&gt;</code> to add a new library path</li>
-<li>Specify <code>-l &lt;lib&gt;</code> to link to a library name</li>
-</ul>
-<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="working-with-native-values"><a class="header" href="#working-with-native-values">Working with native values</a></h1>
 <p>C++ values, references, and pointers can be used directly within jank. However,
 there are some limitations due to how C++’s object model works. The primary
@@ -721,6 +482,23 @@ environments where there is a base <code>Object</code> for all class types. This
 we need to take some extra steps in order to store arbitrary C++ values within
 the jank runtime. There are a few ways this can be done and jank tries to make
 this as easy as possible.</p>
+<h2 id="let-is-special"><a class="header" href="#let-is-special"><code>let</code> is special</a></h2>
+<p>Within a <code>let</code>, you can bind any native value to a name and jank will do no
+conversions. Furthermore, each <code>let</code> represents a lexical scope, so any values
+with non-trivial destructors will have those destructors called at the end of
+the <code>let</code>. This behaves just the same as explicit C++ scoping via <code>{ }</code>.</p>
+<p>As soon as you leave the <code>let</code>, but trying to pass the value as an argument, or
+return the value from the <code>let</code>, you may be crossing a boundary out of C++ land
+and into Clojure land. In general, this happens in two cases:</p>
+<ol>
+<li>Calling a Clojure function</li>
+<li>Returning a value in a Clojure function</li>
+</ol>
+<p>If you use native values in a <code>let</code> and you only call C and C++ functions, no
+conversions will happen. No hidden allocations will happen. However, when you
+start passing native values into Clojure functions or returning them from
+Clojure functions, jank will do what it can to make that work, which may involve
+conversions. More on that below.</p>
 <h2 id="tagged-literals"><a class="header" href="#tagged-literals">Tagged literals</a></h2>
 <p>jank provides access to literal C++ values through the <code>#cpp</code> reader tag. Using
 this will resolve to a C++ primitive, rather than a jank runtime object. It’s
@@ -752,7 +530,7 @@ then pull out the name.</p>
     ))
 </code></pre>
 <p>Whenever a member is accessed, you will get a reference to it, not a copy. Also,
-note that members can be access through a pointer to the native object, without
+note that members can be accessed through a pointer to the native object, without
 needing an explicit dereference.</p>
 <pre><code class="language-clojure">(defn create-person [name]
   (let [p (cpp/new cpp/person (cpp/cast cpp/std.string name))
@@ -947,7 +725,7 @@ jank supports a C++ domain-specific language (DSL).
 This is available implicitly when in type position, but it can be
 explicitly requested by using the special <code>#cpp</code> tag. The documentation for this
 DSL is <a href="#the-c-dsl">here</a>.</p>
-<pre><code class="language-clojure">(let [i (#cpp (:* void))] ; Stack-allocates a void*.
+<pre><code class="language-clojure">(let [p (#cpp (:* void))] ; Stack-allocates a void*.
   )
 </code></pre>
 <h2 id="defining-new-types"><a class="header" href="#defining-new-types">Defining new types</a></h2>
@@ -960,6 +738,11 @@ time) compiled types will be coming soon.</p>
             std::string name;
           };")
 </code></pre>
+<p>Better yet, write the C++ code in a header file and include it in your jank
+project.</p>
+<pre><code class="language-clojure">(ns my.app
+  (:include "person.hpp"))
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="working-with-native-functions"><a class="header" href="#working-with-native-functions">Working with native functions</a></h1>
 <h2 id="global-functions"><a class="header" href="#global-functions">Global functions</a></h2>
@@ -968,7 +751,7 @@ The simplest case is global functions, as well as static member functions. This
 applies to both C and C++ functions. In order to call these, just take the fully
 qualified name of the function and replace <code>::</code> with <code>.</code>. For example:</p>
 <ul>
-<li><code>std::rand</code> becomes <code>cpp/rand</code></li>
+<li><code>rand</code> becomes <code>cpp/rand</code></li>
 <li><code>std::this_thread::get_id</code> becomes <code>cpp/std.this_thread.get_id</code></li>
 </ul>
 <p>For example, we can use the C functions <code>srand</code>, <code>time</code>, and <code>rand</code> to seed the
@@ -989,8 +772,8 @@ resolved to a known overload, or is ambiguous between multiple overloads, jank
 will raise a compiler error.</p>
 <p>For example, the
 <a href="https://en.cppreference.com/w/cpp/string/basic_string/to_string">std::to_string</a>
-function has many different overloads. Here, we specifically create <code>i</code> to be a
-<code>jank::i64</code>, so overload resolution can happen.</p>
+function has many different overloads. Here, we specifically create <code>i</code> to be an
+<code>int</code>, so overload resolution can happen.</p>
 <pre><code class="language-clojure">(defn -main [&amp; args]
   (let [i #cpp 42
         s (cpp/std.to_string i)]

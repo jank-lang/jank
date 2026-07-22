@@ -36,10 +36,10 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-9dcf376f.js";
+            window.path_to_searchindex_js = "../searchindex-41e85fa6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-205a9c9d.js"></script>
+        <script src="../toc-9dcbcf57.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -187,6 +187,23 @@ environments where there is a base <code>Object</code> for all class types. This
 we need to take some extra steps in order to store arbitrary C++ values within
 the jank runtime. There are a few ways this can be done and jank tries to make
 this as easy as possible.</p>
+<h2 id="let-is-special"><a class="header" href="#let-is-special"><code>let</code> is special</a></h2>
+<p>Within a <code>let</code>, you can bind any native value to a name and jank will do no
+conversions. Furthermore, each <code>let</code> represents a lexical scope, so any values
+with non-trivial destructors will have those destructors called at the end of
+the <code>let</code>. This behaves just the same as explicit C++ scoping via <code>{ }</code>.</p>
+<p>As soon as you leave the <code>let</code>, but trying to pass the value as an argument, or
+return the value from the <code>let</code>, you may be crossing a boundary out of C++ land
+and into Clojure land. In general, this happens in two cases:</p>
+<ol>
+<li>Calling a Clojure function</li>
+<li>Returning a value in a Clojure function</li>
+</ol>
+<p>If you use native values in a <code>let</code> and you only call C and C++ functions, no
+conversions will happen. No hidden allocations will happen. However, when you
+start passing native values into Clojure functions or returning them from
+Clojure functions, jank will do what it can to make that work, which may involve
+conversions. More on that below.</p>
 <h2 id="tagged-literals"><a class="header" href="#tagged-literals">Tagged literals</a></h2>
 <p>jank provides access to literal C++ values through the <code>#cpp</code> reader tag. Using
 this will resolve to a C++ primitive, rather than a jank runtime object. It’s
@@ -218,7 +235,7 @@ then pull out the name.</p>
     ))
 </code></pre>
 <p>Whenever a member is accessed, you will get a reference to it, not a copy. Also,
-note that members can be access through a pointer to the native object, without
+note that members can be accessed through a pointer to the native object, without
 needing an explicit dereference.</p>
 <pre><code class="language-clojure">(defn create-person [name]
   (let [p (cpp/new cpp/person (cpp/cast cpp/std.string name))
@@ -401,7 +418,7 @@ need a copy, you will need to manually do that.</p>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../cpp-interop/native-libs.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../cpp-interop/index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -415,7 +432,7 @@ need a copy, you will need to manually do that.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../cpp-interop/native-libs.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../cpp-interop/index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
