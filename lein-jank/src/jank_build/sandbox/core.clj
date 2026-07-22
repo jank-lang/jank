@@ -19,8 +19,8 @@
     (not (bwrap/which-bwrap))
     (util/abort
      (str "No 'bwrap' executable found. If bubblewrap is not available on your"
-          " platform then you can build with the lein option :disable-sandbox,"
-          " however this allows potentially nefarious build scripts free rein"
+          " platform then you can build with the lein --disable-sandbox."
+          " However, this allows potentially nefarious build scripts free rein"
           " over your system. Use with care!"))
 
     :else
