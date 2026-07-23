@@ -1191,7 +1191,11 @@ namespace jank::analyze
                                          jtl::move(arg_exprs));
   }
 
-  /* TODO: Document. */
+  /* This function steps through local_reference expressions to find the underlying
+   * reference. This is particularly handy when we have a local reference to a literal
+   * and we want to work on the literal. However, loop variables halt the process, since
+   * they're actually mutable. We can't look past them to the original literal, since
+   * the value is expected to change. */
   static expression_ref resolved_expression(expression_ref const expr)
   {
     if(expr->kind == expression_kind::local_reference)
