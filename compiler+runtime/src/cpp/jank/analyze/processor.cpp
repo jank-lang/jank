@@ -52,6 +52,7 @@
 #include <jank/analyze/expr/cpp_raw.hpp>
 #include <jank/analyze/expr/cpp_type.hpp>
 #include <jank/analyze/expr/cpp_value.hpp>
+#include <jank/analyze/expr/cpp_literal.hpp>
 #include <jank/analyze/expr/cpp_conversion.hpp>
 #include <jank/analyze/expr/cpp_unsafe_cast.hpp>
 #include <jank/analyze/expr/cpp_call.hpp>
@@ -1190,6 +1191,21 @@ namespace jank::analyze
                                          jtl::move(arg_exprs));
   }
 
+  /* TODO: Document. */
+  static expression_ref resolved_expression(expression_ref const expr)
+  {
+    if(expr->kind == expression_kind::local_reference)
+    {
+      auto const local{ llvm::cast<expr::local_reference>(expr.data) };
+      if(!local->binding->is_loop_variable && local->binding->value_expr.is_some())
+      {
+        return resolved_expression(local->binding->value_expr.unwrap());
+      }
+    }
+
+    return expr;
+  }
+
   static jtl::result<expression_ref, error_ref>
   apply_implicit_conversion(expression_ref const expr,
                             jtl::ptr<void> expr_type,
@@ -1205,6 +1221,22 @@ namespace jank::analyze
         return expr;
       case cpp_util::implicit_conversion_action::into_object:
         {
+          /* If we use a C++ literal in a place where it needs to be boxed, just switch to
+           * a boxed literal instead. This allows for lifting, deduping, etc. */
+          auto const resolved_expr{ resolved_expression(expr) };
+          if(resolved_expr->kind == expression_kind::cpp_literal)
+          {
+            auto const cpp_lit{ llvm::cast<expr::cpp_literal>(resolved_expr.data) };
+            return apply_implicit_conversion(jtl::make_ref<expr::primitive_literal>(expr->position,
+                                                                                    expr->frame,
+                                                                                    expr->needs_box,
+                                                                                    cpp_lit->data,
+                                                                                    cpp_lit->data),
+                                             cpp_util::literal_type(cpp_lit->data, true),
+                                             expected_type,
+                                             macro_expansions);
+          }
+
           auto const cast_position{ expr->position };
           expr->propagate_position(expression_position::value);
           return jtl::make_ref<expr::cpp_conversion>(cast_position,
@@ -1838,9 +1870,10 @@ namespace jank::analyze
      * and would cause an off-by-one error. */
     if(param_symbols.size() > runtime::max_params)
     {
-      /* TODO: Suggestion: use & args to capture the rest */
       return error::analyze_invalid_fn_parameters(
-        util::format("This function has too many parameters. The max is {}.", runtime::max_params),
+        util::format("This function has too many parameters. The max is {}. If you need more, use "
+                     "a variadic function.",
+                     runtime::max_params),
         object_source(params_obj),
         latest_expansion(macro_expansions));
     }
@@ -2311,8 +2344,10 @@ namespace jank::analyze
       jtl::make_ref<expr::do_>(position, frame, needs_box, o, native_vector<expression_ref>{})) };
 
     static auto const loop_kw{ make_box<obj::symbol>("loop*") };
+    bool is_loop{};
     if(loop_details.is_some() && runtime::equal(o->first(), loop_kw))
     {
+      is_loop = true;
       loop_details = ret.data;
     }
 
@@ -2361,9 +2396,22 @@ namespace jank::analyze
       /* Loop bindings are mutable, so if we have a typed object, force it to be untyped since
        * we have no idea what type it'll be assigned to later on. For example, you might start
        * with an empty array map, but then assoc some stuff on and get a hash map afterward. */
-      if(loop_details.is_some())
+      if(is_loop)
       {
+        auto const old_type{ expr_type };
         expr_type = cpp_util::mutable_type(expr_type);
+        /* If old type is not an object and new type is, we need a conversion. */
+        if(!cpp_util::is_any_object(old_type) && cpp_util::is_any_object(expr_type))
+        {
+          value_expr = jtl::make_ref<expr::cpp_conversion>(value_expr->position,
+                                                           value_expr->frame,
+                                                           value_expr->needs_box,
+                                                           value_expr->form,
+                                                           expr_type,
+                                                           old_type,
+                                                           conversion_policy::into_object,
+                                                           value_expr);
+        }
       }
 
       auto const &binding{ ret->frame->locals[sym].emplace_back(
@@ -2372,6 +2420,7 @@ namespace jank::analyze
                        value_expr,
                        frame,
                        value_expr->needs_box,
+                       .is_loop_variable = is_loop,
                        .type = expr_type }) };
       ret->pairs.emplace_back(&binding, value_expr);
     }
@@ -2702,16 +2751,19 @@ namespace jank::analyze
     auto const is_else_object{ cpp_util::is_any_object(else_type) };
     auto const is_then_convertible{ is_else_object && cpp_util::is_trait_convertible(then_type) };
     auto const is_else_convertible{ is_then_object && cpp_util::is_trait_convertible(else_type) };
+    auto const is_compatible{ cpp_util::is_implicitly_convertible(then_type, else_type)
+                              || cpp_util::is_implicitly_convertible(else_type, then_type) };
 
     /* If one of the branches has a native type, we need to match one of these scenarios.
        *
        * 1. The other branch has the same native type.
-       * 2. The other branch has an object type and the native branch is trait convertible.
+       * 2. The other branch has a native type and the two native types are compatible.
+       * 3. The other branch has an object type and the native branch is trait convertible.
        *
        * If neither of these are the case, we have an error. */
     if((Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
        && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible)
-       && !has_recur)
+       && !is_compatible && !has_recur)
     {
       return error::analyze_mismatched_if_types(
         util::format("Mismatched 'if' branch types '{}' and '{}'. Each branch of an 'if' must have "
@@ -2752,6 +2804,16 @@ namespace jank::analyze
        && Cpp::GetCanonicalType(chosen_type) != Cpp::GetCanonicalType(other_type))
     {
       chosen_type = cpp_util::untyped_object_ref_type();
+    }
+    /* If the chosen type is implicitly convertible to the other type, and both are native types,
+     * we fall into option 2 from above. In that case, we actually want the other type.
+     *
+     * Example: if branch returning std::string and C string literal. Regardless of which branch
+     * it's in, we want to take the std::string as our chosen type. */
+    else if(!cpp_util::is_any_object(chosen_type) && !cpp_util::is_any_object(other_type)
+            && is_compatible && cpp_util::is_implicitly_convertible(chosen_type, other_type))
+    {
+      std::swap(chosen_type, other_type);
     }
 
     return jtl::make_ref<expr::if_>(position,
@@ -3057,6 +3119,7 @@ namespace jank::analyze
                                                         false,
                                                         false,
                                                         false,
+                                                        false,
                                                         catch_type);
 
             /* Now we just turn the body into a do block and have the do analyzer handle the rest. */
@@ -3158,7 +3221,12 @@ namespace jank::analyze
                                        bool const needs_box)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
-    return jtl::make_ref<expr::primitive_literal>(position, current_frame, needs_box, o, o);
+    auto const type{ cpp_util::literal_type(o, false) };
+    if(cpp_util::is_any_object(type))
+    {
+      return jtl::make_ref<expr::primitive_literal>(position, current_frame, needs_box, o, o);
+    }
+    return jtl::make_ref<expr::cpp_literal>(position, current_frame, needs_box, o, o);
   }
 
   /* TODO: Test for this. */
@@ -3535,7 +3603,16 @@ namespace jank::analyze
         {
           return arg_expr;
         }
-        packed_arg_exprs.emplace_back(arg_expr.expect_ok());
+
+        /* Everything we pack into a list needs to be boxed. */
+        auto converted_arg{ apply_implicit_conversion(arg_expr.expect_ok(),
+                                                      cpp_util::untyped_object_ref_type(),
+                                                      macro_expansions) };
+        if(converted_arg.is_err())
+        {
+          return converted_arg;
+        }
+        packed_arg_exprs.emplace_back(converted_arg.expect_ok());
       }
       arg_exprs.emplace_back(jtl::make_ref<expr::list>(expression_position::value,
                                                        current_frame,
@@ -4005,7 +4082,7 @@ namespace jank::analyze
     }
     auto const string_expr{ string_expr_res.expect_ok() };
 
-    if(string_expr->kind != expression_kind::primitive_literal)
+    if(string_expr->kind != expression_kind::cpp_literal)
     {
       return error::analyze_invalid_cpp_raw(
                "The first and only argument to 'cpp/raw' must be a string of C++ code.",
@@ -4013,7 +4090,7 @@ namespace jank::analyze
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
-    auto const obj{ llvm::cast<expr::primitive_literal>(string_expr.data)->data };
+    auto const obj{ llvm::cast<expr::cpp_literal>(string_expr.data)->data };
     if(obj.get_type() != runtime::object_type::persistent_string)
     {
       return error::analyze_invalid_cpp_raw(

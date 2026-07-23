@@ -6,5 +6,5 @@
             };
           }")
 (let* [f (cpp/jank.cpp.constructor.complex.pass_aggregate_object.foo. 5)]
-  (if (= 5 (cpp/.-a f))
+  (if (= 5 (.-a f))
     :success))

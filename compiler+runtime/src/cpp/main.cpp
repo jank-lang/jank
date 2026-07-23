@@ -68,10 +68,10 @@ namespace jank
       __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
     }
 
-    __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>("user"));
-    __rt_ctx->intern_var("clojure.core", "refer")
-      .expect_ok()
-      .call(make_box<obj::symbol>("clojure.core"));
+    //__rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>("user"));
+    //__rt_ctx->intern_var("clojure.core", "refer")
+    //  .expect_ok()
+    //  .call(make_box<obj::symbol>("clojure.core"));
 
     {
       profile::timer const timer{ "eval user code" };

@@ -48,6 +48,7 @@ namespace jank::ir
       case instruction_kind::cpp_scope_close:
       case instruction_kind::cpp_raw:
       case instruction_kind::cpp_value:
+      case instruction_kind::cpp_literal:
         break;
       case instruction_kind::set_local:
         {

@@ -387,6 +387,13 @@ namespace jank::ir
     f(instr, s.current_block());
   }
 
+  void
+  walk_typed(ir::inst::cpp_literal_ref const instr, instruction_walk_function const &f, state &s)
+  {
+    s.next_instruction();
+    f(instr, s.current_block());
+  }
+
   void walk_typed(ir::inst::cpp_into_object_ref const instr,
                   instruction_walk_function const &f,
                   state &s)
@@ -693,6 +700,10 @@ namespace jank::ir
   }
 
   void walk_references_typed(ir::inst::cpp_value_ref const, reference_walk_function const &)
+  {
+  }
+
+  void walk_references_typed(ir::inst::cpp_literal_ref const, reference_walk_function const &)
   {
   }
 

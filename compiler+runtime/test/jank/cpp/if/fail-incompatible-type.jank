@@ -1,0 +1,7 @@
+(let* [f1 (cpp/float 77)
+       &f1 (cpp/& f1)
+       f2 (cpp/float)
+       r (if true
+           &f1
+           f2)]
+  :success)

@@ -1,9 +1,5 @@
-(assert
- (=
-  (case 3.4
-    3.4   :three-point-four
-    2     :two
-    :default)
-  :three-point-four))
-
-:success
+(let* [r (case 3.4
+           3.4   :success
+           2     :two
+           :default)]
+  r)

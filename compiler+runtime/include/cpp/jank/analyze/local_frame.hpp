@@ -40,6 +40,7 @@ namespace jank::analyze
     bool has_boxed_usage{};
     bool has_unboxed_usage{};
     bool is_capture{};
+    bool is_loop_variable{};
     jtl::ptr<void> type{ analyze::cpp_util::untyped_object_ref_type() };
 
     runtime::object_ref to_runtime_data() const;

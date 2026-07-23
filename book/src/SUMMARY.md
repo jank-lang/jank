@@ -16,10 +16,8 @@ TODO:
   Reading error messages
   .jank, .cljc, .cpp files
     All modules need to intern the ns
-  jank build system
-    Guide: Packaging a native library
-    Deprecate top-level project flags
-    jank commons docs
+  Auto-boxing rules
+  jank commons docs
   Library linking support
   Known issues
   Reference

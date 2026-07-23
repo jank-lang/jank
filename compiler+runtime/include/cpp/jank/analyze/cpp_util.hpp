@@ -67,8 +67,12 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> untyped_object_ref_type();
   jtl::ptr<void> char_type();
   jtl::ptr<void> bool_type();
+  jtl::ptr<void> int_type();
+  jtl::ptr<void> char_type();
+  jtl::ptr<void> float_type();
   jtl::ptr<void> nil_ref_type();
   jtl::ptr<void> var_type();
+  jtl::ptr<void> integer_ref_type();
   jtl::ptr<void> persistent_list_ref_type();
   jtl::ptr<void> persistent_vector_ref_type();
   jtl::ptr<void> persistent_array_map_ref_type();
@@ -76,8 +80,8 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> persistent_hash_set_ref_type();
   jtl::ptr<void> jit_function_ref_type();
   jtl::ptr<void> jit_closure_ref_type();
-  jtl::ptr<void> literal_type(runtime::object_ref const o);
-  jtl::ptr<void> literal_codegen_type(runtime::object_ref const o);
+  jtl::ptr<void> literal_type(runtime::object_ref const o, bool const is_boxed);
+  jtl::ptr<void> literal_codegen_type(runtime::object_ref const o, bool const is_boxed);
 
   usize offset_to_typed_object_base(jtl::ptr<void> type);
 

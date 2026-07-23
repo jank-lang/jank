@@ -10,5 +10,6 @@
               return a;
             }
           }")
-(let* [fi (cpp/jank.cpp.call.overload.fail_ambiguous_conversion.foo 5)]
+(let* [i (identity 5)
+       fi (cpp/jank.cpp.call.overload.fail_ambiguous_conversion.foo i)]
   :success)
