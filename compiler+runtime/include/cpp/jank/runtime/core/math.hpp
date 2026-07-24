@@ -35,22 +35,22 @@ namespace jank::runtime
                                                     obj::big_decimal_ref,
                                                     obj::ratio_ref>);
 
-  template <typename T>
-  jtl::immutable_string type_name(T const t)
-  {
-    if constexpr(jtl::is_same<T, object_ref>)
+    template <typename T>
+    jtl::immutable_string type_name(T const t)
     {
-      return object_type_str(t.get_type());
+      if constexpr(jtl::is_same<T, object_ref>)
+      {
+        return object_type_str(t.get_type());
+      }
+      else if constexpr(detail::typed_object<T>)
+      {
+        return object_type_str(T::value_type::obj_type);
+      }
+      else
+      {
+        return jtl::type_name<T>();
+      }
     }
-    else if constexpr(detail::typed_object<T>)
-    {
-      return object_type_str(T::value_type::obj_type);
-    }
-    else
-    {
-      return jtl::type_name<T>();
-    }
-  }
   }
 
   /* Only for fixed integer sizes (i.e. integer and small_integer). */
@@ -65,7 +65,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<L> || !detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{ util::format("Can't add a {} to {}.", detail::type_name(l), detail::type_name(r)) };
+      throw std::runtime_error{
+        util::format("Can't add a {} to {}.", detail::type_name(l), detail::type_name(r))
+      };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref> && jtl::is_same<R, object_ref>)
@@ -109,7 +111,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<R>)
     {
-      throw std::runtime_error{ util::format("Can't add a {} to {}.", detail::type_name(l), detail::type_name(r)) };
+      throw std::runtime_error{
+        util::format("Can't add a {} to {}.", detail::type_name(l), detail::type_name(r))
+      };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<R, object_ref>)
@@ -136,7 +140,9 @@ namespace jank::runtime
   {
     if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{ util::format("Can't add a {} to {}.", detail::type_name(l), detail::type_name(r)) };
+      throw std::runtime_error{
+        util::format("Can't add a {} to {}.", detail::type_name(l), detail::type_name(r))
+      };
       return object_ref{};
     }
     else if constexpr(jtl::is_same<L, object_ref>)
@@ -1206,7 +1212,8 @@ namespace jank::runtime
     }
     else if constexpr(!detail::valid_boxed_math<L>)
     {
-      throw std::runtime_error{ util::format("Can't convert {} to integer.", detail::type_name(l)) };
+      throw std::runtime_error{ util::format("Can't convert {} to integer.",
+                                             detail::type_name(l)) };
       return 0;
     }
     else if constexpr(jtl::is_same<L, object_ref>)
