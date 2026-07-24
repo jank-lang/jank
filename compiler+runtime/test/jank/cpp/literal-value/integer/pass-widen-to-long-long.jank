@@ -1,7 +1,7 @@
 (cpp/raw "namespace jank::cpp::literal_value::integer
           {
             bool foo(int) = delete;
-            bool foo(long long)
+            bool foo(long)
             {
               return true;
             }

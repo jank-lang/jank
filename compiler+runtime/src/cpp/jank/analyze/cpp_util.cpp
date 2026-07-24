@@ -442,9 +442,9 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
-  jtl::ptr<void> long_long_type()
+  jtl::ptr<void> long_type()
   {
-    static auto const type{ Cpp::GetType("long long") };
+    static auto const type{ Cpp::GetType("long") };
     return type;
   }
 
@@ -566,7 +566,7 @@ namespace jank::analyze::cpp_util
               static auto const type{ int_type() };
               return type;
             }
-            static auto const type{ long_long_type() };
+            static auto const type{ long_type() };
             return type;
           }
           else
