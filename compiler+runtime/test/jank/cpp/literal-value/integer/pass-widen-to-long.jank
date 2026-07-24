@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::cpp::literal_value::integer
+          {
+            bool foo(int) = delete;
+            bool foo(long)
+            {
+              return false;
+            }
+          }")
+(let* [long 2147483648]
+  (if (not (cpp/jank.cpp.literal_value.integer.foo long))
+    :success))

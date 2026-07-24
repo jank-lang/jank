@@ -15,6 +15,11 @@
 #include <jank/error/analyze.hpp>
 #include <jank/error/codegen.hpp>
 
+namespace jank::runtime
+{
+  i64 to_i64(object_ref const o);
+}
+
 namespace jank::analyze::cpp_util
 {
   /* Even with a SFINAE trap, Clang can get into a bad state when failing to instantiate
@@ -437,6 +442,12 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
+  jtl::ptr<void> long_type()
+  {
+    static auto const type{ Cpp::GetType("long") };
+    return type;
+  }
+
   jtl::ptr<void> double_type()
   {
     static auto const type{ Cpp::GetType("double") };
@@ -549,8 +560,13 @@ namespace jank::analyze::cpp_util
         {
           if(!is_boxed)
           {
-            /* TODO: Handle differently sized typed, depending on the value. */
-            static auto const type{ int_type() };
+            auto const i{ runtime::to_i64(o) };
+            if(static_cast<i32>(i) == i)
+            {
+              static auto const type{ int_type() };
+              return type;
+            }
+            static auto const type{ long_type() };
             return type;
           }
           else
@@ -584,7 +600,6 @@ namespace jank::analyze::cpp_util
         {
           if(!is_boxed)
           {
-            /* TODO: Handle differently sized typed, depending on the value. */
             static auto const type{ double_type() };
             return type;
           }
