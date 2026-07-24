@@ -138,6 +138,12 @@ namespace jank::codegen
     {
       if(!is_boxed)
       {
+        if(auto const r{ dyn_cast<obj::real>(o) }; r.is_some())
+        {
+          jtl::string_builder sb;
+          sb(r->data);
+          return sb.release();
+        }
         return o.to_code_string();
       }
 
@@ -1147,7 +1153,7 @@ namespace jank::codegen
       return none;
     }
 
-    util::format_to(b.body_buffer, "{ // {}\n", inst->name);
+    util::format_to(b.body_buffer, "{\n");
 
     return none;
   }
@@ -1161,7 +1167,7 @@ namespace jank::codegen
       return none;
     }
 
-    util::format_to(b.body_buffer, "} // {}\n", inst->scope);
+    util::format_to(b.body_buffer, "}\n");
 
     return none;
   }
@@ -1849,9 +1855,6 @@ namespace jank::codegen
 
   jtl::option<identifier> gen(ir::instruction_ref const inst, builder &b)
   {
-    jtl::string_builder sb;
-    inst->print(sb, 0);
-    //util::println("gen {}", sb.release());
     if(util::cli::opts.debug)
     {
       auto const &location{ inst->location };

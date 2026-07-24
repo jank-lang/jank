@@ -732,6 +732,13 @@ namespace jank::analyze::cpp_util
     return Cpp::GetCanonicalType(type) == ret;
   }
 
+  bool is_bool(jtl::ptr<void> type)
+  {
+    auto const can_type{ Cpp::GetCanonicalType(
+      Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
+    return can_type == bool_type();
+  }
+
   bool is_implicitly_convertible(jtl::ptr<void> const from, jtl::ptr<void> const to)
   {
     auto const from_no_ref{ Cpp::GetCanonicalType(Cpp::GetNonReferenceType(from)) };

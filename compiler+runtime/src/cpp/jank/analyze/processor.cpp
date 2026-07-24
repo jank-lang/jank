@@ -2706,11 +2706,23 @@ namespace jank::analyze
     }
 
     auto const condition_type{ condition_expr.expect_ok()->get_type() };
-    if(!cpp_util::is_any_object(condition_type))
+    if(!cpp_util::is_any_object(condition_type) && !cpp_util::is_bool(condition_type))
     {
-      condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
-                                                 cpp_util::bool_type(),
-                                                 macro_expansions);
+      /* Clojure treats 0 and 0.0 as true, so we just box any non-bool built-ins. C-strings
+       * will already by truthy as long as they're non-null, so there's no need to box
+       * our native string literals. */
+      if(Cpp::IsBuiltin(condition_type))
+      {
+        condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
+                                                   cpp_util::untyped_object_ref_type(),
+                                                   macro_expansions);
+      }
+      else
+      {
+        condition_expr = apply_implicit_conversion(condition_expr.expect_ok(),
+                                                   cpp_util::bool_type(),
+                                                   macro_expansions);
+      }
     }
     if(condition_expr.is_err())
     {
@@ -2769,15 +2781,16 @@ namespace jank::analyze
        * 2. The other branch has a native type and the two native types are compatible.
        * 3. The other branch has an object type and the native branch is trait convertible.
        * 4. Both branches are trait convertible.
+       * 5. One of the branches recurs, meaning we have no comparison to do.
        *
        * If neither of these are the case, we have an error. */
     if(is_same_type || is_compatible
        || ((is_else_object && is_then_convertible) || (is_then_object && is_else_convertible))
        || (is_then_convertible && is_else_convertible) || has_recur)
     {
-      auto const then_needs_conversion{ !is_same_type && is_then_convertible
+      auto const then_needs_conversion{ !is_same_type && !is_compatible && is_then_convertible
                                         && (is_else_object || is_else_convertible) };
-      auto const else_needs_conversion{ !is_same_type && is_else_convertible
+      auto const else_needs_conversion{ !is_same_type && !is_compatible && is_else_convertible
                                         && (is_then_object || is_then_convertible) };
 
       if(then_needs_conversion)
@@ -2800,27 +2813,29 @@ namespace jank::analyze
       auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
         cpp_util::non_void_type(final_else_type),
         cpp_util::non_void_type(final_then_type)) };
+      auto const final_is_same_type{ Cpp::GetCanonicalType(final_then_type)
+                                     == Cpp::GetCanonicalType(final_else_type) };
       auto const final_common_type{ Cpp::GetCommonType(final_then_type, final_else_type) };
 
       /* If we have a typed object on one side, and anything other than that same typed object
-     * on the other side, we need to type-erase to find the common type.
-     *
-     * We also calculate the types again, since they may have changed due to the implicit
-     * conversions above. */
+       * on the other side, we need to type-erase to find the common type.
+       *
+       * We also calculate the types again, since they may have changed due to the implicit
+       * conversions above. */
       if(cpp_util::is_typed_object(chosen_type) && cpp_util::is_any_object(other_type)
          && Cpp::GetCanonicalType(chosen_type) != Cpp::GetCanonicalType(other_type))
       {
         chosen_type = cpp_util::untyped_object_ref_type();
       }
-      else if(final_common_type)
+      else if(!final_is_same_type && final_common_type)
       {
         chosen_type = final_common_type;
       }
       /* If the chosen type is implicitly convertible to the other type, and both are native types,
-     * we fall into option 2 from above. In that case, we actually want the other type.
-     *
-     * Example: if branch returning std::string and C string literal. Regardless of which branch
-     * it's in, we want to take the std::string as our chosen type. */
+       * we fall into option 2 from above. In that case, we actually want the other type.
+       *
+       * Example: if branch returning std::string and C string literal. Regardless of which branch
+       * it's in, we want to take the std::string as our chosen type. */
       else if(!cpp_util::is_any_object(chosen_type) && !cpp_util::is_any_object(other_type)
               && is_compatible && cpp_util::is_implicitly_convertible(chosen_type, other_type))
       {
