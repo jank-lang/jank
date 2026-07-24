@@ -14,6 +14,6 @@
             int foo(bar &&b)
             { return b.i; }
           }")
-(let* [i (cpp/jank.cpp.call.global.pass_rvalue_ref.foo #cpp 107)]
+(let* [i (cpp/jank.cpp.call.global.pass_rvalue_ref.foo 107)]
   (if (= 107 i)
     :success))

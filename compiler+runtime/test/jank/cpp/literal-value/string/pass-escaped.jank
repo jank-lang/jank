@@ -1,3 +1,0 @@
-(let* [s (cpp/value "\"me\now\"")]
-  (if (= (cpp/strlen s) 7)
-    :success))

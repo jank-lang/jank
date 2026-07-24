@@ -9,8 +9,8 @@
             };
           }")
 (let* [r (loop [it (cpp/jank.cpp.loop.pass_native_binding_custom_type.foo)]
-           (if (cpp/== #cpp 3 (cpp/.-i it))
+           (if (cpp/== 3 (cpp/.-i it))
              (cpp/.-i it)
-             (recur (cpp/+ it #cpp 1))))]
+             (recur (cpp/+ it 1))))]
   (if (= 3 r)
     :success))

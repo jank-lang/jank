@@ -5,5 +5,5 @@
               u8 age{};
             };
           }")
-(let* [f (cpp/jank.cpp.constructor.complex.fail_aggregate_narrowing.foo. #cpp 66)]
+(let* [f (cpp/jank.cpp.constructor.complex.fail_aggregate_narrowing.foo. 66)]
   :success)

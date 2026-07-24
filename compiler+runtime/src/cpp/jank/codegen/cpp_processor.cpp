@@ -1232,7 +1232,7 @@ namespace jank::codegen
   {
     b.next_instruction();
     auto const lifted{ lift_constant(inst->value, inst->obj, false, b) };
-    util::format_to(b.body_buffer, "auto const {}({});\n", inst->name, lifted);
+    util::format_to(b.body_buffer, "auto {}({});\n", inst->name, lifted);
     return inst->name;
   }
 

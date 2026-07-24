@@ -1,7 +1,7 @@
 (ns a)
 
 (defmacro get-foo []
-  (let [foo (cpp/getenv #cpp "FOO")
+  (let [foo (cpp/getenv "FOO")
         foo (if (cpp/cast cpp/bool foo)
               foo
               "NOFOO")]

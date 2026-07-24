@@ -3,6 +3,6 @@
                  :rename {std.string string
                           std.string.npos foo}))
 
-(let [s (string #cpp "success")]
+(let [s (string "success")]
   (if (= -1 foo)
     (println (keyword s))))

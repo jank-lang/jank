@@ -1367,7 +1367,6 @@ namespace jank::analyze
       {           make_box<symbol>("case*"),            &processor::analyze_case },
       {         make_box<symbol>("cpp/raw"),         &processor::analyze_cpp_raw },
       {         make_box<symbol>("cpp/dsl"),         &processor::analyze_cpp_dsl },
-      {       make_box<symbol>("cpp/value"),       &processor::analyze_cpp_value },
       {        make_box<symbol>("cpp/cast"),        &processor::analyze_cpp_cast },
       { make_box<symbol>("cpp/unsafe-cast"), &processor::analyze_cpp_unsafe_cast },
       {         make_box<symbol>("cpp/box"),         &processor::analyze_cpp_box },
@@ -4152,92 +4151,6 @@ namespace jank::analyze
                                          needs_box,
                                          try_object<obj::symbol>(l->first()),
                                          type_res.expect_ok());
-  }
-
-  processor::expression_result
-  /* NOLINTNEXTLINE(readability-make-member-function-const): Can't be const. */
-  processor::analyze_cpp_value(obj::persistent_list_ref const l,
-                               local_frame_ptr const current_frame,
-                               expression_position const position,
-                               jtl::option<expr::function_context_ref> const &,
-                               bool const)
-  {
-    if(l->count() != 2)
-    {
-      return error::analyze_invalid_cpp_type(
-        util::format("Exactly 1 argument is expected for 'cpp/value', but {} were provided.",
-                     l->count() - 1),
-        object_source(l),
-        latest_expansion(macro_expansions));
-    }
-
-    auto const arg{ l->next()->first() };
-    jtl::string_result<cpp_util::literal_value_result> literal_res{ err("unset") };
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-    switch(arg.get_type())
-#pragma clang diagnostic pop
-    {
-      case object_type::integer:
-        literal_res = cpp_util::resolve_literal_value(
-          util::format("static_cast<jtl::i64>({})",
-                       expect_object<runtime::obj::integer>(arg)->data));
-        break;
-      case object_type::small_integer:
-        literal_res = cpp_util::resolve_literal_value(
-          util::format("static_cast<jtl::i32>({})", runtime::detail::as_integer(arg.raw())));
-        break;
-      case object_type::real:
-        literal_res = cpp_util::resolve_literal_value(
-          util::format("static_cast<jtl::f64>({})", expect_object<runtime::obj::real>(arg)->data));
-        break;
-      case object_type::small_real:
-        literal_res = cpp_util::resolve_literal_value(
-          util::format("static_cast<jtl::f64>({})", runtime::detail::as_real(arg.raw())));
-        break;
-      case object_type::boolean:
-        literal_res = cpp_util::resolve_literal_value(
-          util::format("{}", expect_object<runtime::obj::boolean>(arg)->data));
-        break;
-      case object_type::persistent_string:
-        literal_res = cpp_util::resolve_literal_value(
-          util::format("\"{}\"",
-                       util::escape(expect_object<runtime::obj::persistent_string>(arg)->data)));
-        break;
-      default:
-        return error::analyze_invalid_cpp_value("Unexpected input to 'cpp/value'. Only integers, "
-                                                "reals, booleans, and strings are supported.",
-                                                object_source(arg),
-                                                latest_expansion(macro_expansions))
-          ->add_usage(read::parse::reparse_nth(l, 1));
-    }
-
-    if(literal_res.is_err())
-    {
-      return error::analyze_invalid_cpp_value(
-               util::format("Unable to resolve C++ value. {}", literal_res.expect_err()),
-               object_source(arg),
-               latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 1));
-    }
-
-    auto const &result{ literal_res.expect_ok() };
-    auto const source{ jtl::make_ref<expr::cpp_value>(expression_position::value,
-                                                      current_frame,
-                                                      false,
-                                                      /* TODO: Is symbol needed? */
-                                                      try_object<obj::symbol>(l->first()),
-                                                      Cpp::GetTypeFromScope(result.fn_scope),
-                                                      result.fn_scope,
-                                                      expr::cpp_value::value_kind::function) };
-    auto const res{
-      build_cpp_call(source, {}, {}, {}, current_frame, position, false, l, macro_expansions)
-    };
-    if(res.is_ok())
-    {
-      llvm::cast<expr::cpp_call>(res.expect_ok().data)->function_code = result.function_code;
-    }
-    return res;
   }
 
   processor::expression_result
