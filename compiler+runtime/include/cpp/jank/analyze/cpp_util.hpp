@@ -49,6 +49,10 @@ namespace jank::analyze::cpp_util
                      std::vector<Cpp::TemplateArgInfo> &arg_types,
                      std::vector<Cpp::TCppScope_t> const &arg_scopes);
 
+  jtl::option<std::vector<Cpp::TemplateArgInfo>>
+  find_aggregate_match_with_conversions(std::vector<jtl::ptr<void>> const &aggregate_types,
+                                        std::vector<Cpp::TemplateArgInfo> const &arg_types);
+
   bool is_trait_convertible(jtl::ptr<void> type);
   bool is_untyped_object(jtl::ptr<void> type);
   bool is_typed_object(jtl::ptr<void> type);
@@ -90,7 +94,7 @@ namespace jank::analyze::cpp_util
 
   jtl::result<void, error_ref> ensure_convertible(expression_ref const expr);
 
-  native_vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> scope);
+  std::vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> scope);
 
   enum class implicit_conversion_action : u8
   {

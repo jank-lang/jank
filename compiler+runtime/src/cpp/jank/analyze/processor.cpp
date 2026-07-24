@@ -1014,20 +1014,23 @@ namespace jank::analyze
         object_source(val->form),
         latest_expansion(macro_expansions));
     }
-    if(is_ctor
-       && Cpp::IsAggregateConstructible(val->type,
-                                        arg_types,
-                                        runtime::munge(__rt_ctx->unique_namespaced_string())))
+    if(is_ctor)
     {
-      //util::println("using aggregate initialization");
-      return jtl::make_ref<expr::cpp_constructor_call>(position,
-                                                       current_frame,
-                                                       needs_box,
-                                                       form,
-                                                       val->type,
-                                                       nullptr,
-                                                       true,
-                                                       jtl::move(arg_exprs));
+      auto const aggregate_types{ cpp_util::aggregate_initialization_types(val->scope) };
+      auto const aggregate_match{ cpp_util::find_aggregate_match_with_conversions(aggregate_types,
+                                                                                  arg_types) };
+      if(aggregate_match.is_some())
+      {
+        //util::println("using aggregate initialization");
+        return jtl::make_ref<expr::cpp_constructor_call>(position,
+                                                         current_frame,
+                                                         needs_box,
+                                                         form,
+                                                         val->type,
+                                                         nullptr,
+                                                         true,
+                                                         jtl::move(arg_exprs));
+      }
     }
 
     /* TODO: Find a better way to render this. */

@@ -1068,6 +1068,53 @@ namespace jank::analyze::cpp_util
     return ok(nullptr);
   }
 
+  jtl::option<std::vector<Cpp::TemplateArgInfo>>
+  find_aggregate_match_with_conversions(std::vector<jtl::ptr<void>> const &aggregate_types,
+                                        std::vector<Cpp::TemplateArgInfo> const &arg_types)
+  {
+    if(aggregate_types.size() != arg_types.size())
+    {
+      return none;
+    }
+
+    std::vector<Cpp::TemplateArgInfo> converted_args{ arg_types };
+
+    for(usize arg_idx{}; arg_idx < arg_types.size(); ++arg_idx)
+    {
+      /* If our input argument here isn't an object ptr, there's no implicit conversion
+       * we're going to consider. Skip to the next argument. */
+      auto const arg_type{ Cpp::GetNonReferenceType(arg_types[arg_idx].m_Type) };
+      auto const is_arg_obj{ is_any_object(arg_type) };
+
+      auto const param_type{ aggregate_types[arg_idx] };
+      if(!param_type)
+      {
+        continue;
+      }
+      if(is_implicitly_convertible(arg_types[arg_idx].m_Type, param_type))
+      {
+        continue;
+      }
+      auto const is_param_obj{ is_any_object(param_type) };
+      if(!is_arg_obj && !is_param_obj)
+      {
+        continue;
+      }
+
+      auto const trait_type{ is_arg_obj ? param_type.data : arg_type };
+      if(is_trait_convertible(trait_type))
+      {
+        converted_args[arg_idx] = param_type.data;
+      }
+      else
+      {
+        return none;
+      }
+    }
+
+    return converted_args;
+  }
+
   /* TODO: Cache result. */
   bool is_trait_convertible(jtl::ptr<void> const type)
   {
@@ -1212,7 +1259,7 @@ namespace jank::analyze::cpp_util
   }
 
   void aggregate_initialization_types_impl(jtl::ptr<void> const scope,
-                                           native_vector<jtl::ptr<void>> &member_types)
+                                           std::vector<jtl::ptr<void>> &member_types)
   {
     auto const num_bases{ Cpp::GetNumBases(scope) };
     for(usize i{}; i != num_bases; ++i)
@@ -1232,9 +1279,9 @@ namespace jank::analyze::cpp_util
 
   /* When we're aggregate initializing a type, we need to recursively know all of its base types,
    * and their base types, to build the correct order of members and their types. */
-  native_vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> const scope)
+  std::vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> const scope)
   {
-    native_vector<jtl::ptr<void>> member_types;
+    std::vector<jtl::ptr<void>> member_types;
     aggregate_initialization_types_impl(scope, member_types);
     return member_types;
   }
