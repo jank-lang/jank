@@ -74,6 +74,7 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> bool_type();
   jtl::ptr<void> int_type();
   jtl::ptr<void> long_type();
+  jtl::ptr<void> long_long_type();
   jtl::ptr<void> double_type();
   jtl::ptr<void> nil_ref_type();
   jtl::ptr<void> var_type();

@@ -1,7 +1,11 @@
 (cpp/raw "namespace jank::cpp::literal_value::integer
           {
             bool foo(int) = delete;
+          #ifdef WIN32
+            bool foo(long long)
+          #else
             bool foo(long)
+          #endif
             {
               return true;
             }

@@ -448,6 +448,12 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
+  jtl::ptr<void> long_long_type()
+  {
+    static auto const type{ Cpp::GetType("long") };
+    return type;
+  }
+
   jtl::ptr<void> double_type()
   {
     static auto const type{ Cpp::GetType("double") };
@@ -566,7 +572,11 @@ namespace jank::analyze::cpp_util
               static auto const type{ int_type() };
               return type;
             }
+#ifdef WIN32
+            static auto const type{ long_long_type() };
+#else
             static auto const type{ long_type() };
+#endif
             return type;
           }
           else
