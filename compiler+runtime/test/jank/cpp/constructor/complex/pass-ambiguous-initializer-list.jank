@@ -13,6 +13,6 @@
               int a{};
             };
           }")
-(let* [f (cpp/jank.cpp.constructor.complex.pass_ambiguous_initializer_list.foo. #cpp 1 #cpp 2)]
+(let* [f (cpp/jank.cpp.constructor.complex.pass_ambiguous_initializer_list.foo. 1 2)]
   (if (= 3 (cpp/.-a f))
     :success))

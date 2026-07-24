@@ -8,10 +8,10 @@
               i64 i{};
             };
           }")
-(let* [foo (cpp/jank.cpp.if_.pass_condition_convertible_to_bool.foo #cpp 7)
+(let* [foo (cpp/jank.cpp.if_.pass_condition_convertible_to_bool.foo 7)
        r (if foo
            :success)
-       _ (cpp/= (.-i foo) #cpp 0)
+       _ (cpp/= (.-i foo) 0)
        r (if foo
            :failure
            r)]

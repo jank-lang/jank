@@ -8,5 +8,5 @@
                  :rename {std.string my-string
                           std.string.npos foo}))
 
-(let [s (string #cpp "success")]
+(let [s (string "success")]
   (println :success))

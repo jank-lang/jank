@@ -451,6 +451,17 @@ namespace jank::ir::inst
   {
   }
 
+  cpp_literal::cpp_literal(identifier const &name,
+                           jtl::ptr<void> const type,
+                           read::source const &location,
+                           runtime::object_ref const obj,
+                           identifier const &value)
+    : instruction{ instruction_kind::cpp_literal, name, type, location }
+    , obj{ obj }
+    , value{ value }
+  {
+  }
+
   cpp_into_object::cpp_into_object(identifier const &name,
                                    read::source const &location,
                                    identifier const &value,

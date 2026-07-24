@@ -135,6 +135,7 @@ namespace jank::ir
     identifier cpp_scope_close(identifier const &scope);
     identifier cpp_raw(analyze::expr::cpp_raw_ref const expr);
     identifier cpp_value(analyze::expr::cpp_value_ref const expr);
+    identifier cpp_literal(analyze::expression_position const pos, runtime::object_ref const value);
     identifier
     cpp_conversion(identifier const &value, analyze::expr::cpp_conversion_ref const expr);
     identifier

@@ -8,7 +8,7 @@
 (defn variance
   "Compute the population variance of `xs`."
   [xs mean]
-  (/ (reduce (fn [acc x] (+ acc (cpp/pow (- x mean) #cpp 2))) 0.0 xs)
+  (/ (reduce (fn [acc x] (+ acc (cpp/pow (- x mean) 2))) 0.0 xs)
      (count xs)))
 
 (defn standard-deviation

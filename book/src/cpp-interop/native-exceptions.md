@@ -31,7 +31,7 @@ member function to get the exception message.
 (let [v (#cpp (std::vector int))]
   (try
     ; This will throw.
-    (.at v #cpp 0)
+    (.at v 0)
     (catch cpp/std.exception e
       (println :caught (.what e)))))
 ```

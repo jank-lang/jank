@@ -5,12 +5,12 @@
           }")
 (let* [foo1 (loop* []
               (if true
-                (cpp/jank.cpp.loop.pass_not_trait_convertible_with_recur.foo #cpp 1)
+                (cpp/jank.cpp.loop.pass_not_trait_convertible_with_recur.foo 1)
                 (recur)))
        foo2 (loop* []
               (if false
                 (recur)
-                (cpp/jank.cpp.loop.pass_not_trait_convertible_with_recur.foo #cpp 2)))]
+                (cpp/jank.cpp.loop.pass_not_trait_convertible_with_recur.foo 2)))]
   (if (and (= 1 (.-data foo1))
            (= 2 (.-data foo2)))
     :success))

@@ -1,4 +1,4 @@
-(let* [s (cpp/std.string #cpp "meow")
+(let* [s (cpp/std.string "meow")
        it (cpp/.begin s)
        r (loop* [letters []]
            (if (cpp/== (cpp/.end s) it)

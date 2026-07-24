@@ -1,2 +1,2 @@
-(let* [a (cpp/new cpp/float 0)]
+(let* [a (cpp/new cpp/float [0])]
   :success)

@@ -26,6 +26,6 @@ namespace jank::analyze::expr
 
   jtl::ptr<void> primitive_literal::get_type() const
   {
-    return cpp_util::literal_type(data);
+    return cpp_util::literal_type(data, true);
   }
 }

@@ -1,3 +1,0 @@
-(let* [s #cpp "hello"]
-  (if (cpp/== (cpp/cast cpp/std.string "hello") s)
-    :success))

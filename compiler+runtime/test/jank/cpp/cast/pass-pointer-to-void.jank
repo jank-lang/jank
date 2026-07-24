@@ -1,4 +1,4 @@
-(let* [i #cpp 2
+(let* [i 2
        i* (cpp/& i)
        v* (cpp/cast (:* void) i*)
        i*2 (cpp/cast (:* int) v*)]

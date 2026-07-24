@@ -27,27 +27,8 @@ start passing native values into Clojure functions or returning them from
 Clojure functions, jank will do what it can to make that work, which may involve
 conversions. More on that below.
 
-## Tagged literals
-jank provides access to literal C++ values through the `#cpp` reader tag. Using
-this will resolve to a C++ primitive, rather than a jank runtime object. It's
-supported for the following literals:
-
-1. Numbers (integers and floats)
-2. Bools
-3. Strings
-
-For example:
-
-```clojure
-(let [i #cpp 0
-      f #cpp 3.14159
-      s #cpp "meow"]
-  )
-```
-
 ## Named literals
-jank also has explicit support for `cpp/true`, `cpp/false`, and `cpp/nullptr`,
-which all correspond to the C++ primitive.
+jank also has explicit support `cpp/nullptr`, which corresponds to the C++ primitive.
 
 ## Member values
 Member values can be accessed from a native object using the `.-foo` syntax. The
@@ -221,7 +202,7 @@ Given a hypothetical `my_db` C++ database library, boxing is done like this:
 
 (defn -main [& args]
   (let [; db is a my_db.connection*
-        db (cpp/new my_db.connection #cpp "localhost:5758")
+        db (cpp/new my_db.connection "localhost:5758")
         ; db-box is a opaque_box_ref
         db-box (cpp/box db)]
     ))
@@ -246,7 +227,7 @@ error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
  23  │         db (cpp/unbox (:* my_db.secure_connection) db-box)]
      │             ^^^^^^^^^ Unboxed here.
      │ …
- 28  │         db (cpp/new my_db.connection #cpp "localhost:5758")
+ 28  │         db (cpp/new my_db.connection "localhost:5758")
  29  │         ; db-box is a opaque_box_ref
  30  │         db-box (cpp/box db)]
      │                 ^^^^^^^ Boxed here.
