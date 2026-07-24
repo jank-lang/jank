@@ -37,7 +37,7 @@ function has many different overloads. Here, we specifically create `i` to be an
 
 ```clojure
 (defn -main [& args]
-  (let [i #cpp 42
+  (let [i 42
         s (cpp/std.to_string i)]
     s))
 ```
