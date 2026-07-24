@@ -1232,6 +1232,7 @@ namespace jank::codegen
   {
     b.next_instruction();
     auto const lifted{ lift_constant(inst->value, inst->obj, false, b) };
+    /* This is a mutable binding to the lifted constant, which is why it's non-const. */
     util::format_to(b.body_buffer, "auto {}({});\n", inst->name, lifted);
     return inst->name;
   }
@@ -1257,7 +1258,7 @@ namespace jank::codegen
     }
 
     /* If we need a boxed integer (not small integer), we can't necessarily rely on just
-     * the converstion trait, since we may end up getting a small integer back. */
+     * the conversion trait, since we may end up getting a small integer back. */
     if(integer_ref_type().data == Cpp::GetCanonicalType(inst->expr->type))
     {
       util::format_to(b.body_buffer,

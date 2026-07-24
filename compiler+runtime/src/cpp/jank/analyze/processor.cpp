@@ -2755,81 +2755,97 @@ namespace jank::analyze
                             : cpp_util::untyped_object_ref_type() };
     auto const is_then_object{ cpp_util::is_any_object(then_type) };
     auto const is_else_object{ cpp_util::is_any_object(else_type) };
-    auto const is_then_convertible{ is_else_object && cpp_util::is_trait_convertible(then_type) };
-    auto const is_else_convertible{ is_then_object && cpp_util::is_trait_convertible(else_type) };
+    auto const is_then_convertible{ cpp_util::is_trait_convertible(then_type) };
+    auto const is_else_convertible{ cpp_util::is_trait_convertible(else_type) };
+    auto const common_type{ Cpp::GetCommonType(then_type, else_type) };
+    auto const is_same_type{ Cpp::GetCanonicalType(then_type) == Cpp::GetCanonicalType(else_type) };
     auto const is_compatible{ cpp_util::is_implicitly_convertible(then_type, else_type)
-                              || cpp_util::is_implicitly_convertible(else_type, then_type) };
+                              || cpp_util::is_implicitly_convertible(else_type, then_type)
+                              || common_type };
 
     /* If one of the branches has a native type, we need to match one of these scenarios.
        *
        * 1. The other branch has the same native type.
        * 2. The other branch has a native type and the two native types are compatible.
        * 3. The other branch has an object type and the native branch is trait convertible.
+       * 4. Both branches are trait convertible.
        *
        * If neither of these are the case, we have an error. */
-    if((Cpp::GetCanonicalType(then_type) != Cpp::GetCanonicalType(else_type))
-       && (!is_then_object || !is_else_object) && (!is_then_convertible && !is_else_convertible)
-       && !is_compatible && !has_recur)
+    if(is_same_type || is_compatible
+       || ((is_else_object && is_then_convertible) || (is_then_object && is_else_convertible))
+       || (is_then_convertible && is_else_convertible) || has_recur)
+    {
+      auto const then_needs_conversion{ !is_same_type && is_then_convertible
+                                        && (is_else_object || is_else_convertible) };
+      auto const else_needs_conversion{ !is_same_type && is_else_convertible
+                                        && (is_then_object || is_then_convertible) };
+
+      if(then_needs_conversion)
+      {
+        then_expr = apply_implicit_conversion(then_expr.expect_ok(),
+                                              cpp_util::untyped_object_ref_type(),
+                                              macro_expansions);
+      }
+      if(else_expr_opt.is_some() && else_needs_conversion)
+      {
+        else_expr_opt = apply_implicit_conversion(else_expr_opt.unwrap(),
+                                                  cpp_util::untyped_object_ref_type(),
+                                                  macro_expansions)
+                          .expect_ok();
+      }
+
+      auto const final_then_type{ then_expr.expect_ok()->get_type() };
+      auto const final_else_type{ else_expr_opt.is_some() ? else_expr_opt.unwrap()->get_type()
+                                                          : cpp_util::untyped_object_ref_type() };
+      auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
+        cpp_util::non_void_type(final_else_type),
+        cpp_util::non_void_type(final_then_type)) };
+      auto const final_common_type{ Cpp::GetCommonType(final_then_type, final_else_type) };
+
+      /* If we have a typed object on one side, and anything other than that same typed object
+     * on the other side, we need to type-erase to find the common type.
+     *
+     * We also calculate the types again, since they may have changed due to the implicit
+     * conversions above. */
+      if(cpp_util::is_typed_object(chosen_type) && cpp_util::is_any_object(other_type)
+         && Cpp::GetCanonicalType(chosen_type) != Cpp::GetCanonicalType(other_type))
+      {
+        chosen_type = cpp_util::untyped_object_ref_type();
+      }
+      else if(final_common_type)
+      {
+        chosen_type = final_common_type;
+      }
+      /* If the chosen type is implicitly convertible to the other type, and both are native types,
+     * we fall into option 2 from above. In that case, we actually want the other type.
+     *
+     * Example: if branch returning std::string and C string literal. Regardless of which branch
+     * it's in, we want to take the std::string as our chosen type. */
+      else if(!cpp_util::is_any_object(chosen_type) && !cpp_util::is_any_object(other_type)
+              && is_compatible && cpp_util::is_implicitly_convertible(chosen_type, other_type))
+      {
+        std::swap(chosen_type, other_type);
+      }
+
+      return jtl::make_ref<expr::if_>(position,
+                                      current_frame,
+                                      needs_box,
+                                      o,
+                                      chosen_type,
+                                      condition_expr.expect_ok(),
+                                      then_expr.expect_ok(),
+                                      else_expr_opt);
+    }
+    else
     {
       return error::analyze_mismatched_if_types(
         util::format("Mismatched 'if' branch types '{}' and '{}'. Each branch of an 'if' must have "
-                     "the same type.",
+                     "the same type, a common type, or a trait conversion.",
                      cpp_util::get_qualified_type_name(then_type),
                      cpp_util::get_qualified_type_name(else_type)),
         object_source(o->first()),
         latest_expansion(macro_expansions));
     }
-
-    if(is_then_convertible)
-    {
-      then_expr = apply_implicit_conversion(then_expr.expect_ok(),
-                                            cpp_util::untyped_object_ref_type(),
-                                            macro_expansions);
-    }
-    else if(is_else_convertible)
-    {
-      else_expr_opt = apply_implicit_conversion(else_expr_opt.unwrap(),
-                                                cpp_util::untyped_object_ref_type(),
-                                                macro_expansions)
-                        .expect_ok();
-    }
-
-    auto const final_then_type{ then_expr.expect_ok()->get_type() };
-    auto const final_else_type{ else_expr_opt.is_some() ? else_expr_opt.unwrap()->get_type()
-                                                        : cpp_util::untyped_object_ref_type() };
-    auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
-      cpp_util::non_void_type(final_else_type),
-      cpp_util::non_void_type(final_then_type)) };
-
-    /* If we have a typed object on one side, and anything other than that same typed object
-     * on the other side, we need to type-erase to find the common type.
-     *
-     * We also calculate the types again, since they may have changed due to the implicit
-     * conversions above. */
-    if(cpp_util::is_typed_object(chosen_type) && cpp_util::is_any_object(other_type)
-       && Cpp::GetCanonicalType(chosen_type) != Cpp::GetCanonicalType(other_type))
-    {
-      chosen_type = cpp_util::untyped_object_ref_type();
-    }
-    /* If the chosen type is implicitly convertible to the other type, and both are native types,
-     * we fall into option 2 from above. In that case, we actually want the other type.
-     *
-     * Example: if branch returning std::string and C string literal. Regardless of which branch
-     * it's in, we want to take the std::string as our chosen type. */
-    else if(!cpp_util::is_any_object(chosen_type) && !cpp_util::is_any_object(other_type)
-            && is_compatible && cpp_util::is_implicitly_convertible(chosen_type, other_type))
-    {
-      std::swap(chosen_type, other_type);
-    }
-
-    return jtl::make_ref<expr::if_>(position,
-                                    current_frame,
-                                    needs_box,
-                                    o,
-                                    chosen_type,
-                                    condition_expr.expect_ok(),
-                                    then_expr.expect_ok(),
-                                    else_expr_opt);
   }
 
   processor::expression_result

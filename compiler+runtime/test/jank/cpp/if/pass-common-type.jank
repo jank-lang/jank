@@ -1,0 +1,9 @@
+(let* [; This is a char*
+       s (cpp/getenv "USER")
+       ; This will be a char const*
+       r (if true
+           ; This is a char const[5]
+           "meow"
+           s)]
+  (if (= "meow" r)
+    :success))

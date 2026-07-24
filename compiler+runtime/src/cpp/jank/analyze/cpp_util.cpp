@@ -437,9 +437,9 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
-  jtl::ptr<void> float_type()
+  jtl::ptr<void> double_type()
   {
-    static auto const type{ Cpp::GetType("float") };
+    static auto const type{ Cpp::GetType("double") };
     return type;
   }
 
@@ -585,7 +585,7 @@ namespace jank::analyze::cpp_util
           if(!is_boxed)
           {
             /* TODO: Handle differently sized typed, depending on the value. */
-            static auto const type{ float_type() };
+            static auto const type{ double_type() };
             return type;
           }
           else
@@ -599,7 +599,7 @@ namespace jank::analyze::cpp_util
         {
           if(!is_boxed)
           {
-            static auto const type{ float_type() };
+            static auto const type{ double_type() };
             return type;
           }
           else
