@@ -1,20 +1,19 @@
 (ns jank-build.sandbox.core
-  (:require [babashka.process :as proc]
-            [jank-build.sandbox.bwrap :as bwrap]
+  (:require [jank-build.sandbox.bwrap :as bwrap]
             [jank-build.util :as util]))
 
 (defn process
-  "Pass `cmd` and `sh-opts` to `babashka.process/process` running inside of a
-  sandboxed container specified by `sandbox-opts`.
+  "Pass `cmd` and `sh-opts` to `jank-build.util/sh` running inside of
+  a sandboxed container specified by `sandbox-opts`.
 
   Setting the `enable?` flag to false allows sandboxing to be skipped entirely
   and the command will be run as a standard shell process."
-  [enable? sandbox-opts cmd sh-opts]
+  [enable? sandbox-opts sh-opts cmd]
   ;; TODO: handle Windows and MacOS, either by a fake sandbox or using their
   ;; native constructs for containerization.
   (cond
     (not enable?)
-    (proc/process cmd sh-opts)
+    (util/sh sh-opts cmd)
 
     (not (bwrap/which-bwrap))
     (util/abort
@@ -25,4 +24,4 @@
 
     :else
     (let [bwrap-prefix (bwrap/bwrap (into bwrap/standard-binds sandbox-opts))]
-      (proc/process (concat bwrap-prefix cmd) sh-opts))))
+      (util/sh sh-opts (concat bwrap-prefix cmd)))))
