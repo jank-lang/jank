@@ -94,6 +94,10 @@
     :linked-libraries
     (map (fn [v] (str "-l" v)) value)
 
+    ;; pass through to jank-build
+    :static?
+    []
+
     (lmain/warn (str "Unknown flag " flag))))
 
 (defn build-declarative-flags [project]
