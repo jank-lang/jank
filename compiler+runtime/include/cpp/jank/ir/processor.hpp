@@ -85,6 +85,11 @@ namespace jank::ir
                          std::hash<runtime::object_ref>,
                          runtime::very_equal_to_with_meta>
       lifted_constants{};
+    native_unordered_map<runtime::object_ref,
+                         identifier,
+                         std::hash<runtime::object_ref>,
+                         runtime::very_equal_to>
+      lifted_cpp_constants{};
 
     struct lifted_var
     {

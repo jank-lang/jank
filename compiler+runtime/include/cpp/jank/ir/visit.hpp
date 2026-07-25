@@ -83,6 +83,8 @@ namespace jank::ir
         return f(jtl::static_ref_cast<inst::cpp_raw>(i), std::forward<Args>(args)...);
       case instruction_kind::cpp_value:
         return f(jtl::static_ref_cast<inst::cpp_value>(i), std::forward<Args>(args)...);
+      case instruction_kind::cpp_literal:
+        return f(jtl::static_ref_cast<inst::cpp_literal>(i), std::forward<Args>(args)...);
       case instruction_kind::cpp_into_object:
         return f(jtl::static_ref_cast<inst::cpp_into_object>(i), std::forward<Args>(args)...);
       case instruction_kind::cpp_from_object:

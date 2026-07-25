@@ -99,7 +99,7 @@ namespace jank::ir
   identifier
   builder::literal(analyze::expression_position const pos, runtime::object_ref const value)
   {
-    auto const type{ literal_codegen_type(value) };
+    auto const type{ literal_codegen_type(value, true) };
     jtl::immutable_string lifted_literal_name;
     auto const found{ mod->lifted_constants.find(value) };
     if(found == mod->lifted_constants.end())
@@ -552,6 +552,32 @@ namespace jank::ir
     if(expr->position == analyze::expression_position::tail)
     {
       return ret(name, expression_type(expr));
+    }
+    return name;
+  }
+
+  identifier
+  builder::cpp_literal(analyze::expression_position const pos, runtime::object_ref const value)
+  {
+    auto const type{ literal_codegen_type(value, false) };
+    jtl::immutable_string lifted_literal_name;
+    auto const found{ mod->lifted_cpp_constants.find(value) };
+    if(found == mod->lifted_cpp_constants.end())
+    {
+      lifted_literal_name = runtime::munge(runtime::__rt_ctx->unique_string("const"));
+      mod->lifted_cpp_constants.emplace(value, lifted_literal_name);
+    }
+    else
+    {
+      lifted_literal_name = found->second;
+    }
+
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::cpp_literal>(name, type, location, value, lifted_literal_name));
+    if(pos == analyze::expression_position::tail)
+    {
+      return ret(name, type);
     }
     return name;
   }

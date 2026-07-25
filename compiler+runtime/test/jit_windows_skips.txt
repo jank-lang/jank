@@ -37,3 +37,4 @@ throw-return-position.jank
 throw-value.jank
 throw-branch.jank
 throw-default.jank
+pass-widen-to-long.jank

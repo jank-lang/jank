@@ -1,4 +1,4 @@
-(let* [i #cpp 0xdeadbeef
+(let* [i 0xdeadbeef
        a (cpp/unsafe-cast (:* intptr_t) i)
        i2 (cpp/unsafe-cast size_t a)]
   (if (cpp/== i i2)

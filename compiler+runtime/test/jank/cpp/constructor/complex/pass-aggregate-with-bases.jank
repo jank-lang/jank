@@ -21,14 +21,14 @@
                 char const *name{};
             };
           }")
-(let* [a #cpp 5
-       f #cpp 3.14
+(let* [a 5
+       f 3.14
        foo (cpp/jank.cpp.constructor.complex.pass_aggregate_with_bases.foo.
-             #cpp "s"
+             "s"
              a
              (cpp/& a)
              f
-             #cpp "name")]
+             "name")]
   (if (and (= "s" (.-s foo))
            (= 5 (.-a foo))
            (= 5 (cpp/* (.-p foo)))

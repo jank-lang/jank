@@ -950,18 +950,6 @@ namespace jank::read::parse
 #pragma clang diagnostic ignored "-Wswitch-enum"
     switch(str_end.kind)
     {
-      case lex::token_kind::string:
-      case lex::token_kind::escaped_string:
-      case lex::token_kind::boolean:
-      case lex::token_kind::integer:
-      case lex::token_kind::real:
-        {
-          auto const wrapped(make_box<obj::persistent_list>(std::in_place,
-                                                            make_box<obj::symbol>("cpp/value"),
-                                                            form));
-
-          return object_source_info{ wrapped, start_token, str_end };
-        }
       case lex::token_kind::symbol:
       case lex::token_kind::close_paren:
         {

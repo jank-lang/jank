@@ -1,6 +1,6 @@
 (ns test
   (:refer-global :only [std.string std.string.npos]))
 
-(let [s (std.string #cpp "success")]
+(let [s (std.string "success")]
   (if (= -1 std.string.npos)
     (println (keyword s))))

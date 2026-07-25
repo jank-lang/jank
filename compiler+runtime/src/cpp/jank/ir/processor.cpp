@@ -813,6 +813,11 @@ namespace jank::ir
     return b.cpp_value(expr);
   }
 
+  jtl::option<identifier> gen(analyze::expr::cpp_literal_ref const expr, builder &b)
+  {
+    return b.cpp_literal(expr->position, expr->data);
+  }
+
   jtl::option<identifier> gen(analyze::expr::cpp_conversion_ref const expr, builder &b)
   {
     return b.cpp_conversion(gen(expr->value_expr, b).unwrap(), expr);

@@ -1,0 +1,31 @@
+#include <jank/analyze/expr/cpp_literal.hpp>
+#include <jank/detail/to_runtime_data.hpp>
+#include <jank/analyze/cpp_util.hpp>
+
+namespace jank::analyze::expr
+{
+  using namespace jank::runtime;
+
+  cpp_literal::cpp_literal(expression_position const position,
+                           local_frame_ptr const frame,
+                           bool const needs_box,
+                           object_ref const form,
+                           runtime::object_ref const data)
+    : expression{ expr_kind, position, frame, needs_box, form }
+    , data{ data }
+  {
+  }
+
+  object_ref cpp_literal::to_runtime_data() const
+  {
+    using namespace runtime::obj;
+
+    return merge(expression::to_runtime_data(),
+                 persistent_array_map::create_unique(make_box("data"), data));
+  }
+
+  jtl::ptr<void> cpp_literal::get_type() const
+  {
+    return cpp_util::literal_type(data, false);
+  }
+}

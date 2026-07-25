@@ -507,6 +507,15 @@ namespace jank::ir
                     get_qualified_type_name(type));
   }
 
+  void inst::cpp_literal::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    R"({:name {} :op :cpp/literal :value {} :type "{}"})",
+                    name,
+                    obj.to_code_string(),
+                    Cpp::GetTypeAsString(type));
+  }
+
   void inst::cpp_into_object::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,
@@ -728,6 +737,7 @@ namespace jank::ir
       }
     }
     util::format_to(sb, "}\n");
+
     print_indent(sb, indent);
     util::format_to(sb, ":lifted-constants {");
     {
@@ -745,6 +755,25 @@ namespace jank::ir
       }
     }
     util::format_to(sb, "}\n");
+
+    print_indent(sb, indent);
+    util::format_to(sb, ":lifted-cpp-constants {");
+    {
+      auto const indent{ determine_indent(sb) };
+      bool needs_indent{};
+      for(auto const &c : mod.lifted_cpp_constants)
+      {
+        if(needs_indent)
+        {
+          sb('\n');
+          print_indent(sb, indent);
+        }
+        needs_indent = true;
+        util::format_to(sb, "{} {}", c.first.to_code_string(), c.second);
+      }
+    }
+    util::format_to(sb, "}\n");
+
     print_indent(sb, indent);
     util::format_to(sb, ":functions [");
     {

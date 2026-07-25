@@ -71,6 +71,7 @@ namespace jank::ir
     cpp_scope_close,
     cpp_raw,
     cpp_value,
+    cpp_literal,
     cpp_into_object,
     cpp_from_object,
     cpp_unsafe_cast,
@@ -683,6 +684,22 @@ namespace jank::ir
     };
 
     using cpp_value_ref = jtl::ref<cpp_value>;
+
+    struct cpp_literal : instruction
+    {
+      cpp_literal(identifier const &name,
+                  jtl::ptr<void> const type,
+                  read::source const &location,
+                  runtime::object_ref const obj,
+                  identifier const &value);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      runtime::object_ref obj;
+      identifier value;
+    };
+
+    using cpp_literal_ref = jtl::ref<cpp_literal>;
 
     struct cpp_into_object : instruction
     {

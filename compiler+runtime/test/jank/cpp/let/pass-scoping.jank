@@ -14,9 +14,9 @@
 
 (cpp/jank.cpp.let.pass_scoping.log_action "1")
 ((fn* []
-   (let* [f1 (cpp/jank.cpp.let.pass_scoping.foo #cpp "1")]
+   (let* [f1 (cpp/jank.cpp.let.pass_scoping.foo "1")]
      (cpp/jank.cpp.let.pass_scoping.log_action "2")
-     (let* [f2 (cpp/jank.cpp.let.pass_scoping.foo #cpp "2")])
+     (let* [f2 (cpp/jank.cpp.let.pass_scoping.foo "2")])
      (cpp/jank.cpp.let.pass_scoping.log_action "3"))
 
    (if (= ["1" "2" "foo dtor 2" "3" "foo dtor 1"] cpp/jank.cpp.let.pass_scoping.actions)

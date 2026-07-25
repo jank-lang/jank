@@ -131,10 +131,22 @@ namespace jank::codegen
     /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
     global_vars;
 
-  static identifier lift_constant(identifier const &name, object_ref const o, builder const &b)
+  static identifier
+  lift_constant(identifier const &name, object_ref const o, bool const is_boxed, builder const &b)
   {
     if(b.module->target == compilation_target::eval)
     {
+      if(!is_boxed)
+      {
+        if(auto const r{ dyn_cast<obj::real>(o) }; r.is_some())
+        {
+          jtl::string_builder sb;
+          sb(r->data);
+          return sb.release();
+        }
+        return o.to_code_string();
+      }
+
       auto locked_global_constants{ global_constants.wlock() };
       auto const found{ locked_global_constants->find(o) };
       if(found != locked_global_constants->end())
@@ -147,7 +159,7 @@ namespace jank::codegen
        * our object. */
       [[maybe_unused]]
       auto * const root{ new(NoGC) object *{ o.raw() } };
-      auto const type{ literal_type(o) };
+      auto const type{ literal_type(o, true) };
       auto const ptr{ static_cast<void *>(o.raw()) };
       jtl::immutable_string fmt_str;
       if(o.is_nil())
@@ -225,7 +237,7 @@ namespace jank::codegen
       return meta.is_some() && !is_empty(meta);
     }
 
-    static void gen_constant(object_ref const o, jtl::string_builder &buffer)
+    static void gen_constant(object_ref const o, jtl::string_builder &buffer, bool const is_boxed)
     {
       visit_object(
         [&](auto const typed_o) {
@@ -237,7 +249,11 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, obj::boolean>)
           {
-            if(typed_o->data)
+            if(!is_boxed)
+            {
+              util::format_to(buffer, "{}", typed_o->data);
+            }
+            else if(typed_o->data)
             {
               util::format_to(buffer, "jank::runtime::jank_true");
             }
@@ -248,7 +264,11 @@ namespace jank::codegen
           }
           else if constexpr(jtl::is_any_same<T, obj::integer, obj::small_integer>)
           {
-            if(static_cast<i32>(typed_o->data) == typed_o->data)
+            if(!is_boxed)
+            {
+              util::format_to(buffer, "{}", typed_o->data);
+            }
+            else if(static_cast<i32>(typed_o->data) == typed_o->data)
             {
               util::format_to(buffer, "_jank_small_int({})", typed_o->data);
             }
@@ -259,7 +279,14 @@ namespace jank::codegen
           }
           else if constexpr(jtl::is_any_same<T, obj::real, obj::small_real>)
           {
-            util::format_to(buffer, "_jank_small_real({})", typed_o->data);
+            if(!is_boxed)
+            {
+              util::format_to(buffer, "{}", typed_o->data);
+            }
+            else
+            {
+              util::format_to(buffer, "_jank_small_real({})", typed_o->data);
+            }
           }
           else if constexpr(std::same_as<T, obj::big_integer>)
           {
@@ -318,7 +345,11 @@ namespace jank::codegen
           }
           else if constexpr(std::same_as<T, obj::persistent_string>)
           {
-            if(typed_o->data.empty())
+            if(!is_boxed)
+            {
+              util::format_to(buffer, "{}", typed_o->to_code_string());
+            }
+            else if(typed_o->data.empty())
             {
               util::format_to(buffer, "_jank_string()");
             }
@@ -340,7 +371,7 @@ namespace jank::codegen
             for(auto const &form : typed_o->data)
             {
               util::format_to(buffer, ", ");
-              gen_constant(form, buffer);
+              gen_constant(form, buffer, true);
               util::format_to(buffer, ".erase()");
             }
             util::format_to(buffer, ")");
@@ -358,7 +389,7 @@ namespace jank::codegen
             for(auto const &form : typed_o->data)
             {
               util::format_to(buffer, ", ");
-              gen_constant(form, buffer);
+              gen_constant(form, buffer, true);
               util::format_to(buffer, ".erase()");
             }
             util::format_to(buffer, ")");
@@ -376,7 +407,7 @@ namespace jank::codegen
             for(auto const &form : typed_o->data)
             {
               util::format_to(buffer, ", ");
-              gen_constant(form, buffer);
+              gen_constant(form, buffer, true);
               util::format_to(buffer, ".erase()");
             }
             util::format_to(buffer, ")");
@@ -394,9 +425,9 @@ namespace jank::codegen
             for(auto const &form : typed_o->data)
             {
               util::format_to(buffer, ", ");
-              gen_constant(form.first, buffer);
+              gen_constant(form.first, buffer, true);
               util::format_to(buffer, ".erase(), ");
-              gen_constant(form.second, buffer);
+              gen_constant(form.second, buffer, true);
               util::format_to(buffer, ".erase()");
             }
             util::format_to(buffer, ")");
@@ -414,9 +445,9 @@ namespace jank::codegen
             for(auto const &form : typed_o->data)
             {
               util::format_to(buffer, ", ");
-              gen_constant(form.first, buffer);
+              gen_constant(form.first, buffer, true);
               util::format_to(buffer, ".erase(), ");
-              gen_constant(form.second, buffer);
+              gen_constant(form.second, buffer, true);
               util::format_to(buffer, ".erase()");
             }
             util::format_to(buffer, ")");
@@ -428,7 +459,7 @@ namespace jank::codegen
             for(auto const it : make_sequence_range(typed_o))
             {
               util::format_to(buffer, ", ");
-              gen_constant(it, buffer);
+              gen_constant(it, buffer, true);
               util::format_to(buffer, ".erase()");
             }
             util::format_to(buffer, ")");
@@ -564,7 +595,7 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::literal_ref const inst, builder &b)
   {
     b.next_instruction();
-    auto const lifted{ lift_constant(inst->value, inst->obj, b) };
+    auto const lifted{ lift_constant(inst->value, inst->obj, true, b) };
     util::format_to(b.body_buffer, "auto const {}({});\n", inst->name, lifted);
     return inst->name;
   }
@@ -1122,7 +1153,7 @@ namespace jank::codegen
       return none;
     }
 
-    util::format_to(b.body_buffer, "{ // {}\n", inst->name);
+    util::format_to(b.body_buffer, "{\n");
 
     return none;
   }
@@ -1136,7 +1167,7 @@ namespace jank::codegen
       return none;
     }
 
-    util::format_to(b.body_buffer, "} // {}\n", inst->scope);
+    util::format_to(b.body_buffer, "}\n");
 
     return none;
   }
@@ -1203,6 +1234,15 @@ namespace jank::codegen
     return inst->name;
   }
 
+  jtl::option<identifier> gen(ir::inst::cpp_literal_ref const inst, builder &b)
+  {
+    b.next_instruction();
+    auto const lifted{ lift_constant(inst->value, inst->obj, false, b) };
+    /* This is a mutable binding to the lifted constant, which is why it's non-const. */
+    util::format_to(b.body_buffer, "auto {}({});\n", inst->name, lifted);
+    return inst->name;
+  }
+
   jtl::option<identifier> gen(ir::inst::cpp_into_object_ref const inst, builder &b)
   {
     b.next_instruction();
@@ -1223,14 +1263,27 @@ namespace jank::codegen
       return inst->name;
     }
 
-    util::format_to(b.body_buffer,
-                    "auto const {}(jank::runtime::convert<{}>::{}({}));\n",
-                    inst->name,
-                    get_qualified_type_name(Cpp::GetCanonicalType(Cpp::GetTypeWithoutCv(
-                      Cpp::GetNonReferenceType(inst->expr->conversion_type)))),
-                    (inst->expr->policy == analyze::conversion_policy::into_object ? "into_object"
-                                                                                   : "from_object"),
-                    inst->value);
+    /* If we need a boxed integer (not small integer), we can't necessarily rely on just
+     * the conversion trait, since we may end up getting a small integer back. */
+    if(integer_ref_type().data == Cpp::GetCanonicalType(inst->expr->type))
+    {
+      util::format_to(b.body_buffer,
+                      "auto const {}(jank::runtime::make_box<jank::runtime::obj::integer>({}));\n",
+                      inst->name,
+                      inst->value);
+    }
+    else
+    {
+      util::format_to(
+        b.body_buffer,
+        "auto const {}(jank::runtime::convert<{}>::{}({}));\n",
+        inst->name,
+        get_qualified_type_name(Cpp::GetCanonicalType(
+          Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(inst->expr->conversion_type)))),
+        (inst->expr->policy == analyze::conversion_policy::into_object ? "into_object"
+                                                                       : "from_object"),
+        inst->value);
+    }
 
     return inst->name;
   }
@@ -1802,9 +1855,6 @@ namespace jank::codegen
 
   jtl::option<identifier> gen(ir::instruction_ref const inst, builder &b)
   {
-    jtl::string_builder sb;
-    inst->print(sb, 0);
-    //util::println("gen {}", sb.release());
     if(util::cli::opts.debug)
     {
       auto const &location{ inst->location };
@@ -1910,8 +1960,14 @@ namespace jank::codegen
       {
         util::format_to(b.module_header_buffer,
                         "{} {}{ _jank_null{ } };\n",
-                        get_qualified_type_name(literal_codegen_type(v.first)),
+                        get_qualified_type_name(literal_codegen_type(v.first, true)),
                         v.second);
+      }
+      for(auto const &v : b.module->lifted_cpp_constants)
+      {
+        util::format_to(b.module_header_buffer, "auto constexpr {}{ ", v.second);
+        detail::gen_constant(v.first, b.module_header_buffer, false);
+        util::format_to(b.module_header_buffer, " };\n");
       }
       for(auto const &v : b.module->lifted_vars)
       {
@@ -2007,7 +2063,7 @@ namespace jank::codegen
       for(auto const &v : b.module->lifted_constants)
       {
         util::format_to(b.footer_buffer, "new (&{}::{}) auto(", native_ns, v.second);
-        detail::gen_constant(v.first, b.footer_buffer);
+        detail::gen_constant(v.first, b.footer_buffer, true);
         util::format_to(b.footer_buffer, ");\n");
       }
 
