@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-41e85fa6.js";
+            window.path_to_searchindex_js = "../searchindex-d9c773ec.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9dcbcf57.js"></script>
@@ -191,7 +191,7 @@ to C++ <code>static_cast</code>, but it has additional functionality to support 
 <a href="./native-values.html#trait-convertible">trait conversions</a>. This will allow you
 to cast to/from jank runtime object and supported native C++ values.</p>
 <pre><code class="language-clojure">(fn [o]
-  (let [f #cpp 3.14
+  (let [f 3.14
         ; Normal static_cast support.
         i (cpp/cast cpp/int f)
         ; Explicit trait conversion, since `o` is a jank object.
@@ -204,7 +204,7 @@ equivalent of C-style casting in C++. This is a combination of <code>static_cast
 pointer types, <code>cpp/cast</code> will not work, but <code>cpp/unsafe-cast</code> will. However,
 note that <code>cpp/unsafe-cast</code> does not support trait conversions. It is solely
 dedicated to native type construction and reinterpretation.</p>
-<pre><code class="language-clojure">(let [s #cpp "meow"
+<pre><code class="language-clojure">(let [s "meow"
       us (cpp/unsafe-cast (:* (:unsigned char)) s)])
 </code></pre>
 

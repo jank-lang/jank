@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-41e85fa6.js";
+            window.path_to_searchindex_js = "../searchindex-d9c773ec.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9dcbcf57.js"></script>
@@ -205,7 +205,7 @@ member function to get the exception message.</p>
 (let [v (#cpp (std::vector int))]
   (try
     ; This will throw.
-    (.at v #cpp 0)
+    (.at v 0)
     (catch cpp/std.exception e
       (println :caught (.what e)))))
 </code></pre>

@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-41e85fa6.js";
+            window.path_to_searchindex_js = "../searchindex-d9c773ec.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9dcbcf57.js"></script>
@@ -209,7 +209,7 @@ will raise a compiler error.</p>
 function has many different overloads. Here, we specifically create <code>i</code> to be an
 <code>int</code>, so overload resolution can happen.</p>
 <pre><code class="language-clojure">(defn -main [&amp; args]
-  (let [i #cpp 42
+  (let [i 42
         s (cpp/std.to_string i)]
     s))
 </code></pre>
