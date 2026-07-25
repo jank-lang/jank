@@ -154,6 +154,7 @@
         (is (build/needs-compile? compile-op)))
 
       ;; Touching a rerun-if-changed file causes a rebuild to trigger.
+      (Thread/sleep 100)
       (fs/touch (fs/path (:src-dir compile-op) "test-file"))
       (is (build/needs-compile? compile-op))
 
