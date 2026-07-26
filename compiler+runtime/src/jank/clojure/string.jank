@@ -144,18 +144,14 @@
   [s]
   (when (nil? s)
     (throw "upper-case does not support nil"))
-  (-> (cpp/cast jtl.immutable_string (.to_string s))
-      (.c_str)
-      (cpp/jank.util.to_uppercase)))
+  (cpp/jank.util.to_uppercase (.to_string s)))
 
 (defn lower-case
   "Converts string to all lower-case."
   [s]
   (when (nil? s)
     (throw "lower-case does not support nil"))
-  (-> (cpp/cast jtl.immutable_string (.to_string s))
-      (.c_str)
-      (cpp/jank.util.to_lowercase)))
+  (cpp/jank.util.to_lowercase (.to_string s)))
 
 (defn capitalize
   "Converts first character of the string to upper-case, all other
@@ -163,10 +159,9 @@
   [s]
   (when (nil? s)
     (throw "capitalize does not support nil"))
-  (-> (cpp/cast jtl.immutable_string (.to_string s))
-      (.c_str)
+  (-> (.to_string s)
       (cpp/jank.util.to_lowercase)
-      (doto (cpp/jank.util.capitalize))))
+      (cpp/jank.util.capitalize)))
 
 (defn split
   "Splits string on a regular expression.  Optional argument limit is
