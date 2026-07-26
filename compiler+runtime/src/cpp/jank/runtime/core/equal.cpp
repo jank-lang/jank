@@ -27,6 +27,7 @@ namespace jank::runtime
       return false;
     }
 
+    /* TODO: Port visit_object: All types. */
     return visit_object([&](auto const typed_lhs) { return typed_lhs.equal(rhs); }, lhs);
   }
 

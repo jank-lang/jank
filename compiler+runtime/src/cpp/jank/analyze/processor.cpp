@@ -2007,6 +2007,7 @@ namespace jank::analyze
       {
         auto arity_list_obj(it.first().unwrap());
 
+        /* TODO: Port visit_object: sequenceable. */
         auto const err(runtime::visit_object(
           [&](auto const typed_arity_list) -> jtl::result<void, error_ref> {
             using T = typename decltype(typed_arity_list)::value_type;
@@ -4780,6 +4781,7 @@ namespace jank::analyze
                      jtl::option<expr::function_context_ref> const &fn_ctx,
                      bool const needs_box)
   {
+    /* TODO: Port visit_object: sequential. */
     return runtime::visit_object(
       [&](auto const typed_o) -> processor::expression_result {
         using T = typename decltype(typed_o)::value_type;

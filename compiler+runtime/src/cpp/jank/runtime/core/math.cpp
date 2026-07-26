@@ -679,6 +679,7 @@ namespace jank::runtime
 
   obj::big_integer_ref to_big_integer(object_ref const o)
   {
+    /* TODO: Port visit_object: Not all types. */
     return visit_object(
       [&](auto const typed_o) -> obj::big_integer_ref {
         using T = typename decltype(typed_o)::value_type;
@@ -720,6 +721,7 @@ namespace jank::runtime
 
   obj::big_decimal_ref to_big_decimal(object_ref const o)
   {
+    /* TODO: Port visit_object: Not all types. */
     return visit_object(
       [&](auto const typed_o) -> obj::big_decimal_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;

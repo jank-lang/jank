@@ -73,6 +73,7 @@ namespace jank::runtime
 
   obj::symbol_ref to_unqualified_symbol(object_ref const o)
   {
+    /* TODO: Port visit_object: Not all types. */
     return runtime::visit_object(
       [&](auto const typed_o) -> obj::symbol_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -129,6 +130,7 @@ namespace jank::runtime
   {
     auto const out{ get_stdout() };
 
+    /* TODO: Port visit_object: sequenceable. */
     visit_object(
       [&](auto const typed_args) {
         using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
@@ -166,6 +168,7 @@ namespace jank::runtime
   {
     auto const out{ get_stdout() };
 
+    /* TODO: Port visit_object: sequenceable. */
     visit_object(
       [&](auto const typed_more) {
         using T = typename jtl::decay_t<decltype(typed_more)>::value_type;
@@ -200,6 +203,7 @@ namespace jank::runtime
   {
     auto const out{ get_stdout() };
 
+    /* TODO: Port visit_object: sequenceable. */
     visit_object(
       [&](auto const typed_args) {
         using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
@@ -229,6 +233,7 @@ namespace jank::runtime
   {
     auto const out{ get_stdout() };
 
+    /* TODO: Port visit_object: sequenceable. */
     visit_object(
       [&](auto const typed_args) {
         using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
@@ -461,6 +466,7 @@ namespace jank::runtime
 
   bool is_named(object_ref const o)
   {
+    /* TODO: Port visit_object: nameable. */
     return visit_object(
       [](auto const typed_o) {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -472,6 +478,7 @@ namespace jank::runtime
 
   jtl::immutable_string name(object_ref const o)
   {
+    /* TODO: Port visit_object: nameable. */
     return visit_object(
       [](auto const typed_o) -> jtl::immutable_string {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -494,6 +501,7 @@ namespace jank::runtime
 
   object_ref namespace_(object_ref const o)
   {
+    /* TODO: Port visit_object: nameable. */
     return visit_object(
       [](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -572,6 +580,7 @@ namespace jank::runtime
 
   uhash to_hash(object_ref const o)
   {
+    /* TODO: Port visit_object: All types. */
     return visit_object([=](auto const typed_o) -> uhash { return typed_o.to_hash(); }, o);
   }
 
@@ -663,6 +672,7 @@ namespace jank::runtime
 
   object_ref deref(object_ref const o)
   {
+    /* TODO: Port visit_object: derefable. */
     return visit_object(
       [=](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -682,6 +692,7 @@ namespace jank::runtime
 
   bool is_realized(object_ref const o)
   {
+    /* TODO: Port visit_object: realizable. */
     return visit_object(
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;

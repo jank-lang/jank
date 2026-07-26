@@ -41,6 +41,7 @@ namespace clojure::data::json_native
 
   static nlohmann::json write(object_ref const o, write_options const &opts)
   {
+    /* TODO: Port visit_object: Not using all objects. */
     return visit_object(
       [&](auto const typed_o) -> nlohmann::json {
         using T = typename decltype(typed_o)::value_type;
