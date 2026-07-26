@@ -204,11 +204,7 @@ namespace jtl
     std::string str(MB_CUR_MAX, '\0');
     auto const len{ std::wcrtomb(str.data(), wc, &state) };
 
-    if(std::cmp_equal(len, static_cast<size_t>(-1)))
-    {
-      return fallback;
-    }
-    else if(std::cmp_equal(len, static_cast<size_t>(-2)))
+    if(std::cmp_equal(len, static_cast<size_t>(-1)) || std::cmp_equal(len, static_cast<size_t>(-2)))
     {
       return fallback;
     }
