@@ -1,4 +1,5 @@
 #include <cwchar>
+#include <utility>
 
 #include <jtl/utf8.hpp>
 
