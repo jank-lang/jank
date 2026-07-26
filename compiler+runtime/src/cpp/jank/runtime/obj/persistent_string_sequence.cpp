@@ -105,7 +105,7 @@ namespace jank::runtime::obj
 
   persistent_string_sequence_ref persistent_string_sequence::next() const
   {
-    auto n(index + jtl::next_char_size(str->data, index));
+    auto const n(index + jtl::next_char_size(str->data, index));
 
     if(n == str->data.size())
     {
