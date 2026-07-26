@@ -14,6 +14,7 @@ namespace jank::runtime
     using ratio_ref = oref<struct ratio>;
     using big_integer_ref = oref<struct big_integer>;
     using big_decimal_ref = oref<struct big_decimal>;
+    using character_ref = oref<struct character>;
   }
 
   namespace detail
@@ -1210,7 +1211,7 @@ namespace jank::runtime
     {
       return static_cast<i64>(l);
     }
-    else if constexpr(!detail::valid_boxed_math<L>)
+    else if constexpr(!detail::valid_boxed_math<L> && !std::same_as<L, obj::character_ref>)
     {
       throw std::runtime_error{ util::format("Can't convert {} to integer.",
                                              detail::type_name(l)) };
