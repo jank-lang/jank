@@ -34,4 +34,7 @@ namespace jtl
 
     immutable_string data;
   };
+
+  immutable_string::size_type
+  next_char_size(immutable_string const &s, immutable_string::size_type const i);
 }

@@ -5,9 +5,9 @@ namespace jtl
   using value_type = utf8_iterator::value_type;
   using size_type = value_type::size_type;
 
-  static size_type next_char_size(immutable_string const &s, size_type const i)
+  size_type next_char_size(immutable_string const &s, size_type const i)
   {
-    auto const c(s[i]);
+    auto const c(static_cast<u8>(s[i]));
     if(c <= 0x7f)
     {
       return 1;
