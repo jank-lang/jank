@@ -1,6 +1,7 @@
 (ns clojure.string
   (:refer-clojure :exclude [replace reverse])
-  (:include "clojure/string_native.hpp"))
+  (:include "jank/util/string.hpp"
+            "clojure/string_native.hpp"))
 
 (defn reverse
   "returns s with its characters reversed."
@@ -143,14 +144,18 @@
   [s]
   (when (nil? s)
     (throw "upper-case does not support nil"))
-  (cpp/clojure.string_native.upper_case (.to_string s)))
+  (-> (cpp/cast jtl.immutable_string (.to_string s))
+      (.c_str)
+      (cpp/jank.util.to_uppercase)))
 
 (defn lower-case
   "Converts string to all lower-case."
   [s]
   (when (nil? s)
     (throw "lower-case does not support nil"))
-  (cpp/clojure.string_native.lower_case (.to_string s)))
+  (-> (cpp/cast jtl.immutable_string (.to_string s))
+      (.c_str)
+      (cpp/jank.util.to_lowercase)))
 
 (defn capitalize
   "Converts first character of the string to upper-case, all other
@@ -158,11 +163,10 @@
   [s]
   (when (nil? s)
     (throw "capitalize does not support nil"))
-  (let [s (str s)]
-    (if (< (count s) 2)
-      (upper-case s)
-      (str (upper-case (subs s 0 1))
-           (lower-case (subs s 1))))))
+  (-> (cpp/cast jtl.immutable_string (.to_string s))
+      (.c_str)
+      (cpp/jank.util.to_lowercase)
+      (doto (cpp/jank.util.capitalize))))
 
 (defn split
   "Splits string on a regular expression.  Optional argument limit is
