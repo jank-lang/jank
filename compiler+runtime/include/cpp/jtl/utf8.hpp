@@ -36,6 +36,8 @@ namespace jtl
   };
 
   jtl::immutable_string to_char(i64 const ch);
-  bool is_surrogate_pairs(u16 const high);
-  u32 combine_surrogate_pairs(u16 const high, u16 const low);
+  jtl::immutable_string to_char(i64 const ch, jtl::immutable_string const &fallback);
+  bool is_surrogate_high(u16 const high);
+  bool is_surrogate_low(u16 const low);
+  u32 combine_surrogate_pair(u16 const high, u16 const low);
 }

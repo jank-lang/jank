@@ -192,12 +192,43 @@ namespace jtl
     return str;
   }
 
-  bool is_surrogate_pairs(u16 const high)
+  jtl::immutable_string to_char(i64 const ch, jtl::immutable_string const &fallback)
   {
-    return high >= 0x00D800;
+    if(ch > 0x10FFFF)
+    {
+      return fallback;
+    }
+
+    std::mbstate_t state{};
+    wchar_t const wc{ static_cast<wchar_t>(ch) };
+    std::string str(MB_CUR_MAX, '\0');
+    auto const len{ std::wcrtomb(str.data(), wc, &state) };
+
+    if(std::cmp_equal(len, static_cast<size_t>(-1)))
+    {
+      return fallback;
+    }
+    else if(std::cmp_equal(len, static_cast<size_t>(-2)))
+    {
+      return fallback;
+    }
+
+    str.resize(len);
+
+    return str;
   }
 
-  u32 combine_surrogate_pairs(u16 const high, u16 const low)
+  bool is_surrogate_high(u16 const high)
+  {
+    return high >= 0xD800 && high <= 0xDBFF;
+  }
+
+  bool is_surrogate_low(u16 const low)
+  {
+    return low >= 0xDC00 && low <= 0xDFFF;
+  }
+
+  u32 combine_surrogate_pair(u16 const high, u16 const low)
   {
     return 0x10000 + ((static_cast<u32>(high) - 0xD800) * 0x400) + (static_cast<u32>(low) - 0xDC00);
   }

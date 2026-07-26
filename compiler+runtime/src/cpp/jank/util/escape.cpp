@@ -1,7 +1,5 @@
 #include <charconv>
 
-#include <iostream>
-
 #include <jtl/primitive.hpp>
 #include <jtl/string_builder.hpp>
 #include <jtl/utf8.hpp>
@@ -13,14 +11,21 @@ namespace jank::util
 {
   static jtl::result<u16, unescape_error> unescape_unicode(jtl::immutable_string const &input)
   {
-    u16 codepoint{};
-    auto const unicode_buffer(input.c_str());
-    auto const result(std::from_chars(unicode_buffer, unicode_buffer + 4, codepoint, 16));
-
-    if(result.ec != std::errc())
+    if(input.size() != 4)
     {
       return err(unescape_error{
-        util::format("String contains invalid unicode escape sequence '\\u{}'.", unicode_buffer) });
+        util::format("String contains invalid unicode escape sequence '\\u{}'.", input) });
+    }
+
+    u16 codepoint{};
+    auto const unicode_buffer(input.c_str());
+    auto const unicode_end(unicode_buffer + 4);
+    auto const result(std::from_chars(unicode_buffer, unicode_end, codepoint, 16));
+
+    if(result.ec != std::errc() || result.ptr != unicode_end)
+    {
+      return err(unescape_error{
+        util::format("String contains invalid unicode escape sequence '\\u{}'.", input) });
     }
 
     return ok(codepoint);
@@ -29,15 +34,16 @@ namespace jank::util
   /* Converts escape sequences starting with backslash to their mapped character. e.g., \" => " */
   jtl::result<jtl::immutable_string, unescape_error> unescape(jtl::immutable_string const &input)
   {
-    jtl::string_builder sb{ input.size() };
+    auto const size(input.size());
+    jtl::string_builder sb{ size };
     bool escape{};
     usize i{};
 
-    while(i < input.size())
+    while(i < size)
     {
       auto const c(input[i]);
 
-      if(c == '\\' && input[i + 1] == 'u')
+      if(!escape && c == '\\' && (i + 1) < size && input[i + 1] == 'u')
       {
         auto const high(unescape_unicode(input.substr(i + 2, 4)));
         i += 6;
@@ -49,13 +55,13 @@ namespace jank::util
 
         auto const codepoint_high(high.expect_ok());
 
-        if(!jtl::is_surrogate_pairs(codepoint_high))
+        if(!jtl::is_surrogate_high(codepoint_high))
         {
-          sb(jtl::to_char(codepoint_high));
+          sb(jtl::to_char(codepoint_high, "?"));
           continue;
         }
 
-        if(input[i] != '\\' || input[i + 1] != 'u')
+        if((i + 6) > size || input[i] != '\\' || input[i + 1] != 'u')
         {
           sb('?');
           continue;
@@ -69,7 +75,16 @@ namespace jank::util
           return low.expect_err();
         }
 
-        sb(jtl::to_char(jtl::combine_surrogate_pairs(codepoint_high, low.expect_ok())));
+        auto const codepoint_low(low.expect_ok());
+
+        if(!jtl::is_surrogate_low(codepoint_low))
+        {
+          sb("?");
+          sb(jtl::to_char(codepoint_low, "?"));
+          continue;
+        }
+
+        sb(jtl::to_char(jtl::combine_surrogate_pair(codepoint_high, codepoint_low)));
       }
       else if(!escape)
       {
