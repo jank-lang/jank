@@ -14,14 +14,14 @@ set -euo pipefail
 
 # LLVM repo to clone.
 llvm_url="https://github.com/jank-lang/llvm-project.git"
-llvm_branch="jank"
-llvm_commit="8164f1a0c17b192e133817436bdb07598b7402a3"
+llvm_branch="jank-snapshot/llvm23"
+llvm_commit="106644f6c835f9d2137aeb9cbfe1b9a60d03d17f"
 
 # Patched version of the MSYS2-package mingw-w64-llvm used to build
 # LLVM from source. Tracks the MSYS2-packages mingw-w64-llvm package.
-llvm_mingw_pkg_url="https://github.com/ikappaki/MINGW-packages"
-llvm_mingw_pkg_branch="maint/llvm-up-resilience"
-llvm_mingw_pkg_commit="6b27133534fb696e39996154fea565f3bb0bd331"
+llvm_mingw_pkg_url="https://github.com/jank-lang/MINGW-packages"
+llvm_mingw_pkg_branch="master"
+llvm_mingw_pkg_commit="55c116d67e4104c277c676fa1daf5cdebde32cd5"
 
 ### End of configuration.
 
