@@ -27,6 +27,7 @@ namespace jank::analyze::pass
           }
           else if constexpr(jtl::is_same<T, expr::primitive_literal>)
           {
+            /* TODO: Port visit_object: metadatable. */
             runtime::visit_object(
               [](auto const typed_obj) {
                 using O = typename decltype(typed_obj)::value_type;

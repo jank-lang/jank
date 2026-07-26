@@ -42,6 +42,7 @@ namespace jank::runtime::obj
 
   object_ref chunked_cons::first() const
   {
+    /* TODO: Port visit_object: chunk_like. */
     return visit_object(
       [&](auto const typed_head) -> object_ref {
         using T = typename decltype(typed_head)::value_type;
@@ -61,6 +62,7 @@ namespace jank::runtime::obj
 
   object_ref chunked_cons::next() const
   {
+    /* TODO: Port visit_object: chunk_like. */
     return visit_object(
       [&](auto const typed_head) -> object_ref {
         using T = typename decltype(typed_head)::value_type;
@@ -89,6 +91,7 @@ namespace jank::runtime::obj
       return {};
     }
 
+    /* TODO: Port visit_object: sequenceable. */
     return visit_object(
       [&](auto const typed_tail) -> chunked_cons_ref {
         using T = typename jtl::decay_t<decltype(typed_tail)>::value_type;
@@ -109,6 +112,7 @@ namespace jank::runtime::obj
 
   chunked_cons_ref chunked_cons::next_in_place()
   {
+    /* TODO: Port visit_object: chunk_like. */
     return visit_object(
       [&](auto const typed_head) -> chunked_cons_ref {
         using T = typename decltype(typed_head)::value_type;
@@ -132,6 +136,7 @@ namespace jank::runtime::obj
 
   object_ref chunked_cons::chunked_first() const
   {
+    /* TODO: Port visit_object: chunk_like. */
     return visit_object(
       [&](auto const typed_head) -> object_ref {
         using T = typename decltype(typed_head)::value_type;
