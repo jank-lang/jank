@@ -80,7 +80,7 @@ Now configure and build jank as normal, but pass `-Djank_local_clang=on` when yo
 
 For Windows:
 
-Run the same commands from the [MSYS2](https://www.msys2.org/) CLANG64 shell, but use the **bin/build-clang-msys2** script instead.
+Run the same commands from the [MSYS2](https://www.msys2.org/) CLANG64 shell, but use the `bin/build-clang-msys2` script instead.
 
 ```
 cd compiler+runtime
