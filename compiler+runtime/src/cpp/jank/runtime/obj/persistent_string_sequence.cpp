@@ -76,6 +76,7 @@ namespace jank::runtime::obj
   /* behavior::countable */
   usize persistent_string_sequence::count() const
   {
+    /* TODO: Cache count if it becomes an issue */
     usize count{};
     auto const size(str->data.size());
     for(auto i(index); i < size; i += jtl::next_char_size(str->data, i))
