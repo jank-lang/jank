@@ -117,7 +117,7 @@ namespace jank::runtime::obj
 
   persistent_string_sequence_ref persistent_string_sequence::next_in_place()
   {
-    ++index;
+    index += jtl::next_char_size(str->data, index);
 
     if(index == str->data.size())
     {
