@@ -803,6 +803,7 @@ add_library(
   src/cpp/jank/analyze/expr/cpp_raw.cpp
   src/cpp/jank/analyze/expr/cpp_type.cpp
   src/cpp/jank/analyze/expr/cpp_value.cpp
+  src/cpp/jank/analyze/expr/cpp_literal.cpp
   src/cpp/jank/analyze/expr/cpp_conversion.cpp
   src/cpp/jank/analyze/expr/cpp_unsafe_cast.cpp
   src/cpp/jank/analyze/expr/cpp_call.cpp
@@ -826,6 +827,9 @@ add_library(
   src/cpp/jank/ir/print.cpp
   src/cpp/jank/ir/dominance.cpp
   src/cpp/jank/ir/rewrite.cpp
+  src/cpp/jank/ir/util.cpp
+  src/cpp/jank/ir/walk.cpp
+  src/cpp/jank/ir/opt/hoist_scoped_values.cpp
   src/cpp/jank/ir/opt/hoist_literals.cpp
   src/cpp/jank/ir/opt/hoist_var_derefs.cpp
   src/cpp/jank/ir/opt/remove_nops.cpp

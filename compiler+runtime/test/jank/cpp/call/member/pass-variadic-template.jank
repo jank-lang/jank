@@ -14,6 +14,6 @@
             int a{ 7 };
           }")
 (let* [b (cpp/jank.cpp.call.member.pass_variadic_template.bar.)
-       a (cpp/.foo b #cpp 1 cpp/jank.cpp.call.member.pass_variadic_template.a)]
+       a (cpp/.foo b 1 cpp/jank.cpp.call.member.pass_variadic_template.a)]
   (if (= 8 a)
     :success))

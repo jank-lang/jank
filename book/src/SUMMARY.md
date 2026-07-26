@@ -16,7 +16,9 @@ TODO:
   Reading error messages
   .jank, .cljc, .cpp files
     All modules need to intern the ns
-  AOT compiling programs (and distributing them)
+  Auto-boxing rules
+  jank commons docs
+  Library linking support
   Known issues
   Reference
    Special forms
@@ -24,7 +26,6 @@ TODO:
 -->
 
 * [Reaching into C++](cpp-interop/index.md)
-  * [Bringing in native libraries](cpp-interop/native-libs.md)
   * [Working with native values](cpp-interop/native-values.md)
   * [Working with native types](cpp-interop/native-types.md)
   * [Working with native functions](cpp-interop/native-functions.md)
@@ -38,8 +39,13 @@ TODO:
   * [Testing](project/test.md)
   * [AOT compiling](project/aot.md)
 
+* [The jank build system](jank-build/index.md)
+  * [Build system overview](jank-build/overview.md)
+  * [The build cache](jank-build/build-cache.md)
+  * [Guide: Packaging a system library](jank-build/packaging-system-lib.md)
+  * [Guide: Packaging a source library](jank-build/packaging-source-lib.md)
+
 * [Differences from Clojure](differences-from-clojure.md)
-* [For C++ Developers](for-cpp-developers.md)
 
 * [Troubleshooting](troubleshooting/index.md)
   * [Checking jank's health](troubleshooting/health-check.md)

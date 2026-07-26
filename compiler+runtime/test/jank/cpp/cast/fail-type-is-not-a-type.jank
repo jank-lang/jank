@@ -1,2 +1,2 @@
-(let* [r (cpp/cast #cpp 1 #cpp 2)]
+(let* [r (cpp/cast 1 2)]
   :success)

@@ -8,5 +8,5 @@
 (let* [f cpp/jank.cpp.unsafe_cast.pass_pointer_to_function_to_pointer_to_object.foo
        p (cpp/unsafe-cast (:* int) f)
        f* (cpp/unsafe-cast jank.cpp.unsafe_cast.pass_pointer_to_function_to_pointer_to_object.foo_ptr p)]
-  (if (= 42 (f* #cpp 42))
+  (if (= 42 (f* 42))
     :success))

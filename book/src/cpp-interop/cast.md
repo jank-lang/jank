@@ -14,7 +14,7 @@ to cast to/from jank runtime object and supported native C++ values.
 
 ```clojure
 (fn [o]
-  (let [f #cpp 3.14
+  (let [f 3.14
         ; Normal static_cast support.
         i (cpp/cast cpp/int f)
         ; Explicit trait conversion, since `o` is a jank object.
@@ -30,6 +30,6 @@ note that `cpp/unsafe-cast` does not support trait conversions. It is solely
 dedicated to native type construction and reinterpretation.
 
 ```clojure
-(let [s #cpp "meow"
+(let [s "meow"
       us (cpp/unsafe-cast (:* (:unsigned char)) s)])
 ```

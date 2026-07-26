@@ -73,6 +73,7 @@ namespace jank::analyze
     cpp_raw = cpp_value_min,
     cpp_type,
     cpp_value,
+    cpp_literal,
     cpp_conversion,
     cpp_unsafe_cast,
     cpp_call,
@@ -141,6 +142,8 @@ namespace jank::analyze
         return "cpp_type";
       case expression_kind::cpp_value:
         return "cpp_value";
+      case expression_kind::cpp_literal:
+        return "cpp_literal";
       case expression_kind::cpp_conversion:
         return "cpp_conversion";
       case expression_kind::cpp_unsafe_cast:

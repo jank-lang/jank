@@ -284,7 +284,10 @@ namespace jank::ir
       needs_space = true;
       sb(arg);
     }
-    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+    util::format_to(sb,
+                    "] :dynamic? {} :type \"{}\"}",
+                    needs_dynamic_call,
+                    get_qualified_type_name(type));
   }
 
   void inst::recursion_reference::print(jtl::string_builder &sb, usize const) const
@@ -332,18 +335,31 @@ namespace jank::ir
                     get_qualified_type_name(type));
   }
 
+  void inst::local::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb, "{:name {} :op :local :type \"{}\"}", name, get_qualified_type_name(type));
+  }
+
+  void inst::set_local::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :set-local :local {} :value {} :type \"{}\"}",
+                    name,
+                    local,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
   void inst::branch::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(
-      sb,
-      "{:name {} :op :branch :condition {} :then {} :else {} :merge {} :shadow {} :type \"{}\"}",
-      name,
-      condition,
-      then_block,
-      else_block,
-      merge_block.unwrap_or("nil"),
-      (shadow.is_some() ? shadow.unwrap().name : "nil"),
-      get_qualified_type_name(type));
+    util::format_to(sb,
+                    "{:name {} :op :branch :condition {} :then {} :else {} :merge {} :type \"{}\"}",
+                    name,
+                    condition,
+                    then_block,
+                    else_block,
+                    merge_block,
+                    get_qualified_type_name(type));
   }
 
   void inst::loop::print(jtl::string_builder &sb, usize const) const
@@ -390,10 +406,9 @@ namespace jank::ir
       util::format_to(sb, "{:value {} :block {}}", c.first, c.second);
     }
     util::format_to(sb,
-                    "] :default-block {} :merge-block {} :shadow {} :type \"{}\"}",
+                    "] :default-block {} :merge-block {} :type \"{}\"}",
                     default_block,
-                    merge_block.unwrap_or("nil"),
-                    shadow.unwrap_or("nil"),
+                    merge_block,
                     get_qualified_type_name(type));
   }
 
@@ -458,6 +473,23 @@ namespace jank::ir
                     get_qualified_type_name(type));
   }
 
+  void inst::cpp_scope_open::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :cpp/scope-open :type \"{}\"}",
+                    name,
+                    get_qualified_type_name(type));
+  }
+
+  void inst::cpp_scope_close::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :cpp/scope-close :scope {} :type \"{}\"}",
+                    name,
+                    scope,
+                    get_qualified_type_name(type));
+  }
+
   void inst::cpp_raw::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,
@@ -473,6 +505,15 @@ namespace jank::ir
                     name,
                     get_qualified_name(expr->scope),
                     get_qualified_type_name(type));
+  }
+
+  void inst::cpp_literal::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    R"({:name {} :op :cpp/literal :value {} :type "{}"})",
+                    name,
+                    obj.to_code_string(),
+                    Cpp::GetTypeAsString(type));
   }
 
   void inst::cpp_into_object::print(jtl::string_builder &sb, usize const) const
@@ -696,6 +737,7 @@ namespace jank::ir
       }
     }
     util::format_to(sb, "}\n");
+
     print_indent(sb, indent);
     util::format_to(sb, ":lifted-constants {");
     {
@@ -713,6 +755,25 @@ namespace jank::ir
       }
     }
     util::format_to(sb, "}\n");
+
+    print_indent(sb, indent);
+    util::format_to(sb, ":lifted-cpp-constants {");
+    {
+      auto const indent{ determine_indent(sb) };
+      bool needs_indent{};
+      for(auto const &c : mod.lifted_cpp_constants)
+      {
+        if(needs_indent)
+        {
+          sb('\n');
+          print_indent(sb, indent);
+        }
+        needs_indent = true;
+        util::format_to(sb, "{} {}", c.first.to_code_string(), c.second);
+      }
+    }
+    util::format_to(sb, "}\n");
+
     print_indent(sb, indent);
     util::format_to(sb, ":functions [");
     {

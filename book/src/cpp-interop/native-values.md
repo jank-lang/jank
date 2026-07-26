@@ -8,27 +8,27 @@ we need to take some extra steps in order to store arbitrary C++ values within
 the jank runtime. There are a few ways this can be done and jank tries to make
 this as easy as possible.
 
-## Tagged literals
-jank provides access to literal C++ values through the `#cpp` reader tag. Using
-this will resolve to a C++ primitive, rather than a jank runtime object. It's
-supported for the following literals:
+## `let` is special
+Within a `let`, you can bind any native value to a name and jank will do no
+conversions. Furthermore, each `let` represents a lexical scope, so any values
+with non-trivial destructors will have those destructors called at the end of
+the `let`. This behaves just the same as explicit C++ scoping via `{ }`.
 
-1. Numbers (integers and floats)
-2. Bools
-3. Strings
+As soon as you leave the `let`, but trying to pass the value as an argument, or
+return the value from the `let`, you may be crossing a boundary out of C++ land
+and into Clojure land. In general, this happens in two cases:
 
-For example:
+1. Calling a Clojure function
+2. Returning a value in a Clojure function
 
-```clojure
-(let [i #cpp 0
-      f #cpp 3.14159
-      s #cpp "meow"]
-  )
-```
+If you use native values in a `let` and you only call C and C++ functions, no
+conversions will happen. No hidden allocations will happen. However, when you
+start passing native values into Clojure functions or returning them from
+Clojure functions, jank will do what it can to make that work, which may involve
+conversions. More on that below.
 
 ## Named literals
-jank also has explicit support for `cpp/true`, `cpp/false`, and `cpp/nullptr`,
-which all correspond to the C++ primitive.
+jank also has explicit support `cpp/nullptr`, which corresponds to the C++ primitive.
 
 ## Member values
 Member values can be accessed from a native object using the `.-foo` syntax. The
@@ -46,7 +46,7 @@ then pull out the name.
 ```
 
 Whenever a member is accessed, you will get a reference to it, not a copy. Also,
-note that members can be access through a pointer to the native object, without
+note that members can be accessed through a pointer to the native object, without
 needing an explicit dereference.
 
 ```clojure
@@ -202,7 +202,7 @@ Given a hypothetical `my_db` C++ database library, boxing is done like this:
 
 (defn -main [& args]
   (let [; db is a my_db.connection*
-        db (cpp/new my_db.connection #cpp "localhost:5758")
+        db (cpp/new my_db.connection "localhost:5758")
         ; db-box is a opaque_box_ref
         db-box (cpp/box db)]
     ))
@@ -227,7 +227,7 @@ error: This opaque box holds a 'my_db::connection*', but it was unboxed as a
  23  │         db (cpp/unbox (:* my_db.secure_connection) db-box)]
      │             ^^^^^^^^^ Unboxed here.
      │ …
- 28  │         db (cpp/new my_db.connection #cpp "localhost:5758")
+ 28  │         db (cpp/new my_db.connection "localhost:5758")
  29  │         ; db-box is a opaque_box_ref
  30  │         db-box (cpp/box db)]
      │                 ^^^^^^^ Boxed here.

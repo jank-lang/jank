@@ -9,7 +9,7 @@
               foo *f;
             };
           }")
-(let* [f (cpp/jank.cpp.member.pass_reference_to_pointer.foo #cpp 77)
+(let* [f (cpp/jank.cpp.member.pass_reference_to_pointer.foo 77)
        b (cpp/jank.cpp.member.pass_reference_to_pointer.bar (cpp/& f))
        a (.-a (.-f b))]
   (if (= 77 a)

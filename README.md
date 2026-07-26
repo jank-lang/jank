@@ -27,28 +27,25 @@ Read the [jank book](https://book.jank-lang.org).
 
 ## Appetizer
 ```clojure
-; Comments begin with a ;
-(println "meow") ; => nil
+(ns my.app.filesystem
+  (:include "boost/filesystem.hpp")
+  (:refer-global :rename {boost.filesystem.file_size file-size}))
 
-; All built-in data structures are persistent and immutable.
-(def george {:name "George Clooney"}) ; => #'user/george
+(defn file-info [file-path]
+  (try
+    (let [bytes (file-size (cpp/cast std.string file-path))]
+      {:path file-path
+       :size bytes})
+    (catch boost.filesystem.filesystem_error e
+      {:path file-path
+       :error (.what e)})))
 
-; Though all data is immutable by default, side effects are adhoc.
-(defn say-hi [who]
-  (println (str "Hi " (:name who) "!"))
-  (assoc who :greeted? true))
+(file-info "/etc/passwd")
+; {:path "/etc/passwd", :size 4025}
 
-; Doesn't change george.
-(say-hi george) ; => {:name "George Clooney"
-                ;     :greeted? true}
-
-; Many core functions for working with immutable data.
-(apply + (distinct [12 8 12 16 8 6])) ; => 42
-
-; Interop with C++ can happen *seamlessly*.
-(defn sleep [ms]
-  (let [duration (cpp/std.chrono.milliseconds ms)]
-    (cpp/std.this_thread.sleep_for duration)))
+(file-info "/root/.bash_history")
+; {:path "/root/.bash_history"
+;  :error "boost::filesystem::file_size: Permission denied [system:13]: \"/root/.bash_history\""}
 ```
 
 ## Sponsors

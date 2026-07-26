@@ -23,7 +23,7 @@ namespace jank::analyze::expr
     enum class loop_kind : u8
     {
       /* A let. */
-      none,
+      normal,
       /* A loop with one or more recur. */
       loop_with_recur,
       /* A loop with no recurs. Similar to a let, but the bindings are still type-erased. */
@@ -43,6 +43,6 @@ namespace jank::analyze::expr
 
     native_vector<pair_type> pairs;
     do_ref body;
-    loop_kind loop_kind{ loop_kind::none };
+    loop_kind loop_kind{ loop_kind::normal };
   };
 }

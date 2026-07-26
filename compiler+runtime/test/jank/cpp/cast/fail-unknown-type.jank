@@ -1,2 +1,2 @@
-(let* [r (cpp/cast cpp/flurbo #cpp 1)]
+(let* [r (cpp/cast cpp/flurbo 1)]
   :success)
