@@ -1,13 +1,12 @@
 (ns clojure.string
-  (:refer-clojure :exclude [replace reverse]))
-
-(cpp/raw "#include <clojure/string_native.hpp>")
+  (:refer-clojure :exclude [replace reverse])
+  (:include "clojure/string_native.hpp"))
 
 (defn reverse
   "returns s with its characters reversed."
   [s]
   (cpp/clojure.string_native.reverse s))
-  
+
 (defn re-quote-replacement
   "Given a replacement string that you wish to be a literal
   replacement for a pattern match in replace or replace-first, do the
@@ -15,19 +14,6 @@
   [replacement]
   ;(Matcher/quoteReplacement (.toString replacement))
   (throw "TODO: port clojure.string/re-quote-replacement"))
-
-;(defn- replace-by
-;  [s re f]
-;  (let [m (re-matcher re s)]
-;    (if (.find m)
-;      (let [buffer (StringBuffer. (.length s))]
-;        (loop [found true]
-;          (if found
-;            (do (.appendReplacement m buffer (Matcher/quoteReplacement (f (re-groups m))))
-;                (recur (.find m)))
-;            (do (.appendTail m buffer)
-;                (.toString buffer)))))
-;      s)))
 
 (defn replace
   "Replaces all instance of match with replacement in s.
@@ -54,17 +40,33 @@
   (clojure.string/replace \"Almost Pig Latin\" #\"\\b(\\w)(\\w+)\\b\" \"$2$1ay\")
   -> \"lmostAay igPay atinLay\""
   [s match replacement]
-  #_
-  (let [s (.toString s)]
+  (when (nil? s)
+    (throw "replace does not support nil"))
+  (let [s (cpp/cast jtl.immutable_string (str s))]
     (cond
-      (instance? Character match) (.replace s match replacement)
-      (instance? CharSequence match) (.replace s match replacement)
-      (instance? Pattern match) (if (instance? CharSequence replacement)
-                                  (.replaceAll (re-matcher match s)
-                                               (.toString replacement))
-                                  (replace-by s match replacement))
-      :else (throw (IllegalArgumentException. (str "Invalid match arg: " match)))))
-  (throw "TODO: port clojure.string/replace"))
+      (and (char? match) (char? replacement))
+      (cpp/clojure.string_native.replace
+       s
+       (cpp/jank.runtime.to_char match)
+       (cpp/jank.runtime.to_char replacement))
+
+      (and (string? match) (string? replacement))
+      (cpp/clojure.string_native.replace
+       s
+       (.to_string match)
+       (.to_string replacement))
+
+      (cpp/== cpp/jank.runtime.object_type.re_pattern (.get_type match))
+      (if (string? replacement)
+        (cpp/clojure.string_native.replace
+         s
+         (cpp/jank.runtime.re_pattern match)
+         (.to_string replacement))
+        (cpp/clojure.string_native.replace
+         s
+         (cpp/jank.runtime.re_pattern match)
+         replacement))
+      :else (throw (str "Invalid match arg: " match)))))
 
 ;(defn- replace-first-by
 ;  [s re f]

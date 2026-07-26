@@ -49,6 +49,10 @@ namespace jank::analyze::cpp_util
                      std::vector<Cpp::TemplateArgInfo> &arg_types,
                      std::vector<Cpp::TCppScope_t> const &arg_scopes);
 
+  jtl::option<std::vector<Cpp::TemplateArgInfo>>
+  find_aggregate_match_with_conversions(std::vector<jtl::ptr<void>> const &aggregate_types,
+                                        std::vector<Cpp::TemplateArgInfo> const &arg_types);
+
   bool is_trait_convertible(jtl::ptr<void> type);
   bool is_untyped_object(jtl::ptr<void> type);
   bool is_typed_object(jtl::ptr<void> type);
@@ -58,6 +62,7 @@ namespace jank::analyze::cpp_util
   bool is_member_function(jtl::ptr<void> scope);
   bool is_non_static_member_function(jtl::ptr<void> scope);
   bool is_nullptr(jtl::ptr<void> type);
+  bool is_bool(jtl::ptr<void> type);
   bool is_implicitly_convertible(jtl::ptr<void> from, jtl::ptr<void> to);
   bool is_pointer_to_void_conversion(jtl::ptr<void> from, jtl::ptr<void> to);
 
@@ -67,7 +72,13 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> untyped_object_ref_type();
   jtl::ptr<void> char_type();
   jtl::ptr<void> bool_type();
+  jtl::ptr<void> int_type();
+  jtl::ptr<void> long_type();
+  jtl::ptr<void> long_long_type();
+  jtl::ptr<void> double_type();
+  jtl::ptr<void> nil_ref_type();
   jtl::ptr<void> var_type();
+  jtl::ptr<void> integer_ref_type();
   jtl::ptr<void> persistent_list_ref_type();
   jtl::ptr<void> persistent_vector_ref_type();
   jtl::ptr<void> persistent_array_map_ref_type();
@@ -75,8 +86,8 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> persistent_hash_set_ref_type();
   jtl::ptr<void> jit_function_ref_type();
   jtl::ptr<void> jit_closure_ref_type();
-  jtl::ptr<void> literal_type(runtime::object_ref const o);
-  jtl::ptr<void> literal_codegen_type(runtime::object_ref const o);
+  jtl::ptr<void> literal_type(runtime::object_ref const o, bool const is_boxed);
+  jtl::ptr<void> literal_codegen_type(runtime::object_ref const o, bool const is_boxed);
 
   usize offset_to_typed_object_base(jtl::ptr<void> type);
 
@@ -85,7 +96,7 @@ namespace jank::analyze::cpp_util
 
   jtl::result<void, error_ref> ensure_convertible(expression_ref const expr);
 
-  native_vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> scope);
+  std::vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> scope);
 
   enum class implicit_conversion_action : u8
   {

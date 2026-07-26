@@ -9,7 +9,7 @@
               i64 a{};
             };
           }")
-(let* [foo (cpp/jank.cpp.literal_type.member_ptr.fail_mismatched_class.foo #cpp 7)
+(let* [foo (cpp/jank.cpp.literal_type.member_ptr.fail_mismatched_class.foo 7)
        p (cpp/cast #cpp (:member* jank.cpp.literal_type.member_ptr.fail_mismatched_class.bar a) #cpp (:&member jank.cpp.literal_type.member_ptr.fail_mismatched_class.bar a))]
   (if (= 7 (p foo))
     :success))

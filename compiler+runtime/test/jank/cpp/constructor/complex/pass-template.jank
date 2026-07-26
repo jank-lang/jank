@@ -10,6 +10,6 @@
               int a{}, b{7};
             };
           }")
-(let* [f (cpp/jank.cpp.constructor.complex.pass_template.foo. #cpp 5)]
+(let* [f (cpp/jank.cpp.constructor.complex.pass_template.foo. 5)]
   (if (and (= 5 (cpp/.-a f)) (= 5 (cpp/.-b f)))
     :success))

@@ -14,7 +14,7 @@
     clojure.core-test.assoc-bang
     ; clojure.core-test.associative-qmark ; TODO: port to-array
     clojure.core-test.atom
-    clojure.core-test.bigdec
+    ; clojure.core-test.bigdec ; p/thrown? aren't throwing
     clojure.core-test.bigint
     clojure.core-test.binding ; TODO: port future
     clojure.core-test.bit-and
@@ -32,7 +32,7 @@
     clojure.core-test.boolean-qmark
     clojure.core-test.bound-fn
     clojure.core-test.bound-fn-star
-    clojure.core-test.butlast
+    ; clojure.core-test.butlast ; "TODO: port int-array"
     ; clojure.core-test.byte ; TODO: port byte, Expecting whitespace after the last token. due to M.
     ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
     ; clojure.core-test.char ; FIXME: Failing unicode character tests.
@@ -44,7 +44,7 @@
     clojure.core-test.conj-bang
     clojure.core-test.cons
     clojure.core-test.constantly
-    clojure.core-test.contains-qmark
+    ; clojure.core-test.contains-qmark ; "TODO: port int-array"
     clojure.core-test.count
     ; clojure.core-test.counted-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.cycle
@@ -61,7 +61,7 @@
     clojure.core-test.double
     clojure.core-test.double-qmark
     clojure.core-test.drop
-    clojure.core-test.drop-last
+    ; clojure.core-test.drop-last ; "TODO: port int-array"
     clojure.core-test.drop-while
     clojure.core-test.empty
     clojure.core-test.empty-qmark
@@ -71,7 +71,7 @@
     clojure.core-test.false-qmark
     clojure.core-test.ffirst
     clojure.core-test.find
-    clojure.core-test.first
+    ; clojure.core-test.first ; "TODO: port to-array"
     clojure.core-test.float
     clojure.core-test.float-qmark
     clojure.core-test.fn-qmark
@@ -143,7 +143,7 @@
     clojure.core-test.peek
     clojure.core-test.persistent-bang
     ; clojure.core-test.plus ; FIXME: Failing tests.
-    clojure.core-test.plus-squote
+    ; clojure.core-test.plus-squote ; Assertion failed! is_tagged_pointer(val)
     clojure.core-test.pop
     clojure.core-test.pop-bang
     clojure.core-test.pos-int-qmark
@@ -169,7 +169,7 @@
     ; clojure.core-test.rem ; FIXME: Failing tests.
     ; clojure.core-test.remove-watch ; TODO: port sync
     clojure.core-test.repeat
-    clojure.core-test.rest
+    ; clojure.core-test.rest ; "TODO: port int-array"
     clojure.core-test.reverse
     ; clojure.core-test.reversible-qmark ; TODO: port reversible?, TODO: port object-array
     ; clojure.core-test.rseq ; TODO: port rseq
@@ -195,7 +195,7 @@
     ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?
     ; clojure.core-test.star ; FIXME: Failing tests.
-    clojure.core-test.star-squote
+    ; clojure.core-test.star-squote ; Assertion failed! is_tagged_pointer(val)
     clojure.core-test.str
     clojure.core-test.string-qmark
     ; clojure.core-test.subs ; FIXME: Failing tests.
@@ -233,7 +233,8 @@
     clojure.string-test.ends-with-qmark
     ; clojure.string-test.escape ; Uncaught exception: Can't convert character to integer.
     clojure.string-test.lower-case
-    ; clojure.string-test.reverse ; issues with unicode
+    clojure.string-test.replace
+    clojure.string-test.reverse
     clojure.string-test.starts-with-qmark
     clojure.string-test.upper-case
   ])

@@ -1,0 +1,17 @@
+(cpp/raw "namespace jank::form::let::pass_native_non_trivial_default_ctor
+          {
+            struct foo
+            {
+              foo()
+              { throw 1; }
+              foo(int a)
+               : a{ a }
+              { }
+
+              int a{ 5 };
+            };
+          } ")
+(let* [f (let* [f (cpp/jank.form.let.pass_native_non_trivial_default_ctor.foo. (cpp/int. 10))]
+           f)]
+  (if (= 10 (cpp/.-a f))
+    :success))

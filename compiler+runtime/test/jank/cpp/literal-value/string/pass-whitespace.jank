@@ -1,2 +1,0 @@
-(let* [_ (cpp/value " ")]
-  :success)

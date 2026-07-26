@@ -33,6 +33,10 @@ namespace jank::ir
         return f(jtl::static_ref_cast<inst::closure>(i), std::forward<Args>(args)...);
       case instruction_kind::letfn:
         return f(jtl::static_ref_cast<inst::letfn>(i), std::forward<Args>(args)...);
+      case instruction_kind::local:
+        return f(jtl::static_ref_cast<inst::local>(i), std::forward<Args>(args)...);
+      case instruction_kind::set_local:
+        return f(jtl::static_ref_cast<inst::set_local>(i), std::forward<Args>(args)...);
       case instruction_kind::def:
         return f(jtl::static_ref_cast<inst::def>(i), std::forward<Args>(args)...);
       case instruction_kind::var_deref:
@@ -71,10 +75,16 @@ namespace jank::ir
         return f(jtl::static_ref_cast<inst::throw_>(i), std::forward<Args>(args)...);
       case instruction_kind::ret:
         return f(jtl::static_ref_cast<inst::ret>(i), std::forward<Args>(args)...);
+      case instruction_kind::cpp_scope_open:
+        return f(jtl::static_ref_cast<inst::cpp_scope_open>(i), std::forward<Args>(args)...);
+      case instruction_kind::cpp_scope_close:
+        return f(jtl::static_ref_cast<inst::cpp_scope_close>(i), std::forward<Args>(args)...);
       case instruction_kind::cpp_raw:
         return f(jtl::static_ref_cast<inst::cpp_raw>(i), std::forward<Args>(args)...);
       case instruction_kind::cpp_value:
         return f(jtl::static_ref_cast<inst::cpp_value>(i), std::forward<Args>(args)...);
+      case instruction_kind::cpp_literal:
+        return f(jtl::static_ref_cast<inst::cpp_literal>(i), std::forward<Args>(args)...);
       case instruction_kind::cpp_into_object:
         return f(jtl::static_ref_cast<inst::cpp_into_object>(i), std::forward<Args>(args)...);
       case instruction_kind::cpp_from_object:
@@ -100,8 +110,6 @@ namespace jank::ir
         return f(jtl::static_ref_cast<inst::cpp_new>(i), std::forward<Args>(args)...);
       case instruction_kind::cpp_delete:
         return f(jtl::static_ref_cast<inst::cpp_delete>(i), std::forward<Args>(args)...);
-      default:
-        break;
     }
 
     throw std::runtime_error{ "Invalid instruction kind: "

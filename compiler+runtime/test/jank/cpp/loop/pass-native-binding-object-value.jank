@@ -1,7 +1,7 @@
 (let* [add1 (fn* [i]
               (inc i))
-       r (loop* [i #cpp 0]
-           (if (cpp/== #cpp 3 i)
+       r (loop* [i 0]
+           (if (cpp/== 3 i)
              :success
              (recur (add1 i))))]
   r)

@@ -600,6 +600,11 @@ namespace jank::evaluate
     return eval(wrap_expression(expr, "cpp_value", {})).call();
   }
 
+  object_ref eval(expr::cpp_literal_ref const expr)
+  {
+    return expr->data;
+  }
+
   object_ref eval(expr::cpp_conversion_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */

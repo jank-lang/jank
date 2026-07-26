@@ -6,6 +6,7 @@
 
 namespace jank::runtime::obj
 {
+  using character_ref = oref<struct character>;
   using persistent_vector_ref = oref<struct persistent_vector>;
   using re_pattern_ref = oref<struct re_pattern>;
 }
@@ -24,6 +25,19 @@ namespace clojure::string_native
   jtl::immutable_string upper_case(jtl::immutable_string const &s);
   object_ref
   replace_first(object_ref const s, object_ref const match, object_ref const replacement);
+
+  jtl::immutable_string replace(jtl::immutable_string const &s,
+                                obj::character_ref const match,
+                                obj::character_ref const replacement);
+  jtl::immutable_string replace(jtl::immutable_string const &s,
+                                jtl::immutable_string const &match,
+                                jtl::immutable_string const &replacement);
+  jtl::immutable_string replace(jtl::immutable_string const &s,
+                                obj::re_pattern_ref const match,
+                                jtl::immutable_string const &replacement);
+  jtl::immutable_string replace(jtl::immutable_string const &s,
+                                obj::re_pattern_ref const match,
+                                object_ref const replacement);
 
   i64 index_of(jtl::immutable_string const &s,
                jtl::immutable_string const &value,

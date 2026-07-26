@@ -16,8 +16,8 @@
               { }
             };
           }")
-(let* [f1 (cpp/jank.cpp.constructor.complex.pass_shadowed_using.foo. #cpp 7)
-       f2 (cpp/jank.cpp.constructor.complex.pass_shadowed_using.foo. #cpp "meow")]
+(let* [f1 (cpp/jank.cpp.constructor.complex.pass_shadowed_using.foo. 7)
+       f2 (cpp/jank.cpp.constructor.complex.pass_shadowed_using.foo. "meow")]
   (if (and (= 7 (.-data f1))
            (= 4 (.-data f2)))
     :success))

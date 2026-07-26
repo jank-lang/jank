@@ -1,3 +1,3 @@
-(let* [r (* (if true 1 1.0) 2)]
+(let* [r (* (if true 1 "meow") 2)]
   (if (= r 2)
     :success))

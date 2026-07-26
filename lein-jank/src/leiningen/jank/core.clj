@@ -6,15 +6,16 @@
    [babashka.fs :as fs]
    [babashka.process :as ps]
    [leiningen.core.main :as lmain]
-   [leiningen.jank.build :as ljb])
+   [leiningen.jank.resolve :as resolve]
+   [jank-build.core :as build])
   (:import [java.io File]))
 
 (defonce verbose? (atom false))
 
 (def standard-options
   "Standard command line options shared by all lein-jank tasks"
-  [["-v" "--verbose" "verbose output"]
-   [nil  "--disable-sandbox" "disable jank-build sandboxing"]])
+  [["-v" "--verbose" "Enable verbose output"]
+   [nil  "--disable-sandbox" "Disable jank-build sandboxing"]])
 
 (defn parse-opts
   "Process the args using the given clojure.tools.cli option-specs. If given
@@ -38,10 +39,15 @@
   ensure the native libraries are up-to-date. Any work which doesn't need to be
   recomputed will be cached."
   [project opts]
-  (binding [ljb/*disable-sandbox* (or ljb/*disable-sandbox* (:disable-sandbox opts))
-            ljb/*verbose-build*   @verbose?]
-    (let [native-flags (ljb/run-build! (ljb/plan-build project))]
-      (update project :jank ljb/merge-native-flags native-flags))))
+  (binding [build/*disable-sandbox* (or build/*disable-sandbox* (:disable-sandbox opts))
+            build/*verbose-build*   @verbose?]
+    (let [deps-tree    (resolve/dependency-hierarchies
+                        project
+                        (:managed-dependencies project)
+                        (:dependencies project))
+          build-plan   (build/plan-build project deps-tree)
+          native-flags (build/run-build! build-plan)]
+      (update project :jank #(merge-with into % native-flags)))))
 
 (defn build-module-path [project]
   (->> project
@@ -87,6 +93,10 @@
 
     :linked-libraries
     (map (fn [v] (str "-l" v)) value)
+
+    ;; pass through to jank-build
+    :static?
+    []
 
     (lmain/warn (str "Unknown flag " flag))))
 

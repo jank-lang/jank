@@ -156,8 +156,8 @@ namespace jank
           /* TODO: Dedicated error. */
           throw error::internal_failure(
             util::format("Unable to determine the output target type, given output file name '{}'. "
-                         "If you provide a '.ll', '.cpp', or '.o' extension, this can be inferred. "
-                         "Otherwise, please provide the --output-type flag to specify.",
+                         "If you provide a '.cpp' or '.o' extension, this can be inferred. "
+                         "Otherwise, please provide the --output-target flag to specify.",
                          opts.output_module_filename));
         }
       }

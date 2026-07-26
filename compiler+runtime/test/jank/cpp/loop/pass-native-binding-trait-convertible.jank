@@ -1,5 +1,5 @@
-(let* [r (loop* [i #cpp 0]
-           (if (cpp/== #cpp 3 i)
+(let* [r (loop* [i 0]
+           (if (cpp/== 3 i)
              (cpp/++ i)
              (recur (cpp/++ i))))]
   (if (= 4 r)

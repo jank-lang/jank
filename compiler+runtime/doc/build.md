@@ -10,7 +10,7 @@ compile it from source. See the section on compiling Clang/LLVM below.
 For Debian-based distros, this should be all you need:
 
 ```bash
-sudo apt-get install -y curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libbz2-dev gcc g++ libboost-all-dev
+sudo apt-get install -y curl git git-lfs build-essential entr libssl-dev libdouble-conversion-dev pkg-config ninja-build cmake zlib1g-dev libffi-dev libbz2-dev gcc g++ libboost-all-dev libstdc++-16-dev
 ```
 
 For Arch:
