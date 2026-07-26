@@ -14,7 +14,7 @@
     clojure.core-test.assoc-bang
     ; clojure.core-test.associative-qmark ; TODO: port to-array
     clojure.core-test.atom
-    ; clojure.core-test.bigdec ; p/thrown? aren't throwing
+    clojure.core-test.bigdec
     clojure.core-test.bigint
     clojure.core-test.binding ; TODO: port future
     clojure.core-test.bit-and
