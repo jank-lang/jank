@@ -728,9 +728,22 @@ namespace jank::runtime
         {
           return make_box<obj::big_decimal>(typed_o->to_real());
         }
+        else if constexpr(std::same_as<T, obj::real>)
+        {
+          if(std::isnan(typed_o->data))
+          {
+            throw make_box("Cannot convert ##NaN to 'big_decimal'").erase();
+          }
+
+          if(std::isinf(typed_o->data))
+          {
+            throw make_box("Cannot convert ##Inf to 'big_decimal'").erase();
+          }
+
+          return make_box<obj::big_decimal>(typed_o->data);
+        }
         else if constexpr(jtl::is_any_same<T,
                                            obj::big_integer,
-                                           obj::real,
                                            obj::small_real,
                                            obj::ratio,
                                            obj::persistent_string>)
