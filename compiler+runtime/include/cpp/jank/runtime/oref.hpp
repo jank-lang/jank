@@ -38,6 +38,12 @@ namespace jank::runtime
   extern oref<struct obj::boolean> jank_true;
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   extern oref<struct obj::boolean> jank_false;
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern oref<struct obj::real> jank_nan;
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern oref<struct obj::real> jank_inf;
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern oref<struct obj::real> jank_neg_inf;
 
   /* `oref` is jank's pointer wrapper for boxed runtime objects. It is only used for objects
    * which inherit from `jank::runtime::object` and implement the necessary behaviors. It's

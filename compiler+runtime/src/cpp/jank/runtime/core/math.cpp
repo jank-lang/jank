@@ -50,9 +50,32 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> object_ref {
         using LT = typename decltype(typed_l)::value_type;
 
+        if constexpr(std::same_as<LT, obj::real>)
+        {
+          if(std::isnan(typed_l->data))
+          {
+            return jank_nan;
+          }
+        }
+
         return visit_number_like(
           [](auto const typed_r, auto const &l_val) -> object_ref {
             using RT = typename decltype(typed_r)::value_type;
+
+            if constexpr(std::same_as<RT, obj::real>)
+            {
+              if(std::isnan(typed_r->data))
+              {
+                return jank_nan;
+              }
+              if constexpr(std::same_as<LT, obj::real>)
+              {
+                if(std::isinf(l_val) && std::isinf(typed_r->data) && typed_r->data != l_val)
+                {
+                  return jank_nan;
+                }
+              }
+            }
 
             if constexpr(jtl::is_any_same<LT, obj::integer, obj::small_integer>
                          && jtl::is_any_same<RT, obj::integer, obj::small_integer>)

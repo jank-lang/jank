@@ -488,8 +488,32 @@ namespace jank::runtime
     return &r;
   }
 
+  static obj::real_ref nan_const()
+  {
+    static obj::real r{ std::numeric_limits<f64>::quiet_NaN() };
+    return &r;
+  }
+
+  static obj::real_ref inf_const()
+  {
+    static obj::real r{ std::numeric_limits<f64>::infinity() };
+    return &r;
+  }
+
+  static obj::real_ref neg_inf_const()
+  {
+    static obj::real r{ -std::numeric_limits<f64>::infinity() };
+    return &r;
+  }
+
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   obj::boolean_ref jank_true{ true_const() };
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   obj::boolean_ref jank_false{ false_const() };
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::real_ref jank_nan{ nan_const() };
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::real_ref jank_inf{ inf_const() };
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::real_ref jank_neg_inf{ neg_inf_const() };
 }

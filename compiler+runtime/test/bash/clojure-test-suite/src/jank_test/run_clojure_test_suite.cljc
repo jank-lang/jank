@@ -143,7 +143,7 @@
     clojure.core-test.peek
     clojure.core-test.persistent-bang
     ; clojure.core-test.plus ; FIXME: Failing tests.
-    ; clojure.core-test.plus-squote ; Assertion failed! is_tagged_pointer(val)
+    clojure.core-test.plus-squote
     clojure.core-test.pop
     clojure.core-test.pop-bang
     clojure.core-test.pos-int-qmark
