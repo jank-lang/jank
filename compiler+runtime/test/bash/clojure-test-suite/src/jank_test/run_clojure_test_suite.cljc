@@ -35,7 +35,7 @@
     ; clojure.core-test.butlast ; "TODO: port int-array"
     ; clojure.core-test.byte ; TODO: port byte, Expecting whitespace after the last token. due to M.
     ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
-    ; clojure.core-test.char ; FIXME: Failing unicode character tests.
+    clojure.core-test.char
     clojure.core-test.char-qmark
     ; clojure.core-test.coll-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.comment
@@ -62,7 +62,7 @@
     clojure.core-test.double-qmark
     clojure.core-test.drop
     ; clojure.core-test.drop-last ; "TODO: port int-array"
-    clojure.core-test.drop-while
+    ; clojure.core-test.drop-while ; "TODO: port int-array" /  "TODO: port sequence"
     clojure.core-test.empty
     clojure.core-test.empty-qmark
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
@@ -118,14 +118,14 @@
     clojure.core-test.nan-qmark
     clojure.core-test.neg-int-qmark
     clojure.core-test.neg-qmark
-    clojure.core-test.next
+    ; clojure.core-test.next ; "TODO: port int-array"
     clojure.core-test.nfirst
     clojure.core-test.nil-qmark
     clojure.core-test.nnext
     clojure.core-test.not
     ; clojure.core-test.not_empty ; libc++abi: terminating due to uncaught exception of type jank::runtime::oref<jank::runtime::object>.
     ; clojure.core-test.not-eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
-    clojure.core-test.nth
+    ; clojure.core-test.nth ; "TODO: port int-array"
     clojure.core-test.nthnext
     clojure.core-test.nthrest
     ; clojure.core-test.num ; TODO: port short, TODO: port byte & TODO: port long.
