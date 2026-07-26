@@ -90,7 +90,7 @@
     clojure.core-test.inc
     ; clojure.core-test.int ; FIXME: Codegen bug.
     clojure.core-test.int-qmark
-    ; clojure.core-test.integer-qmark ; FIXME: Failing tests.
+    clojure.core-test.integer-qmark
     clojure.core-test.interleave
     clojure.core-test.intern
     clojure.core-test.interpose
