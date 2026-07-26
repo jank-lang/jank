@@ -18,11 +18,9 @@ namespace clojure::string_native
 
   bool blank(object_ref const s);
   jtl::immutable_string reverse(jtl::immutable_string const &s);
-  jtl::immutable_string lower_case(jtl::immutable_string const &s);
   bool starts_with(jtl::immutable_string const &s, jtl::immutable_string const &substr);
   bool ends_with(jtl::immutable_string const &s, jtl::immutable_string const &substr);
   bool includes(jtl::immutable_string const &s, jtl::immutable_string const &substr);
-  jtl::immutable_string upper_case(jtl::immutable_string const &s);
   object_ref
   replace_first(object_ref const s, object_ref const match, object_ref const replacement);
 

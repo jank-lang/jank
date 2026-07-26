@@ -41,11 +41,6 @@ namespace clojure::string_native
     return buff.release();
   }
 
-  jtl::immutable_string lower_case(jtl::immutable_string const &s)
-  {
-    return util::to_lowercase(s);
-  }
-
   bool starts_with(jtl::immutable_string const &s, jtl::immutable_string const &substr)
   {
     return s.starts_with(substr);
@@ -59,11 +54,6 @@ namespace clojure::string_native
   bool includes(jtl::immutable_string const &s, jtl::immutable_string const &substr)
   {
     return s.contains(substr);
-  }
-
-  jtl::immutable_string upper_case(jtl::immutable_string const &s)
-  {
-    return util::to_uppercase(s);
   }
 
   static jtl::immutable_string replace_first(jtl::immutable_string const &s,
