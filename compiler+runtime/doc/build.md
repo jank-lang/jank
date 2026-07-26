@@ -87,7 +87,6 @@ cd compiler+runtime
 mkdir -p build
 export CC=clang; export CXX=clang++;
 ./bin/build-clang-msys2
-export CC=$PWD/build/llvm-install/usr/local/bin/clang; export CXX=$PWD/build/llvm-install/usr/local/bin/clang++
 ```
 
 Install the built toolchain into the environment, which will replace the existing LLVM installation.
