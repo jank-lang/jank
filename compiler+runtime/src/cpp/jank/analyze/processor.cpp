@@ -4581,8 +4581,8 @@ namespace jank::analyze
       Cpp::GetScopeFromType(type),
       expr::cpp_value::value_kind::constructor) };
 
-    /* We build a normal ctor call, then just wrap that in a new expr. During codegen,
-     * the new expr will allow us to allocate memory from the GC first, then initialize it with
+    /* We build a normal ctor call, then just wrap that in a cpp_new expr. During codegen,
+     * the cpp_new expr will allow us to allocate memory from the GC first, then initialize it with
      * the normal call. */
     auto const value_expr_res(analyze_cpp_call(make_box(l->data.rest()),
                                                cpp_value_expr,

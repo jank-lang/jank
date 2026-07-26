@@ -1,0 +1,17 @@
+(cpp/raw "namespace jank::cpp::new_::complex::pass_single_initializer
+          {
+            bool once{};
+            struct foo
+            {
+              foo()
+              {
+                if(once)
+                { throw 0; }
+                once = true;
+              }
+              foo(foo const&) = delete;
+              foo(foo &&) noexcept = delete;
+            };
+          }")
+(let* [f (cpp/new jank.cpp.new_.complex.pass_single_initializer.foo)]
+  :success)

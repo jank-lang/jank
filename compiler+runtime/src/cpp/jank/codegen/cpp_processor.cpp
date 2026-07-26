@@ -1820,12 +1820,17 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer,
                     "auto {}{ "
-                    "new (UseGC{}) {}{ {} }"
-                    " };\n",
+                    "new (UseGC{}) {}{ ",
                     inst->name,
                     (needs_finalizer ? ", " + finalizer_name : ""),
-                    type_name,
-                    inst->value);
+                    type_name);
+
+    for(auto const &arg : inst->args)
+    {
+      util::format_to(b.body_buffer, "{},", arg);
+    }
+
+    util::format_to(b.body_buffer, " } };\n");
 
     return inst->name;
   }

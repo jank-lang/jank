@@ -572,10 +572,10 @@ namespace jank::ir::inst
 
   cpp_new::cpp_new(identifier const &name,
                    read::source const &location,
-                   identifier const &value,
+                   native_vector<identifier> &&args,
                    analyze::expr::cpp_new_ref const expr)
     : instruction{ instruction_kind::cpp_new, name, expression_type(expr), location }
-    , value{ value }
+    , args{ jtl::move(args) }
     , expr{ expr }
   {
   }
