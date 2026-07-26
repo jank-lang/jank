@@ -600,6 +600,7 @@ namespace jank::read::parse
       return error::parse_invalid_meta_hint_value({ start_token.start, latest_token.end });
     }
 
+    /* TODO: Port visit_object: Not using all objects. */
     auto meta_result(visit_object(
       [&](auto const typed_val) -> processor::object_result {
         using T = typename jtl::decay_t<decltype(typed_val)>::value_type;
@@ -645,6 +646,7 @@ namespace jank::read::parse
                                                    "Value missing after hint.");
     }
 
+    /* TODO: Port visit_object: metadatable. */
     return visit_object(
       [&](auto const typed_val) -> processor::object_result {
         using T = typename jtl::decay_t<decltype(typed_val)>::value_type;

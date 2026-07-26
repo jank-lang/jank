@@ -17,6 +17,7 @@ namespace jank::runtime
       return m;
     }
 
+    /* TODO: Port visit_object: metadatable. */
     return visit_object(
       [](auto const typed_m) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
@@ -35,6 +36,7 @@ namespace jank::runtime
 
   object_ref with_meta(object_ref const o, object_ref const m)
   {
+    /* TODO: Port visit_object: metadatable. */
     return visit_object(
       [&o](auto const typed_o, object_ref const m) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -61,6 +63,7 @@ namespace jank::runtime
    * is done with the meta. */
   object_ref with_meta_graceful(object_ref const o, object_ref const m)
   {
+    /* TODO: Port visit_object: metadatable. */
     return visit_object(
       [](auto const typed_o, object_ref const m) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -80,6 +83,7 @@ namespace jank::runtime
 
   object_ref reset_meta(object_ref const o, object_ref const m)
   {
+    /* TODO: Port visit_object: metadatable. */
     return visit_object(
       [](auto const typed_o, object_ref const m) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;

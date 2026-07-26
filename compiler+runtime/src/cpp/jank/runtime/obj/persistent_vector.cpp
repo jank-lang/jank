@@ -48,6 +48,7 @@ namespace jank::runtime::obj
       return make_box<persistent_vector>();
     }
 
+    /* TODO: Port visit_object: seqable. */
     return visit_object(
       [](auto const typed_s) -> persistent_vector_ref {
         using T = typename decltype(typed_s)::value_type;
