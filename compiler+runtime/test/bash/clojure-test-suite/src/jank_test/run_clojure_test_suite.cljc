@@ -14,7 +14,7 @@
     clojure.core-test.assoc-bang
     ; clojure.core-test.associative-qmark ; TODO: port to-array
     clojure.core-test.atom
-    ; clojure.core-test.bigdec ; p/thrown? aren't throwing
+    clojure.core-test.bigdec
     clojure.core-test.bigint
     clojure.core-test.binding ; TODO: port future
     clojure.core-test.bit-and
@@ -35,7 +35,7 @@
     ; clojure.core-test.butlast ; "TODO: port int-array"
     ; clojure.core-test.byte ; TODO: port byte, Expecting whitespace after the last token. due to M.
     ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
-    ; clojure.core-test.char ; FIXME: Failing unicode character tests.
+    clojure.core-test.char
     clojure.core-test.char-qmark
     ; clojure.core-test.coll-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.comment
@@ -62,7 +62,7 @@
     clojure.core-test.double-qmark
     clojure.core-test.drop
     ; clojure.core-test.drop-last ; "TODO: port int-array"
-    clojure.core-test.drop-while
+    ; clojure.core-test.drop-while ; "TODO: port int-array" /  "TODO: port sequence"
     clojure.core-test.empty
     clojure.core-test.empty-qmark
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
@@ -90,7 +90,7 @@
     clojure.core-test.inc
     ; clojure.core-test.int ; FIXME: Codegen bug.
     clojure.core-test.int-qmark
-    ; clojure.core-test.integer-qmark ; FIXME: Failing tests.
+    clojure.core-test.integer-qmark
     clojure.core-test.interleave
     clojure.core-test.intern
     clojure.core-test.interpose
@@ -118,14 +118,14 @@
     clojure.core-test.nan-qmark
     clojure.core-test.neg-int-qmark
     clojure.core-test.neg-qmark
-    clojure.core-test.next
+    ; clojure.core-test.next ; "TODO: port int-array"
     clojure.core-test.nfirst
     clojure.core-test.nil-qmark
     clojure.core-test.nnext
     clojure.core-test.not
     ; clojure.core-test.not_empty ; libc++abi: terminating due to uncaught exception of type jank::runtime::oref<jank::runtime::object>.
     ; clojure.core-test.not-eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
-    clojure.core-test.nth
+    ; clojure.core-test.nth ; "TODO: port int-array"
     clojure.core-test.nthnext
     clojure.core-test.nthrest
     ; clojure.core-test.num ; TODO: port short, TODO: port byte & TODO: port long.
@@ -229,9 +229,9 @@
     clojure.core-test.zipmap
 
     clojure.string-test.blank-qmark
-    ; clojure.string-test.capitalize  ; Uncaught exception: wstring_convert::from_bytes
+    clojure.string-test.capitalize
     clojure.string-test.ends-with-qmark
-    ; clojure.string-test.escape ; Uncaught exception: Can't convert character to integer.
+    clojure.string-test.escape
     clojure.string-test.lower-case
     clojure.string-test.replace
     clojure.string-test.reverse

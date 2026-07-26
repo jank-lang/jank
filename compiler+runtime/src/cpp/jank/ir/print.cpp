@@ -661,11 +661,18 @@ namespace jank::ir
 
   void inst::cpp_new::print(jtl::string_builder &sb, usize const) const
   {
-    util::format_to(sb,
-                    R"({:name {} :op :cpp/new :value {} :type "{}"})",
-                    name,
-                    value,
-                    get_qualified_type_name(type));
+    util::format_to(sb, R"({:name {} :op :cpp/new :args [)", name);
+    bool needs_space{};
+    for(auto const &arg : args)
+    {
+      if(needs_space)
+      {
+        util::format_to(sb, " ");
+      }
+      needs_space = true;
+      sb(arg);
+    }
+    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
   }
 
   void inst::cpp_delete::print(jtl::string_builder &sb, usize const) const

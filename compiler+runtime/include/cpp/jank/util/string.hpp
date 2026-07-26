@@ -11,11 +11,11 @@ namespace jtl
 
 namespace jank::util
 {
-  std::string to_lowercase(std::string const &s);
-  std::string to_uppercase(std::string const &s);
+  jtl::immutable_string to_lowercase(jtl::immutable_string const &s);
+  jtl::immutable_string to_uppercase(jtl::immutable_string const &s);
   void trim(std::string &s);
   std::string trim(jtl::immutable_string const &s);
-  void capitalize(std::string &s);
+  jtl::immutable_string capitalize(jtl::immutable_string const &s);
   std::string ordinal_under_100(usize n);
   std::string number_to_ordinal(usize n);
 }

@@ -155,7 +155,7 @@ namespace jank::ir
     identifier cpp_unbox(identifier const &value,
                          identifier const &meta,
                          analyze::expr::cpp_unbox_ref const expr);
-    identifier cpp_new(identifier const &value, analyze::expr::cpp_new_ref const expr);
+    identifier cpp_new(native_vector<identifier> &&args, analyze::expr::cpp_new_ref const expr);
     identifier cpp_delete(identifier const &value, analyze::expr::cpp_delete_ref const expr);
     identifier source_location(read::source const &location);
 

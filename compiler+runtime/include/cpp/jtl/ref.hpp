@@ -84,6 +84,11 @@ namespace jtl
       return data;
     }
 
+    constexpr value_type *get() const noexcept
+    {
+      return data;
+    }
+
     value_type *data{};
   };
 

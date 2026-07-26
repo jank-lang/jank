@@ -38,6 +38,10 @@ namespace jank::analyze::expr
 
   jtl::ptr<void> cpp_new::get_type() const
   {
+    if(Cpp::IsArrayType(type))
+    {
+      return type;
+    }
     return Cpp::GetPointerType(type);
   }
 }

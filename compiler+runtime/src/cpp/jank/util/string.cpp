@@ -5,12 +5,13 @@
 #include <ranges>
 
 #include <jtl/immutable_string.hpp>
+#include <jtl/string_builder.hpp>
 
 #include <jank/util/string.hpp>
 
 namespace jank::util
 {
-  std::string to_lowercase(std::string const &s)
+  jtl::immutable_string to_lowercase(jtl::immutable_string const &s)
   {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
     std::wstring wide{ converter.from_bytes(s) };
@@ -22,7 +23,7 @@ namespace jank::util
     return converter.to_bytes(wide);
   }
 
-  std::string to_uppercase(std::string const &s)
+  jtl::immutable_string to_uppercase(jtl::immutable_string const &s)
   {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
     std::wstring wide{ converter.from_bytes(s) };
@@ -50,13 +51,23 @@ namespace jank::util
   }
 
   /* Doesn't support Unicode characters. */
-  void capitalize(std::string &s)
+  jtl::immutable_string capitalize(jtl::immutable_string const &s)
   {
     if(s.empty())
     {
-      return;
+      return s;
     }
-    s[0] = static_cast<char>(std::toupper(s[0]));
+
+    auto const c(static_cast<char>(std::toupper(s[0])));
+    if(s[0] == c)
+    {
+      return s;
+    }
+
+    jtl::string_builder buff;
+    buff(c);
+    buff(s.substr(1));
+    return buff.release();
   }
 
   std::string ordinal_under_100(usize const n)

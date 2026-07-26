@@ -859,12 +859,12 @@ namespace jank::ir
     {
       cpp_new(identifier const &name,
               read::source const &location,
-              identifier const &value,
+              native_vector<identifier> &&args,
               analyze::expr::cpp_new_ref const expr);
 
       void print(jtl::string_builder &sb, usize) const override;
 
-      identifier value;
+      native_vector<identifier> args;
       analyze::expr::cpp_new_ref expr;
     };
 

@@ -2007,6 +2007,7 @@ namespace jank::analyze
       {
         auto arity_list_obj(it.first().unwrap());
 
+        /* TODO: Port visit_object: sequenceable. */
         auto const err(runtime::visit_object(
           [&](auto const typed_arity_list) -> jtl::result<void, error_ref> {
             using T = typename decltype(typed_arity_list)::value_type;
@@ -4581,8 +4582,8 @@ namespace jank::analyze
       Cpp::GetScopeFromType(type),
       expr::cpp_value::value_kind::constructor) };
 
-    /* We build a normal ctor call, then just wrap that in a new expr. During codegen,
-     * the new expr will allow us to allocate memory from the GC first, then initialize it with
+    /* We build a normal ctor call, then just wrap that in a cpp_new expr. During codegen,
+     * the cpp_new expr will allow us to allocate memory from the GC first, then initialize it with
      * the normal call. */
     auto const value_expr_res(analyze_cpp_call(make_box(l->data.rest()),
                                                cpp_value_expr,
@@ -4780,6 +4781,7 @@ namespace jank::analyze
                      jtl::option<expr::function_context_ref> const &fn_ctx,
                      bool const needs_box)
   {
+    /* TODO: Port visit_object: sequential. */
     return runtime::visit_object(
       [&](auto const typed_o) -> processor::expression_result {
         using T = typename decltype(typed_o)::value_type;

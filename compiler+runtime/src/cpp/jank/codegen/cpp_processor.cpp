@@ -239,6 +239,7 @@ namespace jank::codegen
 
     static void gen_constant(object_ref const o, jtl::string_builder &buffer, bool const is_boxed)
     {
+      /* TODO: Port visit_object: seqable. */
       visit_object(
         [&](auto const typed_o) {
           using T = typename decltype(typed_o)::value_type;
@@ -1820,12 +1821,17 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer,
                     "auto {}{ "
-                    "new (UseGC{}) {}{ {} }"
-                    " };\n",
+                    "new (UseGC{}) {}{ ",
                     inst->name,
                     (needs_finalizer ? ", " + finalizer_name : ""),
-                    type_name,
-                    inst->value);
+                    type_name);
+
+    for(auto const &arg : inst->args)
+    {
+      util::format_to(b.body_buffer, "{},", arg);
+    }
+
+    util::format_to(b.body_buffer, " } };\n");
 
     return inst->name;
   }

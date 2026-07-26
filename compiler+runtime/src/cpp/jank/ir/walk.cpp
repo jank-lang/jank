@@ -782,7 +782,10 @@ namespace jank::ir
 
   void walk_references_typed(ir::inst::cpp_new_ref const instr, reference_walk_function const &f)
   {
-    f(instr->value);
+    for(auto const &arg : instr->args)
+    {
+      f(arg);
+    }
   }
 
   void walk_references_typed(ir::inst::cpp_delete_ref const instr, reference_walk_function const &f)

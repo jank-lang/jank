@@ -897,7 +897,16 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::cpp_new_ref const expr, builder &b)
   {
-    return b.cpp_new(gen(expr->value_expr, b).unwrap(), expr);
+    jank_debug_assert(expr->value_expr->kind == analyze::expression_kind::cpp_constructor_call);
+    auto const ctor{ runtime::static_box_cast<analyze::expr::cpp_constructor_call>(
+      expr->value_expr) };
+    native_vector<identifier> args;
+    args.reserve(ctor->arg_exprs.size());
+    for(auto const arg : ctor->arg_exprs)
+    {
+      args.emplace_back(gen(arg, b).unwrap());
+    }
+    return b.cpp_new(jtl::move(args), expr);
   }
 
   jtl::option<identifier> gen(analyze::expr::cpp_delete_ref const expr, builder &b)
