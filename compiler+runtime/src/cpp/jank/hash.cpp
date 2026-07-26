@@ -167,6 +167,7 @@ namespace jank::hash
 
   u32 ordered(runtime::oref<runtime::object> const sequence)
   {
+    /* TODO: Port visit_object: sequenceable. */
     return runtime::visit_object(
       [](auto const typed_sequence) -> u32 {
         using T = typename decltype(typed_sequence)::value_type;
@@ -192,6 +193,7 @@ namespace jank::hash
 
   u32 unordered(runtime::object_ref const sequence)
   {
+    /* TODO: Port visit_object: sequenceable. */
     return runtime::visit_object(
       [](auto const typed_sequence) -> u32 {
         using T = typename decltype(typed_sequence)::value_type;

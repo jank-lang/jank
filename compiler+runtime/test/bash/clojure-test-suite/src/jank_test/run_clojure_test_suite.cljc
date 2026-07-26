@@ -14,7 +14,7 @@
     clojure.core-test.assoc-bang
     ; clojure.core-test.associative-qmark ; TODO: port to-array
     clojure.core-test.atom
-    ; clojure.core-test.bigdec ; p/thrown? aren't throwing
+    clojure.core-test.bigdec
     clojure.core-test.bigint
     clojure.core-test.binding ; TODO: port future
     clojure.core-test.bit-and
@@ -90,7 +90,7 @@
     clojure.core-test.inc
     ; clojure.core-test.int ; FIXME: Codegen bug.
     clojure.core-test.int-qmark
-    ; clojure.core-test.integer-qmark ; FIXME: Failing tests.
+    clojure.core-test.integer-qmark
     clojure.core-test.interleave
     clojure.core-test.intern
     clojure.core-test.interpose
@@ -231,7 +231,7 @@
     ; clojure.string-test.blank-qmark ; error: String contains invalid escape sequence '\u'.
     clojure.string-test.capitalize
     clojure.string-test.ends-with-qmark
-    ; clojure.string-test.escape ; Uncaught exception: Can't convert character to integer.
+    clojure.string-test.escape
     clojure.string-test.lower-case
     clojure.string-test.replace
     clojure.string-test.reverse

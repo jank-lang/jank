@@ -239,6 +239,7 @@ namespace jank::codegen
 
     static void gen_constant(object_ref const o, jtl::string_builder &buffer, bool const is_boxed)
     {
+      /* TODO: Port visit_object: seqable. */
       visit_object(
         [&](auto const typed_o) {
           using T = typename decltype(typed_o)::value_type;

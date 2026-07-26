@@ -26,6 +26,7 @@ namespace jank::runtime
 {
   bool is_empty(object_ref const o)
   {
+    /* TODO: Port visit_object: countable, seqable. */
     return visit_object(
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -53,6 +54,7 @@ namespace jank::runtime
 
   bool is_seq(object_ref const o)
   {
+    /* TODO: Port visit_object: sequenceable. */
     return visit_object(
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -71,6 +73,7 @@ namespace jank::runtime
 
   bool is_sequential(object_ref const o)
   {
+    /* TODO: Port visit_object: sequential. */
     return visit_object(
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -82,6 +85,7 @@ namespace jank::runtime
 
   bool is_collection(object_ref const o)
   {
+    /* TODO: Port visit_object: collection_like. */
     return visit_object(
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -112,6 +116,7 @@ namespace jank::runtime
 
   bool is_associative(object_ref const o)
   {
+    /* TODO: Port visit_object: associatively_writable. */
     return visit_object(
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -129,6 +134,7 @@ namespace jank::runtime
 
   bool is_counted(object_ref const o)
   {
+    /* TODO: Port visit_object: countable. */
     return visit_object(
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -140,6 +146,7 @@ namespace jank::runtime
 
   bool is_transientable(object_ref const o)
   {
+    /* TODO: Port visit_object: transientable. */
     return visit_object(
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -157,6 +164,7 @@ namespace jank::runtime
 
   object_ref transient(object_ref const o)
   {
+    /* TODO: Port visit_object: transientable. */
     return visit_object(
       [=](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -176,6 +184,7 @@ namespace jank::runtime
 
   object_ref persistent(object_ref const o)
   {
+    /* TODO: Port visit_object: persistentable. */
     return visit_object(
       [=](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -195,6 +204,7 @@ namespace jank::runtime
 
   object_ref conj_in_place(object_ref const coll, object_ref const o)
   {
+    /* TODO: Port visit_object: conjable_in_place. */
     return visit_object(
       [](auto const typed_coll, auto const &o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
@@ -231,6 +241,7 @@ namespace jank::runtime
 
   object_ref assoc_in_place(object_ref const coll, object_ref const k, object_ref const v)
   {
+    /* TODO: Port visit_object: associatively_writable_in_place. */
     return visit_object(
       [](auto const typed_coll, auto const &k, auto const &v) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
@@ -252,6 +263,7 @@ namespace jank::runtime
 
   object_ref dissoc_in_place(object_ref const coll, object_ref const k)
   {
+    /* TODO: Port visit_object: associatively_writable_in_place. */
     return visit_object(
       [](auto const typed_coll, auto const &k) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_coll)>::value_type;
@@ -278,6 +290,7 @@ namespace jank::runtime
 
   object_ref seq(object_ref const s)
   {
+    /* TODO: Port visit_object: seqable. */
     return visit_object(
       [](auto const typed_s) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
@@ -306,6 +319,7 @@ namespace jank::runtime
 
   object_ref fresh_seq(object_ref const s)
   {
+    /* TODO: Port visit_object: seqable. */
     return visit_object(
       [](auto const typed_s) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
@@ -334,6 +348,7 @@ namespace jank::runtime
 
   object_ref first(object_ref const s)
   {
+    /* TODO: Port visit_object: seqable. */
     return visit_object(
       [](auto const typed_s) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
@@ -371,6 +386,7 @@ namespace jank::runtime
 
   object_ref next(object_ref const s)
   {
+    /* TODO: Port visit_object: seqable. */
     return visit_object(
       [](auto const typed_s) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
@@ -403,6 +419,7 @@ namespace jank::runtime
 
   object_ref next_in_place(object_ref const s)
   {
+    /* TODO: Port visit_object: sequenceable. */
     return visit_object(
       [](auto const typed_s) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
@@ -497,6 +514,7 @@ namespace jank::runtime
 
   object_ref conj(object_ref const s, object_ref const o)
   {
+    /* TODO: Port visit_object: conjable. */
     return visit_object(
       [&](auto const typed_s) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
@@ -539,6 +557,7 @@ namespace jank::runtime
 
   object_ref assoc(object_ref const m, object_ref const k, object_ref const v)
   {
+    /* TODO: Port visit_object: associatively_writable. */
     return visit_object(
       [&](auto const typed_m) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
@@ -558,6 +577,7 @@ namespace jank::runtime
 
   object_ref dissoc(object_ref const m, object_ref const k)
   {
+    /* TODO: Port visit_object: associatively_writable. */
     return visit_object(
       [&](auto const typed_m) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
@@ -647,6 +667,7 @@ namespace jank::runtime
 
   object_ref merge(object_ref const m, object_ref const other)
   {
+    /* TODO: Port visit_object: associatively_writable. */
     return visit_object(
       [](auto const typed_m, object_ref const other) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
@@ -688,6 +709,7 @@ namespace jank::runtime
     {
       return m;
     }
+    /* TODO: Port visit_object: associatively_writable. */
     return visit_object(
       [](auto const typed_m, auto const &other) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_m)>::value_type;
@@ -751,6 +773,7 @@ namespace jank::runtime
       return o;
     }
 
+    /* TODO: Port visit_object: indexable, seqable, sequential. */
     return visit_object(
       [&](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -789,6 +812,7 @@ namespace jank::runtime
       return fallback;
     }
 
+    /* TODO: Port visit_object: indexable, seqable, sequential. */
     return visit_object(
       [&](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -826,6 +850,7 @@ namespace jank::runtime
       return o;
     }
 
+    /* TODO: Port visit_object: stackable. */
     return visit_object(
       [&](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -850,6 +875,7 @@ namespace jank::runtime
       return o;
     }
 
+    /* TODO: Port visit_object: stackable. */
     return visit_object(
       [&](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -869,6 +895,7 @@ namespace jank::runtime
 
   object_ref empty(object_ref const o)
   {
+    /* TODO: Port visit_object: collection_like. */
     return visit_object(
       [=](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -945,6 +972,7 @@ namespace jank::runtime
       return 0;
     }
 
+    /* TODO: Port visit_object: countable, seqable. */
     return visit_object(
       [&](auto const typed_s) -> usize {
         using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
@@ -1059,6 +1087,7 @@ namespace jank::runtime
 
   object_ref chunk_first(object_ref const o)
   {
+    /* TODO: Port visit_object: chunkable. */
     return visit_object(
       [=](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -1076,6 +1105,7 @@ namespace jank::runtime
 
   object_ref chunk_next(object_ref const o)
   {
+    /* TODO: Port visit_object: chunkable. */
     return visit_object(
       [=](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -1093,6 +1123,7 @@ namespace jank::runtime
 
   object_ref chunk_rest(object_ref const o)
   {
+    /* TODO: Port visit_object: chunkable. */
     return visit_object(
       [=](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
@@ -1120,6 +1151,7 @@ namespace jank::runtime
 
   bool is_chunked_seq(object_ref const o)
   {
+    /* TODO: Port visit_object: chunkable. */
     return visit_object(
       [=](auto const typed_o) -> bool {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
