@@ -123,13 +123,13 @@
         proc         (sandbox/process
                       (not *disable-sandbox*)
                       sandbox-args
-                      ["bb" "--classpath" bb-classpath "--stream" (fs/path src-dir jank-build-file)]
-                      {:in       (pr-str build-input)
-                       :continue true})
+                      {}
+                      ["bb" "--classpath" bb-classpath "--stream" (fs/path src-dir jank-build-file)])
         out-lines    (atom [])]
+    (spit (:in proc) (pr-str build-input))
     (future (wrap-stream (:out proc) out-lines *verbose-build* (str "  \u001b[0;34m" dep-name ">\u001b[0m")))
     (future (wrap-stream (:err proc) out-lines *verbose-build* (str "  \u001b[0;31m" dep-name ">\u001b[0m")))
-    (if (zero? (:exit @proc))
+    (if (zero? @(:exit proc))
       ;; Build succeeded. Cache all of the build stdout output. Later we will
       ;; parse the build directives.
       (fs/write-lines (fs/path out-dir jank-build-cache-file) @out-lines)
