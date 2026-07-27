@@ -175,7 +175,7 @@
 (defn split-lines
   "Splits s on \\n or \\r\\n. Trailing empty lines are not returned."
   [s]
-  (cpp/clojure.string_native.split s (cpp/jank.runtime.re_pattern "\\r?\\n")))
+  (cpp/clojure.string_native.split s #"\r?\n"))
 
 (defn trim
   "Removes whitespace from both ends of string."
