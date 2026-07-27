@@ -396,18 +396,20 @@ namespace jank::runtime
         {
           return detail::as_integer(data) == detail::as_integer(o.raw());
         }
+        if(detail::is_tagged_small_real(o.raw()))
+        {
+          return detail::as_integer(data) == detail::as_real(o.raw());
+        }
 
         obj::small_integer const i{ detail::as_integer(data) };
         return o.equal(detail::untagged(&i));
       }
-      else if(detail::is_tagged_small_int(o.raw()))
+      else if(detail::is_tagged_small_real(data))
       {
-        obj::small_integer const i{ detail::as_integer(o.raw()) };
-        return ptr()->equal(i);
-      }
-
-      if(detail::is_tagged_small_real(data))
-      {
+        if(detail::is_tagged_small_int(o.raw()))
+        {
+          return detail::as_real(data) == detail::as_integer(o.raw());
+        }
         if(detail::is_tagged_small_real(o.raw()))
         {
           return detail::as_real(data) == detail::as_real(o.raw());
@@ -415,6 +417,11 @@ namespace jank::runtime
 
         obj::small_real const i{ detail::as_real(data) };
         return o.equal(detail::untagged(&i));
+      }
+      else if(detail::is_tagged_small_int(o.raw()))
+      {
+        obj::small_integer const i{ detail::as_integer(o.raw()) };
+        return ptr()->equal(i);
       }
       else if(detail::is_tagged_small_real(o.raw()))
       {

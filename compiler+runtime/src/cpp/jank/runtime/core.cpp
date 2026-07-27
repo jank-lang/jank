@@ -580,8 +580,7 @@ namespace jank::runtime
 
   uhash to_hash(object_ref const o)
   {
-    /* TODO: Port visit_object: All types. */
-    return visit_object([=](auto const typed_o) -> uhash { return typed_o.to_hash(); }, o);
+    return o.to_hash();
   }
 
   object_ref macroexpand1(object_ref const o)
