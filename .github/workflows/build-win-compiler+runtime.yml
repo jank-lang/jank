@@ -36,13 +36,13 @@ jobs:
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang-msys2') }}
 
       - uses: msys2/setup-msys2@v2
         if: steps.clang-cache.outputs.cache-hit != 'true'
         with:
           msystem: CLANG64
-          install: base-devel git mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-ninja mingw-w64-clang-x86_64-pkgconf mingw-w64-clang-x86_64-libunwind mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-z3 mingw-w64-clang-x86_64-python mingw-w64-clang-x86_64-compiler-rt mingw-w64-clang-x86_64-libc++
+          install: base-devel git
           update: true
 
       - name: Build Clang/LLVM
@@ -52,7 +52,7 @@ jobs:
           MSYSTEM: CLANG64
         run: |
           pushd compiler+runtime
-            ./bin/build-clang
+            ./bin/build-clang-msys2
           popd
           ls -al compiler+runtime/build/llvm-install
 
@@ -118,7 +118,7 @@ jobs:
         with:
           path: |
             ${{ github.workspace }}/compiler+runtime/build/llvm-install
-          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang') }}
+          key: clang-${{ runner.os }}-${{ hashFiles('compiler+runtime/bin/build-clang-msys2') }}
       - name: Cache ccache object files
         if: matrix.analyze == 'off'
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
@@ -149,7 +149,7 @@ jobs:
           JAVA_DIR=$(cygpath -u "${{ steps.find.outputs.java_dir }}")
 
           pushd compiler+runtime
-            ./bin/build-clang -i
+            ./bin/build-clang-msys2 -i
             clang++ --version
           popd
 
