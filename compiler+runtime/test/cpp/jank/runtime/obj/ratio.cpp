@@ -358,16 +358,14 @@ namespace jank::runtime
 
     TEST_CASE("increment")
     {
-      auto const result{ expect_object<obj::ratio>(
-        inc(make_box<obj::ratio>(obj::ratio_data(3, 4)))) };
+      auto const result{ make_box<obj::ratio>(inc(make_box<obj::ratio>(obj::ratio_data(3, 4)))) };
       CHECK_EQ(result->data.numerator, 7);
       CHECK_EQ(result->data.denominator, 4);
     }
 
     TEST_CASE("decrement")
     {
-      auto const result{ expect_object<obj::ratio>(
-        dec(make_box<obj::ratio>(obj::ratio_data(3, 4)))) };
+      auto const result{ make_box<obj::ratio>(dec(make_box<obj::ratio>(obj::ratio_data(3, 4)))) };
       CHECK_EQ(result->data.numerator, -1);
       CHECK_EQ(result->data.denominator, 4);
     }
