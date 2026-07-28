@@ -1,5 +1,6 @@
 #include <cmath>
 
+#include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/oref.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/visit.hpp>
@@ -420,16 +421,16 @@ namespace jank::runtime::obj
     {
       if(data < 0)
       {
-        buff("##-Inf");
+        buff("-Infinity");
       }
       else
       {
-        buff("##Inf");
+        buff("Infinity");
       }
     }
     else if(std::isnan(data))
     {
-      buff("##NaN");
+      buff("NaN");
     }
     else
     {
@@ -439,7 +440,25 @@ namespace jank::runtime::obj
 
   jtl::immutable_string small_real::to_code_string() const
   {
-    return to_string();
+    if(std::isinf(data))
+    {
+      if(data < 0)
+      {
+        return "##-Inf";
+      }
+      else
+      {
+        return "##Inf";
+      }
+    }
+    else if(std::isnan(data))
+    {
+      return "##NaN";
+    }
+    else
+    {
+      return to_string();
+    }
   }
 
   uhash small_real::to_hash() const
@@ -488,22 +507,22 @@ namespace jank::runtime
     return &r;
   }
 
-  static obj::real_ref nan_const()
+  static obj::small_real_ref nan_const()
   {
-    static obj::real r{ std::numeric_limits<f64>::quiet_NaN() };
-    return &r;
+    static auto const r(make_box(std::numeric_limits<f64>::quiet_NaN()));
+    return r;
   }
 
-  static obj::real_ref inf_const()
+  static obj::small_real_ref inf_const()
   {
-    static obj::real r{ std::numeric_limits<f64>::infinity() };
-    return &r;
+    static auto const r(make_box(std::numeric_limits<f64>::infinity()));
+    return r;
   }
 
-  static obj::real_ref neg_inf_const()
+  static obj::small_real_ref neg_inf_const()
   {
-    static obj::real r{ -std::numeric_limits<f64>::infinity() };
-    return &r;
+    static auto const r(make_box(-std::numeric_limits<f64>::infinity()));
+    return r;
   }
 
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
@@ -511,9 +530,9 @@ namespace jank::runtime
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   obj::boolean_ref jank_false{ false_const() };
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  obj::real_ref jank_nan{ nan_const() };
+  obj::small_real_ref jank_nan{ nan_const() };
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  obj::real_ref jank_inf{ inf_const() };
+  obj::small_real_ref jank_inf{ inf_const() };
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  obj::real_ref jank_neg_inf{ neg_inf_const() };
+  obj::small_real_ref jank_neg_inf{ neg_inf_const() };
 }

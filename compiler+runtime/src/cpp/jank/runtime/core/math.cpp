@@ -50,9 +50,9 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> object_ref {
         using LT = typename decltype(typed_l)::value_type;
 
-        if constexpr(std::same_as<LT, obj::real>)
+        if constexpr(jtl::is_any_same<LT, obj::real, obj::small_real>)
         {
-          if(std::isnan(typed_l->data))
+          if(std::isnan(to_real(typed_l)))
           {
             return jank_nan;
           }
@@ -62,15 +62,16 @@ namespace jank::runtime
           [](auto const typed_r, auto const &l_val) -> object_ref {
             using RT = typename decltype(typed_r)::value_type;
 
-            if constexpr(std::same_as<RT, obj::real>)
+            if constexpr(jtl::is_any_same<RT, obj::real, obj::small_real>)
             {
-              if(std::isnan(typed_r->data))
+              if(std::isnan(to_real(typed_r)))
               {
                 return jank_nan;
               }
-              if constexpr(std::same_as<LT, obj::real>)
+              if constexpr(jtl::is_any_same<LT, obj::real, obj::small_real>)
               {
-                if(std::isinf(l_val) && std::isinf(typed_r->data) && typed_r->data != l_val)
+                auto const r_val(to_real(typed_r));
+                if(std::isinf(l_val) && std::isinf(r_val) && l_val != r_val)
                 {
                   return jank_nan;
                 }

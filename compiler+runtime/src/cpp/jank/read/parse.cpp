@@ -848,7 +848,7 @@ namespace jank::read::parse
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
 
-    obj::real_ref n;
+    obj::small_real_ref n;
     if(sym->name == "Inf")
     {
       n = jank_inf;
