@@ -600,43 +600,36 @@ namespace jank::runtime
   object_ref context::macroexpand1(object_ref const o)
   {
     profile::timer const timer{ "rt macroexpand1" };
-    return visit_seqable(
-      [this](auto const typed_o) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
+    if(!o.has_behavior(object_behavior::sequence_like))
+    {
+      return o;
+    }
+    else
+    {
+      auto const first_sym_obj(dyn_cast<obj::symbol>(o.first()));
+      if(first_sym_obj.is_nil())
+      {
+        return o;
+      }
 
-        if constexpr(!behavior::sequenceable<T>)
-        {
-          return typed_o;
-        }
-        else
-        {
-          auto const first_sym_obj(dyn_cast<obj::symbol>(first(typed_o)));
-          if(first_sym_obj.is_nil())
-          {
-            return typed_o;
-          }
+      auto const resolved_sym(qualify_symbol(first_sym_obj));
+      auto const var(find_var(resolved_sym));
+      if(var.is_nil())
+      {
+        return o;
+      }
 
-          auto const resolved_sym(qualify_symbol(first_sym_obj));
-          auto const var(find_var(resolved_sym));
-          if(var.is_nil())
-          {
-            return typed_o;
-          }
+      auto const meta(var->get_meta());
+      auto const found_macro(get(meta, intern_keyword("", "macro", true).expect_ok()));
+      if(found_macro.is_nil() || !truthy(found_macro))
+      {
+        return o;
+      }
 
-          auto const meta(var->get_meta());
-          auto const found_macro(get(meta, intern_keyword("", "macro", true).expect_ok()));
-          if(found_macro.is_nil() || !truthy(found_macro))
-          {
-            return typed_o;
-          }
-
-          /* TODO: Provide &env. */
-          auto const args(cons(cons(rest(typed_o), {}), typed_o));
-          return apply_to(var->deref(), args);
-        }
-      },
-      [=]() { return o; },
-      o);
+      /* TODO: Provide &env. */
+      auto const args(cons(cons(rest(o), {}), o));
+      return apply_to(var->deref(), args);
+    }
   }
 
   object_ref context::macroexpand(object_ref const o)

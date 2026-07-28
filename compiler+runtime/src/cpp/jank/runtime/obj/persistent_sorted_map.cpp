@@ -38,35 +38,21 @@ namespace jank::runtime::obj
 
   persistent_sorted_map_ref persistent_sorted_map::create_from_seq(object_ref const seq)
   {
-    /* TODO: Port visit_object: seqable. */
-    return make_box<persistent_sorted_map>(visit_object(
-      [](auto const typed_seq) -> persistent_sorted_map::value_type {
-        using T = typename jtl::decay_t<decltype(typed_seq)>::value_type;
-
-        if constexpr(behavior::seqable<T>)
-        {
-          runtime::detail::native_transient_sorted_map transient;
-          auto const r{ make_sequence_range(typed_seq) };
-          for(auto it{ r.begin() }; it != r.end(); ++it)
-          {
-            auto const key(*it);
-            ++it;
-            if(it == r.end())
-            {
-              throw std::runtime_error{ util::format("Odd number of elements: {}",
-                                                     typed_seq->to_string()) };
-            }
-            auto const val(*it);
-            transient[key] = val;
-          }
-          return transient;
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("Not seqable: {}", typed_seq->to_string()) };
-        }
-      },
-      seq));
+    runtime::detail::native_transient_sorted_map transient;
+    auto const r{ make_sequence_range(seq) };
+    for(auto it{ r.begin() }; it != r.end(); ++it)
+    {
+      auto const key(*it);
+      ++it;
+      if(it == r.end())
+      {
+        throw std::runtime_error{ util::format("Odd number of elements: {}",
+                                               seq.to_code_string()) };
+      }
+      auto const val(*it);
+      transient[key] = val;
+    }
+    return make_box<persistent_sorted_map>(transient);
   }
 
   object_ref persistent_sorted_map::get(object_ref const key) const

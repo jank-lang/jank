@@ -458,16 +458,69 @@ namespace jank::runtime
     virtual f64 to_real() const;
 
     /* behavior::seqable */
+    /* Returns a (potentially shared) seq, which could just be `this`, if we're already a
+     * seq. However, must return a nullptr for empty seqs. Returning a non-null pointer to
+     * an empty seq is UB. */
     virtual object_ref seq() const;
 
     /* behavior::sequence_like */
     virtual object_ref first() const;
+
+    /* Steps the sequence forward and returns nullptr if there is no more remaining
+     * or a pointer to the remaining sequence.
+     *
+     * Next must always return a fresh seq. */
     virtual object_ref next() const;
 
+    /* Appends the specified object to the beginning of the current sequence. However, if
+     * the current sequence is empty, it must create a cons onto nullptr. It's invalid to
+     * have a cons onto an empty sequence. */
+    //virtual object_ref conj() const;
+
     /* behavior::fresh_seqable */
+    /* Returns a unique seq which can be updated in place. This is an optimization which allows
+     * one allocation for a fresh seq which can then be mutated any number of times to traverse
+     * the data. Also must return nullptr when the sequence is empty. */
     virtual object_ref fresh_seq() const;
 
     /* behavior::sequence_like_in_place */
+    /* Each call to next() allocates a new sequence, since it's polymorphic. When iterating
+     * over a large sequence, this can mean a _lot_ of allocations. However, if you own the
+     * sequence you have, typically meaning it wasn't a parameter, then you can mutate it
+     * in place using this function. No allocations will happen.
+     *
+     * If you don't own your sequence, you can call next() on it once, to get one you
+     * do own, and then next_in_place() on that to your heart's content.
+     *
+     * Using an object after calling next_in_place() on it is UB, even if the return value
+     * is the same object. Its ownership has transferred to the return of next_in_place().
+     * Don't do this:
+     *
+     *   (let [s (fresh-seq ...)
+     *         s'  (-> s next-in-place)
+     *         s'' (-> s next-in-place next-in-place)]
+     *                 ^---- UB!! s' owns seq
+     *     ...)
+     *
+     * Do this instead:
+     *
+     *   (let [s (fresh-seq ...)
+     *         s'  (-> s next-in-place)
+     *         s'' (-> s' next-in-place next-in-place)]
+     *                 ^---- OK: seq ownership transferred from s' to s''
+     *     ...)
+     *
+     * This ownership transfer enables next_in_place() optimizations where the input
+     * sequence_like_in_place can sometimes be left in an inconsistent state. For example, if returning
+     * nullptr, the ownership of the input sequence_like_in_place has been transferred to nullptr.
+     * The input sequence_like_in_place is thus made unreachable. This assumption can be used
+     * to elide certain cleanup code. This also applies if (a carefully considered!) allocation
+     * is made to return a new sequence_like_in_place, making the input sequence_like_in_place unreachable.
+     *
+     * next_in_place() can also assume the sequence_like_in_place is non-empty,
+     * having retained any and all invariants from being returned from {fresh_}seq() or next{_in_place}().
+     * This enables some checks at the beginning of the member function to be elided when
+     * compared to next(), such as bounds or emptiness checks. */
     virtual object_ref next_in_place();
 
     object_type type{};

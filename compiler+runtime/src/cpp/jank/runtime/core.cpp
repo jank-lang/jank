@@ -130,29 +130,14 @@ namespace jank::runtime
   {
     auto const out{ get_stdout() };
 
-    /* TODO: Port visit_object: sequenceable. */
-    visit_object(
-      [&](auto const typed_args) {
-        using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
-
-        if constexpr(behavior::sequenceable<T>)
-        {
-          jtl::string_builder buff;
-          runtime::to_string(typed_args->first().erase(), buff);
-          for(auto const e : make_sequence_range(typed_args).skip(1))
-          {
-            buff(' ');
-            runtime::to_string(e.erase(), buff);
-          }
-          std::fwrite(buff.data(), 1, buff.size(), out);
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("expected a sequence: {}",
-                                                 typed_args.to_string()) };
-        }
-      },
-      args);
+    jtl::string_builder buff;
+    runtime::to_string(args.first().erase(), buff);
+    for(auto const e : make_sequence_range(args).skip(1))
+    {
+      buff(' ');
+      runtime::to_string(e.erase(), buff);
+    }
+    std::fwrite(buff.data(), 1, buff.size(), out);
     return {};
   }
 
@@ -168,34 +153,20 @@ namespace jank::runtime
   {
     auto const out{ get_stdout() };
 
-    /* TODO: Port visit_object: sequenceable. */
-    visit_object(
-      [&](auto const typed_more) {
-        using T = typename jtl::decay_t<decltype(typed_more)>::value_type;
+    if(args.is_nil())
+    {
+      std::putc('\n', out);
+    }
 
-        if constexpr(std::same_as<T, obj::nil>)
-        {
-          std::putc('\n', out);
-        }
-        else if constexpr(behavior::sequenceable<T>)
-        {
-          jtl::string_builder buff;
-          runtime::to_string(typed_more->first().erase(), buff);
-          for(auto const e : make_sequence_range(typed_more).skip(1))
-          {
-            buff(' ');
-            runtime::to_string(e.erase(), buff);
-          }
-          std::fwrite(buff.data(), 1, buff.size(), out);
-          std::putc('\n', out);
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("expected a sequence: {}",
-                                                 typed_more.to_string()) };
-        }
-      },
-      args);
+    jtl::string_builder buff;
+    runtime::to_string(args.first().erase(), buff);
+    for(auto const e : make_sequence_range(args).skip(1))
+    {
+      buff(' ');
+      runtime::to_string(e.erase(), buff);
+    }
+    std::fwrite(buff.data(), 1, buff.size(), out);
+    std::putc('\n', out);
     return {};
   }
 
@@ -203,29 +174,15 @@ namespace jank::runtime
   {
     auto const out{ get_stdout() };
 
-    /* TODO: Port visit_object: sequenceable. */
-    visit_object(
-      [&](auto const typed_args) {
-        using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
+    jtl::string_builder buff;
+    runtime::to_code_string(args.first().erase(), buff);
+    for(auto const e : make_sequence_range(args).skip(1))
+    {
+      buff(' ');
+      runtime::to_code_string(e.erase(), buff);
+    }
+    std::fwrite(buff.data(), 1, buff.size(), out);
 
-        if constexpr(behavior::sequenceable<T>)
-        {
-          jtl::string_builder buff;
-          runtime::to_code_string(typed_args->first().erase(), buff);
-          for(auto const e : make_sequence_range(typed_args).skip(1))
-          {
-            buff(' ');
-            runtime::to_code_string(e.erase(), buff);
-          }
-          std::fwrite(buff.data(), 1, buff.size(), out);
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("expected a sequence: {}",
-                                                 typed_args.to_string()) };
-        }
-      },
-      args);
     return {};
   }
 
@@ -233,34 +190,21 @@ namespace jank::runtime
   {
     auto const out{ get_stdout() };
 
-    /* TODO: Port visit_object: sequenceable. */
-    visit_object(
-      [&](auto const typed_args) {
-        using T = typename jtl::decay_t<decltype(typed_args)>::value_type;
+    if(args.is_nil())
+    {
+      std::putc('\n', out);
+    }
 
-        if constexpr(std::same_as<T, obj::nil>)
-        {
-          std::putc('\n', out);
-        }
-        else if constexpr(behavior::sequenceable<T>)
-        {
-          jtl::string_builder buff;
-          runtime::to_code_string(typed_args->first().erase(), buff);
-          for(auto const e : make_sequence_range(typed_args).skip(1))
-          {
-            buff(' ');
-            runtime::to_code_string(e.erase(), buff);
-          }
-          std::fwrite(buff.data(), 1, buff.size(), out);
-          std::putc('\n', out);
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("expected a sequence: {}",
-                                                 typed_args.to_string()) };
-        }
-      },
-      args);
+    jtl::string_builder buff;
+    runtime::to_code_string(args.first().erase(), buff);
+    for(auto const e : make_sequence_range(args).skip(1))
+    {
+      buff(' ');
+      runtime::to_code_string(e.erase(), buff);
+    }
+    std::fwrite(buff.data(), 1, buff.size(), out);
+    std::putc('\n', out);
+
     return {};
   }
 

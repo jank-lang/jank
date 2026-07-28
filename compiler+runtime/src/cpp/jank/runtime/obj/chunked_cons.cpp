@@ -86,28 +86,15 @@ namespace jank::runtime::obj
 
   static chunked_cons_ref next_in_place_non_chunked(chunked_cons_ref const o)
   {
-    if(o->tail.is_nil())
+    auto const tail{ o->tail };
+    if(tail.is_nil())
     {
       return {};
     }
 
-    /* TODO: Port visit_object: sequenceable. */
-    return visit_object(
-      [&](auto const typed_tail) -> chunked_cons_ref {
-        using T = typename jtl::decay_t<decltype(typed_tail)>::value_type;
-
-        if constexpr(behavior::sequenceable<T>)
-        {
-          o->head = typed_tail->first();
-          o->tail = typed_tail->next();
-          return o;
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("invalid sequence: {}", typed_tail->to_string()) };
-        }
-      },
-      o->tail);
+    o->head = tail.first();
+    o->tail = tail.next();
+    return o;
   }
 
   object_ref chunked_cons::next_in_place()

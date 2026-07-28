@@ -43,34 +43,17 @@ namespace jank::runtime::obj
 
   persistent_vector_ref persistent_vector::create(object_ref const s)
   {
-    if(s.is_nil())
+    if(auto const v{ dyn_cast<obj::persistent_vector>(s) }; v.is_some())
     {
-      return make_box<persistent_vector>();
+      return v->with_meta(jank_nil);
     }
 
-    /* TODO: Port visit_object: seqable. */
-    return visit_object(
-      [](auto const typed_s) -> persistent_vector_ref {
-        using T = typename decltype(typed_s)::value_type;
-        if constexpr(std::same_as<T, obj::persistent_vector>)
-        {
-          return typed_s->with_meta(jank_nil);
-        }
-        else if constexpr(behavior::seqable<T>)
-        {
-          runtime::detail::native_transient_vector v;
-          for(auto const e : make_sequence_range(typed_s))
-          {
-            v.push_back(e);
-          }
-          return make_box<persistent_vector>(v.persistent());
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("invalid sequence: {}", typed_s->to_string()) };
-        }
-      },
-      s);
+    runtime::detail::native_transient_vector v;
+    for(auto const e : make_sequence_range(s))
+    {
+      v.push_back(e);
+    }
+    return make_box<persistent_vector>(v.persistent());
   }
 
   persistent_vector_ref persistent_vector::empty()

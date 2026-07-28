@@ -45,30 +45,16 @@ namespace jank::runtime::obj
   {
     if(s.is_nil())
     {
-      return make_box<persistent_list>();
+      return empty();
     }
 
-    /* TODO: Port visit_object: sequenceable. */
-    return visit_object(
-      [](auto const typed_s) -> persistent_list_ref {
-        using T = typename decltype(typed_s)::value_type;
-
-        if constexpr(behavior::sequenceable<T> || std::same_as<T, nil>)
-        {
-          native_vector<object_ref> v;
-          for(auto const e : make_sequence_range(typed_s))
-          {
-            v.emplace_back(e);
-          }
-          return make_box<persistent_list>(
-            runtime::detail::native_persistent_list{ v.rbegin(), v.rend() });
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("invalid sequence: {}", typed_s->to_string()) };
-        }
-      },
-      s);
+    native_vector<object_ref> v;
+    for(auto const e : make_sequence_range(s))
+    {
+      v.emplace_back(e);
+    }
+    return make_box<persistent_list>(
+      runtime::detail::native_persistent_list{ v.rbegin(), v.rend() });
   }
 
   persistent_list_ref persistent_list::create(persistent_list_ref const s)

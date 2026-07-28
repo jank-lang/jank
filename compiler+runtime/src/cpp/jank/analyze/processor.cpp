@@ -2007,37 +2007,24 @@ namespace jank::analyze
       {
         auto arity_list_obj(it.first().unwrap());
 
-        /* TODO: Port visit_object: sequenceable. */
-        auto const err(runtime::visit_object(
-          [&](auto const typed_arity_list) -> jtl::result<void, error_ref> {
-            using T = typename decltype(typed_arity_list)::value_type;
-
-            if constexpr(runtime::behavior::sequenceable<T>)
-            {
-              auto arity_list(runtime::obj::persistent_list::create(typed_arity_list));
-
-              auto result(analyze_fn_arity(arity_list, name, current_frame));
-              if(result.is_err())
-              {
-                return result.expect_err_move();
-              }
-              arities.emplace_back(result.expect_ok_move());
-              return ok();
-            }
-            else
-            {
-              return error::analyze_invalid_fn(
-                "Invalid 'fn' syntax. Please provide either a list of arities or a "
-                "parameter vector.",
-                meta_source(full_list->get_meta()),
-                latest_expansion(macro_expansions));
-            }
-          },
-          arity_list_obj));
-
-        if(err.is_err())
+        if(arity_list_obj.has_behavior(object_behavior::sequence_like))
         {
-          return err.expect_err();
+          auto arity_list(runtime::obj::persistent_list::create(arity_list_obj));
+
+          auto result(analyze_fn_arity(arity_list, name, current_frame));
+          if(result.is_err())
+          {
+            return result.expect_err_move();
+          }
+          arities.emplace_back(result.expect_ok_move());
+        }
+        else
+        {
+          return error::analyze_invalid_fn(
+            "Invalid 'fn' syntax. Please provide either a list of arities or a "
+            "parameter vector.",
+            meta_source(full_list->get_meta()),
+            latest_expansion(macro_expansions));
         }
       }
     }

@@ -103,7 +103,7 @@ namespace clojure::data::json_native
           return map;
         }
 
-        if constexpr(behavior::seqable<T>)
+        if(typed_o.has_behavior(object_behavior::seqable))
         {
           auto array(nlohmann::json::array());
 

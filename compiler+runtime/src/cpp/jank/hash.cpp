@@ -167,53 +167,41 @@ namespace jank::hash
 
   u32 ordered(runtime::oref<runtime::object> const sequence)
   {
-    /* TODO: Port visit_object: sequenceable. */
-    return runtime::visit_object(
-      [](auto const typed_sequence) -> u32 {
-        using T = typename decltype(typed_sequence)::value_type;
-        if constexpr(runtime::behavior::sequenceable<T>)
-        {
-          u32 n{};
-          u32 hash{ 1 };
-          for(auto const e : make_sequence_range(typed_sequence))
-          {
-            hash = (31 * hash) + visit(e);
-            ++n;
-          }
+    if(sequence.has_behavior(runtime::object_behavior::sequence_like))
+    {
+      u32 n{};
+      u32 hash{ 1 };
+      for(auto const e : make_sequence_range(sequence))
+      {
+        hash = (31 * hash) + visit(e);
+        ++n;
+      }
 
-          return mix_collection_hash(hash, n);
-        }
-        else
-        {
-          return typed_sequence.to_hash();
-        }
-      },
-      sequence);
+      return mix_collection_hash(hash, n);
+    }
+    else
+    {
+      return sequence.to_hash();
+    }
   }
 
   u32 unordered(runtime::object_ref const sequence)
   {
-    /* TODO: Port visit_object: sequenceable. */
-    return runtime::visit_object(
-      [](auto const typed_sequence) -> u32 {
-        using T = typename decltype(typed_sequence)::value_type;
-        if constexpr(runtime::behavior::sequenceable<T>)
-        {
-          u32 n{};
-          u32 hash{ 1 };
-          for(auto const e : make_sequence_range(typed_sequence))
-          {
-            hash += visit(e);
-            ++n;
-          }
+    if(sequence.has_behavior(runtime::object_behavior::sequence_like))
+    {
+      u32 n{};
+      u32 hash{ 1 };
+      for(auto const e : make_sequence_range(sequence))
+      {
+        hash += visit(e);
+        ++n;
+      }
 
-          return mix_collection_hash(hash, n);
-        }
-        else
-        {
-          return typed_sequence.to_hash();
-        }
-      },
-      sequence);
+      return mix_collection_hash(hash, n);
+    }
+    else
+    {
+      return sequence.to_hash();
+    }
   }
 }

@@ -97,7 +97,7 @@ namespace jank::runtime::obj
     return make_box<persistent_string_sequence>(str, index);
   }
 
-  /* behavior::sequenceable */
+  /* behavior::sequence_like */
   object_ref persistent_string_sequence::first() const
   {
     auto const size(jtl::next_char_size(str->data, index));

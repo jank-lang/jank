@@ -94,7 +94,7 @@ namespace jank::runtime::obj
     return make_box<persistent_vector_sequence>(vec, index);
   }
 
-  /* behavior::sequenceable */
+  /* behavior::sequence_like */
   object_ref persistent_vector_sequence::first() const
   {
     return vec->data[index];

@@ -1586,7 +1586,7 @@ namespace jank::read::parse
                 make_box<obj::symbol>("clojure.core", "seq"),
                 cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
           }
-          if constexpr(behavior::sequenceable<T>)
+          if constexpr(behavior::sequence_like<T>)
           {
             auto const seq(typed_form->seq());
             if(seq.is_nil())

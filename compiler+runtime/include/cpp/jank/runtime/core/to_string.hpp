@@ -17,7 +17,7 @@ namespace jank::runtime
   void to_code_string(object_ref const o, jtl::string_builder &buff);
 
   template <typename T>
-  requires(behavior::object_like<T> && !behavior::sequenceable<T>)
+  requires(behavior::object_like<T> && !behavior::sequence_like<T>)
   void to_string(oref<T> const &s, jtl::string_builder &buff)
   {
     s->to_string(buff);
@@ -47,7 +47,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::sequenceable<T>
+  requires behavior::sequence_like<T>
   void to_string(oref<T> const &s, jtl::string_builder &buff)
   {
     if(s.is_nil())
@@ -71,7 +71,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::sequenceable<T>
+  requires behavior::sequence_like<T>
   jtl::immutable_string to_string(oref<T> const &s)
   {
     jtl::string_builder buff;
@@ -80,7 +80,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires(behavior::object_like<T> && !behavior::sequenceable<T>)
+  requires(behavior::object_like<T> && !behavior::sequence_like<T>)
   void to_code_string(oref<T> const &s, jtl::string_builder &buff)
   {
     buff(s->to_code_string());
@@ -110,7 +110,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::sequenceable<T>
+  requires behavior::sequence_like<T>
   void to_code_string(oref<T> const &s, jtl::string_builder &buff)
   {
     if(s.is_nil())
@@ -134,7 +134,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::sequenceable<T>
+  requires behavior::sequence_like<T>
   jtl::immutable_string to_code_string(oref<T> const &s)
   {
     jtl::string_builder buff;
