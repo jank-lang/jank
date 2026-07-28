@@ -754,7 +754,7 @@ namespace jank::runtime
         {
           return make_box<obj::big_decimal>(typed_o->to_real());
         }
-        else if constexpr(std::same_as<T, obj::real>)
+        else if constexpr(jtl::is_any_same<T, obj::real, obj::small_real>)
         {
           if(std::isnan(typed_o->data))
           {

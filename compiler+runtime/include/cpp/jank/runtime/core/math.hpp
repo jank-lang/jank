@@ -1209,6 +1209,11 @@ namespace jank::runtime
   {
     if constexpr(detail::primitive_number<L>)
     {
+      if(std::isnan(l))
+      {
+        return 0;
+      }
+
       return static_cast<i64>(l);
     }
     else if constexpr(!detail::valid_boxed_math<L> && !std::same_as<L, obj::character_ref>)

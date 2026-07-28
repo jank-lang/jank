@@ -959,7 +959,12 @@ namespace jank::runtime
       }
       if(detail::is_tagged_small_real(data))
       {
-        return static_cast<i64>(detail::as_real(data));
+        auto const r(detail::as_real(data));
+        if(std::isnan(r))
+        {
+          return 0;
+        }
+        return static_cast<i64>(r);
       }
 
       return ptr()->to_integer();
@@ -1501,7 +1506,12 @@ namespace jank::runtime
       }
       if(detail::is_tagged_small_real(data))
       {
-        return static_cast<i64>(detail::as_real(data));
+        auto const r(detail::as_real(data));
+        if(std::isnan(r))
+        {
+          return 0;
+        }
+        return static_cast<i64>(r);
       }
 
       return static_cast<T *>(data)->to_integer();
@@ -2142,6 +2152,10 @@ namespace jank::runtime
     /* behavior::number_like */
     i64 to_integer() const
     {
+      if(std::isnan(data))
+      {
+        return 0;
+      }
       return static_cast<i64>(data);
     }
 

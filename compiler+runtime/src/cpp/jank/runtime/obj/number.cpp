@@ -484,6 +484,11 @@ namespace jank::runtime::obj
 
   i64 small_real::to_integer() const
   {
+    if(std::isnan(data))
+    {
+      return 0;
+    }
+
     return static_cast<i64>(data);
   }
 
