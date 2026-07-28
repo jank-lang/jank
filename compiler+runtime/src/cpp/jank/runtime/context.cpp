@@ -710,7 +710,8 @@ namespace jank::runtime
 
     for(auto it(bindings->fresh_seq()); it.is_some(); it = it.next_in_place())
     {
-      auto const entry(it.first());
+      auto const entry(it.first().seq());
+      /* TODO: Port to nth when we can. */
       auto const var(try_object<var>(entry.first()));
       if(!var->dynamic.load())
       {

@@ -13,10 +13,10 @@ namespace jank::runtime::obj
   struct persistent_vector : object
   {
     static constexpr object_type obj_type{ object_type::persistent_vector };
-    static constexpr object_behavior obj_behaviors{
-      object_behavior::call | object_behavior::get | object_behavior::find
-      | object_behavior::compare | object_behavior::seqable | object_behavior::sequence_like
-    };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
+                                                    | object_behavior::find
+                                                    | object_behavior::compare
+                                                    | object_behavior::seqable };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
