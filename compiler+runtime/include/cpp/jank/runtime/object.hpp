@@ -293,7 +293,7 @@ namespace jank::runtime
    * be mindful to benchmark as we go, to ensure that the new virtual behaviors are comparable to
    * the visit-style behavior. If we can't get comparable performance for a behavior, we should
    * leave it as a `visit` style behavior for now. */
-  enum class object_behavior : u8
+  enum class object_behavior : u16
   {
     none = 0,
     call = 1 << 0,
@@ -301,6 +301,11 @@ namespace jank::runtime
     find = 1 << 2,
     compare = 1 << 3,
     number_like = 1 << 4,
+    ref_like = 1 << 5,
+    seqable = 1 << 6,
+    sequence_like = 1 << 7,
+    fresh_seqable = 1 << 8,
+    sequence_like_in_place = 1 << 9,
     //associatively_writable,
     //chunkable,
     //collection_like,
@@ -312,8 +317,6 @@ namespace jank::runtime
     //metadatable,
     //nameable,
     //realizable,
-    ref_like = 1 << 5,
-    //seqable,
     //sequential,
     //set_like,
     //stackable,
@@ -450,8 +453,22 @@ namespace jank::runtime
     virtual void add_watch(object_ref const key, object_ref const fn);
     virtual void remove_watch(object_ref const key);
 
+    /* behavior::number_like */
     virtual i64 to_integer() const;
     virtual f64 to_real() const;
+
+    /* behavior::seqable */
+    virtual object_ref seq() const;
+
+    /* behavior::sequence_like */
+    virtual object_ref first() const;
+    virtual object_ref next() const;
+
+    /* behavior::fresh_seqable */
+    virtual object_ref fresh_seq() const;
+
+    /* behavior::sequence_like_in_place */
+    virtual object_ref next_in_place();
 
     object_type type{};
     object_behavior behaviors{ object_behavior::none };

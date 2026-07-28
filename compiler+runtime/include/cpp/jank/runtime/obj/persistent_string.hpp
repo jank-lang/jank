@@ -12,8 +12,9 @@ namespace jank::runtime::obj
   struct persistent_string : object
   {
     static constexpr object_type obj_type{ object_type::persistent_string };
-    static constexpr object_behavior obj_behaviors{ object_behavior::get
-                                                    | object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{ object_behavior::get | object_behavior::compare
+                                                    | object_behavior::seqable
+                                                    | object_behavior::fresh_seqable };
     static constexpr bool pointer_free{ false };
     static GC_word gc_descriptor;
 
@@ -64,8 +65,10 @@ namespace jank::runtime::obj
     usize count() const;
 
     /* behavior::seqable */
-    obj::persistent_string_sequence_ref seq() const;
-    obj::persistent_string_sequence_ref fresh_seq() const;
+    object_ref seq() const override;
+
+    /* behavior::fresh_seqable */
+    object_ref fresh_seq() const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     jtl::immutable_string data;

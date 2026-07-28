@@ -12,6 +12,13 @@ namespace jank::runtime::obj::detail
   template <typename Derived, typename It>
   struct iterator_sequence : object
   {
+    static constexpr object_behavior obj_behaviors{ object_behavior::seqable
+                                                    | object_behavior::fresh_seqable
+                                                    | object_behavior::sequence_like
+                                                    | object_behavior::sequence_like_in_place };
+    static constexpr bool pointer_free{ false };
+    static constexpr bool is_sequential{ true };
+
     /* NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility) */
     iterator_sequence();
 
@@ -26,19 +33,20 @@ namespace jank::runtime::obj::detail
     uhash to_hash() const override;
 
     /* behavior::seqable */
-    oref<Derived> seq();
-    oref<Derived> fresh_seq() const;
+    object_ref seq() const override;
+
+    /* behavior::fresh_seqable */
+    object_ref fresh_seq() const override;
 
     /* behavior::countable */
     usize count() const;
 
-    /* behavior::sequenceable */
-    object_ref first() const;
+    /* behavior::sequence_like */
+    object_ref first() const override;
+    object_ref next() const override;
 
-    oref<Derived> next() const;
-
-    /* behavior::sequenceable_in_place */
-    oref<Derived> next_in_place();
+    /* behavior::sequence_like_in_place */
+    object_ref next_in_place() override;
 
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head);

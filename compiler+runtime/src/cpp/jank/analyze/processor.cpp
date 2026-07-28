@@ -1610,11 +1610,11 @@ namespace jank::analyze
     auto keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
         keys_and_exprs ret{};
-        for(auto seq{ typed_imap_obj->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
+        for(auto seq{ typed_imap_obj.fresh_seq() }; seq.is_some(); seq = seq.next_in_place())
         {
-          auto const e{ seq->first() };
-          auto const k_obj{ e->data[0] };
-          auto const v_obj{ e->data[1] };
+          auto const e{ seq.first() };
+          auto const k_obj{ e.first() };
+          auto const v_obj{ e.next().first() };
           if(!runtime::is_integral(k_obj))
           {
             return err("Map key for case* is expected to be an integer.");
@@ -3009,9 +3009,9 @@ namespace jank::analyze
       finally_{ make_box<obj::symbol>("finally") };
     bool has_catch{}, has_finally{};
 
-    for(auto it(list->fresh_seq()->next_in_place()); it.is_some(); it = it->next_in_place())
+    for(auto it(list->fresh_seq().next_in_place()); it.is_some(); it = it.next_in_place())
     {
-      auto const item(it->first());
+      auto const item(it.first());
       auto const type(runtime::visit_seqable(
         [](auto const typed_item) {
           using T = jtl::decay_t<decltype(typed_item)>::value_type;
@@ -3049,7 +3049,7 @@ namespace jank::analyze
                 latest_expansion(macro_expansions));
             }
 
-            auto const is_last(it->next().is_nil());
+            auto const is_last(it.next().is_nil());
             auto const form_type(is_last ? position : expression_position::statement);
             auto const form(analyze(item, try_frame, form_type, fn_ctx, is_last));
             if(form.is_err())
@@ -3280,9 +3280,9 @@ namespace jank::analyze
     native_vector<expression_ref> exprs;
     exprs.reserve(o->count());
     bool literal{ true };
-    for(auto d = o->fresh_seq(); d.is_some(); d = d->next_in_place())
+    for(auto d = o->fresh_seq(); d.is_some(); d = d.next_in_place())
     {
-      auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
+      auto res(analyze(d.first(), current_frame, expression_position::value, fn_ctx, true));
       if(res.is_err())
       {
         return res.expect_err();
@@ -3394,9 +3394,9 @@ namespace jank::analyze
         native_vector<expression_ref> exprs;
         exprs.reserve(typed_o->count());
         bool literal{ true };
-        for(auto d = typed_o->fresh_seq(); d.is_some(); d = d->next_in_place())
+        for(auto d{ typed_o->fresh_seq() }; d.is_some(); d = d.next_in_place())
         {
-          auto res(analyze(d->first(), current_frame, expression_position::value, fn_ctx, true));
+          auto res(analyze(d.first(), current_frame, expression_position::value, fn_ctx, true));
           if(res.is_err())
           {
             return res.expect_err();
@@ -3557,7 +3557,7 @@ namespace jank::analyze
     else if(first.get_type() == runtime::object_type::keyword && count <= 3)
     {
       return analyze(cons(make_box<obj::symbol>("cpp/jank.runtime.get"),
-                          cons(o->next()->first(), cons(first, o->next()->next()))),
+                          cons(o->next().first(), cons(first, o->next().next()))),
                      current_frame,
                      position,
                      fn_ctx,
@@ -4106,7 +4106,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_raw(
                "A call to 'cpp/raw' must take a string literal of C++ code and nothing else.",
-               object_source(l->next()->next()->first()),
+               object_source(l->next().next().first()),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 2));
     }
@@ -4213,10 +4213,10 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_cast("A call to 'cpp/cast' must only have a C++ type and a "
                                              "value as arguments and nothing else.",
-                                             object_source(l->next()->first()),
+                                             object_source(l->next().first()),
                                              error::note{
                                                "This form and all after it are unexpected.",
-                                               object_source(l->next()->next()->next()->first()),
+                                               object_source(l->next().next().next().first()),
                                              },
                                              latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 0));
@@ -4293,7 +4293,7 @@ namespace jank::analyze
                "and any specializations of 'jank::runtime::convert'.",
                cpp_util::get_qualified_type_name(value_type),
                cpp_util::get_qualified_type_name(type)),
-             object_source(l->next()->next()->first()),
+             object_source(l->next().next().first()),
              latest_expansion(macro_expansions))
       ->add_usage(read::parse::reparse_nth(l, 2));
   }
@@ -4327,11 +4327,11 @@ namespace jank::analyze
       return error::analyze_invalid_cpp_unsafe_cast(
                "A call to 'cpp/unsafe-cast' must only have a C++ type and a "
                "value as arguments and nothing else.",
-               object_source(l->next()->first()),
+               object_source(l->next().first()),
                /* TODO: Reparse for the note. */
                error::note{
                  "This form and all after it are unexpected.",
-                 object_source(l->next()->next()->next()->first()),
+                 object_source(l->next().next().next().first()),
                },
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 0));
@@ -4391,7 +4391,7 @@ namespace jank::analyze
              util::format("Invalid unsafe-cast from '{}' to '{}'.",
                           cpp_util::get_qualified_type_name(value_type),
                           cpp_util::get_qualified_type_name(type)),
-             object_source(l->next()->next()->first()),
+             object_source(l->next().next().first()),
              latest_expansion(macro_expansions))
       ->add_usage(read::parse::reparse_nth(l, 2));
   }
@@ -4416,7 +4416,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_box("A call to 'cpp/box' must only have a C++ pointer "
                                             "value as argument and nothing else.",
-                                            object_source(l->next()->next()->first()),
+                                            object_source(l->next().next().first()),
                                             latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 2));
     }
@@ -4493,7 +4493,7 @@ namespace jank::analyze
       return error::analyze_invalid_cpp_unbox(
                "A call to 'cpp/unbox' must only have a C++ type and a "
                "value as arguments and nothing else.",
-               object_source(l->next()->next()->next()->first()),
+               object_source(l->next().next().next().first()),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 3));
     }
@@ -4624,7 +4624,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_delete(
                "A call to 'cpp/delete' may only have one argument, which is the value to delete.",
-               object_source(l->next()->next()->first()),
+               object_source(l->next().next().first()),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 2));
     }
@@ -4677,7 +4677,7 @@ namespace jank::analyze
                util::format(
                  "Excess arguments provided for '{}' member access. Only one is expected.",
                  name),
-               object_source(l->next()->next()->first()),
+               object_source(l->next().next().first()),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 2));
     }

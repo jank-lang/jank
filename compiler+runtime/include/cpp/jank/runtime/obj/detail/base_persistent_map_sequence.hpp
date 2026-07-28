@@ -21,6 +21,10 @@ namespace jank::runtime::obj::detail
   {
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
+    static constexpr object_behavior obj_behaviors{ object_behavior::seqable
+                                                    | object_behavior::fresh_seqable
+                                                    | object_behavior::sequence_like
+                                                    | object_behavior::sequence_like_in_place };
 
     base_persistent_map_sequence(base_persistent_map_sequence &&) = default;
     base_persistent_map_sequence(base_persistent_map_sequence const &) = default;
@@ -38,15 +42,17 @@ namespace jank::runtime::obj::detail
     usize count() const;
 
     /* behavior::seqable */
-    oref<PT> seq();
-    oref<PT> fresh_seq() const;
+    object_ref seq() const override;
 
-    /* behavior::sequenceable */
-    obj::persistent_vector_ref first() const;
-    oref<PT> next() const;
+    /* behavior::fresh_seqable */
+    object_ref fresh_seq() const override;
 
-    /* behavior::sequenceable_in_place */
-    oref<PT> next_in_place();
+    /* behavior::sequence_like */
+    object_ref first() const override;
+    object_ref next() const override;
+
+    /* behavior::sequence_like_in_place */
+    object_ref next_in_place() override;
 
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head);

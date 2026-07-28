@@ -30,12 +30,12 @@ namespace jank::runtime::obj
     jank_debug_assert(meta.is_some());
   }
 
-  chunked_cons_ref chunked_cons::seq() const
+  object_ref chunked_cons::seq() const
   {
     return runtime::detail::untagged(this);
   }
 
-  chunked_cons_ref chunked_cons::fresh_seq() const
+  object_ref chunked_cons::fresh_seq() const
   {
     return make_box<chunked_cons>(head, tail);
   }
@@ -110,7 +110,7 @@ namespace jank::runtime::obj
       o->tail);
   }
 
-  chunked_cons_ref chunked_cons::next_in_place()
+  object_ref chunked_cons::next_in_place()
   {
     /* TODO: Port visit_object: chunk_like. */
     return visit_object(
@@ -193,7 +193,7 @@ namespace jank::runtime::obj
   chunked_cons_ref chunked_cons::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(fresh_seq());
+    auto const ret(expect_object<obj::chunked_cons>(fresh_seq()));
     ret->meta = meta;
     return ret;
   }

@@ -89,8 +89,8 @@ namespace jank::runtime
       [&](auto const typed_rename_map) -> jtl::result<void, error_ref> {
         for(auto const p : make_sequence_range(typed_rename_map))
         {
-          auto const old_name{ first(p) };
-          auto const new_name{ second(p) };
+          auto const old_name{ p.first() };
+          auto const new_name{ p.next().first() };
 
           if(old_name.get_type() != object_type::symbol
              || !expect_object<obj::symbol>(old_name)->ns.empty())

@@ -17,12 +17,12 @@ namespace jank::runtime::obj
   {
   }
 
-  iterator_ref iterator::seq() const
+  object_ref iterator::seq() const
   {
     return runtime::detail::untagged(this);
   }
 
-  iterator_ref iterator::fresh_seq() const
+  object_ref iterator::fresh_seq() const
   {
     return make_box<iterator>(fn, current);
   }
@@ -32,7 +32,7 @@ namespace jank::runtime::obj
     return current;
   }
 
-  iterator_ref iterator::next() const
+  object_ref iterator::next() const
   {
     iterator_ref const n{ cached_next.load() ?: iterator_ref{} };
     if(n.is_some())
@@ -47,7 +47,7 @@ namespace jank::runtime::obj
     return ret;
   }
 
-  iterator_ref iterator::next_in_place()
+  object_ref iterator::next_in_place()
   {
     iterator_ref const n{ cached_next.load() ?: iterator_ref{} };
     if(n.is_some())

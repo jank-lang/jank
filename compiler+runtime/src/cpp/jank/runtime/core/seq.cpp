@@ -41,7 +41,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::seqable<T>)
         {
-          return typed_o->seq().is_nil();
+          return typed_o.seq().is_nil();
         }
         else
         {
@@ -301,7 +301,7 @@ namespace jank::runtime
         }
         else if constexpr(behavior::seqable<T>)
         {
-          auto const ret(typed_s->seq());
+          auto const ret(typed_s.seq());
           if(ret.is_nil())
           {
             return ret;
@@ -359,17 +359,17 @@ namespace jank::runtime
         }
         else if constexpr(behavior::sequenceable<T>)
         {
-          return typed_s->first();
+          return typed_s.first();
         }
         else if constexpr(behavior::seqable<T>)
         {
-          auto const ret(typed_s->seq());
+          auto const ret(typed_s.seq());
           if(ret.is_nil())
           {
             return ret;
           }
 
-          return ret->first();
+          return ret.first();
         }
         else
         {
@@ -377,11 +377,6 @@ namespace jank::runtime
         }
       },
       s);
-  }
-
-  object_ref second(object_ref const s)
-  {
-    return first(next(s));
   }
 
   object_ref next(object_ref const s)
@@ -397,17 +392,17 @@ namespace jank::runtime
         }
         else if constexpr(behavior::sequenceable<T>)
         {
-          return typed_s->next();
+          return typed_s.next();
         }
         else if constexpr(behavior::seqable<T>)
         {
-          auto const s(typed_s->seq());
+          auto const s(typed_s.seq());
           if(s.is_nil())
           {
             return s;
           }
 
-          return s->next();
+          return s.next();
         }
         else
         {
@@ -430,21 +425,21 @@ namespace jank::runtime
         }
         else if constexpr(behavior::sequenceable_in_place<T>)
         {
-          return typed_s->next_in_place();
+          return typed_s.next_in_place();
         }
         else if constexpr(behavior::sequenceable<T>)
         {
-          return typed_s->next();
+          return typed_s.next();
         }
         else if constexpr(behavior::seqable<T>)
         {
-          auto const ret(typed_s->seq());
+          auto const ret(typed_s.seq());
           if(ret.is_nil())
           {
             return ret;
           }
 
-          return ret->next_in_place();
+          return ret.next_in_place();
         }
         else
         {
@@ -472,7 +467,7 @@ namespace jank::runtime
     }
     return visit_seqable(
       [=](auto const typed_s) -> object_ref {
-        auto const seq(typed_s->seq());
+        auto const seq(typed_s.seq());
         if(seq.is_nil())
         {
           return obj::persistent_list::empty();
@@ -503,7 +498,7 @@ namespace jank::runtime
         }
         else
         {
-          return make_box<jank::runtime::obj::cons>(head, typed_tail->seq());
+          return make_box<jank::runtime::obj::cons>(head, typed_tail.seq());
         }
       },
       [=]() -> object_ref {
@@ -683,10 +678,10 @@ namespace jank::runtime
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
               R ret{ typed_m };
-              for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
+              for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq.next_in_place())
               {
-                auto const &e(seq->first());
-                ret = assoc(ret, e->data[0], e->data[1]);
+                auto const e(seq.first());
+                ret = assoc(ret, e.first(), e.next().first());
               }
               return ret;
             },
@@ -720,10 +715,10 @@ namespace jank::runtime
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
               R ret{ typed_m };
-              for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
+              for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq.next_in_place())
               {
-                auto const &e(seq->first());
-                ret = assoc_in_place(ret, e->data[0], e->data[1]);
+                auto const &e(seq.first());
+                ret = assoc_in_place(ret, e.first(), e.next().first());
               }
               return ret;
             },

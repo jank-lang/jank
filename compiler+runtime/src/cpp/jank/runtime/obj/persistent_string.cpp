@@ -179,12 +179,12 @@ namespace jank::runtime::obj
     return data.size();
   }
 
-  persistent_string_sequence_ref persistent_string::seq() const
+  object_ref persistent_string::seq() const
   {
     return fresh_seq();
   }
 
-  persistent_string_sequence_ref persistent_string::fresh_seq() const
+  object_ref persistent_string::fresh_seq() const
   {
     if(data.empty())
     {

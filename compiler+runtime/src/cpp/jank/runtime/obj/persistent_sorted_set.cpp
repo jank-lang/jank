@@ -110,12 +110,12 @@ namespace jank::runtime::obj
     return hash::unordered(data.begin(), data.end());
   }
 
-  persistent_sorted_set_sequence_ref persistent_sorted_set::seq() const
+  object_ref persistent_sorted_set::seq() const
   {
     return fresh_seq();
   }
 
-  persistent_sorted_set_sequence_ref persistent_sorted_set::fresh_seq() const
+  object_ref persistent_sorted_set::fresh_seq() const
   {
     if(data.empty())
     {

@@ -14,7 +14,10 @@ namespace jank::runtime::obj
     using value_type = runtime::detail::native_persistent_list;
 
     static constexpr object_type obj_type{ object_type::persistent_list };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::seqable
+                                                    | object_behavior::sequence_like
+                                                    | object_behavior::fresh_seqable
+                                                    | object_behavior::sequence_like_in_place };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -67,8 +70,10 @@ namespace jank::runtime::obj
     void set_meta(object_ref const o);
 
     /* behavior::seqable */
-    obj::persistent_list_ref seq() const;
-    obj::persistent_list_ref fresh_seq() const;
+    object_ref seq() const override;
+
+    /* behavior::fresh_seqable */
+    object_ref fresh_seq() const override;
 
     /* behavior::countable */
     usize count() const;
@@ -76,12 +81,12 @@ namespace jank::runtime::obj
     /* behavior::conjable */
     persistent_list_ref conj(object_ref const head) const;
 
-    /* behavior::sequenceable */
-    object_ref first() const;
-    obj::persistent_list_ref next() const;
+    /* behavior::sequence_like */
+    object_ref first() const override;
+    object_ref next() const override;
 
-    /* behavior::sequenceable_in_place */
-    obj::persistent_list_ref next_in_place();
+    /* behavior::sequence_like_in_place */
+    object_ref next_in_place() override;
 
     /* behavior::stackable */
     object_ref peek() const;

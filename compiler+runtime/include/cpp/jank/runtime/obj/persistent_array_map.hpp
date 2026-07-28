@@ -17,7 +17,9 @@ namespace jank::runtime::obj
   {
     static constexpr object_type obj_type{ object_type::persistent_array_map };
     static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
-                                                    | object_behavior::find };
+                                                    | object_behavior::find
+                                                    | object_behavior::seqable
+                                                    | object_behavior::fresh_seqable };
     static constexpr u8 max_size{ value_type::max_size };
     using parent_type = obj::detail::base_persistent_map<persistent_array_map,
                                                          persistent_array_map_sequence,

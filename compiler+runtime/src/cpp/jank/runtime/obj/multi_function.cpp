@@ -194,17 +194,17 @@ namespace jank::runtime::obj
       __rt_ctx->intern_var("clojure.core", "parents").expect_ok()->deref()
     };
 
-    for(auto it(fresh_seq(parents.call(hierarchy, y))); it.is_some(); it = next_in_place(it))
+    for(auto it(parents.call(hierarchy, y).fresh_seq()); it.is_some(); it = it.next_in_place())
     {
-      if(is_preferred(hierarchy, x, first(it)))
+      if(is_preferred(hierarchy, x, it.first()))
       {
         return true;
       }
     }
 
-    for(auto it(fresh_seq(parents.call(hierarchy, x))); it.is_some(); it = next_in_place(it))
+    for(auto it(parents.call(hierarchy, x).fresh_seq()); it.is_some(); it = it.next_in_place())
     {
-      if(is_preferred(hierarchy, first(it), y))
+      if(is_preferred(hierarchy, it.first(), y))
       {
         return true;
       }
@@ -261,21 +261,21 @@ namespace jank::runtime::obj
     /* TODO: Clojure uses a RW lock here for better parallelism. */
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
     object_ref best_value{};
-    persistent_vector_sequence_ref best_entry{};
+    object_ref best_entry{};
 
-    for(auto it(method_table->fresh_seq()); it.is_some(); it = it->next_in_place())
+    for(auto it(method_table->fresh_seq()); it.is_some(); it = it.next_in_place())
     {
-      auto const entry(it->first());
-      auto const entry_key(entry->seq()->first());
+      auto const entry(it.first());
+      auto const entry_key(entry.seq().first());
 
       if(is_a(cached_hierarchy, dispatch_val, entry_key))
       {
-        if(best_entry.is_nil() || is_dominant(cached_hierarchy, entry_key, best_entry->first()))
+        if(best_entry.is_nil() || is_dominant(cached_hierarchy, entry_key, best_entry.first()))
         {
-          best_entry = entry->seq();
+          best_entry = entry.seq();
         }
 
-        if(!is_dominant(cached_hierarchy, best_entry->first(), entry_key))
+        if(!is_dominant(cached_hierarchy, best_entry.first(), entry_key))
         {
           throw std::runtime_error{ util::format(
             "Multiple methods in multimethod '{}' match dispatch value: {} -> {} and {}, and "
@@ -283,7 +283,7 @@ namespace jank::runtime::obj
             runtime::to_string(name),
             runtime::to_string(dispatch_val),
             runtime::to_string(entry_key),
-            runtime::to_string(best_entry->first())) };
+            runtime::to_string(best_entry.first())) };
         }
       }
     }

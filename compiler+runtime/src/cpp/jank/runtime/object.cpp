@@ -73,7 +73,7 @@ namespace jank::runtime
 
   bool object::has_behavior(object_behavior const b) const
   {
-    return (behaviors & b) != object_behavior::none;
+    return (behaviors & b) == b;
   }
 
   /* callable */
@@ -258,6 +258,37 @@ namespace jank::runtime
     throw error::runtime_unsupported_behavior(type,
                                               "number_like",
                                               object_source(runtime::detail::untagged(this)));
+  }
+
+  object_ref object::seq() const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "seqable",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  object_ref object::first() const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "sequence_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  object_ref object::next() const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "sequence_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  object_ref object::fresh_seq() const
+  {
+    return seq();
+  }
+
+  object_ref object::next_in_place()
+  {
+    return next();
   }
 
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept

@@ -44,12 +44,12 @@ namespace jank::runtime::obj
     return make_box<repeat>(count, value);
   }
 
-  repeat_ref repeat::seq() const
+  object_ref repeat::seq() const
   {
     return runtime::detail::untagged(this);
   }
 
-  repeat_ref repeat::fresh_seq() const
+  object_ref repeat::fresh_seq() const
   {
     if(count == infinite)
     {
@@ -63,7 +63,7 @@ namespace jank::runtime::obj
     return value;
   }
 
-  repeat_ref repeat::next() const
+  object_ref repeat::next() const
   {
     if(count == infinite)
     {
@@ -76,7 +76,7 @@ namespace jank::runtime::obj
     return make_box<repeat>(count - 1, value);
   }
 
-  repeat_ref repeat::next_in_place()
+  object_ref repeat::next_in_place()
   {
     if(count == infinite)
     {
@@ -123,7 +123,7 @@ namespace jank::runtime::obj
   repeat_ref repeat::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(fresh_seq());
+    auto const ret(expect_object<obj::repeat>(fresh_seq()));
     ret->meta = meta;
     return ret;
   }

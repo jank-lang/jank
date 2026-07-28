@@ -17,12 +17,12 @@ namespace jank::runtime::obj
   {
   }
 
-  cons_ref cons::seq() const
+  object_ref cons::seq() const
   {
     return runtime::detail::untagged(this);
   }
 
-  cons_ref cons::fresh_seq() const
+  object_ref cons::fresh_seq() const
   {
     return make_box<cons>(head, tail);
   }
@@ -39,7 +39,7 @@ namespace jank::runtime::obj
       return {};
     }
 
-    return runtime::seq(tail);
+    return tail.seq();
   }
 
   bool cons::equal(object const &o) const
@@ -83,7 +83,7 @@ namespace jank::runtime::obj
   cons_ref cons::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(fresh_seq());
+    auto ret(expect_object<obj::cons>(fresh_seq()));
     ret->meta = meta;
     return ret;
   }

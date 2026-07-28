@@ -58,29 +58,14 @@ namespace jank::runtime
 
     buff('(');
     bool needs_space{};
-    if constexpr(behavior::sequenceable_in_place<T>)
+    for(auto it{ s.fresh_seq() }; it.is_some(); it = it.next_in_place())
     {
-      for(auto it{ s->fresh_seq() }; it.is_some(); it = it->next_in_place())
+      if(needs_space)
       {
-        if(needs_space)
-        {
-          buff(' ');
-        }
-        runtime::to_string(it->first(), buff);
-        needs_space = true;
+        buff(' ');
       }
-    }
-    else
-    {
-      for(object_ref it{ s->seq() }; it.is_some(); it = runtime::next(it))
-      {
-        if(needs_space)
-        {
-          buff(' ');
-        }
-        runtime::to_string(runtime::first(it), buff);
-        needs_space = true;
-      }
+      runtime::to_string(it.first(), buff);
+      needs_space = true;
     }
     buff(')');
   }
@@ -136,29 +121,14 @@ namespace jank::runtime
 
     buff('(');
     bool needs_space{};
-    if constexpr(behavior::sequenceable_in_place<T>)
+    for(auto it{ s.fresh_seq() }; it.is_some(); it = it.next_in_place())
     {
-      for(auto it{ s->fresh_seq() }; it.is_some(); it = it->next_in_place())
+      if(needs_space)
       {
-        if(needs_space)
-        {
-          buff(' ');
-        }
-        runtime::to_code_string(it->first(), buff);
-        needs_space = true;
+        buff(' ');
       }
-    }
-    else
-    {
-      for(object_ref it{ s->seq() }; it.is_some(); it = runtime::next(it))
-      {
-        if(needs_space)
-        {
-          buff(' ');
-        }
-        runtime::to_code_string(runtime::first(it), buff);
-        needs_space = true;
-      }
+      runtime::to_code_string(it.first(), buff);
+      needs_space = true;
     }
     buff(')');
   }

@@ -715,10 +715,10 @@ namespace jank::runtime
       frame.bindings = tbfs.front().bindings;
     }
 
-    for(auto it(bindings->fresh_seq()); it.is_some(); it = it->next_in_place())
+    for(auto it(bindings->fresh_seq()); it.is_some(); it = it.next_in_place())
     {
-      auto const entry(it->first());
-      auto const var(try_object<var>(entry->data[0]));
+      auto const entry(it.first());
+      auto const var(try_object<var>(entry.first()));
       if(!var->dynamic.load())
       {
         return err(
@@ -730,17 +730,18 @@ namespace jank::runtime
 
       /* The binding may already be a thread binding if we're just pushing the previous
        * bindings again to give a scratch pad for some upcoming code. */
-      if(entry->data[1].get_type() == object_type::var_thread_binding)
+      auto const entry_val{ entry.next().first() };
+      if(entry_val.get_type() == object_type::var_thread_binding)
       {
         frame.bindings = frame.bindings->assoc(
           var,
-          make_box<var_thread_binding>(expect_object<var_thread_binding>(entry->data[1])->value,
+          make_box<var_thread_binding>(expect_object<var_thread_binding>(entry_val)->value,
                                        thread_id));
       }
       else
       {
         frame.bindings
-          = frame.bindings->assoc(var, make_box<var_thread_binding>(entry->data[1], thread_id));
+          = frame.bindings->assoc(var, make_box<var_thread_binding>(entry_val, thread_id));
       }
     }
 

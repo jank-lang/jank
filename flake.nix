@@ -188,6 +188,16 @@
             pkg-config
             glfw3
             libGL
+            sqlite
+
+            gnumake
+            alsa-lib
+            xorg.libX11
+            xorg.libXcursor
+            xorg.libXi
+            xorg.libXinerama
+            xorg.libXrandr
+            xorg.xorgproto
 
             ## Book.
             mdbook

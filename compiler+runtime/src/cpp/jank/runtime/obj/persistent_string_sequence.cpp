@@ -87,12 +87,12 @@ namespace jank::runtime::obj
   }
 
   /* behavior::seqable */
-  persistent_string_sequence_ref persistent_string_sequence::seq()
+  object_ref persistent_string_sequence::seq() const
   {
     return runtime::detail::untagged(this);
   }
 
-  persistent_string_sequence_ref persistent_string_sequence::fresh_seq() const
+  object_ref persistent_string_sequence::fresh_seq() const
   {
     return make_box<persistent_string_sequence>(str, index);
   }
@@ -104,7 +104,7 @@ namespace jank::runtime::obj
     return make_box<character>(str->data.substr(index, size));
   }
 
-  persistent_string_sequence_ref persistent_string_sequence::next() const
+  object_ref persistent_string_sequence::next() const
   {
     auto const n(index + jtl::next_char_size(str->data, index));
 
@@ -116,7 +116,7 @@ namespace jank::runtime::obj
     return make_box<persistent_string_sequence>(str, n);
   }
 
-  persistent_string_sequence_ref persistent_string_sequence::next_in_place()
+  object_ref persistent_string_sequence::next_in_place()
   {
     index += jtl::next_char_size(str->data, index);
 

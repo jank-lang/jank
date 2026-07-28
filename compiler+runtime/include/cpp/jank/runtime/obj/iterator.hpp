@@ -13,7 +13,10 @@ namespace jank::runtime::obj
   struct iterator : object
   {
     static constexpr object_type obj_type{ object_type::iterator };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::seqable
+                                                    | object_behavior::fresh_seqable
+                                                    | object_behavior::sequence_like
+                                                    | object_behavior::sequence_like_in_place };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -28,19 +31,23 @@ namespace jank::runtime::obj
     uhash to_hash() const override;
 
     /* behavior::seqable */
-    iterator_ref seq() const;
-    iterator_ref fresh_seq() const;
+    object_ref seq() const override;
 
-    /* behavior::sequenceable */
-    object_ref first() const;
-    iterator_ref next() const;
+    /* behavior::fresh_seqable */
+    object_ref fresh_seq() const override;
+
+    /* behavior::sequence_like */
+    object_ref first() const override;
+    object_ref next() const override;
+
+    /* behavior::conjable */
     obj::cons_ref conj(object_ref const head) const;
 
     /* behavior::collection_like */
     static persistent_list_ref empty();
 
-    /* behavior::sequenceable_in_place */
-    iterator_ref next_in_place();
+    /* behavior::sequence_like_in_place */
+    object_ref next_in_place() override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     /* TODO: Support chunking. */

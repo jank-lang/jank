@@ -32,12 +32,12 @@ namespace jank::runtime::behavior
 
   template <typename T>
   concept sequenceable_in_place = requires(T * const t) {
-    /* Each call to next() allocates a new sequence_ptr, since it's polymorphic. When iterating
+    /* Each call to next() allocates a new sequence, since it's polymorphic. When iterating
      * over a large sequence, this can mean a _lot_ of allocations. However, if you own the
-     * sequence_ptr you have, typically meaning it wasn't a parameter, then you can mutate it
+     * sequence you have, typically meaning it wasn't a parameter, then you can mutate it
      * in place using this function. No allocations will happen.
      *
-     * If you don't own your sequence_ptr, you can call next() on it once, to get one you
+     * If you don't own your sequence, you can call next() on it once, to get one you
      * do own, and then next_in_place() on that to your heart's content.
      *
      * Using an object after calling next_in_place() on it is UB, even if the return value
@@ -54,7 +54,7 @@ namespace jank::runtime::behavior
      *
      *   (let [s (fresh-seq ...)
      *         s'  (-> s next-in-place)
-     *         s'' (-> s' next-in-place)]
+     *         s'' (-> s' next-in-place next-in-place)]
      *                 ^---- OK: seq ownership transferred from s' to s''
      *     ...)
      *
@@ -68,7 +68,7 @@ namespace jank::runtime::behavior
      * next_in_place() can also assume the sequenceable_in_place is non-empty,
      * having retained any and all invariants from being returned from {fresh_}seq() or next{_in_place}().
      * This enables some checks at the beginning of the member function to be elided when
-     * compared to next(), such as bounds or emptiness checks.  **/
+     * compared to next(), such as bounds or emptiness checks. */
     { t->next_in_place() }; // -> sequenceable;
   };
 }

@@ -13,75 +13,14 @@ namespace jank::runtime
     using keyword_ref = oref<struct keyword>;
   }
 
-  template <typename T>
-  requires behavior::seqable<T>
-  auto seq(oref<T> const &s)
-  {
-    return s->seq();
-  }
-
-  object_ref seq(object_ref const s);
-
-  template <typename T>
-  requires behavior::seqable<T>
-  auto fresh_seq(oref<T> const &s)
-  {
-    return s->fresh_seq();
-  }
-
-  object_ref fresh_seq(object_ref const s);
-
-  template <typename T>
-  requires behavior::sequenceable<T>
-  auto next(oref<T> const &s)
-  {
-    return s->next();
-  }
-
-  object_ref next(object_ref const s);
   object_ref more(object_ref const s);
-
-  template <typename T>
-  requires behavior::sequenceable_in_place<T>
-  auto next_in_place(oref<T> const &s)
-  {
-    return s->next_in_place();
-  }
-
-  template <typename T>
-  requires(behavior::sequenceable<T> && !behavior::sequenceable_in_place<T>)
-  auto next_in_place(oref<T> const &s)
-  {
-    /* Not all sequences can be updated in place. For those, just gracefully
-     * do a normal next. */
-    return s->next();
-  }
-
-  object_ref next_in_place(object_ref const s);
-
   object_ref rest(object_ref const s);
 
   template <typename T>
-  requires behavior::sequenceable<T>
-  auto first(oref<T> const &s) -> decltype(s->first())
-  {
-    if(s.is_nil())
-    {
-      return {};
-    }
-    return s->first();
-  }
-
-  object_ref first(object_ref const s);
-
-  template <typename T>
-  requires behavior::sequenceable<T>
   auto second(oref<T> const &s)
   {
-    return first(next(s));
+    return s.next().first();
   }
-
-  object_ref second(object_ref const s);
 
   bool is_empty(object_ref const o);
   bool is_seq(object_ref const o);

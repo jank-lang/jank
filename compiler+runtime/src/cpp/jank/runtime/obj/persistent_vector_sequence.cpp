@@ -84,12 +84,12 @@ namespace jank::runtime::obj
   }
 
   /* behavior::seqable */
-  persistent_vector_sequence_ref persistent_vector_sequence::seq()
+  object_ref persistent_vector_sequence::seq() const
   {
     return this;
   }
 
-  persistent_vector_sequence_ref persistent_vector_sequence::fresh_seq() const
+  object_ref persistent_vector_sequence::fresh_seq() const
   {
     return make_box<persistent_vector_sequence>(vec, index);
   }
@@ -100,7 +100,7 @@ namespace jank::runtime::obj
     return vec->data[index];
   }
 
-  persistent_vector_sequence_ref persistent_vector_sequence::next() const
+  object_ref persistent_vector_sequence::next() const
   {
     auto n(index);
     ++n;
@@ -113,7 +113,7 @@ namespace jank::runtime::obj
     return make_box<persistent_vector_sequence>(vec, n);
   }
 
-  persistent_vector_sequence_ref persistent_vector_sequence::next_in_place()
+  object_ref persistent_vector_sequence::next_in_place()
   {
     ++index;
 

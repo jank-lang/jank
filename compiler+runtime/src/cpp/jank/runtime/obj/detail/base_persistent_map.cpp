@@ -136,7 +136,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  oref<ST> base_persistent_map<PT, ST, V>::seq() const
+  object_ref base_persistent_map<PT, ST, V>::seq() const
   {
     if(static_cast<PT const *>(this)->data.empty())
     {
@@ -148,7 +148,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  oref<ST> base_persistent_map<PT, ST, V>::fresh_seq() const
+  object_ref base_persistent_map<PT, ST, V>::fresh_seq() const
   {
     if(static_cast<PT const *>(this)->data.empty())
     {

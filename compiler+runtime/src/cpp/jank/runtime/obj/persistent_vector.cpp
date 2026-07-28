@@ -166,12 +166,12 @@ namespace jank::runtime::obj
     return 0;
   }
 
-  persistent_vector_sequence_ref persistent_vector::seq() const
+  object_ref persistent_vector::seq() const
   {
     return fresh_seq();
   }
 
-  persistent_vector_sequence_ref persistent_vector::fresh_seq() const
+  object_ref persistent_vector::fresh_seq() const
   {
     if(data.empty())
     {

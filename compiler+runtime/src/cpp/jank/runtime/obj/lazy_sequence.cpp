@@ -36,7 +36,7 @@ namespace jank::runtime::obj
     return realize();
   }
 
-  lazy_sequence_ref lazy_sequence::fresh_seq() const
+  object_ref lazy_sequence::fresh_seq() const
   {
     auto const ret{ realize() };
     if(ret.is_nil())
@@ -45,7 +45,7 @@ namespace jank::runtime::obj
     }
 
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
-    auto const r(runtime::fresh_seq(s));
+    auto const r(s.fresh_seq());
     jank_debug_assert(r.is_some());
     return make_box<lazy_sequence>(jank_nil, r);
   }
@@ -122,7 +122,7 @@ namespace jank::runtime::obj
       {
         ls = unwrap(ls);
       }
-      s = runtime::seq(ls);
+      s = ls.seq();
     }
     return s;
   }

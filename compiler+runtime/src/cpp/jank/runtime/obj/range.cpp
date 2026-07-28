@@ -113,12 +113,12 @@ namespace jank::runtime::obj
                                         : static_cast<bounds_check_t>(negative_step_bounds_check));
   }
 
-  range_ref range::seq() const
+  object_ref range::seq() const
   {
     return runtime::detail::untagged(this);
   }
 
-  range_ref range::fresh_seq() const
+  object_ref range::fresh_seq() const
   {
     return make_box<range>(start, end, step, bounds_check);
   }
@@ -162,7 +162,7 @@ namespace jank::runtime::obj
     chunk_next = make_box<range>(val, end, step, bounds_check);
   }
 
-  range_ref range::next() const
+  object_ref range::next() const
   {
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
     if(cached_next.is_some())
@@ -185,7 +185,7 @@ namespace jank::runtime::obj
     return chunked_next();
   }
 
-  range_ref range::next_in_place()
+  object_ref range::next_in_place()
   {
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
     force_chunk();
@@ -254,7 +254,7 @@ namespace jank::runtime::obj
   range_ref range::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(fresh_seq());
+    auto ret(expect_object<obj::range>(fresh_seq()));
     ret->meta = meta;
     return ret;
   }

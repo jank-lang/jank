@@ -111,12 +111,12 @@ namespace jank::runtime::obj
     return hash::ordered(data.begin(), data.end());
   }
 
-  persistent_list_ref persistent_list::seq() const
+  object_ref persistent_list::seq() const
   {
     return fresh_seq();
   }
 
-  persistent_list_ref persistent_list::fresh_seq() const
+  object_ref persistent_list::fresh_seq() const
   {
     if(data.empty())
     {
@@ -147,7 +147,7 @@ namespace jank::runtime::obj
     return first.unwrap();
   }
 
-  persistent_list_ref persistent_list::next() const
+  object_ref persistent_list::next() const
   {
     if(data.size() < 2)
     {
@@ -156,7 +156,7 @@ namespace jank::runtime::obj
     return make_box<persistent_list>(data.rest());
   }
 
-  persistent_list_ref persistent_list::next_in_place()
+  object_ref persistent_list::next_in_place()
   {
     if(data.size() < 2)
     {
