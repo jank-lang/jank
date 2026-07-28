@@ -235,6 +235,7 @@
     clojure.string-test.lower-case
     clojure.string-test.replace
     clojure.string-test.reverse
+    clojure.string-test.split-lines
     clojure.string-test.starts-with-qmark
     clojure.string-test.upper-case
   ])
