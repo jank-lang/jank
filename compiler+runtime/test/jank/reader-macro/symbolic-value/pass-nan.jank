@@ -1,3 +1,4 @@
+(assert (cpp/std.isnan ##NaN))
 (assert (NaN? ##NaN))
 
 :success
