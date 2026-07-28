@@ -86,7 +86,7 @@ namespace jank::runtime::obj
   /* behavior::seqable */
   object_ref persistent_vector_sequence::seq() const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   object_ref persistent_vector_sequence::fresh_seq() const
@@ -122,11 +122,11 @@ namespace jank::runtime::obj
       return {};
     }
 
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   cons_ref persistent_vector_sequence::conj(object_ref const head)
   {
-    return make_box<cons>(head, this);
+    return make_box<cons>(head, runtime::detail::untagged(this));
   }
 }

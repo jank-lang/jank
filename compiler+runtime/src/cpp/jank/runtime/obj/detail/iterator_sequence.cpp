@@ -70,7 +70,7 @@ namespace jank::runtime::obj::detail
   template <typename Derived, typename It>
   object_ref iterator_sequence<Derived, It>::seq() const
   {
-    return const_cast<Derived *>(static_cast<Derived const *>(this));
+    return runtime::detail::untagged(static_cast<Derived const *>(this));
   }
 
   template <typename Derived, typename It>
@@ -115,13 +115,13 @@ namespace jank::runtime::obj::detail
       return {};
     }
 
-    return static_cast<Derived *>(this);
+    return runtime::detail::untagged(static_cast<Derived *>(this));
   }
 
   template <typename Derived, typename It>
   obj::cons_ref iterator_sequence<Derived, It>::conj(object_ref const head)
   {
-    return make_box<obj::cons>(head, static_cast<Derived *>(this));
+    return make_box<obj::cons>(head, runtime::detail::untagged(static_cast<Derived *>(this)));
   }
 
   template struct iterator_sequence<persistent_sorted_set_sequence,

@@ -54,12 +54,12 @@ namespace jank::runtime::obj
 
   jtl::immutable_string cons::to_string() const
   {
-    return runtime::to_string(seq());
+    return runtime::to_string(expect_object<obj::cons>(seq()));
   }
 
   jtl::immutable_string cons::to_code_string() const
   {
-    return runtime::to_code_string(seq());
+    return runtime::to_code_string(expect_object<obj::cons>(seq()));
   }
 
   uhash cons::to_hash() const

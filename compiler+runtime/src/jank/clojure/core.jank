@@ -211,17 +211,17 @@
        should not be used on any Iterable whose iterator repeatedly
        returns the same mutable object."
        :inline (fn* [o]
-                 (list 'cpp/jank.runtime.seq o))}
+                 (list '.seq o))}
   seq
   (fn* seq [o]
-    (cpp/jank.runtime.seq o)))
+    (.seq o)))
 
 (def ^{:arglists '([coll])
        :inline (fn* [o]
-                 (list 'cpp/jank.runtime.fresh_seq o))}
+                 (list '.fresh_seq o))}
   fresh-seq
   (fn* fresh-seq [o]
-    (cpp/jank.runtime.fresh_seq o)))
+    (.fresh_seq o)))
 
 (def ^{:arglists '([coll])
        :doc "Returns the first item in the collection. Calls seq on its
@@ -249,10 +249,10 @@
 
 (def ^{:arglists '([coll])
        :inline (fn* [o]
-                 (list 'cpp/jank.runtime.next_in_place o))}
+                 (list '.next_in_place o))}
   next-in-place
   (fn* next-in-place [o]
-    (cpp/jank.runtime.next_in_place o)))
+    (.next_in_place o)))
 
 (def ^{:arglists '([x])
        :doc "Same as (next (next x))"}

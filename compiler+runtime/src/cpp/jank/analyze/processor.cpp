@@ -1612,7 +1612,7 @@ namespace jank::analyze
         keys_and_exprs ret{};
         for(auto seq{ typed_imap_obj.fresh_seq() }; seq.is_some(); seq = seq.next_in_place())
         {
-          auto const e{ seq.first() };
+          auto const e{ seq.first().seq() };
           auto const k_obj{ e.first() };
           auto const v_obj{ e.next().first() };
           if(!runtime::is_integral(k_obj))

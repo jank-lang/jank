@@ -82,7 +82,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename IT>
   uhash base_persistent_map_sequence<PT, IT>::to_hash() const
   {
-    return hash::unordered(static_cast<PT const *>(this));
+    return hash::unordered(runtime::detail::untagged(this));
   }
 
   template <typename PT, typename IT>
@@ -94,7 +94,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename IT>
   object_ref base_persistent_map_sequence<PT, IT>::seq() const
   {
-    return const_cast<PT *>(static_cast<PT const *>(this));
+    return runtime::detail::untagged(static_cast<PT const *>(this));
   }
 
   template <typename PT, typename IT>
@@ -135,13 +135,13 @@ namespace jank::runtime::obj::detail
       return {};
     }
 
-    return static_cast<PT *>(this);
+    return runtime::detail::untagged(static_cast<PT *>(this));
   }
 
   template <typename PT, typename IT>
   obj::cons_ref base_persistent_map_sequence<PT, IT>::conj(object_ref const head)
   {
-    return make_box<obj::cons>(head, static_cast<PT *>(this));
+    return make_box<obj::cons>(head, runtime::detail::untagged(static_cast<PT *>(this)));
   }
 
   template struct base_persistent_map_sequence<

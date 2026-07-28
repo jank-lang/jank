@@ -553,7 +553,7 @@ namespace jank::runtime
               R ret{ typed_m };
               for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq.next_in_place())
               {
-                auto const e(seq.first());
+                auto const e(seq.first().seq());
                 ret = assoc(ret, e.first(), e.next().first());
               }
               return ret;

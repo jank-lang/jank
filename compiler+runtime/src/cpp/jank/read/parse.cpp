@@ -1342,8 +1342,9 @@ namespace jank::read::parse
         runtime::detail::native_transient_vector ret;
         for(auto const item : make_sequence_range(typed_seq))
         {
-          ret.push_back(first(item));
-          ret.push_back(second(item));
+          auto const item_seq{ item.seq() };
+          ret.push_back(item_seq.first());
+          ret.push_back(item_seq.next().first());
         }
         auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
         return vec;

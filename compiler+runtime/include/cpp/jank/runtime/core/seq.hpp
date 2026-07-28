@@ -17,9 +17,33 @@ namespace jank::runtime
   object_ref rest(object_ref const s);
 
   template <typename T>
+  auto first(oref<T> const &s)
+  {
+    if(s.has_behavior(object_behavior::sequence_like))
+    {
+      return s.first();
+    }
+    return s.seq().first();
+  }
+
+  template <typename T>
+  auto next(oref<T> const &s)
+  {
+    if(s.has_behavior(object_behavior::sequence_like))
+    {
+      return s.next();
+    }
+    return s.seq().next();
+  }
+
+  template <typename T>
   auto second(oref<T> const &s)
   {
-    return s.next().first();
+    if(s.has_behavior(object_behavior::sequence_like))
+    {
+      return s.next().first();
+    }
+    return s.seq().next().first();
   }
 
   bool is_empty(object_ref const o);
