@@ -400,17 +400,21 @@ namespace clojure::string_native
       std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
       std::sregex_token_iterator const end;
 
-      for(auto peek(iter); iter != end; ++iter)
+      for(; iter != end; ++iter)
       {
-        auto const substr(iter->str());
+        vec.push_back(make_box<obj::persistent_string>(iter->str()));
+      }
 
-        if(++peek == end && substr.empty())
+      /* Discard all trailing empty strings to match java.lang.String/split behavior. */
+      auto n(vec.size());
+      for(; n > 0; --n)
+      {
+        if(!expect_object<obj::persistent_string>(vec[n - 1])->data.empty())
         {
           break;
         }
-
-        vec.push_back(make_box<obj::persistent_string>(substr));
       }
+      vec.take(n);
     }
 
     return make_box<obj::persistent_vector>(vec.persistent());
