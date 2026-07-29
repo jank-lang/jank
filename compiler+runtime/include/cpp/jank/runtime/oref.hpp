@@ -38,6 +38,12 @@ namespace jank::runtime
   extern oref<struct obj::boolean> jank_true;
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   extern oref<struct obj::boolean> jank_false;
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern oref<struct obj::small_real> jank_nan;
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern oref<struct obj::small_real> jank_inf;
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  extern oref<struct obj::small_real> jank_neg_inf;
 
   /* `oref` is jank's pointer wrapper for boxed runtime objects. It is only used for objects
    * which inherit from `jank::runtime::object` and implement the necessary behaviors. It's
@@ -953,7 +959,12 @@ namespace jank::runtime
       }
       if(detail::is_tagged_small_real(data))
       {
-        return static_cast<i64>(detail::as_real(data));
+        auto const r(detail::as_real(data));
+        if(std::isnan(r))
+        {
+          return 0;
+        }
+        return static_cast<i64>(r);
       }
 
       return ptr()->to_integer();
@@ -1495,7 +1506,12 @@ namespace jank::runtime
       }
       if(detail::is_tagged_small_real(data))
       {
-        return static_cast<i64>(detail::as_real(data));
+        auto const r(detail::as_real(data));
+        if(std::isnan(r))
+        {
+          return 0;
+        }
+        return static_cast<i64>(r);
       }
 
       return static_cast<T *>(data)->to_integer();
@@ -2136,6 +2152,10 @@ namespace jank::runtime
     /* behavior::number_like */
     i64 to_integer() const
     {
+      if(std::isnan(data))
+      {
+        return 0;
+      }
       return static_cast<i64>(data);
     }
 
