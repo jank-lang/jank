@@ -2659,6 +2659,7 @@ namespace jank::analyze
                         jtl::option<expr::function_context_ref> const &fn_ctx,
                         bool needs_box)
   {
+    util::println("analyze_if {}", o->to_code_string());
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
     /* We can't (yet) guarantee that each branch of an if returns the same unboxed type,

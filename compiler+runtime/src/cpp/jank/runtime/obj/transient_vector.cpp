@@ -47,7 +47,7 @@ namespace jank::runtime::obj
   {
     assert_active();
     data.push_back(head);
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   object_ref transient_vector::nth(object_ref const index) const
@@ -99,7 +99,7 @@ namespace jank::runtime::obj
       data.set(i, val);
     }
 
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   transient_vector_ref transient_vector::dissoc_in_place(object_ref const /*key*/)
@@ -225,7 +225,7 @@ namespace jank::runtime::obj
     }
 
     data.take(data.size() - 1);
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   void transient_vector::assert_active() const

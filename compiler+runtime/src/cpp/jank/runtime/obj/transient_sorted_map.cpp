@@ -81,14 +81,14 @@ namespace jank::runtime::obj
   {
     assert_active();
     data[key] = val;
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   transient_sorted_map_ref transient_sorted_map::dissoc_in_place(object_ref const key)
   {
     assert_active();
     data.erase(key);
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   transient_sorted_map_ref transient_sorted_map::conj_in_place(object_ref const head)
@@ -97,12 +97,13 @@ namespace jank::runtime::obj
 
     if(head.is_nil())
     {
-      return this;
+      return runtime::detail::untagged(this);
     }
 
     if(is_map(head))
     {
-      return expect_object<transient_sorted_map>(runtime::merge_in_place(this, head));
+      return expect_object<transient_sorted_map>(
+        runtime::merge_in_place(runtime::detail::untagged(this), head));
     }
 
     if(head.get_type() != object_type::persistent_vector)
@@ -119,7 +120,7 @@ namespace jank::runtime::obj
     }
 
     data.insert_or_assign(vec->data[0], vec->data[1]);
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   transient_sorted_map::persistent_type_ref transient_sorted_map::to_persistent()

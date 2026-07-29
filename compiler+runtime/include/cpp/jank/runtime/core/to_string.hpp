@@ -8,13 +8,6 @@ namespace jank::runtime
   void to_string(char ch, jtl::string_builder &buff);
   void to_code_string(char ch, jtl::string_builder &buff);
 
-  template <typename T>
-  requires(behavior::object_like<T> && !behavior::sequence_like<T>)
-  void to_string(oref<T> const &s, jtl::string_builder &buff)
-  {
-    s->to_string(buff);
-  }
-
   template <typename It>
   void to_string(It const &begin,
                  It const &end,
@@ -28,7 +21,7 @@ namespace jank::runtime
     }
     for(auto i(begin); i != end; ++i)
     {
-      buff((*i).to_code_string());
+      buff((*i).to_string());
       auto n(i);
       if(++n != end)
       {
@@ -67,13 +60,6 @@ namespace jank::runtime
     jtl::string_builder buff;
     runtime::seq_to_string(s, buff);
     return buff.release();
-  }
-
-  template <typename T>
-  requires(behavior::object_like<T> && !behavior::sequence_like<T>)
-  void to_code_string(oref<T> const &s, jtl::string_builder &buff)
-  {
-    buff(s->to_code_string());
   }
 
   template <typename It>

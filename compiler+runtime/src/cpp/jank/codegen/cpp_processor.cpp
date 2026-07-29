@@ -454,7 +454,7 @@ namespace jank::codegen
             util::format_to(buffer, ")");
           }
           /* Cons, etc. */
-          else if(typed_o.has_behavior(object_behavior::seqable))
+          else if((T::obj_behaviors & object_behavior::seqable) != object_behavior::none)
           {
             util::format_to(buffer, "_jank_list({}", sequence_length(typed_o));
             for(auto const it : make_sequence_range(typed_o))
