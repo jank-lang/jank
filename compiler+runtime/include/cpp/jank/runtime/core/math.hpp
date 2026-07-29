@@ -826,11 +826,11 @@ namespace jank::runtime
       };
       return object_ref{};
     }
-    if constexpr(jtl::is_same<L, object_ref>)
+    else if constexpr(jtl::is_same<L, object_ref>)
     {
       return visit_number_like(
         [](auto const typed_l, R const r) -> object_ref {
-          return typed_l < r ? typed_l.erase() : make_box(r).erase();
+          return typed_l->data < r ? typed_l.erase() : make_box(r).erase();
         },
         l,
         r);
@@ -953,11 +953,11 @@ namespace jank::runtime
       };
       return object_ref{};
     }
-    if constexpr(jtl::is_same<L, object_ref>)
+    else if constexpr(jtl::is_same<L, object_ref>)
     {
       return visit_number_like(
         [](auto const typed_l, R const r) -> object_ref {
-          return typed_l < r ? make_box(r).erase() : typed_l.erase();
+          return typed_l->data < r ? make_box(r).erase() : typed_l.erase();
         },
         l,
         r);
