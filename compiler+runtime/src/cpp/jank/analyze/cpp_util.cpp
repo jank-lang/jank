@@ -691,6 +691,12 @@ namespace jank::analyze::cpp_util
             resolve_scope("jank.runtime.obj.persistent_hash_map_ref").expect_ok()) };
           return type;
         }
+      case jank::runtime::object_type::re_pattern:
+        {
+          static auto const type{ Cpp::GetTypeFromScope(
+            resolve_scope("jank.runtime.obj.re_pattern_ref").expect_ok()) };
+          return type;
+        }
       case jank::runtime::object_type::var:
         return var_type();
       default:

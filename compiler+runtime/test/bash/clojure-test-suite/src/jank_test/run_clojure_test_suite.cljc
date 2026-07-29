@@ -228,13 +228,14 @@
     clojure.core-test.zero-qmark
     clojure.core-test.zipmap
 
-    ; clojure.string-test.blank-qmark ; error: String contains invalid escape sequence '\u'.
+    clojure.string-test.blank-qmark
     clojure.string-test.capitalize
     clojure.string-test.ends-with-qmark
     clojure.string-test.escape
     clojure.string-test.lower-case
     clojure.string-test.replace
     clojure.string-test.reverse
+    clojure.string-test.split-lines
     clojure.string-test.starts-with-qmark
     clojure.string-test.upper-case
   ])

@@ -16,7 +16,6 @@ namespace clojure::string_native
   using namespace jank;
   using namespace jank::runtime;
 
-  bool blank(object_ref const s);
   jtl::immutable_string reverse(jtl::immutable_string const &s);
   bool starts_with(jtl::immutable_string const &s, jtl::immutable_string const &substr);
   bool ends_with(jtl::immutable_string const &s, jtl::immutable_string const &substr);

@@ -1171,13 +1171,210 @@ namespace jank::runtime
 
   object_ref rem(object_ref const l, object_ref const r);
   object_ref quot(object_ref const l, object_ref const r);
-  object_ref inc(object_ref const l);
   object_ref unchecked_inc(object_ref const l);
   object_ref promoting_inc(object_ref const l);
-  object_ref dec(object_ref const l);
   object_ref promoting_dec(object_ref const l);
 
-  bool is_zero(object_ref const l);
+  template <typename L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  auto inc(L const l)
+  {
+    if constexpr(detail::primitive_number<L>)
+    {
+      if constexpr(std::is_integral_v<L>)
+      {
+        i64 res{};
+
+        if(__builtin_add_overflow(l, 1ll, &res))
+        {
+          throw make_box("Overflow on increment.").erase();
+        }
+
+        return res;
+      }
+      else
+      {
+        return l + 1;
+      }
+    }
+    else if constexpr(!detail::valid_boxed_math<L>)
+    {
+      throw std::runtime_error{ util::format("Can't increment a {}.", detail::type_name(l)) };
+      return object_ref{};
+    }
+    else if constexpr(jtl::is_same<L, object_ref>)
+    {
+      return visit_number_like(
+        [](auto const typed_l) -> object_ref {
+          using T = typename decltype(typed_l)::value_type;
+
+          if constexpr(jtl::is_any_same<T, obj::integer, obj::small_integer>)
+          {
+            i64 res{};
+
+            if(__builtin_add_overflow(typed_l->data, 1ll, &res))
+            {
+              throw make_box("Overflow on increment.").erase();
+            }
+
+            return make_box(res);
+          }
+          else
+          {
+            return make_box(typed_l->data + 1ll);
+          }
+        },
+        l);
+    }
+    else
+    {
+      if constexpr(jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::integer
+                   || jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::small_integer)
+      {
+        i64 res{};
+
+        if(__builtin_add_overflow(l->to_integer(), 1ll, &res))
+        {
+          throw make_box("Overflow on increment.").erase();
+        }
+
+        return res;
+      }
+      else if constexpr(jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::real
+                        || jtl::decay_t<decltype(l)>::value_type::obj_type
+                          == object_type::small_real)
+      {
+        return l->to_real() + 1;
+      }
+      else
+      {
+        return l->data + 1;
+      }
+    }
+  }
+
+  template <typename L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  auto dec(L const l)
+  {
+    if constexpr(detail::primitive_number<L>)
+    {
+      if constexpr(std::is_integral_v<L>)
+      {
+        i64 res{};
+
+        if(__builtin_sub_overflow(l, 1ll, &res))
+        {
+          throw make_box("Overflow on increment.").erase();
+        }
+
+        return res;
+      }
+      else
+      {
+        return l - 1;
+      }
+    }
+    else if constexpr(!detail::valid_boxed_math<L>)
+    {
+      throw std::runtime_error{ util::format("Can't increment a {}.", detail::type_name(l)) };
+      return object_ref{};
+    }
+    else if constexpr(jtl::is_same<L, object_ref>)
+    {
+      return visit_number_like(
+        [](auto const typed_l) -> object_ref {
+          using T = typename decltype(typed_l)::value_type;
+
+          if constexpr(jtl::is_any_same<T, obj::integer, obj::small_integer>)
+          {
+            i64 res{};
+
+            if(__builtin_sub_overflow(typed_l->data, 1ll, &res))
+            {
+              throw make_box("Overflow on increment.").erase();
+            }
+
+            return make_box(res);
+          }
+          else
+          {
+            return make_box(typed_l->data - 1ll);
+          }
+        },
+        l);
+    }
+    else
+    {
+      if constexpr(jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::integer
+                   || jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::small_integer)
+      {
+        i64 res{};
+
+        if(__builtin_sub_overflow(l->to_integer(), 1ll, &res))
+        {
+          throw make_box("Overflow on increment.").erase();
+        }
+
+        return res;
+      }
+      else if constexpr(jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::real
+                        || jtl::decay_t<decltype(l)>::value_type::obj_type
+                          == object_type::small_real)
+      {
+        return l->to_real() - 1;
+      }
+      else
+      {
+        return l->data - 1;
+      }
+    }
+  }
+
+  template <typename L>
+  [[gnu::always_inline, gnu::flatten, gnu::hot]]
+  bool is_zero(L const l)
+  {
+    if constexpr(detail::primitive_number<L> && !jtl::is_same<L, bool>)
+    {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+      return l == 0ll;
+#pragma clang diagnostic pop
+    }
+    else if constexpr(!detail::valid_boxed_math<L>)
+    {
+      throw std::runtime_error{ util::format("Can't check if a {} is zero.",
+                                             detail::type_name(l)) };
+      return false;
+    }
+    else if constexpr(jtl::is_same<L, object_ref>)
+    {
+      return visit_number_like([](auto const typed_l) -> bool { return typed_l->data == 0ll; }, l);
+    }
+    else
+    {
+      if constexpr(jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::integer
+                   || jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::small_integer)
+      {
+        return l->to_integer() == 0ll;
+      }
+      else if constexpr(jtl::decay_t<decltype(l)>::value_type::obj_type == object_type::real
+                        || jtl::decay_t<decltype(l)>::value_type::obj_type
+                          == object_type::small_real)
+      {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wfloat-equal"
+        return l->to_real() == 0.0;
+#pragma clang diagnostic pop
+      }
+      else
+      {
+        return l->data == 0;
+      }
+    }
+  }
+
   bool is_pos(object_ref const l);
   bool is_neg(object_ref const l);
   bool is_even(object_ref const l);

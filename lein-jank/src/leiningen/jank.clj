@@ -3,9 +3,9 @@
   (:require [leiningen.core.main :as lmain]
             [leiningen.core.project :as lproj]
             [leiningen.jank.core :as ljc]
-            [leiningen.jank.test :as ljt]
             [leiningen.help :as lhelp]
-            [babashka.fs :as fs]))
+            [clojure.java.io :as io])
+  (:import [java.nio.file Files]))
 
 (defn find-deprecated-flags [project]
   (doseq [[k] (:jank project)]
@@ -107,11 +107,15 @@ To override the inferred output target, you can pass `--output-target TARGET`
 Keyword arguments are interpreted as test selectors and other arguments as test
 namespaces or files."
   [project & args]
-  (let [project          (lproj/merge-profiles project [:leiningen/test :test])
-        [opts args]      (ljc/parse-opts #'test! args ljc/standard-options)
-        [nses selectors] (ljt/read-args args project)
-        test-runner      (ljt/generate-test-runner! nses (vec selectors))]
-    (dispatch-jank project opts "run" [test-runner] [])))
+  ;; Lazy load the leiningen.jank.test namespace, since it's only
+  ;; needed for this command.
+  (let [read-args             (requiring-resolve 'leiningen.jank.test/read-args)
+        generate-test-runner! (requiring-resolve 'leiningen.jank.test/generate-test-runner!)]
+    (let [project          (lproj/merge-profiles project [:leiningen/test :test])
+          [opts args]      (ljc/parse-opts #'test! args ljc/standard-options)
+          [nses selectors] (read-args args project)
+          test-runner      (generate-test-runner! nses (vec selectors))]
+      (dispatch-jank project opts "run" [test-runner] []))))
 
 (defn check-health!
   "Perform a health check on your jank install."
@@ -203,6 +207,12 @@ namespaces or files."
           (with-meta result (apply deep-merge-metadata maps))
           result)))))
 
+(defn relativize [base target]
+  (let [base   (.toPath (io/file base))
+        target (.toPath (io/file target))]
+    (->> (.relativize base target)
+         (.toFile))))
+
 (defn verbatim->filespecs
   "Specify filespecs to copy files or directories in the :verbatim-paths project
   key into the output archive.
@@ -211,18 +221,18 @@ namespaces or files."
   strip the path prefix such that the entries appear directly on the classpath
   when the jar is loaded."
   [{:keys [verbatim-paths] :as project}]
-  (for [path  verbatim-paths
-        f     (if (fs/directory? path)
-                (fs/glob (fs/path (:root project) path) "**")
-                [(fs/path (:root project) path)])
-        :when (fs/regular-file? f)]
+  (for [path  (mapv io/file verbatim-paths)
+        f     (if (.isDirectory path)
+                (file-seq path)
+                [path])
+        :when (.isFile f)]
     ;; Lazy :fn type filespecs so that the file contents are only loaded when
     ;; needed, rather than every time the middleware is executed.
     {:type :fn
      :fn   (fn [project]
              {:type  :bytes
-              :path  (str (fs/relativize (:root project) f))
-              :bytes (fs/read-all-bytes f)})}))
+              :path  (str (relativize (:root project) f))
+              :bytes (Files/readAllBytes (.toPath f))})}))
 
 (defn build-dependencies->dependencies
   "Compute regular :dependencies coordinates from the jank-specific
@@ -236,7 +246,7 @@ namespaces or files."
 (defn middleware
   "Inject jank project details into your current project."
   [project]
-  (let [project (update project :verbatim-paths conj "jank-build.bb")]
+  (let [project (update project :verbatim-paths conj (io/file (:root project) "jank-build.bb"))]
     (-> (deep-merge (default-project project) project)
         (update :filespecs concat (verbatim->filespecs project))
         (update :dependencies concat (build-dependencies->dependencies project)))))

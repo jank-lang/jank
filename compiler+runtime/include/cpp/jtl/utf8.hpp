@@ -35,6 +35,11 @@ namespace jtl
     immutable_string data;
   };
 
+  jtl::immutable_string to_char(i64 const ch);
+  jtl::immutable_string to_char(i64 const ch, jtl::immutable_string const &fallback);
+  bool is_surrogate_high(u16 const high);
+  bool is_surrogate_low(u16 const low);
+  u32 combine_surrogate_pair(u16 const high, u16 const low);
   immutable_string::size_type
   next_char_size(immutable_string const &s, immutable_string::size_type const i);
 }
