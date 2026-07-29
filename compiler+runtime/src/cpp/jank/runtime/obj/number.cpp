@@ -1,5 +1,6 @@
 #include <cmath>
 
+#include <jank/runtime/core/make_box.hpp>
 #include <jank/runtime/oref.hpp>
 #include <jank/runtime/obj/number.hpp>
 #include <jank/runtime/visit.hpp>
@@ -420,16 +421,16 @@ namespace jank::runtime::obj
     {
       if(data < 0)
       {
-        buff("##-Inf");
+        buff("-Infinity");
       }
       else
       {
-        buff("##Inf");
+        buff("Infinity");
       }
     }
     else if(std::isnan(data))
     {
-      buff("##NaN");
+      buff("NaN");
     }
     else
     {
@@ -439,7 +440,25 @@ namespace jank::runtime::obj
 
   jtl::immutable_string small_real::to_code_string() const
   {
-    return to_string();
+    if(std::isinf(data))
+    {
+      if(data < 0)
+      {
+        return "##-Inf";
+      }
+      else
+      {
+        return "##Inf";
+      }
+    }
+    else if(std::isnan(data))
+    {
+      return "##NaN";
+    }
+    else
+    {
+      return to_string();
+    }
   }
 
   uhash small_real::to_hash() const
@@ -465,6 +484,11 @@ namespace jank::runtime::obj
 
   i64 small_real::to_integer() const
   {
+    if(std::isnan(data))
+    {
+      return 0;
+    }
+
     return static_cast<i64>(data);
   }
 
@@ -492,4 +516,10 @@ namespace jank::runtime
   obj::boolean_ref jank_true{ true_const() };
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   obj::boolean_ref jank_false{ false_const() };
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::small_real_ref jank_nan{ static_cast<f64>(NAN) };
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::small_real_ref jank_inf{ static_cast<f64>(INFINITY) };
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
+  obj::small_real_ref jank_neg_inf{ -static_cast<f64>(INFINITY) };
 }

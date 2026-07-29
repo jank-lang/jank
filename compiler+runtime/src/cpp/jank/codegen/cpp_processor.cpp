@@ -144,6 +144,12 @@ namespace jank::codegen
           sb(r->data);
           return sb.release();
         }
+        if(o.get_type() == object_type::small_real)
+        {
+          jtl::string_builder sb;
+          sb(o.to_real());
+          return sb.release();
+        }
         return o.to_code_string();
       }
 
