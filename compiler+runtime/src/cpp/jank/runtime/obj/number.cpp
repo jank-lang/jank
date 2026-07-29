@@ -517,9 +517,9 @@ namespace jank::runtime
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   obj::boolean_ref jank_false{ false_const() };
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  obj::small_real_ref jank_nan{ NAN };
+  obj::small_real_ref jank_nan{ static_cast<f64>(NAN) };
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  obj::small_real_ref jank_inf{ INFINITY };
+  obj::small_real_ref jank_inf{ static_cast<f64>(INFINITY) };
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
-  obj::small_real_ref jank_neg_inf{ -INFINITY };
+  obj::small_real_ref jank_neg_inf{ -static_cast<f64>(INFINITY) };
 }
