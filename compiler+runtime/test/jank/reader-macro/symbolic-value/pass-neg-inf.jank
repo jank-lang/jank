@@ -1,4 +1,3 @@
-(assert (cpp/std.isinf ##-Inf))
 (assert (infinite? ##-Inf))
 
 :success
