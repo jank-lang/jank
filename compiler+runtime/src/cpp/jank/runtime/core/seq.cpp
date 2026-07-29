@@ -54,7 +54,7 @@ namespace jank::runtime
 
   bool is_seq(object_ref const o)
   {
-    return o.has_behavior(object_behavior::sequence_like);
+    return !o.is_nil() && o.has_behavior(object_behavior::sequence_like);
   }
 
   bool is_seqable(object_ref const o)
