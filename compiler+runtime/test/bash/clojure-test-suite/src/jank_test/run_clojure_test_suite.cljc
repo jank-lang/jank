@@ -88,7 +88,7 @@
     clojure.core-test.identical-qmark
     clojure.core-test.ifn-qmark
     clojure.core-test.inc
-    ; clojure.core-test.int ; FIXME: Codegen bug.
+    clojure.core-test.int
     clojure.core-test.int-qmark
     clojure.core-test.integer-qmark
     clojure.core-test.interleave
