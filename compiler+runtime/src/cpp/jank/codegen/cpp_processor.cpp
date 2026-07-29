@@ -176,7 +176,7 @@ namespace jank::codegen
         }
         else if(runtime::detail::is_tagged_small_int(ptr))
         {
-          fmt_str = util::format("{}{ {} }",
+          fmt_str = util::format("{}{ static_cast<jtl::i32>({}) }",
                                  get_qualified_type_name(type),
                                  runtime::detail::as_integer(ptr));
         }
