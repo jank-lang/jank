@@ -75,7 +75,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("nth on a array_chunk must be an integer; found {}",
-                                             runtime::to_string(index)) };
+                                             object_type_str(index.get_type())) };
     }
   }
 

@@ -34,7 +34,7 @@ namespace jank::runtime::obj
                              jtl::string_builder &buff)
   {
     buff(truthy(splicing) ? "#?@" : "#?");
-    runtime::to_string(form, buff);
+    form.to_string(buff);
   }
 
   void reader_conditional::to_string(jtl::string_builder &buff) const

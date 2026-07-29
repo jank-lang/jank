@@ -154,17 +154,17 @@ namespace jank::runtime::obj
 
   void chunked_cons::to_string(jtl::string_builder &buff) const
   {
-    runtime::to_string(seq(), buff);
+    runtime::seq_to_string(seq(), buff);
   }
 
   jtl::immutable_string chunked_cons::to_string() const
   {
-    return runtime::to_string(seq());
+    return runtime::seq_to_string(seq());
   }
 
   jtl::immutable_string chunked_cons::to_code_string() const
   {
-    return runtime::to_code_string(seq());
+    return runtime::seq_to_code_string(seq());
   }
 
   uhash chunked_cons::to_hash() const

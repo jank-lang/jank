@@ -73,7 +73,7 @@ namespace jank::runtime::obj
         return transient.persistent();
       },
       [=]() -> persistent_hash_map::value_type {
-        throw std::runtime_error{ util::format("Not seqable: {}", runtime::to_string(seq)) };
+        throw std::runtime_error{ util::format("Not seqable: {}", seq.to_string()) };
       },
       seq));
   }

@@ -224,7 +224,7 @@ namespace jank::runtime
         throw std::runtime_error{ util::format(
           "Only :preserve or :allow modes are supported for :read-cond reader option. Found {} "
           "instead.",
-          runtime::to_code_string(read_cond)) };
+          read_cond.to_code_string()) };
       }
     }
 
@@ -346,7 +346,7 @@ namespace jank::runtime
     }
     catch(object_ref const e)
     {
-      return error::runtime_unable_to_load_module(runtime::to_code_string(e));
+      return error::runtime_unable_to_load_module(e.to_code_string());
     }
     catch(error_ref const e)
     {
@@ -690,7 +690,7 @@ namespace jank::runtime
     if(bindings.get_type() != object_type::persistent_hash_map)
     {
       return err(util::format("invalid thread binding map (must be hash map): {}",
-                              runtime::to_code_string(bindings)));
+                              bindings.to_code_string()));
     }
 
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));

@@ -1778,7 +1778,7 @@ namespace jank::codegen
                     /* TODO: Lift this. */
                     "jank::runtime::reset_meta({}, _jank_eval_str(\"{}\"));\n",
                     inst->name,
-                    util::escape(to_code_string(meta)));
+                    util::escape(meta.to_code_string()));
 
     return inst->name;
   }

@@ -4,7 +4,6 @@
 #include <jank/runtime/core/call.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
@@ -323,7 +322,7 @@ namespace jank::runtime
 
   jtl::immutable_string var_thread_binding::to_string() const
   {
-    return runtime::to_string(value);
+    return value.to_string();
   }
 
   jtl::immutable_string var_thread_binding::to_code_string() const
@@ -333,7 +332,7 @@ namespace jank::runtime
 
   void var_thread_binding::to_string(jtl::string_builder &buff) const
   {
-    runtime::to_string(value, buff);
+    value.to_string(buff);
   }
 
   uhash var_thread_binding::to_hash() const

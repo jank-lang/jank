@@ -66,7 +66,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("nth on a vector must be an integer; found {}",
-                                             runtime::to_string(index)) };
+                                             object_type_str(index.get_type())) };
     }
   }
 
@@ -140,7 +140,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("key must be an integer; found {}",
-                                             runtime::to_string(idx)) };
+                                             object_type_str(idx.get_type())) };
     }
   }
 
@@ -160,7 +160,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("key must be an integer; found {}",
-                                             runtime::to_string(idx)) };
+                                             object_type_str(idx.get_type())) };
     }
   }
 
@@ -180,7 +180,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("key must be an integer; found {}",
-                                             runtime::to_string(idx)) };
+                                             object_type_str(idx.get_type())) };
     }
   }
 
@@ -199,7 +199,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("find on a vector must be an integer; found {}",
-                                             runtime::to_string(idx)) };
+                                             object_type_str(idx.get_type())) };
     }
   }
 

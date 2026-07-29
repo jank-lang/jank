@@ -491,7 +491,7 @@
     ([o]
      (if (nil? o)
        ""
-       (cpp/jank.runtime.to_string o)))
+       (.to_string o)))
     ([o & args]
      (cpp/jank.runtime.str o args))))
 
@@ -616,7 +616,7 @@
   pr-str
   ;; TODO: support multiple parameters, preserving current behavior
   (fn* pr-str [x]
-    (cpp/jank.runtime.to_code_string x)))
+    (.to_code_string x)))
 
 ;; Utils.
 ; The full `apply` will be defined below, but it requires more helpers to support

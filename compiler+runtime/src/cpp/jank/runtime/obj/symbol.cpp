@@ -1,6 +1,5 @@
 #include <jank/runtime/obj/symbol.hpp>
 #include <jank/runtime/core/seq.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/visit.hpp>
 
 namespace jank::runtime::obj
@@ -60,8 +59,8 @@ namespace jank::runtime::obj
 
   symbol::symbol(object_ref const ns, object_ref const n)
     : object{ obj_type, obj_behaviors }
-    , ns{ runtime::to_string(ns) }
-    , name{ runtime::to_string(n) }
+    , ns{ ns.to_string() }
+    , name{ n.to_string() }
   {
   }
 

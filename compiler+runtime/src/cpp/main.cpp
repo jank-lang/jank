@@ -284,7 +284,7 @@ namespace jank
           second_res_var->set(first_res_var->deref()).expect_ok();
           first_res_var->set(res.unwrap()).expect_ok();
 
-          util::println("{}", runtime::to_code_string(res.unwrap()));
+          util::println("{}", res.unwrap().to_code_string());
         }
       }
       JANK_CATCH(jank::util::print_exception)

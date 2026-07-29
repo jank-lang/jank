@@ -5,7 +5,6 @@
 #include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/core/seq.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/fmt.hpp>
@@ -55,7 +54,7 @@ namespace jank::runtime::obj
         return transient.to_persistent();
       },
       [=]() -> persistent_array_map_ref {
-        throw std::runtime_error{ util::format("Not seqable: {}", runtime::to_string(seq)) };
+        throw std::runtime_error{ util::format("Not seqable: {}", seq.to_string()) };
       },
       seq);
   }

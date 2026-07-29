@@ -94,7 +94,7 @@ namespace jank::runtime
     if(truthy(compile_files_var->deref()))
     {
       profile::timer const timer{ "rt compile-module" };
-      auto const &module(runtime::to_string(current_module_var->deref()));
+      auto const &module(current_module_var->deref().to_string());
       auto const name{ module::module_to_load_function(module) };
 
       if(forms.empty())
@@ -124,7 +124,7 @@ namespace jank::runtime
         util::println("\n{}\n", formatted);
       }
 
-      auto const module_name{ runtime::to_string(current_module_var->deref()) };
+      auto const module_name{ current_module_var->deref().to_string() };
       auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
       if(!parse_res)
       {
@@ -167,7 +167,7 @@ namespace jank::runtime
      * moves the `llvm::Module` held in the `PartialTranslationUnit`. */
     if(truthy(compile_files_var->deref()))
     {
-      auto module_name{ runtime::to_string(current_module_var->deref()) };
+      auto module_name{ current_module_var->deref().to_string() };
       write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
     }
 

@@ -10,7 +10,7 @@ namespace jank::runtime::behavior::detail
   {
     if(!is_map(m) && m.is_some())
     {
-      throw std::runtime_error{ util::format("invalid meta: {}", runtime::to_string(m)) };
+      throw std::runtime_error{ util::format("invalid meta: {}", object_type_str(m.get_type())) };
     }
 
     return m;

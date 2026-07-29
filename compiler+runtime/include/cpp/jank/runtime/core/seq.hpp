@@ -114,7 +114,6 @@ namespace jank::runtime
   object_ref pop(object_ref const o);
   object_ref empty(object_ref const o);
 
-  jtl::immutable_string str(object_ref const o);
   jtl::immutable_string str(object_ref const o, object_ref const args);
 
   obj::persistent_list_ref list(object_ref const s);

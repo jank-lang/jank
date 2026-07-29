@@ -32,20 +32,20 @@ namespace jank::runtime::obj::detail
       buff('[');
       if(to_code)
       {
-        runtime::to_code_string((*i).first, buff);
+        buff((*i).first.to_code_string());
       }
       else
       {
-        runtime::to_string((*i).first, buff);
+        buff((*i).first.to_string());
       }
       buff(' ');
       if(to_code)
       {
-        runtime::to_code_string((*i).second, buff);
+        buff((*i).second.to_code_string());
       }
       else
       {
-        runtime::to_string((*i).second, buff);
+        buff((*i).second.to_string());
       }
       buff(']');
       auto n(i);

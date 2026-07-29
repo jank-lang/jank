@@ -82,17 +82,17 @@ namespace jank::runtime::obj
 
   void lazy_sequence::to_string(jtl::string_builder &buff) const
   {
-    runtime::to_string(seq(), buff);
+    runtime::seq_to_string(seq(), buff);
   }
 
   jtl::immutable_string lazy_sequence::to_string() const
   {
-    return runtime::to_string(seq());
+    return runtime::seq_to_string(seq());
   }
 
   jtl::immutable_string lazy_sequence::to_code_string() const
   {
-    return runtime::to_code_string(seq());
+    return runtime::seq_to_code_string(seq());
   }
 
   uhash lazy_sequence::to_hash() const

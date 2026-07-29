@@ -28,17 +28,17 @@ namespace jank::runtime
 
       value_type operator*() const
       {
-        return runtime::first(data);
+        return data.first();
       }
 
       pointer operator->() const
       {
-        return runtime::first(data);
+        return data.first();
       }
 
       iterator &operator++()
       {
-        data = runtime::next(data);
+        data = data.next();
 
         return *this;
       }

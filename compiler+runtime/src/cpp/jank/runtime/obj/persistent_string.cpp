@@ -119,7 +119,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("nth on a string must be an integer; found {}",
-                                             runtime::to_string(index)) };
+                                             object_type_str(index.get_type())) };
     }
   }
 
@@ -154,7 +154,7 @@ namespace jank::runtime::obj
 
   i64 persistent_string::first_index_of(object_ref const m) const
   {
-    auto const s(runtime::to_string(m));
+    auto const s(m.to_string());
     auto const found(data.find(s));
     if(found == jtl::immutable_string::npos)
     {
@@ -165,7 +165,7 @@ namespace jank::runtime::obj
 
   i64 persistent_string::last_index_of(object_ref const m) const
   {
-    auto const s(runtime::to_string(m));
+    auto const s(m.to_string());
     auto const found(data.rfind(s));
     if(found == jtl::immutable_string::npos)
     {

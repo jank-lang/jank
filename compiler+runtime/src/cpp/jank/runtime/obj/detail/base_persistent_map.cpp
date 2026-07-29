@@ -71,21 +71,21 @@ namespace jank::runtime::obj::detail
       auto const &pair(*i);
       if(to_code)
       {
-        runtime::to_code_string(pair.first, buff);
+        buff(pair.first.to_code_string());
       }
       else
       {
-        runtime::to_string(pair.first, buff);
+        buff(pair.first.to_string());
       }
       inserter = ' ';
 
       if(to_code)
       {
-        runtime::to_code_string(pair.second, buff);
+        buff(pair.second.to_code_string());
       }
       else
       {
-        runtime::to_string(pair.second, buff);
+        buff(pair.second.to_string());
       }
       auto n(i);
       if(++n != end)

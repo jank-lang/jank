@@ -131,11 +131,11 @@ namespace jank::runtime
     auto const out{ get_stdout() };
 
     jtl::string_builder buff;
-    runtime::to_string(args.first().erase(), buff);
+    args.first().to_string(buff);
     for(auto const e : make_sequence_range(args).skip(1))
     {
       buff(' ');
-      runtime::to_string(e.erase(), buff);
+      e.to_string(buff);
     }
     std::fwrite(buff.data(), 1, buff.size(), out);
     return {};
@@ -144,7 +144,7 @@ namespace jank::runtime
   object_ref print1(object_ref const o)
   {
     jtl::string_builder buff;
-    runtime::to_string(o, buff);
+    o.to_string(buff);
     std::fwrite(buff.data(), 1, buff.size(), get_stdout());
     return {};
   }
@@ -159,11 +159,11 @@ namespace jank::runtime
     }
 
     jtl::string_builder buff;
-    runtime::to_string(args.first().erase(), buff);
+    args.first().to_string(buff);
     for(auto const e : make_sequence_range(args).skip(1))
     {
       buff(' ');
-      runtime::to_string(e.erase(), buff);
+      e.to_string(buff);
     }
     std::fwrite(buff.data(), 1, buff.size(), out);
     std::putc('\n', out);
@@ -175,11 +175,11 @@ namespace jank::runtime
     auto const out{ get_stdout() };
 
     jtl::string_builder buff;
-    runtime::to_code_string(args.first().erase(), buff);
+    buff(args.first().to_code_string());
     for(auto const e : make_sequence_range(args).skip(1))
     {
       buff(' ');
-      runtime::to_code_string(e.erase(), buff);
+      buff(e.to_code_string());
     }
     std::fwrite(buff.data(), 1, buff.size(), out);
 
@@ -196,11 +196,11 @@ namespace jank::runtime
     }
 
     jtl::string_builder buff;
-    runtime::to_code_string(args.first().erase(), buff);
+    buff(args.first().to_code_string());
     for(auto const e : make_sequence_range(args).skip(1))
     {
       buff(' ');
-      runtime::to_code_string(e.erase(), buff);
+      buff(e.to_code_string());
     }
     std::fwrite(buff.data(), 1, buff.size(), out);
     std::putc('\n', out);
@@ -485,21 +485,21 @@ namespace jank::runtime
     {
       throw std::runtime_error{ util::format(
         "The 'keyword' function expects a namespace to be 'nil' or a 'string', got {} instead.",
-        runtime::to_code_string(ns)) };
+        ns.to_code_string()) };
     }
     if(name.get_type() != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format(
         "The 'keyword' function expects the name to be a 'string', got {} instead.",
-        runtime::to_code_string(name)) };
+        name.to_code_string()) };
     }
 
     if(ns.is_nil())
     {
-      return __rt_ctx->intern_keyword(runtime::to_string(name)).expect_ok();
+      return __rt_ctx->intern_keyword(name.to_string()).expect_ok();
     }
 
-    return __rt_ctx->intern_keyword(runtime::to_string(ns), runtime::to_string(name)).expect_ok();
+    return __rt_ctx->intern_keyword(ns.to_string(), name.to_string()).expect_ok();
   }
 
   bool is_keyword(object_ref const o)
@@ -539,7 +539,7 @@ namespace jank::runtime
 
   obj::symbol_ref gensym(object_ref const o)
   {
-    return __rt_ctx->unique_symbol(to_string(o));
+    return __rt_ctx->unique_symbol(o.to_string());
   }
 
   obj::atom_ref atom(object_ref const o)

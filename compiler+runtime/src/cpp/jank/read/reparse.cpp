@@ -1,7 +1,6 @@
 #include <jank/read/reparse.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/module/loader.hpp>
@@ -123,7 +122,7 @@ namespace jank::read::parse
       },
       [=]() -> source {
         throw error::internal_parse_failure(
-          util::format("Unable to reparse object '{}'.", to_code_string(o)));
+          util::format("Unable to reparse object '{}'.", o.to_code_string()));
       },
       o,
       n);

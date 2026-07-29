@@ -49,17 +49,17 @@ namespace jank::runtime::obj
 
   void cons::to_string(jtl::string_builder &buff) const
   {
-    runtime::to_string(seq(), buff);
+    runtime::seq_to_string(seq(), buff);
   }
 
   jtl::immutable_string cons::to_string() const
   {
-    return runtime::to_string(expect_object<obj::cons>(seq()));
+    return runtime::seq_to_string(expect_object<obj::cons>(seq()));
   }
 
   jtl::immutable_string cons::to_code_string() const
   {
-    return runtime::to_code_string(expect_object<obj::cons>(seq()));
+    return runtime::seq_to_code_string(expect_object<obj::cons>(seq()));
   }
 
   uhash cons::to_hash() const

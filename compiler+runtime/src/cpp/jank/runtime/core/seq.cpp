@@ -226,8 +226,7 @@ namespace jank::runtime
       return expect_object<obj::transient_sorted_set>(coll)->disjoin_in_place(o);
     }
 
-    throw std::runtime_error{ util::format("not disjoinable_in_place: {}",
-                                           runtime::to_code_string(coll)) };
+    throw std::runtime_error{ util::format("not disjoinable_in_place: {}", coll.to_code_string()) };
   }
 
   object_ref assoc_in_place(object_ref const coll, object_ref const k, object_ref const v)
@@ -781,33 +780,24 @@ namespace jank::runtime
       o);
   }
 
-  jtl::immutable_string str(object_ref const o)
-  {
-    return runtime::to_string(o);
-  }
-
   jtl::immutable_string str(object_ref const o, object_ref const args)
   {
     jtl::string_builder buff;
     buff.reserve(16);
     if(!is_nil(o))
     {
-      runtime::to_string(o, buff);
+      o.to_string(buff);
     }
-    return visit_seqable(
-      [](auto const typed_args, jtl::string_builder &buff) -> jtl::immutable_string {
-        for(auto const &e : make_sequence_range(typed_args))
-        {
-          if(is_nil(e))
-          {
-            continue;
-          }
-          runtime::to_string(e.erase(), buff);
-        }
-        return buff.release();
-      },
-      args,
-      buff);
+
+    for(auto const &e : make_sequence_range(args))
+    {
+      if(is_nil(e))
+      {
+        continue;
+      }
+      e.to_string(buff);
+    }
+    return buff.release();
   }
 
   obj::persistent_list_ref list(object_ref const s)

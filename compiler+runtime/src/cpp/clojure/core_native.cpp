@@ -259,13 +259,13 @@ namespace clojure::core_native
 
   object_ref load_module(object_ref const path)
   {
-    __rt_ctx->load_module(runtime::to_string(path), module::origin::latest).expect_ok();
+    __rt_ctx->load_module(path.to_string(), module::origin::latest).expect_ok();
     return {};
   }
 
   object_ref compile(object_ref const path)
   {
-    __rt_ctx->compile_module(runtime::to_string(path)).expect_ok();
+    __rt_ctx->compile_module(path.to_string()).expect_ok();
     return {};
   }
 

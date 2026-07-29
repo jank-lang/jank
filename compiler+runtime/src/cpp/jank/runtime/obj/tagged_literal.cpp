@@ -30,9 +30,9 @@ namespace jank::runtime::obj
   static void to_string_impl(object_ref const tag, object_ref const form, jtl::string_builder &buff)
   {
     buff('#');
-    runtime::to_string(tag, buff);
+    tag.to_string(buff);
     buff(' ');
-    runtime::to_string(form, buff);
+    form.to_string(buff);
   }
 
   void tagged_literal::to_string(jtl::string_builder &buff) const

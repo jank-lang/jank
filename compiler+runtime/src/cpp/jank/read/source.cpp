@@ -1,6 +1,5 @@
 #include <jank/read/source.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/core/to_string.hpp>
 
 namespace jank::read
 {
@@ -23,8 +22,8 @@ namespace jank::read
   }
 
   source::source(source_position const &start, source_position const &end)
-    : file{ runtime::to_string(runtime::__rt_ctx->current_file_var->deref()) }
-    , module{ runtime::to_code_string(runtime::__rt_ctx->current_ns_var->deref()) }
+    : file{ runtime::__rt_ctx->current_file_var->deref().to_string() }
+    , module{ runtime::__rt_ctx->current_ns_var->deref().to_code_string() }
     , start{ start }
     , end{ end }
   {
