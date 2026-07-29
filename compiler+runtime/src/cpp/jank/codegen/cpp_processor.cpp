@@ -144,6 +144,12 @@ namespace jank::codegen
           sb(r->data);
           return sb.release();
         }
+        if(o.get_type() == object_type::small_real)
+        {
+          jtl::string_builder sb;
+          sb(o.to_real());
+          return sb.release();
+        }
         return o.to_code_string();
       }
 
@@ -176,9 +182,16 @@ namespace jank::codegen
         }
         else if(runtime::detail::is_tagged_small_int(ptr))
         {
-          fmt_str = util::format("{}{ {} }",
-                                 get_qualified_type_name(type),
-                                 runtime::detail::as_integer(ptr));
+          auto const i(runtime::detail::as_integer(ptr));
+          if(i == std::numeric_limits<i32>::min())
+          {
+            fmt_str
+              = util::format("{}{ static_cast<jtl::i32>({}) }", get_qualified_type_name(type), i);
+          }
+          else
+          {
+            fmt_str = util::format("{}{ {} }", get_qualified_type_name(type), i);
+          }
         }
         else if(runtime::detail::is_tagged_small_real(ptr))
         {

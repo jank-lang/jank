@@ -88,7 +88,7 @@
     clojure.core-test.identical-qmark
     clojure.core-test.ifn-qmark
     clojure.core-test.inc
-    ; clojure.core-test.int ; FIXME: Codegen bug.
+    clojure.core-test.int
     clojure.core-test.int-qmark
     clojure.core-test.integer-qmark
     clojure.core-test.interleave
@@ -143,7 +143,7 @@
     clojure.core-test.peek
     clojure.core-test.persistent-bang
     ; clojure.core-test.plus ; FIXME: Failing tests.
-    ; clojure.core-test.plus-squote ; Assertion failed! is_tagged_pointer(val)
+    clojure.core-test.plus-squote
     clojure.core-test.pop
     clojure.core-test.pop-bang
     clojure.core-test.pos-int-qmark
@@ -235,6 +235,7 @@
     clojure.string-test.lower-case
     clojure.string-test.replace
     clojure.string-test.reverse
+    clojure.string-test.split-lines
     clojure.string-test.starts-with-qmark
     clojure.string-test.upper-case
   ])

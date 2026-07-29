@@ -50,9 +50,33 @@ namespace jank::runtime
       [](auto const typed_l, auto const r) -> object_ref {
         using LT = typename decltype(typed_l)::value_type;
 
+        if constexpr(jtl::is_any_same<LT, obj::real, obj::small_real>)
+        {
+          if(std::isnan(to_real(typed_l)))
+          {
+            return jank_nan;
+          }
+        }
+
         return visit_number_like(
           [](auto const typed_r, auto const &l_val) -> object_ref {
             using RT = typename decltype(typed_r)::value_type;
+
+            if constexpr(jtl::is_any_same<RT, obj::real, obj::small_real>)
+            {
+              if(std::isnan(to_real(typed_r)))
+              {
+                return jank_nan;
+              }
+              if constexpr(jtl::is_any_same<LT, obj::real, obj::small_real>)
+              {
+                auto const r_val(to_real(typed_r));
+                if(std::isinf(l_val) && std::isinf(r_val) && l_val != r_val)
+                {
+                  return jank_nan;
+                }
+              }
+            }
 
             if constexpr(jtl::is_any_same<LT, obj::integer, obj::small_integer>
                          && jtl::is_any_same<RT, obj::integer, obj::small_integer>)
@@ -680,7 +704,7 @@ namespace jank::runtime
         {
           return make_box<obj::big_decimal>(typed_o->to_real());
         }
-        else if constexpr(std::same_as<T, obj::real>)
+        else if constexpr(jtl::is_any_same<T, obj::real, obj::small_real>)
         {
           if(std::isnan(typed_o->data))
           {

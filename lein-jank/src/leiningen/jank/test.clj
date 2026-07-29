@@ -1,11 +1,9 @@
 (ns leiningen.jank.test
-  (:require [leiningen.jank.discovery :as d]
-            [clojure.java.io :as io]
+  (:require [clojure.java.io :as io]
             [clojure.string :as string]
+            [babashka.fs :as fs]
             [leiningen.core.main :as lmain]
-            [leiningen.core.project :as p]
-            [leiningen.jank.core :as ljc]
-            [babashka.fs :as fs]))
+            [leiningen.jank.discovery :as d]))
 
 (defn- convert-to-ns [possible-file]
   (if (d/valid-source-file? (io/file possible-file))

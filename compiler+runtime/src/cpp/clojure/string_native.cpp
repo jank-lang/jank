@@ -384,17 +384,36 @@ namespace clojure::string_native
 
   obj::persistent_vector_ref split(jtl::immutable_string const &s, obj::re_pattern_ref const re)
   {
-    auto const regex(re->regex);
-
-    std::string const search_str{ s.c_str() };
-
     detail::native_transient_vector vec;
-    std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
-    std::sregex_token_iterator const end;
 
-    for(; iter != end; ++iter)
+    if(s.empty())
     {
-      vec.push_back(make_box<obj::persistent_string>(iter->str()));
+      vec.push_back(make_box<obj::persistent_string>(s));
+    }
+    else
+    {
+      auto const regex(re->regex);
+
+      std::string const search_str{ s.c_str() };
+
+      std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
+      std::sregex_token_iterator const end;
+
+      for(; iter != end; ++iter)
+      {
+        vec.push_back(make_box<obj::persistent_string>(iter->str()));
+      }
+
+      /* Discard all trailing empty strings to match java.lang.String/split behavior. */
+      auto n(vec.size());
+      for(; n > 0; --n)
+      {
+        if(!expect_object<obj::persistent_string>(vec[n - 1])->data.empty())
+        {
+          break;
+        }
+      }
+      vec.take(n);
     }
 
     return make_box<obj::persistent_vector>(vec.persistent());
