@@ -45,8 +45,6 @@ namespace jank::runtime::obj::detail
 
     /* behavior::seqable */
     object_ref seq() const override;
-
-    /* behavior::fresh_seqable */
     object_ref fresh_seq() const override;
 
     /* behavior::countable */

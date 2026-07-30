@@ -1010,7 +1010,6 @@ namespace jank::runtime
       }
     }
 
-    /* behavior::fresh_seqable */
     object_ref fresh_seq() const
     {
       if(detail::is_tagged_small_int(data))
@@ -1639,7 +1638,6 @@ namespace jank::runtime
       return static_cast<T *>(data)->seq();
     }
 
-    /* behavior::fresh_seqable */
     object_ref fresh_seq() const
     {
       if(is_nil())
@@ -2007,7 +2005,6 @@ namespace jank::runtime
       return i.seq();
     }
 
-    /* behavior::fresh_seqable */
     object_ref fresh_seq() const
     {
       obj::small_integer const i{ data };
@@ -2352,7 +2349,6 @@ namespace jank::runtime
       return i.seq();
     }
 
-    /* behavior::fresh_seqable */
     object_ref fresh_seq() const
     {
       obj::small_real const i{ data };
@@ -2704,7 +2700,6 @@ namespace jank::runtime
       return {};
     }
 
-    /* behavior::fresh_seqable */
     object_ref fresh_seq() const
     {
       return {};

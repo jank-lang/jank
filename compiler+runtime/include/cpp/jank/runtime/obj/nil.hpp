@@ -13,11 +13,11 @@ namespace jank::runtime::obj
   struct nil : object
   {
     static constexpr object_type obj_type{ object_type::nil };
-    static constexpr object_behavior obj_behaviors{
-      object_behavior::get | object_behavior::compare | object_behavior::find
-      | object_behavior::seqable | object_behavior::fresh_seqable | object_behavior::sequence_like
-      | object_behavior::sequence_like_in_place
-    };
+    static constexpr object_behavior obj_behaviors{ object_behavior::get | object_behavior::compare
+                                                    | object_behavior::find
+                                                    | object_behavior::seqable
+                                                    | object_behavior::sequence_like
+                                                    | object_behavior::sequence_like_in_place };
     static constexpr bool pointer_free{ true };
 
     nil();
@@ -50,8 +50,6 @@ namespace jank::runtime::obj
 
     /* behavior::seqable */
     object_ref seq() const override;
-
-    /* behavior::fresh_seqable */
     object_ref fresh_seq() const override;
 
     /* behavior::sequence_like */

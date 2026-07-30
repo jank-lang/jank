@@ -12,7 +12,6 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::native_array_sequence };
     static constexpr object_behavior obj_behaviors{ object_behavior::seqable
                                                     | object_behavior::sequence_like
-                                                    | object_behavior::fresh_seqable
                                                     | object_behavior::sequence_like_in_place };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
@@ -40,8 +39,6 @@ namespace jank::runtime::obj
 
     /* behavior::seqable */
     object_ref seq() const override;
-
-    /* behavior::fresh_seqable */
     object_ref fresh_seq() const override;
 
     /* behavior::countable */

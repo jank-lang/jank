@@ -13,7 +13,6 @@ namespace jank::runtime::obj::detail
   struct iterator_sequence : object
   {
     static constexpr object_behavior obj_behaviors{ object_behavior::seqable
-                                                    | object_behavior::fresh_seqable
                                                     | object_behavior::sequence_like
                                                     | object_behavior::sequence_like_in_place };
     static constexpr bool pointer_free{ false };
@@ -34,8 +33,6 @@ namespace jank::runtime::obj::detail
 
     /* behavior::seqable */
     object_ref seq() const override;
-
-    /* behavior::fresh_seqable */
     object_ref fresh_seq() const override;
 
     /* behavior::countable */

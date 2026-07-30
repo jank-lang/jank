@@ -304,15 +304,14 @@ namespace jank::runtime
     ref_like = 1 << 5,
     seqable = 1 << 6,
     sequence_like = 1 << 7,
-    fresh_seqable = 1 << 8,
-    sequence_like_in_place = 1 << 9,
+    sequence_like_in_place = 1 << 8,
+    //indexable,
     //associatively_writable,
     //chunkable,
     //collection_like,
     //conjable,
     //countable,
     //derefable,
-    //indexable,
     //map_like,
     //metadatable,
     //nameable,
@@ -463,6 +462,11 @@ namespace jank::runtime
      * an empty seq is UB. */
     virtual object_ref seq() const;
 
+    /* Returns a unique seq which can be updated in place. This is an optimization which allows
+     * one allocation for a fresh seq which can then be mutated any number of times to traverse
+     * the data. Also must return nullptr when the sequence is empty. */
+    virtual object_ref fresh_seq() const;
+
     /* behavior::sequence_like */
     virtual object_ref first() const;
 
@@ -476,12 +480,6 @@ namespace jank::runtime
      * the current sequence is empty, it must create a cons onto nullptr. It's invalid to
      * have a cons onto an empty sequence. */
     //virtual object_ref conj() const;
-
-    /* behavior::fresh_seqable */
-    /* Returns a unique seq which can be updated in place. This is an optimization which allows
-     * one allocation for a fresh seq which can then be mutated any number of times to traverse
-     * the data. Also must return nullptr when the sequence is empty. */
-    virtual object_ref fresh_seq() const;
 
     /* behavior::sequence_like_in_place */
     /* Each call to next() allocates a new sequence, since it's polymorphic. When iterating

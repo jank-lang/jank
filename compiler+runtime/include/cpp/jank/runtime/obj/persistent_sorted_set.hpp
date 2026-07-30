@@ -14,8 +14,7 @@ namespace jank::runtime::obj
   {
     static constexpr object_type obj_type{ object_type::persistent_sorted_set };
     static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
-                                                    | object_behavior::seqable
-                                                    | object_behavior::fresh_seqable };
+                                                    | object_behavior::seqable };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_set_like{ true };
 
@@ -61,8 +60,6 @@ namespace jank::runtime::obj
 
     /* behavior::seqable */
     object_ref seq() const override;
-
-    /* behavior::fresh_seqable */
     object_ref fresh_seq() const override;
 
     /* behavior::countable */
