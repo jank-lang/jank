@@ -62,7 +62,7 @@ namespace jank::runtime::obj
   {
     if(!arity_0)
     {
-      throw invalid_arity<0>{to_string()};
+      throw invalid_arity<0>{ to_string() };
     }
     return arity_0(runtime::detail::untagged(this));
   }
@@ -71,7 +71,7 @@ namespace jank::runtime::obj
   {
     if(!arity_1)
     {
-      throw invalid_arity<1>{to_string()};
+      throw invalid_arity<1>{ to_string() };
     }
     return arity_1(runtime::detail::untagged(this), a1);
   }
@@ -80,7 +80,7 @@ namespace jank::runtime::obj
   {
     if(!arity_2)
     {
-      throw invalid_arity<2>{to_string()};
+      throw invalid_arity<2>{ to_string() };
     }
     return arity_2(runtime::detail::untagged(this), a1, a2);
   }
@@ -89,7 +89,7 @@ namespace jank::runtime::obj
   {
     if(!arity_3)
     {
-      throw invalid_arity<3>{to_string()};
+      throw invalid_arity<3>{ to_string() };
     }
     return arity_3(runtime::detail::untagged(this), a1, a2, a3);
   }
@@ -101,7 +101,7 @@ namespace jank::runtime::obj
   {
     if(!arity_4)
     {
-      throw invalid_arity<4>{to_string()};
+      throw invalid_arity<4>{ to_string() };
     }
     return arity_4(runtime::detail::untagged(this), a1, a2, a3, a4);
   }
@@ -114,7 +114,7 @@ namespace jank::runtime::obj
   {
     if(!arity_5)
     {
-      throw invalid_arity<5>{to_string()};
+      throw invalid_arity<5>{ to_string() };
     }
     return arity_5(runtime::detail::untagged(this), a1, a2, a3, a4, a5);
   }
@@ -128,7 +128,7 @@ namespace jank::runtime::obj
   {
     if(!arity_6)
     {
-      throw invalid_arity<6>{to_string()};
+      throw invalid_arity<6>{ to_string() };
     }
     return arity_6(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6);
   }
@@ -143,7 +143,7 @@ namespace jank::runtime::obj
   {
     if(!arity_7)
     {
-      throw invalid_arity<7>{to_string()};
+      throw invalid_arity<7>{ to_string() };
     }
     return arity_7(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6, a7);
   }
@@ -159,7 +159,7 @@ namespace jank::runtime::obj
   {
     if(!arity_8)
     {
-      throw invalid_arity<8>{to_string()};
+      throw invalid_arity<8>{ to_string() };
     }
     return arity_8(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6, a7, a8);
   }
@@ -176,7 +176,7 @@ namespace jank::runtime::obj
   {
     if(!arity_9)
     {
-      throw invalid_arity<9>{to_string()};
+      throw invalid_arity<9>{ to_string() };
     }
     return arity_9(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6, a7, a8, a9);
   }
@@ -194,7 +194,7 @@ namespace jank::runtime::obj
   {
     if(!arity_10)
     {
-      throw invalid_arity<10>{to_string()};
+      throw invalid_arity<10>{ to_string() };
     }
     return arity_10(runtime::detail::untagged(this), a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
   }
