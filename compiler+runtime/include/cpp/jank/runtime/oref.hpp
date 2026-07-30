@@ -1084,6 +1084,43 @@ namespace jank::runtime
       }
     }
 
+    /* behavior::indexable */
+    object_ref nth(object_ref const index) const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer const i{ detail::as_integer(data) };
+        return i.nth(index);
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
+        return i.nth(index);
+      }
+      else
+      {
+        return ptr()->nth(index);
+      }
+    }
+
+    object_ref nth(object_ref const index, object_ref const fallback) const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer const i{ detail::as_integer(data) };
+        return i.nth(index, fallback);
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
+        return i.nth(index, fallback);
+      }
+      else
+      {
+        return ptr()->nth(index, fallback);
+      }
+    }
+
     value_type *raw() const
     {
       return data;
@@ -1680,6 +1717,27 @@ namespace jank::runtime
       return static_cast<T *>(data)->next_in_place();
     }
 
+    /* behavior::indexable */
+    object_ref nth(object_ref const index) const
+    {
+      if(is_nil())
+      {
+        return _jank_nil.nth(index);
+      }
+
+      return static_cast<T *>(data)->nth(index);
+    }
+
+    object_ref nth(object_ref const index, object_ref const fallback) const
+    {
+      if(is_nil())
+      {
+        return fallback;
+      }
+
+      return static_cast<T *>(data)->nth(index, fallback);
+    }
+
     void *raw() const
     {
       return data;
@@ -2031,6 +2089,19 @@ namespace jank::runtime
       return i.next_in_place();
     }
 
+    /* behavior::indexable */
+    object_ref nth(object_ref const index) const
+    {
+      obj::small_integer i{ data };
+      return i.nth(index);
+    }
+
+    object_ref nth(object_ref const index, object_ref const fallback) const
+    {
+      obj::small_integer i{ data };
+      return i.nth(index, fallback);
+    }
+
     i32 raw() const
     {
       return data;
@@ -2373,6 +2444,19 @@ namespace jank::runtime
     {
       obj::small_real i{ data };
       return i.next_in_place();
+    }
+
+    /* behavior::indexable */
+    object_ref nth(object_ref const index) const
+    {
+      obj::small_real i{ data };
+      return i.nth(index);
+    }
+
+    object_ref nth(object_ref const index, object_ref const fallback) const
+    {
+      obj::small_real i{ data };
+      return i.nth(index, fallback);
     }
 
     f64 raw() const
@@ -2720,6 +2804,17 @@ namespace jank::runtime
     object_ref next_in_place() const
     {
       return {};
+    }
+
+    /* behavior::indexable */
+    object_ref nth(object_ref const) const
+    {
+      return {};
+    }
+
+    object_ref nth(object_ref const, object_ref const fallback) const
+    {
+      return fallback;
     }
 
     value_type *raw() const

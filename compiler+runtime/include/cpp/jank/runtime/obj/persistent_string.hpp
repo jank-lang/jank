@@ -13,7 +13,8 @@ namespace jank::runtime::obj
   {
     static constexpr object_type obj_type{ object_type::persistent_string };
     static constexpr object_behavior obj_behaviors{ object_behavior::get | object_behavior::compare
-                                                    | object_behavior::seqable };
+                                                    | object_behavior::seqable
+                                                    | object_behavior::indexable };
     static constexpr bool pointer_free{ false };
     static GC_word gc_descriptor;
 
@@ -49,8 +50,8 @@ namespace jank::runtime::obj
     bool contains(object_ref const key) const override;
 
     /* behavior::indexable */
-    object_ref nth(object_ref const index) const;
-    object_ref nth(object_ref const index, object_ref const fallback) const;
+    object_ref nth(object_ref const index) const override;
+    object_ref nth(object_ref const index, object_ref const fallback) const override;
 
     jtl::string_result<persistent_string_ref> substring(i64 start) const;
     jtl::string_result<persistent_string_ref> substring(i64 start, i64 end) const;

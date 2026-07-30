@@ -2170,14 +2170,14 @@
      ([a b c & ds] (apply f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c) ds)))))
 
 (defn some
-  "Returns the first logical true value of (pred x) for any x in coll,
-   else nil.  One common idiom is to use a set as pred, for example
+  "Returns the first logical true value of (selector x) for any x in coll,
+   else nil.  One common idiom is to use a set as selector, for example
    this will return :fred if :fred is in the sequence, otherwise nil:
    (some #{:fred} coll)"
-  [pred coll]
+  [selector coll]
   (let [s (seq coll)]
     (when s
-      (or (pred (first s)) (recur pred (next s))))))
+      (or (selector (first s)) (recur selector (next s))))))
 
 
 (defn every-pred

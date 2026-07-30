@@ -12,7 +12,6 @@
 #include <jank/runtime/behavior/collection_like.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/transientable.hpp>
-#include <jank/runtime/behavior/indexable.hpp>
 #include <jank/runtime/behavior/stackable.hpp>
 #include <jank/runtime/behavior/chunkable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
@@ -640,14 +639,14 @@ namespace jank::runtime
       return o;
     }
 
-    /* TODO: Port visit_object: indexable, seqable, sequential. */
+    /* TODO: Port visit_object: sequential. */
     return visit_object(
       [&](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
-        if constexpr(behavior::indexable<T>)
+        if(typed_o.has_behavior(object_behavior::indexable))
         {
-          return typed_o->nth(idx);
+          return typed_o.nth(idx);
         }
         else if(typed_o.has_behavior(object_behavior::seqable) && behavior::sequential<T>)
         {
@@ -679,14 +678,14 @@ namespace jank::runtime
       return fallback;
     }
 
-    /* TODO: Port visit_object: indexable, seqable, sequential. */
+    /* TODO: Port visit_object: sequential. */
     return visit_object(
       [&](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
-        if constexpr(behavior::indexable<T>)
+        if(typed_o.has_behavior(object_behavior::indexable))
         {
-          return typed_o->nth(idx, fallback);
+          return typed_o.nth(idx, fallback);
         }
         else if(typed_o.has_behavior(object_behavior::seqable) && behavior::sequential<T>)
         {

@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   struct array_chunk : object
   {
     static constexpr object_type obj_type{ object_type::array_chunk };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::indexable };
     static constexpr bool pointer_free{ false };
 
     array_chunk();
@@ -21,8 +21,10 @@ namespace jank::runtime::obj
     array_chunk_ref chunk_next() const;
     array_chunk_ref chunk_next_in_place();
     usize count() const;
-    object_ref nth(object_ref const index) const;
-    object_ref nth(object_ref const index, object_ref const fallback) const;
+
+    /* behavior::indexable */
+    object_ref nth(object_ref const index) const override;
+    object_ref nth(object_ref const index, object_ref const fallback) const override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     native_vector<object_ref> buffer;

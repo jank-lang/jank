@@ -305,7 +305,7 @@ namespace jank::runtime
     seqable = 1 << 6,
     sequence_like = 1 << 7,
     sequence_like_in_place = 1 << 8,
-    //indexable,
+    indexable = 1 << 9,
     //associatively_writable,
     //chunkable,
     //collection_like,
@@ -432,6 +432,22 @@ namespace jank::runtime
 
     /* behavior::find */
     virtual object_ref find(object_ref key) const;
+
+    /* behavior::indexable
+     *
+     * Indexable is meant to provide efficient item access in a
+     * collection, given an index. Alas, Clojure implements it
+     * for sequences in O(n) as well.
+     *
+     * In jank, the `runtime::nth` functions will handle the O(n)
+     * use cases and this behavior is reserved for more efficient
+     * usage. */
+
+    /* Given an index, return the item at that index or throw. */
+    virtual object_ref nth(object_ref index) const;
+
+    /* Given an index, return the item at that index or return the fallback. */
+    virtual object_ref nth(object_ref index, object_ref fallback) const;
 
     /* behavior::compare */
     /* Returns how this object compares to the specified object. Comparison, unlike equality,

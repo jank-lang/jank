@@ -211,6 +211,20 @@ namespace jank::runtime
                                               object_source(runtime::detail::untagged(this)));
   }
 
+  object_ref object::nth(object_ref const) const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "indexable",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  object_ref object::nth(object_ref const, object_ref const) const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "indexable",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
   i64 object::compare(object const &) const
   {
     throw error::runtime_unsupported_behavior(type,
