@@ -128,6 +128,11 @@ namespace jank::runtime
 
   object_ref print(object_ref const args)
   {
+    if(args.is_nil())
+    {
+      return {};
+    }
+
     auto const out{ get_stdout() };
 
     jtl::string_builder buff;
@@ -174,6 +179,11 @@ namespace jank::runtime
 
   object_ref pr(object_ref const args)
   {
+    if(args.is_nil())
+    {
+      return {};
+    }
+
     auto const out{ get_stdout() };
 
     jtl::string_builder buff;

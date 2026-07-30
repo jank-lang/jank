@@ -37,7 +37,7 @@ namespace jank::runtime
     }
     for(auto i(begin); i != end; ++i)
     {
-      buff((*i).to_string());
+      (*i).to_string(buff);
       auto n(i);
       if(++n != end)
       {
