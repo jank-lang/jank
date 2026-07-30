@@ -17,7 +17,7 @@
                    :else      [s "bytes"])]
     ;; bytes cannot be fractional
     (if (= "bytes" unit)
-      (format "{} bytes")
+      (format "{} bytes" v)
       (format "{:.{}f} {}" v precision unit))))
 
 (defn format-duration

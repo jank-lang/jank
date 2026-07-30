@@ -802,20 +802,12 @@ namespace jank::runtime
 
   obj::persistent_list_ref list(object_ref const s)
   {
-    return visit_seqable(
-      [](auto const typed_s) -> obj::persistent_list_ref {
-        return obj::persistent_list::create(typed_s);
-      },
-      s);
+    return obj::persistent_list::create(s);
   }
 
   obj::persistent_vector_ref vec(object_ref const s)
   {
-    return visit_seqable(
-      [](auto const typed_s) -> obj::persistent_vector_ref {
-        return obj::persistent_vector::create(typed_s);
-      },
-      s);
+    return obj::persistent_vector::create(s);
   }
 
   usize sequence_length(object_ref const s)
