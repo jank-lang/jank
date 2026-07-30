@@ -45,16 +45,12 @@ namespace jank::runtime::obj
 
   persistent_sorted_set_ref persistent_sorted_set::create_from_seq(object_ref const seq)
   {
-    return make_box<persistent_sorted_set>(visit_seqable(
-      [](auto const typed_seq) -> persistent_sorted_set::value_type {
-        runtime::detail::native_transient_sorted_set transient;
-        for(auto const e : make_sequence_range(typed_seq))
-        {
-          transient.insert(e);
-        }
-        return transient;
-      },
-      seq));
+    runtime::detail::native_transient_sorted_set transient;
+    for(auto const e : make_sequence_range(seq))
+    {
+      transient.insert(e);
+    }
+    return make_box<persistent_sorted_set>(transient);
   }
 
   bool persistent_sorted_set::equal(object const &o) const

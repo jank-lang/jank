@@ -35,28 +35,21 @@ namespace jank::runtime::obj
 
   persistent_array_map_ref persistent_array_map::create_from_seq(object_ref const seq)
   {
-    return visit_seqable(
-      [](auto const typed_seq) -> persistent_array_map_ref {
-        transient_array_map transient{};
-        auto const r{ make_sequence_range(typed_seq) };
-        for(auto it(r.begin()); it != r.end(); ++it)
-        {
-          auto const key(*it);
-          ++it;
-          if(it == r.end())
-          {
-            throw std::runtime_error{ util::format("Odd number of elements: {}",
-                                                   typed_seq->to_string()) };
-          }
-          auto const val(*it);
-          transient.assoc_in_place(key, val);
-        }
-        return transient.to_persistent();
-      },
-      [=]() -> persistent_array_map_ref {
-        throw std::runtime_error{ util::format("Not seqable: {}", seq.to_string()) };
-      },
-      seq);
+    transient_array_map transient{};
+    auto const r{ make_sequence_range(seq) };
+    for(auto it(r.begin()); it != r.end(); ++it)
+    {
+      auto const key(*it);
+      ++it;
+      if(it == r.end())
+      {
+        throw std::runtime_error{ util::format("Odd number of elements: {}",
+                                               seq.to_code_string()) };
+      }
+      auto const val(*it);
+      transient.assoc_in_place(key, val);
+    }
+    return transient.to_persistent();
   }
 
   object_ref persistent_array_map::find(object_ref const key) const

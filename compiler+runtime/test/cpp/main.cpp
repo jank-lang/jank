@@ -38,6 +38,12 @@ try
       .expect_ok();
 #endif
 
+    jank::runtime::__rt_ctx->in_ns_var->deref().call(
+      jank::runtime::make_box<jank::runtime::obj::symbol>("user"));
+    jank::runtime::__rt_ctx->intern_var("clojure.core", "refer")
+      .expect_ok()
+      .call(jank::runtime::make_box<jank::runtime::obj::symbol>("clojure.core"));
+
     auto const res(context.run());
     if(context.shouldExit())
     {

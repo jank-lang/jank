@@ -345,21 +345,18 @@ namespace jank::runtime
     {
       return obj::persistent_list::empty();
     }
-    return visit_seqable(
-      [=](auto const typed_s) -> object_ref {
-        auto const seq(typed_s.seq());
-        if(seq.is_nil())
-        {
-          return obj::persistent_list::empty();
-        }
-        auto ret(more(seq));
-        if(ret.is_nil())
-        {
-          return obj::persistent_list::empty();
-        }
-        return ret;
-      },
-      s);
+
+    auto const seq(s.seq());
+    if(seq.is_nil())
+    {
+      return obj::persistent_list::empty();
+    }
+    auto ret(more(seq));
+    if(ret.is_nil())
+    {
+      return obj::persistent_list::empty();
+    }
+    return ret;
   }
 
   object_ref cons(object_ref const head, object_ref const tail)
@@ -465,16 +462,12 @@ namespace jank::runtime
   {
     if(m.has_behavior(object_behavior::get))
     {
-      return visit_seqable(
-        [&](auto const typed_keys) -> object_ref {
-          object_ref ret{ m };
-          for(auto const &e : make_sequence_range(typed_keys))
-          {
-            ret = get(ret, e.erase());
-          }
-          return ret;
-        },
-        keys);
+      object_ref ret{ m };
+      for(auto const e : make_sequence_range(keys))
+      {
+        ret = get(ret, e);
+      }
+      return ret;
     }
     else
     {
@@ -488,20 +481,16 @@ namespace jank::runtime
 
     if(m.has_behavior(object_behavior::get))
     {
-      return visit_seqable(
-        [&](auto const typed_keys) -> object_ref {
-          object_ref ret{ m };
-          for(auto const &e : make_sequence_range(typed_keys))
-          {
-            ret = get(ret, e.erase(), sentinel);
-            if(ret == sentinel)
-            {
-              return fallback;
-            }
-          }
-          return ret;
-        },
-        keys);
+      object_ref ret{ m };
+      for(auto const &e : make_sequence_range(keys))
+      {
+        ret = get(ret, e, sentinel);
+        if(ret == sentinel)
+        {
+          return fallback;
+        }
+      }
+      return ret;
     }
     else
     {
@@ -859,38 +848,32 @@ namespace jank::runtime
       return true;
     }
 
-    /* TODO: visit_sequence. */
-    return visit_seqable(
-      [](auto const typed_l, object_ref const r) -> bool {
-        return visit_seqable(
-          [](auto const typed_r, auto const typed_l) -> bool {
-            auto const &l_range{ make_sequence_range(typed_l) };
-            auto const &r_range{ make_sequence_range(typed_r) };
-            auto r_it(r_range.begin());
-            for(auto l_it(l_range.begin()); l_it != l_range.end(); ++l_it, ++r_it)
-            {
-              if(r_it == r_range.end() || !runtime::equal((*l_it).erase(), (*r_it).erase()))
-              {
-                return false;
-              }
-            }
-            return r_it == r_range.end();
-          },
-          []() { return false; },
-          r,
-          typed_l);
-      },
-      []() { return false; },
-      l,
-      r);
+    if(!l.has_behavior(object_behavior::seqable))
+    {
+      return false;
+    }
+    if(!r.has_behavior(object_behavior::seqable))
+    {
+      return false;
+    }
+
+    auto const l_range{ make_sequence_range(l) };
+    auto const r_range{ make_sequence_range(r) };
+    auto r_it(r_range.begin());
+    for(auto l_it(l_range.begin()); l_it != l_range.end(); ++l_it, ++r_it)
+    {
+      if(r_it == r_range.end() || !runtime::equal((*l_it).erase(), (*r_it).erase()))
+      {
+        return false;
+      }
+    }
+    return r_it == r_range.end();
   }
 
   object_ref reduce(object_ref const f, object_ref const init, object_ref const s)
   {
-    return visit_seqable(
-      [](auto const typed_coll, object_ref const f, object_ref const init) -> object_ref {
         object_ref res{ init };
-        for(auto const &e : make_sequence_range(typed_coll))
+        for(auto const &e : make_sequence_range(s))
         {
           res = f.call(res, e);
           if(res.get_type() == object_type::reduced)
@@ -900,10 +883,6 @@ namespace jank::runtime
           }
         }
         return res;
-      },
-      s,
-      f,
-      init);
   }
 
   object_ref reduced(object_ref const o)

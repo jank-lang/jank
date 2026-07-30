@@ -1,7 +1,6 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/runtime/sequence_range.hpp>
@@ -12,35 +11,26 @@ namespace jank::runtime
   template <typename It>
   bool equal(object const &o, It const &begin, It const &end)
   {
-    return visit_seqable(
-      [](auto const typed_o, auto const &begin, auto const &end) -> bool {
-        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
-
-        /* nil is seqable, but we don't want it to be equal to an empty collection.
-           An empty seq itself is nil, but that's different. */
-        if constexpr(std::same_as<T, obj::nil>)
+    /* nil is seqable, but we don't want it to be equal to an empty collection.
+     * An empty seq itself is nil, but that's different. */
+    if(o.type == object_type::nil || !o.has_behavior(object_behavior::seqable))
+    {
+      return false;
+    }
+    else
+    {
+      auto const r{ make_sequence_range(detail::untagged(&o)) };
+      auto seq_it(r.begin());
+      auto it(begin);
+      for(; it != end; ++it, ++seq_it)
+      {
+        if(seq_it == r.end() || !runtime::equal(*it, *seq_it))
         {
           return false;
         }
-        else
-        {
-          auto const r{ make_sequence_range(typed_o) };
-          auto seq_it(r.begin());
-          auto it(begin);
-          for(; it != end; ++it, ++seq_it)
-          {
-            if(seq_it == r.end() || !runtime::equal(*it, *seq_it))
-            {
-              return false;
-            }
-          }
-          return seq_it == r.end() && it == end;
-        }
-      },
-      []() { return false; },
-      runtime::detail::untagged(&o),
-      begin,
-      end);
+      }
+      return seq_it == r.end() && it == end;
+    }
   }
 
   template <typename T>

@@ -1209,37 +1209,30 @@ namespace jank::read::parse
                                                     "Top-level #?@ usage is not allowed.");
         }
 
-        auto const res{ visit_seqable(
-          [&](auto const typed_s) -> processor::object_result {
-            auto const r{ make_sequence_range(typed_s) };
-
-            if(r.begin() == r.end())
-            {
-              return ok(none);
-            }
-
-            auto const first(*r.begin());
-
-            for(auto it(++r.begin()); it != r.end(); ++it)
-            {
-              spliced_forms.push_back(*it);
-            }
-
-            return object_source_info{ first, start_token, latest_token };
-          },
-          [&]() -> processor::object_result {
-            /* TODO: Get the source of just this form. */
-            return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
-                                                      "#?@ must be used on a sequence.");
-          },
-          form) };
-
-        if(res.is_err())
+        if(!form.has_behavior(object_behavior::seqable))
         {
-          return res;
+          /* TODO: Get the source of just this form. */
+          return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
+                                                    "#?@ must be used on a sequence.");
         }
 
-        result = res.expect_ok();
+        auto const r{ make_sequence_range(form) };
+
+        if(r.begin() == r.end())
+        {
+          result = ok(none);
+        }
+        else
+        {
+          auto const first(*r.begin());
+
+          for(auto it(++r.begin()); it != r.end(); ++it)
+          {
+            spliced_forms.push_back(*it);
+          }
+
+          result = object_source_info{ first, start_token, latest_token };
+        }
       }
       else
       {
@@ -1292,42 +1285,40 @@ namespace jank::read::parse
       return seq;
     }
 
-    return visit_seqable(
-      [this](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
-        runtime::detail::native_transient_vector ret;
-        for(auto const item : make_sequence_range(typed_seq))
+    if(!seq.has_behavior(object_behavior::seqable))
+    {
+      return err(
+        error::internal_parse_failure(util::format("syntax_quote_expand_seq arg is seqable: {}.",
+                                                   object_type_str(seq.get_type()))));
+    }
+
+    runtime::detail::native_transient_vector ret;
+    for(auto const item : make_sequence_range(seq))
+    {
+      if(syntax_quote_is_unquote(item, false))
+      {
+        ret.push_back(make_box<obj::persistent_list>(std::in_place,
+                                                     make_box<obj::symbol>("clojure.core", "list"),
+                                                     second(item)));
+      }
+      else if(syntax_quote_is_unquote(item, true))
+      {
+        ret.push_back(second(item));
+      }
+      else
+      {
+        auto quoted_item(syntax_quote(item));
+        if(quoted_item.is_err())
         {
-          if(syntax_quote_is_unquote(item, false))
-          {
-            ret.push_back(
-              make_box<obj::persistent_list>(std::in_place,
-                                             make_box<obj::symbol>("clojure.core", "list"),
-                                             second(item)));
-          }
-          else if(syntax_quote_is_unquote(item, true))
-          {
-            ret.push_back(second(item));
-          }
-          else
-          {
-            auto quoted_item(syntax_quote(item));
-            if(quoted_item.is_err())
-            {
-              return quoted_item;
-            }
-            ret.push_back(
-              make_box<obj::persistent_list>(std::in_place,
-                                             make_box<obj::symbol>("clojure.core", "list"),
-                                             quoted_item.expect_ok()));
-          }
+          return quoted_item;
         }
-        auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
-        return vec;
-      },
-      []() -> jtl::result<object_ref, error_ref> {
-        return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
-      },
-      seq);
+        ret.push_back(make_box<obj::persistent_list>(std::in_place,
+                                                     make_box<obj::symbol>("clojure.core", "list"),
+                                                     quoted_item.expect_ok()));
+      }
+    }
+    auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+    return vec;
   }
 
   jtl::result<object_ref, error_ref> processor::syntax_quote_flatten_map(object_ref const seq)
@@ -1337,22 +1328,22 @@ namespace jank::read::parse
       return seq;
     }
 
-    return visit_seqable(
-      [](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
-        runtime::detail::native_transient_vector ret;
-        for(auto const item : make_sequence_range(typed_seq))
-        {
-          auto const item_seq{ item.seq() };
-          ret.push_back(item_seq.first());
-          ret.push_back(item_seq.next().first());
-        }
-        auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
-        return vec;
-      },
-      []() -> jtl::result<object_ref, error_ref> {
-        return err(error::internal_parse_failure("syntax_quote_flatten_map arg is not a seq."));
-      },
-      seq);
+    if(!seq.has_behavior(object_behavior::seqable))
+    {
+      return err(error::internal_parse_failure(
+        util::format("syntax_quote_flatten_map arg is not seqable: {}.",
+                     object_type_str(seq.get_type()))));
+    }
+
+    runtime::detail::native_transient_vector ret;
+    for(auto const item : make_sequence_range(seq))
+    {
+      auto const item_seq{ item.seq() };
+      ret.push_back(item_seq.first());
+      ret.push_back(item_seq.next().first());
+    }
+    auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+    return vec;
   }
 
   jtl::result<object_ref, error_ref> processor::syntax_quote_expand_set(object_ref const seq)
@@ -1362,56 +1353,52 @@ namespace jank::read::parse
       return seq;
     }
 
-    return visit_seqable(
-      [this](auto const typed_seq) -> jtl::result<object_ref, error_ref> {
-        runtime::detail::native_transient_vector ret;
-        for(auto const item : make_sequence_range(typed_seq))
+    if(!seq.has_behavior(object_behavior::seqable))
+    {
+      return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
+    }
+
+    runtime::detail::native_transient_vector ret;
+    for(auto const item : make_sequence_range(seq))
+    {
+      if(syntax_quote_is_unquote(item, false))
+      {
+        ret.push_back(make_box<obj::persistent_list>(std::in_place,
+                                                     make_box<obj::symbol>("clojure.core", "list"),
+                                                     second(item)));
+      }
+      else if(syntax_quote_is_unquote(item, true))
+      {
+        ret.push_back(second(item));
+      }
+      else
+      {
+        auto quoted_item(syntax_quote(item));
+        if(quoted_item.is_err())
         {
-          if(syntax_quote_is_unquote(item, false))
-          {
-            ret.push_back(
-              make_box<obj::persistent_list>(std::in_place,
-                                             make_box<obj::symbol>("clojure.core", "list"),
-                                             second(item)));
-          }
-          else if(syntax_quote_is_unquote(item, true))
-          {
-            ret.push_back(second(item));
-          }
-          else
-          {
-            auto quoted_item(syntax_quote(item));
-            if(quoted_item.is_err())
-            {
-              return quoted_item;
-            }
-            ret.push_back(
-              make_box<obj::persistent_list>(std::in_place,
-                                             make_box<obj::symbol>("clojure.core", "list"),
-                                             quoted_item.expect_ok()));
-          }
+          return quoted_item;
         }
-        auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
-        return vec;
-      },
-      []() -> jtl::result<object_ref, error_ref> {
-        return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
-      },
-      seq);
+        ret.push_back(make_box<obj::persistent_list>(std::in_place,
+                                                     make_box<obj::symbol>("clojure.core", "list"),
+                                                     quoted_item.expect_ok()));
+      }
+    }
+    auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
+    return vec;
   }
 
   bool processor::syntax_quote_is_unquote(object_ref const form, bool const splice)
   {
-    return visit_seqable(
-      [splice](auto const typed_form) {
-        auto const s(typed_form->seq());
-        object_ref const item{ s.is_some() ? first(s).erase() : s.erase() };
+    if(!form.has_behavior(object_behavior::seqable))
+    {
+      return false;
+    }
 
-        return make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote"))
-          .equal(item);
-      },
-      [] { return false; },
-      form);
+    auto const s(form.seq());
+    object_ref const item{ s.is_some() ? first(s).erase() : s.erase() };
+
+    return make_box<obj::symbol>("clojure.core", (splice ? "unquote-splicing" : "unquote"))
+      .equal(item);
   }
 
   static bool is_special(object_ref const form)

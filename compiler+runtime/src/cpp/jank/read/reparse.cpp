@@ -105,26 +105,15 @@ namespace jank::read::parse
      * see if it's one of the types we support. If not, we'll error out.
      * We can do more here, going forward, by supporting various sequences and such,
      * but this will be fine for now. */
-    return visit_seqable(
-      [](auto const typed_o, usize const n) -> source {
-        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
-
-        if constexpr(std::same_as<T, obj::persistent_list>
-                     || std::same_as<T, obj::persistent_vector>)
-        {
-          return reparse_nth(typed_o, n);
-        }
-        else
-        {
-          throw error::internal_parse_failure(
-            util::format("Unsupported object for reparsing '{}'.", typed_o->to_code_string()));
-        }
-      },
-      [=]() -> source {
-        throw error::internal_parse_failure(
-          util::format("Unable to reparse object '{}'.", o.to_code_string()));
-      },
-      o,
-      n);
+    if(o.get_type() == object_type::persistent_list
+       || o.get_type() == object_type::persistent_vector)
+    {
+      return reparse_nth(o, n);
+    }
+    else
+    {
+      throw error::internal_parse_failure(
+        util::format("Unsupported object for reparsing '{}'.", object_type_str(o.get_type())));
+    }
   }
 }

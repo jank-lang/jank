@@ -44,16 +44,12 @@ namespace jank::runtime::obj
 
   persistent_hash_set_ref persistent_hash_set::create_from_seq(object_ref const seq)
   {
-    return make_box<persistent_hash_set>(visit_seqable(
-      [](auto const typed_seq) -> persistent_hash_set::value_type {
-        runtime::detail::native_transient_hash_set transient;
-        for(auto const e : make_sequence_range(typed_seq))
-        {
-          transient.insert(e);
-        }
-        return transient.persistent();
-      },
-      seq));
+    runtime::detail::native_transient_hash_set transient;
+    for(auto const e : make_sequence_range(seq))
+    {
+      transient.insert(e);
+    }
+    return make_box<persistent_hash_set>(transient.persistent());
   }
 
   bool persistent_hash_set::equal(object const &o) const
