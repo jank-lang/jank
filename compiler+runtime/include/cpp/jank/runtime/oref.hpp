@@ -996,12 +996,12 @@ namespace jank::runtime
     {
       if(detail::is_tagged_small_int(data))
       {
-        obj::small_integer i{ detail::as_integer(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.seq();
       }
       else if(detail::is_tagged_small_real(data))
       {
-        obj::small_real i{ detail::as_real(data) };
+        obj::small_real const i{ detail::as_real(data) };
         return i.seq();
       }
       else
@@ -1015,12 +1015,12 @@ namespace jank::runtime
     {
       if(detail::is_tagged_small_int(data))
       {
-        obj::small_integer i{ detail::as_integer(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.fresh_seq();
       }
       else if(detail::is_tagged_small_real(data))
       {
-        obj::small_real i{ detail::as_real(data) };
+        obj::small_real const i{ detail::as_real(data) };
         return i.fresh_seq();
       }
       else
@@ -1034,12 +1034,12 @@ namespace jank::runtime
     {
       if(detail::is_tagged_small_int(data))
       {
-        obj::small_integer i{ detail::as_integer(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.first();
       }
       else if(detail::is_tagged_small_real(data))
       {
-        obj::small_real i{ detail::as_real(data) };
+        obj::small_real const i{ detail::as_real(data) };
         return i.first();
       }
       else
@@ -1052,12 +1052,12 @@ namespace jank::runtime
     {
       if(detail::is_tagged_small_int(data))
       {
-        obj::small_integer i{ detail::as_integer(data) };
+        obj::small_integer const i{ detail::as_integer(data) };
         return i.next();
       }
       else if(detail::is_tagged_small_real(data))
       {
-        obj::small_real i{ detail::as_real(data) };
+        obj::small_real const i{ detail::as_real(data) };
         return i.next();
       }
       else

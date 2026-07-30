@@ -157,16 +157,18 @@ namespace jank::runtime
     {
       std::putc('\n', out);
     }
-
-    jtl::string_builder buff;
-    args.first().to_string(buff);
-    for(auto const e : make_sequence_range(args).skip(1))
+    else
     {
-      buff(' ');
-      e.to_string(buff);
+      jtl::string_builder buff;
+      args.first().to_string(buff);
+      for(auto const e : make_sequence_range(args).skip(1))
+      {
+        buff(' ');
+        e.to_string(buff);
+      }
+      std::fwrite(buff.data(), 1, buff.size(), out);
+      std::putc('\n', out);
     }
-    std::fwrite(buff.data(), 1, buff.size(), out);
-    std::putc('\n', out);
     return {};
   }
 
