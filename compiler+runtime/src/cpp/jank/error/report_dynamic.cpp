@@ -1,10 +1,6 @@
 #include <algorithm>
 #include <deque>
 
-#include <ftxui/dom/elements.hpp>
-#include <ftxui/screen/screen.hpp>
-#include <ftxui/screen/string.hpp>
-
 #include <jtl/terminal.hpp>
 
 #include <jank/util/string.hpp>
@@ -22,9 +18,9 @@
 
 namespace jank::error
 {
+  using jtl::terminal::text_style;
   using namespace jank;
   using namespace jank::runtime;
-  using namespace ftxui;
 
   static constexpr usize max_body_lines{ 6 };
   static constexpr usize min_body_lines{ 1 };
@@ -378,20 +374,22 @@ namespace jank::error
     }
   }
 
-  static Element header(std::string const &title, usize const max_width)
+  static jtl::immutable_string header(std::string const &title, usize const max_width)
   {
     auto const padding_count(max_width - 3 - title.size());
-    std::string padding;
+    jtl::string_builder sb;
+    sb(text_style::bright_black);
+    sb("─ ");
+    sb(text_style::bright_blue);
+    sb(title);
+    sb(text_style::bright_black);
+    sb(" ");
     for(usize i{}; i < padding_count; ++i)
     {
-      padding.insert(padding.size(), "─");
+      sb("─");
     }
-    return hbox({
-      text("─ ") | color(Color::GrayDark),
-      text(title) | color(Color::BlueLight),
-      text(" "),
-      text(padding) | color(Color::GrayDark),
-    });
+    sb(text_style::reset);
+    return sb.release();
   }
 
   /* In order to flex properly, we need line number columns to all be the same width.
@@ -399,18 +397,30 @@ namespace jank::error
    * snippet spanning lines 8 through 12 will have two lines (8 - 9) which have a
    * single character width, while (10 - 12) are twice as wide. So, we measure the
    * width of the widest number (the last one) and then pad the others. */
-  static Element line_number(usize const max_line_number_width, std::string num)
+  static jtl::immutable_string line_number(usize const max_line_number_width, std::string num)
   {
     if(num.size() < max_line_number_width)
     {
-      /* We add space to the beginning so we can keep numbers right aligned. */
+      /* We add space to the beginning so we can keep numbers right-aligned. */
       num.insert(num.begin(), max_line_number_width - num.size(), ' ');
     }
-    return hbox({ paragraphAlignRight(std::move(num)), text("  ") }) | color(Color::GrayDark)
-      | size(WIDTH, EQUAL, 5);
+
+    jtl::string_builder sb;
+    sb(text_style::bright_black);
+    jtl::immutable_string const right_padding{ "  " };
+    for(i64 left_padding{ 5 - (static_cast<i64>(num.size() + right_padding.size())) };
+        0 < left_padding;
+        --left_padding)
+    {
+      sb(' ');
+    }
+    sb(num);
+    sb(right_padding);
+    sb(text_style::reset);
+    return sb.release();
   }
 
-  static Element underline_note(note const &n)
+  static jtl::immutable_string underline_note(note const &n)
   {
     auto const width{ std::max(n.source.end.col - n.source.start.col, 1llu) };
     std::string underline(n.source.start.col - 1, ' ');
@@ -419,22 +429,26 @@ namespace jank::error
 
     /* TODO: This is broken for very long lines, which wrap, since the
      * note doesn't wrap the same way. */
-    auto const ret{ hbox({ text(underline), paragraph(n.message) }) };
+    jtl::string_builder sb;
     switch(n.kind)
     {
       case note::kind::info:
-        return ret | color(Color::BlueLight);
+        sb(text_style::bright_blue);
       case note::kind::warning:
-        return ret | color(Color::Orange1);
+        sb(text_style::yellow);
       case note::kind::error:
-        return ret | color(Color::Red);
+        sb(text_style::red);
     }
+    sb(underline);
+    sb(n.message);
+    return sb.release();
   }
 
-  static Element code_snippet_box(std::filesystem::path const &path,
-                                  std::vector<Element> const &line_numbers,
-                                  std::vector<Element> const &line_contents,
-                                  usize const max_width)
+  static jtl::immutable_string
+  code_snippet_box(std::filesystem::path const &path,
+                   native_vector<jtl::immutable_string> const &line_numbers,
+                   native_vector<jtl::immutable_string> const &line_contents,
+                   usize const max_width)
   {
     static constexpr auto margin{ 8 };
     std::string top_line{ "─────┬──" };
@@ -454,22 +468,30 @@ namespace jank::error
       bottom_line += "─";
     }
 
-    std::vector<Element> numbered_lines;
+    jtl::string_builder sb;
+    util::format_to(sb, "{}{}\n", text_style::bright_black, top_line);
+    util::format_to(sb,
+                    "{}{}{}{}{}\n",
+                    pre_title,
+                    text_style::reset,
+                    text_style::bold,
+                    util::compact_path(path, max_width - margin),
+                    text_style::reset);
+    util::format_to(sb, "{}{}\n", text_style::bright_black, middle_line);
     for(usize i{}; i < line_numbers.size(); ++i)
     {
-      numbered_lines.push_back(hbox(
-        { line_numbers[i], separator() | color(Color::GrayDark), text(" "), line_contents[i] }));
+      util::format_to(sb,
+                      "{}{}│{} {}\n",
+                      line_numbers[i],
+                      text_style::bright_black,
+                      text_style::reset,
+                      line_contents[i]);
     }
-
-    return vbox({ text(top_line) | color(Color::GrayDark),
-                  hbox({ text(pre_title) | color(Color::GrayDark),
-                         text(util::compact_path(path, max_width - margin)) | bold }),
-                  text(middle_line) | color(Color::GrayDark),
-                  vbox(std::move(numbered_lines)),
-                  text(bottom_line) | color(Color::GrayDark) });
+    util::format_to(sb, "{}{}{}\n", text_style::bright_black, bottom_line, text_style::reset);
+    return sb.release();
   }
 
-  static Element code_snippet(snippet const &s, usize const max_width)
+  static jtl::immutable_string code_snippet(snippet const &s, usize const max_width)
   {
     /* We may not be able to read the file, so we fall back to trying to read the module.
      * This can happen for baked-in core libs like clojure.core for an installed jank. */
@@ -482,21 +504,19 @@ namespace jank::error
       }
       if(file.is_err())
       {
-        return window(
-          text(util::format(" {} ", s.file)),
-          hbox({ text(util::format("Unable to map file: {}", file.expect_err()->message)) }));
+        return util::format("Unable to read file: {}\n{}\n", s.file, file.expect_err()->message);
       }
     }
 
     auto const highlighted_lines{ ui::highlight(file.expect_ok(), s.line_start, s.line_end) };
 
-    std::vector<Element> line_numbers, lines;
+    native_vector<jtl::immutable_string> line_numbers, lines;
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
     auto const max_line_number_width{ snprintf(nullptr, 0, "%llu", s.line_end) };
 
     for(auto const &l : s.lines)
     {
-      Element line_num{}, line_content{};
+      jtl::immutable_string line_num{}, line_content{};
       switch(l.kind)
       {
         case line::kind::file_data:
@@ -504,11 +524,11 @@ namespace jank::error
           /* TODO:There's a bug here. We should always contain this line number. */
           if(highlighted_lines.contains(l.number))
           {
-            line_content = text(highlighted_lines.at(l.number));
+            line_content = highlighted_lines.at(l.number);
           }
           else
           {
-            line_content = text(" ");
+            line_content = " ";
           }
           break;
         case line::kind::note:
@@ -517,7 +537,7 @@ namespace jank::error
           break;
         case line::kind::ellipsis:
           line_num = line_number(max_line_number_width, "");
-          line_content = text("…") | flex;
+          line_content = "…";
           break;
       }
       line_numbers.emplace_back(line_num);
@@ -536,14 +556,14 @@ namespace jank::error
   {
     plan const p{ e };
 
-    auto const terminal_width{ Terminal::Size().dimx };
-    auto const max_width{ std::min(terminal_width, 100) };
+    auto const terminal_width{ jtl::terminal::get_size().width };
+    auto const max_width{ std::min(terminal_width, 100ull) };
 
-    auto error{ vbox({ header(kind_str(e->kind), max_width),
-                       hbox({
-                         text("error: ") | bold | color(Color::Red),
-                         paragraph(e->message) | bold,
-                       }) }) };
+    util::println("{}", header(kind_str(e->kind), max_width));
+    util::println("{}error:{} {}\n",
+                  text_style::bold | text_style::red,
+                  text_style::reset,
+                  e->message);
 
     /* TODO: Context. */
     //auto context{ vbox(
@@ -562,32 +582,11 @@ namespace jank::error
     //      }),
     //    }) }) };
 
+    for(auto const &s : p.snippets)
     {
-      std::vector<Element> const doc_body{
-        error,
-        text("\n"),
-      };
-
-      auto document{ vbox(doc_body) };
-      auto screen{ Screen::Create(Dimension::Fixed(max_width), Dimension::Fit(document)) };
-      Render(screen, document);
-      screen.Print();
-      util::print("\n");
+      util::println("{}", code_snippet(s, max_width));
     }
-
-    {
-      std::vector<Element> doc_body;
-      for(auto const &s : p.snippets)
-      {
-        doc_body.emplace_back(code_snippet(s, max_width));
-      }
-
-      auto document{ vbox(doc_body) };
-      auto screen{ Screen::Create(Dimension::Fit(document), Dimension::Fit(document)) };
-      Render(screen, document);
-      screen.Print();
-      util::print("\n");
-    }
+    util::print("\n");
 
     if(e->cause)
     {

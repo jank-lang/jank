@@ -438,7 +438,6 @@ set(jank_standalone_dynamic_lib_deps
   jank_dynamic_lib
   jank_static_lib
   cpptrace::cpptrace
-  ftxui::screen ftxui::dom
   Boost::multiprecision
   nanobench_lib
   jankzip_lib
@@ -489,7 +488,6 @@ set(BUILD_SHARED_LIBS OFF)
 
 include(FetchContent)
 include(cmake/dependency/bdwgc.cmake)
-include(cmake/dependency/ftxui.cmake)
 include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
@@ -651,7 +649,6 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/folly>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/bdwgc/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/immer>"
-  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/ftxui/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/zip/src>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cpptrace/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/cppinterop/include>"
@@ -668,7 +665,6 @@ target_include_directories(
 target_link_libraries(
   jank_common_lib PRIVATE
   cpptrace::cpptrace
-  ftxui::screen ftxui::dom
   Boost::multiprecision
   Boost::boost
   nanobench_lib

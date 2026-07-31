@@ -114,7 +114,7 @@ namespace jank::jit
 
         if(skip)
         {
-          util::println("{}skipped{}", jtl::terminal_style::yellow, jtl::terminal_style::reset);
+          util::println("{}skipped{}", jtl::terminal::text_style::yellow, jtl::terminal::text_style::reset);
           skips.push_back(dir_entry.path());
           continue;
         }
@@ -196,16 +196,16 @@ namespace jank::jit
         if(allow_failure)
         {
           util::println("{}allowed failure{}",
-                        jtl::terminal_style::yellow,
-                        jtl::terminal_style::reset);
+                        jtl::terminal::text_style::yellow,
+                        jtl::terminal::text_style::reset);
         }
         else if(passed)
         {
-          util::println("{}success{}", jtl::terminal_style::green, jtl::terminal_style::reset);
+          util::println("{}success{}", jtl::terminal::text_style::green, jtl::terminal::text_style::reset);
         }
         else
         {
-          util::println("{}failure{}", jtl::terminal_style::red, jtl::terminal_style::reset);
+          util::println("{}failure{}", jtl::terminal::text_style::red, jtl::terminal::text_style::reset);
           std::cerr << captured_output.rdbuf() << "\n";
           std::cerr.flush();
         }
@@ -217,26 +217,26 @@ namespace jank::jit
       for(auto const &f : skips)
       {
         util::print("{}skip{}: {}\n",
-                    jtl::terminal_style::yellow,
-                    jtl::terminal_style::reset,
+                    jtl::terminal::text_style::yellow,
+                    jtl::terminal::text_style::reset,
                     f.string());
       }
       for(auto const &f : failures)
       {
         util::print("{}failure{}: {}\n\t{}\n",
-                    jtl::terminal_style::red,
-                    jtl::terminal_style::reset,
+                    jtl::terminal::text_style::red,
+                    jtl::terminal::text_style::reset,
                     f.path.string(),
                     f.error);
       }
       util::print("tested {} jank files with {}{} skips{} and {}{} failures{}\n",
                   test_count,
-                  (skips.empty() ? jtl::terminal_style::reset : jtl::terminal_style::yellow),
+                  (skips.empty() ? jtl::terminal::text_style::reset : jtl::terminal::text_style::yellow),
                   skips.size(),
-                  jtl::terminal_style::reset,
-                  (failures.empty() ? jtl::terminal_style::reset : jtl::terminal_style::red),
+                  jtl::terminal::text_style::reset,
+                  (failures.empty() ? jtl::terminal::text_style::reset : jtl::terminal::text_style::red),
                   failures.size(),
-                  jtl::terminal_style::reset);
+                  jtl::terminal::text_style::reset);
     }
   }
 }

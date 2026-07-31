@@ -304,7 +304,7 @@ namespace jtl
     return *this;
   }
 
-  string_builder &string_builder::operator()(terminal::text_style s) &
+  string_builder &string_builder::operator()(terminal::text_style const s) &
   {
     if(s == terminal::text_style::reset)
     {
@@ -449,7 +449,7 @@ namespace jtl
 
   jtl::immutable_string string_builder::release()
   {
-    jank_debug_assert(pos < capacity);
+    jank_debug_assert(pos <= capacity);
 
     jtl::immutable_string ret;
     if(pos <= jtl::immutable_string::max_small_size)
