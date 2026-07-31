@@ -872,17 +872,17 @@ namespace jank::runtime
 
   object_ref reduce(object_ref const f, object_ref const init, object_ref const s)
   {
-        object_ref res{ init };
-        for(auto const &e : make_sequence_range(s))
-        {
-          res = f.call(res, e);
-          if(res.get_type() == object_type::reduced)
-          {
-            res = expect_object<obj::reduced>(res)->val;
-            break;
-          }
-        }
-        return res;
+    object_ref res{ init };
+    for(auto const &e : make_sequence_range(s))
+    {
+      res = f.call(res, e);
+      if(res.get_type() == object_type::reduced)
+      {
+        res = expect_object<obj::reduced>(res)->val;
+        break;
+      }
+    }
+    return res;
   }
 
   object_ref reduced(object_ref const o)

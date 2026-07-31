@@ -2092,13 +2092,13 @@ namespace jank::runtime
     /* behavior::indexable */
     object_ref nth(object_ref const index) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.nth(index);
     }
 
     object_ref nth(object_ref const index, object_ref const fallback) const
     {
-      obj::small_integer i{ data };
+      obj::small_integer const i{ data };
       return i.nth(index, fallback);
     }
 
@@ -2449,13 +2449,13 @@ namespace jank::runtime
     /* behavior::indexable */
     object_ref nth(object_ref const index) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.nth(index);
     }
 
     object_ref nth(object_ref const index, object_ref const fallback) const
     {
-      obj::small_real i{ data };
+      obj::small_real const i{ data };
       return i.nth(index, fallback);
     }
 
