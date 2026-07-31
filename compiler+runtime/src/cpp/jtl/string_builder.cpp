@@ -6,7 +6,7 @@
 #include <jtl/assert.hpp>
 
 #include <jtl/string_builder.hpp>
-#include <jtl/format/style.hpp>
+#include <jtl/terminal.hpp>
 
 #include <jank/runtime/obj/ratio.hpp>
 
@@ -37,55 +37,6 @@ namespace jtl
   {
     string_builder::traits_type::copy(sb.buffer + sb.pos, str, size);
     sb.pos += size;
-  }
-
-  static constexpr char const *style(terminal_style const s)
-  {
-    switch(s)
-    {
-      case terminal_style::reset:
-        return "\u001b[0m";
-      case terminal_style::bold:
-        return "\u001b[1m";
-      case terminal_style::underline:
-        return "\u001b[4m";
-      case terminal_style::no_underline:
-        return "\u001b[24m";
-      case terminal_style::black:
-        return "\u001b[0;30m";
-      case terminal_style::red:
-        return "\u001b[0;31m";
-      case terminal_style::green:
-        return "\u001b[0;32m";
-      case terminal_style::yellow:
-        return "\u001b[0;33m";
-      case terminal_style::blue:
-        return "\u001b[0;34m";
-      case terminal_style::magenta:
-        return "\u001b[0;35m";
-      case terminal_style::cyan:
-        return "\u001b[0;36m";
-      case terminal_style::white:
-        return "\u001b[0;37m";
-      case terminal_style::bright_black:
-        return "\u001b[0;90m";
-      case terminal_style::bright_red:
-        return "\u001b[0;91m";
-      case terminal_style::bright_green:
-        return "\u001b[0;92m";
-      case terminal_style::bright_yellow:
-        return "\u001b[0;93m";
-      case terminal_style::bright_blue:
-        return "\u001b[0;94m";
-      case terminal_style::bright_magenta:
-        return "\u001b[0;95m";
-      case terminal_style::bright_cyan:
-        return "\u001b[0;96m";
-      case terminal_style::bright_white:
-        return "\u001b[0;97m";
-      default:
-        return "";
-    }
   }
 
   string_builder::string_builder()
@@ -353,9 +304,39 @@ namespace jtl
     return *this;
   }
 
-  string_builder &string_builder::operator()(terminal_style const s) &
+  string_builder &string_builder::operator()(terminal::text_style s) &
   {
-    return (*this)(style(s));
+    if(s == terminal::text_style::reset)
+    {
+      (*this)("\u001b[0m");
+      return *this;
+    }
+
+    if(terminal::has_flag(s, terminal::text_style::bold))
+    {
+      (*this)("\u001b[1m");
+    }
+
+    if(terminal::has_flag(s, terminal::text_style::underline))
+    {
+      (*this)("\u001b[4m");
+    }
+
+    if(terminal::has_flag(s, terminal::text_style::no_underline))
+    {
+      (*this)("\u001b[24m");
+    }
+
+    for(auto const &[flag, code] : terminal::color_codes)
+    {
+      if(terminal::has_flag(s, flag))
+      {
+        (*this)(code);
+        break;
+      }
+    }
+
+    return *this;
   }
 
   void string_builder::push_back(bool const d) &

@@ -9,7 +9,7 @@
 
 #include <CppInterOp/Compatibility.h>
 
-#include <jtl/format/style.hpp>
+#include <jtl/terminal.hpp>
 
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>

@@ -5,7 +5,7 @@
 #include <ftxui/screen/screen.hpp>
 #include <ftxui/screen/string.hpp>
 
-#include <jtl/format/style.hpp>
+#include <jtl/terminal.hpp>
 
 #include <jank/util/string.hpp>
 #include <jank/util/fmt.hpp>
@@ -504,7 +504,7 @@ namespace jank::error
           /* TODO:There's a bug here. We should always contain this line number. */
           if(highlighted_lines.contains(l.number))
           {
-            line_content = highlighted_lines.at(l.number);
+            line_content = text(highlighted_lines.at(l.number));
           }
           else
           {

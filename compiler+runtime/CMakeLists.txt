@@ -518,6 +518,7 @@ add_library(
   src/cpp/jtl/assert.cpp
   src/cpp/jtl/string_builder.cpp
   src/cpp/jtl/utf8.cpp
+  src/cpp/jtl/terminal.cpp
   src/cpp/jank/c_api.cpp
   src/cpp/jank/hash.cpp
   src/cpp/jank/util/cli.cpp
