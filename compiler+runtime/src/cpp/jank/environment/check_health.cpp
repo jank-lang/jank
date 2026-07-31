@@ -6,8 +6,6 @@
 
 #include <CppInterOp/Compatibility.h>
 
-#include <ftxui/screen/screen.hpp>
-
 #include <jtl/terminal.hpp>
 
 #include <jank/environment/check_health.hpp>
