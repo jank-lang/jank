@@ -114,7 +114,9 @@ namespace jank::jit
 
         if(skip)
         {
-          util::println("{}skipped{}", jtl::terminal::text_style::yellow, jtl::terminal::text_style::reset);
+          util::println("{}skipped{}",
+                        jtl::terminal::text_style::yellow,
+                        jtl::terminal::text_style::reset);
           skips.push_back(dir_entry.path());
           continue;
         }
@@ -201,11 +203,15 @@ namespace jank::jit
         }
         else if(passed)
         {
-          util::println("{}success{}", jtl::terminal::text_style::green, jtl::terminal::text_style::reset);
+          util::println("{}success{}",
+                        jtl::terminal::text_style::green,
+                        jtl::terminal::text_style::reset);
         }
         else
         {
-          util::println("{}failure{}", jtl::terminal::text_style::red, jtl::terminal::text_style::reset);
+          util::println("{}failure{}",
+                        jtl::terminal::text_style::red,
+                        jtl::terminal::text_style::reset);
           std::cerr << captured_output.rdbuf() << "\n";
           std::cerr.flush();
         }
@@ -229,14 +235,15 @@ namespace jank::jit
                     f.path.string(),
                     f.error);
       }
-      util::print("tested {} jank files with {}{} skips{} and {}{} failures{}\n",
-                  test_count,
-                  (skips.empty() ? jtl::terminal::text_style::reset : jtl::terminal::text_style::yellow),
-                  skips.size(),
-                  jtl::terminal::text_style::reset,
-                  (failures.empty() ? jtl::terminal::text_style::reset : jtl::terminal::text_style::red),
-                  failures.size(),
-                  jtl::terminal::text_style::reset);
+      util::print(
+        "tested {} jank files with {}{} skips{} and {}{} failures{}\n",
+        test_count,
+        (skips.empty() ? jtl::terminal::text_style::reset : jtl::terminal::text_style::yellow),
+        skips.size(),
+        jtl::terminal::text_style::reset,
+        (failures.empty() ? jtl::terminal::text_style::reset : jtl::terminal::text_style::red),
+        failures.size(),
+        jtl::terminal::text_style::reset);
     }
   }
 }
