@@ -412,7 +412,7 @@ int main(int const argc, char const **argv)
       else if(util::cli::opts.command == util::cli::command::print_cflags)
       {
         auto const compiler_args_res{ aot::build_compiler_args() };
-        std::vector<char const *> const compiler_args{ jtl::move(compiler_args_res.expect_ok()) };
+        auto const &compiler_args{ compiler_args_res.expect_ok() };
         for(auto const arg : compiler_args)
         {
           util::print("{} ", arg);

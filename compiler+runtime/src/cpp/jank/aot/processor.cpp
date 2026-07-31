@@ -399,7 +399,7 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("c++"));
     compiler_args.push_back(strdup(entrypoint_path.c_str()));
 
-    auto const linker_args = build_linker_args();
+    auto const linker_args{ build_linker_args() };
     std::ranges::copy(linker_args, std::back_inserter(compiler_args));
 
     /* Required because of `strdup` usage and need to manually free the memory.
