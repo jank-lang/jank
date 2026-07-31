@@ -37,6 +37,24 @@
   [l r]
   `(= (str/split-lines ~l) (str/split-lines ~r)))
 
+(defn delete-tree-with-retry
+  "Like babashka.fs/delete-tree but retries deleting DIR ATTEMPTS times
+  with DELAY-MS between each. Throws after all attempts fail.
+
+  Use when deleting a tree that contains a child process' working
+  directory. Windows briefly holds a lock after the process exits."
+  [dir attempts delay-ms]
+  (loop [i 1]
+    (let [result (try
+                   (fs/delete-tree dir)
+                   nil
+                   (catch Exception e e))]
+      (when result
+        (if (< i attempts)
+          (do (Thread/sleep delay-ms)
+              (recur (inc i)))
+          (throw result))))))
+
 (deftest aot-single-jank-module
   (let [alias-name  "single-jank-module"
         module-path (module-path alias-name)]
@@ -57,11 +75,14 @@
         (is (string= expected-output (->> args (str default-output-file-path)
                                           proc/sh :out))))
       (testing "Executable in temp directory"
-        (fs/with-temp-dir [dir {}]
-          (fs/move default-output-file-path dir)
-          (is (string= expected-output (->> (str "./cli " args)
-                                            (proc/sh {:dir dir})
-                                            :out))))))))
+        (let [dir (fs/create-temp-dir)]
+          (try
+            (fs/move default-output-file-path dir)
+            (is (string= expected-output (->> (str "./cli " args)
+                                              (proc/sh {:dir dir})
+                                              :out)))
+            (finally
+              (delete-tree-with-retry dir 5 100))))))))
 
 (deftest aot-multiple-jank-modules
   (let [alias-name "only-jank-modules"
@@ -114,10 +135,7 @@
       (is (string= expected-output (-> default-output-file-path proc/sh :out))))))
 
 (defn -main []
-  (when (and (empty? (System/getenv "JANK_SKIP_AOT_CHECK"))
-             ; Windows is sometimes failing in CI, presumably due to a race condition.
-             ; An example failure is here: https://github.com/jank-lang/jank/actions/runs/28888267509/job/85694092257?pr=846
-             (not (fs/windows?)))
+  (when (empty? (System/getenv "JANK_SKIP_AOT_CHECK"))
     (proc/sh {:out *out* :err *out*} "jank check-health")
     (System/exit
      (if (t/successful? (t/run-tests this-nsym))
