@@ -2992,7 +2992,7 @@ namespace jank::analyze
       finally_
     };
 
-    static runtime::obj::symbol_ref catch_{ make_box<obj::symbol>("catch") },
+    static runtime::obj::symbol_ref const catch_{ make_box<obj::symbol>("catch") },
       finally_{ make_box<obj::symbol>("finally") };
     bool has_catch{}, has_finally{};
 
