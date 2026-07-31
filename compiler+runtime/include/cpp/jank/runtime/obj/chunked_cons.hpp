@@ -13,7 +13,9 @@ namespace jank::runtime::obj
   struct chunked_cons : object
   {
     static constexpr object_type obj_type{ object_type::chunked_cons };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::seqable
+                                                    | object_behavior::sequence_like
+                                                    | object_behavior::sequence_like_in_place };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -36,16 +38,18 @@ namespace jank::runtime::obj
     void set_meta(object_ref const o);
 
     /* behavior::seqable */
-    chunked_cons_ref seq() const;
-    chunked_cons_ref fresh_seq() const;
+    object_ref seq() const override;
+    object_ref fresh_seq() const override;
 
-    /* behavior::sequenceable */
-    object_ref first() const;
-    object_ref next() const;
+    /* behavior::sequence_like */
+    object_ref first() const override;
+    object_ref next() const override;
+
+    /* behavior::conjable */
     obj::cons_ref conj(object_ref const head) const;
 
-    /* behavior::sequenceable_in_place */
-    chunked_cons_ref next_in_place();
+    /* behavior::sequence_like_in_place */
+    object_ref next_in_place() override;
 
     /* behavior::chunkable */
     object_ref chunked_first() const;

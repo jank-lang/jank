@@ -4,7 +4,6 @@
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/native_array_sequence.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/call.hpp>
 #include <jank/runtime/context.hpp>

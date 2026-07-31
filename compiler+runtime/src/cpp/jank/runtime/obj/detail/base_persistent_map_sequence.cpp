@@ -32,20 +32,20 @@ namespace jank::runtime::obj::detail
       buff('[');
       if(to_code)
       {
-        runtime::to_code_string((*i).first, buff);
+        buff((*i).first.to_code_string());
       }
       else
       {
-        runtime::to_string((*i).first, buff);
+        buff((*i).first.to_string());
       }
       buff(' ');
       if(to_code)
       {
-        runtime::to_code_string((*i).second, buff);
+        buff((*i).second.to_code_string());
       }
       else
       {
-        runtime::to_string((*i).second, buff);
+        buff((*i).second.to_string());
       }
       buff(']');
       auto n(i);
@@ -82,7 +82,7 @@ namespace jank::runtime::obj::detail
   template <typename PT, typename IT>
   uhash base_persistent_map_sequence<PT, IT>::to_hash() const
   {
-    return hash::unordered(static_cast<PT const *>(this));
+    return hash::unordered(runtime::detail::untagged(this));
   }
 
   template <typename PT, typename IT>
@@ -92,19 +92,19 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename IT>
-  oref<PT> base_persistent_map_sequence<PT, IT>::seq()
+  object_ref base_persistent_map_sequence<PT, IT>::seq() const
   {
-    return static_cast<PT *>(this);
+    return runtime::detail::untagged(static_cast<PT const *>(this));
   }
 
   template <typename PT, typename IT>
-  oref<PT> base_persistent_map_sequence<PT, IT>::fresh_seq() const
+  object_ref base_persistent_map_sequence<PT, IT>::fresh_seq() const
   {
     return make_box<PT>(coll, begin, end);
   }
 
   template <typename PT, typename IT>
-  obj::persistent_vector_ref base_persistent_map_sequence<PT, IT>::first() const
+  object_ref base_persistent_map_sequence<PT, IT>::first() const
   {
     auto const pair(*begin);
     return make_box<obj::persistent_vector>(
@@ -112,7 +112,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename IT>
-  oref<PT> base_persistent_map_sequence<PT, IT>::next() const
+  object_ref base_persistent_map_sequence<PT, IT>::next() const
   {
     auto n(begin);
     ++n;
@@ -126,7 +126,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename IT>
-  oref<PT> base_persistent_map_sequence<PT, IT>::next_in_place()
+  object_ref base_persistent_map_sequence<PT, IT>::next_in_place()
   {
     ++begin;
 
@@ -135,13 +135,13 @@ namespace jank::runtime::obj::detail
       return {};
     }
 
-    return static_cast<PT *>(this);
+    return runtime::detail::untagged(static_cast<PT *>(this));
   }
 
   template <typename PT, typename IT>
   obj::cons_ref base_persistent_map_sequence<PT, IT>::conj(object_ref const head)
   {
-    return make_box<obj::cons>(head, static_cast<PT *>(this));
+    return make_box<obj::cons>(head, runtime::detail::untagged(static_cast<PT *>(this)));
   }
 
   template struct base_persistent_map_sequence<

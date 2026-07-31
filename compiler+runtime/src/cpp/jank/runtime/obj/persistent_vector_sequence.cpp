@@ -84,23 +84,23 @@ namespace jank::runtime::obj
   }
 
   /* behavior::seqable */
-  persistent_vector_sequence_ref persistent_vector_sequence::seq()
+  object_ref persistent_vector_sequence::seq() const
   {
-    return this;
+    return runtime::detail::untagged(this);
   }
 
-  persistent_vector_sequence_ref persistent_vector_sequence::fresh_seq() const
+  object_ref persistent_vector_sequence::fresh_seq() const
   {
     return make_box<persistent_vector_sequence>(vec, index);
   }
 
-  /* behavior::sequenceable */
+  /* behavior::sequence_like */
   object_ref persistent_vector_sequence::first() const
   {
     return vec->data[index];
   }
 
-  persistent_vector_sequence_ref persistent_vector_sequence::next() const
+  object_ref persistent_vector_sequence::next() const
   {
     auto n(index);
     ++n;
@@ -113,7 +113,7 @@ namespace jank::runtime::obj
     return make_box<persistent_vector_sequence>(vec, n);
   }
 
-  persistent_vector_sequence_ref persistent_vector_sequence::next_in_place()
+  object_ref persistent_vector_sequence::next_in_place()
   {
     ++index;
 
@@ -122,11 +122,11 @@ namespace jank::runtime::obj
       return {};
     }
 
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   cons_ref persistent_vector_sequence::conj(object_ref const head)
   {
-    return make_box<cons>(head, this);
+    return make_box<cons>(head, runtime::detail::untagged(this));
   }
 }

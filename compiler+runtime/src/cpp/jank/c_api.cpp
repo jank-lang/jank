@@ -117,7 +117,7 @@ extern "C"
   {
     object_ref const ns_obj(reinterpret_cast<object *>(ns));
     object_ref const name_obj(reinterpret_cast<object *>(name));
-    return __rt_ctx->intern_keyword(to_string(ns_obj), to_string(name_obj))
+    return __rt_ctx->intern_keyword(ns_obj.to_string(), name_obj.to_string())
       .expect_ok()
       .erase()
       .raw();
@@ -924,6 +924,7 @@ extern "C"
     return o_obj.to_string().c_str();
   }
 
+  /* TODO: These are not safe. We need to strdup here. */
   char const *jank_to_code_string(jank_object_ref const o)
   {
     object_ref const o_obj(reinterpret_cast<object *>(o));

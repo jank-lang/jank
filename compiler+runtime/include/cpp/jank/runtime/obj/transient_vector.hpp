@@ -11,7 +11,8 @@ namespace jank::runtime::obj
   {
     static constexpr object_type obj_type{ object_type::transient_vector };
     static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
-                                                    | object_behavior::find };
+                                                    | object_behavior::find
+                                                    | object_behavior::indexable };
     static constexpr bool pointer_free{ false };
 
     using value_type = runtime::detail::native_transient_vector;
@@ -33,8 +34,8 @@ namespace jank::runtime::obj
     transient_vector_ref conj_in_place(object_ref const head);
 
     /* behavior::indexable */
-    object_ref nth(object_ref const index) const;
-    object_ref nth(object_ref const index, object_ref const fallback) const;
+    object_ref nth(object_ref const index) const override;
+    object_ref nth(object_ref const index, object_ref const fallback) const override;
 
     /* behavior::associatively_writable_in_place */
     transient_vector_ref assoc_in_place(object_ref const key, object_ref const val);

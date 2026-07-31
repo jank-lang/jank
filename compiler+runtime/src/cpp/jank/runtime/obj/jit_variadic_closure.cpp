@@ -6,7 +6,6 @@
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/rtti.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/call.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/util/fmt.hpp>

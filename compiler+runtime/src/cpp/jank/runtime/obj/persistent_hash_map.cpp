@@ -54,28 +54,21 @@ namespace jank::runtime::obj
 
   persistent_hash_map_ref persistent_hash_map::create_from_seq(object_ref const seq)
   {
-    return make_box<persistent_hash_map>(visit_seqable(
-      [](auto const typed_seq) -> persistent_hash_map::value_type {
-        runtime::detail::native_transient_hash_map transient;
-        auto const r{ make_sequence_range(typed_seq) };
-        for(auto it(r.begin()); it != r.end(); ++it)
-        {
-          auto const key(*it);
-          ++it;
-          if(it == r.end())
-          {
-            throw std::runtime_error{ util::format("Odd number of elements: {}",
-                                                   typed_seq->to_string()) };
-          }
-          auto const val(*it);
-          transient.set(key, val);
-        }
-        return transient.persistent();
-      },
-      [=]() -> persistent_hash_map::value_type {
-        throw std::runtime_error{ util::format("Not seqable: {}", runtime::to_string(seq)) };
-      },
-      seq));
+    runtime::detail::native_transient_hash_map transient;
+    auto const r{ make_sequence_range(seq) };
+    for(auto it(r.begin()); it != r.end(); ++it)
+    {
+      auto const key(*it);
+      ++it;
+      if(it == r.end())
+      {
+        throw std::runtime_error{ util::format("Odd number of elements: {}",
+                                               seq.to_code_string()) };
+      }
+      auto const val(*it);
+      transient.set(key, val);
+    }
+    return make_box<persistent_hash_map>(transient.persistent());
   }
 
   object_ref persistent_hash_map::get(object_ref const key) const

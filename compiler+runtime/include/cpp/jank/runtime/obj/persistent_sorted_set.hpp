@@ -13,7 +13,8 @@ namespace jank::runtime::obj
   struct persistent_sorted_set : object
   {
     static constexpr object_type obj_type{ object_type::persistent_sorted_set };
-    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
+                                                    | object_behavior::seqable };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_set_like{ true };
 
@@ -58,8 +59,8 @@ namespace jank::runtime::obj
     void set_meta(object_ref const o);
 
     /* behavior::seqable */
-    persistent_sorted_set_sequence_ref seq() const;
-    persistent_sorted_set_sequence_ref fresh_seq() const;
+    object_ref seq() const override;
+    object_ref fresh_seq() const override;
 
     /* behavior::countable */
     usize count() const;

@@ -76,27 +76,27 @@ namespace jank::runtime::obj
     return runtime::detail::untagged(this);
   }
 
-  nil_ref nil::seq()
+  object_ref nil::seq() const
   {
     return runtime::detail::untagged(this);
   }
 
-  nil_ref nil::fresh_seq() const
+  object_ref nil::fresh_seq() const
   {
     return runtime::detail::untagged(this);
   }
 
-  nil_ref nil::first() const
+  object_ref nil::first() const
   {
     return runtime::detail::untagged(this);
   }
 
-  nil_ref nil::next() const
+  object_ref nil::next() const
   {
     return runtime::detail::untagged(this);
   }
 
-  nil_ref nil::next_in_place()
+  object_ref nil::next_in_place()
   {
     return runtime::detail::untagged(this);
   }

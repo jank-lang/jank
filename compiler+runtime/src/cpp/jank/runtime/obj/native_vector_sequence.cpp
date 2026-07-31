@@ -71,12 +71,12 @@ namespace jank::runtime::obj
   }
 
   /* behavior::seqable */
-  native_vector_sequence_ref native_vector_sequence::seq()
+  object_ref native_vector_sequence::seq() const
   {
     return data.empty() ? native_vector_sequence_ref{} : runtime::detail::untagged(this);
   }
 
-  native_vector_sequence_ref native_vector_sequence::fresh_seq() const
+  object_ref native_vector_sequence::fresh_seq() const
   {
     return data.empty() ? native_vector_sequence_ref{}
                         : make_box<native_vector_sequence>(data, index);
@@ -95,7 +95,7 @@ namespace jank::runtime::obj
     return data[index];
   }
 
-  native_vector_sequence_ref native_vector_sequence::next() const
+  object_ref native_vector_sequence::next() const
   {
     auto n(index);
     ++n;
@@ -108,7 +108,7 @@ namespace jank::runtime::obj
     return make_box<native_vector_sequence>(data, n);
   }
 
-  native_vector_sequence_ref native_vector_sequence::next_in_place()
+  object_ref native_vector_sequence::next_in_place()
   {
     ++index;
 
@@ -128,7 +128,7 @@ namespace jank::runtime::obj
   native_vector_sequence_ref native_vector_sequence::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(fresh_seq());
+    auto ret(expect_object<obj::native_vector_sequence>(fresh_seq()));
     ret->meta = meta;
     return ret;
   }

@@ -30,12 +30,12 @@ namespace jank::runtime::obj
     jank_debug_assert(meta.is_some());
   }
 
-  chunked_cons_ref chunked_cons::seq() const
+  object_ref chunked_cons::seq() const
   {
     return runtime::detail::untagged(this);
   }
 
-  chunked_cons_ref chunked_cons::fresh_seq() const
+  object_ref chunked_cons::fresh_seq() const
   {
     return make_box<chunked_cons>(head, tail);
   }
@@ -86,31 +86,18 @@ namespace jank::runtime::obj
 
   static chunked_cons_ref next_in_place_non_chunked(chunked_cons_ref const o)
   {
-    if(o->tail.is_nil())
+    auto const tail{ o->tail };
+    if(tail.is_nil())
     {
       return {};
     }
 
-    /* TODO: Port visit_object: sequenceable. */
-    return visit_object(
-      [&](auto const typed_tail) -> chunked_cons_ref {
-        using T = typename jtl::decay_t<decltype(typed_tail)>::value_type;
-
-        if constexpr(behavior::sequenceable<T>)
-        {
-          o->head = typed_tail->first();
-          o->tail = typed_tail->next();
-          return o;
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("invalid sequence: {}", typed_tail->to_string()) };
-        }
-      },
-      o->tail);
+    o->head = tail.first();
+    o->tail = tail.next();
+    return o;
   }
 
-  chunked_cons_ref chunked_cons::next_in_place()
+  object_ref chunked_cons::next_in_place()
   {
     /* TODO: Port visit_object: chunk_like. */
     return visit_object(
@@ -167,17 +154,17 @@ namespace jank::runtime::obj
 
   void chunked_cons::to_string(jtl::string_builder &buff) const
   {
-    runtime::to_string(seq(), buff);
+    runtime::seq_to_string(seq(), buff);
   }
 
   jtl::immutable_string chunked_cons::to_string() const
   {
-    return runtime::to_string(seq());
+    return runtime::seq_to_string(seq());
   }
 
   jtl::immutable_string chunked_cons::to_code_string() const
   {
-    return runtime::to_code_string(seq());
+    return runtime::seq_to_code_string(seq());
   }
 
   uhash chunked_cons::to_hash() const
@@ -193,7 +180,7 @@ namespace jank::runtime::obj
   chunked_cons_ref chunked_cons::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(fresh_seq());
+    auto const ret(expect_object<obj::chunked_cons>(fresh_seq()));
     ret->meta = meta;
     return ret;
   }

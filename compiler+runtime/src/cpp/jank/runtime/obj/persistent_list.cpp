@@ -45,30 +45,16 @@ namespace jank::runtime::obj
   {
     if(s.is_nil())
     {
-      return make_box<persistent_list>();
+      return empty();
     }
 
-    /* TODO: Port visit_object: sequenceable. */
-    return visit_object(
-      [](auto const typed_s) -> persistent_list_ref {
-        using T = typename decltype(typed_s)::value_type;
-
-        if constexpr(behavior::sequenceable<T> || std::same_as<T, nil>)
-        {
-          native_vector<object_ref> v;
-          for(auto const e : make_sequence_range(typed_s))
-          {
-            v.emplace_back(e);
-          }
-          return make_box<persistent_list>(
-            runtime::detail::native_persistent_list{ v.rbegin(), v.rend() });
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("invalid sequence: {}", typed_s->to_string()) };
-        }
-      },
-      s);
+    native_vector<object_ref> v;
+    for(auto const e : make_sequence_range(s))
+    {
+      v.emplace_back(e);
+    }
+    return make_box<persistent_list>(
+      runtime::detail::native_persistent_list{ v.rbegin(), v.rend() });
   }
 
   persistent_list_ref persistent_list::create(persistent_list_ref const s)
@@ -111,12 +97,12 @@ namespace jank::runtime::obj
     return hash::ordered(data.begin(), data.end());
   }
 
-  persistent_list_ref persistent_list::seq() const
+  object_ref persistent_list::seq() const
   {
     return fresh_seq();
   }
 
-  persistent_list_ref persistent_list::fresh_seq() const
+  object_ref persistent_list::fresh_seq() const
   {
     if(data.empty())
     {
@@ -147,7 +133,7 @@ namespace jank::runtime::obj
     return first.unwrap();
   }
 
-  persistent_list_ref persistent_list::next() const
+  object_ref persistent_list::next() const
   {
     if(data.size() < 2)
     {
@@ -156,7 +142,7 @@ namespace jank::runtime::obj
     return make_box<persistent_list>(data.rest());
   }
 
-  persistent_list_ref persistent_list::next_in_place()
+  object_ref persistent_list::next_in_place()
   {
     if(data.size() < 2)
     {

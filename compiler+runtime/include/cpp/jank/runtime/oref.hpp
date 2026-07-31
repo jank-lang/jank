@@ -402,18 +402,20 @@ namespace jank::runtime
         {
           return detail::as_integer(data) == detail::as_integer(o.raw());
         }
+        if(detail::is_tagged_small_real(o.raw()))
+        {
+          return detail::as_integer(data) == detail::as_real(o.raw());
+        }
 
         obj::small_integer const i{ detail::as_integer(data) };
         return o.equal(detail::untagged(&i));
       }
-      else if(detail::is_tagged_small_int(o.raw()))
+      else if(detail::is_tagged_small_real(data))
       {
-        obj::small_integer const i{ detail::as_integer(o.raw()) };
-        return ptr()->equal(i);
-      }
-
-      if(detail::is_tagged_small_real(data))
-      {
+        if(detail::is_tagged_small_int(o.raw()))
+        {
+          return detail::as_real(data) == detail::as_integer(o.raw());
+        }
         if(detail::is_tagged_small_real(o.raw()))
         {
           return detail::as_real(data) == detail::as_real(o.raw());
@@ -421,6 +423,11 @@ namespace jank::runtime
 
         obj::small_real const i{ detail::as_real(data) };
         return o.equal(detail::untagged(&i));
+      }
+      else if(detail::is_tagged_small_int(o.raw()))
+      {
+        obj::small_integer const i{ detail::as_integer(o.raw()) };
+        return ptr()->equal(i);
       }
       else if(detail::is_tagged_small_real(o.raw()))
       {
@@ -984,6 +991,136 @@ namespace jank::runtime
       return ptr()->to_real();
     }
 
+    /* behavior::seqable */
+    object_ref seq() const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer const i{ detail::as_integer(data) };
+        return i.seq();
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
+        return i.seq();
+      }
+      else
+      {
+        return ptr()->seq();
+      }
+    }
+
+    object_ref fresh_seq() const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer const i{ detail::as_integer(data) };
+        return i.fresh_seq();
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
+        return i.fresh_seq();
+      }
+      else
+      {
+        return ptr()->fresh_seq();
+      }
+    }
+
+    /* behavior::sequence_like */
+    object_ref first() const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer const i{ detail::as_integer(data) };
+        return i.first();
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
+        return i.first();
+      }
+      else
+      {
+        return ptr()->first();
+      }
+    }
+
+    object_ref next() const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer const i{ detail::as_integer(data) };
+        return i.next();
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
+        return i.next();
+      }
+      else
+      {
+        return ptr()->next();
+      }
+    }
+
+    /* behavior::sequence_like_in_place */
+    object_ref next_in_place() const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer i{ detail::as_integer(data) };
+        return i.next_in_place();
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.next_in_place();
+      }
+      else
+      {
+        return ptr()->next_in_place();
+      }
+    }
+
+    /* behavior::indexable */
+    object_ref nth(object_ref const index) const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer const i{ detail::as_integer(data) };
+        return i.nth(index);
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
+        return i.nth(index);
+      }
+      else
+      {
+        return ptr()->nth(index);
+      }
+    }
+
+    object_ref nth(object_ref const index, object_ref const fallback) const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer const i{ detail::as_integer(data) };
+        return i.nth(index, fallback);
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real const i{ detail::as_real(data) };
+        return i.nth(index, fallback);
+      }
+      else
+      {
+        return ptr()->nth(index, fallback);
+      }
+    }
+
     value_type *raw() const
     {
       return data;
@@ -1523,16 +1660,82 @@ namespace jank::runtime
       {
         return _jank_nil.to_real();
       }
-      else if(detail::is_tagged_small_int(data))
-      {
-        return static_cast<f64>(detail::as_integer(data));
-      }
-      if(detail::is_tagged_small_real(data))
-      {
-        return detail::as_real(data);
-      }
 
       return static_cast<T *>(data)->to_real();
+    }
+
+    /* behavior::seqable */
+    object_ref seq() const
+    {
+      if(is_nil())
+      {
+        return {};
+      }
+
+      return static_cast<T *>(data)->seq();
+    }
+
+    object_ref fresh_seq() const
+    {
+      if(is_nil())
+      {
+        return {};
+      }
+
+      return static_cast<T *>(data)->fresh_seq();
+    }
+
+    /* behavior::sequence_like */
+    object_ref first() const
+    {
+      if(is_nil())
+      {
+        return {};
+      }
+
+      return static_cast<T *>(data)->first();
+    }
+
+    object_ref next() const
+    {
+      if(is_nil())
+      {
+        return {};
+      }
+
+      return static_cast<T *>(data)->next();
+    }
+
+    /* behavior::sequence_like_in_place */
+    object_ref next_in_place() const
+    {
+      if(is_nil())
+      {
+        return {};
+      }
+
+      return static_cast<T *>(data)->next_in_place();
+    }
+
+    /* behavior::indexable */
+    object_ref nth(object_ref const index) const
+    {
+      if(is_nil())
+      {
+        return _jank_nil.nth(index);
+      }
+
+      return static_cast<T *>(data)->nth(index);
+    }
+
+    object_ref nth(object_ref const index, object_ref const fallback) const
+    {
+      if(is_nil())
+      {
+        return fallback;
+      }
+
+      return static_cast<T *>(data)->nth(index, fallback);
     }
 
     void *raw() const
@@ -1853,6 +2056,52 @@ namespace jank::runtime
       return static_cast<f64>(data);
     }
 
+    /* behavior::seqable */
+    object_ref seq() const
+    {
+      obj::small_integer const i{ data };
+      return i.seq();
+    }
+
+    object_ref fresh_seq() const
+    {
+      obj::small_integer const i{ data };
+      return i.fresh_seq();
+    }
+
+    /* behavior::sequence_like */
+    object_ref first() const
+    {
+      obj::small_integer const i{ data };
+      return i.first();
+    }
+
+    object_ref next() const
+    {
+      obj::small_integer const i{ data };
+      return i.next();
+    }
+
+    /* behavior::sequence_like_in_place */
+    object_ref next_in_place() const
+    {
+      obj::small_integer i{ data };
+      return i.next_in_place();
+    }
+
+    /* behavior::indexable */
+    object_ref nth(object_ref const index) const
+    {
+      obj::small_integer const i{ data };
+      return i.nth(index);
+    }
+
+    object_ref nth(object_ref const index, object_ref const fallback) const
+    {
+      obj::small_integer const i{ data };
+      return i.nth(index, fallback);
+    }
+
     i32 raw() const
     {
       return data;
@@ -2162,6 +2411,52 @@ namespace jank::runtime
     f64 to_real() const
     {
       return data;
+    }
+
+    /* behavior::seqable */
+    object_ref seq() const
+    {
+      obj::small_real const i{ data };
+      return i.seq();
+    }
+
+    object_ref fresh_seq() const
+    {
+      obj::small_real const i{ data };
+      return i.fresh_seq();
+    }
+
+    /* behavior::sequence_like */
+    object_ref first() const
+    {
+      obj::small_real const i{ data };
+      return i.first();
+    }
+
+    object_ref next() const
+    {
+      obj::small_real const i{ data };
+      return i.next();
+    }
+
+    /* behavior::sequence_like_in_place */
+    object_ref next_in_place() const
+    {
+      obj::small_real i{ data };
+      return i.next_in_place();
+    }
+
+    /* behavior::indexable */
+    object_ref nth(object_ref const index) const
+    {
+      obj::small_real const i{ data };
+      return i.nth(index);
+    }
+
+    object_ref nth(object_ref const index, object_ref const fallback) const
+    {
+      obj::small_real const i{ data };
+      return i.nth(index, fallback);
     }
 
     f64 raw() const
@@ -2481,6 +2776,45 @@ namespace jank::runtime
     f64 to_real() const
     {
       return _jank_nil.to_real();
+    }
+
+    /* behavior::seqable */
+    object_ref seq() const
+    {
+      return {};
+    }
+
+    object_ref fresh_seq() const
+    {
+      return {};
+    }
+
+    /* behavior::sequence_like */
+    object_ref first() const
+    {
+      return {};
+    }
+
+    object_ref next() const
+    {
+      return {};
+    }
+
+    /* behavior::sequence_like_in_place */
+    object_ref next_in_place() const
+    {
+      return {};
+    }
+
+    /* behavior::indexable */
+    object_ref nth(object_ref const) const
+    {
+      return {};
+    }
+
+    object_ref nth(object_ref const, object_ref const fallback) const
+    {
+      return fallback;
     }
 
     value_type *raw() const

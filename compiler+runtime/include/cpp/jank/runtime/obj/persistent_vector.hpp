@@ -13,9 +13,10 @@ namespace jank::runtime::obj
   struct persistent_vector : object
   {
     static constexpr object_type obj_type{ object_type::persistent_vector };
-    static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
-                                                    | object_behavior::find
-                                                    | object_behavior::compare };
+    static constexpr object_behavior obj_behaviors{
+      object_behavior::call | object_behavior::get | object_behavior::find
+      | object_behavior::compare | object_behavior::seqable | object_behavior::indexable
+    };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -68,8 +69,8 @@ namespace jank::runtime::obj
     void set_meta(object_ref const o);
 
     /* behavior::seqable */
-    persistent_vector_sequence_ref seq() const;
-    persistent_vector_sequence_ref fresh_seq() const;
+    object_ref seq() const override;
+    object_ref fresh_seq() const override;
 
     /* behavior::countable */
     usize count() const;
@@ -95,8 +96,8 @@ namespace jank::runtime::obj
     persistent_vector_ref pop() const;
 
     /* behavior::indexable */
-    object_ref nth(object_ref const index) const;
-    object_ref nth(object_ref const index, object_ref const fallback) const;
+    object_ref nth(object_ref const index) const override;
+    object_ref nth(object_ref const index, object_ref const fallback) const override;
 
     /* behavior::callable */
     using object::call;

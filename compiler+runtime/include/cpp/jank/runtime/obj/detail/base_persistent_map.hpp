@@ -44,8 +44,8 @@ namespace jank::runtime::obj::detail
     uhash to_hash() const override;
 
     /* behavior::seqable */
-    oref<ST> seq() const;
-    oref<ST> fresh_seq() const;
+    object_ref seq() const override;
+    object_ref fresh_seq() const override;
 
     /* behavior::countable */
     usize count() const;

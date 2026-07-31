@@ -7,17 +7,18 @@ namespace jank::runtime
 {
   object_ref first(object_ref const s);
   object_ref next(object_ref const s);
+  object_ref next_in_place(object_ref const s);
 
   jtl::immutable_string to_string(object_ref const o);
-  void to_string(char ch, jtl::string_builder &buff);
   void to_string(object_ref const o, jtl::string_builder &buff);
+  void to_string(char ch, jtl::string_builder &buff);
 
   jtl::immutable_string to_code_string(object_ref const o);
-  void to_code_string(char ch, jtl::string_builder &buff);
   void to_code_string(object_ref const o, jtl::string_builder &buff);
+  void to_code_string(char ch, jtl::string_builder &buff);
 
   template <typename T>
-  requires(behavior::object_like<T> && !behavior::sequenceable<T>)
+  requires(behavior::object_like<T> && !behavior::sequence_like<T>)
   void to_string(oref<T> const &s, jtl::string_builder &buff)
   {
     s->to_string(buff);
@@ -36,7 +37,7 @@ namespace jank::runtime
     }
     for(auto i(begin); i != end; ++i)
     {
-      runtime::to_string(*i, buff);
+      (*i).to_string(buff);
       auto n(i);
       if(++n != end)
       {
@@ -47,8 +48,7 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::sequenceable<T>
-  void to_string(oref<T> const &s, jtl::string_builder &buff)
+  void seq_to_string(oref<T> const &s, jtl::string_builder &buff)
   {
     if(s.is_nil())
     {
@@ -58,9 +58,9 @@ namespace jank::runtime
 
     buff('(');
     bool needs_space{};
-    if constexpr(behavior::sequenceable_in_place<T>)
+    if constexpr(behavior::sequence_like_in_place<T>)
     {
-      for(auto it{ s->fresh_seq() }; it.is_some(); it = it->next_in_place())
+      for(auto it{ s.fresh_seq() }; it.is_some(); it = it.next_in_place())
       {
         if(needs_space)
         {
@@ -72,7 +72,7 @@ namespace jank::runtime
     }
     else
     {
-      for(object_ref it{ s->seq() }; it.is_some(); it = runtime::next(it))
+      for(object_ref it{ s.seq() }; it.is_some(); it = runtime::next(it))
       {
         if(needs_space)
         {
@@ -86,19 +86,11 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::sequenceable<T>
-  jtl::immutable_string to_string(oref<T> const &s)
+  jtl::immutable_string seq_to_string(oref<T> const &s)
   {
     jtl::string_builder buff;
-    runtime::to_string(s, buff);
+    runtime::seq_to_string(s, buff);
     return buff.release();
-  }
-
-  template <typename T>
-  requires(behavior::object_like<T> && !behavior::sequenceable<T>)
-  void to_code_string(oref<T> const &s, jtl::string_builder &buff)
-  {
-    buff(s->to_code_string());
   }
 
   template <typename It>
@@ -114,7 +106,7 @@ namespace jank::runtime
     }
     for(auto i(begin); i != end; ++i)
     {
-      runtime::to_code_string(*i, buff);
+      buff((*i).to_code_string());
       auto n(i);
       if(++n != end)
       {
@@ -125,8 +117,14 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::sequenceable<T>
+  requires(behavior::object_like<T> && !behavior::sequence_like<T>)
   void to_code_string(oref<T> const &s, jtl::string_builder &buff)
+  {
+    buff(s->to_code_string());
+  }
+
+  template <typename T>
+  void seq_to_code_string(oref<T> const &s, jtl::string_builder &buff)
   {
     if(s.is_nil())
     {
@@ -136,7 +134,7 @@ namespace jank::runtime
 
     buff('(');
     bool needs_space{};
-    if constexpr(behavior::sequenceable_in_place<T>)
+    if constexpr(behavior::sequence_like_in_place<T>)
     {
       for(auto it{ s->fresh_seq() }; it.is_some(); it = it->next_in_place())
       {
@@ -150,7 +148,7 @@ namespace jank::runtime
     }
     else
     {
-      for(object_ref it{ s->seq() }; it.is_some(); it = runtime::next(it))
+      for(object_ref it{ s.seq() }; it.is_some(); it = runtime::next(it))
       {
         if(needs_space)
         {
@@ -164,11 +162,10 @@ namespace jank::runtime
   }
 
   template <typename T>
-  requires behavior::sequenceable<T>
-  jtl::immutable_string to_code_string(oref<T> const &s)
+  jtl::immutable_string seq_to_code_string(oref<T> const &s)
   {
     jtl::string_builder buff;
-    runtime::to_code_string(s, buff);
+    runtime::seq_to_code_string(s, buff);
     return buff.release();
   }
 }

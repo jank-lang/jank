@@ -146,7 +146,7 @@ namespace clojure::string_native
         return replace_first(s, try_object<obj::re_pattern>(match)->regex, replacement);
       default:
         throw std::runtime_error{ util::format("Invalid match arg: {}",
-                                               runtime::to_code_string(match)) };
+                                               object_type_str(match.get_type())) };
     }
 #pragma clang diagnostic pop
   }
@@ -154,8 +154,7 @@ namespace clojure::string_native
   object_ref replace_first(object_ref const s, object_ref const match, object_ref const replacement)
   {
     auto const is_string(s.get_type() == object_type::persistent_string);
-    auto const &s_str(is_string ? try_object<obj::persistent_string>(s)->data
-                                : runtime::to_string(s));
+    auto const &s_str(is_string ? try_object<obj::persistent_string>(s)->data : s.to_string());
 
     auto const output_str(replace_first(s_str, match, replacement));
 

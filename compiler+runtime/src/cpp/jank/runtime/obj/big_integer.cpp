@@ -203,8 +203,7 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}",
-                                               runtime::to_string(runtime::detail::untagged(&o))) };
+        throw std::runtime_error{ util::format("not comparable: {}", object_type_str(o.type)) };
       },
       runtime::detail::untagged(&o));
   }

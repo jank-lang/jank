@@ -293,7 +293,7 @@ namespace jank::runtime
    * be mindful to benchmark as we go, to ensure that the new virtual behaviors are comparable to
    * the visit-style behavior. If we can't get comparable performance for a behavior, we should
    * leave it as a `visit` style behavior for now. */
-  enum class object_behavior : u8
+  enum class object_behavior : u16
   {
     none = 0,
     call = 1 << 0,
@@ -301,19 +301,21 @@ namespace jank::runtime
     find = 1 << 2,
     compare = 1 << 3,
     number_like = 1 << 4,
+    ref_like = 1 << 5,
+    seqable = 1 << 6,
+    sequence_like = 1 << 7,
+    sequence_like_in_place = 1 << 8,
+    indexable = 1 << 9,
     //associatively_writable,
     //chunkable,
     //collection_like,
     //conjable,
     //countable,
     //derefable,
-    //indexable,
     //map_like,
     //metadatable,
     //nameable,
     //realizable,
-    ref_like = 1 << 5,
-    //seqable,
     //sequential,
     //set_like,
     //stackable,
@@ -431,6 +433,22 @@ namespace jank::runtime
     /* behavior::find */
     virtual object_ref find(object_ref key) const;
 
+    /* behavior::indexable
+     *
+     * Indexable is meant to provide efficient item access in a
+     * collection, given an index. Alas, Clojure implements it
+     * for sequences in O(n) as well.
+     *
+     * In jank, the `runtime::nth` functions will handle the O(n)
+     * use cases and this behavior is reserved for more efficient
+     * usage. */
+
+    /* Given an index, return the item at that index or throw. */
+    virtual object_ref nth(object_ref index) const;
+
+    /* Given an index, return the item at that index or return the fallback. */
+    virtual object_ref nth(object_ref index, object_ref fallback) const;
+
     /* behavior::compare */
     /* Returns how this object compares to the specified object. Comparison, unlike equality,
      * can only be done for objects of the same type. If there's a type mismatch, this function
@@ -450,8 +468,74 @@ namespace jank::runtime
     virtual void add_watch(object_ref const key, object_ref const fn);
     virtual void remove_watch(object_ref const key);
 
+    /* behavior::number_like */
     virtual i64 to_integer() const;
     virtual f64 to_real() const;
+
+    /* behavior::seqable */
+    /* Returns a (potentially shared) seq, which could just be `this`, if we're already a
+     * seq. However, must return a nullptr for empty seqs. Returning a non-null pointer to
+     * an empty seq is UB. */
+    virtual object_ref seq() const;
+
+    /* Returns a unique seq which can be updated in place. This is an optimization which allows
+     * one allocation for a fresh seq which can then be mutated any number of times to traverse
+     * the data. Also must return nullptr when the sequence is empty. */
+    virtual object_ref fresh_seq() const;
+
+    /* behavior::sequence_like */
+    virtual object_ref first() const;
+
+    /* Steps the sequence forward and returns nullptr if there is no more remaining
+     * or a pointer to the remaining sequence.
+     *
+     * Next must always return a fresh seq. */
+    virtual object_ref next() const;
+
+    /* Appends the specified object to the beginning of the current sequence. However, if
+     * the current sequence is empty, it must create a cons onto nullptr. It's invalid to
+     * have a cons onto an empty sequence. */
+    //virtual object_ref conj() const;
+
+    /* behavior::sequence_like_in_place */
+    /* Each call to next() allocates a new sequence, since it's polymorphic. When iterating
+     * over a large sequence, this can mean a _lot_ of allocations. However, if you own the
+     * sequence you have, typically meaning it wasn't a parameter, then you can mutate it
+     * in place using this function. No allocations will happen.
+     *
+     * If you don't own your sequence, you can call next() on it once, to get one you
+     * do own, and then next_in_place() on that to your heart's content.
+     *
+     * Using an object after calling next_in_place() on it is UB, even if the return value
+     * is the same object. Its ownership has transferred to the return of next_in_place().
+     * Don't do this:
+     *
+     *   (let [s (fresh-seq ...)
+     *         s'  (-> s next-in-place)
+     *         s'' (-> s next-in-place next-in-place)]
+     *                 ^---- UB!! s' owns seq
+     *     ...)
+     *
+     * Do this instead:
+     *
+     *   (let [s (fresh-seq ...)
+     *         s'  (-> s next-in-place)
+     *         s'' (-> s' next-in-place next-in-place)]
+     *                 ^---- OK: seq ownership transferred from s' to s''
+     *     ...)
+     *
+     * This ownership transfer enables next_in_place() optimizations where the input
+     * sequence_like_in_place can sometimes be left in an inconsistent state. For example, if returning
+     * nullptr, the ownership of the input sequence_like_in_place has been transferred to nullptr.
+     * The input sequence_like_in_place is thus made unreachable. This assumption can be used
+     * to elide certain cleanup code. This also applies if (a carefully considered!) allocation
+     * is made to return a new sequence_like_in_place, making the input sequence_like_in_place unreachable.
+     *
+     * next_in_place() can also assume the sequence_like_in_place is non-empty,
+     * having retained any and all invariants from being returned from {fresh_}seq() or next{_in_place}().
+     * This enables some checks at the beginning of the member function to be elided when
+     * compared to next(), such as bounds or emptiness checks. */
+    virtual object_ref next_in_place();
 
     object_type type{};
     object_behavior behaviors{ object_behavior::none };

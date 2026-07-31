@@ -20,7 +20,9 @@ namespace jank::runtime::obj
   struct range : object
   {
     static constexpr object_type obj_type{ object_type::range };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::seqable
+                                                    | object_behavior::sequence_like
+                                                    | object_behavior::sequence_like_in_place };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
     static constexpr i64 chunk_size{ 32 };
@@ -55,15 +57,15 @@ namespace jank::runtime::obj
     uhash to_hash() const override;
 
     /* behavior::seqable */
-    range_ref seq() const;
-    range_ref fresh_seq() const;
+    object_ref seq() const override;
+    object_ref fresh_seq() const override;
 
-    /* behavior::sequenceable */
-    object_ref first() const;
-    range_ref next() const;
+    /* behavior::sequence_like */
+    object_ref first() const override;
+    object_ref next() const override;
 
-    /* behavior::sequenceable_in_place */
-    range_ref next_in_place();
+    /* behavior::sequence_like_in_place */
+    object_ref next_in_place() override;
 
     /* behavior::chunkable */
     obj::array_chunk_ref chunked_first() const;

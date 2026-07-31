@@ -13,75 +13,38 @@ namespace jank::runtime
     using keyword_ref = oref<struct keyword>;
   }
 
-  template <typename T>
-  requires behavior::seqable<T>
-  auto seq(oref<T> const &s)
-  {
-    return s->seq();
-  }
-
-  object_ref seq(object_ref const s);
-
-  template <typename T>
-  requires behavior::seqable<T>
-  auto fresh_seq(oref<T> const &s)
-  {
-    return s->fresh_seq();
-  }
-
-  object_ref fresh_seq(object_ref const s);
-
-  template <typename T>
-  requires behavior::sequenceable<T>
-  auto next(oref<T> const &s)
-  {
-    return s->next();
-  }
-
-  object_ref next(object_ref const s);
   object_ref more(object_ref const s);
-
-  template <typename T>
-  requires behavior::sequenceable_in_place<T>
-  auto next_in_place(oref<T> const &s)
-  {
-    return s->next_in_place();
-  }
-
-  template <typename T>
-  requires(behavior::sequenceable<T> && !behavior::sequenceable_in_place<T>)
-  auto next_in_place(oref<T> const &s)
-  {
-    /* Not all sequences can be updated in place. For those, just gracefully
-     * do a normal next. */
-    return s->next();
-  }
-
-  object_ref next_in_place(object_ref const s);
-
   object_ref rest(object_ref const s);
 
   template <typename T>
-  requires behavior::sequenceable<T>
-  auto first(oref<T> const &s) -> decltype(s->first())
+  auto first(oref<T> const &s)
   {
-    if(s.is_nil())
+    if(s.has_behavior(object_behavior::sequence_like))
     {
-      return {};
+      return s.first();
     }
-    return s->first();
+    return s.seq().first();
   }
-
-  object_ref first(object_ref const s);
 
   template <typename T>
-  requires behavior::sequenceable<T>
-  auto second(oref<T> const &s)
+  auto next(oref<T> const &s)
   {
-    return first(next(s));
+    if(s.has_behavior(object_behavior::sequence_like))
+    {
+      return s.next();
+    }
+    return s.seq().next();
   }
 
-  object_ref second(object_ref const s);
+  template <typename T>
+  auto second(oref<T> const &s)
+  {
+    if(s.has_behavior(object_behavior::sequence_like))
+    {
+      return s.next().first();
+    }
+    return s.seq().next().first();
+  }
 
   bool is_empty(object_ref const o);
   bool is_seq(object_ref const o);
@@ -151,7 +114,6 @@ namespace jank::runtime
   object_ref pop(object_ref const o);
   object_ref empty(object_ref const o);
 
-  jtl::immutable_string str(object_ref const o);
   jtl::immutable_string str(object_ref const o, object_ref const args);
 
   obj::persistent_list_ref list(object_ref const s);

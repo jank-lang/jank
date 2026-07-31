@@ -224,7 +224,7 @@ namespace jank::runtime
         throw std::runtime_error{ util::format(
           "Only :preserve or :allow modes are supported for :read-cond reader option. Found {} "
           "instead.",
-          runtime::to_code_string(read_cond)) };
+          read_cond.to_code_string()) };
       }
     }
 
@@ -346,7 +346,7 @@ namespace jank::runtime
     }
     catch(object_ref const e)
     {
-      return error::runtime_unable_to_load_module(runtime::to_code_string(e));
+      return error::runtime_unable_to_load_module(e.to_code_string());
     }
     catch(error_ref const e)
     {
@@ -600,43 +600,36 @@ namespace jank::runtime
   object_ref context::macroexpand1(object_ref const o)
   {
     profile::timer const timer{ "rt macroexpand1" };
-    return visit_seqable(
-      [this](auto const typed_o) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
+    if(!o.has_behavior(object_behavior::sequence_like))
+    {
+      return o;
+    }
+    else
+    {
+      auto const first_sym_obj(dyn_cast<obj::symbol>(o.first()));
+      if(first_sym_obj.is_nil())
+      {
+        return o;
+      }
 
-        if constexpr(!behavior::sequenceable<T>)
-        {
-          return typed_o;
-        }
-        else
-        {
-          auto const first_sym_obj(dyn_cast<obj::symbol>(first(typed_o)));
-          if(first_sym_obj.is_nil())
-          {
-            return typed_o;
-          }
+      auto const resolved_sym(qualify_symbol(first_sym_obj));
+      auto const var(find_var(resolved_sym));
+      if(var.is_nil())
+      {
+        return o;
+      }
 
-          auto const resolved_sym(qualify_symbol(first_sym_obj));
-          auto const var(find_var(resolved_sym));
-          if(var.is_nil())
-          {
-            return typed_o;
-          }
+      auto const meta(var->get_meta());
+      auto const found_macro(get(meta, intern_keyword("", "macro", true).expect_ok()));
+      if(found_macro.is_nil() || !truthy(found_macro))
+      {
+        return o;
+      }
 
-          auto const meta(var->get_meta());
-          auto const found_macro(get(meta, intern_keyword("", "macro", true).expect_ok()));
-          if(found_macro.is_nil() || !truthy(found_macro))
-          {
-            return typed_o;
-          }
-
-          /* TODO: Provide &env. */
-          auto const args(cons(cons(rest(typed_o), {}), typed_o));
-          return apply_to(var->deref(), args);
-        }
-      },
-      [=]() { return o; },
-      o);
+      /* TODO: Provide &env. */
+      auto const args(cons(cons(rest(o), {}), o));
+      return apply_to(var->deref(), args);
+    }
   }
 
   object_ref context::macroexpand(object_ref const o)
@@ -697,7 +690,7 @@ namespace jank::runtime
     if(bindings.get_type() != object_type::persistent_hash_map)
     {
       return err(util::format("invalid thread binding map (must be hash map): {}",
-                              runtime::to_code_string(bindings)));
+                              bindings.to_code_string()));
     }
 
     return push_thread_bindings(expect_object<obj::persistent_hash_map>(bindings));
@@ -715,10 +708,11 @@ namespace jank::runtime
       frame.bindings = tbfs.front().bindings;
     }
 
-    for(auto it(bindings->fresh_seq()); it.is_some(); it = it->next_in_place())
+    for(auto it(bindings->fresh_seq()); it.is_some(); it = it.next_in_place())
     {
-      auto const entry(it->first());
-      auto const var(try_object<var>(entry->data[0]));
+      auto const entry(it.first().seq());
+      /* TODO: Port to nth when we can. */
+      auto const var(try_object<var>(entry.first()));
       if(!var->dynamic.load())
       {
         return err(
@@ -730,17 +724,18 @@ namespace jank::runtime
 
       /* The binding may already be a thread binding if we're just pushing the previous
        * bindings again to give a scratch pad for some upcoming code. */
-      if(entry->data[1].get_type() == object_type::var_thread_binding)
+      auto const entry_val{ entry.next().first() };
+      if(entry_val.get_type() == object_type::var_thread_binding)
       {
         frame.bindings = frame.bindings->assoc(
           var,
-          make_box<var_thread_binding>(expect_object<var_thread_binding>(entry->data[1])->value,
+          make_box<var_thread_binding>(expect_object<var_thread_binding>(entry_val)->value,
                                        thread_id));
       }
       else
       {
         frame.bindings
-          = frame.bindings->assoc(var, make_box<var_thread_binding>(entry->data[1], thread_id));
+          = frame.bindings->assoc(var, make_box<var_thread_binding>(entry_val, thread_id));
       }
     }
 

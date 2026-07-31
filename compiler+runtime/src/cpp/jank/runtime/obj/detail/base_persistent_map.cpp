@@ -71,21 +71,21 @@ namespace jank::runtime::obj::detail
       auto const &pair(*i);
       if(to_code)
       {
-        runtime::to_code_string(pair.first, buff);
+        buff(pair.first.to_code_string());
       }
       else
       {
-        runtime::to_string(pair.first, buff);
+        buff(pair.first.to_string());
       }
       inserter = ' ';
 
       if(to_code)
       {
-        runtime::to_code_string(pair.second, buff);
+        buff(pair.second.to_code_string());
       }
       else
       {
-        runtime::to_string(pair.second, buff);
+        buff(pair.second.to_string());
       }
       auto n(i);
       if(++n != end)
@@ -136,7 +136,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  oref<ST> base_persistent_map<PT, ST, V>::seq() const
+  object_ref base_persistent_map<PT, ST, V>::seq() const
   {
     if(static_cast<PT const *>(this)->data.empty())
     {
@@ -148,7 +148,7 @@ namespace jank::runtime::obj::detail
   }
 
   template <typename PT, typename ST, typename V>
-  oref<ST> base_persistent_map<PT, ST, V>::fresh_seq() const
+  object_ref base_persistent_map<PT, ST, V>::fresh_seq() const
   {
     if(static_cast<PT const *>(this)->data.empty())
     {

@@ -4,7 +4,6 @@
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/seq.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -66,7 +65,7 @@ namespace jank::runtime::obj
         auto const name_meta(runtime::get(f.get_meta(), name_kw));
         if(name_meta.is_some())
         {
-          name = to_string(name_meta);
+          name = name_meta.to_string();
         }
       }
       throw invalid_arity<sizeof...(Args)>{ name };

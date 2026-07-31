@@ -467,7 +467,7 @@ namespace jank::codegen
             util::format_to(buffer, ")");
           }
           /* Cons, etc. */
-          else if constexpr(behavior::seqable<T>)
+          else if((T::obj_behaviors & object_behavior::seqable) != object_behavior::none)
           {
             util::format_to(buffer, "_jank_list({}", sequence_length(typed_o));
             for(auto const it : make_sequence_range(typed_o))
@@ -1791,7 +1791,7 @@ namespace jank::codegen
                     /* TODO: Lift this. */
                     "jank::runtime::reset_meta({}, _jank_eval_str(\"{}\"));\n",
                     inst->name,
-                    util::escape(to_code_string(meta)));
+                    util::escape(meta.to_code_string()));
 
     return inst->name;
   }

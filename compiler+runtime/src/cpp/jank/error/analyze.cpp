@@ -5,7 +5,6 @@
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/meta.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/util/fmt/print.hpp>
 
 namespace jank::error
@@ -188,9 +187,8 @@ namespace jank::error
                                               runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_macro_expansion_exception,
-                      e.get_type() == runtime::object_type::persistent_string
-                        ? runtime::to_string(e)
-                        : runtime::to_code_string(e),
+                      e.get_type() == runtime::object_type::persistent_string ? e.to_string()
+                                                                              : e.to_code_string(),
                       source,
                       expansion,
                       std::make_unique<cpptrace::stacktrace>(trace));

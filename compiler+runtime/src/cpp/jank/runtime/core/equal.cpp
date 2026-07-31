@@ -18,17 +18,7 @@ namespace jank::runtime
 
   bool equal(object_ref const lhs, object_ref const rhs)
   {
-    if(lhs.is_nil())
-    {
-      return rhs.is_nil();
-    }
-    else if(rhs.is_nil())
-    {
-      return false;
-    }
-
-    /* TODO: Port visit_object: All types. */
-    return visit_object([&](auto const typed_lhs) { return typed_lhs.equal(rhs); }, lhs);
+    return lhs.equal(rhs);
   }
 
   i64 compare(object_ref const l, object_ref const r)

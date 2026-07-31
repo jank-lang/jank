@@ -30,7 +30,6 @@ namespace jank::runtime::obj
       locked_state->status = promise_status::ready;
       sync.notify_all();
     }
-    return this;
+    return runtime::detail::untagged(this);
   }
-
 }

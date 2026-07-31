@@ -30,7 +30,6 @@ namespace jank::runtime
 
   void to_code_string(object_ref const o, jtl::string_builder &buff)
   {
-    auto const value{ o.to_code_string() };
-    buff(value);
+    buff(o.to_code_string());
   }
 }

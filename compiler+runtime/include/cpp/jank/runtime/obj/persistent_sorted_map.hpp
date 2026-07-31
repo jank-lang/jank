@@ -17,7 +17,8 @@ namespace jank::runtime::obj
   {
     static constexpr object_type obj_type{ object_type::persistent_sorted_map };
     static constexpr object_behavior obj_behaviors{ object_behavior::call | object_behavior::get
-                                                    | object_behavior::find };
+                                                    | object_behavior::find
+                                                    | object_behavior::seqable };
 
     using transient_type = transient_sorted_map;
     using parent_type

@@ -5,7 +5,6 @@
 #include <jank/runtime/detail/native_array_map.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/obj/nil.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -112,13 +111,13 @@ namespace jank::runtime::obj
 
     if(head.get_type() != object_type::persistent_vector)
     {
-      throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
+      throw std::runtime_error{ util::format("invalid map entry: {}", head.to_string()) };
     }
 
     auto const vec(expect_object<persistent_vector>(head));
     if(vec->count() != 2)
     {
-      throw std::runtime_error{ util::format("invalid map entry: {}", runtime::to_string(head)) };
+      throw std::runtime_error{ util::format("invalid map entry: {}", head.to_string()) };
     }
 
     return assoc_in_place(vec->data[0], vec->data[1]);

@@ -28,17 +28,17 @@ namespace jank::runtime
 
       value_type operator*() const
       {
-        return runtime::first(data);
+        return data.first();
       }
 
       pointer operator->() const
       {
-        return runtime::first(data);
+        return data.first();
       }
 
       iterator &operator++()
       {
-        data = runtime::next(data);
+        data = data.next();
 
         return *this;
       }
@@ -84,8 +84,7 @@ namespace jank::runtime
   };
 
   template <typename T>
-  requires behavior::sequenceable_in_place<T>
-  struct sequence_range<T>
+  struct fresh_sequence_range
   {
     struct iterator
     {
@@ -146,7 +145,7 @@ namespace jank::runtime
       return { jank_nil };
     }
 
-    sequence_range skip(usize const n) const
+    fresh_sequence_range skip(usize const n) const
     {
       sequence_range const r{ s };
       auto it{ r.begin() };
@@ -167,11 +166,11 @@ namespace jank::runtime
   {
     using S = typename decltype(s->seq())::value_type;
 
-    if constexpr(behavior::sequenceable_in_place<S>)
-    {
-      return sequence_range<S>{ s.is_some() ? s->fresh_seq() : oref<S>{} };
-    }
-    else
+    //if constexpr(S::obj_behaviors & object_behavior::sequence_like_in_place )
+    //{
+    //  return fresh_sequence_range<S>{ s.is_some() ? s->fresh_seq() : oref<S>{} };
+    //}
+    //else
     {
       return sequence_range<S>{ s.is_some() ? s->seq() : s };
     }

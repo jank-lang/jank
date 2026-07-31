@@ -12,7 +12,6 @@
 #include <jank/runtime/behavior/collection_like.hpp>
 #include <jank/runtime/behavior/map_like.hpp>
 #include <jank/runtime/behavior/transientable.hpp>
-#include <jank/runtime/behavior/indexable.hpp>
 #include <jank/runtime/behavior/stackable.hpp>
 #include <jank/runtime/behavior/chunkable.hpp>
 #include <jank/runtime/behavior/metadatable.hpp>
@@ -39,9 +38,9 @@ namespace jank::runtime
         {
           return typed_o->count() == 0;
         }
-        else if constexpr(behavior::seqable<T>)
+        else if(typed_o.has_behavior(object_behavior::seqable))
         {
-          return typed_o->seq().is_nil();
+          return typed_o.seq().is_nil();
         }
         else
         {
@@ -54,21 +53,12 @@ namespace jank::runtime
 
   bool is_seq(object_ref const o)
   {
-    /* TODO: Port visit_object: sequenceable. */
-    return visit_object(
-      [=](auto const typed_o) -> bool {
-        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
-
-        return behavior::sequenceable<T>;
-      },
-      o);
+    return !o.is_nil() && o.has_behavior(object_behavior::sequence_like);
   }
 
   bool is_seqable(object_ref const o)
   {
-    return visit_seqable([=](auto const &) -> bool { return true; },
-                         [=]() -> bool { return false; },
-                         o);
+    return o.has_behavior(object_behavior::seqable);
   }
 
   bool is_sequential(object_ref const o)
@@ -235,8 +225,7 @@ namespace jank::runtime
       return expect_object<obj::transient_sorted_set>(coll)->disjoin_in_place(o);
     }
 
-    throw std::runtime_error{ util::format("not disjoinable_in_place: {}",
-                                           runtime::to_code_string(coll)) };
+    throw std::runtime_error{ util::format("not disjoinable_in_place: {}", coll.to_code_string()) };
   }
 
   object_ref assoc_in_place(object_ref const coll, object_ref const k, object_ref const v)
@@ -290,168 +279,54 @@ namespace jank::runtime
 
   object_ref seq(object_ref const s)
   {
-    /* TODO: Port visit_object: seqable. */
-    return visit_object(
-      [](auto const typed_s) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
-
-        if constexpr(std::same_as<T, obj::nil>)
-        {
-          return typed_s;
-        }
-        else if constexpr(behavior::seqable<T>)
-        {
-          auto const ret(typed_s->seq());
-          if(ret.is_nil())
-          {
-            return ret;
-          }
-
-          return ret;
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
-        }
-      },
-      s);
+    return s.seq();
   }
 
   object_ref fresh_seq(object_ref const s)
   {
-    /* TODO: Port visit_object: seqable. */
-    return visit_object(
-      [](auto const typed_s) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
-
-        if constexpr(std::same_as<T, obj::nil>)
-        {
-          return typed_s;
-        }
-        else if constexpr(behavior::seqable<T>)
-        {
-          auto const ret(typed_s->fresh_seq());
-          if(ret.is_nil())
-          {
-            return ret;
-          }
-
-          return ret;
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
-        }
-      },
-      s);
+    return s.fresh_seq();
   }
 
   object_ref first(object_ref const s)
   {
-    /* TODO: Port visit_object: seqable. */
-    return visit_object(
-      [](auto const typed_s) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
+    if(s.has_behavior(object_behavior::sequence_like))
+    {
+      return s.first();
+    }
+    if(s.has_behavior(object_behavior::seqable))
+    {
+      return s.seq().first();
+    }
 
-        if constexpr(std::same_as<T, obj::nil>)
-        {
-          return typed_s;
-        }
-        else if constexpr(behavior::sequenceable<T>)
-        {
-          return typed_s->first();
-        }
-        else if constexpr(behavior::seqable<T>)
-        {
-          auto const ret(typed_s->seq());
-          if(ret.is_nil())
-          {
-            return ret;
-          }
-
-          return ret->first();
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
-        }
-      },
-      s);
-  }
-
-  object_ref second(object_ref const s)
-  {
-    return first(next(s));
+    return s.first();
   }
 
   object_ref next(object_ref const s)
   {
-    /* TODO: Port visit_object: seqable. */
-    return visit_object(
-      [](auto const typed_s) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
+    if(s.has_behavior(object_behavior::sequence_like))
+    {
+      return s.next();
+    }
+    if(s.has_behavior(object_behavior::seqable))
+    {
+      return s.seq().next();
+    }
 
-        if constexpr(std::same_as<T, obj::nil>)
-        {
-          return typed_s;
-        }
-        else if constexpr(behavior::sequenceable<T>)
-        {
-          return typed_s->next();
-        }
-        else if constexpr(behavior::seqable<T>)
-        {
-          auto const s(typed_s->seq());
-          if(s.is_nil())
-          {
-            return s;
-          }
-
-          return s->next();
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
-        }
-      },
-      s);
+    return s.next();
   }
 
   object_ref next_in_place(object_ref const s)
   {
-    /* TODO: Port visit_object: sequenceable. */
-    return visit_object(
-      [](auto const typed_s) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_s)>::value_type;
+    if(s.has_behavior(object_behavior::sequence_like))
+    {
+      return s.next_in_place();
+    }
+    if(s.has_behavior(object_behavior::seqable))
+    {
+      return s.seq().next_in_place();
+    }
 
-        if constexpr(std::same_as<T, obj::nil>)
-        {
-          return typed_s;
-        }
-        else if constexpr(behavior::sequenceable_in_place<T>)
-        {
-          return typed_s->next_in_place();
-        }
-        else if constexpr(behavior::sequenceable<T>)
-        {
-          return typed_s->next();
-        }
-        else if constexpr(behavior::seqable<T>)
-        {
-          auto const ret(typed_s->seq());
-          if(ret.is_nil())
-          {
-            return ret;
-          }
-
-          return ret->next_in_place();
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
-        }
-      },
-      s);
+    return s.next_in_place();
   }
 
   object_ref more(object_ref const s)
@@ -470,46 +345,34 @@ namespace jank::runtime
     {
       return obj::persistent_list::empty();
     }
-    return visit_seqable(
-      [=](auto const typed_s) -> object_ref {
-        auto const seq(typed_s->seq());
-        if(seq.is_nil())
-        {
-          return obj::persistent_list::empty();
-        }
-        auto ret(more(seq));
-        if(ret.is_nil())
-        {
-          return obj::persistent_list::empty();
-        }
-        return ret;
-      },
-      s);
+
+    auto const seq(s.seq());
+    if(seq.is_nil())
+    {
+      return obj::persistent_list::empty();
+    }
+    auto ret(more(seq));
+    if(ret.is_nil())
+    {
+      return obj::persistent_list::empty();
+    }
+    return ret;
   }
 
   object_ref cons(object_ref const head, object_ref const tail)
   {
-    return visit_seqable(
-      [=](auto const typed_tail) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_tail)>::value_type;
-
-        if constexpr(jtl::is_same<T, obj::nil>)
-        {
-          return make_box<obj::persistent_list>(std::in_place, head);
-        }
-        else if constexpr(behavior::sequenceable<T>)
-        {
-          return make_box<jank::runtime::obj::cons>(head, typed_tail);
-        }
-        else
-        {
-          return make_box<jank::runtime::obj::cons>(head, typed_tail->seq());
-        }
-      },
-      [=]() -> object_ref {
-        throw std::runtime_error{ util::format("not seqable: {}", runtime::to_code_string(tail)) };
-      },
-      tail);
+    if(tail.is_nil())
+    {
+      return make_box<obj::persistent_list>(std::in_place, head);
+    }
+    else if(tail.has_behavior(object_behavior::sequence_like))
+    {
+      return make_box<jank::runtime::obj::cons>(head, tail);
+    }
+    else
+    {
+      return make_box<jank::runtime::obj::cons>(head, tail.seq());
+    }
   }
 
   object_ref conj(object_ref const s, object_ref const o)
@@ -599,16 +462,12 @@ namespace jank::runtime
   {
     if(m.has_behavior(object_behavior::get))
     {
-      return visit_seqable(
-        [&](auto const typed_keys) -> object_ref {
-          object_ref ret{ m };
-          for(auto const &e : make_sequence_range(typed_keys))
-          {
-            ret = get(ret, e.erase());
-          }
-          return ret;
-        },
-        keys);
+      object_ref ret{ m };
+      for(auto const e : make_sequence_range(keys))
+      {
+        ret = get(ret, e);
+      }
+      return ret;
     }
     else
     {
@@ -622,20 +481,16 @@ namespace jank::runtime
 
     if(m.has_behavior(object_behavior::get))
     {
-      return visit_seqable(
-        [&](auto const typed_keys) -> object_ref {
-          object_ref ret{ m };
-          for(auto const &e : make_sequence_range(typed_keys))
-          {
-            ret = get(ret, e.erase(), sentinel);
-            if(ret == sentinel)
-            {
-              return fallback;
-            }
-          }
-          return ret;
-        },
-        keys);
+      object_ref ret{ m };
+      for(auto const &e : make_sequence_range(keys))
+      {
+        ret = get(ret, e, sentinel);
+        if(ret == sentinel)
+        {
+          return fallback;
+        }
+      }
+      return ret;
     }
     else
     {
@@ -683,10 +538,10 @@ namespace jank::runtime
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
               R ret{ typed_m };
-              for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
+              for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq.next_in_place())
               {
-                auto const &e(seq->first());
-                ret = assoc(ret, e->data[0], e->data[1]);
+                auto const e(seq.first().seq());
+                ret = assoc(ret, e.first(), e.next().first());
               }
               return ret;
             },
@@ -720,10 +575,10 @@ namespace jank::runtime
           return visit_map_like(
             [](auto const typed_other, auto const typed_m) -> object_ref {
               R ret{ typed_m };
-              for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq->next_in_place())
+              for(auto seq{ typed_other->fresh_seq() }; seq.is_some(); seq = seq.next_in_place())
               {
-                auto const &e(seq->first());
-                ret = assoc_in_place(ret, e->data[0], e->data[1]);
+                auto const e(seq.first().seq());
+                ret = assoc_in_place(ret, e.first(), e.next().first());
               }
               return ret;
             },
@@ -773,16 +628,16 @@ namespace jank::runtime
       return o;
     }
 
-    /* TODO: Port visit_object: indexable, seqable, sequential. */
+    /* TODO: Port visit_object: sequential. */
     return visit_object(
       [&](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
-        if constexpr(behavior::indexable<T>)
+        if(typed_o.has_behavior(object_behavior::indexable))
         {
-          return typed_o->nth(idx);
+          return typed_o.nth(idx);
         }
-        else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
+        else if(typed_o.has_behavior(object_behavior::seqable) && behavior::sequential<T>)
         {
           i64 i{};
           for(auto const &e : make_sequence_range(typed_o))
@@ -812,16 +667,16 @@ namespace jank::runtime
       return fallback;
     }
 
-    /* TODO: Port visit_object: indexable, seqable, sequential. */
+    /* TODO: Port visit_object: sequential. */
     return visit_object(
       [&](auto const typed_o) -> object_ref {
         using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
 
-        if constexpr(behavior::indexable<T>)
+        if(typed_o.has_behavior(object_behavior::indexable))
         {
-          return typed_o->nth(idx, fallback);
+          return typed_o.nth(idx, fallback);
         }
-        else if constexpr(behavior::seqable<T> && behavior::sequential<T>)
+        else if(typed_o.has_behavior(object_behavior::seqable) && behavior::sequential<T>)
         {
           i64 i{};
           for(auto const &e : make_sequence_range(typed_o))
@@ -913,51 +768,34 @@ namespace jank::runtime
       o);
   }
 
-  jtl::immutable_string str(object_ref const o)
-  {
-    return runtime::to_string(o);
-  }
-
   jtl::immutable_string str(object_ref const o, object_ref const args)
   {
     jtl::string_builder buff;
     buff.reserve(16);
     if(!is_nil(o))
     {
-      runtime::to_string(o, buff);
+      o.to_string(buff);
     }
-    return visit_seqable(
-      [](auto const typed_args, jtl::string_builder &buff) -> jtl::immutable_string {
-        for(auto const &e : make_sequence_range(typed_args))
-        {
-          if(is_nil(e))
-          {
-            continue;
-          }
-          runtime::to_string(e.erase(), buff);
-        }
-        return buff.release();
-      },
-      args,
-      buff);
+
+    for(auto const &e : make_sequence_range(args))
+    {
+      if(is_nil(e))
+      {
+        continue;
+      }
+      e.to_string(buff);
+    }
+    return buff.release();
   }
 
   obj::persistent_list_ref list(object_ref const s)
   {
-    return visit_seqable(
-      [](auto const typed_s) -> obj::persistent_list_ref {
-        return obj::persistent_list::create(typed_s);
-      },
-      s);
+    return obj::persistent_list::create(s);
   }
 
   obj::persistent_vector_ref vec(object_ref const s)
   {
-    return visit_seqable(
-      [](auto const typed_s) -> obj::persistent_vector_ref {
-        return obj::persistent_vector::create(typed_s);
-      },
-      s);
+    return obj::persistent_vector::create(s);
   }
 
   usize sequence_length(object_ref const s)
@@ -985,7 +823,7 @@ namespace jank::runtime
         {
           return typed_s->count();
         }
-        else if constexpr(behavior::seqable<T>)
+        else if(typed_s.has_behavior(object_behavior::seqable))
         {
           usize length{ 0 };
           auto const &r{ make_sequence_range(typed_s) };
@@ -1010,51 +848,41 @@ namespace jank::runtime
       return true;
     }
 
-    /* TODO: visit_sequence. */
-    return visit_seqable(
-      [](auto const typed_l, object_ref const r) -> bool {
-        return visit_seqable(
-          [](auto const typed_r, auto const typed_l) -> bool {
-            auto const &l_range{ make_sequence_range(typed_l) };
-            auto const &r_range{ make_sequence_range(typed_r) };
-            auto r_it(r_range.begin());
-            for(auto l_it(l_range.begin()); l_it != l_range.end(); ++l_it, ++r_it)
-            {
-              if(r_it == r_range.end() || !runtime::equal((*l_it).erase(), (*r_it).erase()))
-              {
-                return false;
-              }
-            }
-            return r_it == r_range.end();
-          },
-          []() { return false; },
-          r,
-          typed_l);
-      },
-      []() { return false; },
-      l,
-      r);
+    if(!l.has_behavior(object_behavior::seqable))
+    {
+      return false;
+    }
+    if(!r.has_behavior(object_behavior::seqable))
+    {
+      return false;
+    }
+
+    auto const l_range{ make_sequence_range(l) };
+    auto const r_range{ make_sequence_range(r) };
+    auto r_it(r_range.begin());
+    for(auto l_it(l_range.begin()); l_it != l_range.end(); ++l_it, ++r_it)
+    {
+      if(r_it == r_range.end() || !runtime::equal((*l_it).erase(), (*r_it).erase()))
+      {
+        return false;
+      }
+    }
+    return r_it == r_range.end();
   }
 
   object_ref reduce(object_ref const f, object_ref const init, object_ref const s)
   {
-    return visit_seqable(
-      [](auto const typed_coll, object_ref const f, object_ref const init) -> object_ref {
-        object_ref res{ init };
-        for(auto const &e : make_sequence_range(typed_coll))
-        {
-          res = f.call(res, e);
-          if(res.get_type() == object_type::reduced)
-          {
-            res = expect_object<obj::reduced>(res)->val;
-            break;
-          }
-        }
-        return res;
-      },
-      s,
-      f,
-      init);
+    object_ref res{ init };
+    for(auto const &e : make_sequence_range(s))
+    {
+      res = f.call(res, e);
+      if(res.get_type() == object_type::reduced)
+      {
+        res = expect_object<obj::reduced>(res)->val;
+        break;
+      }
+    }
+    return res;
   }
 
   object_ref reduced(object_ref const o)

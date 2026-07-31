@@ -211,17 +211,17 @@
        should not be used on any Iterable whose iterator repeatedly
        returns the same mutable object."
        :inline (fn* [o]
-                 (list 'cpp/jank.runtime.seq o))}
+                 (list '.seq o))}
   seq
   (fn* seq [o]
-    (cpp/jank.runtime.seq o)))
+    (.seq o)))
 
 (def ^{:arglists '([coll])
        :inline (fn* [o]
-                 (list 'cpp/jank.runtime.fresh_seq o))}
+                 (list '.fresh_seq o))}
   fresh-seq
   (fn* fresh-seq [o]
-    (cpp/jank.runtime.fresh_seq o)))
+    (.fresh_seq o)))
 
 (def ^{:arglists '([coll])
        :doc "Returns the first item in the collection. Calls seq on its
@@ -249,10 +249,10 @@
 
 (def ^{:arglists '([coll])
        :inline (fn* [o]
-                 (list 'cpp/jank.runtime.next_in_place o))}
+                 (list '.next_in_place o))}
   next-in-place
   (fn* next-in-place [o]
-    (cpp/jank.runtime.next_in_place o)))
+    (.next_in_place o)))
 
 (def ^{:arglists '([x])
        :doc "Same as (next (next x))"}
@@ -491,7 +491,7 @@
     ([o]
      (if (nil? o)
        ""
-       (cpp/jank.runtime.to_string o)))
+       (.to_string o)))
     ([o & args]
      (cpp/jank.runtime.str o args))))
 
@@ -616,7 +616,7 @@
   pr-str
   ;; TODO: support multiple parameters, preserving current behavior
   (fn* pr-str [x]
-    (cpp/jank.runtime.to_code_string x)))
+    (.to_code_string x)))
 
 ;; Utils.
 ; The full `apply` will be defined below, but it requires more helpers to support
@@ -2170,14 +2170,14 @@
      ([a b c & ds] (apply f (if (nil? a) x a) (if (nil? b) y b) (if (nil? c) z c) ds)))))
 
 (defn some
-  "Returns the first logical true value of (pred x) for any x in coll,
-   else nil.  One common idiom is to use a set as pred, for example
+  "Returns the first logical true value of (selector x) for any x in coll,
+   else nil.  One common idiom is to use a set as selector, for example
    this will return :fred if :fred is in the sequence, otherwise nil:
    (some #{:fred} coll)"
-  [pred coll]
+  [selector coll]
   (let [s (seq coll)]
     (when s
-      (or (pred (first s)) (recur pred (next s))))))
+      (or (selector (first s)) (recur selector (next s))))))
 
 
 (defn every-pred
@@ -6309,7 +6309,8 @@
   "Evaluates body in a context in which *in* is bound to a fresh
   StringReader initialized with the string s."
   [s & body]
-  `(with-open [s# (-> (java.io.StringReader. ~s) clojure.lang.LineNumberingPushbackReader.)]
+  (throw "TODO: port with-in-str")
+  #_`(with-open [s# (-> (java.io.StringReader. ~s) clojure.lang.LineNumberingPushbackReader.)]
      (binding [*in* s#]
        ~@body)))
 
@@ -6318,7 +6319,6 @@
   [& xs]
   (with-out-str
    (apply prn xs)))
-
 
 (defn print-str
   "print to a string, returning it"

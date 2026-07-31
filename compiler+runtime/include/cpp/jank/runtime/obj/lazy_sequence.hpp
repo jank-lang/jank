@@ -17,7 +17,8 @@ namespace jank::runtime::obj
   struct lazy_sequence : object
   {
     static constexpr object_type obj_type{ object_type::lazy_sequence };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::seqable
+                                                    | object_behavior::sequence_like };
     static constexpr bool pointer_free{ false };
     static constexpr bool is_sequential{ true };
 
@@ -33,16 +34,18 @@ namespace jank::runtime::obj
     uhash to_hash() const override;
 
     /* behavior::seqable */
-    object_ref seq() const;
-    lazy_sequence_ref fresh_seq() const;
+    object_ref seq() const override;
+    object_ref fresh_seq() const override;
 
-    /* behavior::sequenceable */
-    object_ref first() const;
-    object_ref next() const;
+    /* behavior::sequence_like */
+    object_ref first() const override;
+    object_ref next() const override;
+
+    /* behavior::conjable */
     obj::cons_ref conj(object_ref const head) const;
 
-    /* behavior::sequenceable_in_place */
-    //lazy_sequence_ref next_in_place();
+    /* behavior::sequence_like_in_place */
+    //object_ref next_in_place() override;
 
     /* behavior::realizable */
     bool is_realized() const;

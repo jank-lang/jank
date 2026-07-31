@@ -95,12 +95,12 @@ namespace jank::runtime::obj
                                      : static_cast<bounds_check_t>(negative_step_bounds_check));
   }
 
-  integer_range_ref integer_range::seq() const
+  object_ref integer_range::seq() const
   {
     return runtime::detail::untagged(this);
   }
 
-  integer_range_ref integer_range::fresh_seq() const
+  object_ref integer_range::fresh_seq() const
   {
     return make_box<integer_range>(start, end, step, bounds_check);
   }
@@ -110,7 +110,7 @@ namespace jank::runtime::obj
     return make_box(start);
   }
 
-  integer_range_ref integer_range::next() const
+  object_ref integer_range::next() const
   {
     if(count() <= 1)
     {
@@ -119,7 +119,7 @@ namespace jank::runtime::obj
     return make_box<integer_range>(start + step, end, step, bounds_check);
   }
 
-  integer_range_ref integer_range::next_in_place()
+  object_ref integer_range::next_in_place()
   {
     if(count() <= 1)
     {
@@ -146,17 +146,17 @@ namespace jank::runtime::obj
 
   void integer_range::to_string(jtl::string_builder &buff) const
   {
-    runtime::to_string(seq(), buff);
+    runtime::seq_to_string(seq(), buff);
   }
 
   jtl::immutable_string integer_range::to_string() const
   {
-    return runtime::to_string(seq());
+    return runtime::seq_to_string(seq());
   }
 
   jtl::immutable_string integer_range::to_code_string() const
   {
-    return runtime::to_code_string(seq());
+    return runtime::seq_to_code_string(seq());
   }
 
   uhash integer_range::to_hash() const
@@ -167,7 +167,7 @@ namespace jank::runtime::obj
   integer_range_ref integer_range::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto const ret(fresh_seq());
+    auto const ret(expect_object<obj::integer_range>(fresh_seq()));
     ret->meta = meta;
     return ret;
   }

@@ -5,7 +5,6 @@
 
 #include <jank/util/try.hpp>
 #include <jank/util/fmt/print.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/error.hpp>
 #include <jank/error/report.hpp>
 
@@ -94,11 +93,11 @@ namespace jank::util
   {
     if(e.get_type() == runtime::object_type::persistent_string)
     {
-      util::println("Uncaught exception: {}\n", runtime::to_string(e));
+      util::println("Uncaught exception: {}\n", e.to_string());
     }
     else
     {
-      util::println("Uncaught exception: {}\n", runtime::to_code_string(e));
+      util::println("Uncaught exception: {}\n", e.to_code_string());
     }
     print_exception_stack_trace();
   }

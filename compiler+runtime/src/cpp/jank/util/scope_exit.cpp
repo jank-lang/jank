@@ -1,6 +1,5 @@
 #include <jank/util/scope_exit.hpp>
 #include <jank/runtime/object.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/util/fmt/print.hpp>
 
 namespace jank::util
@@ -37,7 +36,7 @@ namespace jank::util
       catch(runtime::object_ref const o)
       {
         /* TODO: Panic */
-        util::println(stderr, "Exception caught in scope_exit: {}", runtime::to_string(o));
+        util::println(stderr, "Exception caught in scope_exit: {}", o.to_string());
       }
       catch(std::exception const &e)
       {

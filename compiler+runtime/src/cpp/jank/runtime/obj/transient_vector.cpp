@@ -47,7 +47,7 @@ namespace jank::runtime::obj
   {
     assert_active();
     data.push_back(head);
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   object_ref transient_vector::nth(object_ref const index) const
@@ -66,7 +66,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("nth on a vector must be an integer; found {}",
-                                             runtime::to_string(index)) };
+                                             object_type_str(index.get_type())) };
     }
   }
 
@@ -99,7 +99,7 @@ namespace jank::runtime::obj
       data.set(i, val);
     }
 
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   transient_vector_ref transient_vector::dissoc_in_place(object_ref const /*key*/)
@@ -140,7 +140,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("key must be an integer; found {}",
-                                             runtime::to_string(idx)) };
+                                             object_type_str(idx.get_type())) };
     }
   }
 
@@ -160,7 +160,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("key must be an integer; found {}",
-                                             runtime::to_string(idx)) };
+                                             object_type_str(idx.get_type())) };
     }
   }
 
@@ -180,7 +180,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("key must be an integer; found {}",
-                                             runtime::to_string(idx)) };
+                                             object_type_str(idx.get_type())) };
     }
   }
 
@@ -199,7 +199,7 @@ namespace jank::runtime::obj
     else
     {
       throw std::runtime_error{ util::format("find on a vector must be an integer; found {}",
-                                             runtime::to_string(idx)) };
+                                             object_type_str(idx.get_type())) };
     }
   }
 
@@ -225,7 +225,7 @@ namespace jank::runtime::obj
     }
 
     data.take(data.size() - 1);
-    return this;
+    return runtime::detail::untagged(this);
   }
 
   void transient_vector::assert_active() const

@@ -21,7 +21,6 @@
 #include <jank/runtime/obj/keyword.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/core/equal.hpp>
 #include <jank/analyze/processor.hpp>
 #include <jank/jit/processor.hpp>
@@ -43,11 +42,6 @@ namespace jank::jit
   {
     TEST_CASE("files")
     {
-      __rt_ctx->in_ns_var->deref().call(runtime::make_box<runtime::obj::symbol>("user"));
-      __rt_ctx->intern_var("clojure.core", "refer")
-        .expect_ok()
-        .call(runtime::make_box<runtime::obj::symbol>("clojure.core"));
-
       auto const cardinal_result(__rt_ctx->intern_keyword("success").expect_ok());
       usize test_count{};
 
@@ -142,7 +136,7 @@ namespace jank::jit
           {
             failures.push_back({ dir_entry.path(),
                                  util::format("Test failure was expected, but it passed with {}",
-                                              runtime::to_code_string(result)) });
+                                              result.to_code_string()) });
             passed = false;
           }
           else
@@ -151,7 +145,7 @@ namespace jank::jit
             {
               failures.push_back(
                 { dir_entry.path(),
-                  util::format("Result is not :success: {}", runtime::to_string(result)) });
+                  util::format("Result is not :success: {}", result.to_string()) });
               passed = false;
             }
           }
@@ -171,14 +165,13 @@ namespace jank::jit
           if(expect_success || (expect_throw && !runtime::equal(e, cardinal_result)))
           {
             failures.push_back(
-              { dir_entry.path(), util::format("Exception thrown: {}", runtime::to_string(e)) });
+              { dir_entry.path(), util::format("Exception thrown: {}", e.to_string()) });
             passed = false;
           }
           else if(expect_failure && runtime::equal(e, cardinal_result))
           {
             failures.push_back(
-              { dir_entry.path(),
-                util::format("Expected failure, thrown: {}", runtime::to_string(e)) });
+              { dir_entry.path(), util::format("Expected failure, thrown: {}", e.to_string()) });
             passed = false;
           }
         }
@@ -187,7 +180,7 @@ namespace jank::jit
           if(!expect_throw || !runtime::equal(e.erase(), cardinal_result))
           {
             failures.push_back(
-              { dir_entry.path(), util::format("Exception thrown: {}", runtime::to_string(e)) });
+              { dir_entry.path(), util::format("Exception thrown: {}", e.to_string()) });
             passed = false;
           }
         }

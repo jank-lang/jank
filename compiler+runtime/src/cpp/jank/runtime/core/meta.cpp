@@ -147,14 +147,14 @@ namespace jank::runtime
       get(meta, __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok()));
 
     return {
-      runtime::to_string(file),
-      module.is_some() ? to_string(module) : "",
+      file.to_string(),
+      module.is_some() ? module.to_string() : "",
       { static_cast<size_t>(to_int(start_offset)),
-                                           static_cast<size_t>(to_int(start_line)),
-                                           static_cast<size_t>(to_int(start_col)) },
+                                            static_cast<size_t>(to_int(start_line)),
+                                            static_cast<size_t>(to_int(start_col)) },
       {   static_cast<size_t>(to_int(end_offset)),
-                                           static_cast<size_t>(to_int(end_line)),
-                                           static_cast<size_t>(to_int(end_col))  },
+                                            static_cast<size_t>(to_int(end_line)),
+                                            static_cast<size_t>(to_int(end_col))  },
       macro_expansion
     };
   }
@@ -215,14 +215,14 @@ namespace jank::runtime
   {
     read::source source{ start, end };
 
-    auto const module{ runtime::to_code_string(runtime::__rt_ctx->current_ns_var->deref()) };
+    auto const module{ runtime::__rt_ctx->current_ns_var->deref().to_code_string() };
     if(runtime::module::is_core_module(module))
     {
       source.module = module;
     }
 
     auto const file{ runtime::__rt_ctx->current_file_var->deref() };
-    source.file = runtime::to_string(file);
+    source.file = file.to_string();
 
     return source_to_meta(source);
   }

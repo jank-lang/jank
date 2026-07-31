@@ -350,7 +350,7 @@ namespace jank::runtime
     return visit_seqable(
       fn,
       [=]() -> decltype(fn(obj::cons_ref{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not seqable: " + to_code_string(erased) };
+        throw std::runtime_error{ "not seqable: " + erased.to_code_string() };
       },
       erased,
       std::forward<Args>(args)...);
@@ -390,7 +390,7 @@ namespace jank::runtime
     return visit_map_like(
       fn,
       [=]() -> decltype(fn(obj::persistent_hash_map_ref{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not map-like: " + to_code_string(erased) };
+        throw std::runtime_error{ "not map-like: " + erased.to_code_string() };
       },
       erased,
       std::forward<Args>(args)...);
@@ -424,7 +424,7 @@ namespace jank::runtime
     return visit_set_like(
       fn,
       [=]() -> decltype(fn(obj::persistent_hash_set_ref{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not set-like: " + to_code_string(erased) };
+        throw std::runtime_error{ "not set-like: " + erased.to_code_string() };
       },
       erased,
       std::forward<Args>(args)...);
@@ -476,7 +476,7 @@ namespace jank::runtime
     return visit_number_like(
       fn,
       [=]() -> decltype(fn(obj::integer_ref{}, std::forward<Args>(args)...)) {
-        throw std::runtime_error{ "not a number: " + to_code_string(erased) };
+        throw std::runtime_error{ "not a number: " + erased.to_code_string() };
       },
       erased,
       std::forward<Args>(args)...);

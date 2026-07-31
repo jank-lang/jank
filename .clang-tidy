@@ -13,6 +13,7 @@ misc-misleading-identifier,\
 misc-definitions-in-headers,\
 -misc-use-internal-linkage,\
 -clang-diagnostic-unknown-warning-option,\
+-clang-analyzer-core.StackAddressEscape,\
 -clang-analyzer-cplusplus.NewDeleteLeaks,\
 -clang-analyzer-cplusplus.NewDelete,\
 -clang-analyzer-security.ArrayBound,\

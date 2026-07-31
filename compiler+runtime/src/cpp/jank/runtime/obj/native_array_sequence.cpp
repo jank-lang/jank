@@ -56,12 +56,12 @@ namespace jank::runtime::obj
   }
 
   /* behavior::seqable */
-  native_array_sequence_ref native_array_sequence::seq()
+  object_ref native_array_sequence::seq() const
   {
     return runtime::detail::untagged(this);
   }
 
-  native_array_sequence_ref native_array_sequence::fresh_seq()
+  object_ref native_array_sequence::fresh_seq() const
   {
     return make_box<native_array_sequence>(arr, index, size);
   }
@@ -79,7 +79,7 @@ namespace jank::runtime::obj
     return arr[index];
   }
 
-  native_array_sequence_ref native_array_sequence::next() const
+  object_ref native_array_sequence::next() const
   {
     auto n(index);
     ++n;
@@ -92,7 +92,7 @@ namespace jank::runtime::obj
     return make_box<native_array_sequence>(arr, n, size);
   }
 
-  native_array_sequence_ref native_array_sequence::next_in_place()
+  object_ref native_array_sequence::next_in_place()
   {
     ++index;
 
