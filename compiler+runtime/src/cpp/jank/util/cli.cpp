@@ -113,6 +113,8 @@ COMMANDS
                               -main.
   check-health                Provide a status report on the jank installation.
   print-binary-version        Print the current binary version to stdout and exit.
+  print-cflags                Print the Clang flags for AOT compilation of C++ source code
+                              to stdout and exit.
 
 OPTIONS
   -h,     --help              Print this help message and exit.
@@ -228,6 +230,7 @@ OPTIONS
       {       "compile-module",       command::compile_module },
       {         "check-health",         command::check_health },
       { "print-binary-version", command::print_binary_version },
+      {         "print-cflags",         command::print_cflags },
     };
 
     options_scratchpad scratch;

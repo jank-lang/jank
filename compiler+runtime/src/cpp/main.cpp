@@ -404,9 +404,24 @@ int main(int const argc, char const **argv)
       {
         return jank::environment::check_health() ? 0 : 1;
       }
-      if(util::cli::opts.command == util::cli::command::print_binary_version)
+      else if(util::cli::opts.command == util::cli::command::print_binary_version)
       {
         util::println("{}", util::binary_version());
+        return 0;
+      }
+      else if(util::cli::opts.command == util::cli::command::print_cflags)
+      {
+        auto const compiler_args_res{ aot::build_compiler_args() };
+        auto const &compiler_args{ compiler_args_res.expect_ok() };
+        for(auto const arg : compiler_args)
+        {
+          util::print("{} ", arg);
+        }
+        for(auto const arg : aot::build_linker_args())
+        {
+          util::print("{} ", arg);
+        }
+        util::println("");
         return 0;
       }
 
@@ -485,6 +500,7 @@ int main(int const argc, char const **argv)
           break;
         case util::cli::command::check_health:
         case util::cli::command::print_binary_version:
+        case util::cli::command::print_cflags:
           break;
       }
       return 0;

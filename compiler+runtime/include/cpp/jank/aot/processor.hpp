@@ -6,6 +6,9 @@
 
 namespace jank::aot
 {
+  jtl::result<std::vector<char const *>, error_ref> build_compiler_args();
+  std::vector<char const *> build_linker_args();
+
   struct processor
   {
     jtl::result<void, error_ref> build_executable(jtl::immutable_string const &module) const;
