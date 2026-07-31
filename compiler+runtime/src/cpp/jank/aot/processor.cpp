@@ -154,7 +154,7 @@ int main(int argc, const char** argv)
     return main_file_path;
   }
 
-  static jtl::result<std::vector<char const *>, error_ref> build_compiler_args()
+  jtl::result<std::vector<char const *>, error_ref> build_compiler_args()
   {
     std::vector<char const *> compiler_args{};
 
@@ -283,6 +283,50 @@ int main(int argc, const char** argv)
     return compiler_args;
   }
 
+  std::vector<char const *> build_linker_args()
+  {
+    std::vector<char const *> linker_args{};
+
+    if(util::cli::opts.target_runtime == util::cli::compilation_runtime::static_)
+    {
+      for(auto const &lib : { "-ljank-static-runtime", "-lm", "-lz", "-lzstd" })
+      {
+        linker_args.push_back(strdup(lib));
+      }
+    }
+    else
+    {
+      for(auto const &lib :
+          { "-ljank-dynamic-runtime", "-lLLVM", "-lclang-cpp", "-lcrypto", "-lm", "-lz", "-lzstd" })
+      {
+        linker_args.push_back(strdup(lib));
+      }
+    }
+
+#if defined(__MINGW64__)
+    linker_args.push_back(strdup("-lpthread"));
+#endif
+
+    for(auto const &library_dir : util::cli::opts.library_dirs)
+    {
+      linker_args.push_back(strdup(util::format("-Wl,-rpath,{}", library_dir).c_str()));
+    }
+
+    for(auto const &lib : util::cli::opts.libs)
+    {
+      linker_args.push_back(strdup(util::format("-l{}", lib).c_str()));
+    }
+
+    /* On non-macOS platforms, explicitly link libstdc++.
+     * macOS uses libc++ implicitly via Clang. */
+    if constexpr(jtl::current_platform != jtl::platform::macos_like)
+    {
+      linker_args.push_back(strdup("-lstdc++"));
+    }
+
+    return linker_args;
+  }
+
   jtl::result<void, error_ref>
   processor::build_executable(jtl::immutable_string const &module) const
   {
@@ -355,42 +399,8 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("c++"));
     compiler_args.push_back(strdup(entrypoint_path.c_str()));
 
-    if(util::cli::opts.target_runtime == util::cli::compilation_runtime::static_)
-    {
-      for(auto const &lib : { "-ljank-static-runtime", "-lm", "-lz", "-lzstd" })
-      {
-        compiler_args.push_back(strdup(lib));
-      }
-    }
-    else
-    {
-      for(auto const &lib :
-          { "-ljank-dynamic-runtime", "-lLLVM", "-lclang-cpp", "-lcrypto", "-lm", "-lz", "-lzstd" })
-      {
-        compiler_args.push_back(strdup(lib));
-      }
-    }
-
-#if defined(__MINGW64__)
-    compiler_args.push_back(strdup("-lpthread"));
-#endif
-
-    for(auto const &library_dir : util::cli::opts.library_dirs)
-    {
-      compiler_args.push_back(strdup(util::format("-Wl,-rpath,{}", library_dir).c_str()));
-    }
-
-    for(auto const &lib : util::cli::opts.libs)
-    {
-      compiler_args.push_back(strdup(util::format("-l{}", lib).c_str()));
-    }
-
-    /* On non-macOS platforms, explicitly link libstdc++.
-     * macOS uses libc++ implicitly via Clang. */
-    if constexpr(jtl::current_platform != jtl::platform::macos_like)
-    {
-      compiler_args.push_back(strdup("-lstdc++"));
-    }
+    auto const linker_args = build_linker_args();
+    std::ranges::copy(linker_args, std::back_inserter(compiler_args));
 
     /* Required because of `strdup` usage and need to manually free the memory.
      * Clang expects C strings that we own. */

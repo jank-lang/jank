@@ -14,6 +14,7 @@ namespace jank::util::cli
     run_main,
     check_health,
     print_binary_version,
+    print_cflags,
   };
 
   enum class compilation_target : u8
