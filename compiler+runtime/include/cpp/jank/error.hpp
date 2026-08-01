@@ -103,6 +103,7 @@ namespace jank::error
     analyze_invalid_cpp_box,
     analyze_invalid_cpp_unbox,
     analyze_invalid_cpp_new,
+    analyze_invalid_cpp_def,
     analyze_invalid_cpp_delete,
     analyze_invalid_cpp_member_access,
     analyze_invalid_cpp_capture,
@@ -311,6 +312,8 @@ namespace jank::error
         return "analyze/invalid-cpp-unbox";
       case kind::analyze_invalid_cpp_new:
         return "analyze/invalid-cpp-new";
+      case kind::analyze_invalid_cpp_def:
+        return "analyze/invalid-cpp-def";
       case kind::analyze_invalid_cpp_delete:
         return "analyze/invalid-cpp-delete";
       case kind::analyze_invalid_cpp_member_access:

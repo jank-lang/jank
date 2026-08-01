@@ -190,6 +190,8 @@ namespace jank::error
         return "Invalid C++ unbox.";
       case kind::analyze_invalid_cpp_new:
         return "Invalid C++ new.";
+      case kind::analyze_invalid_cpp_def:
+        return "Invalid C++ def.";
       case kind::analyze_invalid_cpp_delete:
         return "Invalid C++ delete.";
       case kind::analyze_invalid_cpp_member_access:

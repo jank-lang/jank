@@ -474,6 +474,12 @@ namespace jank::ir
     f(instr, s.current_block());
   }
 
+  void walk_typed(ir::inst::cpp_def_ref const instr, instruction_walk_function const &f, state &s)
+  {
+    s.next_instruction();
+    f(instr, s.current_block());
+  }
+
   void
   walk_typed(ir::inst::cpp_delete_ref const instr, instruction_walk_function const &f, state &s)
   {
@@ -785,6 +791,14 @@ namespace jank::ir
     for(auto const &arg : instr->args)
     {
       f(arg);
+    }
+  }
+
+  void walk_references_typed(ir::inst::cpp_def_ref const instr, reference_walk_function const &f)
+  {
+    if(instr->value.is_some())
+    {
+      f(instr->value.unwrap());
     }
   }
 

@@ -163,6 +163,13 @@ namespace jank::error
   error_ref analyze_invalid_cpp_new(jtl::immutable_string const &message,
                                     read::source const &source,
                                     runtime::object_ref const expansion);
+  error_ref analyze_invalid_cpp_def(jtl::immutable_string const &message,
+                                    read::source const &source,
+                                    runtime::object_ref const expansion);
+  error_ref analyze_invalid_cpp_def(jtl::immutable_string const &message,
+                                    read::source const &source,
+                                    error::note const &note,
+                                    runtime::object_ref const expansion);
   error_ref analyze_invalid_cpp_delete(jtl::immutable_string const &message,
                                        read::source const &source,
                                        runtime::object_ref const expansion);
