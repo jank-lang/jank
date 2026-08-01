@@ -27,8 +27,8 @@ namespace jtl::terminal
 
     if(GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi))
     {
-      return { csbi.srWindow.Right - csbi.srWindow.Left + 1,
-               csbi.srWindow.Bottom - csbi.srWindow.Top + 1 };
+      return { static_cast<usize>(csbi.srWindow.Right - csbi.srWindow.Left + 1),
+               static_cast<usize>(csbi.srWindow.Bottom - csbi.srWindow.Top + 1) };
     }
 
     return default_size();
