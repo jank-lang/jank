@@ -4805,7 +4805,7 @@ namespace jank::analyze
                  /* TODO: Reparse for the note. */
                  error::note{
                    "value here",
-                   object_source(l->next()->next()->next()->first()),
+                   object_source(l->next().next().next().first()),
                  },
                  latest_expansion(macro_expansions))
           ->add_usage(read::parse::reparse_nth(l, 0));
