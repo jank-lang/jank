@@ -87,11 +87,11 @@
 (def ^{:arglists '([_])}
   unquote
   (fn* unquote [_]
-    (throw "~ cannot be used outside of syntax quote")))
+    (throw "~ cannot be used outside of a syntax quote.")))
 (def ^{:arglists '([_])}
   unquote-splicing
   (fn* unquote-splicing [_]
-    (throw "~@ cannot be used outside of syntax quote")))
+    (throw "~@ cannot be used outside of a syntax quote.")))
 
 (def ^{:arglists '([o])}
   type

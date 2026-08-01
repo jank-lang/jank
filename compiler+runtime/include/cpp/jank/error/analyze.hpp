@@ -84,10 +84,6 @@ namespace jank::error
                                               cpptrace::stacktrace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
-  error_ref analyze_macro_expansion_exception(jtl::immutable_string const &e,
-                                              cpptrace::stacktrace const &trace,
-                                              read::source const &source,
-                                              runtime::object_ref const expansion);
   error_ref analyze_macro_expansion_exception(error_ref e,
                                               cpptrace::stacktrace const &trace,
                                               read::source const &source,

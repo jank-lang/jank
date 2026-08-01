@@ -14,6 +14,7 @@
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/util/try.hpp>
 
 /* TODO: Make common symbol boxes once and reuse those. */
 namespace jank::read::parse
@@ -887,10 +888,14 @@ namespace jank::read::parse
     {
       return error::parse_invalid_regex(e.what(), { start_token.start, latest_token.end });
     }
-    catch(jank::runtime::object * const e)
+    catch(object_ref const e)
     {
       return error::parse_invalid_regex(try_object<obj::persistent_string>(e)->data,
                                         { start_token.start, latest_token.end });
+    }
+    catch(error_ref const e)
+    {
+      return e;
     }
   }
 
@@ -912,10 +917,18 @@ namespace jank::read::parse
       auto const wrapped(make_box<obj::uuid>(str->data));
       return object_source_info{ wrapped, start_token, str_end };
     }
-    catch(jank::runtime::object * const e)
+    catch(std::exception const &e)
+    {
+      return error::parse_invalid_uuid(e.what(), { start_token.start, latest_token.end });
+    }
+    catch(object_ref const e)
     {
       return error::parse_invalid_uuid(try_object<obj::persistent_string>(e)->data,
                                        { start_token.start, latest_token.end });
+    }
+    catch(error_ref const e)
+    {
+      return e;
     }
   }
 
@@ -937,10 +950,18 @@ namespace jank::read::parse
       auto const wrapped(make_box<obj::inst>(str->data));
       return object_source_info{ wrapped, start_token, str_end };
     }
-    catch(jank::runtime::object * const e)
+    catch(std::exception const &e)
+    {
+      return error::parse_invalid_inst(e.what(), { start_token.start, latest_token.end });
+    }
+    catch(object_ref const e)
     {
       return error::parse_invalid_inst(try_object<obj::persistent_string>(e)->data,
                                        { start_token.start, latest_token.end });
+    }
+    catch(error_ref const e)
+    {
+      return e;
     }
   }
 

@@ -102,12 +102,6 @@ namespace jank::util
     print_exception_stack_trace();
   }
 
-  void print_exception(jtl::immutable_string const &e)
-  {
-    util::println("Uncaught exception: {}\n", e);
-    print_exception_stack_trace();
-  }
-
   void print_exception(error_ref const e)
   {
     error::report(e);

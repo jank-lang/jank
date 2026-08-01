@@ -194,18 +194,6 @@ namespace jank::error
                       std::make_unique<cpptrace::stacktrace>(trace));
   }
 
-  error_ref analyze_macro_expansion_exception(jtl::immutable_string const &e,
-                                              cpptrace::stacktrace const &trace,
-                                              read::source const &source,
-                                              runtime::object_ref const expansion)
-  {
-    return make_error(kind::analyze_macro_expansion_exception,
-                      e,
-                      source,
-                      expansion,
-                      std::make_unique<cpptrace::stacktrace>(trace));
-  }
-
   error_ref analyze_macro_expansion_exception(error_ref const e,
                                               cpptrace::stacktrace const &trace,
                                               read::source const &source,

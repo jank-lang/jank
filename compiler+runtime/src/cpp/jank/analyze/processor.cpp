@@ -2908,7 +2908,7 @@ namespace jank::analyze
     {
       return error::analyze_unresolved_var(
         util::format("Unable to resolve var '{}'.", qualified_sym->to_string()),
-        meta_source(o->get_meta()),
+        meta_source(arg_sym->get_meta()),
         latest_expansion(macro_expansions));
     }
 
