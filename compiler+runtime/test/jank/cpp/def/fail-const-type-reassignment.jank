@@ -1,0 +1,5 @@
+(cpp/def (:const int) jank-cpp-def-fail-const-type-reassignment 1)
+
+(cpp/= jank-cpp-def-fail-const-type-reassignment 2)
+
+:success
