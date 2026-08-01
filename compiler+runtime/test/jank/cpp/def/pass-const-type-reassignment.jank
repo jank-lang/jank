@@ -1,5 +1,6 @@
 (cpp/def (:const int) jank-cpp-def-fail-const-type-reassignment 1)
 
+;; TODO: Should fail or at least have a warning
 (cpp/= jank-cpp-def-fail-const-type-reassignment 2)
 
 :success
