@@ -61,15 +61,22 @@
   ^{:doc "Bound to true in a repl thread"}
   *repl* false)
 
-(cpp/raw "#include <stdio.h>")
-(cpp/raw "#include <fstream>")
-(cpp/raw "#include <sstream>")
-(cpp/raw "#include <filesystem>")
+(cpp/raw "#include <jank/runtime/include.hpp>")
 
-(cpp/raw "#include <jank/runtime/core/equal.hpp>")
-(cpp/raw "#include <jank/runtime/core/meta.hpp>")
-(cpp/raw "#include <jank/runtime/obj/repeat.hpp>")
-(cpp/raw "#include <jank/runtime/detail/native_array_blocking_queue.hpp>")
+(def ^{:macro true} include-header
+  (fn* include-header [&form &env header]
+     (cpp/jank.runtime.include_header header)))
+
+(include-header "jank/runtime/include.hpp")
+
+(include-header "stdio.h")
+(include-header "fstream")
+(include-header "sstream")
+(include-header "filesystem")
+(include-header "jank/runtime/core/equal.hpp")
+(include-header "jank/runtime/core/meta.hpp")
+(include-header "jank/runtime/obj/repeat.hpp")
+(include-header "jank/runtime/detail/native_array_blocking_queue.hpp")
 
 ; Lists.
 (def ^{:arglists '([x])
@@ -5725,9 +5732,7 @@
   (if (empty? headers)
     nil
     (let [build-include (fn* build-include [header]
-                          `(cpp/raw ~(if (= "./" (subs header 0 (min 2 (count header))))
-                                       (str "#include \"" header "\"")
-                                       (str "#include <" header ">"))))
+                          (cpp/jank.runtime.include_header header))
           includes (map (comp build-include eval) headers)]
       `(do ~@includes))))
 

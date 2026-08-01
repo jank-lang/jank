@@ -735,6 +735,7 @@ add_library(
   src/cpp/jank/c_api_dynamic.cpp
   src/cpp/jank/util/sha256.cpp
   src/cpp/jank/util/environment_dynamic.cpp
+  src/cpp/jank/runtime/include_dynamic.cpp
   src/cpp/jank/runtime/module/loader_dynamic.cpp
   src/cpp/jank/runtime/context_dynamic.cpp
   src/cpp/jank/runtime/ns_dynamic.cpp
@@ -756,6 +757,7 @@ add_library(
   src/cpp/jank/error/report_static.cpp
   src/cpp/jank/c_api_static.cpp
   src/cpp/jank/util/environment_static.cpp
+  src/cpp/jank/runtime/include_static.cpp
   src/cpp/jank/runtime/module/loader_static.cpp
   src/cpp/jank/runtime/context_static.cpp
   src/cpp/jank/runtime/ns_static.cpp
