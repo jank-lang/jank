@@ -6622,80 +6622,63 @@
 (defn float-array
   "Creates an array of floats"
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers float_array size-or-seq)
-   (throw "TODO: port float-array"))
+   (cpp/jank.runtime.obj.float_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers float_array size init-val-or-seq)
-   (throw "TODO: port float-array") ))
+   (cpp/jank.runtime.obj.float_array size init-val-or-seq)))
 
 (defn boolean-array
   "Creates an array of booleans"
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers boolean_array size-or-seq)
-   (throw "TODO: port boolean-array"))
+   (cpp/jank.runtime.obj.boolean_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers boolean_array size init-val-or-seq)
-   (throw "TODO: port boolean-array")))
+   (cpp/jank.runtime.obj.boolean_array size init-val-or-seq)))
 
 (defn byte-array
   "Creates an array of bytes"
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers byte_array size-or-seq)
-   (throw "TODO: port byte-array"))
+   (cpp/jank.runtime.obj.byte_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers byte_array size init-val-or-seq)
-   (throw "TODO: port byte-array")))
+   (cpp/jank.runtime.obj.byte_array size init-val-or-seq)))
 
 (defn char-array
   "Creates an array of chars"
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers char_array size-or-seq)
-   (throw "TODO: port char-array"))
+   (cpp/jank.runtime.obj.char_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers char_array size init-val-or-seq)
-   (throw "TODO: port char-array")))
+   (cpp/jank.runtime.obj.char_array size init-val-or-seq)))
 
 (defn short-array
   "Creates an array of shorts"
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers short_array size-or-seq)
-   (throw "TODO: port short-array"))
+   (cpp/jank.runtime.obj.short_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers short_array size init-val-or-seq)
-   (throw "TODO: port short-array")))
+   (cpp/jank.runtime.obj.short_array size init-val-or-seq)))
 
 (defn double-array
   "Creates an array of doubles"
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers double_array size-or-seq)
-   (throw "TODO: port double-array"))
+   (cpp/jank.runtime.obj.double_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers double_array size init-val-or-seq)
-   (throw "TODO: port double-array")))
+   (cpp/jank.runtime.obj.double_array size init-val-or-seq)))
 
 (defn object-array
   "Creates an array of objects"
   ([size-or-seq]
-  ;;  (. clojure.lang.RT object_array size-or-seq)
-   (throw "TODO: port object-array")))
+   (cpp/jank.runtime.obj.object_array size-or-seq)))
 
 (defn int-array
   "Creates an array of ints"
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers int_array size-or-seq)
-   (throw "TODO: port int-array"))
+   (cpp/jank.runtime.obj.int_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers int_array size init-val-or-seq)
-   (throw "TODO: port int-array")))
+   (cpp/jank.runtime.obj.int_array size init-val-or-seq)))
 
 (defn long-array
   "Creates an array of longs"
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers long_array size-or-seq)
-   (throw "TODO: port long-array"))
+   (cpp/jank.runtime.obj.long_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers long_array size init-val-or-seq)
-   (throw "TODO: port long-array")))
+   (cpp/jank.runtime.obj.long_array size init-val-or-seq)))
 
 ;; definline doesn't work without eval
 
@@ -6750,10 +6733,12 @@
 (defn bytes?
   "Return true if x is a byte array"
   [x]
-  ;; (if (nil? x)
-  ;;   false
-  ;;   (-> x class .getComponentType (= Byte/TYPE)))
-  (throw "TODO: port bytes?"))
+  (if (nil? x)
+    false
+    (and (cpp/== (.get_type x)
+                 cpp/jank.runtime.object_type.array_box)
+         (cpp/== (cpp/jank.runtime.obj.get_element_type x)
+                 cpp/jank.runtime.obj.element_type.u8))))
 
 (defn seque
   "Creates a queued seq on another (presumably lazy) seq s. The queued

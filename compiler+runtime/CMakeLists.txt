@@ -579,6 +579,7 @@ add_library(
   src/cpp/jank/runtime/obj/uuid.cpp
   src/cpp/jank/runtime/obj/inst.cpp
   src/cpp/jank/runtime/obj/opaque_box.cpp
+  src/cpp/jank/runtime/obj/array.cpp
   src/cpp/jank/runtime/obj/character.cpp
   src/cpp/jank/runtime/obj/big_integer.cpp
   src/cpp/jank/runtime/obj/big_decimal.cpp

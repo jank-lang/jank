@@ -64,6 +64,7 @@
 #include <jank/runtime/obj/uuid.hpp>
 #include <jank/runtime/obj/inst.hpp>
 #include <jank/runtime/obj/opaque_box.hpp>
+#include <jank/runtime/obj/array.hpp>
 #include <jank/runtime/obj/reader_conditional.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
@@ -242,6 +243,8 @@ namespace jank::runtime
         return fn(expect_object<obj::inst>(erased), std::forward<Args>(args)...);
       case object_type::opaque_box:
         return fn(expect_object<obj::opaque_box>(erased), std::forward<Args>(args)...);
+      case object_type::array_box:
+        return fn(expect_object<obj::array_box>(erased), std::forward<Args>(args)...);
       case object_type::reader_conditional:
         return fn(expect_object<obj::reader_conditional>(erased), std::forward<Args>(args)...);
       default:
