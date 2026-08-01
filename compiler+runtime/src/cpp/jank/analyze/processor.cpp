@@ -614,7 +614,6 @@ namespace jank::analyze
           latest_expansion(macro_expansions));
       }
 
-      /* TODO: Switch std::vector to native_vector where possible. */
       auto const obj_type{ Cpp::GetNonReferenceType(arg_types[0].m_Type) };
       auto const obj_scope{ Cpp::GetScopeFromType(obj_type) };
       auto const member_name{ try_object<obj::symbol>(val->form)->name.substr(1) };
@@ -622,7 +621,9 @@ namespace jank::analyze
       if(!obj_scope)
       {
         return error::analyze_invalid_cpp_member_call(
-          util::format("There is no '{}' member function within '{}'.", member_name, parent_name),
+          util::format("There is no '{}' member function within '{}'.",
+                       member_name,
+                       cpp_util::get_qualified_type_name(obj_type)),
           object_source(val->form),
           latest_expansion(macro_expansions));
       }

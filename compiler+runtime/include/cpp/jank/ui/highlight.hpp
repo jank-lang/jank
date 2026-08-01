@@ -1,19 +1,7 @@
 #pragma once
 
-#include <memory>
-#include <map>
-
 #include <jtl/primitive.hpp>
-
-namespace ftxui
-{
-  using Element = std::shared_ptr<struct Node>;
-}
-
-namespace jtl
-{
-  struct immutable_string;
-}
+#include <jtl/immutable_string.hpp>
 
 namespace jank
 {
@@ -24,7 +12,7 @@ namespace jank
 
   namespace ui
   {
-    std::map<usize, ftxui::Element>
+    native_map<usize, jtl::immutable_string>
     highlight(runtime::module::file_view const &code, usize line_start, usize line_end);
 
     jtl::immutable_string highlight_str(runtime::module::file_view const &code);

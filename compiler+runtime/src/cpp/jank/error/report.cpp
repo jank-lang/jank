@@ -1,4 +1,4 @@
-#include <jtl/format/style.hpp>
+#include <jtl/terminal.hpp>
 
 #include <jank/error/report.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -9,8 +9,8 @@ namespace jank::error
   {
     util::println(stderr,
                   "{}warning:{} {}",
-                  jtl::terminal_style::yellow,
-                  jtl::terminal_style::reset,
+                  jtl::terminal::text_style::yellow,
+                  jtl::terminal::text_style::reset,
                   msg);
   }
 }
