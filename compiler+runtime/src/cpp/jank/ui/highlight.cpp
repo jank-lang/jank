@@ -1,6 +1,4 @@
-#include <ftxui/dom/elements.hpp>
-#include <ftxui/screen/screen.hpp>
-#include <ftxui/screen/string.hpp>
+#include <jtl/terminal.hpp>
 
 #include <jank/ui/highlight.hpp>
 #include <jank/read/lex.hpp>
@@ -9,7 +7,7 @@
 
 namespace jank::ui
 {
-  using namespace ftxui;
+  using namespace jtl::terminal;
 
   /* TODO: Also support core fns? */
   static native_set<jtl::immutable_string_view> const specials{
@@ -17,17 +15,17 @@ namespace jank::ui
     "if",  "quote", "var", "try",  "catch", "finally", "throw", "letfn*",
   };
 
-  static Decorator symbol_color(jtl::immutable_string_view const &sym)
+  static text_style symbol_color(jtl::immutable_string_view const &sym)
   {
     if(specials.contains(sym))
     {
-      return color(Color::CyanLight) | bold;
+      return text_style::bright_cyan | text_style::bold;
     }
 
-    return color(Color::Default);
+    return text_style::reset;
   }
 
-  static Decorator token_color(read::lex::token const &token)
+  static text_style token_color(read::lex::token const &token)
   {
     using namespace jank::read::lex;
     switch(token.kind)
@@ -49,11 +47,11 @@ namespace jank::ui
       case token_kind::unquote_splice:
       case token_kind::deref:
       case token_kind::nil:
-        return color(Color::DarkOrange);
+        return text_style::yellow;
       case token_kind::keyword:
-        return color(Color::BlueLight);
+        return text_style::bright_blue;
       case token_kind::comment:
-        return color(Color::GrayLight);
+        return text_style::bright_black;
       case token_kind::integer:
       case token_kind::real:
       case token_kind::ratio:
@@ -61,46 +59,45 @@ namespace jank::ui
       case token_kind::big_decimal:
       case token_kind::boolean:
       case token_kind::character:
-        return color(Color::MagentaLight);
+        return text_style::bright_magenta;
       case token_kind::string:
       case token_kind::escaped_string:
-        return color(Color::GreenLight);
+        return text_style::bright_green;
       case token_kind::symbol:
         return symbol_color(std::get<jtl::immutable_string_view>(token.data));
       case token_kind::eof:
-        return color(Color::Default);
+        return text_style::reset;
     }
   }
 
   /* This function will return a map of line numbers to highlighted lines. It gracefully
    * handles lex errors by not highlighting those tokens and skipping to the next token.
    * The map will at least contain lines within the range specified and maybe some others. */
-  std::map<usize, Element>
+  native_map<usize, jtl::immutable_string>
   highlight(runtime::module::file_view const &code, usize const line_start, usize const line_end)
   {
     read::lex::processor l_prc{ code.view() };
     auto const end{ l_prc.end() };
     usize last_offset{}, last_line{ 1 };
-    std::map<usize, Element> lines;
-    std::vector<Element> current_line;
+    native_map<usize, jtl::immutable_string> lines;
+    jtl::string_builder current_line;
     bool ended_on_error{};
-    static auto const config{ FlexboxConfig().SetGap(0, 0) };
 
     /* As we progress through the file, we update our offset. When we call `fill_in_lines`, we
      * catch up based on scanning for new line characters between the last offset and the
      * new offset. For any new lines found, we track the line and build it up if it's
      * in our target range. */
-    auto const fill_in_lines([&](bool const skip, usize const offset, Decorator const &color) {
-      std::string_view const space{ code.data() + last_offset, offset - last_offset };
+    auto const fill_in_lines([&](bool const skip, usize const offset, text_style const style) {
+      jtl::immutable_string_view const space{ code.data() + last_offset, offset - last_offset };
       usize last_newline{};
       for(auto it(space.find('\n')); it != decltype(space)::npos; it = space.find('\n', it + 1))
       {
         if(!skip)
         {
-          std::string line{ space.substr(last_newline, it - last_newline) };
-          current_line.emplace_back(text(std::move(line)) | color);
-          lines.emplace(last_line, flexbox(std::move(current_line), config));
-          current_line.clear();
+          auto const line{ space.substr(last_newline, it - last_newline) };
+          current_line(style);
+          current_line(line);
+          lines.emplace(last_line, current_line.release());
         }
         last_newline = it + 1;
         ++last_line;
@@ -108,7 +105,8 @@ namespace jank::ui
 
       if(!skip && last_newline < space.size())
       {
-        current_line.emplace_back(text(std::string{ space.substr(last_newline) }) | color);
+        current_line(style);
+        current_line(space.substr(last_newline));
       }
     });
 
@@ -126,12 +124,12 @@ namespace jank::ui
       {
         /* We're at the end of our range. In case we saw an error last, fill in the space
          * until this token. */
-        fill_in_lines(false, token.start.offset, color(Color::Default));
+        fill_in_lines(false, token.start.offset, text_style::reset);
         break;
       }
 
       auto const skip(token.end.line < line_start);
-      fill_in_lines(skip, token.start.offset, color(Color::Default));
+      fill_in_lines(skip, token.start.offset, text_style::reset);
 
       /* TODO: Large tokens can be broken up further, to aid in line wrapping. For example,
        * using `paragraph` for comments. */
@@ -150,7 +148,8 @@ namespace jank::ui
       }
       else
       {
-        current_line.emplace_back(text(std::string{ code_range }) | token_color(token));
+        current_line(token_color(token));
+        current_line(code_range);
       }
       last_offset = token.start.offset + token_size;
     }
@@ -158,10 +157,10 @@ namespace jank::ui
     /* If we saw an error last, fill in the space until the end of the file. */
     if(ended_on_error)
     {
-      fill_in_lines(false, code.size(), color(Color::Default));
+      fill_in_lines(false, code.size(), text_style::reset);
     }
 
-    lines.emplace(last_line, flexbox(std::move(current_line), config));
+    lines.emplace(last_line, current_line.release());
 
     return lines;
   }
@@ -177,19 +176,16 @@ namespace jank::ui
                                       usize const line_end)
   {
     auto const line_to_elem{ highlight(code, line_start, line_end) };
-    std::vector<Element> lines;
-    lines.reserve(line_to_elem.size());
+    jtl::string_builder sb;
     for(usize i{ line_start }; i <= line_end; ++i)
     {
       auto const found{ line_to_elem.find(i + 1) };
       if(found != line_to_elem.end())
       {
-        lines.emplace_back(found->second);
+        sb(found->second);
+        sb('\n');
       }
     }
-    auto document{ vbox(lines) };
-    auto screen{ Screen::Create(Dimension::Fit(document), Dimension::Fit(document)) };
-    Render(screen, document);
-    return screen.ToString();
+    return sb.release();
   }
 }

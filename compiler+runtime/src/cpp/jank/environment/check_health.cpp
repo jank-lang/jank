@@ -6,9 +6,7 @@
 
 #include <CppInterOp/Compatibility.h>
 
-#include <ftxui/screen/screen.hpp>
-
-#include <jtl/format/style.hpp>
+#include <jtl/terminal.hpp>
 
 #include <jank/environment/check_health.hpp>
 #include <jank/runtime/context.hpp>
@@ -30,7 +28,7 @@ extern "C" void jank_load_clojure_core();
 
 namespace jank::environment
 {
-  using jtl::terminal_style;
+  using jtl::terminal::text_style;
 
   /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   static bool fatal_error{};
@@ -63,10 +61,7 @@ namespace jank::environment
         break;
     }
 
-    return util::format("{}─ ✅{} operating system: {}",
-                        terminal_style::green,
-                        terminal_style::reset,
-                        os);
+    return util::format("{}─ ✅{} operating system: {}", text_style::green, text_style::reset, os);
   }
 
   static jtl::immutable_string system_triple()
@@ -74,24 +69,24 @@ namespace jank::environment
     auto const &target_triple{ llvm::sys::getDefaultTargetTriple() };
 
     return util::format("{}─ ✅{} default triple: {}",
-                        terminal_style::green,
-                        terminal_style::reset,
+                        text_style::green,
+                        text_style::reset,
                         target_triple);
   }
 
   static jtl::immutable_string jank_version()
   {
     return util::format("{}─ ✅{} jank version: {}",
-                        terminal_style::green,
-                        terminal_style::reset,
+                        text_style::green,
+                        text_style::reset,
                         JANK_VERSION);
   }
 
   static jtl::immutable_string jank_cmake_build_type()
   {
     return util::format("{}─ ✅{} jank cmake build type: {}",
-                        terminal_style::green,
-                        terminal_style::reset,
+                        text_style::green,
+                        text_style::reset,
                         JANK_CMAKE_BUILD_TYPE);
   }
 
@@ -99,8 +94,8 @@ namespace jank::environment
   {
 #ifndef NDEBUG
     return util::format("{}─ ⚠️  jank assertions are enabled; performance will be impacted {}\n",
-                        terminal_style::yellow,
-                        terminal_style::reset);
+                        text_style::yellow,
+                        text_style::reset);
 #else
     return "";
 #endif
@@ -121,9 +116,9 @@ namespace jank::environment
                           && jank_path.parent_path().filename() == "compiler+runtime" };
     auto const error{ !exists && !dev_build };
     auto const icon{ error ? "❌" : "✅" };
-    auto const col{ exists ? terminal_style::green
+    auto const col{ exists ? text_style::green
                            /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
-                           : (dev_build ? terminal_style::yellow : terminal_style::red) };
+                           : (dev_build ? text_style::yellow : text_style::red) };
 
     fatal_error |= error;
 
@@ -132,14 +127,14 @@ namespace jank::environment
                     "{}─ {}{} jank resource dir: {}{}{} {}{}{}",
                     col,
                     icon,
-                    terminal_style::reset,
-                    terminal_style::blue,
+                    text_style::reset,
+                    text_style::blue,
                     JANK_RESOURCE_DIR,
-                    terminal_style::reset,
-                    terminal_style::bright_black,
+                    text_style::reset,
+                    text_style::bright_black,
                     /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
                     (relative ? "" : (exists ? " (found)" : " (not found)")),
-                    terminal_style::reset);
+                    text_style::reset);
 
     if(relative)
     {
@@ -148,14 +143,14 @@ namespace jank::environment
         "\n{}─ {}{} jank resolved resource dir: {}{}{} {}{}{}",
         col,
         icon,
-        terminal_style::reset,
-        terminal_style::blue,
+        text_style::reset,
+        text_style::blue,
         dir.c_str(),
-        terminal_style::reset,
-        terminal_style::bright_black,
+        text_style::reset,
+        text_style::bright_black,
         /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
         (exists ? "(found)" : (dev_build ? "(ignored for dev build)" : "(not found)")),
-        terminal_style::reset);
+        text_style::reset);
     }
 
     return sb.release();
@@ -166,14 +161,14 @@ namespace jank::environment
     auto const path{ util::user_cache_dir(util::binary_version()) };
     auto const configured_path_exists{ std::filesystem::exists(path.c_str()) };
     return util::format("{}─ ✅{} jank user cache dir: {}{}{} {}{}{}",
-                        configured_path_exists ? terminal_style::green : terminal_style::yellow,
-                        terminal_style::reset,
-                        terminal_style::blue,
+                        configured_path_exists ? text_style::green : text_style::yellow,
+                        text_style::reset,
+                        text_style::blue,
                         path,
-                        terminal_style::reset,
-                        terminal_style::bright_black,
+                        text_style::reset,
+                        text_style::bright_black,
                         configured_path_exists ? "(found)" : "(not found)",
-                        terminal_style::reset);
+                        text_style::reset);
   }
 
   static jtl::immutable_string clang_path()
@@ -182,15 +177,15 @@ namespace jank::environment
     jtl::string_builder sb;
     util::format_to(sb,
                     "{}─ {}{} configured clang path: {}{}{} {}{}{}",
-                    configured_path_exists ? terminal_style::green : terminal_style::yellow,
+                    configured_path_exists ? text_style::green : text_style::yellow,
                     configured_path_exists ? "✅" : "ℹ️",
-                    terminal_style::reset,
-                    terminal_style::blue,
+                    text_style::reset,
+                    text_style::blue,
                     JANK_CLANG_PATH,
-                    terminal_style::reset,
-                    terminal_style::bright_black,
+                    text_style::reset,
+                    text_style::bright_black,
                     configured_path_exists ? "(found)" : "(not found)",
-                    terminal_style::reset);
+                    text_style::reset);
 
     auto const found_clang{ util::find_clang() };
     auto const found_path_exists{ found_clang.is_some()
@@ -200,22 +195,22 @@ namespace jank::environment
     {
       util::format_to(sb,
                       "\n{}─ ✅{} runtime clang path: {}{}{} {}(found){}",
-                      terminal_style::green,
-                      terminal_style::reset,
-                      terminal_style::blue,
+                      text_style::green,
+                      text_style::reset,
+                      text_style::blue,
                       found_clang.unwrap(),
-                      terminal_style::reset,
-                      terminal_style::bright_black,
-                      terminal_style::reset);
+                      text_style::reset,
+                      text_style::bright_black,
+                      text_style::reset);
     }
     else if(!found_path_exists)
     {
       fatal_error = true;
       util::format_to(sb,
                       "\n{}─ ❌ clang version {} not found in configured location or on PATH{}",
-                      terminal_style::red,
+                      text_style::red,
                       JANK_CLANG_MAJOR_VERSION,
-                      terminal_style::reset);
+                      text_style::reset);
     }
 
     return sb.release();
@@ -227,15 +222,15 @@ namespace jank::environment
     jtl::string_builder sb;
     util::format_to(sb,
                     "{}─ {}{} configured clang resource dir: {}{}{} {}{}{}",
-                    configured_path_exists ? terminal_style::green : terminal_style::yellow,
+                    configured_path_exists ? text_style::green : text_style::yellow,
                     configured_path_exists ? "✅" : "ℹ️",
-                    terminal_style::reset,
-                    terminal_style::blue,
+                    text_style::reset,
+                    text_style::blue,
                     JANK_CLANG_RESOURCE_DIR,
-                    terminal_style::reset,
-                    terminal_style::bright_black,
+                    text_style::reset,
+                    text_style::bright_black,
                     configured_path_exists ? "(found)" : "(not found)",
-                    terminal_style::reset);
+                    text_style::reset);
 
     auto const found_clang_resource_dir{ util::find_clang_resource_dir() };
     auto const found_path_exists{ found_clang_resource_dir.is_some()
@@ -246,22 +241,22 @@ namespace jank::environment
     {
       util::format_to(sb,
                       "\n{}─ ✅{} runtime clang resource dir: {}{}{} {}(found){}",
-                      terminal_style::green,
-                      terminal_style::reset,
-                      terminal_style::blue,
+                      text_style::green,
+                      text_style::reset,
+                      text_style::blue,
                       found_clang_resource_dir.unwrap(),
-                      terminal_style::reset,
-                      terminal_style::bright_black,
-                      terminal_style::reset);
+                      text_style::reset,
+                      text_style::bright_black,
+                      text_style::reset);
     }
     else if(!found_path_exists)
     {
       fatal_error = true;
       util::format_to(sb,
                       "\n{}─ ❌ no viable clang version {} resource dir found{}",
-                      terminal_style::red,
+                      text_style::red,
                       JANK_CLANG_MAJOR_VERSION,
-                      terminal_style::reset);
+                      text_style::reset);
     }
 
     return sb.release();
@@ -273,23 +268,23 @@ namespace jank::environment
     if(pch_path.is_some())
     {
       return util::format("{}─ ✅{} jank pch path: {}{}{} {}(found){}",
-                          terminal_style::green,
-                          terminal_style::reset,
-                          terminal_style::blue,
+                          text_style::green,
+                          text_style::reset,
+                          text_style::blue,
                           util::user_cache_dir(util::binary_version()),
-                          terminal_style::reset,
-                          terminal_style::bright_black,
-                          terminal_style::reset);
+                          text_style::reset,
+                          text_style::bright_black,
+                          text_style::reset);
     }
 
     return util::format("{}─ ℹ️{} jank pch dir: {}{}{} {}(no pch found){}",
-                        terminal_style::yellow,
-                        terminal_style::reset,
-                        terminal_style::blue,
+                        text_style::yellow,
+                        text_style::reset,
+                        text_style::blue,
                         util::user_cache_dir(util::binary_version()),
-                        terminal_style::reset,
-                        terminal_style::bright_black,
-                        terminal_style::reset);
+                        text_style::reset,
+                        text_style::bright_black,
+                        text_style::reset);
   }
 
   static jtl::immutable_string check_cpp_jit()
@@ -323,12 +318,10 @@ namespace jank::environment
     if(error)
     {
       return util::format("{}─ ❌{} jank cannot jit compile c++",
-                          terminal_style::red,
-                          terminal_style::reset);
+                          text_style::red,
+                          text_style::reset);
     }
-    return util::format("{}─ ✅{} jank can jit compile c++",
-                        terminal_style::green,
-                        terminal_style::reset);
+    return util::format("{}─ ✅{} jank can jit compile c++", text_style::green, text_style::reset);
   }
 
   static jtl::immutable_string check_aot()
@@ -336,8 +329,8 @@ namespace jank::environment
     if(std::getenv("JANK_SKIP_AOT_CHECK"))
     {
       return util::format("{}─ ℹ️{} skipped aot check since JANK_SKIP_AOT_CHECK is defined",
-                          terminal_style::yellow,
-                          terminal_style::reset);
+                          text_style::yellow,
+                          text_style::reset);
     }
 
     bool error{};
@@ -418,12 +411,12 @@ namespace jank::environment
     if(error)
     {
       return util::format("{}─ ❌{} jank cannot aot compile working binaries",
-                          terminal_style::red,
-                          terminal_style::reset);
+                          text_style::red,
+                          text_style::reset);
     }
     return util::format("{}─ ✅{} jank can aot compile working binaries",
-                        terminal_style::green,
-                        terminal_style::reset);
+                        text_style::green,
+                        text_style::reset);
   }
 
   static jtl::immutable_string header(std::string const &title, usize const max_width)
@@ -435,12 +428,12 @@ namespace jank::environment
       padding.insert(padding.size(), "─");
     }
     return util::format("{}─ {}{} {}{}{}",
-                        terminal_style::bright_black,
-                        terminal_style::bright_blue,
+                        text_style::bright_black,
+                        text_style::bright_blue,
                         title,
-                        terminal_style::bright_black,
+                        text_style::bright_black,
                         padding,
-                        terminal_style::reset);
+                        text_style::reset);
   }
 
   /* Runs through the various jank systems and outputs to stdout various status reports.
@@ -449,8 +442,8 @@ namespace jank::environment
    * Returns whether or not jank is healthy. */
   bool check_health()
   {
-    auto const terminal_width{ ftxui::Terminal::Size().dimx };
-    auto const max_width{ std::min(terminal_width, 100) };
+    auto const terminal_width{ jtl::terminal::get_size().width };
+    auto const max_width{ std::min(terminal_width, 100ull) };
 
     util::println("{}", header("system", max_width));
     util::println("{}", system_os());
@@ -476,9 +469,7 @@ namespace jank::environment
       util::println("{}", header("jank runtime", max_width));
       auto const ret{ jank_init_dynamic(0, nullptr, true, nullptr, 0, [](int const, char const **) {
         jank_load_clojure_core_native();
-        util::println("{}─ ✅{} jank runtime initialized",
-                      terminal_style::green,
-                      terminal_style::reset);
+        util::println("{}─ ✅{} jank runtime initialized", text_style::green, text_style::reset);
         util::println("{}", pch_location());
         util::println("{}", check_cpp_jit());
         util::println("{}", check_aot());
@@ -498,11 +489,11 @@ namespace jank::environment
       "If you're having issues with jank, please either "
       "ask the jank community on the Clojurians Slack or report the issue on Github.\n");
     util::println("─ Slack: {}https://clojurians.slack.com/archives/C03SRH97FDK{}",
-                  terminal_style::underline,
-                  terminal_style::no_underline);
+                  text_style::underline,
+                  text_style::no_underline);
     util::println("─ Github: {}https://github.com/jank-lang/jank{}",
-                  terminal_style::underline,
-                  terminal_style::no_underline);
+                  text_style::underline,
+                  text_style::no_underline);
 
     return !fatal_error;
   }
