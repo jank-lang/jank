@@ -4712,17 +4712,20 @@ namespace jank::analyze
     auto const count(l->count());
     if(count < 2)
     {
-      return error::analyze_invalid_cpp_def("The call to 'cpp/def' is missing a type to allocate.",
-                                            object_source(l->first()),
-                                            latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 0));
+      return error::analyze_invalid_cpp_def(
+        "The call to 'cpp/def' is missing a type to allocate.",
+        object_source(l->first()),
+        error::note{ "Should be placed after this.", object_source(l->first()) },
+        latest_expansion(macro_expansions));
     }
     if(count < 3)
     {
-      return error::analyze_invalid_cpp_def("The call to 'cpp/def' is missing the identifier.",
-                                            object_source(l->first()),
-                                            latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 0));
+      return error::analyze_invalid_cpp_def(
+        "The call to 'cpp/def' is missing the identifier.",
+        object_source(l->first()),
+
+        error::note{ "Should be placed after this.", read::parse::reparse_nth(l, 1) },
+        latest_expansion(macro_expansions));
     }
 
     auto const type_obj{ l->data.rest().first().unwrap() };
@@ -4730,6 +4733,16 @@ namespace jank::analyze
     if(type_expr_res.is_err())
     {
       return type_expr_res.expect_err()->add_usage(read::parse::reparse_nth(l, 1));
+    }
+
+    if(cpp_util::is_incomplete(type_expr_res.expect_ok()))
+    {
+      return error::analyze_invalid_cpp_def(
+        "cpp/def can not accept an incomplete type as a type expression.",
+        object_source(l->first()),
+
+        error::note{ "This is an incomplete type.", read::parse::reparse_nth(l, 1) },
+        latest_expansion(macro_expansions));
     }
 
     auto const sym_obj{ l->data.rest().rest().first().unwrap() };
@@ -4744,10 +4757,9 @@ namespace jank::analyze
     auto const name_sym{ runtime::expect_object<runtime::obj::symbol>(sym_obj) };
     if(!name_sym->ns.empty())
     {
-      return error::analyze_invalid_cpp_def(
-               "The provided var name for a 'cpp/def' must not be qualified.",
-               meta_source(name_sym->get_meta()),
-               latest_expansion(macro_expansions))
+      return error::analyze_invalid_cpp_def("Identifier can not be a fully qualified symbol.",
+                                            meta_source(name_sym->get_meta()),
+                                            latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 2));
     }
 
@@ -4755,13 +4767,13 @@ namespace jank::analyze
     if(found_var.is_some())
     {
       return error::analyze_invalid_cpp_def(
-               util::format("'{}' already refers to {} in namespace '{}'",
-                            name_sym->name,
-                            found_var->to_string(),
-                            __rt_ctx->current_ns()->to_string()),
-               meta_source(name_sym->get_meta()),
-               latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 2));
+        util::format("'{}' already refers to {} in namespace '{}'",
+                     name_sym->name,
+                     found_var->to_string(),
+                     __rt_ctx->current_ns()->to_string()),
+        meta_source(name_sym->get_meta()),
+        error::note{ "Redeclared here.", read::parse::reparse_nth(l, 2) },
+        latest_expansion(macro_expansions));
     }
 
     if(__rt_ctx->current_ns()->find_referred_global(name_sym).is_some())
@@ -4781,6 +4793,30 @@ namespace jank::analyze
 
     auto const type{ type_expr_res.expect_ok() };
     jtl::option<expression_ref> value_expr_opt{};
+
+    if(l->count() <= 3 && !cpp_util::is_empty_list_initializable(type))
+    {
+      return error::analyze_invalid_cpp_def(
+        util::format("'{}' is not empty list initializable and no value expression was provided.",
+                     Cpp::GetTypeAsString(type)),
+        object_source(l->first()),
+
+        error::note{ "Used here.", read::parse::reparse_nth(l, 1) },
+        latest_expansion(macro_expansions));
+    }
+
+    if(l->count() > 4)
+    {
+      return error::analyze_invalid_cpp_def(
+        util::format("`cpp/def` expects at most 1 value expression, found {}.", l->count() - 3),
+        object_source(l->first()),
+        /* TODO: Reparse for the note. */
+        error::note{
+          "This form and all after it are unexpected.",
+          read::parse::reparse_nth(l, 4),
+        },
+        latest_expansion(macro_expansions));
+    }
 
     if(l->count() == 4)
     {

@@ -1,3 +1,5 @@
+#include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/meta.hpp>
@@ -9,6 +11,12 @@
 
 namespace jank::runtime
 {
+
+  static bool is_cpp_defined_obj(object_ref const o)
+  {
+    return truthy(runtime::meta(o).get(make_box("cpp/def?")));
+  }
+
   jtl::result<void, error_ref>
   ns::refer_global_impl(decltype(ns::referred_cpp_globals)::LockedPtr &locked_globals,
                         object_ref const sym)
@@ -71,16 +79,37 @@ namespace jank::runtime
     runtime::detail::native_transient_hash_set referred_names_without_renames;
     auto locked_globals(referred_cpp_globals.wlock());
 
-    /* Consecutive calls to `refer-global` will retain the old renames. */
-    for(auto const p : (*locked_globals)->data)
-    {
-      if(p.first == p.second)
-      {
-        referred_names_without_renames.insert(p.first);
-        continue;
-      }
+    /* We want to clear all previous renames so that the new rename map is all that we have.
+     * This is important for REPL-based development, where we re-evaluated the ns form with
+     * different renames. However, we want to keep :only names as they are. */
 
+    if(!is_cpp_defined_obj(rename_map))
+    {
+      for(auto const p : (*locked_globals)->data)
+      {
+        if(p.first == p.second)
+        {
+          referred_names_without_renames.insert(p.first);
+          continue;
+        }
+
+        if(!is_cpp_defined_obj(p.first))
+        {
+          *locked_globals = (*locked_globals)->dissoc(p.first);
+        }
+      }
     }
+
+    /* Consecutive calls to `refer-global` will retain the old renames. */
+    // for(auto const p : (*locked_globals)->data)
+    // {
+    //   if(p.first == p.second)
+    //   {
+    //     referred_names_without_renames.insert(p.first);
+    //     continue;
+    //   }
+    //
+    // }
 
     auto res{ visit_map_like(
       [&](auto const typed_rename_map) -> jtl::result<void, error_ref> {

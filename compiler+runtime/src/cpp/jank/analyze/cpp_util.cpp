@@ -1,5 +1,7 @@
 #include <algorithm>
 
+#include <clang/AST/ComputeDependence.h>
+#include <clang/Sema/Initialization.h>
 #include <clang/Sema/Sema.h>
 #include <CppInterOp/Compatibility.h>
 #include <CppInterOp/CppInterOp.h>
@@ -842,6 +844,34 @@ namespace jank::analyze::cpp_util
   {
     return Cpp::IsBuiltin(type) || Cpp::IsPointerType(type) || Cpp::IsArrayType(type)
       || Cpp::IsEnumType(type);
+  }
+
+  bool is_incomplete(jtl::ptr<void> const type)
+  {
+    return Cpp::IsVoid(type) || !Cpp::IsComplete(type);
+  }
+
+  bool is_empty_list_initializable(jtl::ptr<void> type)
+  {
+    clang::QualType const T = clang::QualType::getFromOpaquePtr(type);
+    auto &sema = runtime::__rt_ctx->jit_prc.interpreter->getSema();
+
+    clang::SourceLocation loc;
+    auto init_list_result = sema.ActOnInitList(loc, {}, loc);
+
+    if(init_list_result.isInvalid())
+    {
+      return false;
+    }
+
+    auto *init_list = llvm::cast<clang::InitListExpr>(init_list_result.get());
+
+    clang::Expr *args[] = { init_list };
+    auto const entity = clang::InitializedEntity::InitializeTemporary(T);
+    auto const kind = clang::InitializationKind::CreateDirectList(loc);
+    clang::InitializationSequence sequence(sema, entity, kind, args);
+
+    return !sequence.Failed();
   }
 
   /* The C++ is_constructible trait doesn't include reference construction from values
