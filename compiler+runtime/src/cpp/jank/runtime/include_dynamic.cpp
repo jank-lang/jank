@@ -2,6 +2,7 @@
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/include.hpp>
+#include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/symbol.hpp>
@@ -38,6 +39,12 @@ namespace jank::runtime
 
   void load_header(jtl::immutable_string const &header)
   {
-    __rt_ctx->eval(cpp_raw_include(header));
+    context::binding_scope const _{ obj::persistent_hash_map::create_unique(
+      std::make_pair(__rt_ctx->compile_files_var, jank_false)) };
+
+    auto const cpp(header.starts_with("./") ? util::format("#include \"{}\"", header)
+                                            : util::format("#include <{}>", header));
+
+    __rt_ctx->eval_cpp_string(cpp).expect_ok();
   }
 }
