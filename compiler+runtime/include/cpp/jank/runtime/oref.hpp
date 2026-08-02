@@ -21,6 +21,11 @@ struct _jank_null
 {
 };
 
+/* Any overload tagged with this is not meant to be used for anything other than codegen. */
+struct _jank_codegen
+{
+};
+
 namespace jank::runtime
 {
   namespace obj
@@ -146,14 +151,14 @@ namespace jank::runtime
      * `oref` constructor which will do the necessary NaN space shifting. */
     struct untagged_ptr
     {
-      untagged_ptr() = default;
+      explicit untagged_ptr() = default;
 
-      untagged_ptr(object *data)
+      explicit untagged_ptr(object *data)
         : data{ data }
       {
       }
 
-      untagged_ptr(void *data)
+      explicit untagged_ptr(void *data)
         : data{ reinterpret_cast<object *>(data) }
       {
       }
@@ -163,19 +168,19 @@ namespace jank::runtime
 
     inline untagged_ptr untagged(object const *data)
     {
-      return const_cast<object *>(data);
+      return untagged_ptr{ const_cast<object *>(data) };
     }
 
     inline untagged_ptr untagged(void *data)
     {
-      return data;
+      return untagged_ptr{ data };
     }
 
     template <typename T>
     requires behavior::object_like<T>
     untagged_ptr untagged(T *data)
     {
-      return { static_cast<object *>(const_cast<jtl::remove_const_t<T> *>(data)) };
+      return untagged_ptr{ static_cast<object *>(const_cast<jtl::remove_const_t<T> *>(data)) };
     }
 
     template <typename T>
@@ -238,7 +243,7 @@ namespace jank::runtime
     }
 
     /* We use this one during codegen. */
-    oref(void * const data) noexcept
+    oref(_jank_codegen, void * const data) noexcept
       : data{ static_cast<value_type *>(data) }
     {
     }
@@ -251,7 +256,7 @@ namespace jank::runtime
     }
 
     oref(detail::untagged_ptr const p) noexcept
-      : data{ detail::tag<object *>(p.data) }
+      : data{ detail::tag<object *>(detail::untagged_ptr{ p.data }) }
     {
     }
 
@@ -287,7 +292,7 @@ namespace jank::runtime
 
     void reset() noexcept
     {
-      data = detail::tag<object *>(std::bit_cast<object *>(&_jank_nil));
+      data = detail::tag<object *>(detail::untagged_ptr{ std::bit_cast<object *>(&_jank_nil) });
     }
 
     void reset(object * const o) noexcept
@@ -297,7 +302,7 @@ namespace jank::runtime
 
     void reset(detail::untagged_ptr const o) noexcept
     {
-      data = detail::tag<object *>(o.data);
+      data = detail::tag<object *>(detail::untagged_ptr{ o.data });
     }
 
     void reset(oref<object> const &o) noexcept
@@ -1132,7 +1137,8 @@ namespace jank::runtime
     }
 
   private:
-    value_type *data{ detail::tag<object *>(std::bit_cast<object *>(&_jank_nil)) };
+    value_type *data{ detail::tag<object *>(
+      detail::untagged_ptr{ std::bit_cast<object *>(&_jank_nil) }) };
   };
 
   /* This specialization of oref is for fully-typed objects like
@@ -1170,7 +1176,7 @@ namespace jank::runtime
     }
 
     /* We use this one during codegen. */
-    oref(void * const data) noexcept
+    oref(_jank_codegen, void * const data) noexcept
       : data{ static_cast<T *>(data) }
     {
       jank_debug_assert(this->data);
@@ -1768,11 +1774,6 @@ namespace jank::runtime
     {
     }
 
-    oref(void * const data) noexcept
-      : data{ detail::as_integer(data) }
-    {
-    }
-
     oref(i32 const data) noexcept
       : data{ data }
     {
@@ -2123,11 +2124,6 @@ namespace jank::runtime
     oref(nullptr_t) = delete;
 
     oref(_jank_null) noexcept
-    {
-    }
-
-    oref(void * const data) noexcept
-      : data{ detail::as_real(data) }
     {
     }
 
@@ -2496,7 +2492,7 @@ namespace jank::runtime
     }
 
     /* We use this one during codegen. */
-    oref(void * const data) noexcept
+    oref(_jank_codegen, void * const data) noexcept
       : data{ static_cast<value_type *>(data) }
     {
       jank_debug_assert(this->data);

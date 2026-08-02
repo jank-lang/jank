@@ -74,11 +74,15 @@ namespace jank::analyze::cpp_util
   jtl::string_result<jtl::ptr<void>>
   instantiate(jtl::ptr<void> const scope, native_vector<Cpp::TemplateArgInfo> const &args)
   {
+    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    /* TODO: Capture the diagnostic output instead of showing it. Then put it together
+     * in our own format. Until we have that, we might as well show it. */
+    clang::DiagnosticErrorTrap const trap{ diag };
     clang::Sema::SFINAETrap const sfinae_trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(),
                                                true };
 
     auto const res{ Cpp::InstantiateTemplate(scope, args.data(), args.size()) };
-    if(sfinae_trap.hasErrorOccurred())
+    if(sfinae_trap.hasErrorOccurred() || trap.hasErrorOccurred())
     {
       reset_sfinae_state();
       return err("Unable to instantiate template.");

@@ -237,9 +237,21 @@ namespace jank::error
     return make_error(kind::parse_invalid_syntax_quote, source, note);
   }
 
+  error_ref
+  parse_invalid_syntax_unquote(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::parse_invalid_syntax_unquote, message, source);
+  }
+
   error_ref parse_invalid_syntax_unquote(read::source const &source)
   {
     return make_error(kind::parse_invalid_syntax_unquote, source);
+  }
+
+  error_ref parse_invalid_syntax_unquote_splice(jtl::immutable_string const &message,
+                                                read::source const &source)
+  {
+    return make_error(kind::parse_invalid_syntax_unquote_splice, message, source);
   }
 
   error_ref parse_invalid_syntax_unquote_splice(read::source const &source)

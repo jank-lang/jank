@@ -1502,7 +1502,8 @@ namespace jank::read::parse
     }
     else if(syntax_quote_is_unquote(form, true))
     {
-      return err(error::parse_invalid_syntax_unquote_splice(meta_source(form)));
+      return err(
+        error::parse_invalid_syntax_unquote_splice(object_source(form.seq().next().first())));
     }
     /* Clojure treats these specially, perhaps as a small optimization, by not quoting. We can
      * do the same for now, but quoting all of these has no effect. */

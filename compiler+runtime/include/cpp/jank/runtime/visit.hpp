@@ -90,11 +90,12 @@ namespace jank::runtime
   {
     if(detail::is_tagged_small_int(erased.raw()))
     {
-      return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
+      return fn(obj::small_integer_ref{ detail::as_integer(erased.raw()) },
+                std::forward<Args>(args)...);
     }
     if(detail::is_tagged_small_real(erased.raw()))
     {
-      return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
+      return fn(obj::small_real_ref{ detail::as_real(erased.raw()) }, std::forward<Args>(args)...);
     }
 
     switch(erased.get_type())
@@ -437,11 +438,12 @@ namespace jank::runtime
   {
     if(detail::is_tagged_small_int(erased.raw()))
     {
-      return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
+      return fn(obj::small_integer_ref{ detail::as_integer(erased.raw()) },
+                std::forward<Args>(args)...);
     }
     if(detail::is_tagged_small_real(erased.raw()))
     {
-      return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
+      return fn(obj::small_real_ref{ detail::as_real(erased.raw()) }, std::forward<Args>(args)...);
     }
 
 #pragma clang diagnostic push

@@ -86,12 +86,12 @@
 ; Syntax quoting.
 (def ^{:arglists '([_])}
   unquote
-  (fn* unquote [_]
-    (throw "~ cannot be used outside of a syntax quote.")))
+  (fn* unquote [arg]
+    (cpp/clojure.core_native.throw_parse_invalid_syntax_unquote "~ cannot be used outside of a syntax quote.")))
 (def ^{:arglists '([_])}
   unquote-splicing
-  (fn* unquote-splicing [_]
-    (throw "~@ cannot be used outside of a syntax quote.")))
+  (fn* unquote-splicing [arg]
+    (cpp/clojure.core_native.throw_parse_invalid_syntax_unquote_splice "~@ cannot be used outside of a syntax quote.")))
 
 (def ^{:arglists '([o])}
   type

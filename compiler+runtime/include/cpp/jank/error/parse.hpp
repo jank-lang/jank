@@ -45,7 +45,11 @@ namespace jank::error
   error_ref parse_invalid_inst(jtl::immutable_string const &message, read::source const &source);
   error_ref
   parse_invalid_syntax_quote(read::source const &source, jtl::immutable_string const &note);
+  error_ref
+  parse_invalid_syntax_unquote(jtl::immutable_string const &message, read::source const &source);
   error_ref parse_invalid_syntax_unquote(read::source const &source);
+  error_ref parse_invalid_syntax_unquote_splice(jtl::immutable_string const &message,
+                                                read::source const &source);
   error_ref parse_invalid_syntax_unquote_splice(read::source const &source);
   error_ref parse_invalid_reader_deref(read::source const &source);
   error_ref parse_invalid_ratio(read::source const &source, jtl::immutable_string const &note);
