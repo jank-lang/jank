@@ -188,9 +188,17 @@ namespace jank::jit
         }
         catch(error_ref const e)
         {
+          /* Any thrown compiler error should have source information, with the rare exception
+           * of some which are thrown at runtime. */
           if(e->source == read::source::unknown() && !expect_throw)
           {
             failures.push_back({ dir_entry.path(), "Compiler error thrown without a source" });
+            passed = false;
+          }
+          /* This should never happen. */
+          else if(e->kind == error::kind::internal_codegen_failure)
+          {
+            failures.push_back({ dir_entry.path(), "Internal codegen failure" });
             passed = false;
           }
           else if(expect_success)
