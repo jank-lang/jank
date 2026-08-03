@@ -186,6 +186,19 @@ namespace jank::jit
             passed = false;
           }
         }
+        catch(error_ref const e)
+        {
+          if(e->source == read::source::unknown() && !expect_throw)
+          {
+            failures.push_back({ dir_entry.path(), "Compiler error thrown without a source" });
+            passed = false;
+          }
+          else if(expect_success)
+          {
+            failures.push_back({ dir_entry.path(), "Unknown exception thrown" });
+            passed = false;
+          }
+        }
         catch(...)
         {
           if(expect_success || expect_throw)
