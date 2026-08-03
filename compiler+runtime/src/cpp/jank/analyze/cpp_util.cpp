@@ -82,7 +82,7 @@ namespace jank::analyze::cpp_util
                                                true };
 
     auto const res{ Cpp::InstantiateTemplate(scope, args.data(), args.size()) };
-    if(sfinae_trap.hasErrorOccurred() || trap.hasErrorOccurred())
+    if(!res || sfinae_trap.hasErrorOccurred() || trap.hasErrorOccurred())
     {
       reset_sfinae_state();
       return err("Unable to instantiate template.");

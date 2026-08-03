@@ -467,6 +467,7 @@ namespace jank::error
 
     void sort_notes();
     jtl::ref<base> add_usage(read::source const &usage_source);
+    jtl::ref<base> add_fallback_usage(read::source const &usage_source);
 
     kind kind{};
     jtl::immutable_string message;

@@ -1817,7 +1817,8 @@ namespace jank::analyze
       return error::analyze_invalid_fn_parameters("This function is missing a parameter vector.",
                                                   object_source(list),
                                                   "The missing [] was expected here.",
-                                                  latest_expansion(macro_expansions));
+                                                  latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(list, 0));
     }
     auto const &params_obj(first_form.unwrap());
     if(params_obj.get_type() != runtime::object_type::persistent_vector)
@@ -1994,7 +1995,7 @@ namespace jank::analyze
     if(length < 2)
     {
       return error::analyze_invalid_fn("This function is missing its parameter vector.",
-                                       meta_source(full_list->get_meta()),
+                                       object_source(full_list->data.first().unwrap()),
                                        latest_expansion(macro_expansions));
     }
     auto list(full_list);
@@ -2009,7 +2010,7 @@ namespace jank::analyze
       if(length < 3)
       {
         return error::analyze_invalid_fn("This function is missing its parameter vector.",
-                                         meta_source(full_list->get_meta()),
+                                         object_source(full_list->data.first().unwrap()),
                                          latest_expansion(macro_expansions));
       }
       first_elem = list->data.rest().rest().first().unwrap();
@@ -2030,7 +2031,7 @@ namespace jank::analyze
                                          current_frame));
       if(result.is_err())
       {
-        return result.expect_err();
+        return result.expect_err()->add_fallback_usage(object_source(list->data.first().unwrap()));
       }
       arities.emplace_back(result.expect_ok());
     }
@@ -2047,7 +2048,8 @@ namespace jank::analyze
           auto result(analyze_fn_arity(arity_list, name, current_frame));
           if(result.is_err())
           {
-            return result.expect_err_move();
+            return result.expect_err()->add_fallback_usage(
+              object_source(list->data.first().unwrap()));
           }
           arities.emplace_back(result.expect_ok_move());
         }
@@ -2056,7 +2058,7 @@ namespace jank::analyze
           return error::analyze_invalid_fn(
             "Invalid 'fn' syntax. Please provide either a list of arities or a "
             "parameter vector.",
-            meta_source(full_list->get_meta()),
+            object_source(list->data.first().unwrap()),
             latest_expansion(macro_expansions));
         }
       }
@@ -2076,7 +2078,7 @@ namespace jank::analyze
     if(found_variadic > 1)
     {
       return error::analyze_invalid_fn("A function may only have one variadic arity.",
-                                       meta_source(full_list->get_meta()),
+                                       object_source(list->data.first().unwrap()),
                                        latest_expansion(macro_expansions));
     }
 
@@ -2092,7 +2094,7 @@ namespace jank::analyze
           return error::analyze_invalid_fn(
             "The variadic arity of this function has fewer parameters than one of "
             "its fixed arities, which would lead to ambiguities when it's called.",
-            meta_source(full_list->get_meta()),
+            object_source(list->data.first().unwrap()),
             latest_expansion(macro_expansions));
         }
       }
@@ -2129,10 +2131,11 @@ namespace jank::analyze
         if(base->params.size() == other->params.size()
            && base->fn_ctx->is_variadic == other->fn_ctx->is_variadic)
         {
+          /* TODO: Point at each arity. */
           return error::analyze_invalid_fn(
-            "There are multiple overloads with the same number of parameters. Each "
+            "There are multiple arities with the same number of parameters. Each "
             "one must be unique.",
-            meta_source(full_list->get_meta()),
+            object_source(list->data.first().unwrap()),
             latest_expansion(macro_expansions));
         }
       }
@@ -2357,9 +2360,8 @@ namespace jank::analyze
     {
       /* TODO: Note the last value (maybe reparse). Check if it's a symbol? */
       return error::analyze_invalid_let("There must be an even number of bindings for a 'let'.",
-                                        object_source(bindings_obj),
-                                        latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(o, 1));
+                                        read::parse::reparse_nth(bindings, binding_parts - 1),
+                                        latest_expansion(macro_expansions));
     }
 
     auto frame{ jtl::make_ref<local_frame>(local_frame::frame_type::let, current_frame) };
@@ -2496,7 +2498,7 @@ namespace jank::analyze
     if(o->count() < 2)
     {
       return error::analyze_invalid_letfn("A bindings vector must be provided to 'letfn*'.",
-                                          meta_source(o),
+                                          object_source(o),
                                           latest_expansion(macro_expansions));
     }
 
@@ -2504,8 +2506,9 @@ namespace jank::analyze
     if(bindings_obj.get_type() != runtime::object_type::persistent_vector)
     {
       return error::analyze_invalid_letfn("The bindings of a 'letfn*' must be in a vector.",
-                                          meta_source(bindings_obj),
-                                          latest_expansion(macro_expansions));
+                                          object_source(bindings_obj),
+                                          latest_expansion(macro_expansions))
+        ->add_fallback_usage(read::parse::reparse_nth(o, 1));
     }
 
     auto const bindings(runtime::expect_object<runtime::obj::persistent_vector>(bindings_obj));
@@ -2514,7 +2517,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_letfn(
         "There must be an even number of bindings for a 'letfn*'.",
-        meta_source(bindings_obj),
+        read::parse::reparse_nth(bindings, binding_parts - 1),
         latest_expansion(macro_expansions));
     }
 
@@ -2541,16 +2544,18 @@ namespace jank::analyze
       if(sym_obj.get_type() != runtime::object_type::symbol)
       {
         return error::analyze_invalid_letfn(
-          "The left hand side of a 'letfn*' binding must be a symbol.",
-          meta_source(sym_obj),
-          latest_expansion(macro_expansions));
+                 "The left hand side of a 'letfn*' binding must be a symbol.",
+                 object_source(sym_obj),
+                 latest_expansion(macro_expansions))
+          ->add_fallback_usage(read::parse::reparse_nth(bindings, i));
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
       {
         return error::analyze_invalid_letfn("'letfn*' binding symbols must be unqualified.",
-                                            meta_source(sym_obj),
-                                            latest_expansion(macro_expansions));
+                                            object_source(sym_obj),
+                                            latest_expansion(macro_expansions))
+          ->add_fallback_usage(read::parse::reparse_nth(bindings, i));
       }
       ret->frame->locals[sym].emplace_back(sym, sym->name, none, current_frame);
     }
@@ -2563,15 +2568,17 @@ namespace jank::analyze
       auto const value_res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
       if(value_res.is_err())
       {
-        return value_res.expect_err();
+        return value_res.expect_err()->add_fallback_usage(
+          read::parse::reparse_nth(bindings, i + 1));
       }
       auto maybe_fexpr(value_res.expect_ok());
       if(maybe_fexpr->kind != expression_kind::function)
       {
         return error::analyze_invalid_letfn(
-          "The right hand side of a 'letfn*' binding must be a function.",
-          meta_source(val),
-          latest_expansion(macro_expansions));
+                 "The right hand side of a 'letfn*' binding must be a function.",
+                 object_source(val),
+                 latest_expansion(macro_expansions))
+          ->add_fallback_usage(read::parse::reparse_nth(bindings, i + 1));
       }
       auto const fexpr(runtime::static_box_cast<expr::function>(maybe_fexpr));
 
@@ -3029,7 +3036,8 @@ namespace jank::analyze
       finally_{ make_box<obj::symbol>("finally") };
     bool has_catch{}, has_finally{};
 
-    for(auto it(list->fresh_seq().next_in_place()); it.is_some(); it = it.next_in_place())
+    usize index{ 1 };
+    for(auto it(list->fresh_seq().next_in_place()); it.is_some(); it = it.next_in_place(), ++index)
     {
       auto const item(it.first());
       try_expression_type type{};
@@ -3061,9 +3069,10 @@ namespace jank::analyze
             if(has_catch || has_finally)
             {
               return error::analyze_invalid_try(
-                "No extra forms may appear after 'catch' or 'finally'.",
-                object_source(item),
-                latest_expansion(macro_expansions));
+                       "No extra forms may appear after 'catch' or 'finally'.",
+                       object_source(item),
+                       latest_expansion(macro_expansions))
+                ->add_fallback_usage(read::parse::reparse_nth(list, index));
             }
 
             auto const is_last(it.next().is_nil());

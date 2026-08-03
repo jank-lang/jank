@@ -496,6 +496,22 @@ namespace jank::error
     return this;
   }
 
+  /* This is similar to `add_usage`, but it only adds a source if there is none. This is
+   * just a way to ensure we have _something_ to show to the user. */
+  jtl::ref<base> base::add_fallback_usage(read::source const &usage_source)
+  {
+    if(usage_source == read::source::unknown() || usage_source.overlaps(source))
+    {
+      return this;
+    }
+    else if(source == read::source::unknown())
+    {
+      source = usage_source;
+      notes[0].source = usage_source;
+    }
+    return this;
+  }
+
   std::ostream &operator<<(std::ostream &os, base const &e)
   {
     return os << "error(" << kind_str(e.kind) << " - " << e.source << ", \"" << e.message << "\")";

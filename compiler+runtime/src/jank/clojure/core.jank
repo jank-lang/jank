@@ -7180,8 +7180,8 @@ fails, attempts to require sym's namespace and retries."
   {:forms '[(letfn [fnspecs*] exprs*)],
    :special-form true}
   [fnspecs & body]
-  `(letfn* ~(vec (interleave (map first fnspecs)
-                             (map #(cons `fn %) fnspecs)))
+  `(letfn* [~@(interleave (map first fnspecs)
+                          (map #(cons `fn %) fnspecs))]
      ~@body))
 
 (defn stream-reduce!
