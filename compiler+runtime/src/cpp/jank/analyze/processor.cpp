@@ -4225,7 +4225,7 @@ namespace jank::analyze
                "This call to 'cpp/cast' is missing a C++ type and a value as arguments.",
                object_source(l->first()),
                latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 0));
+        ->add_fallback_usage(read::parse::reparse_nth(l, 0));
     }
     else if(count < 3)
     {
@@ -4233,7 +4233,7 @@ namespace jank::analyze
                "This call to 'cpp/cast' is missing a value to cast as an argument.",
                object_source(l->first()),
                latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 0));
+        ->add_fallback_usage(read::parse::reparse_nth(l, 0));
     }
     else if(3 < count)
     {
@@ -4245,14 +4245,14 @@ namespace jank::analyze
                                                object_source(l->next().next().next().first()),
                                              },
                                              latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 0));
+        ->add_fallback_usage(read::parse::reparse_nth(l, 0));
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
     auto const type_expr_res(analyze_type(type_obj, current_frame, fn_ctx));
     if(type_expr_res.is_err())
     {
-      return type_expr_res.expect_err()->add_usage(read::parse::reparse_nth(l, 1));
+      return type_expr_res.expect_err()->add_fallback_usage(read::parse::reparse_nth(l, 1));
     }
 
     auto const type{ type_expr_res.expect_ok() };
@@ -4321,7 +4321,7 @@ namespace jank::analyze
                cpp_util::get_qualified_type_name(type)),
              object_source(l->next().next().first()),
              latest_expansion(macro_expansions))
-      ->add_usage(read::parse::reparse_nth(l, 2));
+      ->add_fallback_usage(read::parse::reparse_nth(l, 2));
   }
 
   processor::expression_result
@@ -4338,7 +4338,7 @@ namespace jank::analyze
                "This call to 'cpp/unsafe-cast' is missing its C++ type and value arguments.",
                object_source(l->first()),
                latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 0));
+        ->add_fallback_usage(read::parse::reparse_nth(l, 0));
     }
     else if(count < 3)
     {
@@ -4346,7 +4346,7 @@ namespace jank::analyze
                "This call to 'cpp/unsafe-cast' is missing its value argument.",
                object_source(l->first()),
                latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 0));
+        ->add_fallback_usage(read::parse::reparse_nth(l, 0));
     }
     else if(3 < count)
     {
@@ -4360,14 +4360,14 @@ namespace jank::analyze
                  object_source(l->next().next().next().first()),
                },
                latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(l, 0));
+        ->add_fallback_usage(read::parse::reparse_nth(l, 0));
     }
 
     auto const type_obj(l->data.rest().first().unwrap());
     auto const type_expr_res(analyze_type(type_obj, current_frame, fn_ctx));
     if(type_expr_res.is_err())
     {
-      return type_expr_res.expect_err()->add_usage(read::parse::reparse_nth(l, 1));
+      return type_expr_res.expect_err()->add_fallback_usage(read::parse::reparse_nth(l, 1));
     }
 
     auto const type{ type_expr_res.expect_ok() };
@@ -4419,7 +4419,7 @@ namespace jank::analyze
                           cpp_util::get_qualified_type_name(type)),
              object_source(l->next().next().first()),
              latest_expansion(macro_expansions))
-      ->add_usage(read::parse::reparse_nth(l, 2));
+      ->add_fallback_usage(read::parse::reparse_nth(l, 2));
   }
 
   processor::expression_result
