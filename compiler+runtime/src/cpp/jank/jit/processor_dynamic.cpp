@@ -241,6 +241,14 @@ namespace jank::jit
     interpreter.reset(static_cast<CppInternal::Interpreter *>(
       Cpp::CreateInterpreter(args, {}, vfs, static_cast<int>(llvm::CodeModel::Large))));
 
+    if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
+    {
+      auto const ee{ interpreter->getExecutionEngine() };
+      auto &ol{ ee->getObjLinkingLayer() };
+      auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
+      oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
+    }
+
     /* Enabling perf support requires registering a couple of plugins with LLVM. These
      * plugins will generate files which perf can then use to inject additional info
      * into its recorded data (via `perf inject`).
@@ -269,7 +277,6 @@ namespace jank::jit
       auto const end_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfEnd) };
       auto const impl_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfImpl) };
       llvm::cantFail(ee->getMainJITDylib().define(llvm::orc::absoluteSymbols(perf_fns)));
-      oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
       oll.addPlugin(std::make_unique<llvm::orc::PerfSupportPlugin>(es.getExecutorProcessControl(),
                                                                    start_addr,
                                                                    end_addr,
