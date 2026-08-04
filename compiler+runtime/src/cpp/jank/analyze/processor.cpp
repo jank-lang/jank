@@ -3534,19 +3534,33 @@ namespace jank::analyze
       {
         object_ref expanded{ o };
         jtl::ptr<error::base> expansion_error{};
-        JANK_TRY
-        {
-          expanded = __rt_ctx->macroexpand(o);
-        }
-        JANK_CATCH_THEN(
-          [&](auto const &e) {
+        cpptrace::try_catch(
+          [&] { expanded = __rt_ctx->macroexpand(o); },
+          [&](std::exception const &e) {
             expansion_error
               = error::analyze_macro_expansion_exception(e,
                                                          cpptrace::from_current_exception(),
                                                          object_source(o),
                                                          latest_expansion(macro_expansions));
           },
-          return expansion_error.as_ref())
+          [&](object_ref const e) {
+            expansion_error
+              = error::analyze_macro_expansion_exception(e,
+                                                         cpptrace::from_current_exception(),
+                                                         object_source(o),
+                                                         latest_expansion(macro_expansions));
+          },
+          [&](error_ref const e) {
+            expansion_error
+              = error::analyze_macro_expansion_exception(e,
+                                                         cpptrace::from_current_exception(),
+                                                         object_source(o),
+                                                         latest_expansion(macro_expansions));
+          });
+        if(expansion_error)
+        {
+          return expansion_error.as_ref();
+        }
 
         if(expanded != o)
         {

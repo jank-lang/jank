@@ -57,10 +57,13 @@ namespace jank::util
 
       /* (Bottom) Linux startup pipework. */
       "__libc_start_call_main",
+      "__libc_start_main_impl",
       "__libc_start_main_alias_1",
       "_start"
     };
-    return !symbols_to_ignore.contains(frame.symbol);
+    return !symbols_to_ignore.contains(frame.symbol)
+      && frame.symbol.find("cpptrace::") == std::string::npos
+      && frame.symbol.find("_ZN8cpptrace2v1") == std::string::npos;
   }
 
   static auto const formatter{ cpptrace::formatter{}

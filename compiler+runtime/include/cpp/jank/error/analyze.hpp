@@ -4,7 +4,10 @@
 
 namespace cpptrace
 {
-  struct stacktrace;
+  inline namespace v1
+  {
+    struct stacktrace;
+  }
 }
 
 namespace jank::error

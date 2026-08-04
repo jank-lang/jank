@@ -1055,18 +1055,31 @@ extern "C"
                        jank_bool const init_default_ctx,
                        int (*fn)(int const, char const ** const))
   {
-    JANK_TRY
-    {
-      jank_init_base();
+    int ret{};
 
-      if(init_default_ctx)
-      {
-        runtime::__rt_ctx = new(UseGC) runtime::context{};
-      }
+    cpptrace::try_catch(
+      [&] {
+        jank_init_base();
 
-      return fn(argc, argv);
-    }
-    JANK_CATCH_THEN(jank::util::print_exception, return 1)
+        if(init_default_ctx)
+        {
+          runtime::__rt_ctx = new(UseGC) runtime::context{};
+        }
+
+        ret = fn(argc, argv);
+      },
+      [&](std::exception const &e) {
+        ret = 1;
+        jank::util::print_exception(e);
+      },
+      [&](jank::runtime::object_ref const e) {
+        ret = 1;
+        jank::util::print_exception(e);
+      },
+      [&](jank::error_ref const e) {
+        ret = 1;
+        jank::util::print_exception(e);
+      });
 
     return 0;
   }
