@@ -3,20 +3,21 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <llvm/ExecutionEngine/Orc/Core.h>
-#include <llvm/IR/Verifier.h>
-#include <llvm/Support/Signals.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 #include <llvm/ExecutionEngine/Orc/Debugging/PerfSupportPlugin.h>
 #include <llvm/ExecutionEngine/Orc/Debugging/DebugInfoSupport.h>
+#include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
 #include <llvm/ExecutionEngine/Orc/TargetProcess/JITLoaderPerf.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
+#include <llvm/ExecutionEngine/JITLink/JITLink.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/Object/ObjectFile.h>
+#include <llvm/Object/SymbolSize.h>
 #include <llvm/IRReader/IRReader.h>
+#include <llvm/Support/Signals.h>
 
 #include <CppInterOp/Compatibility.h>
 #include <CppInterOp/CppInterOp.h>
-
-#include <cpptrace/gdb_jit.hpp>
 
 #include <jank/jit/processor.hpp>
 #include <jank/util/make_array.hpp>
@@ -85,27 +86,100 @@ namespace jank::jit
     std::exit(gen_crash_diag ? 70 : 1);
   }
 
-  /* LLVM will register JIT compiled frames for GDB/LLDB using a standard
-   * interface which is described here:
-   *
-   * https://weliveindetail.github.io/blog/post/2022/11/27/gdb-jit-interface-101.html
-   *
-   * The debuggers implicitly place breakpoints on the `__jit_debug_register_code`
-   * function, which is called as part of LLVM's registration. This is an empty
-   * function, but the breakpoint triggering tells the debugger to update its
-   * entries based on the `__jit_debug_descriptor` linked list.
-   *
-   * Here, we manually trigger the same thing, to have cpptrace update its
-   * view of the available JIT compiler frames. We do this after loading any
-   * new JIT compiled code. */
-  [[maybe_unused]]
-  static void register_jit_stack_frames()
+  /* ORC associates every materialization with a resource key. We use that key as the stable join
+   * point between:
+   * 1. the original object-file symbol table collected in `load_object`, and
+   * 2. the final runtime addresses reported by JITLink when those symbols are emitted. */
+  static jtl::option<uptr> get_resource_key(llvm::orc::MaterializationResponsibility const &mr)
   {
-    if(auto *entry = cpptrace::detail::__jit_debug_descriptor.relevant_entry)
+    uptr ret{};
+    auto err{ mr.withResourceKeyDo([&ret](llvm::orc::ResourceKey const key) -> llvm::Error {
+      ret = key;
+      return llvm::Error::success();
+    }) };
+    if(err)
     {
-      cpptrace::register_jit_object(entry->symfile_addr, entry->symfile_size);
+      llvm::consumeError(jtl::move(err));
+      return none;
     }
+    return ret;
   }
+
+  /* This plugin is the core of the lazy `.o` stack-trace path. `load_object` only tells ORC about
+   * a relocatable object file; actual code emission can happen much later and only for the symbols
+   * that are needed. JITLink's post-allocation hook is the first place where we can reliably see
+   * the final runtime addresses and sizes for those emitted symbols. */
+  class object_tracking_plugin final : public llvm::orc::ObjectLinkingLayer::Plugin
+  {
+  public:
+    explicit object_tracking_plugin(processor const &prc)
+      : prc{ prc }
+    {
+    }
+
+    void modifyPassConfig(llvm::orc::MaterializationResponsibility &mr,
+                          llvm::jitlink::LinkGraph &,
+                          llvm::jitlink::PassConfiguration &config) override
+    {
+      auto const resource_key{ get_resource_key(mr) };
+      if(resource_key.is_none())
+      {
+        return;
+      }
+
+      config.PostAllocationPasses.emplace_back([this, resource_key = resource_key.unwrap()](
+                                                 llvm::jitlink::LinkGraph &graph) -> llvm::Error {
+        using U = std::underlying_type_t<llvm::orc::MemProt>;
+        for(auto *symbol : graph.defined_symbols())
+        {
+          /* We only care about executable symbols here, since these are the ones that can appear
+           * as stack frames. */
+          if(!symbol->hasName()
+             || (static_cast<U>(symbol->getSection().getMemProt())
+                 & static_cast<U>(llvm::orc::MemProt::Exec))
+               == static_cast<U>(llvm::orc::MemProt::None))
+          {
+            continue;
+          }
+
+          prc.record_materialized_symbol(resource_key,
+                                         std::string{ *symbol->getName() },
+                                         symbol->getAddress().getValue(),
+                                         symbol->getSize());
+        }
+
+        return llvm::Error::success();
+      });
+    }
+
+    llvm::Error notifyFailed(llvm::orc::MaterializationResponsibility &mr) override
+    {
+      if(auto const resource_key{ get_resource_key(mr) }; resource_key.is_some())
+      {
+        prc.remove_materialized_symbols(resource_key.unwrap());
+      }
+      return llvm::Error::success();
+    }
+
+    llvm::Error
+    notifyRemovingResources(llvm::orc::JITDylib &, llvm::orc::ResourceKey const key) override
+    {
+      prc.remove_loaded_object(key);
+      prc.remove_materialized_symbols(key);
+      return llvm::Error::success();
+    }
+
+    void notifyTransferringResources(llvm::orc::JITDylib &,
+                                     llvm::orc::ResourceKey const dst_key,
+                                     llvm::orc::ResourceKey const src_key) override
+    {
+      prc.transfer_loaded_object(dst_key, src_key);
+      prc.transfer_materialized_symbols(dst_key, src_key);
+    }
+
+  private:
+    processor const &prc;
+  };
 
   processor::processor(jtl::immutable_string const &binary_version)
   {
@@ -243,6 +317,13 @@ namespace jank::jit
     interpreter.reset(static_cast<CppInternal::Interpreter *>(
       Cpp::CreateInterpreter(args, {}, vfs, static_cast<int>(llvm::CodeModel::Large))));
 
+    {
+      auto const ee{ interpreter->getExecutionEngine() };
+      auto &ol{ ee->getObjLinkingLayer() };
+      auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
+      oll.addPlugin(std::make_shared<object_tracking_plugin>(*this));
+    }
+
     if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
     {
       auto const ee{ interpreter->getExecutionEngine() };
@@ -378,7 +459,6 @@ namespace jank::jit
         }
       }
 
-      //register_jit_stack_frames();
       return ret;
     }
     else
@@ -437,7 +517,6 @@ namespace jank::jit
         }
       }
 
-      //register_jit_stack_frames();
       return ret;
     }
   }
@@ -464,7 +543,6 @@ namespace jank::jit
       llvm::logAllUnhandledErrors(jtl::move(err), llvm::errs(), "error: ");
       throw error::internal_codegen_failure("Unable to compile C++ source.");
     }
-    //register_jit_stack_frames();
   }
 
   void processor::load_object(jtl::immutable_string_view const &path) const
@@ -484,38 +562,48 @@ namespace jank::jit
 
     std::string const path_string{ path.data(), path.size() };
     auto const object_path{ std::filesystem::absolute(path_string).native() };
-
+    /* Give each loaded object file its own resource tracker so later JITLink callbacks can tell
+     * us which original `.o` file a materialized symbol came from. */
+    auto const resource_tracker{ ee->getMainJITDylib().createResourceTracker() };
+    loaded_object object_info{ object_path, {} };
+    /* Snapshot the object file's executable symbol table up front. This remains in object-file
+     * address space; runtime addresses are filled in later by the ORC plugin. */
+    for(auto const &[symbol, symbol_size] : llvm::object::computeSymbolSizes(*object->get()))
     {
-      auto locked_symbols{ loaded_object_symbols.wlock() };
-      for(auto const &symbol : object->get()->symbols())
+      auto flags{ symbol.getFlags() };
+      if(!flags)
       {
-        auto flags{ symbol.getFlags() };
-        if(!flags)
-        {
-          continue;
-        }
-        if((*flags & llvm::object::SymbolRef::SF_Executable) == 0
-           || (*flags & llvm::object::SymbolRef::SF_Undefined) != 0)
-        {
-          continue;
-        }
-
-        auto name{ symbol.getName() };
-        auto address{ symbol.getAddress() };
-        if(!name || !address || name->empty())
-        {
-          continue;
-        }
-
-        (*locked_symbols)[name->str()].push_back({ object_path, *address, 0 });
+        continue;
       }
+      if((*flags & llvm::object::SymbolRef::SF_Executable) == 0
+         || (*flags & llvm::object::SymbolRef::SF_Undefined) != 0)
+      {
+        continue;
+      }
+
+      auto name{ symbol.getName() };
+      auto address{ symbol.getAddress() };
+      if(!name || !address || name->empty())
+      {
+        continue;
+      }
+
+      object_info.symbols[std::string{ *name }] = loaded_object_symbol{ *address, symbol_size };
+    }
+    if(auto err{
+         resource_tracker->withResourceKeyDo([&](llvm::orc::ResourceKey const key) -> llvm::Error {
+           register_loaded_object(key, jtl::move(object_info));
+           return llvm::Error::success();
+         }) })
+    {
+      llvm::consumeError(jtl::move(err));
+      throw std::runtime_error{ util::format("failed to track object file resources: {}", path) };
     }
 
     /* XXX: Object files won't be able to use global ctors until jank is on the ORC
      * runtime, which likely won't happen until clang::Interpreter is on the ORC runtime. */
     /* TODO: Return result on failure. */
-    llvm::cantFail(ee->addObjectFile(std::move(file.get())));
-    //register_jit_stack_frames();
+    llvm::cantFail(ee->addObjectFile(resource_tracker, std::move(file.get())));
   }
 
   void processor::load_ir_module(llvm::orc::ThreadSafeModule &&m) const
@@ -529,7 +617,6 @@ namespace jank::jit
     auto const ee(interpreter->getExecutionEngine());
     llvm::cantFail(ee->addIRModule(jtl::move(m)));
     llvm::cantFail(ee->initialize(ee->getMainJITDylib()));
-    //register_jit_stack_frames();
   }
 
   void processor::load_bitcode(jtl::immutable_string const &module,
@@ -575,38 +662,123 @@ namespace jank::jit
     return err(util::format("Failed to find symbol: '{}'", name));
   }
 
-  jtl::option<processor::materialized_object_frame>
-  processor::lookup_materialized_object_frame(std::string const &symbol,
-                                              uptr const raw_address,
-                                              uptr const runtime_symbol_address,
-                                              usize const runtime_symbol_size) const
+  void processor::register_loaded_object(uptr const resource_key, loaded_object object) const
   {
-    if(raw_address < runtime_symbol_address)
-    {
-      return none;
-    }
+    auto loaded_objects_guard{ loaded_objects.wlock() };
+    (*loaded_objects_guard)[resource_key] = jtl::move(object);
+  }
 
-    auto const offset{ raw_address - runtime_symbol_address };
-    auto const symbols{ loaded_object_symbols.rlock() };
-    auto const it{ symbols->find(symbol) };
-    if(it == symbols->end())
+  void
+  processor::transfer_loaded_object(uptr const dst_resource_key, uptr const src_resource_key) const
+  {
+    auto loaded_objects_guard{ loaded_objects.wlock() };
+    auto const it{ loaded_objects_guard->find(src_resource_key) };
+    if(it == loaded_objects_guard->end())
     {
-      return none;
+      return;
     }
+    (*loaded_objects_guard)[dst_resource_key] = jtl::move(it->second);
+    loaded_objects_guard->erase(it);
+  }
 
-    for(auto const &candidate : it->second)
+  void processor::remove_loaded_object(uptr const resource_key) const
+  {
+    loaded_objects.wlock()->erase(resource_key);
+  }
+
+  void processor::record_materialized_symbol(uptr const resource_key,
+                                             std::string const &symbol,
+                                             uptr const runtime_address,
+                                             usize const runtime_size) const
+  {
+    jtl::immutable_string object_path;
+    loaded_object_symbol object_symbol{};
+    usize symbol_size{};
     {
-      if(runtime_symbol_size != 0 && candidate.object_size != 0
-         && candidate.object_size != runtime_symbol_size)
+      auto const loaded_objects_guard{ loaded_objects.rlock() };
+      auto const loaded_object_it{ loaded_objects_guard->find(resource_key) };
+      if(loaded_object_it == loaded_objects_guard->end())
       {
-        continue;
+        return;
       }
-      return materialized_object_frame{ candidate.object_path,
-                                        candidate.object_address + offset,
-                                        symbol };
+
+      auto const symbol_it{ loaded_object_it->second.symbols.find(symbol) };
+      if(symbol_it == loaded_object_it->second.symbols.end())
+      {
+        return;
+      }
+      object_path = loaded_object_it->second.path;
+      object_symbol = symbol_it->second;
+      symbol_size = runtime_size == 0 ? object_symbol.object_size : runtime_size;
     }
 
-    return none;
+    /* Combine the object-file symbol metadata gathered at load time with the runtime address
+     * assigned by JITLink. After this point, raw PCs can be mapped back to backing `.o` files
+     * without consulting ORC again. */
+    materialized_symbols.wlock()->insert_or_assign(
+      runtime_address,
+      materialized_symbol{ resource_key,
+                           runtime_address,
+                           symbol_size,
+                           object_path,
+                           object_symbol.object_address,
+                           object_symbol.object_size,
+                           symbol });
+  }
+
+  void processor::remove_materialized_symbols(uptr const resource_key) const
+  {
+    auto materialized_symbols_guard{ materialized_symbols.wlock() };
+    for(auto it{ materialized_symbols_guard->begin() }; it != materialized_symbols_guard->end();)
+    {
+      if(it->second.resource_key == resource_key)
+      {
+        it = materialized_symbols_guard->erase(it);
+      }
+      else
+      {
+        ++it;
+      }
+    }
+  }
+
+  void processor::transfer_materialized_symbols(uptr const dst_resource_key,
+                                                uptr const src_resource_key) const
+  {
+    auto materialized_symbols_guard{ materialized_symbols.wlock() };
+    for(auto &[_, symbol] : *materialized_symbols_guard)
+    {
+      if(symbol.resource_key == src_resource_key)
+      {
+        symbol.resource_key = dst_resource_key;
+      }
+    }
+  }
+
+  jtl::option<processor::materialized_object_frame>
+  processor::lookup_materialized_object_frame(uptr const raw_address) const
+  {
+    auto const materialized_symbols_guard{ materialized_symbols.rlock() };
+    /* `materialized_symbols` is ordered by runtime symbol start address, so `upper_bound`
+     * gives us the nearest candidate range at or below the raw PC. */
+    auto const upper{ materialized_symbols_guard->upper_bound(raw_address) };
+    if(upper == materialized_symbols_guard->begin())
+    {
+      return none;
+    }
+
+    auto const &symbol{ std::prev(upper)->second };
+    if(raw_address < symbol.runtime_address
+       || raw_address >= symbol.runtime_address + symbol.runtime_size)
+    {
+      return none;
+    }
+
+    return materialized_object_frame{
+      symbol.runtime_address, symbol.runtime_size,
+      symbol.object_path,     symbol.object_address + (raw_address - symbol.runtime_address),
+      symbol.object_size,     symbol.symbol
+    };
   }
 
   jtl::option<jtl::immutable_string> processor::find_lib(jtl::immutable_string const &lib) const

@@ -52,17 +52,23 @@ namespace jank::util
       }
     }
 
+    /* For non-Clojure functions, we want to clean up some common templates, since they
+     * can be quite noisy. */
     static std::regex const jtl_ref_expr{ R"(jtl::ref<jank::analyze::expression>\s*)" };
     static std::regex const jtl_ref_expr_t{ R"(jtl::ref<jank::analyze::expr::(\S+)>\s*)" };
     static std::regex const runtime_oref_object{
       R"(jank::runtime::oref<jank::runtime::object>\s*)"
     };
     static std::regex const runtime_oref_t{ R"(jank::runtime::oref<jank::runtime::(\S+)>\s*)" };
+    static std::regex const runtime_obj{ R"(jank::runtime::obj::)" };
+    static std::regex const auto_ret{ R"(^auto )" };
 
     frame.symbol = std::regex_replace(frame.symbol, jtl_ref_expr, "expression_ref");
     frame.symbol = std::regex_replace(frame.symbol, jtl_ref_expr_t, "expr::$1_ref");
     frame.symbol = std::regex_replace(frame.symbol, runtime_oref_object, "object_ref");
     frame.symbol = std::regex_replace(frame.symbol, runtime_oref_t, "$1_ref");
+    frame.symbol = std::regex_replace(frame.symbol, runtime_obj, "");
+    frame.symbol = std::regex_replace(frame.symbol, auto_ret, "");
 
     return frame;
   }
@@ -75,26 +81,21 @@ namespace jank::util
       return prettify_symbols(jtl::move(frame));
     }
 
-    cpptrace::jit_symbol_info jit_symbol;
-    if(!cpptrace::lookup_jit_symbol(frame.raw_address, jit_symbol))
-    {
-      return prettify_symbols(jtl::move(frame));
-    }
-
+    /* cpptrace has already done its normal best-effort resolution. If a frame is still missing
+     * source information, ask jank whether the raw PC belongs to lazily materialized object-file
+     * code and, if so, re-resolve it against the original `.o` file on disk. */
     auto const resolved{ runtime::__rt_ctx->jit_prc.lookup_materialized_object_frame(
-      jit_symbol.symbol,
-      frame.raw_address,
-      jit_symbol.symbol_address,
-      jit_symbol.symbol_size) };
+      frame.raw_address) };
     if(resolved.is_none())
     {
       return prettify_symbols(jtl::move(frame));
     }
 
+    /* Feed cpptrace an object-space frame for the original `.o` file so it can reuse its normal
+     * on-disk DWARF resolver rather than teaching cpptrace about ORC-specific bookkeeping. */
     cpptrace::object_trace object_trace;
-    object_trace.frames.push_back({ frame.raw_address,
-                                    resolved.unwrap().object_address,
-                                    resolved.unwrap().object_path.c_str() });
+    object_trace.frames.push_back(
+      { frame.raw_address, resolved.unwrap().object_address, resolved.unwrap().object_path });
     auto const resolved_trace{ object_trace.resolve() };
     if(resolved_trace.frames.empty())
     {
@@ -117,7 +118,8 @@ namespace jank::util
     }
     if(frame.symbol.empty())
     {
-      frame.symbol = resolved_frame.symbol.empty() ? jit_symbol.symbol : resolved_frame.symbol;
+      frame.symbol
+        = resolved_frame.symbol.empty() ? resolved.unwrap().symbol : resolved_frame.symbol;
     }
 
     return prettify_symbols(jtl::move(frame));
@@ -125,12 +127,11 @@ namespace jank::util
 
   static auto const formatter{ cpptrace::formatter{}
                                  .header("Stack trace (most recent call first):")
-                                 //.addresses(cpptrace::formatter::address_mode::none)
+                                 .addresses(cpptrace::formatter::address_mode::none)
                                  .paths(cpptrace::formatter::path_mode::basename)
                                  .columns(false)
                                  .snippets(false)
                                  .transform(&resolve_materialized_object_frame)
-                                 //.transform(&strip_frame_symbol)
                                  .filtered_frame_placeholders(false)
                                  .filter(&filter_frame) };
 

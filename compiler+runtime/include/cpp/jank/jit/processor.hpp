@@ -1,7 +1,10 @@
 #pragma once
 
 #include <filesystem>
+#include <map>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 #include <folly/Synchronized.h>
 
@@ -66,18 +69,20 @@ namespace jank::jit
     jtl::string_result<void> remove_symbol(jtl::immutable_string const &name) const;
     jtl::string_result<void *> find_symbol(jtl::immutable_string const &name) const;
 
+    /* Describes one lazily materialized object-file-backed frame after we've mapped a runtime
+     * PC back to its original `.o` file location. The formatter uses this to ask cpptrace to do
+     * ordinary on-disk DWARF resolution against the backing object file. */
     struct materialized_object_frame
     {
-      jtl::immutable_string object_path;
+      uptr runtime_address{};
+      usize runtime_size{};
+      std::string object_path;
       uptr object_address{};
-      jtl::immutable_string symbol;
+      usize object_size{};
+      std::string symbol;
     };
 
-    jtl::option<materialized_object_frame>
-    lookup_materialized_object_frame(std::string const &symbol,
-                                     uptr raw_address,
-                                     uptr runtime_symbol_address,
-                                     usize runtime_symbol_size) const;
+    jtl::option<materialized_object_frame> lookup_materialized_object_frame(uptr raw_address) const;
 
     jtl::result<void, jtl::immutable_string>
     load_libs(native_vector<jtl::immutable_string> const &libs) const;
@@ -95,14 +100,47 @@ namespace jank::jit
     /*** XXX: Everything here is thread-safe. ***/
     jtl::ptr<CppInternal::Interpreter> interpreter;
 
+    /* Symbol metadata recorded from the original object file before ORC materializes anything. */
     struct loaded_object_symbol
     {
-      std::string object_path;
       uptr object_address{};
       usize object_size{};
     };
 
-    mutable folly::Synchronized<std::unordered_map<std::string, std::vector<loaded_object_symbol>>>
-      loaded_object_symbols;
+    /* Bookkeeping for a single object file added through `load_object`. This is keyed by the
+     * ORC resource key so we can join it later with the symbols that JITLink actually emits. */
+    struct loaded_object
+    {
+      jtl::immutable_string path;
+      std::unordered_map<std::string, loaded_object_symbol> symbols;
+    };
+
+    /* Runtime symbol metadata captured from JITLink once ORC assigns final addresses. This is the
+     * bridge between a raw PC in a stack trace and the original object-file symbol metadata above. */
+    struct materialized_symbol
+    {
+      uptr resource_key{};
+      uptr runtime_address{};
+      usize runtime_size{};
+      jtl::immutable_string object_path;
+      uptr object_address{};
+      usize object_size{};
+      jtl::immutable_string symbol;
+    };
+
+    void register_loaded_object(uptr resource_key, loaded_object object) const;
+    void transfer_loaded_object(uptr dst_resource_key, uptr src_resource_key) const;
+    void remove_loaded_object(uptr resource_key) const;
+    void record_materialized_symbol(uptr resource_key,
+                                    std::string const &symbol,
+                                    uptr runtime_address,
+                                    usize runtime_size) const;
+    void remove_materialized_symbols(uptr resource_key) const;
+    void transfer_materialized_symbols(uptr dst_resource_key, uptr src_resource_key) const;
+
+    /* Resource key -> original object file metadata captured at `load_object` time. */
+    mutable folly::Synchronized<std::unordered_map<uptr, loaded_object>> loaded_objects;
+    /* Runtime symbol start address -> materialized symbol metadata captured from JITLink. */
+    mutable folly::Synchronized<std::map<uptr, materialized_symbol>> materialized_symbols;
   };
 }
