@@ -9,6 +9,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/error.hpp>
 #include <jank/error/report.hpp>
+#include <jank/jit/object.hpp>
 #include <jank/runtime/context.hpp>
 
 namespace jank::util
@@ -84,8 +85,7 @@ namespace jank::util
     /* cpptrace has already done its normal best-effort resolution. If a frame is still missing
      * source information, ask jank whether the raw PC belongs to lazily materialized object-file
      * code and, if so, re-resolve it against the original `.o` file on disk. */
-    auto const resolved{ runtime::__rt_ctx->jit_prc.lookup_materialized_object_frame(
-      frame.raw_address) };
+    auto const resolved{ jit::find_materialized_object_frame(frame.raw_address) };
     if(resolved.is_none())
     {
       return prettify_symbols(jtl::move(frame));

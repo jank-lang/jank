@@ -735,6 +735,7 @@ add_library(
   src/cpp/jank/runtime/module/loader_dynamic.cpp
   src/cpp/jank/runtime/context_dynamic.cpp
   src/cpp/jank/runtime/ns_dynamic.cpp
+  src/cpp/jank/jit/object.cpp
   src/cpp/jank/jit/processor_dynamic.cpp
   src/cpp/jank/codegen/api_dynamic.cpp
 )
