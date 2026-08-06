@@ -2943,7 +2943,7 @@ namespace jank::analyze
 
     if(3 <= o->count())
     {
-      return error::analyze_invalid_throw("'throw' requires exactly zero or one arguments.",
+      return error::analyze_invalid_throw("'throw' requires at most one argument.",
                                           meta_source(o->get_meta()),
                                           latest_expansion(macro_expansions));
     }
