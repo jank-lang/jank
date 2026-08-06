@@ -40,7 +40,7 @@ namespace jank::evaluate
         walk(form, f);
       }
     }
-    else if constexpr(std::same_as<T, expr::def>)
+    else if constexpr(jtl::is_any_same<T, expr::def, expr::throw_>)
     {
       if(expr.value.is_some())
       {
@@ -66,13 +66,6 @@ namespace jank::evaluate
     else if constexpr(std::same_as<T, expr::let> || std::same_as<T, expr::letfn>)
     {
       walk(expr.body, f);
-    }
-    else if constexpr(std::same_as<T, expr::throw_>)
-    {
-      if(expr.value.is_some())
-      {
-        walk(expr.value.unwrap(), f);
-      }
     }
     else if constexpr(std::same_as<T, expr::try_>)
     {
