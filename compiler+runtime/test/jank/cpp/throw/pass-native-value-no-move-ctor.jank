@@ -1,0 +1,21 @@
+(cpp/raw "namespace jank::cpp::throw_::pass_native_value_no_move_ctor
+          {
+            struct foo
+            {
+              foo(int i)
+                : a{ i }
+              { }
+
+              foo() = delete;
+              foo(foo const &) = default;
+
+              int a{ };
+            };
+          }")
+
+(try
+  (let* [f (cpp/jank.cpp.throw_.pass_native_value_no_move_ctor.foo 5)]
+    (throw f))
+  (catch jank.cpp.throw_.pass_native_value_no_move_ctor.foo f
+    (if (= 5 (.-a f))
+      :success)))

@@ -2941,11 +2941,18 @@ namespace jank::analyze
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
-    if(o->count() != 2)
+    if(3 <= o->count())
     {
-      return error::analyze_invalid_throw("'throw' requires exactly one argument.",
+      return error::analyze_invalid_throw("'throw' requires at most one argument.",
                                           meta_source(o->get_meta()),
                                           latest_expansion(macro_expansions));
+    }
+
+    /* Throwing without an argument just re-throws the current exception. This can
+     * be done anywhere, not even just within a catch. */
+    if(o->count() == 1)
+    {
+      return jtl::make_ref<expr::throw_>(position, current_frame, true, o);
     }
 
     auto const arg(o->data.rest().first().unwrap());
@@ -2954,12 +2961,31 @@ namespace jank::analyze
     {
       return arg_expr.expect_err();
     }
-    arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
-                                         cpp_util::untyped_object_ref_type(),
-                                         macro_expansions);
-    if(arg_expr.is_err())
+
+    /* By default, thrown values will be moved. If there is no move ctor, the copy ctor can
+     * also be used. But if the move ctor is deleted, even if there is a copy ctor, the
+     * value is not throwable. These are C++'s semantics and we mirror them here. */
+    auto const arg_type{ arg_expr.expect_ok()->get_type() };
+    auto const arg_scope{ Cpp::GetScopeFromType(arg_type) };
+    if(arg_scope
+       && (!Cpp::HasUsableCopyConstructor(arg_scope) && !Cpp::HasUsableMoveConstructor(arg_scope)))
     {
-      return arg_expr.expect_err();
+      return error::analyze_invalid_throw(
+        util::format("Unable to throw a value of type '{}', since it is neither copy constructible "
+                     "nor move constructible.",
+                     cpp_util::get_qualified_type_name(arg_type)),
+        meta_source(o->get_meta()),
+        latest_expansion(macro_expansions));
+    }
+    else if(arg_scope
+            && (Cpp::HasUsableCopyConstructor(arg_scope)
+                && Cpp::HasDeletedMoveConstructor(arg_scope)))
+    {
+      return error::analyze_invalid_throw(
+        util::format("Unable to throw a value of type '{}', since its move constructor is deleted.",
+                     cpp_util::get_qualified_type_name(arg_type)),
+        meta_source(o->get_meta()),
+        latest_expansion(macro_expansions));
     }
 
     return jtl::make_ref<expr::throw_>(position, current_frame, true, o, arg_expr.unwrap_move());
