@@ -1,0 +1,10 @@
+(let* [inner-catch? (atom false)]
+  (try
+    (try
+      (throw :success)
+      (catch jank.runtime.object_ref _
+        (reset! inner-catch? true)
+        (throw)))
+    (catch jank.runtime.object_ref e
+      (if @inner-catch?
+        e))))

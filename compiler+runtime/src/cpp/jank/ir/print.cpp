@@ -458,9 +458,10 @@ namespace jank::ir
   void inst::throw_::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,
-                    "{:name {} :op :throw :value {} :type \"{}\"}",
+                    R"({:name {} :op :throw :value {} :value-type "{}" :type "{}"})",
                     name,
-                    value,
+                    value.is_some() ? value.unwrap().name : "<none>",
+                    value.is_some() ? get_qualified_type_name(value.unwrap().type) : "<none>",
                     get_qualified_type_name(type));
   }
 

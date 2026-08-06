@@ -69,7 +69,10 @@ namespace jank::evaluate
     }
     else if constexpr(std::same_as<T, expr::throw_>)
     {
-      walk(expr.value, f);
+      if(expr.value.is_some())
+      {
+        walk(expr.value.unwrap(), f);
+      }
     }
     else if constexpr(std::same_as<T, expr::try_>)
     {
@@ -569,7 +572,14 @@ namespace jank::evaluate
      * clojure.main uses the stack trace to provide source info by stripping out
      * Clojure frames until the first non-Clojure frame is found. If we throw
      * from an eval, maybe that doesn't happen? For now, we support eval, however. */
-    throw eval(expr->value);
+    if(expr->value.is_some())
+    {
+      throw eval(expr->value.unwrap());
+    }
+    else
+    {
+      throw;
+    }
   }
 
   object_ref eval(expr::try_ref const expr)
