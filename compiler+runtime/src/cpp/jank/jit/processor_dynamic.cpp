@@ -10,6 +10,7 @@
 #include <llvm/ExecutionEngine/Orc/Debugging/DebugInfoSupport.h>
 #include <llvm/ExecutionEngine/Orc/TargetProcess/JITLoaderPerf.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
+#include <llvm/Object/ObjectFile.h>
 #include <llvm/IRReader/IRReader.h>
 
 #include <CppInterOp/Compatibility.h>
@@ -97,6 +98,7 @@ namespace jank::jit
    * Here, we manually trigger the same thing, to have cpptrace update its
    * view of the available JIT compiler frames. We do this after loading any
    * new JIT compiled code. */
+  [[maybe_unused]]
   static void register_jit_stack_frames()
   {
     if(auto *entry = cpptrace::detail::__jit_debug_descriptor.relevant_entry)
@@ -376,6 +378,7 @@ namespace jank::jit
         }
       }
 
+      //register_jit_stack_frames();
       return ret;
     }
     else
@@ -434,6 +437,7 @@ namespace jank::jit
         }
       }
 
+      //register_jit_stack_frames();
       return ret;
     }
   }
@@ -460,7 +464,7 @@ namespace jank::jit
       llvm::logAllUnhandledErrors(jtl::move(err), llvm::errs(), "error: ");
       throw error::internal_codegen_failure("Unable to compile C++ source.");
     }
-    register_jit_stack_frames();
+    //register_jit_stack_frames();
   }
 
   void processor::load_object(jtl::immutable_string_view const &path) const
@@ -471,11 +475,47 @@ namespace jank::jit
     {
       throw std::runtime_error{ util::format("failed to load object file: {}", path) };
     }
+
+    auto object{ llvm::object::ObjectFile::createObjectFile(file.get()->getMemBufferRef()) };
+    if(!object)
+    {
+      throw std::runtime_error{ util::format("failed to parse object file: {}", path) };
+    }
+
+    std::string const path_string{ path.data(), path.size() };
+    auto const object_path{ std::filesystem::absolute(path_string).native() };
+
+    {
+      auto locked_symbols{ loaded_object_symbols.wlock() };
+      for(auto const &symbol : object->get()->symbols())
+      {
+        auto flags{ symbol.getFlags() };
+        if(!flags)
+        {
+          continue;
+        }
+        if((*flags & llvm::object::SymbolRef::SF_Executable) == 0
+           || (*flags & llvm::object::SymbolRef::SF_Undefined) != 0)
+        {
+          continue;
+        }
+
+        auto name{ symbol.getName() };
+        auto address{ symbol.getAddress() };
+        if(!name || !address || name->empty())
+        {
+          continue;
+        }
+
+        (*locked_symbols)[name->str()].push_back({ object_path, *address, 0 });
+      }
+    }
+
     /* XXX: Object files won't be able to use global ctors until jank is on the ORC
      * runtime, which likely won't happen until clang::Interpreter is on the ORC runtime. */
     /* TODO: Return result on failure. */
     llvm::cantFail(ee->addObjectFile(std::move(file.get())));
-    register_jit_stack_frames();
+    //register_jit_stack_frames();
   }
 
   void processor::load_ir_module(llvm::orc::ThreadSafeModule &&m) const
@@ -489,7 +529,7 @@ namespace jank::jit
     auto const ee(interpreter->getExecutionEngine());
     llvm::cantFail(ee->addIRModule(jtl::move(m)));
     llvm::cantFail(ee->initialize(ee->getMainJITDylib()));
-    register_jit_stack_frames();
+    //register_jit_stack_frames();
   }
 
   void processor::load_bitcode(jtl::immutable_string const &module,
@@ -533,6 +573,40 @@ namespace jank::jit
     }
 
     return err(util::format("Failed to find symbol: '{}'", name));
+  }
+
+  jtl::option<processor::materialized_object_frame>
+  processor::lookup_materialized_object_frame(std::string const &symbol,
+                                              uptr const raw_address,
+                                              uptr const runtime_symbol_address,
+                                              usize const runtime_symbol_size) const
+  {
+    if(raw_address < runtime_symbol_address)
+    {
+      return none;
+    }
+
+    auto const offset{ raw_address - runtime_symbol_address };
+    auto const symbols{ loaded_object_symbols.rlock() };
+    auto const it{ symbols->find(symbol) };
+    if(it == symbols->end())
+    {
+      return none;
+    }
+
+    for(auto const &candidate : it->second)
+    {
+      if(runtime_symbol_size != 0 && candidate.object_size != 0
+         && candidate.object_size != runtime_symbol_size)
+      {
+        continue;
+      }
+      return materialized_object_frame{ candidate.object_path,
+                                        candidate.object_address + offset,
+                                        symbol };
+    }
+
+    return none;
   }
 
   jtl::option<jtl::immutable_string> processor::find_lib(jtl::immutable_string const &lib) const

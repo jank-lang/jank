@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <memory>
 
+#include <folly/Synchronized.h>
+
 #include <jtl/result.hpp>
 #include <jtl/string_builder.hpp>
 
@@ -64,18 +66,43 @@ namespace jank::jit
     jtl::string_result<void> remove_symbol(jtl::immutable_string const &name) const;
     jtl::string_result<void *> find_symbol(jtl::immutable_string const &name) const;
 
+    struct materialized_object_frame
+    {
+      jtl::immutable_string object_path;
+      uptr object_address{};
+      jtl::immutable_string symbol;
+    };
+
+    jtl::option<materialized_object_frame>
+    lookup_materialized_object_frame(std::string const &symbol,
+                                     uptr raw_address,
+                                     uptr runtime_symbol_address,
+                                     usize runtime_symbol_size) const;
+
     jtl::result<void, jtl::immutable_string>
     load_libs(native_vector<jtl::immutable_string> const &libs) const;
     jtl::option<jtl::immutable_string> find_lib(jtl::immutable_string const &lib) const;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     /*** XXX: Calls through the interpreter and LLVM JIT runtime are thread-safe. ***/
-    jtl::ptr<CppInternal::Interpreter> interpreter;
     native_vector<std::filesystem::path> library_dirs;
 
     /* The files within this map will get added into Clang's VFS prior to the creation of
      * the `clang::Interpreter`. This allows us to embed the PCH into AOT compiled programs
      * while still being able to include it. */
     std::map<char const *, std::string_view> vfs;
+
+    /*** XXX: Everything here is thread-safe. ***/
+    jtl::ptr<CppInternal::Interpreter> interpreter;
+
+    struct loaded_object_symbol
+    {
+      std::string object_path;
+      uptr object_address{};
+      usize object_size{};
+    };
+
+    mutable folly::Synchronized<std::unordered_map<std::string, std::vector<loaded_object_symbol>>>
+      loaded_object_symbols;
   };
 }
