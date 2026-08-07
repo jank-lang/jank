@@ -3,7 +3,6 @@
 
 #include <cpptrace/from_current.hpp>
 #include <cpptrace/formatting.hpp>
-#include <cpptrace/gdb_jit.hpp>
 
 #include <jank/util/try.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -74,55 +73,9 @@ namespace jank::util
     return frame;
   }
 
-  static cpptrace::stacktrace_frame
-  resolve_materialized_object_frame(cpptrace::stacktrace_frame frame)
+  static cpptrace::stacktrace_frame transform_frame(cpptrace::stacktrace_frame frame)
   {
-    if((!frame.filename.empty() && frame.line.has_value()) || runtime::__rt_ctx == nullptr)
-    {
-      return prettify_symbols(jtl::move(frame));
-    }
-
-    /* cpptrace has already done its normal best-effort resolution. If a frame is still missing
-     * source information, ask jank whether the raw PC belongs to lazily materialized object-file
-     * code and, if so, re-resolve it against the original `.o` file on disk. */
-    auto const resolved{ jit::find_materialized_object_frame(frame.raw_address) };
-    if(resolved.is_none())
-    {
-      return prettify_symbols(jtl::move(frame));
-    }
-
-    /* Feed cpptrace an object-space frame for the original `.o` file so it can reuse its normal
-     * on-disk DWARF resolver rather than teaching cpptrace about ORC-specific bookkeeping. */
-    cpptrace::object_trace object_trace;
-    object_trace.frames.push_back(
-      { frame.raw_address, resolved.unwrap().object_address, resolved.unwrap().object_path });
-    auto const resolved_trace{ object_trace.resolve() };
-    if(resolved_trace.frames.empty())
-    {
-      return prettify_symbols(jtl::move(frame));
-    }
-
-    auto const &resolved_frame{ resolved_trace.frames.front() };
-    frame.object_address = resolved_frame.object_address;
-    if(frame.filename.empty())
-    {
-      frame.filename = resolved_frame.filename;
-    }
-    if(!frame.line.has_value())
-    {
-      frame.line = resolved_frame.line;
-    }
-    if(!frame.column.has_value())
-    {
-      frame.column = resolved_frame.column;
-    }
-    if(frame.symbol.empty())
-    {
-      frame.symbol
-        = resolved_frame.symbol.empty() ? resolved.unwrap().symbol : resolved_frame.symbol;
-    }
-
-    return prettify_symbols(jtl::move(frame));
+    return prettify_symbols(jit::resolve_materialized_object_frame(jtl::move(frame)));
   }
 
   static auto const formatter{ cpptrace::formatter{}
@@ -131,19 +84,19 @@ namespace jank::util
                                  .paths(cpptrace::formatter::path_mode::basename)
                                  .columns(false)
                                  .snippets(false)
-                                 .transform(&resolve_materialized_object_frame)
+                                 .transform(&transform_frame)
                                  .filtered_frame_placeholders(false)
                                  .filter(&filter_frame) };
 
   static void print_exception_stack_trace()
   {
-    cpptrace::experimental::register_jit_objects_from_gdb_jit_interface();
+    jit::refresh_jit_objects();
     formatter.print(cpptrace::from_current_exception());
   }
 
   static void print_exception_stack_trace(cpptrace::stacktrace const &trace)
   {
-    cpptrace::experimental::register_jit_objects_from_gdb_jit_interface();
+    jit::refresh_jit_objects();
     formatter.print(trace);
   }
 

@@ -4,6 +4,8 @@
 
 #include <folly/Synchronized.h>
 
+#include <cpptrace/cpptrace.hpp>
+
 #include <jtl/option.hpp>
 
 /* In order to get great symbolicated stack traces, with source information, we need to
@@ -50,4 +52,7 @@ namespace jank::jit
   void install_object_tracking_plugin();
   void register_loaded_object(uptr resource_key, loaded_object const &object);
   jtl::option<materialized_object_frame> find_materialized_object_frame(uptr raw_address);
+
+  cpptrace::stacktrace_frame resolve_materialized_object_frame(cpptrace::stacktrace_frame frame);
+  void refresh_jit_objects();
 }
