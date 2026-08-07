@@ -255,6 +255,11 @@ namespace jank::error
   static void add_expansion_note(base &e, runtime::object_ref const expansion)
   {
     auto source{ runtime::object_source(expansion) };
+    if(source == read::source::unknown())
+    {
+      return;
+    }
+
     /* We just want to point at the start of the expansion, not underline the
      * whole thing. It may be huge! */
     source.end = source.start;
@@ -504,7 +509,8 @@ namespace jank::error
     {
       return this;
     }
-    else if(source == read::source::unknown())
+    else if(source == read::source::unknown() && notes[0].source == read::source::unknown()
+            && notes.size() == 1)
     {
       source = usage_source;
       notes[0].source = usage_source;

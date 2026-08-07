@@ -2722,7 +2722,7 @@ namespace jank::analyze
                "Everything starting here is excess. Perhaps you wanted to wrap some of these forms "
                "in a 'do'?",
                latest_expansion(macro_expansions))
-        ->add_usage(read::parse::reparse_nth(o, 4));
+        ->add_fallback_usage(read::parse::reparse_nth(o, 4));
     }
 
     auto const condition(o->data.rest().first().unwrap());
