@@ -224,12 +224,16 @@ namespace jank::jit
 
     jit::install_object_tracking_plugin();
 
-    if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
+    if constexpr(jtl::current_platform == jtl::platform::linux_like)
     {
-      auto const ee{ interpreter->getExecutionEngine() };
-      auto &ol{ ee->getObjLinkingLayer() };
-      auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
-      oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
+      if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
+      {
+        auto const ee{ interpreter->getExecutionEngine() };
+        auto &ol{ ee->getObjLinkingLayer() };
+        auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
+
+        oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
+      }
     }
 
     /* Enabling perf support requires registering a couple of plugins with LLVM. These
