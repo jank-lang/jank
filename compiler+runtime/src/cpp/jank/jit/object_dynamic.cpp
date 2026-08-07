@@ -1,5 +1,6 @@
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <type_traits>
 #include <vector>
 
@@ -11,18 +12,6 @@
 
 #include <jank/jit/object.hpp>
 #include <jank/runtime/context.hpp>
-
-namespace cpptrace
-{
-  inline namespace v1
-  {
-    namespace detail
-    {
-      void register_jit_object(char const *, std::size_t);
-      void unregister_jit_object(char const *);
-    }
-  }
-}
 
 namespace jank::jit
 {
@@ -63,10 +52,18 @@ namespace jank::jit
     void transfer_materialized_symbols(uptr dst_resource_key, uptr src_resource_key);
     jtl::option<materialized_object_frame> find_materialized_object_frame(uptr raw_address) const;
 
+    /* Resource key -> emitted debug objects already registered with cpptrace, plus a flat set of
+     * every registered `object_start` for O(1) dedup checks. Both members are updated together,
+     * so they're wrapped in a single `Synchronized` to keep them consistent under one lock. */
+    struct jit_debug_object_state
+    {
+      std::unordered_map<uptr, std::vector<jit_debug_object>> objects_by_resource_key;
+      std::unordered_set<char const *> registered_object_starts;
+    };
+
     /* Resource key -> original object file metadata captured at `load_object` time. */
     folly::Synchronized<std::unordered_map<uptr, loaded_object>> loaded_objects;
-    /* Resource key -> emitted debug objects already registered with cpptrace. */
-    folly::Synchronized<std::unordered_map<uptr, std::vector<jit_debug_object>>> jit_debug_objects;
+    folly::Synchronized<jit_debug_object_state> jit_debug_objects;
     /* Runtime symbol start address -> materialized symbol metadata captured from JITLink. */
     folly::Synchronized<std::map<uptr, materialized_symbol>> materialized_symbols;
   };
@@ -218,33 +215,24 @@ namespace jank::jit
   void object_tracker::register_emitted_jit_debug_object(uptr const resource_key)
   {
     auto jit_debug_objects_guard{ jit_debug_objects.wlock() };
-    auto &objects{ (*jit_debug_objects_guard)[resource_key] };
+    auto &objects{ jit_debug_objects_guard->objects_by_resource_key[resource_key] };
+    auto &registered_object_starts{ jit_debug_objects_guard->registered_object_starts };
 
-    auto const already_registered = [&](char const * const object_start) -> bool {
-      for(auto const &[_, registered_objects] : *jit_debug_objects_guard)
-      {
-        for(auto const &object : registered_objects)
-        {
-          if(object.object_start == object_start)
-          {
-            return true;
-          }
-        }
-      }
-      return false;
-    };
-
-    auto const register_entry = [&](cpptrace::detail::jit_code_entry const &entry) -> bool {
+    auto const register_entry{ [&](cpptrace::detail::jit_code_entry const &entry) -> bool {
       if(entry.symfile_addr == nullptr || entry.symfile_size == 0
-         || already_registered(entry.symfile_addr))
+         || registered_object_starts.contains(entry.symfile_addr))
       {
         return false;
       }
 
-      cpptrace::detail::register_jit_object(entry.symfile_addr, entry.symfile_size);
+      /* We call cpptrace's public `register_jit_object` (declared in `cpptrace/basic.hpp`,
+       * transitively included above) rather than reaching into `cpptrace::detail`. It's a thin,
+       * stable wrapper around the same detail-namespaced implementation. */
+      cpptrace::register_jit_object(entry.symfile_addr, entry.symfile_size);
       objects.emplace_back(jit_debug_object{ entry.symfile_addr });
+      registered_object_starts.insert(entry.symfile_addr);
       return true;
-    };
+    } };
 
     auto const action_flag{ cpptrace::detail::__jit_debug_descriptor.action_flag };
     auto * const relevant_entry{ cpptrace::detail::__jit_debug_descriptor.relevant_entry };
@@ -270,38 +258,42 @@ namespace jank::jit
   void object_tracker::remove_jit_debug_objects(uptr const resource_key)
   {
     auto jit_debug_objects_guard{ jit_debug_objects.wlock() };
-    auto const it{ jit_debug_objects_guard->find(resource_key) };
-    if(it == jit_debug_objects_guard->end())
+    auto &objects_by_resource_key{ jit_debug_objects_guard->objects_by_resource_key };
+    auto const it{ objects_by_resource_key.find(resource_key) };
+    if(it == objects_by_resource_key.end())
     {
       return;
     }
 
+    auto &registered_object_starts{ jit_debug_objects_guard->registered_object_starts };
     for(auto const &object : it->second)
     {
       if(object.object_start != nullptr)
       {
-        cpptrace::detail::unregister_jit_object(object.object_start);
+        cpptrace::unregister_jit_object(object.object_start);
+        registered_object_starts.erase(object.object_start);
       }
     }
-    jit_debug_objects_guard->erase(it);
+    objects_by_resource_key.erase(it);
   }
 
   void object_tracker::transfer_jit_debug_objects(uptr const dst_resource_key,
                                                   uptr const src_resource_key)
   {
     auto jit_debug_objects_guard{ jit_debug_objects.wlock() };
-    auto const it{ jit_debug_objects_guard->find(src_resource_key) };
-    if(it == jit_debug_objects_guard->end())
+    auto &objects_by_resource_key{ jit_debug_objects_guard->objects_by_resource_key };
+    auto const it{ objects_by_resource_key.find(src_resource_key) };
+    if(it == objects_by_resource_key.end())
     {
       return;
     }
 
-    auto &dst_objects{ (*jit_debug_objects_guard)[dst_resource_key] };
+    auto &dst_objects{ objects_by_resource_key[dst_resource_key] };
     for(auto &object : it->second)
     {
       dst_objects.emplace_back(jtl::move(object));
     }
-    jit_debug_objects_guard->erase(it);
+    objects_by_resource_key.erase(it);
   }
 
   void object_tracker::record_materialized_symbol(uptr const resource_key,
@@ -404,11 +396,6 @@ namespace jank::jit
     global_tracker().register_loaded_object(resource_key, object);
   }
 
-  jtl::option<materialized_object_frame> find_materialized_object_frame(uptr const raw_address)
-  {
-    return global_tracker().find_materialized_object_frame(raw_address);
-  }
-
   cpptrace::stacktrace_frame resolve_materialized_object_frame(cpptrace::stacktrace_frame frame)
   {
     if((!frame.filename.empty() && frame.line.has_value()) || runtime::__rt_ctx == nullptr)
@@ -419,7 +406,7 @@ namespace jank::jit
     /* cpptrace has already done its normal best-effort resolution. If a frame is still missing
      * source information, ask jank whether the raw PC belongs to lazily materialized object-file
      * code and, if so, re-resolve it against the original `.o` file on disk. */
-    auto const resolved{ find_materialized_object_frame(frame.raw_address) };
+    auto const resolved{ global_tracker().find_materialized_object_frame(frame.raw_address) };
     if(resolved.is_none())
     {
       return frame;
