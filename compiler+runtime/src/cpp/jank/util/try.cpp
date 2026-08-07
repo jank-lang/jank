@@ -90,13 +90,11 @@ namespace jank::util
 
   static void print_exception_stack_trace()
   {
-    jit::refresh_jit_objects();
     formatter.print(cpptrace::from_current_exception());
   }
 
   static void print_exception_stack_trace(cpptrace::stacktrace const &trace)
   {
-    jit::refresh_jit_objects();
     formatter.print(trace);
   }
 

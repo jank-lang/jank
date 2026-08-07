@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
 #include <folly/Synchronized.h>
 
@@ -12,6 +13,11 @@
  * keep track of both stack frame and debug information for JIT compiled/loaded code. How
  * we do this varies, depending on whether or not we JIT compiled the code this session
  * or loaded an object file of AOT compiled code.
+ *
+ * For true JIT-compiled code, LLVM publishes emitted debug objects through the GDB JIT
+ * interface. We mirror those registrations incrementally into cpptrace from ORC plugin
+ * lifecycle callbacks, instead of rebuilding cpptrace's entire JIT object registry whenever
+ * we print a stack trace.
  *
  * In the object file scenario, each symbol within the object file is lazily resolved by
  * LLVM, so we don't just have all the info we need at any particular point. This is good,
@@ -54,5 +60,4 @@ namespace jank::jit
   jtl::option<materialized_object_frame> find_materialized_object_frame(uptr raw_address);
 
   cpptrace::stacktrace_frame resolve_materialized_object_frame(cpptrace::stacktrace_frame frame);
-  void refresh_jit_objects();
 }

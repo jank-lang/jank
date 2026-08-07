@@ -15,8 +15,4 @@ namespace jank::jit
   {
     return frame;
   }
-
-  void refresh_jit_objects()
-  {
-  }
 }

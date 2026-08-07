@@ -1,5 +1,7 @@
+#include <map>
 #include <unordered_map>
 #include <type_traits>
+#include <vector>
 
 #include <llvm/ExecutionEngine/JITLink/JITLink.h>
 
@@ -10,10 +12,30 @@
 #include <jank/jit/object.hpp>
 #include <jank/runtime/context.hpp>
 
+namespace cpptrace
+{
+  inline namespace v1
+  {
+    namespace detail
+    {
+      void register_jit_object(char const *, std::size_t);
+      void unregister_jit_object(char const *);
+    }
+  }
+}
+
 namespace jank::jit
 {
   struct object_tracker
   {
+    /* LLVM's GDB-JIT integration publishes the real emitted debug object for each materialization
+     * through `__jit_debug_descriptor.relevant_entry`. We mirror those registrations into cpptrace
+     * incrementally and keep just enough per-resource state to unregister them later. */
+    struct jit_debug_object
+    {
+      char const *object_start{};
+    };
+
     /* Runtime symbol metadata captured from JITLink once ORC assigns final addresses. This is the
      * bridge between a raw PC in a stack trace and the original object-file symbol metadata above. */
     struct materialized_symbol
@@ -30,6 +52,9 @@ namespace jank::jit
     void register_loaded_object(uptr resource_key, loaded_object const &object);
     void transfer_loaded_object(uptr dst_resource_key, uptr src_resource_key);
     void remove_loaded_object(uptr resource_key);
+    void register_emitted_jit_debug_object(uptr resource_key);
+    void remove_jit_debug_objects(uptr resource_key);
+    void transfer_jit_debug_objects(uptr dst_resource_key, uptr src_resource_key);
     void record_materialized_symbol(uptr resource_key,
                                     std::string const &symbol,
                                     uptr runtime_address,
@@ -40,6 +65,8 @@ namespace jank::jit
 
     /* Resource key -> original object file metadata captured at `load_object` time. */
     folly::Synchronized<std::unordered_map<uptr, loaded_object>> loaded_objects;
+    /* Resource key -> emitted debug objects already registered with cpptrace. */
+    folly::Synchronized<std::unordered_map<uptr, std::vector<jit_debug_object>>> jit_debug_objects;
     /* Runtime symbol start address -> materialized symbol metadata captured from JITLink. */
     folly::Synchronized<std::map<uptr, materialized_symbol>> materialized_symbols;
   };
@@ -115,10 +142,21 @@ namespace jank::jit
       });
     }
 
+    llvm::Error notifyEmitted(llvm::orc::MaterializationResponsibility &mr) override
+    {
+      if(auto const resource_key{ get_resource_key(mr) }; resource_key.is_some())
+      {
+        tracker.register_emitted_jit_debug_object(resource_key.unwrap());
+      }
+      return llvm::Error::success();
+    }
+
     llvm::Error notifyFailed(llvm::orc::MaterializationResponsibility &mr) override
     {
       if(auto const resource_key{ get_resource_key(mr) }; resource_key.is_some())
       {
+        tracker.remove_loaded_object(resource_key.unwrap());
+        tracker.remove_jit_debug_objects(resource_key.unwrap());
         tracker.remove_materialized_symbols(resource_key.unwrap());
       }
       return llvm::Error::success();
@@ -128,6 +166,7 @@ namespace jank::jit
     notifyRemovingResources(llvm::orc::JITDylib &, llvm::orc::ResourceKey const key) override
     {
       tracker.remove_loaded_object(key);
+      tracker.remove_jit_debug_objects(key);
       tracker.remove_materialized_symbols(key);
       return llvm::Error::success();
     }
@@ -137,6 +176,7 @@ namespace jank::jit
                                      llvm::orc::ResourceKey const src_key) override
     {
       tracker.transfer_loaded_object(dst_key, src_key);
+      tracker.transfer_jit_debug_objects(dst_key, src_key);
       tracker.transfer_materialized_symbols(dst_key, src_key);
     }
 
@@ -173,6 +213,95 @@ namespace jank::jit
   void object_tracker::remove_loaded_object(uptr const resource_key)
   {
     loaded_objects.wlock()->erase(resource_key);
+  }
+
+  void object_tracker::register_emitted_jit_debug_object(uptr const resource_key)
+  {
+    auto jit_debug_objects_guard{ jit_debug_objects.wlock() };
+    auto &objects{ (*jit_debug_objects_guard)[resource_key] };
+
+    auto const already_registered = [&](char const * const object_start) -> bool {
+      for(auto const &[_, registered_objects] : *jit_debug_objects_guard)
+      {
+        for(auto const &object : registered_objects)
+        {
+          if(object.object_start == object_start)
+          {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    auto const register_entry = [&](cpptrace::detail::jit_code_entry const &entry) -> bool {
+      if(entry.symfile_addr == nullptr || entry.symfile_size == 0
+         || already_registered(entry.symfile_addr))
+      {
+        return false;
+      }
+
+      cpptrace::detail::register_jit_object(entry.symfile_addr, entry.symfile_size);
+      objects.emplace_back(jit_debug_object{ entry.symfile_addr });
+      return true;
+    };
+
+    auto const action_flag{ cpptrace::detail::__jit_debug_descriptor.action_flag };
+    auto * const relevant_entry{ cpptrace::detail::__jit_debug_descriptor.relevant_entry };
+    if(action_flag == cpptrace::detail::JIT_REGISTER_FN && relevant_entry != nullptr
+       && register_entry(*relevant_entry))
+    {
+      return;
+    }
+
+    /* If callback ordering means `relevant_entry` is not usable here, fall back to the current
+     * GDB-JIT list and register the newest unseen emitted object. LLVM prepends new entries, so
+     * the first unseen node in the list is our best incremental fallback. */
+    for(auto *entry{ cpptrace::detail::__jit_debug_descriptor.first_entry }; entry != nullptr;
+        entry = entry->next_entry)
+    {
+      if(register_entry(*entry))
+      {
+        return;
+      }
+    }
+  }
+
+  void object_tracker::remove_jit_debug_objects(uptr const resource_key)
+  {
+    auto jit_debug_objects_guard{ jit_debug_objects.wlock() };
+    auto const it{ jit_debug_objects_guard->find(resource_key) };
+    if(it == jit_debug_objects_guard->end())
+    {
+      return;
+    }
+
+    for(auto const &object : it->second)
+    {
+      if(object.object_start != nullptr)
+      {
+        cpptrace::detail::unregister_jit_object(object.object_start);
+      }
+    }
+    jit_debug_objects_guard->erase(it);
+  }
+
+  void object_tracker::transfer_jit_debug_objects(uptr const dst_resource_key,
+                                                  uptr const src_resource_key)
+  {
+    auto jit_debug_objects_guard{ jit_debug_objects.wlock() };
+    auto const it{ jit_debug_objects_guard->find(src_resource_key) };
+    if(it == jit_debug_objects_guard->end())
+    {
+      return;
+    }
+
+    auto &dst_objects{ (*jit_debug_objects_guard)[dst_resource_key] };
+    for(auto &object : it->second)
+    {
+      dst_objects.emplace_back(jtl::move(object));
+    }
+    jit_debug_objects_guard->erase(it);
   }
 
   void object_tracker::record_materialized_symbol(uptr const resource_key,
@@ -328,10 +457,5 @@ namespace jank::jit
     }
 
     return frame;
-  }
-
-  void refresh_jit_objects()
-  {
-    cpptrace::experimental::register_jit_objects_from_gdb_jit_interface();
   }
 }
