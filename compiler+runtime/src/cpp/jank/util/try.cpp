@@ -3,6 +3,7 @@
 
 #include <cpptrace/from_current.hpp>
 #include <cpptrace/formatting.hpp>
+#include <cpptrace/gdb_jit.hpp>
 
 #include <jank/util/try.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -90,7 +91,17 @@ namespace jank::util
 
   static void print_exception_stack_trace()
   {
+#if defined(__APPLE__)
+    /* On Mach-O, LLVM's debugger-support path appears to publish JIT debug objects later than
+     * our incremental mirror currently observes. Refresh cpptrace from the process-global GDB
+     * JIT descriptor right before resolving the saved raw trace so we can distinguish a timing
+     * problem from a Mach-O parsing problem. If this restores JIT symbols, the next fix is to
+     * move our incremental synchronization point, not to change cpptrace's Mach-O reader. */
+    cpptrace::experimental::register_jit_objects_from_gdb_jit_interface();
+    formatter.print(cpptrace::raw_trace_from_current_exception().resolve());
+#else
     formatter.print(cpptrace::from_current_exception());
+#endif
   }
 
   static void print_exception_stack_trace(cpptrace::stacktrace const &trace)
