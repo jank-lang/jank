@@ -4,6 +4,7 @@
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <llvm/ExecutionEngine/Orc/Core.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/ExecutionEngine/Orc/Debugging/DebuggerSupport.h>
 #include <llvm/ExecutionEngine/Orc/Debugging/PerfSupportPlugin.h>
 #include <llvm/ExecutionEngine/Orc/Debugging/DebugInfoSupport.h>
 #include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
@@ -222,19 +223,30 @@ namespace jank::jit
     interpreter.reset(static_cast<CppInternal::Interpreter *>(
       Cpp::CreateInterpreter(args, {}, vfs, static_cast<int>(llvm::CodeModel::Large))));
 
-    jit::install_object_tracking_plugin();
+    auto const ee{ interpreter->getExecutionEngine() };
 
-    if constexpr(jtl::current_platform == jtl::platform::linux_like)
+    if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
     {
-      if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
-      {
-        auto const ee{ interpreter->getExecutionEngine() };
-        auto &ol{ ee->getObjLinkingLayer() };
-        auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
+      auto &ol{ ee->getObjLinkingLayer() };
+      auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
 
+      /* LLVM's JIT debug-object plumbing is platform-specific. On Mach-O, ORC requires its
+       * dedicated debugger-support setup to synthesize/register JIT debug objects at all.
+       * We install that first so our own tracking plugin, which mirrors LLVM's published
+       * registrations into cpptrace, runs after LLVM's registration path has had a chance to
+       * populate the global JIT descriptor state. */
+      if constexpr(jtl::current_platform == jtl::platform::macos_like)
+      {
+        llvm::cantFail(llvm::orc::enableDebuggerSupport(*ee));
+      }
+
+      if constexpr(jtl::current_platform == jtl::platform::linux_like)
+      {
         oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
       }
     }
+
+    jit::install_object_tracking_plugin();
 
     /* Enabling perf support requires registering a couple of plugins with LLVM. These
      * plugins will generate files which perf can then use to inject additional info
