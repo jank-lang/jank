@@ -74,6 +74,40 @@ namespace jank::jit
     return tracker;
   }
 
+  static loaded_object_symbol const *
+  find_loaded_object_symbol(loaded_object const &object, std::string const &symbol)
+  {
+    if(auto const it{ object.symbols.find(symbol) }; it != object.symbols.end())
+    {
+      return &it->second;
+    }
+
+#if defined(__APPLE__)
+    /* Mach-O object files commonly spell external symbols with a leading underscore in the
+     * object-file symbol table, while JITLink may report the same symbol without it. Treat
+     * those as equivalent so lazy `.o` frame resolution can join ORC runtime symbols back to
+     * their original on-disk DWARF entries. */
+    if(!symbol.empty() && symbol[0] == '_')
+    {
+      if(auto const it{ object.symbols.find(symbol.substr(1)) }; it != object.symbols.end())
+      {
+        return &it->second;
+      }
+    }
+    else
+    {
+      std::string underscored_symbol{ "_" };
+      underscored_symbol += symbol;
+      if(auto const it{ object.symbols.find(underscored_symbol) }; it != object.symbols.end())
+      {
+        return &it->second;
+      }
+    }
+#endif
+
+    return nullptr;
+  }
+
   /* ORC associates every materialization with a resource key. We use that key as the stable join
    * point between:
    * 1. the original object-file symbol table collected in `load_object`, and
@@ -130,9 +164,9 @@ namespace jank::jit
           }
 
           tracker.record_materialized_symbol(resource_key,
-                                             (*symbol->getName()).str(),
-                                             symbol->getAddress().getValue(),
-                                             symbol->getSize());
+                                            (*symbol->getName()).str(),
+                                            symbol->getAddress().getValue(),
+                                            symbol->getSize());
         }
 
         return llvm::Error::success();
@@ -217,6 +251,7 @@ namespace jank::jit
     auto jit_debug_objects_guard{ jit_debug_objects.wlock() };
     auto &objects{ jit_debug_objects_guard->objects_by_resource_key[resource_key] };
     auto &registered_object_starts{ jit_debug_objects_guard->registered_object_starts };
+    usize registered_count{};
 
     auto const register_entry{ [&](cpptrace::detail::jit_code_entry const &entry) -> bool {
       if(entry.symfile_addr == nullptr || entry.symfile_size == 0
@@ -231,27 +266,51 @@ namespace jank::jit
       cpptrace::register_jit_object(entry.symfile_addr, entry.symfile_size);
       objects.emplace_back(jit_debug_object{ entry.symfile_addr });
       registered_object_starts.insert(entry.symfile_addr);
+      ++registered_count;
       return true;
     } };
+
+    auto const register_contiguous_unseen_entries
+     = [&](cpptrace::detail::jit_code_entry const *entry) {
+     for(auto *current{ entry }; current != nullptr; current = current->next_entry)
+     {
+       if(current->symfile_addr == nullptr || current->symfile_size == 0)
+       {
+         continue;
+       }
+       if(registered_object_starts.contains(current->symfile_addr))
+       {
+         break;
+       }
+       register_entry(*current);
+     }
+    };
 
     auto const action_flag{ cpptrace::detail::__jit_debug_descriptor.action_flag };
     auto * const relevant_entry{ cpptrace::detail::__jit_debug_descriptor.relevant_entry };
     if(action_flag == cpptrace::detail::JIT_REGISTER_FN && relevant_entry != nullptr
-       && register_entry(*relevant_entry))
+      && register_entry(*relevant_entry))
     {
-      return;
+     /* Mach-O debugger support can publish more than one new GDB-JIT entry before ORC calls our
+      * callback. Once we have positively identified the current emission via `relevant_entry`,
+      * consume any additional unseen head entries from the same burst as well. */
+     register_contiguous_unseen_entries(cpptrace::detail::__jit_debug_descriptor.first_entry);
+     return;
     }
 
     /* If callback ordering means `relevant_entry` is not usable here, fall back to the current
-     * GDB-JIT list and register the newest unseen emitted object. LLVM prepends new entries, so
-     * the first unseen node in the list is our best incremental fallback. */
+    * GDB-JIT list and register the newest unseen emitted object. LLVM prepends new entries, so
+    * the first unseen node in the list is our best incremental fallback. If there are multiple
+    * adjacent unseen head entries, they're part of the same unpublished burst, so mirror all of
+    * them before returning. */
     for(auto *entry{ cpptrace::detail::__jit_debug_descriptor.first_entry }; entry != nullptr;
-        entry = entry->next_entry)
+       entry = entry->next_entry)
     {
-      if(register_entry(*entry))
-      {
-        return;
-      }
+     if(register_entry(*entry))
+     {
+       register_contiguous_unseen_entries(entry->next_entry);
+       return;
+     }
     }
   }
 
@@ -312,13 +371,13 @@ namespace jank::jit
         return;
       }
 
-      auto const symbol_it{ loaded_object_it->second.symbols.find(symbol) };
-      if(symbol_it == loaded_object_it->second.symbols.end())
+      auto const *symbol_match{ find_loaded_object_symbol(loaded_object_it->second, symbol) };
+      if(symbol_match == nullptr)
       {
         return;
       }
       object_path = loaded_object_it->second.path;
-      object_symbol = symbol_it->second;
+      object_symbol = *symbol_match;
       symbol_size = runtime_size == 0 ? object_symbol.object_size : runtime_size;
     }
 

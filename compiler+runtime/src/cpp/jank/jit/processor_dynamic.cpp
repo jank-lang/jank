@@ -16,6 +16,8 @@
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/Signals.h>
 
+#include <cstdlib>
+
 #include <CppInterOp/Compatibility.h>
 #include <CppInterOp/CppInterOp.h>
 
@@ -482,6 +484,7 @@ namespace jank::jit
      * us which original `.o` file a materialized symbol came from. */
     auto const resource_tracker{ ee->getMainJITDylib().createResourceTracker() };
     jit::loaded_object object_info{ object_path, {} };
+    auto const section_end{ object->get()->section_end() };
     /* Snapshot the object file's executable symbol table up front. This remains in object-file
      * address space; runtime addresses are filled in later by the ORC plugin. */
     for(auto const &[symbol, symbol_size] : llvm::object::computeSymbolSizes(*object->get()))
@@ -494,7 +497,12 @@ namespace jank::jit
       if((*flags & llvm::object::SymbolRef::SF_Executable) == 0
          || (*flags & llvm::object::SymbolRef::SF_Undefined) != 0)
       {
-        continue;
+        auto section{ symbol.getSection() };
+        if(!section || *section == section_end || !(*section)->isText()
+           || (*flags & llvm::object::SymbolRef::SF_Undefined) != 0)
+        {
+          continue;
+        }
       }
 
       auto name{ symbol.getName() };
