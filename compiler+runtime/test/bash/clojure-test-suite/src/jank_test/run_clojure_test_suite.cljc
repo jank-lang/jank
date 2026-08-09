@@ -226,7 +226,7 @@
     clojure.core-test.unsigned-bit-shift-right
     clojure.core-test.update
     clojure.core-test.uuid-qmark
-    ; clojure.core-test.val ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
+    clojure.core-test.val
     clojure.core-test.vals
     clojure.core-test.var-qmark
     ; clojure.core-test.vec ; analyze/invalid-cpp-operator-call error: Binary operator aget is not supported for 'jank::runtime::object *' and 'jank::runtime::object *'.
