@@ -387,23 +387,28 @@ namespace jank::runtime
 
   obj::persistent_string_ref subs(object_ref const s, object_ref const start)
   {
-    return visit_type<obj::persistent_string>(
-      [](auto const typed_s, i64 const start) -> obj::persistent_string_ref {
-        return typed_s->substring(start).expect_ok();
-      },
-      s,
-      to_int(start));
+    auto const str{ dyn_cast<obj::persistent_string>(s) };
+    if(str.is_nil())
+    {
+      throw std::runtime_error{ util::format(
+        "The first argument to 'subs' must be a string, not '{}'.",
+        object_type_str(s.get_type())) };
+    }
+
+    return str->substring(to_int(start)).expect_ok();
   }
 
   obj::persistent_string_ref subs(object_ref const s, object_ref const start, object_ref const end)
   {
-    return visit_type<obj::persistent_string>(
-      [](auto const typed_s, i64 const start, i64 const end) -> obj::persistent_string_ref {
-        return typed_s->substring(start, end).expect_ok();
-      },
-      s,
-      to_int(start),
-      to_int(end));
+    auto const str{ dyn_cast<obj::persistent_string>(s) };
+    if(str.is_nil())
+    {
+      throw std::runtime_error{ util::format(
+        "The first argument to 'subs' must be a string, not '{}'.",
+        object_type_str(s.get_type())) };
+    }
+
+    return str->substring(to_int(start), to_int(end)).expect_ok();
   }
 
   i64 first_index_of(object_ref const s, object_ref const m)
