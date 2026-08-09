@@ -82,39 +82,96 @@ namespace jank::util
                                  .header("Stack trace (most recent call first):")
                                  .addresses(cpptrace::formatter::address_mode::none)
                                  .paths(cpptrace::formatter::path_mode::basename)
+                                 .symbols(cpptrace::formatter::symbol_mode::pruned)
+                                 .colors(cpptrace::formatter::color_mode::automatic)
+                                 .hide_exception_machinery(true)
                                  .columns(false)
                                  .snippets(false)
                                  .transform(&transform_frame)
                                  .filtered_frame_placeholders(false)
                                  .filter(&filter_frame) };
 
-  static void print_exception_stack_trace()
-  {
-    formatter.print(cpptrace::from_current_exception());
-  }
-
   static void print_exception_stack_trace(cpptrace::stacktrace const &trace)
   {
     formatter.print(trace);
   }
 
+  static error_ref make_error_from_exception(jtl::immutable_string const &message)
+  {
+    static native_set<jtl::immutable_string> const core_libs{
+      "clojure_core",
+      "clojure_core_reducers",
+      "clojure_core_protocols",
+      "clojure_data",
+      "clojure_datafy",
+      "clojure_edn",
+      "clojure_instant",
+      "clojure_main",
+      "clojure_pprint",
+      "clojure_reflect",
+      "clojure_repl",
+      "clojure_set",
+      "clojure_spec_alpha",
+      "clojure_spec_gen_alpha",
+      "clojure_spec_test_alpha",
+      "clojure_string",
+      "clojure_template",
+      "clojure_uuid",
+      "clojure_walk",
+      "clojure_xml",
+      "clojure_zip",
+    };
+
+    static auto const is_core_lib{ [&](jtl::immutable_string const &symbol) {
+      for(auto const &lib : core_libs)
+      {
+        if(symbol.starts_with(lib))
+        {
+          return true;
+        }
+      }
+      return false;
+    } };
+
+    auto const &trace{ cpptrace::from_current_exception() };
+
+    read::source source{ read::source::unknown() };
+    for(auto const &frame : trace.frames)
+    {
+      auto const &resolved_frame(jit::resolve_materialized_object_frame(frame));
+      auto const is_jank_file{ resolved_frame.filename.ends_with(".jank")
+                               || resolved_frame.filename.ends_with(".cljc") };
+      auto const is_core{ is_core_lib(resolved_frame.symbol) };
+      if(is_jank_file && !is_core && resolved_frame.line.has_value())
+      {
+        read::source_position const location{ 0, resolved_frame.line.value(), 1 };
+        source = read::source(resolved_frame.filename, "", location, location);
+        break;
+      }
+    }
+
+    auto const err{ make_error(error::kind::runtime_uncaught_exception, message, source) };
+    err->notes.at(0).kind = error::note::kind::error_line;
+    err->notes.at(0).message = "Found on this line. (No column info)";
+    err->trace = std::make_unique<cpptrace::stacktrace>(trace);
+    return err;
+  }
+
   void print_exception(std::exception const &e)
   {
-    util::println("Uncaught exception: {}\n", e.what());
-    print_exception_stack_trace();
+    print_exception(make_error_from_exception(e.what()));
   }
 
   void print_exception(runtime::object_ref const e)
   {
     if(e.get_type() == runtime::object_type::persistent_string)
     {
-      util::println("Uncaught exception: {}\n", e.to_string());
+      print_exception(make_error_from_exception(e.to_string()));
     }
     else
     {
-      util::println("Uncaught exception: {}\n", e.to_code_string());
+      print_exception(make_error_from_exception(e.to_code_string()));
     }
-    print_exception_stack_trace();
   }
 
   void print_exception(error_ref const e)

@@ -11,7 +11,7 @@ namespace cpptrace
 {
   inline namespace v1
   {
-  struct stacktrace;
+    struct stacktrace;
   }
 }
 
@@ -134,6 +134,7 @@ namespace jank::error
     runtime_invalid_referred_global_rename,
     runtime_unsupported_behavior,
     runtime_static_feature_disabled,
+    runtime_uncaught_exception,
     internal_runtime_failure,
 
     internal_failure,
@@ -366,6 +367,8 @@ namespace jank::error
         return "runtime/unsupported-behavior";
       case kind::runtime_static_feature_disabled:
         return "runtime/static-feature-disabled";
+      case kind::runtime_uncaught_exception:
+        return "runtime/uncaught-exception";
       case kind::internal_runtime_failure:
         return "internal/runtime-failure";
 
@@ -383,7 +386,13 @@ namespace jank::error
     {
       info,
       warning,
-      error
+      error,
+      /* No column info for these. */
+      line_start,
+      info_line = line_start,
+      warning_line,
+      error_line,
+      line_end = error_line,
     };
 
     static constexpr char const *kind_str(kind const k)
@@ -396,6 +405,13 @@ namespace jank::error
           return "warning";
         case kind::error:
           return "error";
+
+        case kind::info_line:
+          return "info_line";
+        case kind::warning_line:
+          return "warning_line";
+        case kind::error_line:
+          return "error_line";
       }
       return "unknown";
     }

@@ -236,6 +236,8 @@ namespace jank::error
         return "Unsupported behavior.";
       case kind::runtime_static_feature_disabled:
         return "This feature is disabled in a static runtime.";
+      case kind::runtime_uncaught_exception:
+        return "Uncaught exception.";
       case kind::internal_runtime_failure:
         return "Internal runtime failure.";
 

@@ -405,42 +405,113 @@ namespace jank::error
       num.insert(num.begin(), max_line_number_width - num.size(), ' ');
     }
 
+    constexpr auto const target_width{ 5 };
+    auto const left_padding{ (target_width - num.size()) / 2 };
+    auto const right_padding{ static_cast<u64>(
+      std::ceil(static_cast<double>(target_width - num.size()) / 2.0)) };
+
     jtl::string_builder sb;
     sb(text_style::bright_black);
-    jtl::immutable_string const right_padding{ "  " };
-    for(i64 left_padding{ 5 - (static_cast<i64>(num.size() + right_padding.size())) };
-        0 < left_padding;
-        --left_padding)
+    for(u64 i{}; i < left_padding; ++i)
     {
       sb(' ');
     }
     sb(num);
-    sb(right_padding);
+    for(u64 i{}; i < right_padding; ++i)
+    {
+      sb(' ');
+    }
     sb(text_style::reset);
     return sb.release();
   }
 
-  static jtl::immutable_string underline_note(note const &n)
+  /* TODO: Support Unicode as well. */
+  /* Counts the length of a string, ignoring ANSI escape sequences. */
+  static usize display_length(jtl::immutable_string const &line)
   {
-    auto const width{ std::max(n.source.end.col - n.source.start.col, 1llu) };
-    std::string underline(n.source.start.col - 1, ' ');
-    underline.insert(underline.end(), width, '^');
-    underline += ' ';
+    usize length{};
+    for(usize i{ 0 }; i < line.size() - 2; ++i)
+    {
+      if(line[i] == '\u001b')
+      {
+        i += 3;
+        if(line[i] != 'm')
+        {
+          ++i;
+        }
+        continue;
+      }
 
-    /* TODO: This is broken for very long lines, which wrap, since the
-     * note doesn't wrap the same way. */
+      ++length;
+    }
+
+    return length;
+  }
+
+  static jtl::immutable_string
+  underline_note(note const &n, jtl::immutable_string const &previous_line_content)
+  {
     jtl::string_builder sb;
+
     switch(n.kind)
     {
       case note::kind::info:
+      case note::kind::info_line:
         sb(text_style::bright_blue);
       case note::kind::warning:
+      case note::kind::warning_line:
         sb(text_style::yellow);
       case note::kind::error:
+      case note::kind::error_line:
         sb(text_style::red);
     }
-    sb(underline);
-    sb(n.message);
+
+    if(note::kind::line_start <= n.kind && n.kind <= note::kind::line_end)
+    {
+      usize line_start{};
+      for(; line_start < previous_line_content.size(); ++line_start)
+      {
+        if(previous_line_content[line_start] == '\u001b')
+        {
+          line_start += 3;
+          if(previous_line_content[line_start] == 'm')
+          {
+            ++line_start;
+          }
+          else
+          {
+            line_start += 2;
+          }
+        }
+
+        if(std::isspace(previous_line_content[line_start]))
+        {
+          sb(' ');
+          continue;
+        }
+        break;
+      }
+
+      sb("╰");
+      auto const length{ display_length(previous_line_content.substr(line_start)) };
+      for(usize i{ 0 }; i < length - 2; ++i)
+      {
+        sb("─");
+      }
+      sb("╯ ");
+      sb(n.message);
+    }
+    else
+    {
+      auto const width{ std::max(n.source.end.col - n.source.start.col, 1llu) };
+      std::string underline(n.source.start.col - 1, ' ');
+      underline.insert(underline.end(), width, '^');
+      underline += ' ';
+
+      sb(underline);
+      sb(n.message);
+    }
+
     return sb.release();
   }
 
@@ -514,9 +585,9 @@ namespace jank::error
     /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
     auto const max_line_number_width{ snprintf(nullptr, 0, "%llu", s.line_end) };
 
+    jtl::immutable_string line_num{}, line_content{}, previous_line_content{};
     for(auto const &l : s.lines)
     {
-      jtl::immutable_string line_num{}, line_content{};
       switch(l.kind)
       {
         case line::kind::file_data:
@@ -530,10 +601,11 @@ namespace jank::error
           {
             line_content = " ";
           }
+          previous_line_content = line_content;
           break;
         case line::kind::note:
           line_num = line_number(max_line_number_width, "");
-          line_content = underline_note(l.note.unwrap());
+          line_content = underline_note(l.note.unwrap(), previous_line_content);
           break;
         case line::kind::ellipsis:
           line_num = line_number(max_line_number_width, "");
