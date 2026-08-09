@@ -16,7 +16,7 @@
     clojure.core-test.atom
     clojure.core-test.bigdec
     clojure.core-test.bigint
-    clojure.core-test.binding ; TODO: port future
+    clojure.core-test.binding
     clojure.core-test.bit-and
     clojure.core-test.bit-and-not
     clojure.core-test.bit-clear
