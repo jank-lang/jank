@@ -100,7 +100,7 @@
     clojure.core-test.intern
     clojure.core-test.interpose
     clojure.core-test.juxt
-    ; clojure.core-test.key ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
+    clojure.core-test.key
     clojure.core-test.keys
     clojure.core-test.keyword
     clojure.core-test.keyword-qmark
