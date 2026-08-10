@@ -163,15 +163,9 @@ namespace jank::error
     });
   }
 
-  error_ref
-  parse_invalid_shorthand_function(read::source const &source, jtl::immutable_string const &note)
-  {
-    return make_error(kind::parse_invalid_shorthand_function, source, note);
-  }
-
   error_ref parse_invalid_shorthand_function_parameter(read::source const &source)
   {
-    return make_error(kind::parse_invalid_shorthand_function,
+    return make_error(kind::parse_invalid_shorthand_function_parameter,
                       source,
                       "Arg literal must be %, %&, or %n where n >= 1.");
   }

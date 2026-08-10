@@ -787,7 +787,11 @@ namespace jank::read::parse
 
     auto const args(make_box<obj::persistent_vector>(arg_trans.persistent()));
     auto const wrapped(
-      make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("fn*"), args, call));
+      make_box<obj::persistent_list>(source_to_meta(start_token.start, latest_token.end),
+                                     std::in_place,
+                                     make_box<obj::symbol>("fn*"),
+                                     args,
+                                     call));
 
     shorthand = none;
 
@@ -819,7 +823,10 @@ namespace jank::read::parse
     auto const sym_end(sym_result.expect_ok().unwrap().end);
 
     auto const wrapped(
-      make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("var"), sym));
+      make_box<obj::persistent_list>(source_to_meta(start_token.start, latest_token.end),
+                                     std::in_place,
+                                     make_box<obj::symbol>("var"),
+                                     sym));
 
     return object_source_info{ wrapped, start_token, sym_end };
   }
@@ -977,7 +984,10 @@ namespace jank::read::parse
       case lex::token_kind::close_paren:
         {
           auto const wrapped(
-            make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("cpp/dsl"), form));
+            make_box<obj::persistent_list>(source_to_meta(start_token.start, latest_token.end),
+                                           std::in_place,
+                                           make_box<obj::symbol>("cpp/dsl"),
+                                           form));
 
           return object_source_info{ wrapped, start_token, str_end };
         }
@@ -1712,6 +1722,7 @@ namespace jank::read::parse
     }
 
     return object_source_info{ make_box<obj::persistent_list>(
+                                 source_to_meta(start_token.start, latest_token.end),
                                  std::in_place,
                                  make_box<obj::symbol>("clojure.core",
                                                        (splice ? "unquote-splicing" : "unquote")),
@@ -1735,9 +1746,11 @@ namespace jank::read::parse
       return error::parse_invalid_reader_deref({ start_token.start, latest_token.end });
     }
 
-    return object_source_info{ make_box<obj::persistent_list>(std::in_place,
-                                                              make_box<obj::symbol>("deref"),
-                                                              val_result.expect_ok().unwrap().ptr)
+    return object_source_info{ make_box<obj::persistent_list>(
+                                 source_to_meta(start_token.start, latest_token.end),
+                                 std::in_place,
+                                 make_box<obj::symbol>("deref"),
+                                 val_result.expect_ok().unwrap().ptr)
                                  .erase(),
                                start_token,
                                latest_token };

@@ -123,7 +123,7 @@ namespace jank::runtime
       auto const write_res{ write_module(module_name, code) };
       if(write_res.is_err())
       {
-        throw error::internal_codegen_failure(write_res.expect_err());
+        throw error::codegen_internal_failure(write_res.expect_err());
       }
     }
 

@@ -1335,7 +1335,7 @@ namespace jank::analyze
         }
       case cpp_util::implicit_conversion_action::unknown:
       default:
-        return error::internal_analyze_failure(
+        return error::analyze_internal_failure(
           util::format("Unknown implicit conversion from '{}' to '{}'.",
                        cpp_util::get_qualified_type_name(expr_type),
                        cpp_util::get_qualified_type_name(expected_type)),
@@ -1420,7 +1420,7 @@ namespace jank::analyze
   {
     if(parse_current == parse_end)
     {
-      return error::internal_analyze_failure("Invalid iterator; parse_current == parse_end.",
+      return error::analyze_internal_failure("Invalid iterator; parse_current == parse_end.",
                                              latest_expansion(macro_expansions));
     }
 
@@ -1490,7 +1490,7 @@ namespace jank::analyze
     auto const var_res(__rt_ctx->intern_owned_var(qualified_sym));
     if(var_res.is_err())
     {
-      return error::internal_analyze_failure(var_res.expect_err(),
+      return error::analyze_internal_failure(var_res.expect_err(),
                                              meta_source(sym),
                                              latest_expansion(macro_expansions));
     }

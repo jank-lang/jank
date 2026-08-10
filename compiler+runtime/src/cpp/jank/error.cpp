@@ -69,8 +69,6 @@ namespace jank::error
         return "Unsupported reader macro.";
       case kind::parse_nested_shorthand_function:
         return "Nested #() forms are not allowed.";
-      case kind::parse_invalid_shorthand_function:
-        return "Invalid shorthand function.";
       case kind::parse_invalid_shorthand_function_parameter:
         return "Invalid shorthand function parameter.";
       case kind::parse_invalid_reader_var:
