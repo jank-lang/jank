@@ -1,5 +1,5 @@
 # Installation
-jank has continuous builds for macOS, Ubuntu, and Arch. These builds are
+jank has continuous builds for macOS, Ubuntu, Arch, and Windows. These builds are
 bleeding edge and you're encouraged to update regularly. If you're on any of the
 supported systems, you can install jank using your system's package manager. If
 not, you can still [build jank yourself](https://github.com/jank-lang/jank/blob/main/compiler+runtime/doc/build.md).
@@ -63,6 +63,29 @@ yay -S jank-bin
 
 
 If you'd like to install from source on Arch, you can install `jank-git` instead.
+
+## Windows (MSYS2)
+We have binary jank packages in our own pacman repo, so installation is quick and easy.
+
+First, install [MSYS2](https://www.msys2.org/) and open a **CLANG64** shell.
+
+Add our package repo to `/etc/pacman.conf` (e.g. with `nano /etc/pacman.conf`).
+Insert the following **before** the `[clang64]` section so that our bundled LLVM
+packages take priority over those in `[clang64]`:
+
+```conf
+[jank]
+SigLevel = Optional TrustAll
+Server = https://ppa.jank-lang.org/msys2
+```
+
+Then install (or update) jank:
+
+```bash
+pacman -Syy mingw-w64-clang-x86_64-jank
+```
+
+If you'd like to build from source, see the [build docs](https://github.com/jank-lang/jank/blob/main/compiler+runtime/doc/build.md).
 
 ## Something else?
 Don't see your preferred system here? [Help us with

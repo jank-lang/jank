@@ -66,9 +66,14 @@ jobs:
           ## Release
           - name: Windows - release
             os: windows-2022
-            build_type: Debug
+            build_type: Release
             sanitize: none
-            analyze: off
+            package: on
+          # - name: Windows - Debug
+          #    os: windows-2022
+          #    build_type: Debug
+          #    sanitize: none
+
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.name }}
     env:
@@ -158,3 +163,48 @@ jobs:
             export JANK_SKIP_AOT_CHECK=1
           fi
           PATH="$PATH:$JAVA_DIR" JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
+      - name: Upload llvm and msys2 packages for publishing
+        if: steps.jank-build-step-win.outputs.msys2-pkg
+        # if: github.ref == 'refs/heads/main' && steps.jank-build-step-win.outputs.msys2-pkg
+        uses: actions/upload-artifact@v4
+        with:
+          name: jank-msys2-pkg
+          path: |
+            ${{ steps.jank-build-step-win.outputs.msys2-pkg }}
+            ${{ github.workspace }}/compiler+runtime/build/llvm-install/*.tar.zst
+
+  publish-msys2-pkg:
+    # if: github.ref == 'refs/heads/main'
+    needs: build-jank
+    name: Publish MSYS2 packages
+    runs-on: windows-2022
+    timeout-minutes: 5
+    steps:
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: CLANG64
+          install: pacman-contrib openssh rsync
+          update: false
+      - uses: actions/download-artifact@v5
+        with:
+          name: jank-msys2-pkg
+          path: ${{ github.workspace }}/msys2-repo
+      - name: Import SSH key
+        shell: msys2 {0}
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PPA_SSH_KEY }}" > ~/.ssh/jank_id_ed25519
+          chmod 400 ~/.ssh/jank_id_ed25519
+      - name: Generate repo database and publish
+        shell: msys2 {0}
+        run: |
+          cd "$(cygpath -u "$GITHUB_WORKSPACE")/msys2-repo"
+          # move jank and LLVM packages into the staging repo, create
+          # package database and push to server
+          mkdir -p staging
+          find . -name "*.tar.zst" -exec mv {} staging/ \;
+          cd staging
+          repo-add jank.db.tar.gz *.tar.zst
+          ls -al .
+          # TODO: add --delete to remove old package versions from server
+          rsync -avz -e "ssh -i $HOME/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no" ./ root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/msys2
