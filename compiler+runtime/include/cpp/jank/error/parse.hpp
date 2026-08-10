@@ -25,8 +25,6 @@ namespace jank::error
   error_ref parse_unsupported_reader_macro(read::source const &source);
   error_ref
   parse_nested_shorthand_function(read::source const &source, note const &parent_fn_source);
-  error_ref
-  parse_invalid_shorthand_function(read::source const &source, jtl::immutable_string const &note);
   error_ref parse_invalid_shorthand_function_parameter(read::source const &source);
   error_ref parse_invalid_reader_var(read::source const &source, jtl::immutable_string const &note);
   error_ref

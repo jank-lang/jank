@@ -49,7 +49,6 @@ namespace jank::error
     parse_invalid_unicode,
     parse_invalid_character,
     parse_nested_shorthand_function,
-    parse_invalid_shorthand_function,
     parse_invalid_shorthand_function_parameter,
     parse_invalid_reader_var,
     parse_invalid_reader_comment,
@@ -77,7 +76,6 @@ namespace jank::error
     analyze_invalid_recur_args,
     analyze_invalid_let,
     analyze_invalid_letfn,
-    analyze_invalid_loop,
     analyze_invalid_if,
     analyze_invalid_quote,
     analyze_invalid_var_reference,
@@ -110,13 +108,11 @@ namespace jank::error
     analyze_invalid_cpp_capture,
     analyze_invalid_cpp_position,
     analyze_mismatched_if_types,
-    analyze_known_issue,
     analyze_internal_failure,
 
     codegen_internal_failure,
 
     aot_unresolved_main,
-    aot_compilation_failure,
     aot_internal_failure,
 
     runtime_module_not_found,
@@ -198,8 +194,6 @@ namespace jank::error
         return "parse/unsupported-reader-macro";
       case kind::parse_nested_shorthand_function:
         return "parse/nested-shorthand-function";
-      case kind::parse_invalid_shorthand_function:
-        return "parse/invalid-shorthand-function";
       case kind::parse_invalid_shorthand_function_parameter:
         return "parse_invalid_shorthand_function_parameter";
       case kind::parse_invalid_reader_var:
@@ -257,8 +251,6 @@ namespace jank::error
         return "analyze/invalid-let";
       case kind::analyze_invalid_letfn:
         return "analyze/invalid-letfn";
-      case kind::analyze_invalid_loop:
-        return "analyze/invalid-loop";
       case kind::analyze_invalid_if:
         return "analyze/invalid-if";
       case kind::analyze_invalid_quote:
@@ -324,8 +316,6 @@ namespace jank::error
         return "analyze/invalid-cpp-position";
       case kind::analyze_mismatched_if_types:
         return "analyze/mismatched-if-types";
-      case kind::analyze_known_issue:
-        return "analyze/known-issue";
       case kind::analyze_internal_failure:
         return "analyze/internal-failure";
 
@@ -334,8 +324,6 @@ namespace jank::error
 
       case kind::aot_unresolved_main:
         return "aot/unresolved-main";
-      case kind::aot_compilation_failure:
-        return "aot/compilation-failure";
       case kind::aot_internal_failure:
         return "aot/internal-failure";
 

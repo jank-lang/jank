@@ -126,8 +126,6 @@ namespace jank::error
         return "Invalid let.";
       case kind::analyze_invalid_letfn:
         return "Invalid letfn.";
-      case kind::analyze_invalid_loop:
-        return "Invalid loop.";
       case kind::analyze_invalid_if:
         return "Invalid if.";
       case kind::analyze_invalid_quote:
@@ -192,8 +190,6 @@ namespace jank::error
         return "Invalid C++ delete.";
       case kind::analyze_invalid_cpp_member_access:
         return "Invalid C++ member access.";
-      case kind::analyze_known_issue:
-        return "Known issue.";
       case kind::analyze_internal_failure:
         return "Internal analysis failure.";
 
@@ -202,8 +198,6 @@ namespace jank::error
 
       case kind::aot_unresolved_main:
         return "Unresolved -main function.";
-      case kind::aot_compilation_failure:
-        return "Ahead-of-time compilation failure.";
       case kind::aot_internal_failure:
         return "Internal ahead-of-time compilation failure.";
 

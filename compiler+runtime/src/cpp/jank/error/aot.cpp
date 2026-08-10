@@ -9,11 +9,6 @@ namespace jank::error
     return make_error(kind::aot_unresolved_main, message, read::source::unknown());
   }
 
-  error_ref aot_compilation_failure()
-  {
-    return make_error(kind::aot_compilation_failure, read::source::unknown());
-  }
-
   error_ref aot_internal_failure(jtl::immutable_string const &message)
   {
     return make_error(kind::aot_internal_failure, message, read::source::unknown());

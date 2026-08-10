@@ -97,13 +97,6 @@ namespace jank::error
     return make_error(kind::analyze_invalid_letfn, message, source, expansion);
   }
 
-  error_ref analyze_invalid_loop(jtl::immutable_string const &message,
-                                 read::source const &source,
-                                 runtime::object_ref const expansion)
-  {
-    return make_error(kind::analyze_invalid_loop, message, source, expansion);
-  }
-
   error_ref analyze_invalid_if(jtl::immutable_string const &message,
                                read::source const &source,
                                runtime::object_ref const expansion)
@@ -397,13 +390,6 @@ namespace jank::error
                                               runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_member_access, message, source, expansion);
-  }
-
-  error_ref analyze_known_issue(jtl::immutable_string const &message,
-                                read::source const &source,
-                                runtime::object_ref const expansion)
-  {
-    return make_error(kind::analyze_known_issue, message, source, expansion);
   }
 
   error_ref analyze_internal_failure(jtl::immutable_string const &message,

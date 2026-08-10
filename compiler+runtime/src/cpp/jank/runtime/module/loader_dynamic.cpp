@@ -576,7 +576,7 @@ namespace jank::runtime::module
 
     if(source_entry.is_none())
     {
-      return error::runtime_internal_failure(
+      return error::runtime_module_binary_without_source(
         util::format("No sources for registered module '{}'.", module));
     }
 

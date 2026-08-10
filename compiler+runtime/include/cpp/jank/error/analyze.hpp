@@ -47,9 +47,6 @@ namespace jank::error
   error_ref analyze_invalid_letfn(jtl::immutable_string const &message,
                                   read::source const &source,
                                   runtime::object_ref const expansion);
-  error_ref analyze_invalid_loop(jtl::immutable_string const &message,
-                                 read::source const &source,
-                                 runtime::object_ref const expansion);
   error_ref analyze_invalid_if(jtl::immutable_string const &message,
                                read::source const &source,
                                runtime::object_ref const expansion);
@@ -168,9 +165,6 @@ namespace jank::error
   error_ref analyze_invalid_cpp_member_access(jtl::immutable_string const &message,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
-  error_ref analyze_known_issue(jtl::immutable_string const &message,
-                                read::source const &source,
-                                runtime::object_ref const expansion);
   error_ref analyze_internal_failure(jtl::immutable_string const &message,
                                      runtime::object_ref const expansion);
   error_ref analyze_internal_failure(jtl::immutable_string const &message,
