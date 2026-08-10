@@ -143,7 +143,7 @@ namespace jank::runtime::module
     if(read_result < 0)
     {
       auto const entry_name{ zip_entry_name(zip) };
-      return error::internal_runtime_failure(
+      return error::runtime_internal_failure(
         util::format("Failed to read jar entry '{}' with error '{}'.",
                      entry_name,
                      zip_strerror(static_cast<int>(read_result))));
@@ -162,7 +162,7 @@ namespace jank::runtime::module
     zip_ptr const zip{ zip_openwitherror(path.c_str(), 0, 'r', &ziperr), &zip_close };
     if(ziperr < 0)
     {
-      return error::internal_runtime_failure(
+      return error::runtime_internal_failure(
         util::format("Failed to open jar '{}' with error '{}'.", path, zip_strerror(ziperr)));
     }
 
@@ -431,7 +431,7 @@ namespace jank::runtime::module
     zip_ptr const zip{ zip_openwitherror(jar_path.c_str(), 0, 'r', &ziperr), &zip_close };
     if(ziperr < 0)
     {
-      return error::internal_runtime_failure(
+      return error::runtime_internal_failure(
         util::format("Failed to open jar '{}' with error {}, '{}'.",
                      jar_path,
                      ziperr,
@@ -478,7 +478,7 @@ namespace jank::runtime::module
 
     if(res.is_none())
     {
-      return error::internal_runtime_failure(util::format("Unknown type for module '{}'.", module));
+      return error::runtime_internal_failure(util::format("Unknown type for module '{}'.", module));
     }
 
     auto const &entry{ res.unwrap() };
@@ -576,7 +576,7 @@ namespace jank::runtime::module
 
     if(source_entry.is_none())
     {
-      return error::internal_runtime_failure(
+      return error::runtime_internal_failure(
         util::format("No sources for registered module '{}'.", module));
     }
 
@@ -759,7 +759,7 @@ namespace jank::runtime::module
         break;
       case module_type::cpp:
       default:
-        res = error::internal_runtime_failure(
+        res = error::runtime_internal_failure(
           util::format("Unknown module type '{}'.", module_type_str(module_type_to_load)));
     }
 

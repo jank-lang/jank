@@ -389,7 +389,7 @@ int main(int argc, const char** argv)
 
         if(!found)
         {
-          return error::internal_aot_failure(util::format("Compiled module '{}' not found.", mod));
+          return error::aot_internal_failure(util::format("Compiled module '{}' not found.", mod));
         }
       }
     }

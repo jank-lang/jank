@@ -36,7 +36,7 @@ namespace jank::error
         return "Invalid string escape sequence.";
       case kind::lex_unexpected_character:
         return "Unexpected character.";
-      case kind::internal_lex_failure:
+      case kind::lex_internal_failure:
         return "Internal lex failure.";
 
       case kind::parse_invalid_unicode:
@@ -107,7 +107,7 @@ namespace jank::error
         return "Invalid keyword.";
       case kind::parse_invalid_data_reader:
         return "Invalid data reader.";
-      case kind::internal_parse_failure:
+      case kind::parse_internal_failure:
         return "Internal parse failure.";
 
       case kind::analyze_invalid_case:
@@ -196,23 +196,18 @@ namespace jank::error
         return "Invalid C++ member access.";
       case kind::analyze_known_issue:
         return "Known issue.";
-      case kind::internal_analyze_failure:
+      case kind::analyze_internal_failure:
         return "Internal analysis failure.";
 
-      case kind::internal_codegen_failure:
+      case kind::codegen_internal_failure:
         return "Internal codegen failure.";
 
       case kind::aot_unresolved_main:
         return "Unresolved -main function.";
       case kind::aot_compilation_failure:
         return "Ahead-of-time compilation failure.";
-      case kind::internal_aot_failure:
+      case kind::aot_internal_failure:
         return "Internal ahead-of-time compilation failure.";
-
-      case kind::system_clang_executable_not_found:
-        return "Unable to find a suitable Clang " JANK_CLANG_MAJOR_VERSION " binary.";
-      case kind::system_failure:
-        return "System failure.";
 
       case kind::runtime_module_not_found:
         return "Module not found.";
@@ -238,8 +233,13 @@ namespace jank::error
         return "This feature is disabled in a static runtime.";
       case kind::runtime_uncaught_exception:
         return "Uncaught exception.";
-      case kind::internal_runtime_failure:
+      case kind::runtime_internal_failure:
         return "Internal runtime failure.";
+
+      case kind::system_clang_executable_not_found:
+        return "Unable to find a suitable Clang " JANK_CLANG_MAJOR_VERSION " binary.";
+      case kind::system_failure:
+        return "System failure.";
 
       case kind::internal_failure:
         return "Internal failure.";

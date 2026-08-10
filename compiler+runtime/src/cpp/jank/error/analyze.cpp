@@ -406,16 +406,16 @@ namespace jank::error
     return make_error(kind::analyze_known_issue, message, source, expansion);
   }
 
-  error_ref internal_analyze_failure(jtl::immutable_string const &message,
+  error_ref analyze_internal_failure(jtl::immutable_string const &message,
                                      runtime::object_ref const expansion)
   {
-    return make_error(kind::internal_analyze_failure, message, read::source::unknown(), expansion);
+    return make_error(kind::analyze_internal_failure, message, read::source::unknown(), expansion);
   }
 
-  error_ref internal_analyze_failure(jtl::immutable_string const &message,
+  error_ref analyze_internal_failure(jtl::immutable_string const &message,
                                      read::source const &source,
                                      runtime::object_ref const expansion)
   {
-    return make_error(kind::internal_analyze_failure, message, source, expansion);
+    return make_error(kind::analyze_internal_failure, message, source, expansion);
   }
 }

@@ -17,7 +17,6 @@ namespace cpptrace
 
 namespace jank::error
 {
-  /* TODO: Rename internal failures to have correct prefix. i.e. lex_internal_failure. */
   enum class kind : u8
   {
     lex_unexpected_eof,
@@ -31,7 +30,7 @@ namespace jank::error
     lex_unterminated_string,
     lex_invalid_string_escape,
     lex_unexpected_character,
-    internal_lex_failure,
+    lex_internal_failure,
 
     parse_unexpected_closing_character,
     parse_unterminated_list,
@@ -67,7 +66,7 @@ namespace jank::error
     parse_invalid_ratio,
     parse_invalid_keyword,
     parse_invalid_data_reader,
-    internal_parse_failure,
+    parse_internal_failure,
 
     analyze_invalid_case,
     analyze_invalid_def,
@@ -112,16 +111,13 @@ namespace jank::error
     analyze_invalid_cpp_position,
     analyze_mismatched_if_types,
     analyze_known_issue,
-    internal_analyze_failure,
+    analyze_internal_failure,
 
-    internal_codegen_failure,
+    codegen_internal_failure,
 
     aot_unresolved_main,
     aot_compilation_failure,
-    internal_aot_failure,
-
-    system_clang_executable_not_found,
-    system_failure,
+    aot_internal_failure,
 
     runtime_module_not_found,
     runtime_module_binary_without_source,
@@ -135,7 +131,10 @@ namespace jank::error
     runtime_unsupported_behavior,
     runtime_static_feature_disabled,
     runtime_uncaught_exception,
-    internal_runtime_failure,
+    runtime_internal_failure,
+
+    system_clang_executable_not_found,
+    system_failure,
 
     internal_failure,
   };
@@ -166,8 +165,8 @@ namespace jank::error
         return "lex/invalid-string-escape";
       case kind::lex_unexpected_character:
         return "lex/unexpected-character";
-      case kind::internal_lex_failure:
-        return "internal/lex-failure";
+      case kind::lex_internal_failure:
+        return "lex/internal-failure";
 
       case kind::parse_invalid_unicode:
         return "parse/invalid-unicode";
@@ -237,8 +236,8 @@ namespace jank::error
         return "parse/invalid-keyword";
       case kind::parse_invalid_data_reader:
         return "parse/invalid-data-reader";
-      case kind::internal_parse_failure:
-        return "internal/parse-failure";
+      case kind::parse_internal_failure:
+        return "parse/internal-failure";
 
       case kind::analyze_invalid_case:
         return "analyze/invalid-case";
@@ -327,23 +326,18 @@ namespace jank::error
         return "analyze/mismatched-if-types";
       case kind::analyze_known_issue:
         return "analyze/known-issue";
-      case kind::internal_analyze_failure:
-        return "internal/analysis-failure";
+      case kind::analyze_internal_failure:
+        return "analyze/internal-failure";
 
-      case kind::internal_codegen_failure:
-        return "internal/codegen-failure";
+      case kind::codegen_internal_failure:
+        return "codegen/internal-failure";
 
       case kind::aot_unresolved_main:
         return "aot/unresolved-main";
       case kind::aot_compilation_failure:
         return "aot/compilation-failure";
-      case kind::internal_aot_failure:
-        return "internal/aot-failure";
-
-      case kind::system_clang_executable_not_found:
-        return "system/clang-executable-not-found";
-      case kind::system_failure:
-        return "system/failure";
+      case kind::aot_internal_failure:
+        return "aot/internal-failure";
 
       case kind::runtime_module_not_found:
         return "runtime/module-not-found";
@@ -369,8 +363,13 @@ namespace jank::error
         return "runtime/static-feature-disabled";
       case kind::runtime_uncaught_exception:
         return "runtime/uncaught-exception";
-      case kind::internal_runtime_failure:
-        return "internal/runtime-failure";
+      case kind::runtime_internal_failure:
+        return "runtime/internal-failure";
+
+      case kind::system_clang_executable_not_found:
+        return "system/clang-executable-not-found";
+      case kind::system_failure:
+        return "system/failure";
 
       case kind::internal_failure:
         return "internal/failure";

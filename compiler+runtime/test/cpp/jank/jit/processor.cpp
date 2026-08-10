@@ -196,7 +196,7 @@ namespace jank::jit
             passed = false;
           }
           /* This should never happen. */
-          else if(e->kind == error::kind::internal_codegen_failure)
+          else if(e->kind == error::kind::codegen_internal_failure)
           {
             failures.push_back({ dir_entry.path(), "Internal codegen failure" });
             passed = false;

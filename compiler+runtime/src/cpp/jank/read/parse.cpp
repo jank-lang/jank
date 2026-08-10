@@ -326,7 +326,7 @@ namespace jank::read::parse
           return ok(none);
         default:
           {
-            return error::internal_parse_failure(
+            return error::parse_internal_failure(
               util::format("Unexpected token kind '{}'.", lex::token_kind_str(latest_token.kind)),
               { latest_token.start, latest_token.end });
           }
@@ -764,7 +764,7 @@ namespace jank::read::parse
     else if(list_result.expect_ok().is_none()
             || list_result.expect_ok().unwrap().ptr.get_type() != object_type::persistent_list)
     {
-      return error::internal_parse_failure("Value after #( must be present.",
+      return error::parse_internal_failure("Value after #( must be present.",
                                            { start_token.start, latest_token.end });
     }
 
@@ -1309,7 +1309,7 @@ namespace jank::read::parse
     if(!seq.has_behavior(object_behavior::seqable))
     {
       return err(
-        error::internal_parse_failure(util::format("syntax_quote_expand_seq arg is seqable: {}.",
+        error::parse_internal_failure(util::format("syntax_quote_expand_seq arg is seqable: {}.",
                                                    object_type_str(seq.get_type()))));
     }
 
@@ -1351,7 +1351,7 @@ namespace jank::read::parse
 
     if(!seq.has_behavior(object_behavior::seqable))
     {
-      return err(error::internal_parse_failure(
+      return err(error::parse_internal_failure(
         util::format("syntax_quote_flatten_map arg is not seqable: {}.",
                      object_type_str(seq.get_type()))));
     }
@@ -1376,7 +1376,7 @@ namespace jank::read::parse
 
     if(!seq.has_behavior(object_behavior::seqable))
     {
-      return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
+      return err(error::parse_internal_failure("syntax_quote_expand_seq arg not seqable."));
     }
 
     runtime::detail::native_transient_vector ret;
@@ -1466,7 +1466,7 @@ namespace jank::read::parse
         auto const env(__rt_ctx->gensym_env_var->deref());
         if(env.get_type() == object_type::nil)
         {
-          return err(error::internal_parse_failure("Missing gensym env."));
+          return err(error::parse_internal_failure("Missing gensym env."));
         }
 
         auto gensym(get(env, sym));
@@ -1619,7 +1619,7 @@ namespace jank::read::parse
           else
           {
             return err(
-              error::internal_parse_failure(util::format("Unsupported collection: {} [{}]",
+              error::parse_internal_failure(util::format("Unsupported collection: {} [{}]",
                                                          typed_form->to_code_string(),
                                                          object_type_str(typed_form->type))));
           }
@@ -1917,7 +1917,7 @@ namespace jank::read::parse
     }
     else
     {
-      return error::internal_parse_failure("Unexpected token ratio data.",
+      return error::parse_internal_failure("Unexpected token ratio data.",
                                            { token.start, latest_token.end });
     }
   }
@@ -1948,7 +1948,7 @@ namespace jank::read::parse
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {
-      return error::internal_parse_failure(res.expect_err().message,
+      return error::parse_internal_failure(res.expect_err().message,
                                            { token.start, latest_token.end });
     }
     return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),

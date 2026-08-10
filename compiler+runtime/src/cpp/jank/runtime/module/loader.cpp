@@ -172,7 +172,7 @@ namespace jank::runtime::module
     if(!GetFileSizeEx(hFile, &fileSize))
     {
       CloseHandle(hFile);
-      return error::internal_runtime_failure("Failed to get file size");
+      return error::runtime_internal_failure("Failed to get file size");
     }
 
     HANDLE hMapping{ CreateFileMappingA(hFile, nullptr, PAGE_READONLY, 0, 0, nullptr) };
@@ -180,7 +180,7 @@ namespace jank::runtime::module
     if(!hMapping)
     {
       CloseHandle(hFile);
-      return error::internal_runtime_failure("Failed to create file mapping");
+      return error::runtime_internal_failure("Failed to create file mapping");
     }
 
     auto head{ static_cast<char const *>(MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0)) };
@@ -188,7 +188,7 @@ namespace jank::runtime::module
     {
       CloseHandle(hMapping);
       CloseHandle(hFile);
-      return error::internal_runtime_failure("Failed to map view of file");
+      return error::runtime_internal_failure("Failed to map view of file");
     }
 
     return ok(
@@ -222,7 +222,7 @@ namespace jank::runtime::module
   {
     if(path == read::no_source_path)
     {
-      return error::internal_runtime_failure("No source to read.");
+      return error::runtime_internal_failure("No source to read.");
     }
 
     if(path.contains(".jar:"))

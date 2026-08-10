@@ -280,13 +280,13 @@ namespace jank::error
     return make_error(kind::parse_invalid_data_reader, message, source);
   }
 
-  error_ref internal_parse_failure(jtl::immutable_string const &message, read::source const &source)
+  error_ref parse_internal_failure(jtl::immutable_string const &message, read::source const &source)
   {
-    return make_error(kind::internal_parse_failure, message, source);
+    return make_error(kind::parse_internal_failure, message, source);
   }
 
-  error_ref internal_parse_failure(jtl::immutable_string const &message)
+  error_ref parse_internal_failure(jtl::immutable_string const &message)
   {
-    return make_error(kind::internal_parse_failure, message, read::source::unknown());
+    return make_error(kind::parse_internal_failure, message, read::source::unknown());
   }
 }

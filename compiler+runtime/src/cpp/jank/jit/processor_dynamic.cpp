@@ -373,7 +373,7 @@ namespace jank::jit
               find_symbol(util::format("{}_10", base_name)).expect_ok());
             break;
           default:
-            throw error::internal_runtime_failure(util::format("Unsupported arity {}.", arity));
+            throw error::runtime_internal_failure(util::format("Unsupported arity {}.", arity));
         }
       }
 
@@ -431,7 +431,7 @@ namespace jank::jit
               find_symbol(util::format("{}_10", base_name)).expect_ok());
             break;
           default:
-            throw error::internal_runtime_failure(util::format("Unsupported arity {}.", arity));
+            throw error::runtime_internal_failure(util::format("Unsupported arity {}.", arity));
         }
       }
 
@@ -459,7 +459,7 @@ namespace jank::jit
     if(err)
     {
       llvm::logAllUnhandledErrors(jtl::move(err), llvm::errs(), "error: ");
-      throw error::internal_codegen_failure("Unable to compile C++ source.");
+      throw error::codegen_internal_failure("Unable to compile C++ source.");
     }
   }
 

@@ -2,8 +2,8 @@
 
 namespace jank::error
 {
-  error_ref internal_codegen_failure(jtl::immutable_string const &message)
+  error_ref codegen_internal_failure(jtl::immutable_string const &message)
   {
-    return make_error(kind::internal_codegen_failure, message, read::source::unknown());
+    return make_error(kind::codegen_internal_failure, message, read::source::unknown());
   }
 }

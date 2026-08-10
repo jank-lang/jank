@@ -57,6 +57,6 @@ namespace jank::error
   error_ref
   parse_invalid_data_reader(jtl::immutable_string const &message, read::source const &source);
   error_ref
-  internal_parse_failure(jtl::immutable_string const &message, read::source const &source);
-  error_ref internal_parse_failure(jtl::immutable_string const &message);
+  parse_internal_failure(jtl::immutable_string const &message, read::source const &source);
+  error_ref parse_internal_failure(jtl::immutable_string const &message);
 }

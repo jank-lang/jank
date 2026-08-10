@@ -393,7 +393,7 @@ namespace jank::analyze::cpp_util
     auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->ParseAndExecute(code.c_str(), &value) };
     if(exec_res || trap.hasErrorOccurred())
     {
-      throw error::internal_codegen_failure(
+      throw error::codegen_internal_failure(
         util::format("Unable to get RTTI for '{}'.", Cpp::GetTypeAsString(type)));
     }
 
