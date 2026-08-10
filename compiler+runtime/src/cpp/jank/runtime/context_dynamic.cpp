@@ -1,11 +1,6 @@
 #include <fstream>
 
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
-#include <llvm/Bitcode/BitcodeWriter.h>
-#include <llvm/Target/TargetMachine.h>
-#include <llvm/IR/LegacyPassManager.h>
-#include <llvm/MC/TargetRegistry.h>
-#include <llvm/TargetParser/Host.h>
 
 #include <CppInterOp/CppInterOp.h>
 #include <CppInterOp/Compatibility.h>
@@ -125,20 +120,11 @@ namespace jank::runtime
       }
 
       auto const module_name{ current_module_var->deref().to_string() };
-      auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
-      if(!parse_res)
+      auto const write_res{ write_module(module_name, code) };
+      if(write_res.is_err())
       {
-        /* TODO: Helper to turn an llvm::Error into a string. */
-        jtl::immutable_string const res{ "Unable to compile generated C++ source." };
-        llvm::logAllUnhandledErrors(parse_res.takeError(), llvm::errs(), "error: ");
-        throw error::internal_codegen_failure(res);
+        throw error::internal_codegen_failure(write_res.expect_err());
       }
-      auto &partial_tu{ parse_res.get() };
-      if(util::cli::opts.output_target != util::cli::compilation_target::cpp)
-      {
-        codegen::optimize(partial_tu.TheModule.get(), module_name);
-      }
-      write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
     }
 
     return ret;
@@ -168,7 +154,7 @@ namespace jank::runtime
     if(truthy(compile_files_var->deref()))
     {
       auto module_name{ current_module_var->deref().to_string() };
-      write_module(module_name, code, partial_tu.TheModule.get()).expect_ok();
+      write_module(module_name, code).expect_ok();
     }
 
     auto exec_res(jit_prc.interpreter->Execute(partial_tu));
@@ -251,8 +237,7 @@ namespace jank::runtime
   }
 
   jtl::string_result<void> context::write_module(jtl::immutable_string const &module_name,
-                                                 jtl::immutable_string const &cpp_code,
-                                                 jtl::ref<llvm::Module> const &module) const
+                                                 jtl::immutable_string const &cpp_code) const
   {
     profile::timer const timer{ util::format("write_module {}", module_name) };
     std::filesystem::path const module_path{ get_output_module_name(module_name).c_str() };
@@ -275,72 +260,15 @@ namespace jank::runtime
         }
       case util::cli::compilation_target::object:
         {
-          /* TODO: Is there a better place for this block of code? */
-          std::error_code file_error{};
-          llvm::raw_fd_ostream os(module_path.string(),
-                                  file_error,
-                                  llvm::sys::fs::OpenFlags::OF_None);
-          if(file_error)
+          /* Dynamic-runtime module compilation is an AOT artifact path, not a
+           * continuation of the live incremental JIT session. Compile the
+           * generated C++ as a standalone TU so the resulting object does not
+           * inherit cross-PTU symbol ownership assumptions from the interpreter. */
+          auto const res{ aot::processor{}.compile_object(module_name, cpp_code) };
+          if(res.is_err())
           {
-            return err(util::format("Failed to open module file '{}' with error '{}'.",
-                                    module_path.c_str(),
-                                    file_error.message()));
+            return err(res.expect_err()->message);
           }
-          //module->print(llvm::outs(), nullptr);
-
-          auto const target_triple{ util::default_target_triple() };
-          std::string target_error;
-          auto const target{
-            llvm::TargetRegistry::lookupTarget(llvm::Triple{ target_triple.c_str() }, target_error)
-          };
-          if(!target)
-          {
-            return err(target_error);
-          }
-          llvm::TargetOptions const opt;
-          llvm::CodeGenOptLevel level{ llvm::CodeGenOptLevel::Default };
-          switch(util::cli::opts.codegen_optimization_level)
-          {
-            case 0:
-              level = llvm::CodeGenOptLevel::None;
-              break;
-            case 1:
-              level = llvm::CodeGenOptLevel::Less;
-              break;
-            case 2:
-              level = llvm::CodeGenOptLevel::Default;
-              break;
-            case 3:
-              level = llvm::CodeGenOptLevel::Aggressive;
-              break;
-            default:
-              break;
-          }
-
-          auto const target_machine{ target->createTargetMachine(
-            llvm::Triple{ target_triple.c_str() },
-            "generic",
-            "",
-            opt,
-            llvm::Reloc::PIC_,
-            llvm::CodeModel::Large,
-            level) };
-          if(!target_machine)
-          {
-            return err(util::format("Failed to create target machine for '{}'.", target_triple));
-          }
-          llvm::legacy::PassManager pass;
-
-          if(target_machine->addPassesToEmitFile(pass,
-                                                 os,
-                                                 nullptr,
-                                                 llvm::CodeGenFileType::ObjectFile))
-          {
-            return err(
-              util::format("Failed to write module to object file for '{}'.", target_triple));
-          }
-
-          pass.run(*module);
           return ok();
         }
       case util::cli::compilation_target::unspecified:
