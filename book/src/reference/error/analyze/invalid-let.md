@@ -1,10 +1,6 @@
 # analyze/invalid-let
-Invalid `let`.
 
-## Additional explanation
-This happens when a `let` binding form is malformed, such as when the binding
-form is missing, is not a vector, has an odd number of entries, or uses invalid
-binding names.
+This happens when a `let` binding form is malformed. The binding form may be missing. It may not be a vector. It may have an odd number of entries. The binding names may be invalid.
 
 ## Mitigations
 Use a binding vector with pairs of unqualified symbol names and values.

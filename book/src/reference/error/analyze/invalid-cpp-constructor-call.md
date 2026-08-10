@@ -1,10 +1,6 @@
 # analyze/invalid-cpp-constructor-call
-Invalid C++ constructor call.
 
-## Additional explanation
-This happens when a C++ constructor call cannot be formed, such as when the
-target is not a constructible type or required template information is missing.
+This happens when a C++ constructor call cannot be formed. The target may not be constructible. Required template information may also be missing.
 
 ## Mitigations
-Make sure you are constructing a valid concrete type and passing constructor
-arguments that match an available constructor.
+Make sure you are constructing a valid concrete type. Make sure the constructor arguments match an available constructor.

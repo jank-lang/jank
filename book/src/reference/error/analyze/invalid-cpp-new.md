@@ -1,7 +1,5 @@
 # analyze/invalid-cpp-new
-Invalid C++ new.
 
-## Additional explanation
 This happens when `cpp/new` is missing the type it should allocate.
 
 ## Mitigations

@@ -1,11 +1,6 @@
 # analyze/invalid-cpp-function-call
-Invalid C++ function call.
 
-## Additional explanation
-This happens when a direct C++ function-style call cannot be resolved, such as
-when the target is not callable, no overload matches, or the requested function
-cannot be found.
+This happens when a direct C++ function-style call cannot be resolved. The target may not be callable. No overload may match. The requested function may not exist.
 
 ## Mitigations
-Check the function name, template arguments, and call arguments, and make sure a
-matching callable target exists.
+Check the function name. Check the template arguments. Check the call arguments. Make sure a matching callable target exists.

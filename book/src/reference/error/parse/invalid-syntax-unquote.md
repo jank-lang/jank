@@ -1,7 +1,5 @@
 # parse/invalid-syntax-unquote
-Invalid syntax unquote.
 
-## Additional explanation
 This happens when an unquote form such as `~` is missing its value or is otherwise used incorrectly.
 
 ## Mitigations

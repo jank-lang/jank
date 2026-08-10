@@ -1,11 +1,6 @@
 # analyze/invalid-cpp-conversion
-Invalid C++ type returned.
 
-## Additional explanation
-This happens when analyzed code returns a native C++ value that jank cannot
-convert into a jank object.
+This happens when analyzed code returns a native C++ value that jank cannot convert into a jank object.
 
 ## Mitigations
-In short, return a jank object. You can get there via opaque boxes, trait
-conversions, or manually creating a jank object from the members of your native
-value.
+Return a jank object instead. You can use an opaque box. You can define a trait conversion. You can also build a jank object from the native value's members.

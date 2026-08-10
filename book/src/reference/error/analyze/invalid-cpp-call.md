@@ -1,10 +1,6 @@
 # analyze/invalid-cpp-call
-Invalid C++ call.
 
-## Additional explanation
-This happens when jank cannot form a valid indirect or generic C++ call, such as
-a call through a function pointer, functor, or other callable-like value.
+This happens when jank cannot form a valid indirect or generic C++ call. That can include calls through function pointers. It can also include calls through functors or other callable values.
 
 ## Mitigations
-Make sure the target is actually callable and that the argument list matches the
-available call operator or function type.
+Make sure the target is actually callable. Make sure the argument list matches an available call operator or function type.

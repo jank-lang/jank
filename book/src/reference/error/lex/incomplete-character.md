@@ -1,8 +1,6 @@
 # lex/incomplete-character
-Incomplete character.
 
-## Additional explanation
-This error is for an incomplete character literal. That usually means a character literal was started, but no complete character value was provided.
+This happens when a character literal starts but no complete character value follows.
 
 ## Mitigations
-Complete the character literal, such as `\a`, `\space`, or `\newline`, or remove the partial literal.
+Complete the character literal. Examples include `\a`, `\space`, `\newline`. Otherwise remove the partial literal.

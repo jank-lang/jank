@@ -1,10 +1,6 @@
 # analyze/invalid-cpp-operator-call
-Invalid C++ operator call.
 
-## Additional explanation
-This happens when a C++ operator form is called with the wrong number of
-arguments or with operand types that do not support that operator.
+This happens when a C++ operator form is called with the wrong number of arguments. It can also happen when the operand types do not support that operator.
 
 ## Mitigations
-Call the operator with the required number of arguments, and make sure the
-operand types support it.
+Call the operator with the required number of arguments. Make sure the operand types support it.

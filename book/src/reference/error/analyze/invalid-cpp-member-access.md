@@ -1,11 +1,6 @@
 # analyze/invalid-cpp-member-access
-Invalid C++ member access.
 
-## Additional explanation
-This happens when a `.-member` form is malformed, is missing its target object,
-has extra arguments, or refers to a field that does not exist on the target
-type.
+This happens when a `.-member` form is malformed. It can also happen when the target object is missing. Extra arguments can trigger it too. A missing field on the target type can also trigger it.
 
 ## Mitigations
-Pass exactly one target object and make sure the named member exists and is
-accessible on that type. Also make sure that the member is public.
+Pass exactly one target object. Make sure the named member exists on that type. Make sure it is accessible. The member must be public.
