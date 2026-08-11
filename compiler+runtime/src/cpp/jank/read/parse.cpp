@@ -1961,8 +1961,8 @@ namespace jank::read::parse
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {
-      return error::parse_internal_failure(res.expect_err().message,
-                                           { token.start, latest_token.end });
+      return error::parse_invalid_string_escape(res.expect_err().message,
+                                                { token.start, latest_token.end });
     }
     return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),
                                token,

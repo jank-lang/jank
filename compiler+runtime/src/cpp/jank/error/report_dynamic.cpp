@@ -519,7 +519,8 @@ namespace jank::error
   code_snippet_box(std::filesystem::path const &path,
                    native_vector<jtl::immutable_string> const &line_numbers,
                    native_vector<jtl::immutable_string> const &line_contents,
-                   usize const max_width)
+                   usize const max_width,
+                   bool const is_last)
   {
     static constexpr auto margin{ 8 };
     std::string top_line{ "─────┬──" };
@@ -533,7 +534,7 @@ namespace jank::error
     {
       middle_line += "─";
     }
-    std::string bottom_line{ "─────┼──" };
+    std::string bottom_line{ is_last ? "─────┼──" : "─────┴──" };
     for(usize i{ margin }; i < max_width; ++i)
     {
       bottom_line += "─";
@@ -562,7 +563,8 @@ namespace jank::error
     return sb.release();
   }
 
-  static jtl::immutable_string code_snippet(snippet const &s, usize const max_width)
+  static jtl::immutable_string
+  code_snippet(snippet const &s, usize const max_width, bool const is_last)
   {
     /* We may not be able to read the file, so we fall back to trying to read the module.
      * This can happen for baked-in core libs like clojure.core for an installed jank. */
@@ -621,7 +623,8 @@ namespace jank::error
     return code_snippet_box(util::relative_path(file.expect_ok().file_path()),
                             line_numbers,
                             lines,
-                            max_width);
+                            max_width,
+                            is_last);
   }
 
   static jtl::immutable_string documentation_box(error_ref const e, usize const max_width)
@@ -676,9 +679,9 @@ namespace jank::error
     //      }),
     //    }) }) };
 
-    for(auto const &s : p.snippets)
+    for(usize i{}; i < p.snippets.size(); ++i)
     {
-      util::println("{}", code_snippet(s, max_width));
+      util::println("{}", code_snippet(p.snippets[i], max_width, i == p.snippets.size() - 1));
     }
     if(p.snippets.empty())
     {

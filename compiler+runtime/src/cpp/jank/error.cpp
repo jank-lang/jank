@@ -32,8 +32,6 @@ namespace jank::error
         return "Invalid keyword.";
       case kind::lex_unterminated_string:
         return "Unterminated string.";
-      case kind::lex_invalid_string_escape:
-        return "Invalid string escape sequence.";
       case kind::lex_unexpected_character:
         return "Unexpected character.";
       case kind::lex_internal_failure:
@@ -43,6 +41,8 @@ namespace jank::error
         return "Invalid Unicode character.";
       case kind::parse_invalid_character:
         return "Invalid character.";
+      case kind::parse_invalid_string_escape:
+        return "Invalid string escape sequence.";
       case kind::parse_unexpected_closing_character:
         return "Unexpected closing character.";
       case kind::parse_unterminated_list:

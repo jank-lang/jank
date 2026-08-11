@@ -7,6 +7,8 @@ namespace jank::error
 {
   error_ref parse_invalid_unicode(read::source const &source, jtl::immutable_string const &note);
   error_ref parse_invalid_character(read::lex::token const &token);
+  error_ref
+  parse_invalid_string_escape(jtl::immutable_string const &message, read::source const &source);
   error_ref parse_unexpected_closing_character(read::lex::token const &token);
   error_ref parse_unterminated_list(read::source const &source);
   error_ref parse_unterminated_vector(read::source const &source);

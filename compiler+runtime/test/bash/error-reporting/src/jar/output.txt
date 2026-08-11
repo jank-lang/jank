@@ -11,4 +11,6 @@ error: It's not permitted to use 'recur' through a 'try'.
   4  │   (try
   5  │     (recur)
      │     ^^^^^^^ Found here.
+─────┼──────────────────────────────────────────────────────────────────────────
+  🗎  │ https://book.jank-lang.org/reference/error/analyze/invalid-recur-from-try.html
 ─────┴──────────────────────────────────────────────────────────────────────────

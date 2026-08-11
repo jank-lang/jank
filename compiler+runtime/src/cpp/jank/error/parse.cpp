@@ -62,6 +62,12 @@ namespace jank::error
       read::source{ token.start, token.end });
   }
 
+  error_ref
+  parse_invalid_string_escape(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::parse_invalid_string_escape, message, source);
+  }
+
   error_ref parse_unexpected_closing_character(read::lex::token const &token)
   {
     /* TODO: Add a note to show last open token. */

@@ -28,7 +28,6 @@ namespace jank::error
     lex_invalid_symbol,
     lex_invalid_keyword,
     lex_unterminated_string,
-    lex_invalid_string_escape,
     lex_unexpected_character,
     lex_internal_failure,
 
@@ -48,6 +47,7 @@ namespace jank::error
     parse_invalid_meta_hint_target,
     parse_invalid_unicode,
     parse_invalid_character,
+    parse_invalid_string_escape,
     parse_nested_shorthand_function,
     parse_invalid_shorthand_function_parameter,
     parse_invalid_reader_var,
@@ -157,8 +157,6 @@ namespace jank::error
         return "lex/invalid-keyword";
       case kind::lex_unterminated_string:
         return "lex/unterminated-string";
-      case kind::lex_invalid_string_escape:
-        return "lex/invalid-string-escape";
       case kind::lex_unexpected_character:
         return "lex/unexpected-character";
       case kind::lex_internal_failure:
@@ -168,6 +166,8 @@ namespace jank::error
         return "parse/invalid-unicode";
       case kind::parse_invalid_character:
         return "parse/invalid-character";
+      case kind::parse_invalid_string_escape:
+        return "parse/invalid-string-escape";
       case kind::parse_unexpected_closing_character:
         return "parse/unexpected-closing-character";
       case kind::parse_unterminated_list:
