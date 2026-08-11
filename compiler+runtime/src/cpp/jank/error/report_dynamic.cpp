@@ -533,7 +533,7 @@ namespace jank::error
     {
       middle_line += "─";
     }
-    std::string bottom_line{ "─────┴──" };
+    std::string bottom_line{ "─────┼──" };
     for(usize i{ margin }; i < max_width; ++i)
     {
       bottom_line += "─";
@@ -558,7 +558,7 @@ namespace jank::error
                       text_style::reset,
                       line_contents[i]);
     }
-    util::format_to(sb, "{}{}{}\n", text_style::bright_black, bottom_line, text_style::reset);
+    util::format_to(sb, "{}{}{}", text_style::bright_black, bottom_line, text_style::reset);
     return sb.release();
   }
 
@@ -624,6 +624,28 @@ namespace jank::error
                             max_width);
   }
 
+  static jtl::immutable_string documentation_box(error_ref const e, usize const max_width)
+  {
+    static constexpr auto margin{ 8 };
+    std::string const pre_title{ "  🗎  │ " };
+    std::string bottom_line{ "─────┴──" };
+    for(usize i{ margin }; i < max_width; ++i)
+    {
+      bottom_line += "─";
+    }
+
+    jtl::string_builder sb;
+    util::format_to(sb,
+                    "{}{}{}https://book.jank-lang.org/reference/error/{}.html{}\n",
+                    text_style::reset,
+                    text_style::bright_black,
+                    pre_title,
+                    kind_str(e->kind),
+                    text_style::reset);
+    util::format_to(sb, "{}{}{}\n", text_style::bright_black, bottom_line, text_style::reset);
+    return sb.release();
+  }
+
   void report(error_ref const e)
   {
     plan const p{ e };
@@ -658,7 +680,14 @@ namespace jank::error
     {
       util::println("{}", code_snippet(s, max_width));
     }
-    util::print("\n");
+    if(p.snippets.empty())
+    {
+      util::println("https://book.jank-lang.org/reference/error/{}.html\n", kind_str(e->kind));
+    }
+    else
+    {
+      util::println("{}\n", documentation_box(e, max_width));
+    }
 
     if(e->cause)
     {
