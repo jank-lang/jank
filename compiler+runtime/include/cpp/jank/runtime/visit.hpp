@@ -65,10 +65,12 @@
 #include <jank/runtime/obj/inst.hpp>
 #include <jank/runtime/obj/opaque_box.hpp>
 #include <jank/runtime/obj/reader_conditional.hpp>
+#include <jank/runtime/obj/array.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/array.hpp>
 
 namespace jank::runtime
 {
@@ -242,6 +244,52 @@ namespace jank::runtime
         return fn(expect_object<obj::inst>(erased), std::forward<Args>(args)...);
       case object_type::opaque_box:
         return fn(expect_object<obj::opaque_box>(erased), std::forward<Args>(args)...);
+      case object_type::array:
+        /* TODO: Remove arrays from visit. It is still required for certain
+         * clojure functions such as nth. */
+        {
+          auto const type(get_element_type(erased));
+          if(type == "bool")
+          {
+            return fn(booleans(erased), std::forward<Args>(args)...);
+          }
+          else if(type == "char")
+          {
+            return fn(chars(erased), std::forward<Args>(args)...);
+          }
+          else if(type == "f32")
+          {
+            return fn(floats(erased), std::forward<Args>(args)...);
+          }
+          else if(type == "f64")
+          {
+            return fn(doubles(erased), std::forward<Args>(args)...);
+          }
+          else if(type == "i16")
+          {
+            return fn(shorts(erased), std::forward<Args>(args)...);
+          }
+          else if(type == "i32")
+          {
+            return fn(ints(erased), std::forward<Args>(args)...);
+          }
+          else if(type == "i64")
+          {
+            return fn(longs(erased), std::forward<Args>(args)...);
+          }
+          else if(type == "object")
+          {
+            return fn(objects(erased), std::forward<Args>(args)...);
+          }
+          else if(type == "u8")
+          {
+            return fn(bytes(erased), std::forward<Args>(args)...);
+          }
+          else
+          {
+            throw std::runtime_error{ "visit not supported for 'array'" };
+          }
+        }
       case object_type::reader_conditional:
         return fn(expect_object<obj::reader_conditional>(erased), std::forward<Args>(args)...);
       default:

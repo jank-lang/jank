@@ -619,13 +619,14 @@ namespace jank::runtime
   object_ref nth(object_ref const o, object_ref const idx)
   {
     auto const index(to_int(idx));
-    if(index < 0)
-    {
-      throw std::runtime_error{ util::format("index out of bounds: {}", index) };
-    }
-    else if(o.is_nil())
+
+    if(o.is_nil())
     {
       return o;
+    }
+    else if(index < 0)
+    {
+      throw std::runtime_error{ util::format("index out of bounds: {}", index) };
     }
 
     /* TODO: Port visit_object: sequential. */

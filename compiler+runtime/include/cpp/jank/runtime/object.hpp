@@ -103,6 +103,8 @@ namespace jank::runtime
 
     opaque_box,
 
+    array,
+
     reader_conditional,
   };
 
@@ -265,6 +267,9 @@ namespace jank::runtime
 
       case object_type::opaque_box:
         return "opaque_box";
+
+      case object_type::array:
+        return "array";
 
       case object_type::reader_conditional:
         return "reader_conditional";

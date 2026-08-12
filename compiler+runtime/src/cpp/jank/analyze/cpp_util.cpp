@@ -7,6 +7,7 @@
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/array.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
@@ -699,6 +700,64 @@ namespace jank::analyze::cpp_util
         }
       case jank::runtime::object_type::var:
         return var_type();
+      case jank::runtime::object_type::array:
+        {
+          auto const type(get_element_type(o));
+          if(type == "bool")
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.bool_array_ref").expect_ok()) };
+            return type;
+          }
+          else if(type == "char")
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.char_array_ref").expect_ok()) };
+            return type;
+          }
+          else if(type == "f32")
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.f32_array_ref").expect_ok()) };
+            return type;
+          }
+          else if(type == "f64")
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.f64_array_ref").expect_ok()) };
+            return type;
+          }
+          else if(type == "i16")
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.i16_array_ref").expect_ok()) };
+            return type;
+          }
+          else if(type == "i32")
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.i32_array_ref").expect_ok()) };
+            return type;
+          }
+          else if(type == "i64")
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.i64_array_ref").expect_ok()) };
+            return type;
+          }
+          else if(type == "object")
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.object_array_ref").expect_ok()) };
+            return type;
+          }
+          else if(type == "u8")
+          {
+            static auto const type{ Cpp::GetTypeFromScope(
+              resolve_scope("jank.runtime.obj.u8_array_ref").expect_ok()) };
+            return type;
+          }
+        }
       default:
         {
           static auto const type{ untyped_object_ref_type() };

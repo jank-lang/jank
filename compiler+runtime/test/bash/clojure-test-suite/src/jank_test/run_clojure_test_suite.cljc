@@ -4,7 +4,7 @@
 (def namespaces
   '[
     clojure.core-test.abs
-    ; clojure.core-test.aclone ; analyze/invalid-cpp-operator-call error: Binary operator aget is not supported for 'jank::runtime::object *' and 'jank::runtime::object *', TODO: port int-array, TODO: port aclone
+    clojure.core-test.aclone
     ; clojure.core-test.add-watch ; TODO: port sync
     ; clojure.core-test.ancestors ; analyze/unresolved-symbol error: Unable to resolve symbol 'Object'.
     clojure.core-test.and
@@ -12,7 +12,7 @@
     clojure.core-test.apply
     clojure.core-test.assoc
     clojure.core-test.assoc-bang
-    ; clojure.core-test.associative-qmark ; TODO: port to-array
+    ; clojure.core-test.associative-qmark ; FIXME: There is no 'seq' member function within 'const char[3]'.
     clojure.core-test.atom
     clojure.core-test.bigdec
     clojure.core-test.bigint
@@ -37,16 +37,16 @@
     ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
     clojure.core-test.char
     clojure.core-test.char-qmark
-    ; clojure.core-test.coll-qmark ; TODO: port array-map, TODO: port object-array
+    ; clojure.core-test.coll-qmark ; FIXME: `seq` does not satisfy `coll?`
     clojure.core-test.comment
     clojure.core-test.compare
     clojure.core-test.conj
     clojure.core-test.conj-bang
     clojure.core-test.cons
     clojure.core-test.constantly
-    ; clojure.core-test.contains-qmark ; "TODO: port int-array"
+    ; clojure.core-test.contains-qmark ; FIXME: expecting p/thrown? are not throwing
     clojure.core-test.count
-    ; clojure.core-test.counted-qmark ; TODO: port array-map, TODO: port object-array
+    ; clojure.core-test.counted-qmark ; FIXME: "a string" / (object-array 3) are not counted
     clojure.core-test.cycle
     clojure.core-test.dec
     clojure.core-test.decimal-qmark
@@ -71,14 +71,14 @@
     clojure.core-test.false-qmark
     clojure.core-test.ffirst
     clojure.core-test.find
-    ; clojure.core-test.first ; "TODO: port to-array"
+    clojure.core-test.first
     clojure.core-test.float
     clojure.core-test.float-qmark
     clojure.core-test.fn-qmark
     clojure.core-test.fnext
     clojure.core-test.fnil
     ; clojure.core-test.format ; TODO: port format
-    ; clojure.core-test.get ; TODO: port to-array
+    clojure.core-test.get
     clojure.core-test.get-in
     clojure.core-test.gt
     clojure.core-test.gt-eq
@@ -100,12 +100,12 @@
     clojure.core-test.keyword
     clojure.core-test.keyword-qmark
     clojure.core-test.last
-    ; clojure.core-test.list-qmark ; TODO: port array-map, TODO: port object-array
+    clojure.core-test.list-qmark
     clojure.core-test.long
     clojure.core-test.lt
     clojure.core-test.lt-eq
     clojure.core-test.make-hierarchy
-    ; clojure.core-test.map-qmark ; TODO: port array-map, TODO: port object-array
+    clojure.core-test.map-qmark
     clojure.core-test.mapcat
     ; clojure.core-test.max ; FIXME: Failing tests.
     clojure.core-test.merge
@@ -118,14 +118,14 @@
     clojure.core-test.nan-qmark
     clojure.core-test.neg-int-qmark
     clojure.core-test.neg-qmark
-    ; clojure.core-test.next ; "TODO: port int-array"
+    ; clojure.core-test.next ; FIXME: Failing tests.
     clojure.core-test.nfirst
     clojure.core-test.nil-qmark
     clojure.core-test.nnext
     clojure.core-test.not
     ; clojure.core-test.not_empty ; libc++abi: terminating due to uncaught exception of type jank::runtime::oref<jank::runtime::object>.
     ; clojure.core-test.not-eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
-    ; clojure.core-test.nth ; "TODO: port int-array"
+    clojure.core-test.nth
     clojure.core-test.nthnext
     clojure.core-test.nthrest
     ; clojure.core-test.num ; TODO: port short, TODO: port byte & TODO: port long.
@@ -175,12 +175,12 @@
     ; clojure.core-test.rseq ; TODO: port rseq
     clojure.core-test.second
     clojure.core-test.select-keys
-    ; clojure.core-test.seq ; TODO: port int-array
+    ; clojure.core-test.seq ; FIXME: There is no 'seq' member function within 'const char[5]'.
     ; clojure.core-test.seq-qmark ; TODO: port rseq, TODO: port array-map, TODO: port object-array
-    ; clojure.core-test.seqable-qmark ; TODO: port array-map, TODO: port object-array
-    ; clojure.core-test.sequential-qmark ; TODO: port to-array
+    clojure.core-test.seqable-qmark
+    ; clojure.core-test.sequential-qmark ; FIXME There is no 'seq' member function within 'const char[4]'.
     clojure.core-test.set
-    ; clojure.core-test.set-qmark ; TODO: port array-map, TODO: port object-array
+    clojure.core-test.set-qmark
     ; clojure.core-test.short ; analyze/macro-expansion-exception error: index out of bounds: 2,  TODO: port short, TODO: Port instance?
     clojure.core-test.shuffle
     clojure.core-test.simple-ident-qmark
@@ -218,7 +218,7 @@
     clojure.core-test.var-qmark
     ; clojure.core-test.vec ; analyze/invalid-cpp-operator-call error: Binary operator aget is not supported for 'jank::runtime::object *' and 'jank::runtime::object *'.
     clojure.core-test.vector
-    ; clojure.core-test.vector-qmark ; TODO: port array-map, TODO: port object-array
+    clojure.core-test.vector-qmark
     clojure.core-test.when
     clojure.core-test.when-first
     clojure.core-test.when-let
