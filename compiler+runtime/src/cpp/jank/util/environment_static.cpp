@@ -13,4 +13,9 @@ namespace jank::util
   {
     throw error::runtime_static_feature_disabled("build_dir");
   }
+
+  bool is_dynamic_runtime()
+  {
+    return false;
+  }
 }

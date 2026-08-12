@@ -169,4 +169,9 @@ namespace jank::util
   {
     return util::format("{}/{}", util::cli::opts.build_dir, binary_version());
   }
+
+  bool is_dynamic_runtime()
+  {
+    return true;
+  }
 }
