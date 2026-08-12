@@ -142,8 +142,6 @@ namespace jank::error
         return "Unresolved symbol.";
       case kind::analyze_macro_expansion_exception:
         return "Macro expansion exception.";
-      case kind::analyze_invalid_conversion:
-        return "Invalid conversion.";
       case kind::analyze_invalid_cpp_operator_call:
         return "Invalid C++ operator call.";
       case kind::analyze_invalid_cpp_constructor_call:
@@ -371,8 +369,6 @@ namespace jank::error
         return "analyze/unresolved-symbol";
       case kind::analyze_macro_expansion_exception:
         return "analyze/macro-expansion-exception";
-      case kind::analyze_invalid_conversion:
-        return "analyze/invalid-conversion";
 
       case kind::analyze_invalid_cpp_operator_call:
         return "analyze/invalid-cpp-operator-call";

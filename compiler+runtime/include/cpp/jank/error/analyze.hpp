@@ -88,7 +88,6 @@ namespace jank::error
                                               cpptrace::stacktrace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
-  error_ref analyze_invalid_conversion(jtl::immutable_string const &message);
   error_ref analyze_invalid_cpp_operator_call(jtl::immutable_string const &message,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
@@ -113,6 +112,8 @@ namespace jank::error
   error_ref analyze_invalid_cpp_call(jtl::immutable_string const &message,
                                      read::source const &source,
                                      runtime::object_ref const expansion);
+  error_ref
+  analyze_invalid_cpp_conversion(jtl::immutable_string const &message, read::source const &source);
   error_ref analyze_invalid_cpp_conversion(jtl::immutable_string const &message,
                                            read::source const &source,
                                            runtime::object_ref const expansion);

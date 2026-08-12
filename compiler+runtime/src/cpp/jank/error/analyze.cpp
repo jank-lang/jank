@@ -201,11 +201,6 @@ namespace jank::error
                       std::make_unique<cpptrace::stacktrace>(trace));
   }
 
-  error_ref analyze_invalid_conversion(jtl::immutable_string const &message)
-  {
-    return make_error(kind::analyze_invalid_conversion, message, read::source::unknown());
-  }
-
   error_ref analyze_invalid_cpp_operator_call(jtl::immutable_string const &message,
                                               read::source const &source,
                                               runtime::object_ref const expansion)
@@ -270,6 +265,12 @@ namespace jank::error
                                      runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_call, message, source, expansion);
+  }
+
+  error_ref
+  analyze_invalid_cpp_conversion(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::analyze_invalid_cpp_conversion, message, source);
   }
 
   error_ref analyze_invalid_cpp_conversion(jtl::immutable_string const &message,

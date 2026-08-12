@@ -1335,10 +1335,11 @@ namespace jank::analyze
         }
       case cpp_util::implicit_conversion_action::unknown:
       default:
-        return error::analyze_internal_failure(
+        return error::analyze_invalid_cpp_conversion(
           util::format("Unknown implicit conversion from '{}' to '{}'.",
                        cpp_util::get_qualified_type_name(expr_type),
                        cpp_util::get_qualified_type_name(expected_type)),
+          object_source(expr->form),
           latest_expansion(macro_expansions));
     }
   }

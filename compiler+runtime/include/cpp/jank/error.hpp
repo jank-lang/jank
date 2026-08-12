@@ -84,7 +84,6 @@ namespace jank::error
     analyze_unresolved_var,
     analyze_unresolved_symbol,
     analyze_macro_expansion_exception,
-    analyze_invalid_conversion,
     analyze_invalid_cpp_operator_call,
     analyze_invalid_cpp_constructor_call,
     analyze_invalid_cpp_member_call,
