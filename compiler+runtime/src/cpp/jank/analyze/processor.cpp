@@ -3535,29 +3535,28 @@ namespace jank::analyze
       {
         object_ref expanded{ o };
         jtl::ptr<error::base> expansion_error{};
-        cpptrace::try_catch(
-          [&] { expanded = __rt_ctx->macroexpand(o); },
-          [&](std::exception const &e) {
-            expansion_error
-              = error::analyze_macro_expansion_exception(e,
-                                                         cpptrace::from_current_exception(),
-                                                         object_source(o),
-                                                         latest_expansion(macro_expansions));
-          },
-          [&](object_ref const e) {
-            expansion_error
-              = error::analyze_macro_expansion_exception(e,
-                                                         cpptrace::from_current_exception(),
-                                                         object_source(o),
-                                                         latest_expansion(macro_expansions));
-          },
-          [&](error_ref const e) {
-            expansion_error
-              = error::analyze_macro_expansion_exception(e,
-                                                         cpptrace::from_current_exception(),
-                                                         object_source(o),
-                                                         latest_expansion(macro_expansions));
-          });
+        cpptrace::try_catch([&] { expanded = __rt_ctx->macroexpand(o); },
+                            [&](std::exception const &e) {
+                              expansion_error = error::analyze_macro_expansion_exception(
+                                e,
+                                cpptrace::raw_trace_from_current_exception(),
+                                object_source(o),
+                                latest_expansion(macro_expansions));
+                            },
+                            [&](object_ref const e) {
+                              expansion_error = error::analyze_macro_expansion_exception(
+                                e,
+                                cpptrace::raw_trace_from_current_exception(),
+                                object_source(o),
+                                latest_expansion(macro_expansions));
+                            },
+                            [&](error_ref const e) {
+                              expansion_error = error::analyze_macro_expansion_exception(
+                                e,
+                                cpptrace::raw_trace_from_current_exception(),
+                                object_source(o),
+                                latest_expansion(macro_expansions));
+                            });
         if(expansion_error)
         {
           return expansion_error.as_ref();

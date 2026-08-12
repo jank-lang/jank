@@ -11,7 +11,7 @@ namespace cpptrace
 {
   inline namespace v1
   {
-    struct stacktrace;
+    struct raw_trace;
   }
 }
 
@@ -184,7 +184,7 @@ namespace jank::error
 
   /* We need gc_cleanup to run the dtor for the unique_ptr<stacktrace>. This
    * is because cpptrace doesn't use our GC allocator. */
-  struct base
+  struct base : gc_cleanup
   {
     static constexpr bool is_error{ true };
 
@@ -203,7 +203,7 @@ namespace jank::error
          jtl::immutable_string const &message,
          read::source const &source,
          runtime::object_ref const expansion,
-         std::unique_ptr<cpptrace::stacktrace> trace);
+         std::unique_ptr<cpptrace::raw_trace> trace);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
@@ -238,7 +238,7 @@ namespace jank::error
          read::source const &source,
          runtime::object_ref const expansion,
          jtl::ref<base> cause,
-         std::unique_ptr<cpptrace::stacktrace> trace);
+         std::unique_ptr<cpptrace::raw_trace> trace);
 
     bool operator==(base const &rhs) const;
     bool operator!=(base const &rhs) const;
@@ -252,7 +252,7 @@ namespace jank::error
     read::source source;
     native_vector<note> notes;
     jtl::ptr<base> cause;
-    std::unique_ptr<cpptrace::stacktrace> trace;
+    std::unique_ptr<cpptrace::raw_trace> trace;
     /* TODO: context */
     /* TODO: suggestions */
   };

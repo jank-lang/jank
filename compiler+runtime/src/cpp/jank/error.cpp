@@ -551,7 +551,7 @@ namespace jank::error
              jtl::immutable_string const &message,
              read::source const &source,
              runtime::object_ref const expansion,
-             std::unique_ptr<cpptrace::stacktrace> trace)
+             std::unique_ptr<cpptrace::raw_trace> trace)
     : kind{
       k
   }
@@ -667,7 +667,7 @@ namespace jank::error
              read::source const &source,
              runtime::object_ref const expansion,
              jtl::ref<base> const cause,
-             std::unique_ptr<cpptrace::stacktrace> trace)
+             std::unique_ptr<cpptrace::raw_trace> trace)
     : kind{
       k
   }
@@ -754,7 +754,7 @@ namespace jank::error
   error_ref internal_failure(jtl::immutable_string const &message)
   {
     auto const e{ make_error(kind::internal_failure, message, read::source::unknown()) };
-    e->trace = std::make_unique<cpptrace::stacktrace>(cpptrace::generate_trace());
+    e->trace = std::make_unique<cpptrace::raw_trace>(cpptrace::generate_raw_trace());
     return e;
   }
 
@@ -766,7 +766,7 @@ namespace jank::error
   void throw_result_failure(jtl::immutable_string const &message)
   {
     auto const e{ make_error(kind::runtime_uncaught_exception, message, read::source::unknown()) };
-    e->trace = std::make_unique<cpptrace::stacktrace>(cpptrace::generate_trace());
+    e->trace = std::make_unique<cpptrace::raw_trace>(cpptrace::generate_raw_trace());
     throw e;
   }
 }

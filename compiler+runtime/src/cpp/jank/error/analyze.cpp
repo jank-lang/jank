@@ -163,7 +163,7 @@ namespace jank::error
   }
 
   error_ref analyze_macro_expansion_exception(std::exception const &e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion)
   {
@@ -171,11 +171,11 @@ namespace jank::error
                       e.what(),
                       source,
                       expansion,
-                      std::make_unique<cpptrace::stacktrace>(trace));
+                      std::make_unique<cpptrace::raw_trace>(trace));
   }
 
   error_ref analyze_macro_expansion_exception(runtime::object_ref const e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion)
   {
@@ -184,11 +184,11 @@ namespace jank::error
                                                                               : e.to_code_string(),
                       source,
                       expansion,
-                      std::make_unique<cpptrace::stacktrace>(trace));
+                      std::make_unique<cpptrace::raw_trace>(trace));
   }
 
   error_ref analyze_macro_expansion_exception(error_ref const e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion)
   {
@@ -198,7 +198,7 @@ namespace jank::error
                       source,
                       expansion,
                       e,
-                      std::make_unique<cpptrace::stacktrace>(trace));
+                      std::make_unique<cpptrace::raw_trace>(trace));
   }
 
   error_ref analyze_invalid_cpp_operator_call(jtl::immutable_string const &message,

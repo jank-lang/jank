@@ -94,7 +94,12 @@ namespace jank::util
     formatter.print(trace);
   }
 
-  static error_ref make_error_from_exception(jtl::immutable_string const &message)
+  static void print_exception_stack_trace(cpptrace::raw_trace const &trace)
+  {
+    formatter.print(trace.resolve());
+  }
+
+  static void print_exception(jtl::immutable_string const &message)
   {
     static native_set<jtl::immutable_string> const core_libs{
       "clojure_core",
@@ -151,24 +156,25 @@ namespace jank::util
     auto const err{ make_error(error::kind::runtime_uncaught_exception, message, source) };
     err->notes.at(0).kind = error::note::kind::error_line;
     err->notes.at(0).message = "Found on this line. (No column info)";
-    err->trace = std::make_unique<cpptrace::stacktrace>(trace);
-    return err;
+
+    print_exception(err);
+    print_exception_stack_trace(trace);
   }
 
   void print_exception(std::exception const &e)
   {
-    print_exception(make_error_from_exception(e.what()));
+    print_exception(e.what());
   }
 
   void print_exception(runtime::object_ref const e)
   {
     if(e.get_type() == runtime::object_type::persistent_string)
     {
-      print_exception(make_error_from_exception(e.to_string()));
+      print_exception(e.to_string());
     }
     else
     {
-      print_exception(make_error_from_exception(e.to_code_string()));
+      print_exception(e.to_code_string());
     }
   }
 
@@ -184,7 +190,7 @@ namespace jank::util
      * compiler error output cleaner, since the stack trace isn't
      * actually going to provide any useful info. */
     jtl::ptr<error::base> original{ e };
-    cpptrace::stacktrace const *deepest_trace{ original->trace.get() };
+    auto const *deepest_trace{ original->trace.get() };
     while(original->cause)
     {
       original = original->cause;

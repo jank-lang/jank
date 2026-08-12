@@ -6,7 +6,7 @@ namespace cpptrace
 {
   inline namespace v1
   {
-    struct stacktrace;
+    struct raw_trace;
   }
 }
 
@@ -77,15 +77,15 @@ namespace jank::error
                                       read::source const &source,
                                       runtime::object_ref const expansion);
   error_ref analyze_macro_expansion_exception(std::exception const &e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
   error_ref analyze_macro_expansion_exception(runtime::object_ref const e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
   error_ref analyze_macro_expansion_exception(error_ref e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
   error_ref analyze_invalid_cpp_operator_call(jtl::immutable_string const &message,
