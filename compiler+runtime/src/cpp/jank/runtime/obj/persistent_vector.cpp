@@ -119,8 +119,13 @@ namespace jank::runtime::obj
 
   i64 persistent_vector::compare(object const &o) const
   {
-    return visit_type<persistent_vector>([this](auto const typed_o) { return compare(*typed_o); },
-                                         runtime::detail::untagged(&o));
+    auto const v{ dyn_cast<obj::persistent_vector>(runtime::detail::untagged(&o)) };
+    if(v.is_nil())
+    {
+      throw std::runtime_error{ util::format("The value for comparison must be a vector, not '{}'.",
+                                             object_type_str(o.type)) };
+    }
+    return compare(*v);
   }
 
   i64 persistent_vector::compare(persistent_vector const &v) const

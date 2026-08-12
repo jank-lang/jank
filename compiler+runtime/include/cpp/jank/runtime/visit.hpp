@@ -252,23 +252,6 @@ namespace jank::runtime
     }
   }
 
-  /* Allows the visiting of a single type. */
-  template <typename T, typename F, typename... Args>
-  [[gnu::hot]]
-  auto visit_type(F const &fn, object_ref const erased, Args &&...args)
-  {
-    if(erased.get_type() == T::obj_type)
-    {
-      return fn(expect_object<T>(erased), std::forward<Args>(args)...);
-    }
-    else
-    {
-      throw std::runtime_error{ util::format("invalid object type: {}, raw value {}",
-                                             object_type_str(erased.get_type()),
-                                             static_cast<int>(erased.get_type())) };
-    }
-  }
-
   template <typename F1, typename F2, typename... Args>
   requires(visitable<F1, Args...> && !std::convertible_to<F2, object_ref>)
   [[gnu::hot]]

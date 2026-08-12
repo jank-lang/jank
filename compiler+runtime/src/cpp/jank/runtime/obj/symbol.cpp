@@ -82,8 +82,13 @@ namespace jank::runtime::obj
 
   i64 symbol::compare(object const &o) const
   {
-    return visit_type<symbol>([this](auto const typed_o) { return compare(*typed_o); },
-                              runtime::detail::untagged(&o));
+    auto const s{ dyn_cast<obj::symbol>(runtime::detail::untagged(&o)) };
+    if(s.is_nil())
+    {
+      throw std::runtime_error{ util::format("The value for comparison must be a symbol, not '{}'.",
+                                             object_type_str(o.type)) };
+    }
+    return compare(*s);
   }
 
   i64 symbol::compare(symbol const &s) const

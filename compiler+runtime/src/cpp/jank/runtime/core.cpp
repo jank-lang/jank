@@ -413,18 +413,26 @@ namespace jank::runtime
 
   i64 first_index_of(object_ref const s, object_ref const m)
   {
-    return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ref const m) -> i64 { return typed_s->first_index_of(m); },
-      s,
-      m);
+    auto const str{ dyn_cast<obj::persistent_string>(s) };
+    if(str.is_nil())
+    {
+      throw std::runtime_error{ util::format(
+        "The first argument to 'first-index-of' must be a string, not '{}'.",
+        object_type_str(s.get_type())) };
+    }
+    return str->first_index_of(m);
   }
 
   i64 last_index_of(object_ref const s, object_ref const m)
   {
-    return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ref const m) -> i64 { return typed_s->last_index_of(m); },
-      s,
-      m);
+    auto const str{ dyn_cast<obj::persistent_string>(s) };
+    if(str.is_nil())
+    {
+      throw std::runtime_error{ util::format(
+        "The first argument to 'last-index-of' must be a string, not '{}'.",
+        object_type_str(s.get_type())) };
+    }
+    return str->last_index_of(m);
   }
 
   bool is_named(object_ref const o)
