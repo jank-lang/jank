@@ -9,7 +9,7 @@
 namespace jank::error
 {
   [[noreturn]]
-  void throw_internal_failure(jtl::immutable_string const &message);
+  void throw_result_failure(jtl::immutable_string const &message);
 }
 
 namespace jtl
@@ -57,14 +57,14 @@ namespace jtl
       }
       else if constexpr(jtl::is_same<E, immutable_string>)
       {
-        jank::error::throw_internal_failure(r.expect_err());
+        jank::error::throw_result_failure(r.expect_err());
       }
       else
       {
         immutable_string s{ "Unexpected result<" };
         s = s + type_name<E>().data();
         s = s + ">";
-        jank::error::throw_internal_failure(s);
+        jank::error::throw_result_failure(s);
       }
     }
   }

@@ -762,4 +762,11 @@ namespace jank::error
   {
     throw internal_failure(message);
   }
+
+  void throw_result_failure(jtl::immutable_string const &message)
+  {
+    auto const e{ make_error(kind::runtime_uncaught_exception, message, read::source::unknown()) };
+    e->trace = std::make_unique<cpptrace::stacktrace>(cpptrace::generate_trace());
+    throw e;
+  }
 }
