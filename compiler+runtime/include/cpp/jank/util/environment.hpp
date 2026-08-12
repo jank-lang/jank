@@ -17,4 +17,6 @@ namespace jank::util
   jtl::immutable_string resource_dir();
 
   void add_system_flags(std::vector<char const *> &args);
+
+  bool is_dynamic_runtime();
 }

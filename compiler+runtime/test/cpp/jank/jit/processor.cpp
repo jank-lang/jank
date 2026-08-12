@@ -195,10 +195,10 @@ namespace jank::jit
             failures.push_back({ dir_entry.path(), "Compiler error thrown without a source" });
             passed = false;
           }
-          /* This should never happen. */
-          else if(e->kind == error::kind::codegen_internal_failure)
+          /* Internal failures should never happen. */
+          else if(error::is_internal_failure_kind(e->kind))
           {
-            failures.push_back({ dir_entry.path(), "Internal codegen failure" });
+            failures.push_back({ dir_entry.path(), "Internal failure" });
             passed = false;
           }
           else if(expect_success)

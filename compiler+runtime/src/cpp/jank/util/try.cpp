@@ -54,20 +54,18 @@ namespace jank::util
 
     /* For non-Clojure functions, we want to clean up some common templates, since they
      * can be quite noisy. */
-    static std::regex const jtl_ref_expr{ R"(jtl::ref<jank::analyze::expression>\s*)" };
-    static std::regex const jtl_ref_expr_t{ R"(jtl::ref<jank::analyze::expr::(\S+)>\s*)" };
-    static std::regex const runtime_oref_object{
-      R"(jank::runtime::oref<jank::runtime::object>\s*)"
-    };
-    static std::regex const runtime_oref_t{ R"(jank::runtime::oref<jank::runtime::(\S+)>\s*)" };
+    static std::regex const jtl_ref_expr{ R"(jtl::ref<jank::analyze::expression>)" };
+    static std::regex const jtl_ref_expr_t{ R"(jtl::ref<jank::analyze::expr::(\S+)>)" };
+    static std::regex const runtime_oref_object{ R"(jank::runtime::oref<jank::runtime::object>)" };
+    static std::regex const runtime_oref_t{ R"(jank::runtime::oref<jank::runtime::(\S+)>)" };
     static std::regex const runtime_obj{ R"(jank::runtime::obj::)" };
     static std::regex const auto_ret{ R"(^auto )" };
 
     frame.symbol = std::regex_replace(frame.symbol, jtl_ref_expr, "expression_ref");
     frame.symbol = std::regex_replace(frame.symbol, jtl_ref_expr_t, "expr::$1_ref");
+    frame.symbol = std::regex_replace(frame.symbol, runtime_obj, "");
     frame.symbol = std::regex_replace(frame.symbol, runtime_oref_object, "object_ref");
     frame.symbol = std::regex_replace(frame.symbol, runtime_oref_t, "$1_ref");
-    frame.symbol = std::regex_replace(frame.symbol, runtime_obj, "");
     frame.symbol = std::regex_replace(frame.symbol, auto_ret, "");
 
     return frame;
