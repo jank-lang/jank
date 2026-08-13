@@ -99,6 +99,43 @@ namespace jank::util
     formatter.print(trace.resolve());
   }
 
+  cpptrace::stacktrace resolve(cpptrace::raw_trace const &trace)
+  {
+    auto resolved{ trace.resolve() };
+
+    resolved.frames.erase(
+      std::remove_if(resolved.frames.begin(),
+                     resolved.frames.end(),
+                     [](cpptrace::stacktrace_frame const &frame) { return !filter_frame(frame); }),
+      resolved.frames.end());
+
+    for(auto &frame : resolved.frames)
+    {
+      frame = transform_frame(std::move(frame));
+      frame.symbol = cpptrace::prune_symbol(frame.symbol);
+      frame.filename = cpptrace::basename(frame.filename);
+    }
+
+    /* This was taken from cpptrace, but it's not public there. */
+    // Look for c++ exception machinery and skip it if it's present, otherwise start at the beginning
+    // On itanium this is identifiable by __cxa_throw
+    // https://itanium-cxx-abi.github.io/cxx-abi/abi-eh.html 2.4.1
+    // On windows this is identifiable by CxxThrowException (maybe with an underscore?)
+    // https://www.youtube.com/watch?v=COEv2kq_Ht8 40:10
+    // https://github.com/CppCon/CppCon2018/blob/master/Presentations/unwinding_the_stack_exploring_how_cpp_exceptions_work_on_windows/unwinding_the_stack_exploring_how_cpp_exceptions_work_on_windows__james_mcnellis__cppcon_2018.pdf slide 157
+    // https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/cxxthrowexception?view=msvc-170
+    auto const it{ std::ranges::find_if(resolved.frames,
+                                        [](cpptrace::stacktrace_frame const &frame) {
+                                          return frame.symbol == "__cxa_throw"
+                                            || frame.symbol == "CxxThrowException"
+                                            || frame.symbol == "_CxxThrowException";
+                                        }) };
+    auto const start{ it == resolved.end() ? 0 : it - resolved.begin() + 1 };
+    resolved.frames.erase(resolved.frames.begin(), resolved.frames.begin() + start);
+
+    return resolved;
+  }
+
   static void print_exception(jtl::immutable_string const &message)
   {
     static native_set<jtl::immutable_string> const core_libs{

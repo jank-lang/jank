@@ -620,6 +620,7 @@ add_library(
   src/cpp/jank/runtime/obj/promise.cpp
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/obj/reader_conditional.cpp
+  src/cpp/jank/runtime/obj/exception_info.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
   src/cpp/jank/codegen/api.cpp
   src/cpp/jank/aot/resource.cpp

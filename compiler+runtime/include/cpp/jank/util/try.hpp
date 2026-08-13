@@ -19,4 +19,6 @@ namespace jank::util
   void print_exception(std::exception const &e);
   void print_exception(runtime::object_ref const e);
   void print_exception(error_ref e);
+
+  cpptrace::stacktrace resolve(cpptrace::raw_trace const &trace);
 }
