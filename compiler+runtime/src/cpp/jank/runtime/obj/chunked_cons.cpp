@@ -53,10 +53,9 @@ namespace jank::runtime::obj
         }
         else
         {
-          throw std::runtime_error{
-            util::format("The `chunked_cons` head is not chunk-like. It has type `{}`.",
-                         object_type_str(typed_head.get_type()))
-          };
+          throw std::runtime_error{ util::format(
+            "The `chunked_cons` head is not chunk-like. It has type `{}`.",
+            object_type_str(typed_head.get_type())) };
         }
       },
       head);
@@ -79,10 +78,9 @@ namespace jank::runtime::obj
         }
         else
         {
-          throw std::runtime_error{
-            util::format("The `chunked_cons` head is not chunk-like. It has type `{}`.",
-                         object_type_str(typed_head.get_type()))
-          };
+          throw std::runtime_error{ util::format(
+            "The `chunked_cons` head is not chunk-like. It has type `{}`.",
+            object_type_str(typed_head.get_type())) };
         }
       },
       head);

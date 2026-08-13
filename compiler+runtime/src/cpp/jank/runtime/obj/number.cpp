@@ -350,9 +350,8 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format(
-          "Objects of type `{}` are not comparable to `real`.",
-          object_type_str(o.type)) };
+        throw std::runtime_error{ util::format("Objects of type `{}` are not comparable to `real`.",
+                                               object_type_str(o.type)) };
       },
       runtime::detail::untagged(&o));
   }

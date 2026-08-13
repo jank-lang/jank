@@ -1,5 +1,5 @@
 ─ analyze/invalid-def ──────────────────────────────────────────────────────────
-error: The var name in a 'def' must be a symbol.
+error: The var name in a `def` form must be a symbol.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ input.jank

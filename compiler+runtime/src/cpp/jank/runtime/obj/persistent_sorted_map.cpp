@@ -47,7 +47,8 @@ namespace jank::runtime::obj
       if(it == r.end())
       {
         throw std::runtime_error{ util::format(
-          "The sequence used to create a `persistent_sorted_map` must contain an even number of elements. The sequence `{}` does not.",
+          "The sequence used to create a `persistent_sorted_map` must contain an even number of "
+          "elements. The sequence `{}` does not.",
           seq.to_code_string()) };
       }
       auto const val(*it);

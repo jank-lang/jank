@@ -151,7 +151,8 @@ namespace jank::runtime::module
   {
     if(!std::filesystem::exists(path.c_str()))
     {
-      return error::runtime_unable_to_open_file(util::format("The file `{}` does not exist.", path));
+      return error::runtime_unable_to_open_file(
+        util::format("The file `{}` does not exist.", path));
     }
 
 #ifdef JANK_WINDOWS_LIKE
@@ -165,14 +166,16 @@ namespace jank::runtime::module
 
     if(hFile == INVALID_HANDLE_VALUE)
     {
-      return error::runtime_unable_to_open_file(util::format("The file `{}` could not be opened.", path));
+      return error::runtime_unable_to_open_file(
+        util::format("The file `{}` could not be opened.", path));
     }
 
     LARGE_INTEGER fileSize{};
     if(!GetFileSizeEx(hFile, &fileSize))
     {
       CloseHandle(hFile);
-      return error::runtime_internal_failure(util::format("The file size for `{}` could not be determined.", path));
+      return error::runtime_internal_failure(
+        util::format("The file size for `{}` could not be determined.", path));
     }
 
     HANDLE hMapping{ CreateFileMappingA(hFile, nullptr, PAGE_READONLY, 0, 0, nullptr) };
@@ -180,7 +183,8 @@ namespace jank::runtime::module
     if(!hMapping)
     {
       CloseHandle(hFile);
-      return error::runtime_internal_failure(util::format("The file mapping for `{}` could not be created.", path));
+      return error::runtime_internal_failure(
+        util::format("The file mapping for `{}` could not be created.", path));
     }
 
     auto head{ static_cast<char const *>(MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0)) };
@@ -188,7 +192,8 @@ namespace jank::runtime::module
     {
       CloseHandle(hMapping);
       CloseHandle(hFile);
-      return error::runtime_internal_failure(util::format("The file view for `{}` could not be mapped.", path));
+      return error::runtime_internal_failure(
+        util::format("The file view for `{}` could not be mapped.", path));
     }
 
     return ok(
@@ -199,7 +204,8 @@ namespace jank::runtime::module
     auto const fd(::open(path.c_str(), O_RDONLY));
     if(fd < 0)
     {
-      return error::runtime_unable_to_open_file(util::format("The file `{}` could not be opened.", path));
+      return error::runtime_unable_to_open_file(
+        util::format("The file `{}` could not be opened.", path));
     }
     auto const head(
       reinterpret_cast<char const *>(mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0)));
@@ -211,7 +217,8 @@ namespace jank::runtime::module
     if(head == MAP_FAILED)
   #pragma clang diagnostic pop
     {
-      return error::runtime_unable_to_open_file(util::format("The file `{}` could not be mapped into memory.", path));
+      return error::runtime_unable_to_open_file(
+        util::format("The file `{}` could not be mapped into memory.", path));
     }
 
     return ok(file_view{ path, fd, head, file_size });

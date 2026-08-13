@@ -51,7 +51,9 @@ namespace jank::runtime::obj
     catch(std::exception const &e)
     {
       throw std::runtime_error(
-        util::format("The `big_integer` constructor could not parse the string `{}`: {}.", s, e.what()));
+        util::format("The `big_integer` constructor could not parse the string `{}`: {}.",
+                     s,
+                     e.what()));
     }
   }
 
@@ -203,10 +205,9 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{
-          util::format("Objects of type `{}` are not comparable to `big_integer`.",
-                       object_type_str(o.type))
-        };
+        throw std::runtime_error{ util::format(
+          "Objects of type `{}` are not comparable to `big_integer`.",
+          object_type_str(o.type)) };
       },
       runtime::detail::untagged(&o));
   }
@@ -226,7 +227,8 @@ namespace jank::runtime::obj
   {
     if(d > std::numeric_limits<i64>::max() || d < std::numeric_limits<i64>::min())
     {
-      throw std::runtime_error{ util::format("The value `{}` is out of range for `i64` conversion.", d) };
+      throw std::runtime_error{ util::format("The value `{}` is out of range for `i64` conversion.",
+                                             d) };
     }
     return static_cast<i64>(d);
   }

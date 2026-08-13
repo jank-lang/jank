@@ -124,16 +124,17 @@ namespace jank::runtime::obj
 
     if(head.get_type() != object_type::persistent_vector)
     {
-      throw std::runtime_error{ util::format(
-        "The `conj` operation on a transient map requires a two-element `persistent_vector`, not a `{}`.",
-        object_type_str(head.get_type())) };
+      throw std::runtime_error{ util::format("The `conj` operation on a transient map requires a "
+                                             "two-element `persistent_vector`, not a `{}`.",
+                                             object_type_str(head.get_type())) };
     }
 
     auto const vec(expect_object<persistent_vector>(head));
     if(vec->count() != 2)
     {
       throw std::runtime_error{ util::format(
-        "The `conj` operation on a transient map requires a two-element vector entry, not a vector of length `{}`.",
+        "The `conj` operation on a transient map requires a two-element vector entry, not a vector "
+        "of length `{}`.",
         vec->count()) };
     }
 

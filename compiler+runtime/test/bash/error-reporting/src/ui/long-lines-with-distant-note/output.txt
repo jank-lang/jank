@@ -1,5 +1,5 @@
 ─ analyze/unresolved-symbol ────────────────────────────────────────────────────
-error: Unable to resolve symbol 'unknown'.
+error: The symbol `unknown` could not be resolved.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ input.jank

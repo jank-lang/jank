@@ -167,7 +167,8 @@ namespace jank::runtime::obj
     if(is_preferred(deref(hierarchy), y, x))
     {
       throw std::runtime_error{ util::format(
-        "The `prefer-method` operation on multimethod `{}` cannot prefer `{}` over `{}` because `{}` is already preferred to `{}`.",
+        "The `prefer-method` operation on multimethod `{}` cannot prefer `{}` over `{}` because "
+        "`{}` is already preferred to `{}`.",
         name.to_string(),
         y.to_string(),
         x.to_string(),
@@ -281,7 +282,8 @@ namespace jank::runtime::obj
         if(!is_dominant(cached_hierarchy, best_entry.first(), entry_key))
         {
           throw std::runtime_error{ util::format(
-            "Multiple methods in multimethod `{}` match dispatch value `{}`. The matching methods are `{}` and `{}`, and neither is preferred.",
+            "Multiple methods in multimethod `{}` match dispatch value `{}`. The matching methods "
+            "are `{}` and `{}`, and neither is preferred.",
             name.to_string(),
             dispatch_val.to_string(),
             entry_key.to_string(),

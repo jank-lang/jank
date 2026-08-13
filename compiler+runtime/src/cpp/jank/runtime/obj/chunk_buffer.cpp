@@ -24,9 +24,9 @@ namespace jank::runtime::obj
     auto const c(to_int(capacity));
     if(c < 0)
     {
-      throw std::runtime_error{
-        util::format("The `chunk_buffer` capacity must be non-negative. The provided capacity was `{}`.", c)
-      };
+      throw std::runtime_error{ util::format(
+        "The `chunk_buffer` capacity must be non-negative. The provided capacity was `{}`.",
+        c) };
     }
     this->capacity = c;
     buffer.reserve(c);

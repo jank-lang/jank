@@ -115,7 +115,8 @@ namespace jank::runtime::detail
         }
       default:
         throw std::runtime_error{ util::format(
-          "The `native_array_map` cannot expand to size `{}`. Check the current size before insertion and promote to a hash map if needed.",
+          "The `native_array_map` cannot expand to size `{}`. Check the current size before "
+          "insertion and promote to a hash map if needed.",
           (length / 2) + 1) };
     }
   }
@@ -269,7 +270,8 @@ namespace jank::runtime::detail
     if(max_size < size)
     {
       throw std::runtime_error{ util::format(
-        "The `native_array_map` cannot reserve size `{}`. Check the current size before requesting a reservation and use a hash map instead if needed.",
+        "The `native_array_map` cannot reserve size `{}`. Check the current size before requesting "
+        "a reservation and use a hash map instead if needed.",
         size) };
     }
 

@@ -164,9 +164,9 @@ namespace jank::jit
           }
 
           tracker.record_materialized_symbol(resource_key,
-                                            (*symbol->getName()).str(),
-                                            symbol->getAddress().getValue(),
-                                            symbol->getSize());
+                                             (*symbol->getName()).str(),
+                                             symbol->getAddress().getValue(),
+                                             symbol->getSize());
         }
 
         return llvm::Error::success();
@@ -271,31 +271,31 @@ namespace jank::jit
     } };
 
     auto const register_contiguous_unseen_entries
-     = [&](cpptrace::detail::jit_code_entry const *entry) {
-     for(auto *current{ entry }; current != nullptr; current = current->next_entry)
-     {
-       if(current->symfile_addr == nullptr || current->symfile_size == 0)
-       {
-         continue;
-       }
-       if(registered_object_starts.contains(current->symfile_addr))
-       {
-         break;
-       }
-       register_entry(*current);
-     }
-    };
+      = [&](cpptrace::detail::jit_code_entry const *entry) {
+          for(auto *current{ entry }; current != nullptr; current = current->next_entry)
+          {
+            if(current->symfile_addr == nullptr || current->symfile_size == 0)
+            {
+              continue;
+            }
+            if(registered_object_starts.contains(current->symfile_addr))
+            {
+              break;
+            }
+            register_entry(*current);
+          }
+        };
 
     auto const action_flag{ cpptrace::detail::__jit_debug_descriptor.action_flag };
     auto * const relevant_entry{ cpptrace::detail::__jit_debug_descriptor.relevant_entry };
     if(action_flag == cpptrace::detail::JIT_REGISTER_FN && relevant_entry != nullptr
-      && register_entry(*relevant_entry))
+       && register_entry(*relevant_entry))
     {
-     /* Mach-O debugger support can publish more than one new GDB-JIT entry before ORC calls our
+      /* Mach-O debugger support can publish more than one new GDB-JIT entry before ORC calls our
       * callback. Once we have positively identified the current emission via `relevant_entry`,
       * consume any additional unseen head entries from the same burst as well. */
-     register_contiguous_unseen_entries(cpptrace::detail::__jit_debug_descriptor.first_entry);
-     return;
+      register_contiguous_unseen_entries(cpptrace::detail::__jit_debug_descriptor.first_entry);
+      return;
     }
 
     /* If callback ordering means `relevant_entry` is not usable here, fall back to the current
@@ -304,13 +304,13 @@ namespace jank::jit
     * adjacent unseen head entries, they're part of the same unpublished burst, so mirror all of
     * them before returning. */
     for(auto *entry{ cpptrace::detail::__jit_debug_descriptor.first_entry }; entry != nullptr;
-       entry = entry->next_entry)
+        entry = entry->next_entry)
     {
-     if(register_entry(*entry))
-     {
-       register_contiguous_unseen_entries(entry->next_entry);
-       return;
-     }
+      if(register_entry(*entry))
+      {
+        register_contiguous_unseen_entries(entry->next_entry);
+        return;
+      }
     }
   }
 

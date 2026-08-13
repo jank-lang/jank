@@ -57,11 +57,10 @@ namespace jank::runtime::obj
       auto const i(to_i64(index));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
-        throw std::runtime_error{
-          util::format("The index `{}` is out of bounds for this `transient_vector` of length `{}`.",
-                       i,
-                       data.size())
-        };
+        throw std::runtime_error{ util::format(
+          "The index `{}` is out of bounds for this `transient_vector` of length `{}`.",
+          i,
+          data.size()) };
       }
       return data[i];
     }
@@ -93,11 +92,10 @@ namespace jank::runtime::obj
 
     if(i > size || 0 > i)
     {
-      throw std::runtime_error{
-        util::format("The index `{}` is out of bounds for this `transient_vector` of length `{}`.",
-                     i,
-                     data.size())
-      };
+      throw std::runtime_error{ util::format(
+        "The index `{}` is out of bounds for this `transient_vector` of length `{}`.",
+        i,
+        data.size()) };
     }
     else if(i == size)
     {
@@ -139,11 +137,10 @@ namespace jank::runtime::obj
       auto const i(to_i64(idx));
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
-        throw std::runtime_error{
-          util::format("The index `{}` is out of bounds for this `transient_vector` of length `{}`.",
-                       i,
-                       data.size())
-        };
+        throw std::runtime_error{ util::format(
+          "The index `{}` is out of bounds for this `transient_vector` of length `{}`.",
+          i,
+          data.size()) };
       }
 
       return data[i];
@@ -236,7 +233,9 @@ namespace jank::runtime::obj
     assert_active();
     if(data.empty())
     {
-      throw std::runtime_error{ "The `pop` operation on an empty `transient_vector` is not allowed." };
+      throw std::runtime_error{
+        "The `pop` operation on an empty `transient_vector` is not allowed."
+      };
     }
 
     data.take(data.size() - 1);

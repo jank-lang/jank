@@ -1,5 +1,5 @@
 ─ analyze/invalid-recur-from-try ───────────────────────────────────────────────
-error: It's not permitted to use 'recur' through a 'try'.
+error: `recur` may not be used through a `try` form.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ jar.jar:jar.cljc

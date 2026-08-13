@@ -64,9 +64,9 @@ namespace jank::runtime::obj
       auto const i(to_i64(index));
       if(i < 0 || buffer.size() - offset <= static_cast<size_t>(i))
       {
-        throw std::runtime_error{ util::format(
-          "The index `{}` is out of bounds for this `array_chunk`.",
-          i) };
+        throw std::runtime_error{
+          util::format("The index `{}` is out of bounds for this `array_chunk`.", i)
+        };
       }
       return buffer[offset + i];
     }

@@ -1187,8 +1187,9 @@ namespace jank::read::parse
 
       if(feature.ptr.get_type() != object_type::keyword)
       {
-        return error::parse_invalid_reader_conditional({ feature.start.start, feature.end.end },
-                                                       "Each feature in a reader conditional must be a keyword.");
+        return error::parse_invalid_reader_conditional(
+          { feature.start.start, feature.end.end },
+          "Each feature in a reader conditional must be a keyword.");
       }
 
       auto const feature_kw(expect_object<obj::keyword>(feature.ptr));
@@ -1209,8 +1210,9 @@ namespace jank::read::parse
       }
       else if(form_result.expect_ok().is_none())
       {
-        return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
-                                                       "Reader conditionals must contain an even number of forms.");
+        return error::parse_invalid_reader_conditional(
+          { start_token.start, latest_token.end },
+          "Reader conditionals must contain an even number of forms.");
       }
 
       auto const form{ form_result.expect_ok().unwrap().ptr };

@@ -98,11 +98,10 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{
-            util::format("Objects of type `{}` cannot be converted to symbols.",
-                         object_type_str(typed_o.get_type()))
-              .c_str()
-          };
+          throw std::runtime_error{ util::format(
+                                      "Objects of type `{}` cannot be converted to symbols.",
+                                      object_type_str(typed_o.get_type()))
+                                      .c_str() };
         }
       },
       o);
@@ -467,8 +466,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format(
-            "Objects of type `{}` are not nameable.", object_type_str(typed_o.get_type())) };
+          throw std::runtime_error{ util::format("Objects of type `{}` are not nameable.",
+                                                 object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -492,8 +491,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format(
-            "Objects of type `{}` are not nameable.", object_type_str(typed_o.get_type())) };
+          throw std::runtime_error{ util::format("Objects of type `{}` are not nameable.",
+                                                 object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -515,9 +514,9 @@ namespace jank::runtime
   {
     if(!ns.is_nil() && ns.get_type() != object_type::persistent_string)
     {
-      throw std::runtime_error{ util::format(
-        "The `keyword` function expects the namespace to be `nil` or a `persistent_string`, not a `{}`.",
-        object_type_str(ns.get_type())) };
+      throw std::runtime_error{ util::format("The `keyword` function expects the namespace to be "
+                                             "`nil` or a `persistent_string`, not a `{}`.",
+                                             object_type_str(ns.get_type())) };
     }
     if(name.get_type() != object_type::persistent_string)
     {
@@ -657,9 +656,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format(
-            "Objects of type `{}` are not dereferenceable.",
-            object_type_str(typed_o.get_type())) };
+          throw std::runtime_error{ util::format("Objects of type `{}` are not dereferenceable.",
+                                                 object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -678,9 +676,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format(
-            "Objects of type `{}` are not realizable.",
-            object_type_str(typed_o.get_type())) };
+          throw std::runtime_error{ util::format("Objects of type `{}` are not realizable.",
+                                                 object_type_str(typed_o.get_type())) };
         }
       },
       o);

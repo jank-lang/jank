@@ -277,9 +277,9 @@ namespace jank::runtime::obj
 
     if(i > size || 0 > i)
     {
-      throw std::runtime_error{ util::format(
-        "The index `{}` is out of bounds for this `persistent_vector`.",
-        i) };
+      throw std::runtime_error{
+        util::format("The index `{}` is out of bounds for this `persistent_vector`.", i)
+      };
     }
 
     if(i == size)
@@ -294,7 +294,9 @@ namespace jank::runtime::obj
 
   persistent_vector_ref persistent_vector::dissoc(object_ref const /*key*/) const
   {
-    throw std::runtime_error{ "The `dissoc` operation is not supported for `persistent_vector` values." };
+    throw std::runtime_error{
+      "The `dissoc` operation is not supported for `persistent_vector` values."
+    };
   }
 
   object_ref persistent_vector::peek() const

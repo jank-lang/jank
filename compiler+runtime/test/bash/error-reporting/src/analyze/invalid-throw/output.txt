@@ -1,5 +1,5 @@
 ─ analyze/invalid-throw ────────────────────────────────────────────────────────
-error: 'throw' requires exactly one argument.
+error: The `throw` form requires exactly one argument.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ input.jank

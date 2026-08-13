@@ -109,7 +109,8 @@ namespace jank::runtime::obj
     if(head.get_type() != object_type::persistent_vector)
     {
       throw std::runtime_error{ util::format(
-        "The `conj` operation on a transient sorted map requires a two-element `persistent_vector`, not a `{}`.",
+        "The `conj` operation on a transient sorted map requires a two-element "
+        "`persistent_vector`, not a `{}`.",
         object_type_str(head.get_type())) };
     }
 
@@ -117,7 +118,8 @@ namespace jank::runtime::obj
     if(vec->count() != 2)
     {
       throw std::runtime_error{ util::format(
-        "The `conj` operation on a transient sorted map requires a two-element vector entry, not a vector of length `{}`.",
+        "The `conj` operation on a transient sorted map requires a two-element vector entry, not a "
+        "vector of length `{}`.",
         vec->count()) };
     }
 

@@ -739,9 +739,10 @@ namespace jank::read::lex
               if(contains_dot || is_scientific || !contains_leading_digit || found_N)
               {
                 ++pos;
-                return error::lex_invalid_number("A number literal cannot contain a `.` in this position.",
-                                                 { token_start, pos },
-                                                 error::note{ "Found a `.` here.", pos });
+                return error::lex_invalid_number(
+                  "A number literal cannot contain a `.` in this position.",
+                  { token_start, pos },
+                  error::note{ "Found a `.` here.", pos });
               }
               if(found_r)
               {
@@ -780,9 +781,10 @@ namespace jank::read::lex
                 if(is_scientific || !contains_leading_digit)
                 {
                   ++pos;
-                  return error::lex_invalid_number("A decimal number literal contains an unexpected `e`.",
-                                                   { token_start, pos },
-                                                   error::note{ "Found `e` here.", pos });
+                  return error::lex_invalid_number(
+                    "A decimal number literal contains an unexpected `e`.",
+                    { token_start, pos },
+                    error::note{ "Found `e` here.", pos });
                 }
                 if(found_slash_after_number)
                 {
@@ -809,7 +811,8 @@ namespace jank::read::lex
                 {
                   ++pos;
                   return error::lex_invalid_number(
-                    util::format("A number literal contains an unexpected `{}`.", static_cast<char>(c)),
+                    util::format("A number literal contains an unexpected `{}`.",
+                                 static_cast<char>(c)),
                     { token_start, pos },
                     error::note{ util::format("Found `{}` here.", static_cast<char>(c)), pos });
                 }
@@ -920,8 +923,9 @@ namespace jank::read::lex
               if(expecting_exponent)
               {
                 ++pos;
-                return error::lex_invalid_number("The decimal exponent is missing from the end of this number literal.",
-                                                 { token_start, pos });
+                return error::lex_invalid_number(
+                  "The decimal exponent is missing from the end of this number literal.",
+                  { token_start, pos });
               }
               if(!contains_leading_digit)
               {
@@ -1034,7 +1038,8 @@ namespace jank::read::lex
             ++pos;
             if(found_r)
             {
-              return error::lex_invalid_number("This integer literal ended unexpectedly.", { token_start, pos });
+              return error::lex_invalid_number("This integer literal ended unexpectedly.",
+                                               { token_start, pos });
             }
             return error::lex_invalid_number(
               util::format("This base-{} number literal ended unexpectedly.", radix),
@@ -1064,9 +1069,9 @@ namespace jank::read::lex
               if(radix < 2 || radix > 36)
               {
                 return error::lex_invalid_number(
-                  util::format(
-                    "The base `{}` is out of range. The supported bases are `2` through `36`, inclusive.",
-                    radix),
+                  util::format("The base `{}` is out of range. The supported bases are `2` through "
+                               "`36`, inclusive.",
+                               radix),
                   { token_start, pos });
               }
               number_start = r_pos + 1llu;
@@ -1206,9 +1211,8 @@ namespace jank::read::lex
              || is_special_char(oc.expect_ok().character))
           {
             ++pos;
-            return error::lex_invalid_keyword(
-              "A keyword must contain a valid symbol after `:`.",
-              { token_start, pos });
+            return error::lex_invalid_keyword("A keyword must contain a valid symbol after `:`.",
+                                              { token_start, pos });
           }
 
           auto const c(oc.expect_ok().character);
@@ -1249,7 +1253,8 @@ namespace jank::read::lex
 
               return error::lex_invalid_keyword(
                 ch == '/' ? "The namespace symbol before `/` is missing."
-                          : util::format("This keyword ended unexpectedly. A symbol was expected, but `{}` was found here.",
+                          : util::format("This keyword ended unexpectedly. A symbol was expected, "
+                                         "but `{}` was found here.",
                                          ch),
                 { token_start, pos });
             }
@@ -1280,9 +1285,10 @@ namespace jank::read::lex
           }
           else if(name[0] == ':' && name[1] == ':')
           {
-            return error::lex_invalid_keyword("A keyword may not contain more than two `:` characters.",
-                                              { token_start, pos },
-                                              "Only one or two `:` characters are valid.");
+            return error::lex_invalid_keyword(
+              "A keyword may not contain more than two `:` characters.",
+              { token_start, pos },
+              "Only one or two `:` characters are valid.");
           }
 
           return ok(token{ token_start, pos, token_kind::keyword, name });

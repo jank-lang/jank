@@ -670,9 +670,10 @@ namespace jank::analyze
       auto const arg_count{ arg_exprs.size() };
       if(arg_count == 0)
       {
-        return error::analyze_invalid_cpp_operator_call("An operator call requires an invoking object.",
-                                                        object_source(val->form),
-                                                        latest_expansion(macro_expansions));
+        return error::analyze_invalid_cpp_operator_call(
+          "An operator call requires an invoking object.",
+          object_source(val->form),
+          latest_expansion(macro_expansions));
       }
       else if(arg_count > 2)
       {
@@ -1421,8 +1422,9 @@ namespace jank::analyze
   {
     if(parse_current == parse_end)
     {
-      return error::analyze_internal_failure("The parser iterator is invalid because it has reached the end of the parse stream.",
-                                             latest_expansion(macro_expansions));
+      return error::analyze_internal_failure(
+        "The parser iterator is invalid because it has reached the end of the parse stream.",
+        latest_expansion(macro_expansions));
     }
 
     /* We wrap all of the expressions we get in an anonymous fn so that we can call it easily.
@@ -1455,7 +1457,7 @@ namespace jank::analyze
     auto const length(l->count());
     if(length < 2)
     {
-      return error::analyze_invalid_def("The `def` form is missing a variable name.",
+      return error::analyze_invalid_def("The `def` form is missing a var name.",
                                         meta_source(l->get_meta()),
                                         latest_expansion(macro_expansions));
     }
@@ -1469,7 +1471,7 @@ namespace jank::analyze
     auto const sym_obj(l->data.rest().first().unwrap());
     if(sym_obj.get_type() != runtime::object_type::symbol)
     {
-      return error::analyze_invalid_def("The variable name in a `def` form must be a symbol.",
+      return error::analyze_invalid_def("The var name in a `def` form must be a symbol.",
                                         object_source(sym_obj),
                                         "A symbol is needed for the name here.",
                                         latest_expansion(macro_expansions))
@@ -1479,7 +1481,7 @@ namespace jank::analyze
     auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
     if(!sym->ns.empty())
     {
-      return error::analyze_invalid_def("The variable name in a `def` form must not be qualified.",
+      return error::analyze_invalid_def("The var name in a `def` form must not be qualified.",
                                         meta_source(sym->get_meta()),
                                         latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 1));
@@ -1824,9 +1826,10 @@ namespace jank::analyze
     auto const &params_obj(first_form.unwrap());
     if(params_obj.get_type() != runtime::object_type::persistent_vector)
     {
-      return error::analyze_invalid_fn_parameters("The parameter vector for this function must be a vector.",
-                                                  object_source(params_obj),
-                                                  latest_expansion(macro_expansions))
+      return error::analyze_invalid_fn_parameters(
+               "The parameter vector for this function must be a vector.",
+               object_source(params_obj),
+               latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(list, 0));
     }
 
@@ -2167,10 +2170,9 @@ namespace jank::analyze
     else if(__rt_ctx->no_recur_var->is_bound() && runtime::truthy(__rt_ctx->no_recur_var->deref()))
     {
       /* TODO: Note where the try is. */
-      return error::analyze_invalid_recur_from_try(
-        "`recur` may not be used through a `try` form.",
-        meta_source(list->get_meta()),
-        latest_expansion(macro_expansions));
+      return error::analyze_invalid_recur_from_try("`recur` may not be used through a `try` form.",
+                                                   meta_source(list->get_meta()),
+                                                   latest_expansion(macro_expansions));
     }
     else if(position != expression_position::tail)
     {
@@ -2360,9 +2362,10 @@ namespace jank::analyze
     if(binding_parts % 2 == 1)
     {
       /* TODO: Note the last value (maybe reparse). Check if it's a symbol? */
-      return error::analyze_invalid_let("The `let` bindings vector must contain an even number of entries.",
-                                        read::parse::reparse_nth(bindings, binding_parts - 1),
-                                        latest_expansion(macro_expansions));
+      return error::analyze_invalid_let(
+        "The `let` bindings vector must contain an even number of entries.",
+        read::parse::reparse_nth(bindings, binding_parts - 1),
+        latest_expansion(macro_expansions));
     }
 
     auto frame{ jtl::make_ref<local_frame>(local_frame::frame_type::let, current_frame) };
@@ -2388,9 +2391,10 @@ namespace jank::analyze
 
       if(sym_obj.get_type() != runtime::object_type::symbol)
       {
-        return error::analyze_invalid_let("The left-hand side of each `let` binding must be a symbol.",
-                                          object_source(sym_obj),
-                                          latest_expansion(macro_expansions))
+        return error::analyze_invalid_let(
+                 "The left-hand side of each `let` binding must be a symbol.",
+                 object_source(sym_obj),
+                 latest_expansion(macro_expansions))
           ->add_usage(read::parse::reparse_nth(bindings, i));
       }
       auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
@@ -2926,9 +2930,10 @@ namespace jank::analyze
 
     if(o->count() != 2)
     {
-      return error::analyze_invalid_var_reference("The `var` form requires exactly one form to resolve.",
-                                                  meta_source(o->get_meta()),
-                                                  latest_expansion(macro_expansions));
+      return error::analyze_invalid_var_reference(
+        "The `var` form requires exactly one form to resolve.",
+        meta_source(o->get_meta()),
+        latest_expansion(macro_expansions));
     }
 
     auto const arg(o->data.rest().first().unwrap());
@@ -3163,13 +3168,14 @@ namespace jank::analyze
             {
               if(existing_catch.type == catch_type)
               {
-                return error::analyze_invalid_try("Each `catch` form must specify a unique exception type.",
-                                                  object_source(item),
-                                                  error::note{
-                                                    "Type previously caught here.",
-                                                    object_source(existing_catch.sym),
-                                                  },
-                                                  latest_expansion(macro_expansions));
+                return error::analyze_invalid_try(
+                  "Each `catch` form must specify a unique exception type.",
+                  object_source(item),
+                  error::note{
+                    "Type previously caught here.",
+                    object_source(existing_catch.sym),
+                  },
+                  latest_expansion(macro_expansions));
               }
             }
 
@@ -4682,8 +4688,9 @@ namespace jank::analyze
     if(!Cpp::IsPointerType(value_type))
     {
       return error::analyze_invalid_cpp_delete(
-               util::format("The value `{}` cannot be deleted because it is not a raw pointer type.",
-                            cpp_util::get_qualified_type_name(value_type)),
+               util::format(
+                 "The value `{}` cannot be deleted because it is not a raw pointer type.",
+                 cpp_util::get_qualified_type_name(value_type)),
                object_source(value_obj),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 1));

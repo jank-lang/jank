@@ -479,7 +479,8 @@ namespace jank::runtime::module
 
     if(res.is_none())
     {
-      return error::runtime_internal_failure(util::format("The module `{}` has an unknown type.", module));
+      return error::runtime_internal_failure(
+        util::format("The module `{}` has an unknown type.", module));
     }
 
     auto const &entry{ res.unwrap() };
@@ -556,7 +557,8 @@ namespace jank::runtime::module
     if(found.is_none())
     {
       /* TODO: If it contains -, suggest using _. Very common issue. */
-      return error::runtime_module_not_found(util::format("The module `{}` could not be found.", module));
+      return error::runtime_module_not_found(
+        util::format("The module `{}` could not be found.", module));
     }
 
     auto const &entry(found.unwrap());

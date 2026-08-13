@@ -1,5 +1,5 @@
 ─ analyze/invalid-def ──────────────────────────────────────────────────────────
-error: The provided var name for a 'def' must not be qualified.
+error: The var name in a `def` form must not be qualified.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ input.jank

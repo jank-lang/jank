@@ -1,5 +1,5 @@
 ─ analyze/invalid-if ───────────────────────────────────────────────────────────
-error: Each 'if' needs at least a condition and a 'then' form.
+error: Each `if` form requires a condition and a `then` form.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ input.jank

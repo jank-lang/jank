@@ -221,9 +221,9 @@ namespace jank::runtime
       }
       else
       {
-        throw std::runtime_error{ util::format(
-          "The `:read-cond` reader option supports only `:preserve` and `:allow`. It was set to `{}`.",
-          read_cond.to_code_string()) };
+        throw std::runtime_error{ util::format("The `:read-cond` reader option supports only "
+                                               "`:preserve` and `:allow`. It was set to `{}`.",
+                                               read_cond.to_code_string()) };
       }
     }
 
@@ -290,7 +290,8 @@ namespace jank::runtime
 
     if(throw_on_eof && eof_found)
     {
-      throw std::runtime_error{ "EOF was reached while reading. To override this behavior, provide a value for the EOF case via the `:eof` reader option." };
+      throw std::runtime_error{ "EOF was reached while reading. To override this behavior, provide "
+                                "a value for the EOF case via the `:eof` reader option." };
     }
 
     return ret;
@@ -397,9 +398,9 @@ namespace jank::runtime
   {
     if(!sym->ns.empty())
     {
-      throw std::runtime_error{ util::format(
-        "The namespace symbol `{}` is already qualified. Namespace names for `intern-ns` must be unqualified.",
-        sym->to_string()) };
+      throw std::runtime_error{ util::format("The namespace symbol `{}` is already qualified. "
+                                             "Namespace names for `intern-ns` must be unqualified.",
+                                             sym->to_string()) };
     }
     auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
