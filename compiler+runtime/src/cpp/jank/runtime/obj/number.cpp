@@ -58,7 +58,9 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}", object_type_str(o.type)) };
+        throw std::runtime_error{ util::format(
+          "Objects of type `{}` are not comparable to `boolean`.",
+          object_type_str(o.type)) };
       },
       runtime::detail::untagged(&o));
   }
@@ -139,7 +141,9 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}", object_type_str(o.type)) };
+        throw std::runtime_error{ util::format(
+          "Objects of type `{}` are not comparable to `integer`.",
+          object_type_str(o.type)) };
       },
       runtime::detail::untagged(&o));
   }
@@ -226,7 +230,9 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}", object_type_str(o.type)) };
+        throw std::runtime_error{ util::format(
+          "Objects of type `{}` are not comparable to `small_integer`.",
+          object_type_str(o.type)) };
       },
       runtime::detail::untagged(&o));
   }
@@ -344,7 +350,9 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}", object_type_str(o.type)) };
+        throw std::runtime_error{ util::format(
+          "Objects of type `{}` are not comparable to `real`.",
+          object_type_str(o.type)) };
       },
       runtime::detail::untagged(&o));
   }
@@ -467,7 +475,9 @@ namespace jank::runtime::obj
     return visit_number_like(
       [this](auto const typed_o) -> i64 { return (typed_o->data < data) - (data < typed_o->data); },
       [&]() -> i64 {
-        throw std::runtime_error{ util::format("not comparable: {}", object_type_str(o.type)) };
+        throw std::runtime_error{ util::format(
+          "Objects of type `{}` are not comparable to `small_real`.",
+          object_type_str(o.type)) };
       },
       runtime::detail::untagged(&o));
   }

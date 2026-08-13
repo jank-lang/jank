@@ -85,8 +85,9 @@ namespace jank::runtime::obj
     auto const s{ dyn_cast<obj::symbol>(runtime::detail::untagged(&o)) };
     if(s.is_nil())
     {
-      throw std::runtime_error{ util::format("The value for comparison must be a symbol, not '{}'.",
-                                             object_type_str(o.type)) };
+      throw std::runtime_error{ util::format(
+        "The value for comparison must be a `symbol`, not a `{}`.",
+        object_type_str(o.type)) };
     }
     return compare(*s);
   }
