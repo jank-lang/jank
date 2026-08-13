@@ -2,6 +2,7 @@
 
 #include <jank/error.hpp>
 
+/* NOLINTNEXTLINE(modernize-concat-nested-namespaces): Not doable, due to the inline. */
 namespace cpptrace
 {
   inline namespace v1

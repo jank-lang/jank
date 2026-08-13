@@ -7,6 +7,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/read/source.hpp>
 
+/* NOLINTNEXTLINE(modernize-concat-nested-namespaces): Not doable, due to the inline. */
 namespace cpptrace
 {
   inline namespace v1

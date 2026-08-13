@@ -103,11 +103,12 @@ namespace jank::util
   {
     auto resolved{ trace.resolve() };
 
-    resolved.frames.erase(
-      std::remove_if(resolved.frames.begin(),
-                     resolved.frames.end(),
-                     [](cpptrace::stacktrace_frame const &frame) { return !filter_frame(frame); }),
-      resolved.frames.end());
+    resolved.frames.erase(std::ranges::remove_if(resolved.frames,
+                                                 [](cpptrace::stacktrace_frame const &frame) {
+                                                   return !filter_frame(frame);
+                                                 })
+                            .begin(),
+                          resolved.frames.end());
 
     for(auto &frame : resolved.frames)
     {
