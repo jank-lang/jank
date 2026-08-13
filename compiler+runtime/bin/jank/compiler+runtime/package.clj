@@ -1,7 +1,7 @@
 #!/usr/bin/env bb
 
 (ns jank.compiler+runtime.package
-  (:require [clojure.string]
+  (:require [clojure.string :as str]
             [babashka.process :as b.p]
             [selmer.parser :as selmer]
             [jank.util :as util]
@@ -63,17 +63,17 @@ Description: The native Clojure dialect with seamless C++ interop.
   ["llvm-libs" "clang" "openssl"])
 
 (def pkgbuild-template
-  "Selmer template for generating an MSYS2 PKGBUILD.
+  "Selmer template for generating the jank MSYS2 PKGBUILD.
    Assumes the source tree is already configured and compiled.
-   Produces a pacman package (.pkg.tar.zst) from the existing build.
+   Produces mingw-w64-clang-x86_64-jank-<pkgver>-<pkgrel>-any.pkg.tar.zst.
    Template params:
-     version - jank version (e.g. 0.1)
-     pkgrel  - package release identifier (e.g. jank_302859499)
+     pkgver  - package version
+     pkgrel  - package release identifier
      deps    - list of runtime dep names without MINGW_PACKAGE_PREFIX"
   "_realname=jank
 pkgbase=mingw-w64-${_realname}
 pkgname=(\"${MINGW_PACKAGE_PREFIX}-${_realname}\")
-pkgver={{version}}
+pkgver={{pkgver}}
 pkgrel={{pkgrel}}
 pkgdesc=\"The native Clojure dialect on LLVM (mingw-w64)\"
 arch=('any')
@@ -102,25 +102,29 @@ package() {
 ;; Packages jank into an MSYS2 pacman .pkg.tar.zst using makepkg.
 ;;
 ;; Requires: bin/configure + bin/compile already ran (build tree at
-;; compiler+runtime/build/ with CMAKE_INSTALL_PREFIX=/clang64).
+;; compiler+runtime-dir).
 ;;
-;; Inputs:
-;;   pkgbuild-template - selmer template, rendered with:
-;;     :version  - from jank-version
-;;     :pkgrel   - "jank_<short-commit-hash>"
-;;     :deps     - from win-depends
-;;   win-depends - runtime dependency list for the package
+;; Global inputs:
+;;   compiler+runtime-dir - path to compiler+runtime/
+;;   jank-version         - version string
+;;   pkgbuild-template    - selmer PKGBUILD template to render for packaging
+;;   win-depends          - runtime dependency list for the package
 ;;
-;; Outputs: .pkg.tar.zst in build/makepkg-jank/ (filename determined by makepkg).
-;; In CI: writes path to GITHUB_OUTPUT as msys2-pkg=<path>.
+;; Outputs: mingw-w64-clang-x86_64-jank-<pkgver>-<rev-count>.<commit>-any.pkg.tar.zst
+;;   in build/makepkg-jank/.
+;; When GITHUB_OUTPUT exists in the environment (i.e. on CI) writes
+;;   path to it as msys2-pkg=<package-path>.
 (defmethod create-package! :win [_props]
   (let [repo-root (b.f/canonicalize (b.f/path compiler+runtime-dir ".."))
         build-dir (b.f/path compiler+runtime-dir "build" "makepkg-jank")
-        commit-hash (:out @(util/quiet-shell {:dir repo-root}
-                                             "git rev-parse --short HEAD"))
+        commit-count (str/trim (:out @(util/quiet-shell {:dir repo-root}
+                                                        "git rev-list --count HEAD")))
+        commit-hash (str/trim (:out @(util/quiet-shell {:dir repo-root}
+                                                       "git rev-parse --short HEAD")))
         pkgbuild (selmer/render pkgbuild-template
-                                {:version jank-version
-                                 :pkgrel (str "jank_" commit-hash)})
+                                {:pkgver jank-version
+                                 :pkgrel (str commit-count "." commit-hash)
+                                 :deps win-depends})
         pkgbuild-dest (b.f/path build-dir "PKGBUILD")]
 
     ;; Clean and create the makepkg build directory
