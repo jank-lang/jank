@@ -26,9 +26,7 @@ namespace jank::runtime::obj
 
   object_ref atom::with_meta(object_ref const)
   {
-    throw std::runtime_error{
-      "Value of type 'atom' does not support 'with-meta'.",
-    };
+    throw std::runtime_error{ "Objects of type `atom` do not support `with-meta`." };
   }
 
   object_ref atom::get_meta() const
@@ -231,7 +229,7 @@ namespace jank::runtime::obj
   {
     if(vf.is_some() && !truthy(vf.call(val)))
     {
-      throw std::runtime_error{ "Invalid atom state" };
+      throw std::runtime_error{ "The `atom` validator rejected the provided value." };
     }
   }
 
