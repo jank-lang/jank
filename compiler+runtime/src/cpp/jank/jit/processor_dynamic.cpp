@@ -219,6 +219,17 @@ namespace jank::jit
         break;
     }
 
+    /* Remove any -g flags if we don't have debug info enabled. This will drastically cut
+     * down JIT compilation time. */
+    if(!util::cli::opts.debug)
+    {
+      args.erase(
+        std::ranges::remove_if(args,
+                               [](char const *arg) { return std::string_view{ arg } == "-g"; })
+          .begin(),
+        args.end());
+    }
+
     //util::println("jit flags {}", args);
 
     /* We don't actually own this interpreter. CppInterOp does. */
