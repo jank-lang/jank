@@ -144,7 +144,7 @@ namespace jank::runtime::module
     {
       auto const entry_name{ zip_entry_name(zip) };
       return error::runtime_internal_failure(
-        util::format("Failed to read jar entry '{}' with error '{}'.",
+        util::format("The jar entry `{}` could not be read because of the error `{}`.",
                      entry_name,
                      zip_strerror(static_cast<int>(read_result))));
     }
@@ -163,7 +163,9 @@ namespace jank::runtime::module
     if(ziperr < 0)
     {
       return error::runtime_internal_failure(
-        util::format("Failed to open jar '{}' with error '{}'.", path, zip_strerror(ziperr)));
+        util::format("The jar `{}` could not be opened because of the error `{}`.",
+                     path,
+                     zip_strerror(ziperr)));
     }
 
     auto const entry_handle{ open_zip_entry(zip.get(), entry.path.c_str()) };
@@ -432,9 +434,8 @@ namespace jank::runtime::module
     if(ziperr < 0)
     {
       return error::runtime_internal_failure(
-        util::format("Failed to open jar '{}' with error {}, '{}'.",
+        util::format("The jar `{}` could not be opened because of the error `{}`.",
                      jar_path,
-                     ziperr,
                      zip_strerror(ziperr)));
     }
 
@@ -478,7 +479,7 @@ namespace jank::runtime::module
 
     if(res.is_none())
     {
-      return error::runtime_internal_failure(util::format("Unknown type for module '{}'.", module));
+      return error::runtime_internal_failure(util::format("The module `{}` has an unknown type.", module));
     }
 
     auto const &entry{ res.unwrap() };
@@ -555,7 +556,7 @@ namespace jank::runtime::module
     if(found.is_none())
     {
       /* TODO: If it contains -, suggest using _. Very common issue. */
-      return error::runtime_module_not_found(util::format("Unable to find module '{}'.", module));
+      return error::runtime_module_not_found(util::format("The module `{}` could not be found.", module));
     }
 
     auto const &entry(found.unwrap());
@@ -577,7 +578,7 @@ namespace jank::runtime::module
     if(source_entry.is_none())
     {
       return error::runtime_module_binary_without_source(
-        util::format("No sources for registered module '{}'.", module));
+        util::format("The registered module `{}` has no source files.", module));
     }
 
     if(ori == origin::source)
