@@ -334,7 +334,7 @@ int main(int argc, const char** argv)
     if(main_var.is_nil())
     {
       return error::aot_unresolved_main(util::format(
-        "The entrypoint of the program is expected to be #'{}/-main, but this var was not found.",
+        "The entrypoint of the program is expected to be `#'{}/-main`, but this var was not found.",
         module));
     }
 
