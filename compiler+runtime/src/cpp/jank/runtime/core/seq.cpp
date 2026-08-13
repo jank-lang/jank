@@ -44,8 +44,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("cannot check if this is empty: {}",
-                                                 typed_o.to_code_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` do not support emptiness checks.",
+            object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -165,8 +166,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not transientable: {}",
-                                                 object_type_str(typed_o.get_type())) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not transientable.",
+            object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -185,8 +187,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not persistentable: {}",
-                                                 typed_o.to_code_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not persistentable.",
+            object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -205,8 +208,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not conjable_in_place: {}",
-                                                 typed_coll.to_code_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not conjable in place.",
+            object_type_str(typed_coll.get_type())) };
         }
       },
       coll,
@@ -225,7 +229,9 @@ namespace jank::runtime
       return expect_object<obj::transient_sorted_set>(coll)->disjoin_in_place(o);
     }
 
-    throw std::runtime_error{ util::format("not disjoinable_in_place: {}", coll.to_code_string()) };
+    throw std::runtime_error{ util::format(
+      "Objects of type `{}` are not disjoinable in place.",
+      object_type_str(coll.get_type())) };
   }
 
   object_ref assoc_in_place(object_ref const coll, object_ref const k, object_ref const v)
@@ -241,8 +247,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not associatively_writable_in_place: {}",
-                                                 typed_coll.to_code_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not associatively writable in place.",
+            object_type_str(typed_coll.get_type())) };
         }
       },
       coll,
@@ -263,8 +270,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not associatively_writable_in_place: {}",
-                                                 typed_coll.to_code_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not associatively writable in place.",
+            object_type_str(typed_coll.get_type())) };
         }
       },
       coll,
@@ -392,7 +400,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not conjable: {}", typed_s.to_code_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not conjable.",
+            object_type_str(typed_s.get_type())) };
         }
       },
       s);
@@ -413,8 +423,9 @@ namespace jank::runtime
     }
     else
     {
-      throw std::runtime_error{ util::format("not disjoinable: {}",
-                                             object_type_str(s.get_type())) };
+      throw std::runtime_error{ util::format(
+        "Objects of type `{}` are not disjoinable.",
+        object_type_str(s.get_type())) };
     }
   }
 
@@ -431,8 +442,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not associatively writable: {}",
-                                                 object_type_str(typed_m.get_type())) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not associatively writable.",
+            object_type_str(typed_m.get_type())) };
         }
       },
       m);
@@ -451,8 +463,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not associatively writable: {}",
-                                                 object_type_str(typed_m.get_type())) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not associatively writable.",
+            object_type_str(typed_m.get_type())) };
         }
       },
       m);
@@ -550,8 +563,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not associatively_writable: {}",
-                                                 typed_m.to_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not associatively writable.",
+            object_type_str(typed_m.get_type())) };
         }
       },
       m,
@@ -587,8 +601,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not associatively_writable_in_place: {}",
-                                                 typed_m.to_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not associatively writable in place.",
+            object_type_str(typed_m.get_type())) };
         }
       },
       m,
@@ -599,14 +614,19 @@ namespace jank::runtime
   {
     if(o.get_type() != object_type::persistent_vector)
     {
-      throw std::runtime_error{ "not a vector" };
+      throw std::runtime_error{ util::format(
+        "The `subvec` function expects a `persistent_vector`, not a `{}`.",
+        object_type_str(o.get_type())) };
     }
 
     auto const &v(expect_object<obj::persistent_vector>(o));
 
     if(end < start || start < 0 || static_cast<size_t>(end) > v->count())
     {
-      throw std::runtime_error{ "index out of bounds" };
+      throw std::runtime_error{ util::format(
+        "The index range `[{}, {})` is out of bounds for this vector.",
+        start,
+        end) };
     }
     else if(start == end)
     {
@@ -621,7 +641,9 @@ namespace jank::runtime
     auto const index(to_int(idx));
     if(index < 0)
     {
-      throw std::runtime_error{ util::format("index out of bounds: {}", index) };
+      throw std::runtime_error{ util::format(
+        "The index `{}` is out of bounds for this collection.",
+        index) };
     }
     else if(o.is_nil())
     {
@@ -648,12 +670,15 @@ namespace jank::runtime
             }
             ++i;
           }
-          throw std::runtime_error{ util::format("index out of bounds: {}", index) };
+          throw std::runtime_error{ util::format(
+            "The index `{}` is out of bounds for this collection.",
+            index) };
         }
         else
         {
-          throw std::runtime_error{ util::format("not indexable: {}",
-                                                 object_type_str(o.get_type())) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not indexable.",
+            object_type_str(o.get_type())) };
         }
       },
       o);
@@ -691,8 +716,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not indexable: {}",
-                                                 object_type_str(o.get_type())) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not indexable.",
+            object_type_str(o.get_type())) };
         }
       },
       o);
@@ -716,8 +742,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not stackable: {}",
-                                                 object_type_str(o.get_type())) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not stackable.",
+            object_type_str(o.get_type())) };
         }
       },
       o);
@@ -741,8 +768,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not stackable: {}",
-                                                 object_type_str(o.get_type())) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not stackable.",
+            object_type_str(o.get_type())) };
         }
       },
       o);
@@ -835,7 +863,9 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not seqable: {}", typed_s.to_code_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not seqable.",
+            object_type_str(typed_s.get_type())) };
         }
       },
       s);
@@ -925,7 +955,9 @@ namespace jank::runtime
           return typed_o->chunked_first();
         }
         {
-          throw std::runtime_error{ util::format("not chunkable: {}", typed_o.to_code_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not chunkable.",
+            object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -943,7 +975,9 @@ namespace jank::runtime
           return typed_o->chunked_next();
         }
         {
-          throw std::runtime_error{ util::format("not chunkable: {}", typed_o.to_code_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not chunkable.",
+            object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -966,7 +1000,9 @@ namespace jank::runtime
           return ret;
         }
         {
-          throw std::runtime_error{ util::format("not chunkable: {}", typed_o.to_code_string()) };
+          throw std::runtime_error{ util::format(
+            "Objects of type `{}` are not chunkable.",
+            object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -1093,7 +1129,8 @@ namespace jank::runtime
         if constexpr(!behavior::collection_like<T> || behavior::map_like<T>)
         {
           throw std::runtime_error{
-            util::format("cannot shuffle: '{}'", object_type_str(typed_coll.get_type())),
+            util::format("Objects of type `{}` cannot be shuffled.",
+                         object_type_str(typed_coll.get_type()))
           };
         }
 
