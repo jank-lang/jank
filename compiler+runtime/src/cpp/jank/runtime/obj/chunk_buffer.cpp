@@ -24,7 +24,9 @@ namespace jank::runtime::obj
     auto const c(to_int(capacity));
     if(c < 0)
     {
-      throw std::runtime_error{ util::format("invalid capacity: {}", c) };
+      throw std::runtime_error{
+        util::format("The `chunk_buffer` capacity must be non-negative. The provided capacity was `{}`.", c)
+      };
     }
     this->capacity = c;
     buffer.reserve(c);
@@ -39,7 +41,7 @@ namespace jank::runtime::obj
   {
     if(buffer.size() == capacity)
     {
-      throw std::runtime_error{ "chunk buffer is already full" };
+      throw std::runtime_error{ "This `chunk_buffer` is already full." };
     }
     buffer.emplace_back(o);
   }

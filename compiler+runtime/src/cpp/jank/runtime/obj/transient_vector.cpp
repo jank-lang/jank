@@ -58,15 +58,18 @@ namespace jank::runtime::obj
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{
-          util::format("out of bounds index {}; vector has a size of {}", i, data.size())
+          util::format("The index `{}` is out of bounds for this `transient_vector` of length `{}`.",
+                       i,
+                       data.size())
         };
       }
       return data[i];
     }
     else
     {
-      throw std::runtime_error{ util::format("nth on a vector must be an integer; found {}",
-                                             object_type_str(index.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The `nth` operation on a `transient_vector` requires an integer index, not a `{}`.",
+        object_type_str(index.get_type())) };
     }
   }
 
@@ -80,7 +83,9 @@ namespace jank::runtime::obj
     assert_active();
     if(!is_integral(key))
     {
-      throw std::runtime_error{ "Key must be an integer." };
+      throw std::runtime_error{ util::format(
+        "The `assoc` operation on a `transient_vector` requires an integer key, not a `{}`.",
+        object_type_str(key.get_type())) };
     }
 
     auto const i(to_i64(key));
@@ -88,7 +93,11 @@ namespace jank::runtime::obj
 
     if(i > size || 0 > i)
     {
-      throw std::runtime_error{ "Index out of bounds." };
+      throw std::runtime_error{
+        util::format("The index `{}` is out of bounds for this `transient_vector` of length `{}`.",
+                     i,
+                     data.size())
+      };
     }
     else if(i == size)
     {
@@ -104,7 +113,7 @@ namespace jank::runtime::obj
 
   transient_vector_ref transient_vector::dissoc_in_place(object_ref const /*key*/)
   {
-    throw std::runtime_error{ "Unsupported dissoc operation!" };
+    throw std::runtime_error{ "The `dissoc` operation on a `transient_vector` is not supported." };
   }
 
   transient_vector::persistent_type_ref transient_vector::to_persistent()
@@ -131,7 +140,9 @@ namespace jank::runtime::obj
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{
-          util::format("Index out of bound; index = {}, count = {}", i, count())
+          util::format("The index `{}` is out of bounds for this `transient_vector` of length `{}`.",
+                       i,
+                       data.size())
         };
       }
 
@@ -139,8 +150,9 @@ namespace jank::runtime::obj
     }
     else
     {
-      throw std::runtime_error{ util::format("key must be an integer; found {}",
-                                             object_type_str(idx.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The `call` operation on a `transient_vector` requires an integer index, not a `{}`.",
+        object_type_str(idx.get_type())) };
     }
   }
 
@@ -159,8 +171,9 @@ namespace jank::runtime::obj
     }
     else
     {
-      throw std::runtime_error{ util::format("key must be an integer; found {}",
-                                             object_type_str(idx.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The `get` operation on a `transient_vector` requires an integer index, not a `{}`.",
+        object_type_str(idx.get_type())) };
     }
   }
 
@@ -179,8 +192,9 @@ namespace jank::runtime::obj
     }
     else
     {
-      throw std::runtime_error{ util::format("key must be an integer; found {}",
-                                             object_type_str(idx.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The `get` operation on a `transient_vector` requires an integer index, not a `{}`.",
+        object_type_str(idx.get_type())) };
     }
   }
 
@@ -198,8 +212,9 @@ namespace jank::runtime::obj
     }
     else
     {
-      throw std::runtime_error{ util::format("find on a vector must be an integer; found {}",
-                                             object_type_str(idx.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The `find` operation on a `transient_vector` requires an integer index, not a `{}`.",
+        object_type_str(idx.get_type())) };
     }
   }
 
@@ -221,7 +236,7 @@ namespace jank::runtime::obj
     assert_active();
     if(data.empty())
     {
-      throw std::runtime_error{ "Can't pop empty vector" };
+      throw std::runtime_error{ "The `pop` operation on an empty `transient_vector` is not allowed." };
     }
 
     data.take(data.size() - 1);
@@ -232,7 +247,7 @@ namespace jank::runtime::obj
   {
     if(!active)
     {
-      throw std::runtime_error{ "transient used after it's been made persistent" };
+      throw std::runtime_error{ "This `transient_vector` has already been made persistent." };
     }
   }
 }
