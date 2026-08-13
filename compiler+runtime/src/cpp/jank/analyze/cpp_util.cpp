@@ -1294,8 +1294,8 @@ namespace jank::analyze::cpp_util
     if(!is_any_object(type) && !is_trait_convertible(type))
     {
       return error::analyze_invalid_cpp_conversion(
-        util::format("This function is returning a native object of type '{}', which is not "
-                     "convertible to a jank runtime object.",
+        util::format("This function returns a native object of type `{}` that is not convertible "
+                     "to a jank runtime object.",
                      Cpp::GetTypeAsString(type)),
         runtime::object_source(expr->form));
     }

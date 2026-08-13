@@ -19,7 +19,7 @@ namespace jank::read::parse
   {
     if(module == no_source_path)
     {
-      return error::parse_internal_failure("Cannot reparse object with no source path.");
+      return error::parse_internal_failure("A source path is required to reparse this object.");
     }
 
     auto mapped_file(runtime::module::loader::read_file(file));
@@ -44,7 +44,7 @@ namespace jank::read::parse
       if(it->is_err())
       {
         return error::parse_internal_failure(
-          util::format("Unable to reparse module '{}' due to error '{}'.",
+          util::format("The module `{}` could not be reparsed because of the error `{}`.",
                        module,
                        it->expect_err()->message));
       }
@@ -52,7 +52,7 @@ namespace jank::read::parse
     if(it->is_err())
     {
       return error::parse_internal_failure(
-        util::format("Unable to reparse module '{}' due to error '{}'.",
+        util::format("The module `{}` could not be reparsed because of the error `{}`.",
                      module,
                      it->expect_err()->message));
     }
@@ -113,7 +113,8 @@ namespace jank::read::parse
     else
     {
       throw error::parse_internal_failure(
-        util::format("Unsupported object for reparsing '{}'.", object_type_str(o.get_type())));
+        util::format("This object of type `{}` is not supported for reparsing.",
+                     object_type_str(o.get_type())));
     }
   }
 }

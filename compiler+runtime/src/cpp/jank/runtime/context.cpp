@@ -197,7 +197,7 @@ namespace jank::runtime
     if(!is_map(reader_opts))
     {
       throw std::runtime_error{ util::format(
-        "The reader options need to be a map. Found a {} instead.",
+        "The `reader_opts` argument must be a map, not a `{}`.",
         runtime::object_type_str(reader_opts.get_type())) };
     }
 
@@ -222,8 +222,7 @@ namespace jank::runtime
       else
       {
         throw std::runtime_error{ util::format(
-          "Only :preserve or :allow modes are supported for :read-cond reader option. Found {} "
-          "instead.",
+          "The `:read-cond` reader option supports only `:preserve` and `:allow`. It was set to `{}`.",
           read_cond.to_code_string()) };
       }
     }
@@ -236,7 +235,7 @@ namespace jank::runtime
       if(!is_set(features))
       {
         throw std::runtime_error{ util::format(
-          "The :features reader option needs to be a set. Found a {} instead.",
+          "The `:features` reader option must be a set, not a `{}`.",
           runtime::object_type_str(features.get_type())) };
       }
 
@@ -291,8 +290,7 @@ namespace jank::runtime
 
     if(throw_on_eof && eof_found)
     {
-      throw std::runtime_error{ "EOF reached while reading. To override this behavior, provide a "
-                                "return value for the EOF case via the `:eof` reader option." };
+      throw std::runtime_error{ "EOF was reached while reading. To override this behavior, provide a value for the EOF case via the `:eof` reader option." };
     }
 
     return ret;
@@ -399,8 +397,9 @@ namespace jank::runtime
   {
     if(!sym->ns.empty())
     {
-      throw std::runtime_error{ util::format("Can't intern ns. Sym is qualified: {}",
-                                             sym->to_string()) };
+      throw std::runtime_error{ util::format(
+        "The namespace symbol `{}` is already qualified. Namespace names for `intern-ns` must be unqualified.",
+        sym->to_string()) };
     }
     auto locked_namespaces(namespaces.wlock());
     auto const found(locked_namespaces->find(sym));
