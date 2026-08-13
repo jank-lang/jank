@@ -5,6 +5,8 @@
 #include <cxxabi.h>
 #include <charconv>
 
+#include <cpptrace/basic.hpp>
+
 #include <jank/gc.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
@@ -1089,5 +1091,42 @@ namespace jank::runtime
     }
 
     return make_box<obj::character>(to_int(x));
+  }
+
+  obj::exception_info_ref ex_info(jtl::immutable_string const &message, object_ref const data)
+  {
+    return ex_info(message, data, {});
+  }
+
+  obj::exception_info_ref
+  ex_info(jtl::immutable_string const &message, object_ref const data, object_ref const cause)
+  {
+    auto const ret{ make_box<obj::exception_info>(message, data) };
+    ret->raw_trace = std::make_unique<cpptrace::raw_trace>(cpptrace::generate_raw_trace());
+    if(cause.is_some())
+    {
+      ret->cause = try_object<obj::exception_info>(cause);
+    }
+    return ret;
+  }
+
+  jtl::immutable_string ex_message(object_ref const o)
+  {
+    return try_object<obj::exception_info>(o)->message;
+  }
+
+  object_ref ex_data(object_ref const o)
+  {
+    return try_object<obj::exception_info>(o)->data;
+  }
+
+  obj::exception_info_ref ex_cause(object_ref const o)
+  {
+    return try_object<obj::exception_info>(o)->cause;
+  }
+
+  obj::persistent_array_map_ref ex_map(object_ref const o)
+  {
+    return try_object<obj::exception_info>(o)->to_map();
   }
 }
