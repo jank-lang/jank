@@ -21,8 +21,8 @@
         libdwarf-lite-src = pkgs.fetchFromGitHub {
           owner = "jeremy-rifkin";
           repo = "libdwarf-lite";
-          rev = "5e71a74491dddc231664bbcd6a8cf8a8643918e9";
-          sha256 = "sha256-qHikjAG5xuuHquqqKGuiDHXVZSlg/MbNp9JNSAKM/Hs=";
+          rev = "d06f37ed6660b324e458387d43efde3d84c9dd55";
+          sha256 = "sha256-Y2uuFbej4X5DEXDKIy/h8X9Zl+YMOLrqPvI0rL2CW9s=";
         };
         zstd-src = pkgs.fetchFromGitHub {
           owner = "facebook";
