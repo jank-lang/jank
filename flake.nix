@@ -22,7 +22,7 @@
           owner = "jeremy-rifkin";
           repo = "libdwarf-lite";
           rev = "d06f37ed6660b324e458387d43efde3d84c9dd55";
-          sha256 = "sha256-Y2uuFbej4X5DEXDKIy/h8X9Zl+YMOLrqPvI0rL2CW9s=";
+          sha256 = "sha256-vPSHVrzsLRa29qnXWfkI3EJQeMTSpXHN9I129JjJxtE=";
         };
         zstd-src = pkgs.fetchFromGitHub {
           owner = "facebook";
