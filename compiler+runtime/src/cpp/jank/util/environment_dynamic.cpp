@@ -192,6 +192,6 @@ namespace jank::util
       include_path = install_path.c_str();
     }
 
-    return include_path.native();
+    return include_path.string();
   }
 }
