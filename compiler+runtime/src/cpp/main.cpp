@@ -220,8 +220,6 @@ namespace jank
       return __rt_ctx->current_ns()->name->to_code_string() + suffix;
     });
 
-    /* By default we are placed in clojure.core ns as of now.
-     * TODO: Set default ns to `user` when we are dropped in that ns.*/
     llvm::LineEditor le("jank", ".jank-repl-history");
     le.setPrompt(get_prompt("=> "));
     native_transient_string input{};
