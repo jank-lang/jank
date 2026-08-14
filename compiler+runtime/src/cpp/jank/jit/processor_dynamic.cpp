@@ -490,7 +490,7 @@ namespace jank::jit
     }
 
     std::string const path_string{ path.data(), path.size() };
-    auto const object_path{ std::filesystem::absolute(path_string).native() };
+    auto const object_path{ std::filesystem::absolute(path_string).string() };
     /* Give each loaded object file its own resource tracker so later JITLink callbacks can tell
      * us which original `.o` file a materialized symbol came from. */
     auto const resource_tracker{ ee->getMainJITDylib().createResourceTracker() };
