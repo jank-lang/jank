@@ -1,5 +1,10 @@
 #pragma once
 
+/* Windows defines this and it becomes an issue in unity builds. */
+#ifdef exception_info
+  #undef exception_info
+#endif
+
 #include <memory>
 
 #include <jank/runtime/object.hpp>
