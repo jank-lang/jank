@@ -238,24 +238,27 @@ namespace jank::jit
 
     auto const ee{ interpreter->getExecutionEngine() };
 
-    if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
+    if constexpr(jtl::current_platform != jtl::platform::windows_like)
     {
-      auto &ol{ ee->getObjLinkingLayer() };
-      auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
+      if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
+      {
+        auto &ol{ ee->getObjLinkingLayer() };
+        auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
 
-      /* LLVM's JIT debug-object plumbing is platform-specific. On Mach-O, ORC requires its
+        /* LLVM's JIT debug-object plumbing is platform-specific. On Mach-O, ORC requires its
        * dedicated debugger-support setup to synthesize/register JIT debug objects at all.
        * We install that first so our own tracking plugin, which mirrors LLVM's published
        * registrations into cpptrace, runs after LLVM's registration path has had a chance to
        * populate the global JIT descriptor state. */
-      if constexpr(jtl::current_platform == jtl::platform::macos_like)
-      {
-        llvm::cantFail(llvm::orc::enableDebuggerSupport(*ee));
-      }
+        if constexpr(jtl::current_platform == jtl::platform::macos_like)
+        {
+          llvm::cantFail(llvm::orc::enableDebuggerSupport(*ee));
+        }
 
-      if constexpr(jtl::current_platform == jtl::platform::linux_like)
-      {
-        oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
+        if constexpr(jtl::current_platform == jtl::platform::linux_like)
+        {
+          oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
+        }
       }
     }
 
@@ -271,12 +274,14 @@ namespace jank::jit
      *
      * https://github.com/mortenpi/julia/blob/1edc6f1b7752ed67059020ba7ce174dffa225954/src/jitlayers.cpp#L2330
      */
-    if(util::cli::opts.perf_profiling_enabled)
+    if constexpr(jtl::current_platform != jtl::platform::windows_like)
     {
-      auto const ee{ interpreter->getExecutionEngine() };
-      auto &es{ ee->getExecutionSession() };
-      auto &ol{ ee->getObjLinkingLayer() };
-      auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
+      if(util::cli::opts.perf_profiling_enabled)
+      {
+        auto const ee{ interpreter->getExecutionEngine() };
+        auto &es{ ee->getExecutionSession() };
+        auto &ol{ ee->getObjLinkingLayer() };
+        auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
 
 #define add_address_to_map(map, name)                                     \
   ((map)[es.intern(ee->mangle(#name))]                                    \
@@ -284,17 +289,18 @@ namespace jank::jit
        llvm::JITSymbolFlags::Exported | llvm::JITSymbolFlags::Callable }, \
    llvm::orc::ExecutorAddr::fromPtr(&(name)))
 
-      llvm::orc::SymbolMap perf_fns;
-      auto const start_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfStart) };
-      auto const end_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfEnd) };
-      auto const impl_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfImpl) };
-      llvm::cantFail(ee->getMainJITDylib().define(llvm::orc::absoluteSymbols(perf_fns)));
-      oll.addPlugin(std::make_unique<llvm::orc::PerfSupportPlugin>(es.getExecutorProcessControl(),
-                                                                   start_addr,
-                                                                   end_addr,
-                                                                   impl_addr,
-                                                                   true,
-                                                                   true));
+        llvm::orc::SymbolMap perf_fns;
+        auto const start_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfStart) };
+        auto const end_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfEnd) };
+        auto const impl_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfImpl) };
+        llvm::cantFail(ee->getMainJITDylib().define(llvm::orc::absoluteSymbols(perf_fns)));
+        oll.addPlugin(std::make_unique<llvm::orc::PerfSupportPlugin>(es.getExecutorProcessControl(),
+                                                                     start_addr,
+                                                                     end_addr,
+                                                                     impl_addr,
+                                                                     true,
+                                                                     true));
+      }
     }
 
     auto const &load_result{ load_libs(util::cli::opts.libs) };
