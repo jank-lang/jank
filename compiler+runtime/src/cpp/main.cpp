@@ -1,7 +1,9 @@
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 
-#include <llvm/LineEditor/LineEditor.h>
+#include <isocline.h>
 
 #include <CppInterOp/Compatibility.h>
 #include <CppInterOp/CppInterOp.h>
@@ -57,6 +59,27 @@ extern "C" void jank_load_jank_nrepl_server_handler_lookup();
 namespace jank
 {
   using util::cli::opts;
+
+  static void no_op_completer(ic_completion_env_t *, char const *)
+  {
+  }
+
+  static void no_op_highlighter(ic_highlight_env_t *, char const *, void *)
+  {
+  }
+
+  static jtl::option<jtl::immutable_string> read_line(std::string const &prompt)
+  {
+    auto *const line{ ic_readline(prompt.c_str()) };
+    if(!line)
+    {
+      return jank::none;
+    }
+
+    jtl::immutable_string input{ line };
+    std::free(line);
+    return input;
+  }
 
   static void run()
   {
@@ -220,9 +243,9 @@ namespace jank
       return __rt_ctx->current_ns()->name->to_code_string() + suffix;
     });
 
-    llvm::LineEditor le("jank", ".jank-repl-history");
-    le.setPrompt(get_prompt("=> "));
-    native_transient_string input{};
+    ic_set_history(".jank-repl-history", 200);
+    ic_set_default_completer(no_op_completer, nullptr);
+    ic_set_default_highlighter(no_op_highlighter, nullptr);
 
     /* We write every REPL expression to a temporary file, which then allows us
      * to later review that for error reporting. We automatically clean it up
@@ -245,26 +268,22 @@ namespace jank
 
     /* TODO: Completion. */
     /* TODO: Syntax highlighting. */
-    while(auto buf = le.readLine())
+    while(true)
     {
-      auto &line(*buf);
-      util::trim(line);
+      auto const line{ read_line(get_prompt("")) };
+      if(line.is_none())
+      {
+        break;
+      }
 
-      if(line.empty())
+      std::string input{ line.unwrap() };
+      util::trim(input);
+
+      if(input.empty())
       {
         util::println("");
         continue;
       }
-
-      if(line.ends_with('\\'))
-      {
-        input.append(line.substr(0, line.size() - 1));
-        input.append("\n");
-        le.setPrompt(get_prompt("=>... "));
-        continue;
-      }
-
-      input += line;
 
       util::scope_exit const finally{ [&] { std::filesystem::remove(path_tmp); } };
       cpptrace::try_catch(
@@ -289,9 +308,7 @@ namespace jank
         [&](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
         [&](jank::error_ref const e) { jank::util::print_exception(e); });
 
-      input.clear();
       util::println("");
-      le.setPrompt(get_prompt("=> "));
     }
   }
 
@@ -312,37 +329,31 @@ namespace jank
       __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>(opts.target_module));
     }
 
-    llvm::LineEditor le("jank-native", ".jank-native-repl-history");
-    le.setPrompt("native> ");
-    native_transient_string input{};
+    ic_set_history(".jank-native-repl-history", 200);
+    ic_set_default_completer(no_op_completer, nullptr);
+    ic_set_default_highlighter(no_op_highlighter, nullptr);
 
-    while(auto buf = le.readLine())
+    while(true)
     {
-      auto &line(*buf);
-      util::trim(line);
+      auto const line{ read_line("native> ") };
+      if(line.is_none())
+      {
+        break;
+      }
 
-      if(line.empty())
+      std::string input{ line.unwrap() };
+      util::trim(input);
+
+      if(input.empty())
       {
         continue;
       }
-
-      if(line.ends_with('\\'))
-      {
-        input.append(line.substr(0, line.size() - 1));
-        le.setPrompt("native>... ");
-        continue;
-      }
-
-      input += line;
 
       cpptrace::try_catch(
         [&] { __rt_ctx->jit_prc.eval_string(input); },
         [&](std::exception const &e) { jank::util::print_exception(e); },
         [&](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
         [&](jank::error_ref const e) { jank::util::print_exception(e); });
-
-      input.clear();
-      le.setPrompt("native> ");
     }
   }
 
