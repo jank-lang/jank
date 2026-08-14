@@ -183,9 +183,8 @@ namespace jank::error
     kind kind{ kind::error };
   };
 
-  /* We need gc_cleanup to run the dtor for the unique_ptr<stacktrace>. This
-   * is because cpptrace doesn't use our GC allocator. */
-  struct base : gc_cleanup
+  /* TODO: We leak the stack trace. See if we can get these errors off the GC heap. */
+  struct base
   {
     static constexpr bool is_error{ true };
 
