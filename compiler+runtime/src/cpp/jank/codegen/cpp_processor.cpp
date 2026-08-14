@@ -1819,27 +1819,19 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_new_ref const inst, builder &b)
   {
     b.next_instruction();
-    auto finalizer_name{ munge(__rt_ctx->unique_string("finalizer")) };
     auto const type_name{ get_qualified_type_name(inst->expr->type) };
-    auto const needs_finalizer{ !Cpp::IsTriviallyDestructible(inst->expr->type) };
 
-    if(needs_finalizer)
-    {
-      util::format_to(b.body_buffer,
-                      "static auto const {}("
-                      "[](void * const obj, void *){"
-                      "using T = {};"
-                      "reinterpret_cast<T*>(obj)->~T();"
-                      "});\n",
-                      finalizer_name,
-                      type_name);
-    }
+    /* TODO: Support a syntax to opt into a finalizer. */
 
+    /* We're not using finalizers here, since we can't know for sure if the native
+     * value holds any GC-allocated values which could lead to cycles.
+     *
+     * However, this means that any value allocated with `cpp/new` will not have
+     * its destructor called unless it's explicitly deleted via `cpp/delete`. */
     util::format_to(b.body_buffer,
                     "auto {}{ "
-                    "new (UseGC{}) {}{ ",
+                    "new (UseGC) {}{ ",
                     inst->name,
-                    (needs_finalizer ? ", " + finalizer_name : ""),
                     type_name);
 
     for(auto const &arg : inst->args)
