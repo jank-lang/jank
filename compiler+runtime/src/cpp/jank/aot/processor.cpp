@@ -457,13 +457,16 @@ int main(int argc, const char** argv)
       //ofs << util::format_cpp_source(cpp_source).expect_ok();
     }
 
-    std::filesystem::path const jank_resource_dir{ util::resource_dir().c_str() };
     compiler_args.push_back("-include");
-    auto const prelude_path{ jank_resource_dir / "include/cpp/jank/prelude.hpp" };
-    std::string const prelude_path_str{ prelude_path.string() };
-    std::string const module_path_str{ module_path.string() };
+    auto prelude_path{ util::prelude_hpp_path() };
+    if(prelude_path.is_err())
+    {
+      return prelude_path.expect_err();
+    }
+    auto const &prelude_path_str{ prelude_path.expect_ok() };
     compiler_args.push_back(prelude_path_str.c_str());
 
+    std::string const module_path_str{ module_path.string() };
     compiler_args.push_back("-c");
     compiler_args.push_back("-o");
     compiler_args.push_back(module_path_str.c_str());

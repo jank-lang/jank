@@ -18,4 +18,9 @@ namespace jank::util
   {
     return false;
   }
+
+  jtl::result<jtl::immutable_string, error_ref> prelude_hpp_path()
+  {
+    throw error::runtime_static_feature_disabled("prelude_hpp_path");
+  }
 }

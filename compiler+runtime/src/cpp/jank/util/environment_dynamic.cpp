@@ -174,4 +174,24 @@ namespace jank::util
   {
     return true;
   }
+
+  jtl::result<jtl::immutable_string, error_ref> prelude_hpp_path()
+  {
+    std::filesystem::path const jank_path{ process_dir().c_str() };
+    auto include_path{ jank_path / "../include/cpp/jank/prelude.hpp" };
+    if(!std::filesystem::exists(include_path))
+    {
+      auto const install_path{ util::resource_dir() + "/include/jank/prelude.hpp" };
+      if(!std::filesystem::exists(install_path.c_str()))
+      {
+        return err(error::system_failure(util::format(
+          "The PCH entrypoint could not be found. These paths were considered:\n\n{}\n{}",
+          include_path.c_str(),
+          install_path)));
+      }
+      include_path = install_path.c_str();
+    }
+
+    return include_path.native();
+  }
 }

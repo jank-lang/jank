@@ -1,6 +1,9 @@
 #pragma once
 
+#include <jtl/result.hpp>
 #include <jtl/immutable_string.hpp>
+
+#include <jank/error.hpp>
 
 namespace jank::util
 {
@@ -15,6 +18,7 @@ namespace jank::util
   jtl::immutable_string process_dir();
 
   jtl::immutable_string resource_dir();
+  jtl::result<jtl::immutable_string, error_ref> prelude_hpp_path();
 
   void add_system_flags(std::vector<char const *> &args);
 
