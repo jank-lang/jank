@@ -31,6 +31,7 @@
 #include <jank/error/report.hpp>
 #include <jank/environment/check_health.hpp>
 #include <jank/runtime/convert/builtin.hpp>
+#include <jank/terminal_repl_client.hpp>
 
 #include <jank/compiler_native.hpp>
 #include <clojure/core_native.hpp>
@@ -59,27 +60,6 @@ extern "C" void jank_load_jank_nrepl_server_handler_lookup();
 namespace jank
 {
   using util::cli::opts;
-
-  static void no_op_completer(ic_completion_env_t *, char const *)
-  {
-  }
-
-  static void no_op_highlighter(ic_highlight_env_t *, char const *, void *)
-  {
-  }
-
-  static jtl::option<jtl::immutable_string> read_line(std::string const &prompt)
-  {
-    auto *const line{ ic_readline(prompt.c_str()) };
-    if(!line)
-    {
-      return jank::none;
-    }
-
-    jtl::immutable_string input{ line };
-    std::free(line);
-    return input;
-  }
 
   static void run()
   {
@@ -205,156 +185,6 @@ namespace jank
     }
 
     __rt_ctx->compile_module(opts.target_module).expect_ok();
-  }
-
-  static void repl()
-  {
-    using namespace jank;
-    using namespace jank::runtime;
-
-    {
-      profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
-    }
-
-    {
-      profile::timer const timer{ "require jank.nrepl.server.core" };
-      __rt_ctx->load_module("jank.nrepl.server.core", module::origin::latest).expect_ok();
-    }
-
-    auto const repl_main{
-      __rt_ctx->intern_var("jank.nrepl.server.core", "background-main").expect_ok()
-    };
-    repl_main.call();
-
-    __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>("user"));
-    __rt_ctx->intern_var("clojure.core", "refer")
-      .expect_ok()
-      .call(make_box<obj::symbol>("clojure.core"));
-
-    if(!opts.target_module.empty())
-    {
-      profile::timer const timer{ "load main" };
-      __rt_ctx->load_module(opts.target_module, module::origin::latest).expect_ok();
-      __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>(opts.target_module));
-    }
-
-    auto const get_prompt([](jtl::immutable_string const &suffix) {
-      return __rt_ctx->current_ns()->name->to_code_string() + suffix;
-    });
-
-    ic_set_history(".jank-repl-history", 200);
-    ic_set_default_completer(no_op_completer, nullptr);
-    ic_set_default_highlighter(no_op_highlighter, nullptr);
-
-    /* We write every REPL expression to a temporary file, which then allows us
-     * to later review that for error reporting. We automatically clean it up
-     * and we reuse the same file over and over. */
-    auto const tmp{ std::filesystem::temp_directory_path() };
-    std::string path_tmp{ (tmp / "jank-repl-XXXXXX").string() };
-    int const fd{ mkstemp(path_tmp.data()) };
-    close(fd);
-
-    auto const first_res_var{ __rt_ctx->find_var("clojure.core", "*1") };
-    auto const second_res_var{ __rt_ctx->find_var("clojure.core", "*2") };
-    auto const third_res_var{ __rt_ctx->find_var("clojure.core", "*3") };
-    auto const error_var{ __rt_ctx->find_var("clojure.core", "*e") };
-
-    context::binding_scope const scope{ obj::persistent_hash_map::create_unique(
-      std::make_pair(first_res_var, jank_nil),
-      std::make_pair(second_res_var, jank_nil),
-      std::make_pair(third_res_var, jank_nil),
-      std::make_pair(error_var, jank_nil)) };
-
-    /* TODO: Completion. */
-    /* TODO: Syntax highlighting. */
-    while(true)
-    {
-      auto const line{ read_line(get_prompt("")) };
-      if(line.is_none())
-      {
-        break;
-      }
-
-      std::string input{ line.unwrap() };
-      util::trim(input);
-
-      if(input.empty())
-      {
-        util::println("");
-        continue;
-      }
-
-      util::scope_exit const finally{ [&] { std::filesystem::remove(path_tmp); } };
-      cpptrace::try_catch(
-        [&] {
-          {
-            std::ofstream ofs{ path_tmp };
-            ofs << input;
-          }
-
-          auto const res(__rt_ctx->eval_file(path_tmp));
-
-          if(res.is_some())
-          {
-            third_res_var->set(second_res_var->deref()).expect_ok();
-            second_res_var->set(first_res_var->deref()).expect_ok();
-            first_res_var->set(res.unwrap()).expect_ok();
-
-            util::println("{}", res.unwrap().to_code_string());
-          }
-        },
-        [&](std::exception const &e) { jank::util::print_exception(e); },
-        [&](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
-        [&](jank::error_ref const e) { jank::util::print_exception(e); });
-
-      util::println("");
-    }
-  }
-
-  static void cpp_repl()
-  {
-    using namespace jank;
-    using namespace jank::runtime;
-
-    {
-      profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
-    }
-
-    if(!opts.target_module.empty())
-    {
-      profile::timer const timer{ "load main" };
-      __rt_ctx->load_module(opts.target_module, module::origin::latest).expect_ok();
-      __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>(opts.target_module));
-    }
-
-    ic_set_history(".jank-native-repl-history", 200);
-    ic_set_default_completer(no_op_completer, nullptr);
-    ic_set_default_highlighter(no_op_highlighter, nullptr);
-
-    while(true)
-    {
-      auto const line{ read_line("native> ") };
-      if(line.is_none())
-      {
-        break;
-      }
-
-      std::string input{ line.unwrap() };
-      util::trim(input);
-
-      if(input.empty())
-      {
-        continue;
-      }
-
-      cpptrace::try_catch(
-        [&] { __rt_ctx->jit_prc.eval_string(input); },
-        [&](std::exception const &e) { jank::util::print_exception(e); },
-        [&](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
-        [&](jank::error_ref const e) { jank::util::print_exception(e); });
-    }
   }
 
   static void compile()
@@ -498,10 +328,10 @@ int main(int const argc, char const **argv)
           compile_module();
           break;
         case util::cli::command::repl:
-          repl();
+          jank::terminal_repl::repl();
           break;
         case util::cli::command::cpp_repl:
-          cpp_repl();
+          jank::terminal_repl::cpp_repl();
           break;
         case util::cli::command::run_main:
           run_main();

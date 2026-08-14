@@ -859,6 +859,7 @@ set_target_properties(jank_compiler_lib PROPERTIES ENABLE_EXPORTS 1)
 add_executable(
   jank_exe_phase_1
   src/cpp/main.cpp
+  src/cpp/jank/terminal_repl_client.cpp
   src/cpp/jank/environment/check_health.cpp
 )
 add_executable(jank::exe ALIAS jank_exe_phase_1)
