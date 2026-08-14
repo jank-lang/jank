@@ -492,6 +492,7 @@ include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
 include(cmake/dependency/folly.cmake)
+include(cmake/dependency/isocline.cmake)
 
 if(jank_test)
   include(cmake/dependency/doctest.cmake)
@@ -880,6 +881,7 @@ target_link_libraries(
   jank_exe_phase_1 PUBLIC
   ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a ${jank_link_whole_end}
   LLVM clang-cpp
+  isocline
   z
   OpenSSL::Crypto
 )
