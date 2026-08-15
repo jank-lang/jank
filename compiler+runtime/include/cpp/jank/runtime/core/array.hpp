@@ -23,7 +23,7 @@ namespace jank::runtime
         a->canonical_type) };
     }
 
-    return expect_object<obj::array<T>>(o);
+    return a;
   }
 
   template <typename T>
