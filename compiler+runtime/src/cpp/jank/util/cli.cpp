@@ -422,7 +422,7 @@ OPTIONS
 
       if(command.empty())
       {
-        show_help();
+        command = "repl";
       }
 
       /* Now process all pending flags, depending on our command. */
