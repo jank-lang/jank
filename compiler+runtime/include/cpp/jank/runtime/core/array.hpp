@@ -71,6 +71,12 @@ namespace jank::runtime
     return val;
   }
 
+  template <typename T>
+  T aset(obj::array_ref<T> const a, i64 const i, object_ref const val)
+  {
+    return aset(a, i, convert<T>::from_object(val));
+  }
+
   template <typename T, size_t N>
   T aset(T (&a)[N], i64 const i, T const val)
   {
@@ -83,6 +89,12 @@ namespace jank::runtime
 
     a[i] = val;
     return val;
+  }
+
+  template <typename T, size_t N>
+  T aset(T (&a)[N], i64 const i, object_ref const val)
+  {
+    return aset(a, i, convert<T>::from_object(val));
   }
 
   object_ref aset(object_ref const a, i64 const i, object_ref const val);
