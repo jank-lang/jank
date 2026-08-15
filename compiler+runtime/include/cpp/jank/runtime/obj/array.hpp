@@ -3,11 +3,10 @@
 #include <jtl/option.hpp>
 #include <jtl/primitive.hpp>
 
-#include <jank/util/fmt.hpp>
-
-#include <jank/runtime/core/make_box.hpp>
-#include <jank/runtime/object.hpp>
+#include <jank/runtime/convert/builtin.hpp>
 #include <jank/runtime/obj/opaque_box.hpp>
+#include <jank/runtime/object.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime::obj
 {
@@ -74,7 +73,7 @@ namespace jank::runtime::obj
           util::format("out of bounds index {}; array has a size of {}", i, size)
         };
       }
-      return make_box(data[i]);
+      return convert<T>::into_object(data[i]);
     }
 
     object_ref nth(object_ref const index, object_ref const fallback) const override
@@ -84,7 +83,7 @@ namespace jank::runtime::obj
       {
         return fallback;
       }
-      return make_box(data[i]);
+      return convert<T>::into_object(data[i]);
     }
 
     /* behavior::get */
@@ -97,7 +96,7 @@ namespace jank::runtime::obj
       {
         return {};
       }
-      return make_box(data[i]);
+      return convert<T>::into_object(data[i]);
     }
 
     object_ref get(object_ref const key, object_ref const fallback) const override
@@ -107,7 +106,7 @@ namespace jank::runtime::obj
       {
         return fallback;
       }
-      return make_box(data[i]);
+      return convert<T>::into_object(data[i]);
     }
 
     bool contains(object_ref const key) const override
@@ -130,7 +129,7 @@ namespace jank::runtime::obj
     /* behavior::sequence_like */
     object_ref first() const override
     {
-      return make_box(data[0]);
+      return convert<T>::into_object(data[0]);
     }
 
     object_ref next() const override
