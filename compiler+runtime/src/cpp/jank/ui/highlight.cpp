@@ -241,10 +241,11 @@ namespace jank::ui
         case read::lex::token_kind::big_decimal:
         case read::lex::token_kind::boolean:
         case read::lex::token_kind::character:
-
+          style = "ansi-fuchsia";
+          break;
         case read::lex::token_kind::string:
         case read::lex::token_kind::escaped_string:
-          style = "ansi-fuchsia";
+          style = "ansi-lime";
           break;
         case read::lex::token_kind::symbol:
           if(specials.contains(std::get<jtl::immutable_string_view>(token.data)))
