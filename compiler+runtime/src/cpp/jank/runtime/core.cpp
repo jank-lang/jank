@@ -5,6 +5,8 @@
 #include <cxxabi.h>
 #include <charconv>
 
+#include <cpptrace/basic.hpp>
+
 #include <jank/gc.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
@@ -96,9 +98,10 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{
-            util::format("can't convert {} to a symbol", typed_o.to_code_string()).c_str()
-          };
+          throw std::runtime_error{ util::format(
+                                      "Objects of type `{}` cannot be converted to symbols.",
+                                      object_type_str(typed_o.get_type()))
+                                      .c_str() };
         }
       },
       o);
@@ -119,8 +122,9 @@ namespace jank::runtime
 
     if(stream_box->canonical_type != out_box->canonical_type)
     {
-      throw std::runtime_error{ util::format("Invalid binding for *out*: {}",
-                                             out_box->canonical_type) };
+      throw std::runtime_error{ util::format(
+        "The binding for `*out*` must match the current stream type. The current binding is `{}`.",
+        out_box->canonical_type) };
     }
 
     return reinterpret_cast<FILE *>(out_box->data.data);
@@ -269,7 +273,7 @@ namespace jank::runtime
               break;
             case indexing_mode::automatic:
               throw std::format_error{
-                "Cannot mix automatic (i.e. {}) and manual indexing (i.e. {1})."
+                "Automatic and manual format indexes cannot be mixed in the same format string."
               };
             case indexing_mode::manual:
               break;
@@ -298,7 +302,7 @@ namespace jank::runtime
               break;
             case indexing_mode::manual:
               throw std::format_error{
-                "Cannot mix automatic (i.e. {}) and manual indexing (i.e. {1})."
+                "Automatic and manual format indexes cannot be mixed in the same format string."
               };
           }
 
@@ -321,7 +325,7 @@ namespace jank::runtime
             if(idx >= args_vec->count())
             {
               throw std::format_error{
-                util::format("Format arg index {} out of range.", idx).c_str()
+                util::format("The format argument index `{}` is out of range.", idx).c_str()
               };
             }
             return args_vec->nth(make_box(idx));
@@ -351,9 +355,7 @@ namespace jank::runtime
           }
           else
           {
-            throw std::format_error{ util::format(
-              "There are too many embedded format specifiers in {}.",
-              v1.to_code_string()) };
+            throw std::format_error{ "This format string contains too many replacement fields." };
           }
 
           /* Reset for the next format specification. */
@@ -379,7 +381,7 @@ namespace jank::runtime
 
     if(depth != 0)
     {
-      throw std::format_error{ "There's a brace mismatch in this format string." };
+      throw std::format_error{ "This format string has an unmatched brace." };
     }
 
     return out.release();
@@ -387,39 +389,52 @@ namespace jank::runtime
 
   obj::persistent_string_ref subs(object_ref const s, object_ref const start)
   {
-    return visit_type<obj::persistent_string>(
-      [](auto const typed_s, i64 const start) -> obj::persistent_string_ref {
-        return typed_s->substring(start).expect_ok();
-      },
-      s,
-      to_int(start));
+    auto const str{ dyn_cast<obj::persistent_string>(s) };
+    if(str.is_nil())
+    {
+      throw std::runtime_error{ util::format(
+        "The first argument to `subs` must be a `persistent_string`, not a `{}`.",
+        object_type_str(s.get_type())) };
+    }
+
+    return str->substring(to_int(start)).expect_ok();
   }
 
   obj::persistent_string_ref subs(object_ref const s, object_ref const start, object_ref const end)
   {
-    return visit_type<obj::persistent_string>(
-      [](auto const typed_s, i64 const start, i64 const end) -> obj::persistent_string_ref {
-        return typed_s->substring(start, end).expect_ok();
-      },
-      s,
-      to_int(start),
-      to_int(end));
+    auto const str{ dyn_cast<obj::persistent_string>(s) };
+    if(str.is_nil())
+    {
+      throw std::runtime_error{ util::format(
+        "The first argument to `subs` must be a `persistent_string`, not a `{}`.",
+        object_type_str(s.get_type())) };
+    }
+
+    return str->substring(to_int(start), to_int(end)).expect_ok();
   }
 
   i64 first_index_of(object_ref const s, object_ref const m)
   {
-    return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ref const m) -> i64 { return typed_s->first_index_of(m); },
-      s,
-      m);
+    auto const str{ dyn_cast<obj::persistent_string>(s) };
+    if(str.is_nil())
+    {
+      throw std::runtime_error{ util::format(
+        "The first argument to `first-index-of` must be a `persistent_string`, not a `{}`.",
+        object_type_str(s.get_type())) };
+    }
+    return str->first_index_of(m);
   }
 
   i64 last_index_of(object_ref const s, object_ref const m)
   {
-    return visit_type<obj::persistent_string>(
-      [](auto const typed_s, object_ref const m) -> i64 { return typed_s->last_index_of(m); },
-      s,
-      m);
+    auto const str{ dyn_cast<obj::persistent_string>(s) };
+    if(str.is_nil())
+    {
+      throw std::runtime_error{ util::format(
+        "The first argument to `last-index-of` must be a `persistent_string`, not a `{}`.",
+        object_type_str(s.get_type())) };
+    }
+    return str->last_index_of(m);
   }
 
   bool is_named(object_ref const o)
@@ -451,7 +466,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not nameable: {}", typed_o.to_string()) };
+          throw std::runtime_error{ util::format("Objects of type `{}` are not nameable.",
+                                                 object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -475,7 +491,8 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not nameable: {}", typed_o.to_string()) };
+          throw std::runtime_error{ util::format("Objects of type `{}` are not nameable.",
+                                                 object_type_str(typed_o.get_type())) };
         }
       },
       o);
@@ -497,17 +514,16 @@ namespace jank::runtime
   {
     if(!ns.is_nil() && ns.get_type() != object_type::persistent_string)
     {
-      throw std::runtime_error{ util::format(
-        "The 'keyword' function expects a namespace to be 'nil' or a 'string', got {} instead.",
-        ns.to_code_string()) };
+      throw std::runtime_error{ util::format("The `keyword` function expects the namespace to be "
+                                             "`nil` or a `persistent_string`, not a `{}`.",
+                                             object_type_str(ns.get_type())) };
     }
     if(name.get_type() != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format(
-        "The 'keyword' function expects the name to be a 'string', got {} instead.",
-        name.to_code_string()) };
+        "The `keyword` function expects the name to be a `persistent_string`, not a `{}`.",
+        object_type_str(name.get_type())) };
     }
-
     if(ns.is_nil())
     {
       return __rt_ctx->intern_keyword(name.to_string()).expect_ok();
@@ -640,7 +656,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not derefable: {}",
+          throw std::runtime_error{ util::format("Objects of type `{}` are not dereferenceable.",
                                                  object_type_str(typed_o.get_type())) };
         }
       },
@@ -660,7 +676,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not realizable: {}",
+          throw std::runtime_error{ util::format("Objects of type `{}` are not realizable.",
                                                  object_type_str(typed_o.get_type())) };
         }
       },
@@ -793,7 +809,7 @@ namespace jank::runtime
 
     if(matcher->groups.is_nil())
     {
-      throw std::runtime_error{ "No match found" };
+      throw std::runtime_error{ "No match was found for this regular expression." };
     }
 
     return matcher->groups;
@@ -832,8 +848,9 @@ namespace jank::runtime
     }
     else
     {
-      throw std::runtime_error{ util::format("expected string, got {}",
-                                             object_type_str(o.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The `parse-uuid` function expects a `persistent_string`, not a `{}`.",
+        object_type_str(o.get_type())) };
     }
   }
 
@@ -856,8 +873,9 @@ namespace jank::runtime
   {
     if(o.get_type() != object_type::inst)
     {
-      throw std::runtime_error{ util::format("The function 'inst-ms' expects an inst, got {}",
-                                             object_type_str(o.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The `inst-ms` function expects an `inst`, not a `{}`.",
+        object_type_str(o.get_type())) };
     }
 
     return std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -1047,7 +1065,7 @@ namespace jank::runtime
     if(form_string.get_type() != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format(
-        "Argument to `read-string` needs to be a string representing a form. Found a {} instead.",
+        "The `read-string` function expects a string representing a form, not a `{}`.",
         object_type_str(form_string.get_type())) };
     }
 
@@ -1059,9 +1077,9 @@ namespace jank::runtime
   {
     if(file_path.get_type() != object_type::persistent_string)
     {
-      throw std::runtime_error{ util::format("Argument to `read-file` needs to be a string "
-                                             "representing a file path. Found a {} instead.",
-                                             object_type_str(file_path.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The `read-file` function expects a string representing a file path, not a `{}`.",
+        object_type_str(file_path.get_type())) };
     }
 
     auto const typed_o{ expect_object<obj::persistent_string>(file_path) };
@@ -1076,5 +1094,42 @@ namespace jank::runtime
     }
 
     return make_box<obj::character>(to_int(x));
+  }
+
+  obj::exception_info_ref ex_info(jtl::immutable_string const &message, object_ref const data)
+  {
+    return ex_info(message, data, {});
+  }
+
+  obj::exception_info_ref
+  ex_info(jtl::immutable_string const &message, object_ref const data, object_ref const cause)
+  {
+    auto const ret{ make_box<obj::exception_info>(message, data) };
+    ret->raw_trace = std::make_unique<cpptrace::raw_trace>(cpptrace::generate_raw_trace());
+    if(cause.is_some())
+    {
+      ret->cause = try_object<obj::exception_info>(cause);
+    }
+    return ret;
+  }
+
+  jtl::immutable_string ex_message(object_ref const o)
+  {
+    return try_object<obj::exception_info>(o)->message;
+  }
+
+  object_ref ex_data(object_ref const o)
+  {
+    return try_object<obj::exception_info>(o)->data;
+  }
+
+  obj::exception_info_ref ex_cause(object_ref const o)
+  {
+    return try_object<obj::exception_info>(o)->cause;
+  }
+
+  obj::persistent_array_map_ref ex_map(object_ref const o)
+  {
+    return try_object<obj::exception_info>(o)->to_map();
   }
 }

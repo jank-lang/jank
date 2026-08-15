@@ -620,6 +620,7 @@ add_library(
   src/cpp/jank/runtime/obj/promise.cpp
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/obj/reader_conditional.cpp
+  src/cpp/jank/runtime/obj/exception_info.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
   src/cpp/jank/codegen/api.cpp
   src/cpp/jank/aot/resource.cpp
@@ -735,6 +736,7 @@ add_library(
   src/cpp/jank/runtime/module/loader_dynamic.cpp
   src/cpp/jank/runtime/context_dynamic.cpp
   src/cpp/jank/runtime/ns_dynamic.cpp
+  src/cpp/jank/jit/object_dynamic.cpp
   src/cpp/jank/jit/processor_dynamic.cpp
   src/cpp/jank/codegen/api_dynamic.cpp
 )
@@ -756,6 +758,7 @@ add_library(
   src/cpp/jank/runtime/module/loader_static.cpp
   src/cpp/jank/runtime/context_static.cpp
   src/cpp/jank/runtime/ns_static.cpp
+  src/cpp/jank/jit/object_static.cpp
   src/cpp/jank/jit/processor_static.cpp
   src/cpp/jank/codegen/api_static.cpp
 )

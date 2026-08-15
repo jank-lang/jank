@@ -804,7 +804,7 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::cpp_type_ref const, builder &)
   {
-    throw error::internal_codegen_failure(
+    throw error::codegen_internal_failure(
       "A cpp_type expression was found during codegen, but that should not be possible.");
   }
 

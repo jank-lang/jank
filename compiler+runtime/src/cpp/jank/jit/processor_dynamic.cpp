@@ -3,20 +3,25 @@
 #include <clang/Frontend/CompilerInstance.h>
 #include <clang/Frontend/FrontendDiagnostic.h>
 #include <llvm/ExecutionEngine/Orc/Core.h>
-#include <llvm/IR/Verifier.h>
-#include <llvm/Support/Signals.h>
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
+#include <llvm/ExecutionEngine/Orc/Debugging/DebuggerSupport.h>
 #include <llvm/ExecutionEngine/Orc/Debugging/PerfSupportPlugin.h>
 #include <llvm/ExecutionEngine/Orc/Debugging/DebugInfoSupport.h>
+#include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
 #include <llvm/ExecutionEngine/Orc/TargetProcess/JITLoaderPerf.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
+#include <llvm/IR/Verifier.h>
+#include <llvm/Object/ObjectFile.h>
+#include <llvm/Object/SymbolSize.h>
 #include <llvm/IRReader/IRReader.h>
+#include <llvm/Support/Signals.h>
+
+#include <cstdlib>
 
 #include <CppInterOp/Compatibility.h>
 #include <CppInterOp/CppInterOp.h>
 
-#include <cpptrace/gdb_jit.hpp>
-
+#include <jank/jit/object.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/environment.hpp>
@@ -82,27 +87,6 @@ namespace jank::jit
        with status 70 to generate crash diagnostics.  For BSD systems this is
        defined as an internal software error. Otherwise, exit with status 1. */
     std::exit(gen_crash_diag ? 70 : 1);
-  }
-
-  /* LLVM will register JIT compiled frames for GDB/LLDB using a standard
-   * interface which is described here:
-   *
-   * https://weliveindetail.github.io/blog/post/2022/11/27/gdb-jit-interface-101.html
-   *
-   * The debuggers implicitly place breakpoints on the `__jit_debug_register_code`
-   * function, which is called as part of LLVM's registration. This is an empty
-   * function, but the breakpoint triggering tells the debugger to update its
-   * entries based on the `__jit_debug_descriptor` linked list.
-   *
-   * Here, we manually trigger the same thing, to have cpptrace update its
-   * view of the available JIT compiler frames. We do this after loading any
-   * new JIT compiled code. */
-  static void register_jit_stack_frames()
-  {
-    if(auto *entry = cpptrace::detail::__jit_debug_descriptor.relevant_entry)
-    {
-      cpptrace::register_jit_object(entry->symfile_addr, entry->symfile_size);
-    }
   }
 
   processor::processor(jtl::immutable_string const &binary_version)
@@ -235,11 +219,50 @@ namespace jank::jit
         break;
     }
 
+    /* Remove any -g flags if we don't have debug info enabled. This will drastically cut
+     * down JIT compilation time. */
+    if(!util::cli::opts.debug)
+    {
+      args.erase(
+        std::ranges::remove_if(args,
+                               [](char const *arg) { return std::string_view{ arg } == "-g"; })
+          .begin(),
+        args.end());
+    }
+
     //util::println("jit flags {}", args);
 
     /* We don't actually own this interpreter. CppInterOp does. */
     interpreter.reset(static_cast<CppInternal::Interpreter *>(
       Cpp::CreateInterpreter(args, {}, vfs, static_cast<int>(llvm::CodeModel::Large))));
+
+    auto const ee{ interpreter->getExecutionEngine() };
+
+    if constexpr(jtl::current_platform != jtl::platform::windows_like)
+    {
+      if(util::cli::opts.debug || util::cli::opts.perf_profiling_enabled)
+      {
+        auto &ol{ ee->getObjLinkingLayer() };
+        auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
+
+        /* LLVM's JIT debug-object plumbing is platform-specific. On Mach-O, ORC requires its
+         * dedicated debugger-support setup to synthesize/register JIT debug objects at all.
+         * We install that first so our own tracking plugin, which mirrors LLVM's published
+         * registrations into cpptrace, runs after LLVM's registration path has had a chance to
+         * populate the global JIT descriptor state. */
+        if constexpr(jtl::current_platform == jtl::platform::macos_like)
+        {
+          llvm::cantFail(llvm::orc::enableDebuggerSupport(*ee));
+        }
+
+        if constexpr(jtl::current_platform == jtl::platform::linux_like)
+        {
+          oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
+        }
+      }
+
+      jit::install_object_tracking_plugin();
+    }
 
     /* Enabling perf support requires registering a couple of plugins with LLVM. These
      * plugins will generate files which perf can then use to inject additional info
@@ -251,12 +274,14 @@ namespace jank::jit
      *
      * https://github.com/mortenpi/julia/blob/1edc6f1b7752ed67059020ba7ce174dffa225954/src/jitlayers.cpp#L2330
      */
-    if(util::cli::opts.perf_profiling_enabled)
+    if constexpr(jtl::current_platform != jtl::platform::windows_like)
     {
-      auto const ee{ interpreter->getExecutionEngine() };
-      auto &es{ ee->getExecutionSession() };
-      auto &ol{ ee->getObjLinkingLayer() };
-      auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
+      if(util::cli::opts.perf_profiling_enabled)
+      {
+        auto const ee{ interpreter->getExecutionEngine() };
+        auto &es{ ee->getExecutionSession() };
+        auto &ol{ ee->getObjLinkingLayer() };
+        auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
 
 #define add_address_to_map(map, name)                                     \
   ((map)[es.intern(ee->mangle(#name))]                                    \
@@ -264,18 +289,18 @@ namespace jank::jit
        llvm::JITSymbolFlags::Exported | llvm::JITSymbolFlags::Callable }, \
    llvm::orc::ExecutorAddr::fromPtr(&(name)))
 
-      llvm::orc::SymbolMap perf_fns;
-      auto const start_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfStart) };
-      auto const end_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfEnd) };
-      auto const impl_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfImpl) };
-      llvm::cantFail(ee->getMainJITDylib().define(llvm::orc::absoluteSymbols(perf_fns)));
-      oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
-      oll.addPlugin(std::make_unique<llvm::orc::PerfSupportPlugin>(es.getExecutorProcessControl(),
-                                                                   start_addr,
-                                                                   end_addr,
-                                                                   impl_addr,
-                                                                   true,
-                                                                   true));
+        llvm::orc::SymbolMap perf_fns;
+        auto const start_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfStart) };
+        auto const end_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfEnd) };
+        auto const impl_addr{ add_address_to_map(perf_fns, llvm_orc_registerJITLoaderPerfImpl) };
+        llvm::cantFail(ee->getMainJITDylib().define(llvm::orc::absoluteSymbols(perf_fns)));
+        oll.addPlugin(std::make_unique<llvm::orc::PerfSupportPlugin>(es.getExecutorProcessControl(),
+                                                                     start_addr,
+                                                                     end_addr,
+                                                                     impl_addr,
+                                                                     true,
+                                                                     true));
+      }
     }
 
     auto const &load_result{ load_libs(util::cli::opts.libs) };
@@ -365,7 +390,7 @@ namespace jank::jit
               find_symbol(util::format("{}_10", base_name)).expect_ok());
             break;
           default:
-            throw error::internal_runtime_failure(util::format("Unsupported arity {}.", arity));
+            throw error::runtime_internal_failure(util::format("Unsupported arity {}.", arity));
         }
       }
 
@@ -423,7 +448,7 @@ namespace jank::jit
               find_symbol(util::format("{}_10", base_name)).expect_ok());
             break;
           default:
-            throw error::internal_runtime_failure(util::format("Unsupported arity {}.", arity));
+            throw error::runtime_internal_failure(util::format("Unsupported arity {}.", arity));
         }
       }
 
@@ -451,9 +476,8 @@ namespace jank::jit
     if(err)
     {
       llvm::logAllUnhandledErrors(jtl::move(err), llvm::errs(), "error: ");
-      throw error::internal_codegen_failure("Unable to compile C++ source.");
+      throw error::codegen_internal_failure("Unable to compile C++ source.");
     }
-    register_jit_stack_frames();
   }
 
   void processor::load_object(jtl::immutable_string_view const &path) const
@@ -464,11 +488,63 @@ namespace jank::jit
     {
       throw std::runtime_error{ util::format("failed to load object file: {}", path) };
     }
+
+    auto object{ llvm::object::ObjectFile::createObjectFile(file.get()->getMemBufferRef()) };
+    if(!object)
+    {
+      throw std::runtime_error{ util::format("failed to parse object file: {}", path) };
+    }
+
+    std::string const path_string{ path.data(), path.size() };
+    auto const object_path{ std::filesystem::absolute(path_string).string() };
+    /* Give each loaded object file its own resource tracker so later JITLink callbacks can tell
+     * us which original `.o` file a materialized symbol came from. */
+    auto const resource_tracker{ ee->getMainJITDylib().createResourceTracker() };
+    jit::loaded_object object_info{ object_path, {} };
+    auto const section_end{ object->get()->section_end() };
+    /* Snapshot the object file's executable symbol table up front. This remains in object-file
+     * address space; runtime addresses are filled in later by the ORC plugin. */
+    for(auto const &[symbol, symbol_size] : llvm::object::computeSymbolSizes(*object->get()))
+    {
+      auto flags{ symbol.getFlags() };
+      if(!flags)
+      {
+        continue;
+      }
+      if((*flags & llvm::object::SymbolRef::SF_Executable) == 0
+         || (*flags & llvm::object::SymbolRef::SF_Undefined) != 0)
+      {
+        auto section{ symbol.getSection() };
+        if(!section || *section == section_end || !(*section)->isText()
+           || (*flags & llvm::object::SymbolRef::SF_Undefined) != 0)
+        {
+          continue;
+        }
+      }
+
+      auto name{ symbol.getName() };
+      auto address{ symbol.getAddress() };
+      if(!name || !address || name->empty())
+      {
+        continue;
+      }
+
+      object_info.symbols[name->str()] = loaded_object_symbol{ *address, symbol_size };
+    }
+    if(auto err{
+         resource_tracker->withResourceKeyDo([&](llvm::orc::ResourceKey const key) -> llvm::Error {
+           register_loaded_object(key, jtl::move(object_info));
+           return llvm::Error::success();
+         }) })
+    {
+      llvm::consumeError(jtl::move(err));
+      throw std::runtime_error{ util::format("failed to track object file resources: {}", path) };
+    }
+
     /* XXX: Object files won't be able to use global ctors until jank is on the ORC
      * runtime, which likely won't happen until clang::Interpreter is on the ORC runtime. */
     /* TODO: Return result on failure. */
-    llvm::cantFail(ee->addObjectFile(std::move(file.get())));
-    register_jit_stack_frames();
+    llvm::cantFail(ee->addObjectFile(resource_tracker, std::move(file.get())));
   }
 
   void processor::load_ir_module(llvm::orc::ThreadSafeModule &&m) const
@@ -482,7 +558,6 @@ namespace jank::jit
     auto const ee(interpreter->getExecutionEngine());
     llvm::cantFail(ee->addIRModule(jtl::move(m)));
     llvm::cantFail(ee->initialize(ee->getMainJITDylib()));
-    register_jit_stack_frames();
   }
 
   void processor::load_bitcode(jtl::immutable_string const &module,

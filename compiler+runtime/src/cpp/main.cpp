@@ -220,8 +220,6 @@ namespace jank
       return __rt_ctx->current_ns()->name->to_code_string() + suffix;
     });
 
-    /* By default we are placed in clojure.core ns as of now.
-     * TODO: Set default ns to `user` when we are dropped in that ns.*/
     llvm::LineEditor le("jank", ".jank-repl-history");
     le.setPrompt(get_prompt("=> "));
     native_transient_string input{};
@@ -269,25 +267,27 @@ namespace jank
       input += line;
 
       util::scope_exit const finally{ [&] { std::filesystem::remove(path_tmp); } };
-      JANK_TRY
-      {
-        {
-          std::ofstream ofs{ path_tmp };
-          ofs << input;
-        }
+      cpptrace::try_catch(
+        [&] {
+          {
+            std::ofstream ofs{ path_tmp };
+            ofs << input;
+          }
 
-        auto const res(__rt_ctx->eval_file(path_tmp));
+          auto const res(__rt_ctx->eval_file(path_tmp));
 
-        if(res.is_some())
-        {
-          third_res_var->set(second_res_var->deref()).expect_ok();
-          second_res_var->set(first_res_var->deref()).expect_ok();
-          first_res_var->set(res.unwrap()).expect_ok();
+          if(res.is_some())
+          {
+            third_res_var->set(second_res_var->deref()).expect_ok();
+            second_res_var->set(first_res_var->deref()).expect_ok();
+            first_res_var->set(res.unwrap()).expect_ok();
 
-          util::println("{}", res.unwrap().to_code_string());
-        }
-      }
-      JANK_CATCH(jank::util::print_exception)
+            util::println("{}", res.unwrap().to_code_string());
+          }
+        },
+        [&](std::exception const &e) { jank::util::print_exception(e); },
+        [&](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
+        [&](jank::error_ref const e) { jank::util::print_exception(e); });
 
       input.clear();
       util::println("");
@@ -335,11 +335,11 @@ namespace jank
 
       input += line;
 
-      JANK_TRY
-      {
-        __rt_ctx->jit_prc.eval_string(input);
-      }
-      JANK_CATCH(jank::util::print_exception)
+      cpptrace::try_catch(
+        [&] { __rt_ctx->jit_prc.eval_string(input); },
+        [&](std::exception const &e) { jank::util::print_exception(e); },
+        [&](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
+        [&](jank::error_ref const e) { jank::util::print_exception(e); });
 
       input.clear();
       le.setPrompt("native> ");

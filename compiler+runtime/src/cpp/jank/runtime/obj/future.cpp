@@ -42,7 +42,7 @@ namespace jank::runtime::obj
       case future_status::cancelled:
         return true;
       default:
-        throw std::runtime_error{ util::format("Invalid future status: {}",
+        throw std::runtime_error{ util::format("The `future` status `{}` is not recognized.",
                                                static_cast<int>(locked_state->status)) };
     }
   }

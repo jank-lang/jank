@@ -186,6 +186,27 @@ namespace jank::jit
             passed = false;
           }
         }
+        catch(error_ref const e)
+        {
+          /* Any thrown compiler error should have source information, with the rare exception
+           * of some which are thrown at runtime. */
+          if(e->source == read::source::unknown() && !expect_throw)
+          {
+            failures.push_back({ dir_entry.path(), "Compiler error thrown without a source" });
+            passed = false;
+          }
+          /* Internal failures should never happen. */
+          else if(error::is_internal_failure_kind(e->kind))
+          {
+            failures.push_back({ dir_entry.path(), "Internal failure" });
+            passed = false;
+          }
+          else if(expect_success)
+          {
+            failures.push_back({ dir_entry.path(), "Unknown exception thrown" });
+            passed = false;
+          }
+        }
         catch(...)
         {
           if(expect_success || expect_throw)

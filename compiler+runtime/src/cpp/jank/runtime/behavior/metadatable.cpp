@@ -10,7 +10,8 @@ namespace jank::runtime::behavior::detail
   {
     if(!is_map(m) && m.is_some())
     {
-      throw std::runtime_error{ util::format("invalid meta: {}", object_type_str(m.get_type())) };
+      throw std::runtime_error{ util::format("Metadata must be a map or `nil`, not a `{}`.",
+                                             object_type_str(m.get_type())) };
     }
 
     return m;

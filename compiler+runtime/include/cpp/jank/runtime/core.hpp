@@ -24,6 +24,7 @@ namespace jank::runtime
     using tagged_literal_ref = oref<struct tagged_literal>;
     using uuid_ref = oref<struct uuid>;
     using volatile_ref = oref<struct volatile_>;
+    using exception_info_ref = oref<struct exception_info>;
   }
 
   jtl::immutable_string type(object_ref const o);
@@ -146,4 +147,13 @@ namespace jank::runtime
   object_ref read_file(object_ref const file_path, object_ref const opts);
 
   obj::character_ref to_char(object_ref const x);
+
+  obj::exception_info_ref ex_info(jtl::immutable_string const &message, object_ref const data);
+  obj::exception_info_ref
+  ex_info(jtl::immutable_string const &message, object_ref const data, object_ref const cause);
+
+  jtl::immutable_string ex_message(object_ref const o);
+  object_ref ex_data(object_ref const o);
+  obj::exception_info_ref ex_cause(object_ref const o);
+  obj::persistent_array_map_ref ex_map(object_ref const o);
 }

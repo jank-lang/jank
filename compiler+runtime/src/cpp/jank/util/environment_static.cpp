@@ -13,4 +13,14 @@ namespace jank::util
   {
     throw error::runtime_static_feature_disabled("build_dir");
   }
+
+  bool is_dynamic_runtime()
+  {
+    return false;
+  }
+
+  jtl::result<jtl::immutable_string, error_ref> prelude_hpp_path()
+  {
+    throw error::runtime_static_feature_disabled("prelude_hpp_path");
+  }
 }

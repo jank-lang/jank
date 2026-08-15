@@ -2,9 +2,13 @@
 
 #include <jank/error.hpp>
 
+/* NOLINTNEXTLINE(modernize-concat-nested-namespaces): Not doable, due to the inline. */
 namespace cpptrace
 {
-  struct stacktrace;
+  inline namespace v1
+  {
+    struct raw_trace;
+  }
 }
 
 namespace jank::error
@@ -44,9 +48,6 @@ namespace jank::error
   error_ref analyze_invalid_letfn(jtl::immutable_string const &message,
                                   read::source const &source,
                                   runtime::object_ref const expansion);
-  error_ref analyze_invalid_loop(jtl::immutable_string const &message,
-                                 read::source const &source,
-                                 runtime::object_ref const expansion);
   error_ref analyze_invalid_if(jtl::immutable_string const &message,
                                read::source const &source,
                                runtime::object_ref const expansion);
@@ -77,22 +78,17 @@ namespace jank::error
                                       read::source const &source,
                                       runtime::object_ref const expansion);
   error_ref analyze_macro_expansion_exception(std::exception const &e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
   error_ref analyze_macro_expansion_exception(runtime::object_ref const e,
-                                              cpptrace::stacktrace const &trace,
-                                              read::source const &source,
-                                              runtime::object_ref const expansion);
-  error_ref analyze_macro_expansion_exception(jtl::immutable_string const &e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
   error_ref analyze_macro_expansion_exception(error_ref e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
-  error_ref analyze_invalid_conversion(jtl::immutable_string const &message);
   error_ref analyze_invalid_cpp_operator_call(jtl::immutable_string const &message,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
@@ -117,6 +113,8 @@ namespace jank::error
   error_ref analyze_invalid_cpp_call(jtl::immutable_string const &message,
                                      read::source const &source,
                                      runtime::object_ref const expansion);
+  error_ref
+  analyze_invalid_cpp_conversion(jtl::immutable_string const &message, read::source const &source);
   error_ref analyze_invalid_cpp_conversion(jtl::immutable_string const &message,
                                            read::source const &source,
                                            runtime::object_ref const expansion);
@@ -169,12 +167,9 @@ namespace jank::error
   error_ref analyze_invalid_cpp_member_access(jtl::immutable_string const &message,
                                               read::source const &source,
                                               runtime::object_ref const expansion);
-  error_ref analyze_known_issue(jtl::immutable_string const &message,
-                                read::source const &source,
-                                runtime::object_ref const expansion);
-  error_ref internal_analyze_failure(jtl::immutable_string const &message,
+  error_ref analyze_internal_failure(jtl::immutable_string const &message,
                                      runtime::object_ref const expansion);
-  error_ref internal_analyze_failure(jtl::immutable_string const &message,
+  error_ref analyze_internal_failure(jtl::immutable_string const &message,
                                      read::source const &source,
                                      runtime::object_ref const expansion);
 }

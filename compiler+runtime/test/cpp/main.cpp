@@ -24,6 +24,9 @@ extern "C" void jank_load_clojure_core();
 int main(int const argc, char const **argv)
 try
 {
+  /* Generating debug info drastically slows down JIT compilation. */
+  jank::util::cli::opts.debug = false;
+
   return jank_init_dynamic(argc, argv, true, nullptr, 0, [](int const argc, char const **argv) {
     doctest::Context context;
     context.applyCommandLine(argc, argv);

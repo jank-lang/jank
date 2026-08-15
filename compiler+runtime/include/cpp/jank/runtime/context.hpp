@@ -119,8 +119,7 @@ namespace jank::runtime
 
     jtl::immutable_string get_output_module_name(jtl::immutable_string const &module_name) const;
     jtl::string_result<void> write_module(jtl::immutable_string const &module_name,
-                                          jtl::immutable_string const &cpp_code,
-                                          jtl::ref<llvm::Module> const &module) const;
+                                          jtl::immutable_string const &cpp_code) const;
 
     /* Generates a unique name for use with anything from codgen structs,
      * lifted vars, to shadowed locals. Prefixes with current namespace. */

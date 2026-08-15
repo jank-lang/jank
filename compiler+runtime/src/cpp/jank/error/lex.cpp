@@ -92,19 +92,13 @@ namespace jank::error
   }
 
   error_ref
-  lex_invalid_string_escape(jtl::immutable_string const &message, read::source const &source)
-  {
-    return make_error(kind::lex_invalid_string_escape, message, source);
-  }
-
-  error_ref
   lex_unexpected_character(jtl::immutable_string const &message, read::source const &source)
   {
     return make_error(kind::lex_unexpected_character, message, source);
   }
 
-  error_ref internal_lex_failure(read::source const &source)
+  error_ref lex_internal_failure(read::source const &source)
   {
-    return make_error(kind::internal_lex_failure, source);
+    return make_error(kind::lex_internal_failure, source);
   }
 }

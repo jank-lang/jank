@@ -46,8 +46,10 @@ namespace jank::runtime::obj
       ++it;
       if(it == r.end())
       {
-        throw std::runtime_error{ util::format("Odd number of elements: {}",
-                                               seq.to_code_string()) };
+        throw std::runtime_error{ util::format(
+          "The sequence used to create a `persistent_sorted_map` must contain an even number of "
+          "elements. The sequence `{}` does not.",
+          seq.to_code_string()) };
       }
       auto const val(*it);
       transient[key] = val;

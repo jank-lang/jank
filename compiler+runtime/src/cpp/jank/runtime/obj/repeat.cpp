@@ -25,8 +25,9 @@ namespace jank::runtime::obj
   {
     if(0 >= count)
     {
-      throw std::runtime_error{ "repeat must be constructed with positive count: "
-                                + std::to_string(count) };
+      throw std::runtime_error{ util::format(
+        "The `repeat` sequence requires a positive count. The provided count was `{}`.",
+        count) };
     }
   }
 

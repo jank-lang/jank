@@ -9,4 +9,6 @@ error: Nested #() forms are not allowed.
   3  │ (defn foo [] (def there-is-a-long-name-here-which-pushes #(do #(println 2))))
      │                                                                ^ Inner #() starts here.
      │                                                           ^ Outer #() form starts here.
+─────┼──────────────────────────────────────────────────────────────────────────
+  🗎  │ https://book.jank-lang.org/reference/error/parse/nested-shorthand-function.html
 ─────┴──────────────────────────────────────────────────────────────────────────

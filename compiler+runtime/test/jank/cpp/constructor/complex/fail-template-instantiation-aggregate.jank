@@ -6,6 +6,5 @@
               std::string a{ T{} };
             };
           }")
-(let* [arg (cpp/int 5)
-       _ (#cpp (jank.cpp.constructor.complex.fail_template_instantiation_aggregate.foo int) arg)]
+(let* [_ (#cpp (jank.cpp.constructor.complex.fail_template_instantiation_aggregate.foo (:* int)))]
   :success)
