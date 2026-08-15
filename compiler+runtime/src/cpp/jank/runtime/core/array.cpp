@@ -1,9 +1,9 @@
 #include <jank/runtime/core/array.hpp>
 
-#include <jank/util/fmt.hpp>
-
-#include <jank/runtime/sequence_range.hpp>
+#include <jank/runtime/core/math.hpp>
 #include <jank/runtime/core/seq.hpp>
+#include <jank/runtime/sequence_range.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
@@ -24,7 +24,7 @@ namespace jank::runtime
 
   obj::bool_array_ref boolean_array(object_ref const o)
   {
-    if(o.get_type() == object_type::small_integer || o.get_type() == object_type::integer)
+    if(is_integer(o))
     {
       return boolean_array(o.to_integer());
     }
@@ -66,7 +66,7 @@ namespace jank::runtime
 
   obj::char_array_ref char_array(object_ref const o)
   {
-    if(o.get_type() == object_type::small_integer || o.get_type() == object_type::integer)
+    if(is_integer(o))
     {
       return char_array(o.to_integer());
     }
@@ -100,7 +100,7 @@ namespace jank::runtime
 
   obj::f32_array_ref float_array(object_ref const o)
   {
-    if(o.get_type() == object_type::small_integer || o.get_type() == object_type::integer)
+    if(is_integer(o))
     {
       return float_array(o.to_integer());
     }
@@ -129,7 +129,7 @@ namespace jank::runtime
 
   obj::f64_array_ref double_array(object_ref const o)
   {
-    if(o.get_type() == object_type::small_integer || o.get_type() == object_type::integer)
+    if(is_integer(o))
     {
       return double_array(o.to_integer());
     }
@@ -158,7 +158,7 @@ namespace jank::runtime
 
   obj::i16_array_ref short_array(object_ref const o)
   {
-    if(o.get_type() == object_type::small_integer || o.get_type() == object_type::integer)
+    if(is_integer(o))
     {
       return short_array(o.to_integer());
     }
@@ -187,7 +187,7 @@ namespace jank::runtime
 
   obj::i32_array_ref int_array(object_ref const o)
   {
-    if(o.get_type() == object_type::small_integer || o.get_type() == object_type::integer)
+    if(is_integer(o))
     {
       return int_array(o.to_integer());
     }
@@ -216,7 +216,7 @@ namespace jank::runtime
 
   obj::i64_array_ref long_array(object_ref const o)
   {
-    if(o.get_type() == object_type::small_integer || o.get_type() == object_type::integer)
+    if(is_integer(o))
     {
       return long_array(o.to_integer());
     }
@@ -240,7 +240,7 @@ namespace jank::runtime
 
   obj::object_array_ref object_array(object_ref const o)
   {
-    if(o.get_type() == object_type::small_integer || o.get_type() == object_type::integer)
+    if(is_integer(o))
     {
       return object_array(o.to_integer());
     }
@@ -269,7 +269,7 @@ namespace jank::runtime
 
   obj::u8_array_ref byte_array(object_ref const o)
   {
-    if(o.get_type() == object_type::small_integer || o.get_type() == object_type::integer)
+    if(is_integer(o))
     {
       return byte_array(o.to_integer());
     }
