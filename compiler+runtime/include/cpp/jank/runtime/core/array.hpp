@@ -2,10 +2,9 @@
 
 #include <jtl/immutable_string.hpp>
 
-#include <jank/util/fmt.hpp>
-
 #include <jank/runtime/obj/array.hpp>
 #include <jank/runtime/rtti.hpp>
+#include <jank/util/fmt.hpp>
 
 namespace jank::runtime
 {
