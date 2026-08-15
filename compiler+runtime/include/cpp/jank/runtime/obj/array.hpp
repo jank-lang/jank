@@ -40,7 +40,7 @@ namespace jank::runtime::obj
       }
     }
 
-    T &operator[](std::size_t const i)
+    T &operator[](usize const i)
     {
       if(i >= size)
       {
@@ -52,19 +52,7 @@ namespace jank::runtime::obj
       return data[i];
     }
 
-    T operator[](std::size_t const i) const
-    {
-      if(i >= size)
-      {
-        throw std::runtime_error{
-          util::format("out of bounds index {}; array has a size of {}", i, size)
-        };
-      }
-
-      return data[i];
-    }
-
-    T at(std::size_t i) const
+    T operator[](usize const i) const
     {
       if(i >= size)
       {
