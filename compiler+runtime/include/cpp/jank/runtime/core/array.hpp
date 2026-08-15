@@ -42,7 +42,7 @@ namespace jank::runtime
   template <typename T, size_t N>
   T aget(T const (&a)[N], i64 const i)
   {
-    if(i < 0 || static_cast<usize>(i) >= N)
+    if(i < 0 || std::cmp_greater_equal(i, N))
     {
       throw std::runtime_error{
         util::format("out of bounds index {}; array has a size of {}", i, N)
@@ -72,7 +72,7 @@ namespace jank::runtime
   template <typename T, size_t N>
   T aset(T (&a)[N], i64 const i, T const val)
   {
-    if(i < 0 || static_cast<usize>(i) >= N)
+    if(i < 0 || std::cmp_greater_equal(i, N))
     {
       throw std::runtime_error{
         util::format("out of bounds index {}; array has a size of {}", i, N)
