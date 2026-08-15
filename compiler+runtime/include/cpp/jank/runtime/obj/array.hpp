@@ -24,7 +24,7 @@ namespace jank::runtime::obj
       : object{ obj_type, obj_behaviors }
       , canonical_type{ canonical_type }
       , size{ size }
-      , data{ new(UseGC) T[size] }
+      , data{ new(UseGC) T[size]{} }
     {
     }
 
@@ -32,7 +32,7 @@ namespace jank::runtime::obj
       : object{ obj_type, obj_behaviors }
       , canonical_type{ canonical_type }
       , size{ size }
-      , data{ new(UseGC) T[size] }
+      , data{ new(UseGC) T[size]{} }
     {
       for(usize i{}; i < size; ++i)
       {
@@ -146,7 +146,7 @@ namespace jank::runtime::obj
     }
 
     jtl::immutable_string canonical_type{};
-    usize size;
+    usize size{};
     jtl::ptr<T> data{};
   };
 
