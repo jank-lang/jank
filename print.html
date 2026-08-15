@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-d9c773ec.js";
+            window.path_to_searchindex_js = "searchindex-83c255c6.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-9dcbcf57.js"></script>
+        <script src="toc-f6752db7.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -180,7 +180,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="welcome-to-the-jank-alpha"><a class="header" href="#welcome-to-the-jank-alpha">Welcome to the jank alpha!</a></h1>
-<p><em>by Jeaye Wilkerson, without LLMs, with feedback from the jank community.</em></p>
+<p><em>by Jeaye Wilkerson, with feedback from the jank community.</em></p>
 <p>This book is written for jank’s alpha release. It is incomplete, although its
 incompleteness matches jank’s. It’s still early to jump into jank, but your
 time and patience is welcome.</p>
@@ -2022,6 +2022,631 @@ That will play very nicely with the REPL. Leave the C++ stuff to be
 static, if you can. However, if you need to update C++ stuff, consider adding a
 version to the symbol or namespace so that you’re always defining new things and
 not violating the one definition rule.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="reference"><a href="#reference" class="header">Reference</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="errors"><a href="#errors" class="header">Errors</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lex"><a href="#lex" class="header">Lex</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lexunexpected-eof"><a class="header" href="#lexunexpected-eof">lex/unexpected-eof</a></h1>
+<p>This uncommon error usually means the source file contains corrupt Unicode. Normal unterminated lists or strings produce different errors.</p>
+<h2 id="mitigations"><a class="header" href="#mitigations">Mitigations</a></h2>
+<p>Verify the integrity of the file before proceeding.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lexexpecting-whitespace"><a class="header" href="#lexexpecting-whitespace">lex/expecting-whitespace</a></h1>
+<p>This happens when two forms that must be separated are written back to back without whitespace.</p>
+<h2 id="mitigations-1"><a class="header" href="#mitigations-1">Mitigations</a></h2>
+<p>Add a space or newline between the two forms. If they are meant to be one token, rewrite them as a single valid token.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lexinvalid-unicode"><a class="header" href="#lexinvalid-unicode">lex/invalid-unicode</a></h1>
+<p>This usually means the source file contains invalid or incomplete Unicode text. It is usually not a normal unfinished form.</p>
+<h2 id="mitigations-2"><a class="header" href="#mitigations-2">Mitigations</a></h2>
+<p>Save the file as valid UTF-8. Then remove or retype the corrupted characters.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lexincomplete-character"><a class="header" href="#lexincomplete-character">lex/incomplete-character</a></h1>
+<p>This happens when a character literal starts but no complete character value follows.</p>
+<h2 id="mitigations-3"><a class="header" href="#mitigations-3">Mitigations</a></h2>
+<p>Complete the character literal. Examples include <code>\a</code>, <code>\space</code>, <code>\newline</code>. Otherwise remove the partial literal.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lexinvalid-number"><a class="header" href="#lexinvalid-number">lex/invalid-number</a></h1>
+<p>This happens when a numeric literal is malformed. Common causes include mixed number syntax. They also include digits that do not match the base. Another cause is an unsupported base. Another cause is an unfinished literal.</p>
+<h2 id="mitigations-4"><a class="header" href="#mitigations-4">Mitigations</a></h2>
+<p>Rewrite the literal using one valid number format. Make sure every required digit is present.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lexinvalid-ratio"><a class="header" href="#lexinvalid-ratio">lex/invalid-ratio</a></h1>
+<p>This happens when a ratio literal is not written as two integers separated by <code>/</code>. Decimal points are not allowed. Scientific notation is not allowed. Arbitrary-radix notation is not allowed. Non-integer denominators are not allowed.</p>
+<h2 id="mitigations-5"><a class="header" href="#mitigations-5">Mitigations</a></h2>
+<p>Write the ratio as <code>numerator/denominator</code> with integers on both sides. If you want a decimal value, use a decimal number instead.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lexinvalid-symbol"><a class="header" href="#lexinvalid-symbol">lex/invalid-symbol</a></h1>
+<p>This most often means the symbol starts with <code>/</code>. That is not allowed.</p>
+<h2 id="mitigations-6"><a class="header" href="#mitigations-6">Mitigations</a></h2>
+<p>Either remove the leading <code>/</code> or add a namespace before it, such as <code>my.ns/name</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lexinvalid-keyword"><a class="header" href="#lexinvalid-keyword">lex/invalid-keyword</a></h1>
+<p>This happens when a keyword literal is missing its name or has an invalid namespace or name shape. Common cases include <code>:</code>, <code>::</code>, <code>:/foo</code>, <code>::/foo</code>. Another common case is too many leading colons.</p>
+<h2 id="mitigations-7"><a class="header" href="#mitigations-7">Mitigations</a></h2>
+<p>Use one of these shapes: <code>:name</code>, <code>:ns/name</code>, <code>::name</code>, <code>::alias/name</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lexunterminated-string"><a class="header" href="#lexunterminated-string">lex/unterminated-string</a></h1>
+<p>A string literal was started with <code>"</code> but never closed.</p>
+<h2 id="mitigations-8"><a class="header" href="#mitigations-8">Mitigations</a></h2>
+<p>Either add the missing closing quote or remove the accidental opening quote.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lexunexpected-character"><a class="header" href="#lexunexpected-character">lex/unexpected-character</a></h1>
+<p>This happens when the source contains a character that cannot start any valid jank token in that position.</p>
+<h2 id="mitigations-9"><a class="header" href="#mitigations-9">Mitigations</a></h2>
+<p>Either remove or replace the stray character. If it was intentional, put it inside a string or another valid form.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="lexinternal-failure"><a class="header" href="#lexinternal-failure">lex/internal-failure</a></h1>
+<p>This indicates an internal problem while reading source code. It is not a normal syntax mistake.</p>
+<h2 id="mitigations-10"><a class="header" href="#mitigations-10">Mitigations</a></h2>
+<p>Try to simplify the source. Then <a href="/troubleshooting/getting-help.html">report it as a jank bug</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parse"><a href="#parse" class="header">Parse</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-unicode"><a class="header" href="#parseinvalid-unicode">parse/invalid-unicode</a></h1>
+<p>This happens when a character literal or Unicode escape does not represent a valid Unicode character.</p>
+<h2 id="mitigations-11"><a class="header" href="#mitigations-11">Mitigations</a></h2>
+<p>Use a valid character literal or a valid Unicode escape.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-character"><a class="header" href="#parseinvalid-character">parse/invalid-character</a></h1>
+<p>This happens when a character literal is not one of the supported character forms.</p>
+<h2 id="mitigations-12"><a class="header" href="#mitigations-12">Mitigations</a></h2>
+<p>Use a single character. You can also use a supported named character such as <code>\newline</code> or <code>\space</code>. A valid Unicode character form also works.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-string-escape"><a class="header" href="#parseinvalid-string-escape">parse/invalid-string-escape</a></h1>
+<p>This happens when jank does not recognize a string escape sequence. It can also
+happen for a malformed Unicode escape inside a string literal.</p>
+<h2 id="mitigations-13"><a class="header" href="#mitigations-13">Mitigations</a></h2>
+<p>Use a supported escape sequence such as <code>\n</code>, <code>\t</code>, <code>\\</code>, <code>\"</code>. You can also use
+a valid <code>\uXXXX</code> escape.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseunexpected-closing-character"><a class="header" href="#parseunexpected-closing-character">parse/unexpected-closing-character</a></h1>
+<p>This happens when one of <code>)</code>, <code>]</code>, <code>}</code> appears without a matching opening delimiter.</p>
+<h2 id="mitigations-14"><a class="header" href="#mitigations-14">Mitigations</a></h2>
+<p>Either remove the extra closing delimiter or add the matching opening delimiter earlier in the form.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseunterminated-list"><a class="header" href="#parseunterminated-list">parse/unterminated-list</a></h1>
+<p>A list was started with <code>(</code> but was not closed with <code>)</code>.</p>
+<h2 id="mitigations-15"><a class="header" href="#mitigations-15">Mitigations</a></h2>
+<p>Add the missing <code>)</code> to close the list.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseunterminated-vector"><a class="header" href="#parseunterminated-vector">parse/unterminated-vector</a></h1>
+<p>A vector was started with <code>[</code> but was not closed with <code>]</code>.</p>
+<h2 id="mitigations-16"><a class="header" href="#mitigations-16">Mitigations</a></h2>
+<p>Add the missing <code>]</code> to close the vector.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseunterminated-map"><a class="header" href="#parseunterminated-map">parse/unterminated-map</a></h1>
+<p>A map was started with <code>{</code> but was not closed with <code>}</code>.</p>
+<h2 id="mitigations-17"><a class="header" href="#mitigations-17">Mitigations</a></h2>
+<p>Add the missing <code>}</code> to close the map.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseunterminated-set"><a class="header" href="#parseunterminated-set">parse/unterminated-set</a></h1>
+<p>A set was started with <code>#{</code> but was not closed with <code>}</code>.</p>
+<h2 id="mitigations-18"><a class="header" href="#mitigations-18">Mitigations</a></h2>
+<p>Add the missing <code>}</code> to close the set.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseodd-entries-in-map"><a class="header" href="#parseodd-entries-in-map">parse/odd-entries-in-map</a></h1>
+<p>This happens when a map literal has a key without a corresponding value. For example:</p>
+<pre><code class="language-clojure">{:a }
+</code></pre>
+<h2 id="mitigations-19"><a class="header" href="#mitigations-19">Mitigations</a></h2>
+<p>Make sure every key in the map is followed by a value.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseduplicate-keys-in-map"><a class="header" href="#parseduplicate-keys-in-map">parse/duplicate-keys-in-map</a></h1>
+<p>This happens when the same key appears more than once in a map literal. For example:</p>
+<pre><code class="language-clojure">{:a 1
+ :a 2}
+</code></pre>
+<h2 id="mitigations-20"><a class="header" href="#mitigations-20">Mitigations</a></h2>
+<p>Either remove the duplicate key or rename it so each key appears only once.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseduplicate-items-in-set"><a class="header" href="#parseduplicate-items-in-set">parse/duplicate-items-in-set</a></h1>
+<p>This happens when the same item appears more than once in a set literal. For example:</p>
+<pre><code class="language-clojure">#{:foo :foo}
+</code></pre>
+<p>This also applies to repeated forms such as:</p>
+<pre><code class="language-clojure">#{(rand) (rand)}
+</code></pre>
+<h2 id="mitigations-21"><a class="header" href="#mitigations-21">Mitigations</a></h2>
+<p>Remove the duplicate item so each set element appears only once. If you need separate computed values, bind them in a <code>let</code> first and build the set from those locals.</p>
+<pre><code class="language-clojure">(let [a (rand)
+      b (rand)]
+ #{a b})
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-quote"><a class="header" href="#parseinvalid-quote">parse/invalid-quote</a></h1>
+<p>This usually means a quote form like <code>'</code> is missing the value it should quote.</p>
+<h2 id="mitigations-22"><a class="header" href="#mitigations-22">Mitigations</a></h2>
+<p>Place a form immediately after the quote.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-meta-hint-value"><a class="header" href="#parseinvalid-meta-hint-value">parse/invalid-meta-hint-value</a></h1>
+<p>This happens when the form after <code>^</code> is missing or is not a valid metadata value.</p>
+<h2 id="mitigations-23"><a class="header" href="#mitigations-23">Mitigations</a></h2>
+<p>Use a valid metadata form after <code>^</code>. A keyword or map works.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-meta-hint-target"><a class="header" href="#parseinvalid-meta-hint-target">parse/invalid-meta-hint-target</a></h1>
+<p>This happens when metadata is attached to a missing form or to a value that cannot carry metadata. Some values, such as numbers and strings, do not support metadata.</p>
+<h2 id="mitigations-24"><a class="header" href="#mitigations-24">Mitigations</a></h2>
+<p>Put the metadata before a valid target form that supports metadata. If needed, wrap the value in something that can carry metadata, such as an atom or a container.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseunsupported-reader-macro"><a class="header" href="#parseunsupported-reader-macro">parse/unsupported-reader-macro</a></h1>
+<p>This happens when <code>#</code> is followed by a reader macro that jank does not support.</p>
+<h2 id="mitigations-25"><a class="header" href="#mitigations-25">Mitigations</a></h2>
+<p>Either use a supported reader macro or rewrite the form without that reader syntax.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parsenested-shorthand-function"><a class="header" href="#parsenested-shorthand-function">parse/nested-shorthand-function</a></h1>
+<p>This happens when one shorthand anonymous function form is placed inside another <code>#()</code> form. The <code>%1</code>-style placeholders would be ambiguous between the two functions.</p>
+<h2 id="mitigations-26"><a class="header" href="#mitigations-26">Mitigations</a></h2>
+<p>Either rewrite the nested shorthand function as a normal <code>fn</code> or move it outside the outer <code>#()</code> form.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-shorthand-function-parameter"><a class="header" href="#parseinvalid-shorthand-function-parameter">parse/invalid-shorthand-function-parameter</a></h1>
+<p>This happens when a <code>%</code> parameter inside <code>#()</code> is not one of the supported forms.</p>
+<h2 id="mitigations-27"><a class="header" href="#mitigations-27">Mitigations</a></h2>
+<p>Use one of the supported forms: <code>%</code>, <code>%&amp;</code>, <code>%n</code> where <code>n</code> is 1 or greater. <code>%</code> means <code>%1</code>. <code>%&amp;</code> means all parameters as a sequence.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-reader-var"><a class="header" href="#parseinvalid-reader-var">parse/invalid-reader-var</a></h1>
+<p>This happens when <code>#'</code> is not followed by a symbol. For example, <code>#'foo</code> is valid if <code>foo</code> resolves in the current namespace. <code>#'123</code> is not valid.</p>
+<h2 id="mitigations-28"><a class="header" href="#mitigations-28">Mitigations</a></h2>
+<p>Put a symbol immediately after <code>#'</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-reader-comment"><a class="header" href="#parseinvalid-reader-comment">parse/invalid-reader-comment</a></h1>
+<p>This happens when <code>#_</code> is not followed by a form to skip.</p>
+<h2 id="mitigations-29"><a class="header" href="#mitigations-29">Mitigations</a></h2>
+<p>Either place a form immediately after <code>#_</code> or remove the reader comment. For example:</p>
+<pre><code class="language-clojure">(let [a (get-a!)]
+  #_(println :a a)
+  a)
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-reader-conditional"><a class="header" href="#parseinvalid-reader-conditional">parse/invalid-reader-conditional</a></h1>
+<p>This happens when a reader conditional such as <code>#?</code> is not allowed in the current context. It can also happen when it is not followed by a list. Malformed feature or value pairs can trigger it too.</p>
+<h2 id="mitigations-30"><a class="header" href="#mitigations-30">Mitigations</a></h2>
+<p>Use a valid reader conditional list with keyword features and matching forms. Enable reader conditionals if needed. A valid reader conditional looks like this:</p>
+<pre><code class="language-clojure">#?(:jank (println "hi jank!")
+   :default (println "hi other clojure!"))
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-reader-splice"><a class="header" href="#parseinvalid-reader-splice">parse/invalid-reader-splice</a></h1>
+<p>This happens when <code>#?@</code> is used where splicing is not allowed. It can also happen when the selected form is not a sequence.</p>
+<h2 id="mitigations-31"><a class="header" href="#mitigations-31">Mitigations</a></h2>
+<p>Use <code>#?@</code> only in a place where splicing is allowed. Make sure the selected form is a sequence. A valid reader conditional splice looks like this:</p>
+<pre><code class="language-clojure">(def v [1 2 #?@(:jank [3 4]
+                :default [])])
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-reader-gensym"><a class="header" href="#parseinvalid-reader-gensym">parse/invalid-reader-gensym</a></h1>
+<p>This happens when a gensym-style symbol ending in <code>#</code> is used outside a syntax-quoted form.</p>
+<h2 id="mitigations-32"><a class="header" href="#mitigations-32">Mitigations</a></h2>
+<p>Use gensym literals only inside syntax quote. Otherwise replace them with an ordinary symbol.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-reader-symbolic-value"><a class="header" href="#parseinvalid-reader-symbolic-value">parse/invalid-reader-symbolic-value</a></h1>
+<p>This happens when a reader symbolic value is not one of the supported forms. Supported forms include <code>##Inf</code>, <code>##-Inf</code>, <code>##NaN</code>. It may also appear for unsupported built-in tagged-reader cases.</p>
+<h2 id="mitigations-33"><a class="header" href="#mitigations-33">Mitigations</a></h2>
+<p>Use one of the supported symbolic values. Otherwise switch to a supported tagged literal form.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-reader-tag-value"><a class="header" href="#parseinvalid-reader-tag-value">parse/invalid-reader-tag-value</a></h1>
+<p>This happens when a tagged literal is missing its following form. It can also happen when the following form has the wrong kind for that tag.</p>
+<h2 id="mitigations-34"><a class="header" href="#mitigations-34">Mitigations</a></h2>
+<p>Place a valid form immediately after the tag. Make sure it matches what the tag expects.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-regex"><a class="header" href="#parseinvalid-regex">parse/invalid-regex</a></h1>
+<p>This happens when a regex literal contains an invalid regular expression.</p>
+<h2 id="mitigations-35"><a class="header" href="#mitigations-35">Mitigations</a></h2>
+<p>Fix the regex pattern so it is valid.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-uuid"><a class="header" href="#parseinvalid-uuid">parse/invalid-uuid</a></h1>
+<p>This happens when <code>#uuid</code> is not followed by a valid UUID string.</p>
+<h2 id="mitigations-36"><a class="header" href="#mitigations-36">Mitigations</a></h2>
+<p>Use a valid UUID string after <code>#uuid</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-inst"><a class="header" href="#parseinvalid-inst">parse/invalid-inst</a></h1>
+<p>This happens when <code>#inst</code> is not followed by a supported date or time string.</p>
+<h2 id="mitigations-37"><a class="header" href="#mitigations-37">Mitigations</a></h2>
+<p>Use a supported date or time string after <code>#inst</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-syntax-quote"><a class="header" href="#parseinvalid-syntax-quote">parse/invalid-syntax-quote</a></h1>
+<p>This usually means a syntax quote form like <code>`</code> is missing the value it should quote.</p>
+<h2 id="mitigations-38"><a class="header" href="#mitigations-38">Mitigations</a></h2>
+<p>Place a form immediately after the syntax quote.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-syntax-unquote"><a class="header" href="#parseinvalid-syntax-unquote">parse/invalid-syntax-unquote</a></h1>
+<p>This happens when an unquote form such as <code>~</code> is missing its value or is otherwise used incorrectly.</p>
+<h2 id="mitigations-39"><a class="header" href="#mitigations-39">Mitigations</a></h2>
+<p>Use <code>~</code> only with a following form in a valid syntax-quote context.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-syntax-unquote-splice"><a class="header" href="#parseinvalid-syntax-unquote-splice">parse/invalid-syntax-unquote-splice</a></h1>
+<p>This happens when <code>~@</code> is used somewhere syntax-quote splicing is not allowed.</p>
+<h2 id="mitigations-40"><a class="header" href="#mitigations-40">Mitigations</a></h2>
+<p>Use <code>~@</code> only inside a sequence position where splicing makes sense.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-reader-deref"><a class="header" href="#parseinvalid-reader-deref">parse/invalid-reader-deref</a></h1>
+<p>This happens when <code>@</code> is not followed by a form to dereference.</p>
+<h2 id="mitigations-41"><a class="header" href="#mitigations-41">Mitigations</a></h2>
+<p>Place a form immediately after <code>@</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-ratio"><a class="header" href="#parseinvalid-ratio">parse/invalid-ratio</a></h1>
+<p>This most often means the ratio’s denominator is zero.</p>
+<h2 id="mitigations-42"><a class="header" href="#mitigations-42">Mitigations</a></h2>
+<p>Use a non-zero denominator.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-keyword"><a class="header" href="#parseinvalid-keyword">parse/invalid-keyword</a></h1>
+<p>This happens when a keyword form is lexically valid but still cannot be resolved or interned as a keyword.</p>
+<h2 id="mitigations-43"><a class="header" href="#mitigations-43">Mitigations</a></h2>
+<p>Use a valid keyword name. For auto-resolved keywords, make sure the namespace or alias exists.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinvalid-data-reader"><a class="header" href="#parseinvalid-data-reader">parse/invalid-data-reader</a></h1>
+<p>This happens when tagged-literal data reader configuration is invalid. For example, <code>*data-readers*</code> may not be a map. A data reader may also not be a function.</p>
+<h2 id="mitigations-44"><a class="header" href="#mitigations-44">Mitigations</a></h2>
+<p>Fix the tagged-literal reader configuration before reading the form again.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="parseinternal-failure"><a class="header" href="#parseinternal-failure">parse/internal-failure</a></h1>
+<p>This indicates an internal problem while building forms from tokens. It is not a normal syntax mistake.</p>
+<h2 id="mitigations-45"><a class="header" href="#mitigations-45">Mitigations</a></h2>
+<p>Try to simplify the source. Then <a href="/troubleshooting/getting-help.html">report it as a jank bug</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyze"><a href="#analyze" class="header">Analyze</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-case"><a class="header" href="#analyzeinvalid-case">analyze/invalid-case</a></h1>
+<p>This happens when the low-level <code>case*</code> form is used directly with missing arguments or with arguments of the wrong type.</p>
+<h2 id="mitigations-46"><a class="header" href="#mitigations-46">Mitigations</a></h2>
+<p>Prefer the normal <code>case</code> macro instead of calling <code>case*</code> directly. If you do use <code>case*</code>, make sure each required argument is present and has the expected type.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-def"><a class="header" href="#analyzeinvalid-def">analyze/invalid-def</a></h1>
+<p>This happens when a <code>def</code> form is malformed. It may be missing its name. It may have extra forms. The name may not be an unqualified symbol.</p>
+<h2 id="mitigations-47"><a class="header" href="#mitigations-47">Mitigations</a></h2>
+<p>Write <code>def</code> as <code>(def name value)</code> or <code>(def name)</code>. Make sure <code>name</code> is an unqualified symbol.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-fn"><a class="header" href="#analyzeinvalid-fn">analyze/invalid-fn</a></h1>
+<p>This happens when an <code>fn</code> form has an invalid overall shape. Malformed arities can trigger it. Duplicate arities can trigger it too. Invalid variadic usage can also trigger it.</p>
+<h2 id="mitigations-48"><a class="header" href="#mitigations-48">Mitigations</a></h2>
+<p>Rewrite the function so each arity has a valid parameter vector and body. If you use a variadic arity, make sure it is well formed. <code>fn</code> comes in two forms.</p>
+<h3 id="single-arity"><a class="header" href="#single-arity">Single arity</a></h3>
+<pre><code class="language-clojure">(fn foo [a1 a2]
+  (println a1 a2))
+</code></pre>
+<h3 id="multi-arity"><a class="header" href="#multi-arity">Multi-arity</a></h3>
+<pre><code class="language-clojure">(fn foo
+  ([a1]
+   (println a1))
+  ([a1 a2]
+   (println a1 a2)))
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-fn-parameters"><a class="header" href="#analyzeinvalid-fn-parameters">analyze/invalid-fn-parameters</a></h1>
+<p>This happens when a function parameter vector is malformed. Common cases include non-symbol parameters. Qualified parameter names can also trigger it. Incorrect <code>&amp;</code> usage can trigger it too.</p>
+<h2 id="mitigations-49"><a class="header" href="#mitigations-49">Mitigations</a></h2>
+<p>Use a parameter vector of unqualified symbols. Use <code>&amp;</code> only once. Put it immediately before the variadic parameter name.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-recur-position"><a class="header" href="#analyzeinvalid-recur-position">analyze/invalid-recur-position</a></h1>
+<p>This happens when <code>recur</code> is used outside the tail position of a <code>fn</code> or <code>loop</code>.</p>
+<h2 id="mitigations-50"><a class="header" href="#mitigations-50">Mitigations</a></h2>
+<p>Move the <code>recur</code> call to the tail position of the enclosing <code>fn</code> or <code>loop</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-recur-from-try"><a class="header" href="#analyzeinvalid-recur-from-try">analyze/invalid-recur-from-try</a></h1>
+<p>This happens when <code>recur</code> appears within a <code>try</code> path. The same rule applies inside <code>catch</code> and <code>finally</code>.</p>
+<h2 id="mitigations-51"><a class="header" href="#mitigations-51">Mitigations</a></h2>
+<p>Restructure the code so the <code>recur</code> happens outside the <code>try</code> form.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-recur-args"><a class="header" href="#analyzeinvalid-recur-args">analyze/invalid-recur-args</a></h1>
+<p>This happens when <code>recur</code> is given the wrong number of arguments for the enclosing <code>fn</code> or <code>loop</code>.</p>
+<h2 id="mitigations-52"><a class="header" href="#mitigations-52">Mitigations</a></h2>
+<p>Pass exactly one new value for each local that the enclosing <code>fn</code> arity or <code>loop</code> binds.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-let"><a class="header" href="#analyzeinvalid-let">analyze/invalid-let</a></h1>
+<p>This happens when a <code>let</code> binding form is malformed. The binding form may be missing. It may not be a vector. It may have an odd number of entries. The binding names may be invalid.</p>
+<h2 id="mitigations-53"><a class="header" href="#mitigations-53">Mitigations</a></h2>
+<p>Use a binding vector with pairs of unqualified symbol names and values.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-letfn"><a class="header" href="#analyzeinvalid-letfn">analyze/invalid-letfn</a></h1>
+<p>This happens when a <code>letfn*</code> binding form is malformed. The bindings may be missing. They may be uneven. The names may be invalid. The bound values may not be functions.</p>
+<h2 id="mitigations-54"><a class="header" href="#mitigations-54">Mitigations</a></h2>
+<p>Use a binding vector of function-name and function-value pairs. Make sure each name is an unqualified symbol.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-if"><a class="header" href="#analyzeinvalid-if">analyze/invalid-if</a></h1>
+<p>This happens when an <code>if</code> form is malformed. It may be missing the <code>then</code> branch. It may also have too many forms.</p>
+<h2 id="mitigations-55"><a class="header" href="#mitigations-55">Mitigations</a></h2>
+<p>Write <code>if</code> as <code>(if test then)</code> or <code>(if test then else)</code>. If you need multiple forms in the <code>then</code> branch or the <code>else</code> branch, wrap them in a <code>do</code> form.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-quote"><a class="header" href="#analyzeinvalid-quote">analyze/invalid-quote</a></h1>
+<p>This happens when <code>quote</code> is given anything other than exactly one form.</p>
+<h2 id="mitigations-56"><a class="header" href="#mitigations-56">Mitigations</a></h2>
+<p>Pass exactly one form to <code>quote</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-var-reference"><a class="header" href="#analyzeinvalid-var-reference">analyze/invalid-var-reference</a></h1>
+<p>This happens when <code>(var ...)</code> is malformed. It may have the wrong number of arguments. The argument may not be a symbol.</p>
+<h2 id="mitigations-57"><a class="header" href="#mitigations-57">Mitigations</a></h2>
+<p>Use <code>(var some-symbol)</code> with exactly one symbol argument.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeunresolved-var"><a class="header" href="#analyzeunresolved-var">analyze/unresolved-var</a></h1>
+<p>This happens when <code>(var some-symbol)</code> refers to a var that jank cannot resolve. The same error can appear for <code>#'some-symbol</code>.</p>
+<h2 id="mitigations-58"><a class="header" href="#mitigations-58">Mitigations</a></h2>
+<p>Make sure the var exists. Check the spelling. Make sure it is available in the current namespace or use a fully qualified name. You can write a fully qualified var reference as <code>#'some.ns/foo</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeunresolved-symbol"><a class="header" href="#analyzeunresolved-symbol">analyze/unresolved-symbol</a></h1>
+<p>This happens when a symbol is not a local. It may also not be a named recursion target. In that case jank cannot resolve it to a known var or supported C++ global.</p>
+<h2 id="mitigations-59"><a class="header" href="#mitigations-59">Mitigations</a></h2>
+<p>Check the spelling. Check the namespace. Check the scope. Make sure any required namespace has been loaded or aliased.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzemacro-expansion-exception"><a class="header" href="#analyzemacro-expansion-exception">analyze/macro-expansion-exception</a></h1>
+<p>This happens when a macro throws an exception or another error while jank expands it.</p>
+<h2 id="mitigations-60"><a class="header" href="#mitigations-60">Mitigations</a></h2>
+<p>Inspect the macro call. Inspect the macro itself. Reduce the input to a smaller example and fix the failing expansion path.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-operator-call"><a class="header" href="#analyzeinvalid-cpp-operator-call">analyze/invalid-cpp-operator-call</a></h1>
+<p>This happens when a C++ operator form is called with the wrong number of arguments. It can also happen when the operand types do not support that operator.</p>
+<h2 id="mitigations-61"><a class="header" href="#mitigations-61">Mitigations</a></h2>
+<p>Call the operator with the required number of arguments. Make sure the operand types support it.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-constructor-call"><a class="header" href="#analyzeinvalid-cpp-constructor-call">analyze/invalid-cpp-constructor-call</a></h1>
+<p>This happens when a C++ constructor call cannot be formed. The target may not be constructible. Required template information may also be missing.</p>
+<h2 id="mitigations-62"><a class="header" href="#mitigations-62">Mitigations</a></h2>
+<p>Make sure you are constructing a valid concrete type. Make sure the constructor arguments match an available constructor.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-member-call"><a class="header" href="#analyzeinvalid-cpp-member-call">analyze/invalid-cpp-member-call</a></h1>
+<p>This happens when a <code>.member</code> call is missing its target object. It can also happen when the target type does not have a matching callable member function.</p>
+<h2 id="mitigations-63"><a class="header" href="#mitigations-63">Mitigations</a></h2>
+<p>Pass the target object first. Make sure the member function exists for that type and argument list. The member function must be public.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-capture"><a class="header" href="#analyzeinvalid-cpp-capture">analyze/invalid-cpp-capture</a></h1>
+<p>This happens when a local native C++ value is captured in a context where it cannot be safely copied.</p>
+<h2 id="mitigations-64"><a class="header" href="#mitigations-64">Mitigations</a></h2>
+<p>Avoid capturing that value directly. If possible, change the code so the captured value has a copyable type. You can also capture a pointer to it by using <code>cpp/&amp;</code> in a <code>let</code>. Verify that the pointed-to value will outlive the closure.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-position"><a class="header" href="#analyzeinvalid-cpp-position">analyze/invalid-cpp-position</a></h1>
+<p>This happens when a C++ operator or member-style form is used as a plain value instead of being called directly.</p>
+<h2 id="mitigations-65"><a class="header" href="#mitigations-65">Mitigations</a></h2>
+<p>Call the form directly in place, such as <code>(.member obj ...)</code>. Do not try to pass it around as a value.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzemismatched-if-types"><a class="header" href="#analyzemismatched-if-types">analyze/mismatched-if-types</a></h1>
+<p>This happens when the <code>then</code> branch and <code>else</code> branch of an <code>if</code> produce native C++ values with incompatible types. jank needs both branches to produce a compatible result type for the full expression.</p>
+<p>This usually is not a problem for ordinary jank objects. It most often appears when native C++ values are involved.</p>
+<h2 id="mitigations-66"><a class="header" href="#mitigations-66">Mitigations</a></h2>
+<p>Change the branches so they produce compatible types. jank can handle some implicit conversions and trait conversions automatically. If that is not enough, wrap both branches in a common type such as <code>std::variant</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-function-call"><a class="header" href="#analyzeinvalid-cpp-function-call">analyze/invalid-cpp-function-call</a></h1>
+<p>This happens when a direct C++ function-style call cannot be resolved. The target may not be callable. No overload may match. The requested function may not exist.</p>
+<h2 id="mitigations-67"><a class="header" href="#mitigations-67">Mitigations</a></h2>
+<p>Check the function name. Check the template arguments. Check the call arguments. Make sure a matching callable target exists.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-call"><a class="header" href="#analyzeinvalid-cpp-call">analyze/invalid-cpp-call</a></h1>
+<p>This happens when jank cannot form a valid indirect or generic C++ call. That can include calls through function pointers. It can also include calls through functors or other callable values.</p>
+<h2 id="mitigations-68"><a class="header" href="#mitigations-68">Mitigations</a></h2>
+<p>Make sure the target is actually callable. Make sure the argument list matches an available call operator or function type.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-conversion"><a class="header" href="#analyzeinvalid-cpp-conversion">analyze/invalid-cpp-conversion</a></h1>
+<p>This happens when there’s an unsupported implicit conversion needed between two
+types. This can happen between two native types, such as when you try to use a
+native value for an <code>if</code> condition and it can’t implicitly convert to <code>bool</code>.</p>
+<p>This can also happen for unsupported trait conversions. In that case, a jank object is
+expected and a native value is provided, but there is no conversion trait which
+allows jank to get from the native value to the jank object.</p>
+<h2 id="mitigations-69"><a class="header" href="#mitigations-69">Mitigations</a></h2>
+<p>If you’re implicitly casting between two native types, you’ll need to sort out
+how that can be done more explicitly.</p>
+<p>If you’re converting a native value into a jank object, you have a few options.</p>
+<ol>
+<li>You can wrap the native value in an opaque box, if its lifetime allows that.</li>
+<li>You can define a conversion trait for your native type.</li>
+<li>You can also build a jank object from the native value’s members.</li>
+</ol>
+<p>For more information on all of this see <a href="/cpp-interop/native-values.html">here</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-symbol"><a class="header" href="#analyzeinvalid-cpp-symbol">analyze/invalid-cpp-symbol</a></h1>
+<p>This happens when a C++ symbol form is malformed. It may refer to a namespace as a value. It may use an invalid dotted name. It may use constructor syntax on something that is not a type.</p>
+<h2 id="mitigations-70"><a class="header" href="#mitigations-70">Mitigations</a></h2>
+<p>Rewrite the symbol as a valid C++ namespace, type, function, member name. Only use constructor syntax with actual types.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeunresolved-cpp-symbol"><a class="header" href="#analyzeunresolved-cpp-symbol">analyze/unresolved-cpp-symbol</a></h1>
+<p>This happens when a referenced C++ name cannot be resolved to any known symbol.</p>
+<h2 id="mitigations-71"><a class="header" href="#mitigations-71">Mitigations</a></h2>
+<p>Check the spelling. Check the qualification. Check the includes. Check the surrounding scope. Make sure the C++ name is available where it is used.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-raw"><a class="header" href="#analyzeinvalid-cpp-raw">analyze/invalid-cpp-raw</a></h1>
+<p>This happens when <code>cpp/raw</code> is missing its string argument. It can also happen when it has extra arguments or when it is given something other than a string literal of C++ code.</p>
+<h2 id="mitigations-72"><a class="header" href="#mitigations-72">Mitigations</a></h2>
+<p>Call <code>cpp/raw</code> with exactly one string literal containing the raw C++ code.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-type"><a class="header" href="#analyzeinvalid-cpp-type">analyze/invalid-cpp-type</a></h1>
+<p>This happens when a form that requires a C++ type is malformed or when it receives a value form instead of a type form.</p>
+<h2 id="mitigations-73"><a class="header" href="#mitigations-73">Mitigations</a></h2>
+<p>Pass a valid C++ type form in that position.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-type-position"><a class="header" href="#analyzeinvalid-cpp-type-position">analyze/invalid-cpp-type-position</a></h1>
+<p>This happens when a C++ type name is used where jank expects a value instead of a type.</p>
+<h2 id="mitigations-74"><a class="header" href="#mitigations-74">Mitigations</a></h2>
+<p>Move the type form to a type position. Otherwise use a value-producing form instead.</p>
+<p>Types cannot be used as first-class values in jank because there is no runtime reflection.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-dsl"><a class="header" href="#analyzeinvalid-cpp-dsl">analyze/invalid-cpp-dsl</a></h1>
+<p>This happens when a <code>#cpp</code> type form is malformed. Common cases include invalid modifiers. They also include invalid template usage. Malformed function type forms can trigger it. Malformed array type forms can trigger it. Using a value form where a type form is required can trigger it too.</p>
+<h2 id="mitigations-75"><a class="header" href="#mitigations-75">Mitigations</a></h2>
+<p>Rewrite the <code>#cpp</code> form so each part is a valid C++ type description. Make sure each part appears in the correct position.</p>
+<p>For full documentation on the C++ DSL, see <a href="/cpp-interop/dsl.html">here</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-value"><a class="header" href="#analyzeinvalid-cpp-value">analyze/invalid-cpp-value</a></h1>
+<p>This happens when a resolved C++ form is not usable as a value in the current position.</p>
+<h2 id="mitigations-76"><a class="header" href="#mitigations-76">Mitigations</a></h2>
+<p>Make sure the form names an actual value. Otherwise rewrite it as the correct type form or call form for that position.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-cast"><a class="header" href="#analyzeinvalid-cpp-cast">analyze/invalid-cpp-cast</a></h1>
+<p>This happens when <code>cpp/cast</code> is malformed or when the requested cast is not allowed for the source type and target type.</p>
+<h2 id="mitigations-77"><a class="header" href="#mitigations-77">Mitigations</a></h2>
+<p>Call <code>cpp/cast</code> with exactly a target type and a value. Choose a conversion that is valid for those types.</p>
+<p><code>cpp/cast</code> behaves like C++ <code>static_cast</code>. If you need a less restricted cast, use <code>cpp/unsafe-cast</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-unsafe-cast"><a class="header" href="#analyzeinvalid-cpp-unsafe-cast">analyze/invalid-cpp-unsafe-cast</a></h1>
+<p>This happens when <code>cpp/unsafe-cast</code> is malformed or when even an unsafe C-style cast cannot be formed for the given types.</p>
+<h2 id="mitigations-78"><a class="header" href="#mitigations-78">Mitigations</a></h2>
+<p>Call <code>cpp/unsafe-cast</code> with exactly a target type and a value. Make sure the cast is actually possible.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-box"><a class="header" href="#analyzeinvalid-cpp-box">analyze/invalid-cpp-box</a></h1>
+<p>This happens when <code>cpp/box</code> is malformed. It can also happen when it receives the wrong number of arguments or when the value cannot be boxed this way.</p>
+<p><code>cpp/box</code> must receive a raw pointer value. The pointed-to value must outlive the returned opaque box.</p>
+<h2 id="mitigations-79"><a class="header" href="#mitigations-79">Mitigations</a></h2>
+<p>Call <code>cpp/box</code> with exactly one suitable pointer value.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-unbox"><a class="header" href="#analyzeinvalid-cpp-unbox">analyze/invalid-cpp-unbox</a></h1>
+<p>This happens when <code>cpp/unbox</code> is malformed. It can also happen when it receives the wrong number of arguments. Using a non-pointer target type triggers it too. Applying it to something that is not a boxed jank object also triggers it.</p>
+<h2 id="mitigations-80"><a class="header" href="#mitigations-80">Mitigations</a></h2>
+<p>Call <code>cpp/unbox</code> with a pointer target type and a compatible boxed jank value.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-new"><a class="header" href="#analyzeinvalid-cpp-new">analyze/invalid-cpp-new</a></h1>
+<p>This happens when <code>cpp/new</code> is missing the type it should allocate.</p>
+<h2 id="mitigations-81"><a class="header" href="#mitigations-81">Mitigations</a></h2>
+<p>Pass the type to allocate, followed by any constructor arguments.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-delete"><a class="header" href="#analyzeinvalid-cpp-delete">analyze/invalid-cpp-delete</a></h1>
+<p>This happens when <code>cpp/delete</code> is malformed. It can also happen when it receives the wrong number of arguments or when the value is not a pointer.</p>
+<h2 id="mitigations-82"><a class="header" href="#mitigations-82">Mitigations</a></h2>
+<p>Call <code>cpp/delete</code> with exactly one pointer value. The pointed-to value must have been allocated via <code>cpp/new</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinvalid-cpp-member-access"><a class="header" href="#analyzeinvalid-cpp-member-access">analyze/invalid-cpp-member-access</a></h1>
+<p>This happens when a <code>.-member</code> form is malformed. It can also happen when the target object is missing. Extra arguments can trigger it too. A missing field on the target type can also trigger it.</p>
+<h2 id="mitigations-83"><a class="header" href="#mitigations-83">Mitigations</a></h2>
+<p>Pass exactly one target object. Make sure the named member exists on that type. Make sure it is accessible. The member must be public.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="analyzeinternal-failure"><a class="header" href="#analyzeinternal-failure">analyze/internal-failure</a></h1>
+<p>This indicates an internal analyzer problem or inconsistent internal state. It is not a normal code mistake.</p>
+<h2 id="mitigations-84"><a class="header" href="#mitigations-84">Mitigations</a></h2>
+<p>Try to simplify the source. Then <a href="/troubleshooting/getting-help.html">report it as a jank bug</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="codegen"><a href="#codegen" class="header">Codegen</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="codegeninternal-failure"><a class="header" href="#codegeninternal-failure">codegen/internal-failure</a></h1>
+<p>This indicates an internal code generation bug rather than a normal user-facing code mistake.</p>
+<h2 id="mitigations-85"><a class="header" href="#mitigations-85">Mitigations</a></h2>
+<p>Try to simplify the source. Then <a href="/troubleshooting/getting-help.html">report it as a jank bug</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="aot"><a href="#aot" class="header">AOT</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="aotunresolved-main"><a class="header" href="#aotunresolved-main">aot/unresolved-main</a></h1>
+<p>This happens when jank is building an executable and the target module does not define <code>-main</code>.</p>
+<h2 id="mitigations-86"><a class="header" href="#mitigations-86">Mitigations</a></h2>
+<p>Define <code>-main</code> in the target module. Make sure you are compiling the module that
+is meant to be the program entrypoint. A normal <code>-main</code> looks like this:</p>
+<pre><code class="language-clojure">(ns my-app.main)
+
+(defn -main [&amp; args]
+  )
+</code></pre>
+<p>Note that it’s <code>defn -main</code> and not <code>defn- main</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="aotinternal-failure"><a class="header" href="#aotinternal-failure">aot/internal-failure</a></h1>
+<p>This indicates an internal AOT build-state problem.</p>
+<h2 id="mitigations-87"><a class="header" href="#mitigations-87">Mitigations</a></h2>
+<p>Try to simplify the source. Then <a href="/troubleshooting/getting-help.html">report it as a jank bug</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtime"><a href="#runtime" class="header">Runtime</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimemodule-not-found"><a class="header" href="#runtimemodule-not-found">runtime/module-not-found</a></h1>
+<p>This happens when jank cannot find the requested module. Common causes include a
+missing dependency, a wrong module path, or asking for a module that is not
+available in the current build.</p>
+<h2 id="mitigations-88"><a class="header" href="#mitigations-88">Mitigations</a></h2>
+<p>Make sure the module exists. Then check that the module path, build mode, and
+current dependencies make it available to jank.</p>
+<p>Note that it’s very common to have a module name with a <code>-</code> in it, but the
+corresponding file system path will use <code>_</code> instead. So <code>my-app.foo-bar</code> becomes
+<code>my_app/foo_bar.jank</code> on the file system.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimemodule-binary-without-source"><a class="header" href="#runtimemodule-binary-without-source">runtime/module-binary-without-source</a></h1>
+<p>This error happens when a required module has no source file on the module path,
+but it does have an object file. jank will refuse to load object files for
+modules which don’t have a corresponding source, since jank is a source-first
+language.</p>
+<h2 id="mitigations-89"><a class="header" href="#mitigations-89">Mitigations</a></h2>
+<p>Verify that the module’s source is present on the module path.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimeunable-to-open-file"><a class="header" href="#runtimeunable-to-open-file">runtime/unable-to-open-file</a></h1>
+<p>This happens when jank cannot open or read a required file. Common causes include a missing file, a bad path, or a filesystem access problem.</p>
+<h2 id="mitigations-90"><a class="header" href="#mitigations-90">Mitigations</a></h2>
+<p>Check that the file exists and is readable. Then verify that the path being used is the one you intended.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimeinvalid-cpp-eval"><a class="header" href="#runtimeinvalid-cpp-eval">runtime/invalid-cpp-eval</a></h1>
+<p>This happens when runtime C++ evaluation fails. The provided C++ may be invalid
+or the JIT toolchain may have failed while compiling it.</p>
+<h2 id="mitigations-91"><a class="header" href="#mitigations-91">Mitigations</a></h2>
+<p>Check the accompanying compiler output first. Then fix the C++ source or the
+local Clang and JIT setup before trying again.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimeunable-to-load-module"><a class="header" href="#runtimeunable-to-load-module">runtime/unable-to-load-module</a></h1>
+<p>This happens when jank finds a module but fails while loading or initializing it.</p>
+<h2 id="mitigations-92"><a class="header" href="#mitigations-92">Mitigations</a></h2>
+<p>Read the accompanying error details closely. Then fix the exception or nested
+error that occurred during module loading.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimeinvalid-unbox"><a class="header" href="#runtimeinvalid-unbox">runtime/invalid-unbox</a></h1>
+<p>This happens when a boxed foreign value is unboxed as the wrong type.</p>
+<h2 id="mitigations-93"><a class="header" href="#mitigations-93">Mitigations</a></h2>
+<p>Make sure the unbox operation uses the same type that was originally boxed. The
+jank error output should provide you with source information, as well as the
+expected type for the given box.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimenon-metadatable-value"><a class="header" href="#runtimenon-metadatable-value">runtime/non-metadatable-value</a></h1>
+<p>This happens when metadata is applied to a value type that cannot carry metadata.</p>
+<h2 id="mitigations-94"><a class="header" href="#mitigations-94">Mitigations</a></h2>
+<p>Only use metadata with values that support it. If needed, wrap the value in a
+metadatable form first, such as an atom.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimeinvalid-referred-global-symbol"><a class="header" href="#runtimeinvalid-referred-global-symbol">runtime/invalid-referred-global-symbol</a></h1>
+<p>This happens when a referred C++ global name is malformed.</p>
+<h2 id="mitigations-95"><a class="header" href="#mitigations-95">Mitigations</a></h2>
+<p>Use a simple symbol name for the referred C++ global. Avoid namespace-qualified
+names in that position.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimeinvalid-referred-global-rename"><a class="header" href="#runtimeinvalid-referred-global-rename">runtime/invalid-referred-global-rename</a></h1>
+<p>This happens when a requested local rename for a referred C++ global would conflict with an existing name in the namespace.</p>
+<h2 id="mitigations-96"><a class="header" href="#mitigations-96">Mitigations</a></h2>
+<p>Choose a different local name that does not collide with an existing var.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimeunsupported-behavior"><a class="header" href="#runtimeunsupported-behavior">runtime/unsupported-behavior</a></h1>
+<p>This happens when an operation is used on a value whose type does not support that behavior. Common examples include sequence operations, associative lookup, indexed access, comparison, or numeric conversion on the wrong kind of value.</p>
+<h2 id="mitigations-97"><a class="header" href="#mitigations-97">Mitigations</a></h2>
+<p>Use the operation only with values that support it. If needed, convert the value to a compatible type first.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimestatic-feature-disabled"><a class="header" href="#runtimestatic-feature-disabled">runtime/static-feature-disabled</a></h1>
+<p>This happens when a dynamic-only feature is used in a static runtime build.</p>
+<h2 id="mitigations-98"><a class="header" href="#mitigations-98">Mitigations</a></h2>
+<p>Avoid that feature in a static runtime, or switch to a dynamic runtime if you need it.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimeuncaught-exception"><a class="header" href="#runtimeuncaught-exception">runtime/uncaught-exception</a></h1>
+<p>This error happens when an exception, of some kind, was thrown and then not
+caught by your program’s code. The jank runtime caught the exception and then
+surfaced the stack trace, along with the exception message.</p>
+<h2 id="mitigations-99"><a class="header" href="#mitigations-99">Mitigations</a></h2>
+<p>Inspect the stack trace to find where the exception was thrown and whether or
+not that was intended. If the exception was intended, add a <code>try</code> to your
+program so that you can catch the exception yourself.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="runtimeinternal-failure"><a class="header" href="#runtimeinternal-failure">runtime/internal-failure</a></h1>
+<p>This indicates an internal runtime problem or a low-level loading failure rather than a normal language mistake. Current uses include impossible loader states, missing internal artifacts, jar-reading failures, and unsupported generated arities.</p>
+<h2 id="mitigations-100"><a class="header" href="#mitigations-100">Mitigations</a></h2>
+<p>Try again from a clean state if the problem involves loading or compilation artifacts. If it still happens, report it as a jank bug with the exact command and input.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="system"><a href="#system" class="header">System</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="systemclang-executable-not-found"><a class="header" href="#systemclang-executable-not-found">system/clang-executable-not-found</a></h1>
+<p>This happens when jank cannot find a suitable Clang executable with the required major version.</p>
+<h2 id="mitigations-101"><a class="header" href="#mitigations-101">Mitigations</a></h2>
+<p>jank should be installed with its own Clang version, so this error indicates an
+issue with the jank install. The first step to troubleshoot this would be a
+<a href="/troubleshooting/health-check.html">health check</a>.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="systemfailure"><a class="header" href="#systemfailure">system/failure</a></h1>
+<p>This covers external tool or environment failures. Common causes include missing Clang resources, missing SDK or Xcode tooling, missing precompiled-header inputs, or Clang itself failing during a build step.</p>
+<h2 id="mitigations-102"><a class="header" href="#mitigations-102">Mitigations</a></h2>
+<p>Read the accompanying error output closely. Then fix the reported system or toolchain problem before trying again.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="internal"><a href="#internal" class="header">Internal</a></h1>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="internalfailure"><a class="header" href="#internalfailure">internal/failure</a></h1>
+<p>This is a generic fallback for internal failures. It usually indicates a jank
+bug or an unexpected internal state.</p>
+<h2 id="mitigations-103"><a class="header" href="#mitigations-103">Mitigations</a></h2>
+<p>Try to simplify the source. Then <a href="/troubleshooting/getting-help.html">report it as a jank bug</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="developing-jank"><a class="header" href="#developing-jank">Developing jank</a></h1>
 <p>This documentation is for the compiler hackers working on jank itself. Anything
