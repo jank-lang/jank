@@ -246,10 +246,10 @@ namespace jank::jit
         auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
 
         /* LLVM's JIT debug-object plumbing is platform-specific. On Mach-O, ORC requires its
-       * dedicated debugger-support setup to synthesize/register JIT debug objects at all.
-       * We install that first so our own tracking plugin, which mirrors LLVM's published
-       * registrations into cpptrace, runs after LLVM's registration path has had a chance to
-       * populate the global JIT descriptor state. */
+         * dedicated debugger-support setup to synthesize/register JIT debug objects at all.
+         * We install that first so our own tracking plugin, which mirrors LLVM's published
+         * registrations into cpptrace, runs after LLVM's registration path has had a chance to
+         * populate the global JIT descriptor state. */
         if constexpr(jtl::current_platform == jtl::platform::macos_like)
         {
           llvm::cantFail(llvm::orc::enableDebuggerSupport(*ee));
@@ -260,9 +260,9 @@ namespace jank::jit
           oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
         }
       }
-    }
 
-    jit::install_object_tracking_plugin();
+      jit::install_object_tracking_plugin();
+    }
 
     /* Enabling perf support requires registering a couple of plugins with LLVM. These
      * plugins will generate files which perf can then use to inject additional info
