@@ -242,4 +242,11 @@ namespace jank::util
       print_exception_stack_trace(*deepest_trace);
     }
   }
+
+  void print_current_exception()
+  {
+    print_exception(
+      "A native exception was thrown with a type that jank was not prepared to catch, so its "
+      "message can't be shown. You can inspect the stack trace for more information.");
+  }
 }

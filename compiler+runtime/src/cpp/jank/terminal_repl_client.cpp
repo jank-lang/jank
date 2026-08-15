@@ -1,8 +1,6 @@
 #include <cctype>
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
-#include <optional>
 #include <set>
 #include <string>
 
@@ -28,15 +26,11 @@
 #include <jank/util/string.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/try.hpp>
+#include <jank/ui/highlight.hpp>
 
 namespace jank::terminal_repl
 {
-  static bool starts_with(std::string const &value, std::string const &prefix)
-  {
-    return prefix.empty() || value.rfind(prefix, 0) == 0;
-  }
-
-  static bool is_clj_word_char(char const *s, long len)
+  static bool is_clj_word_char(char const * const s, long const len)
   {
     if(s == nullptr || len <= 0)
     {
@@ -44,6 +38,7 @@ namespace jank::terminal_repl
     }
 
     auto const c{ static_cast<unsigned char>(*s) };
+    /* Beyond ASCII implies Unicode. */
     if(c >= 0x80)
     {
       return true;
@@ -70,18 +65,18 @@ namespace jank::terminal_repl
     }
   }
 
-  static void add_repl_completions(ic_completion_env_t *cenv, std::string const &prefix)
+  static void add_repl_completions(ic_completion_env_t * const cenv, std::string const &prefix)
   {
     using namespace jank::runtime;
 
     std::set<std::string> seen;
-    auto add_candidate = [&](std::string const &candidate) {
+    auto const add_candidate{ [&](std::string const &candidate) {
       if(candidate.empty())
       {
         return;
       }
 
-      if(!starts_with(candidate, prefix))
+      if(!candidate.starts_with(prefix))
       {
         return;
       }
@@ -90,44 +85,31 @@ namespace jank::terminal_repl
       {
         ic_add_completion(cenv, candidate.c_str());
       }
-    };
+    } };
 
     auto const current_ns{ __rt_ctx->current_ns() };
     auto const current_mappings{ current_ns->get_mappings() };
     for(auto const &entry : current_mappings->data)
     {
-      if(entry.first.get_type() != object_type::symbol)
-      {
-        continue;
-      }
-
       auto const sym{ expect_object<obj::symbol>(entry.first) };
-      add_candidate(std::string{ sym->name });
-    }
-
-    if(prefix.find('.') != std::string::npos)
-    {
-      for(auto const &ns : __rt_ctx->all_ns())
-      {
-        add_candidate(std::string{ ns->name->to_string() });
-      }
-      return;
+      add_candidate(sym->name);
     }
 
     for(auto const &ns : __rt_ctx->all_ns())
     {
-      add_candidate(std::string{ ns->name->to_string() });
+      add_candidate(ns->name->to_string());
     }
   }
 
-  static void add_qualified_repl_completions(ic_completion_env_t *cenv,
+  static void add_qualified_repl_completions(ic_completion_env_t * const cenv,
                                              std::string const &token,
                                              std::string const &ns_name,
                                              std::string const &var_prefix)
   {
     using namespace jank::runtime;
 
-    auto const ns{ __rt_ctx->resolve_ns(make_box<obj::symbol>(ns_name)) };
+    obj::symbol const ns_sym{ ns_name };
+    auto const ns{ __rt_ctx->resolve_ns(runtime::detail::untagged(&ns_sym)) };
     if(ns.is_nil())
     {
       return;
@@ -137,26 +119,24 @@ namespace jank::terminal_repl
     auto const mappings{ ns->get_mappings() };
     for(auto const &entry : mappings->data)
     {
-      if(entry.first.get_type() != object_type::symbol)
-      {
-        continue;
-      }
-
       auto const sym{ expect_object<obj::symbol>(entry.first) };
       auto const value{ expect_object<var>(entry.second) };
+
+      /* Namespaces can have referred vars, but we only want to show completions for
+       * owned vars. */
       if(value->n != ns)
       {
         continue;
       }
 
-      std::string const name{ sym->name };
-      if(!var_prefix.empty() && !starts_with(name, var_prefix))
+      auto const &name{ sym->name };
+      if(!var_prefix.empty() && !name.starts_with(var_prefix))
       {
         continue;
       }
 
       std::string const candidate{ ns->name->to_string() + "/" + name };
-      if(!starts_with(candidate, token))
+      if(!candidate.starts_with(token))
       {
         continue;
       }
@@ -168,7 +148,7 @@ namespace jank::terminal_repl
     }
   }
 
-  static void repl_word_completer(ic_completion_env_t *cenv, char const *prefix)
+  static void repl_word_completer(ic_completion_env_t * const cenv, char const * const prefix)
   {
     if(prefix == nullptr)
     {
@@ -188,7 +168,7 @@ namespace jank::terminal_repl
     add_qualified_repl_completions(cenv, token, ns_name, var_prefix);
   }
 
-  static void repl_completer(ic_completion_env_t *cenv, char const *input)
+  static void repl_completer(ic_completion_env_t * const cenv, char const * const input)
   {
     if(input == nullptr)
     {
@@ -198,11 +178,12 @@ namespace jank::terminal_repl
     ic_complete_word(cenv, input, repl_word_completer, &is_clj_word_char);
   }
 
-  static void no_op_highlighter(ic_highlight_env_t *, char const *, void *)
+  static void repl_highlighter(ic_highlight_env_t * const henv, char const * const input, void *)
   {
+    jank::ui::highlight_for_ic(henv, input);
   }
 
-  static jtl::option<jtl::immutable_string> read_line(std::string const &prompt)
+  static jtl::option<std::string> read_line(std::string const &prompt)
   {
     auto * const line{ ic_readline(prompt.c_str()) };
     if(!line)
@@ -210,9 +191,30 @@ namespace jank::terminal_repl
       return jank::none;
     }
 
-    jtl::immutable_string input{ line };
-    std::free(line);
+    std::string input{ line };
+    ic_free(line);
     return input;
+  }
+
+  void init_isocline()
+  {
+    ic_set_prompt_marker("=> ", "> ");
+    ic_enable_color(true);
+
+    ic_set_insertion_braces("()[]{}");
+    ic_set_matching_braces("()[]{}");
+    ic_enable_brace_insertion(true);
+    ic_enable_brace_matching(true);
+
+    ic_enable_hint(true);
+    ic_set_hint_delay(0);
+    ic_enable_inline_help(true);
+
+    ic_enable_completion_preview(true);
+    ic_enable_auto_tab(true);
+
+    ic_enable_multiline(true);
+    ic_enable_multiline_indent(true);
   }
 
   void repl()
@@ -247,20 +249,14 @@ namespace jank::terminal_repl
       __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>(util::cli::opts.target_module));
     }
 
-    auto const get_prompt([](jtl::immutable_string const &suffix) {
+    auto const get_prompt([](std::string const &suffix) {
       return __rt_ctx->current_ns()->name->to_code_string() + suffix;
     });
 
     ic_set_history(".jank-repl-history", 200);
-    ic_enable_brace_insertion(true);
-    ic_enable_brace_matching(true);
-    ic_enable_hint(true);
-    ic_enable_inline_help(true);
-    ic_set_hint_delay(0);
-    ic_enable_completion_preview(true);
-    ic_enable_auto_tab(true);
+    init_isocline();
     ic_set_default_completer(repl_completer, nullptr);
-    ic_set_default_highlighter(no_op_highlighter, nullptr);
+    ic_set_default_highlighter(repl_highlighter, nullptr);
 
     auto const tmp{ std::filesystem::temp_directory_path() };
     std::string path_tmp{ (tmp / "jank-repl-XXXXXX").string() };
@@ -311,12 +307,13 @@ namespace jank::terminal_repl
             second_res_var->set(first_res_var->deref()).expect_ok();
             first_res_var->set(res.unwrap()).expect_ok();
 
-            util::println("{}", res.unwrap().to_code_string());
+            util::print("{}", jank::ui::highlight_str({ path_tmp, res.unwrap().to_code_string() }));
           }
         },
         [&](std::exception const &e) { jank::util::print_exception(e); },
         [&](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
-        [&](jank::error_ref const e) { jank::util::print_exception(e); });
+        [&](jank::error_ref const e) { jank::util::print_exception(e); },
+        [&]() { jank::util::print_current_exception(); });
 
       util::println("");
     }
@@ -340,15 +337,7 @@ namespace jank::terminal_repl
     }
 
     ic_set_history(".jank-native-repl-history", 200);
-    ic_enable_brace_insertion(true);
-    ic_enable_brace_matching(true);
-    ic_enable_hint(true);
-    ic_enable_inline_help(true);
-    ic_set_hint_delay(0);
-    ic_enable_completion_preview(true);
-    ic_enable_auto_tab(true);
-    ic_set_default_completer(repl_completer, nullptr);
-    ic_set_default_highlighter(no_op_highlighter, nullptr);
+    init_isocline();
 
     while(true)
     {
@@ -358,7 +347,7 @@ namespace jank::terminal_repl
         break;
       }
 
-      std::string input{ line.unwrap() };
+      auto input{ line.unwrap() };
       util::trim(input);
 
       if(input.empty())
@@ -370,7 +359,8 @@ namespace jank::terminal_repl
         [&] { __rt_ctx->jit_prc.eval_string(input); },
         [&](std::exception const &e) { jank::util::print_exception(e); },
         [&](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
-        [&](jank::error_ref const e) { jank::util::print_exception(e); });
+        [&](jank::error_ref const e) { jank::util::print_exception(e); },
+        [&]() { jank::util::print_current_exception(); });
     }
   }
 }
