@@ -93,6 +93,12 @@ namespace jank::runtime
     return static_cast<i64>(a->size);
   }
 
+  template <typename T, size_t N>
+  i64 alength(T const (&)[N])
+  {
+    return static_cast<i64>(N);
+  }
+
   i64 alength(object_ref const a);
 
   template <typename T>
