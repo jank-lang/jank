@@ -256,7 +256,10 @@ namespace jank::ui
           break;
       }
 
-      ic_highlight(henv, token.start.offset, token.end.offset - token.start.offset, style);
+      ic_highlight(henv,
+                   static_cast<long>(token.start.offset),
+                   static_cast<long>(token.end.offset - token.start.offset),
+                   style);
     }
   }
 }
