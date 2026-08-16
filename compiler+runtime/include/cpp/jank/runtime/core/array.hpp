@@ -130,7 +130,7 @@ namespace jank::runtime
   object_ref aclone(object_ref const a);
 
   template <typename T, size_t N>
-  requires(jtl::is_any_same<T, bool, u8, i8, u16, i16, u32, i32, u64, i64, f32, f64, object_ref>)
+  requires(!jtl::is_same<T, char> && obj::is_array_element_type<T>)
   struct convert<T[N]>
   {
     static obj::array_ref<T> into_object(T (&a)[N])

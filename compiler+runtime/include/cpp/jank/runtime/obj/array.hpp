@@ -10,6 +10,11 @@
 
 namespace jank::runtime::obj
 {
+
+  template <typename T>
+  concept is_array_element_type
+    = jtl::is_any_same<T, bool, char, u8, i8, u16, i16, u32, i32, u64, i64, f32, f64, object_ref>;
+
   template <typename T>
   constexpr array_element_type get_array_element_type()
   {
