@@ -14,7 +14,7 @@ namespace jank::runtime
   obj::array_ref<T> try_array(object_ref const o)
   {
     auto const a(try_object<obj::array<T>>(o));
-    auto const expected_element_type(obj::array_element_type_selector<T>::element_type);
+    auto const expected_element_type(obj::get_array_element_type<T>());
     auto const actual_element_type(o.get_element_type());
 
     if(actual_element_type != expected_element_type)

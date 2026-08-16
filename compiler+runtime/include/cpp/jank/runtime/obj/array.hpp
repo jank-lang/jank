@@ -11,85 +11,61 @@
 namespace jank::runtime::obj
 {
   template <typename T>
-  struct array_element_type_selector;
-
-  template <>
-  struct array_element_type_selector<bool>
+  constexpr array_element_type get_array_element_type()
   {
-    static constexpr array_element_type element_type = array_element_type::boolean;
-  };
-
-  template <>
-  struct array_element_type_selector<char>
-  {
-    static constexpr array_element_type element_type = array_element_type::character;
-  };
-
-  template <>
-  struct array_element_type_selector<u8>
-  {
-    static constexpr array_element_type element_type = array_element_type::u8;
-  };
-
-  template <>
-  struct array_element_type_selector<i8>
-  {
-    static constexpr array_element_type element_type = array_element_type::i8;
-  };
-
-  template <>
-  struct array_element_type_selector<u16>
-  {
-    static constexpr array_element_type element_type = array_element_type::u16;
-  };
-
-  template <>
-  struct array_element_type_selector<i16>
-  {
-    static constexpr array_element_type element_type = array_element_type::i16;
-  };
-
-  template <>
-  struct array_element_type_selector<u32>
-  {
-    static constexpr array_element_type element_type = array_element_type::u32;
-  };
-
-  template <>
-  struct array_element_type_selector<i32>
-  {
-    static constexpr array_element_type element_type = array_element_type::i32;
-  };
-
-  template <>
-  struct array_element_type_selector<u64>
-  {
-    static constexpr array_element_type element_type = array_element_type::u64;
-  };
-
-  template <>
-  struct array_element_type_selector<i64>
-  {
-    static constexpr array_element_type element_type = array_element_type::i64;
-  };
-
-  template <>
-  struct array_element_type_selector<f32>
-  {
-    static constexpr array_element_type element_type = array_element_type::f32;
-  };
-
-  template <>
-  struct array_element_type_selector<f64>
-  {
-    static constexpr array_element_type element_type = array_element_type::f64;
-  };
-
-  template <>
-  struct array_element_type_selector<object_ref>
-  {
-    static constexpr array_element_type element_type = array_element_type::object;
-  };
+    if constexpr(jtl::is_same<T, bool>)
+    {
+      return array_element_type::boolean;
+    }
+    else if constexpr(jtl::is_same<T, char>)
+    {
+      return array_element_type::character;
+    }
+    else if constexpr(jtl::is_same<T, u8>)
+    {
+      return array_element_type::u8;
+    }
+    else if constexpr(jtl::is_same<T, i8>)
+    {
+      return array_element_type::i8;
+    }
+    else if constexpr(jtl::is_same<T, u16>)
+    {
+      return array_element_type::u16;
+    }
+    else if constexpr(jtl::is_same<T, i16>)
+    {
+      return array_element_type::i16;
+    }
+    else if constexpr(jtl::is_same<T, u32>)
+    {
+      return array_element_type::u32;
+    }
+    else if constexpr(jtl::is_same<T, i32>)
+    {
+      return array_element_type::i32;
+    }
+    else if constexpr(jtl::is_same<T, u64>)
+    {
+      return array_element_type::u64;
+    }
+    else if constexpr(jtl::is_same<T, i64>)
+    {
+      return array_element_type::i64;
+    }
+    else if constexpr(jtl::is_same<T, f32>)
+    {
+      return array_element_type::f32;
+    }
+    else if constexpr(jtl::is_same<T, f64>)
+    {
+      return array_element_type::f64;
+    }
+    else if constexpr(jtl::is_same<T, object_ref>)
+    {
+      return array_element_type::object;
+    }
+  }
 
   template <typename T>
   struct array : object
@@ -103,7 +79,7 @@ namespace jank::runtime::obj
 
     array(usize const size)
       : object{ obj_type, obj_behaviors }
-      , element_type{ array_element_type_selector<T>::element_type }
+      , element_type{ get_array_element_type<T>() }
       , size{ size }
       , data{ new(UseGC) T[size]{} }
     {
@@ -111,7 +87,7 @@ namespace jank::runtime::obj
 
     array(usize const size, T init_value)
       : object{ obj_type, obj_behaviors }
-      , element_type{ array_element_type_selector<T>::element_type }
+      , element_type{ get_array_element_type<T>() }
       , size{ size }
       , data{ new(UseGC) T[size]{} }
     {
