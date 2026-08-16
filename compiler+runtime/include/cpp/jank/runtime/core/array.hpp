@@ -129,6 +129,23 @@ namespace jank::runtime
 
   object_ref aclone(object_ref const a);
 
+  template <typename T, size_t N>
+  requires(jtl::is_any_same<T, bool, u8, i8, u16, i16, u32, i32, u64, i64, f32, f64, object_ref>)
+  struct convert<T[N]>
+  {
+    static obj::array_ref<T> into_object(T (&a)[N])
+    {
+      auto const clone(make_box<obj::array<T>>(N));
+
+      for(usize i{}; i < N; ++i)
+      {
+        clone->data[i] = a[i];
+      }
+
+      return clone;
+    }
+  };
+
   obj::bool_array_ref booleans(object_ref const o);
   obj::char_array_ref chars(object_ref const o);
   obj::f32_array_ref floats(object_ref const o);
