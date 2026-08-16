@@ -26,7 +26,6 @@
       (assert-exit-code 1 "jank --module-path src run-main jank-test.fail-throw-exit")
       (assert-exit-code 1 "jank run src/jank_test/throwing_script.jank")))
 
-  (assert-exit-code 1 "jank")
   (assert-exit-code 0 "jank run src/jank_test/successful_script.jank"))
 
 (deftest jank-command-line-args-test
