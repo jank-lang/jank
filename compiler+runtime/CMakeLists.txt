@@ -492,6 +492,7 @@ include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
 include(cmake/dependency/folly.cmake)
+include(cmake/dependency/isocline.cmake)
 
 if(jank_test)
   include(cmake/dependency/doctest.cmake)
@@ -659,6 +660,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-process/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/json/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/isocline/include>"
   ${OPENSSL_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
 )
@@ -858,6 +860,7 @@ set_target_properties(jank_compiler_lib PROPERTIES ENABLE_EXPORTS 1)
 add_executable(
   jank_exe_phase_1
   src/cpp/main.cpp
+  src/cpp/jank/terminal_repl_client.cpp
   src/cpp/jank/environment/check_health.cpp
 )
 add_executable(jank::exe ALIAS jank_exe_phase_1)
@@ -880,6 +883,7 @@ target_link_libraries(
   jank_exe_phase_1 PUBLIC
   ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a ${jank_link_whole_end}
   LLVM clang-cpp
+  isocline
   z
   OpenSSL::Crypto
 )

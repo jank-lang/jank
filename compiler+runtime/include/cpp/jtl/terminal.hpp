@@ -79,4 +79,5 @@ namespace jtl::terminal
   };
 
   size get_size();
+  bool is_interactive();
 }

@@ -1,3 +1,5 @@
+#include <isocline.h>
+
 #include <jtl/terminal.hpp>
 
 #include <jank/ui/highlight.hpp>
@@ -11,8 +13,8 @@ namespace jank::ui
 
   /* TODO: Also support core fns? */
   static native_set<jtl::immutable_string_view> const specials{
-    "def", "fn*",   "fn",  "let*", "let",   "loop*",   "loop",  "do",
-    "if",  "quote", "var", "try",  "catch", "finally", "throw", "letfn*",
+    "def", "defn",  "fn*", "fn",  "let*",  "let",     "loop*", "loop",   "do",
+    "if",  "quote", "var", "try", "catch", "finally", "throw", "letfn*", "cpp/raw"
   };
 
   static text_style symbol_color(jtl::immutable_string_view const &sym)
@@ -187,5 +189,78 @@ namespace jank::ui
       }
     }
     return sb.release();
+  }
+
+  /* Highlighting for isocline is done in place. We use this for highlighting prompts in jank's
+   * terminal REPL client. Note that the colors match our normal highlighting above. */
+  void highlight_for_ic(ic_highlight_env_t * const henv, jtl::immutable_string_view const input)
+  {
+    read::lex::processor l_prc{ input };
+    auto const end{ l_prc.end() };
+
+    for(auto it(l_prc.begin()); it != end; ++it)
+    {
+      if(it.latest.unwrap().is_err())
+      {
+        continue;
+      }
+
+      auto const &token(it.latest.unwrap().expect_ok());
+      char const *style{ "none" };
+      switch(token.kind)
+      {
+        case read::lex::token_kind::open_paren:
+        case read::lex::token_kind::close_paren:
+        case read::lex::token_kind::open_square_bracket:
+        case read::lex::token_kind::close_square_bracket:
+        case read::lex::token_kind::open_curly_bracket:
+        case read::lex::token_kind::close_curly_bracket:
+        case read::lex::token_kind::single_quote:
+        case read::lex::token_kind::meta_hint:
+        case read::lex::token_kind::reader_macro:
+        case read::lex::token_kind::reader_macro_comment:
+        case read::lex::token_kind::reader_macro_conditional:
+        case read::lex::token_kind::reader_macro_conditional_splice:
+        case read::lex::token_kind::syntax_quote:
+        case read::lex::token_kind::unquote:
+        case read::lex::token_kind::unquote_splice:
+        case read::lex::token_kind::deref:
+        case read::lex::token_kind::nil:
+          style = "ansi-olive";
+          break;
+        case read::lex::token_kind::keyword:
+          style = "ansi-blue";
+          break;
+        case read::lex::token_kind::comment:
+          style = "ansi-gray";
+          break;
+        case read::lex::token_kind::integer:
+        case read::lex::token_kind::real:
+        case read::lex::token_kind::ratio:
+        case read::lex::token_kind::big_integer:
+        case read::lex::token_kind::big_decimal:
+        case read::lex::token_kind::boolean:
+        case read::lex::token_kind::character:
+          style = "ansi-fuchsia";
+          break;
+        case read::lex::token_kind::string:
+        case read::lex::token_kind::escaped_string:
+          style = "ansi-lime";
+          break;
+        case read::lex::token_kind::symbol:
+          if(specials.contains(std::get<jtl::immutable_string_view>(token.data)))
+          {
+            style = "ansi-aqua";
+          }
+          break;
+        case read::lex::token_kind::eof:
+          break;
+      }
+
+      ic_highlight(henv,
+                   static_cast<long>(token.start.offset),
+                   static_cast<long>(token.end.offset - token.start.offset),
+                   style);
+    }
   }
 }
