@@ -9,12 +9,12 @@ namespace jank::runtime
 {
   obj::bool_array_ref boolean_array(usize const size)
   {
-    return make_box<obj::array<bool>>(array_element_type::boolean, size);
+    return make_box<obj::array<bool>>(size);
   }
 
   obj::bool_array_ref boolean_array(usize const size, bool const init_value)
   {
-    return make_box<obj::array<bool>>(array_element_type::boolean, size, init_value);
+    return make_box<obj::array<bool>>(size, init_value);
   }
 
   obj::bool_array_ref boolean_array(object_ref const o)
@@ -38,12 +38,12 @@ namespace jank::runtime
 
   obj::char_array_ref char_array(usize const size)
   {
-    return make_box<obj::array<char>>(array_element_type::character, size);
+    return make_box<obj::array<char>>(size);
   }
 
   obj::char_array_ref char_array(usize const size, char const init)
   {
-    return make_box<obj::array<char>>(array_element_type::character, size, init);
+    return make_box<obj::array<char>>(size, init);
   }
 
   obj::char_array_ref char_array(jtl::immutable_string const &s)
@@ -85,12 +85,12 @@ namespace jank::runtime
 
   obj::f32_array_ref float_array(usize const size)
   {
-    return make_box<obj::array<f32>>(array_element_type::f32, size);
+    return make_box<obj::array<f32>>(size);
   }
 
   obj::f32_array_ref float_array(usize const size, f32 const init)
   {
-    return make_box<obj::array<f32>>(array_element_type::f32, size, init);
+    return make_box<obj::array<f32>>(size, init);
   }
 
   obj::f32_array_ref float_array(object_ref const o)
@@ -114,12 +114,12 @@ namespace jank::runtime
 
   obj::f64_array_ref double_array(usize const size)
   {
-    return make_box<obj::array<f64>>(array_element_type::f64, size);
+    return make_box<obj::array<f64>>(size);
   }
 
   obj::f64_array_ref double_array(usize const size, f64 const init)
   {
-    return make_box<obj::array<f64>>(array_element_type::f64, size, init);
+    return make_box<obj::array<f64>>(size, init);
   }
 
   obj::f64_array_ref double_array(object_ref const o)
@@ -143,12 +143,12 @@ namespace jank::runtime
 
   obj::i16_array_ref short_array(usize const size)
   {
-    return make_box<obj::array<i16>>(array_element_type::i16, size);
+    return make_box<obj::array<i16>>(size);
   }
 
   obj::i16_array_ref short_array(usize const size, i16 const init)
   {
-    return make_box<obj::array<i16>>(array_element_type::i16, size, init);
+    return make_box<obj::array<i16>>(size, init);
   }
 
   obj::i16_array_ref short_array(object_ref const o)
@@ -172,12 +172,12 @@ namespace jank::runtime
 
   obj::i32_array_ref int_array(usize const size)
   {
-    return make_box<obj::array<i32>>(array_element_type::i32, size);
+    return make_box<obj::array<i32>>(size);
   }
 
   obj::i32_array_ref int_array(usize const size, i32 const init)
   {
-    return make_box<obj::array<i32>>(array_element_type::i32, size, init);
+    return make_box<obj::array<i32>>(size, init);
   }
 
   obj::i32_array_ref int_array(object_ref const o)
@@ -201,12 +201,12 @@ namespace jank::runtime
 
   obj::i64_array_ref long_array(usize const size)
   {
-    return make_box<obj::array<i64>>(array_element_type::i64, size);
+    return make_box<obj::array<i64>>(size);
   }
 
   obj::i64_array_ref long_array(usize const size, i64 const init)
   {
-    return make_box<obj::array<i64>>(array_element_type::i64, size, init);
+    return make_box<obj::array<i64>>(size, init);
   }
 
   obj::i64_array_ref long_array(object_ref const o)
@@ -230,7 +230,7 @@ namespace jank::runtime
 
   obj::object_array_ref object_array(usize const size)
   {
-    return make_box<obj::array<object_ref>>(array_element_type::object, size);
+    return make_box<obj::array<object_ref>>(size);
   }
 
   obj::object_array_ref object_array(object_ref const o)
@@ -254,12 +254,12 @@ namespace jank::runtime
 
   obj::u8_array_ref byte_array(usize const size)
   {
-    return make_box<obj::array<u8>>(array_element_type::u8, size);
+    return make_box<obj::array<u8>>(size);
   }
 
   obj::u8_array_ref byte_array(usize const size, u8 const init)
   {
-    return make_box<obj::array<u8>>(array_element_type::u8, size, init);
+    return make_box<obj::array<u8>>(size, init);
   }
 
   obj::u8_array_ref byte_array(object_ref const o)
@@ -309,46 +309,46 @@ namespace jank::runtime
 
   obj::bool_array_ref booleans(object_ref const o)
   {
-    return try_array<bool>(array_element_type::boolean, o);
+    return try_array<bool>(o);
   }
 
   obj::char_array_ref chars(object_ref const o)
   {
-    return try_array<char>(array_element_type::character, o);
+    return try_array<char>(o);
   }
 
   obj::f32_array_ref floats(object_ref const o)
   {
-    return try_array<f32>(array_element_type::f32, o);
+    return try_array<f32>(o);
   }
 
   obj::f64_array_ref doubles(object_ref const o)
   {
-    return try_array<f64>(array_element_type::f64, o);
+    return try_array<f64>(o);
   }
 
   obj::i16_array_ref shorts(object_ref const o)
   {
-    return try_array<i16>(array_element_type::i16, o);
+    return try_array<i16>(o);
   }
 
   obj::i32_array_ref ints(object_ref const o)
   {
-    return try_array<i32>(array_element_type::i32, o);
+    return try_array<i32>(o);
   }
 
   obj::i64_array_ref longs(object_ref const o)
   {
-    return try_array<i64>(array_element_type::i64, o);
+    return try_array<i64>(o);
   }
 
   obj::object_array_ref objects(object_ref const o)
   {
-    return try_array<object_ref>(array_element_type::object, o);
+    return try_array<object_ref>(o);
   }
 
   obj::u8_array_ref bytes(object_ref const o)
   {
-    return try_array<u8>(array_element_type::u8, o);
+    return try_array<u8>(o);
   }
 }

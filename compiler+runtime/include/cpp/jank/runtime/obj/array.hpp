@@ -11,6 +11,87 @@
 namespace jank::runtime::obj
 {
   template <typename T>
+  struct array_element_type_selector;
+
+  template <>
+  struct array_element_type_selector<bool>
+  {
+    static constexpr array_element_type element_type = array_element_type::boolean;
+  };
+
+  template <>
+  struct array_element_type_selector<char>
+  {
+    static constexpr array_element_type element_type = array_element_type::character;
+  };
+
+  template <>
+  struct array_element_type_selector<u8>
+  {
+    static constexpr array_element_type element_type = array_element_type::u8;
+  };
+
+  template <>
+  struct array_element_type_selector<i8>
+  {
+    static constexpr array_element_type element_type = array_element_type::i8;
+  };
+
+  template <>
+  struct array_element_type_selector<u16>
+  {
+    static constexpr array_element_type element_type = array_element_type::u16;
+  };
+
+  template <>
+  struct array_element_type_selector<i16>
+  {
+    static constexpr array_element_type element_type = array_element_type::i16;
+  };
+
+  template <>
+  struct array_element_type_selector<u32>
+  {
+    static constexpr array_element_type element_type = array_element_type::u32;
+  };
+
+  template <>
+  struct array_element_type_selector<i32>
+  {
+    static constexpr array_element_type element_type = array_element_type::i32;
+  };
+
+  template <>
+  struct array_element_type_selector<u64>
+  {
+    static constexpr array_element_type element_type = array_element_type::u64;
+  };
+
+  template <>
+  struct array_element_type_selector<i64>
+  {
+    static constexpr array_element_type element_type = array_element_type::i64;
+  };
+
+  template <>
+  struct array_element_type_selector<f32>
+  {
+    static constexpr array_element_type element_type = array_element_type::f32;
+  };
+
+  template <>
+  struct array_element_type_selector<f64>
+  {
+    static constexpr array_element_type element_type = array_element_type::f64;
+  };
+
+  template <>
+  struct array_element_type_selector<object_ref>
+  {
+    static constexpr array_element_type element_type = array_element_type::object;
+  };
+
+  template <typename T>
   struct array : object
   {
     static constexpr object_type obj_type{ object_type::array };
@@ -20,17 +101,17 @@ namespace jank::runtime::obj
                                                     | object_behavior::array_like };
     static constexpr bool pointer_free{ false };
 
-    array(array_element_type const element_type, usize const size)
+    array(usize const size)
       : object{ obj_type, obj_behaviors }
-      , element_type{ element_type }
+      , element_type{ array_element_type_selector<T>::element_type }
       , size{ size }
       , data{ new(UseGC) T[size]{} }
     {
     }
 
-    array(array_element_type const element_type, usize const size, T init_value)
+    array(usize const size, T init_value)
       : object{ obj_type, obj_behaviors }
-      , element_type{ element_type }
+      , element_type{ array_element_type_selector<T>::element_type }
       , size{ size }
       , data{ new(UseGC) T[size]{} }
     {
@@ -54,7 +135,7 @@ namespace jank::runtime::obj
 
     object_ref aclone() const override
     {
-      auto const clone(make_box<array<T>>(element_type, size));
+      auto const clone(make_box<array<T>>(size));
 
       for(usize i{}; i < size; ++i)
       {

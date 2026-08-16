@@ -11,17 +11,18 @@
 namespace jank::runtime
 {
   template <typename T>
-  obj::array_ref<T> try_array(array_element_type const element_type, object_ref const o)
+  obj::array_ref<T> try_array(object_ref const o)
   {
     auto const a(try_object<obj::array<T>>(o));
-    auto const o_element_type(o.get_element_type());
+    auto const expected_element_type(obj::array_element_type_selector<T>::element_type);
+    auto const actual_element_type(o.get_element_type());
 
-    if(o_element_type != element_type)
+    if(actual_element_type != expected_element_type)
     {
       throw std::runtime_error{ util::format(
         "Array cast failed, 'element_type' mismatch: expected '{}', received '{}'.",
-        element_type_str(element_type),
-        element_type_str(o_element_type)) };
+        element_type_str(expected_element_type),
+        element_type_str(actual_element_type)) };
     }
 
     return a;
@@ -116,7 +117,7 @@ namespace jank::runtime
   obj::array_ref<T> aclone(obj::array_ref<T> const a)
   {
     auto const size(a->size);
-    auto const clone(make_box<obj::array<T>>(a->element_type, size));
+    auto const clone(make_box<obj::array<T>>(size));
 
     for(usize i{}; i < size; ++i)
     {
