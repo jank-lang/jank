@@ -350,21 +350,21 @@ namespace jank::runtime
     return a.aset(i, val);
   }
 
-  template i64 alength(obj::bool_array_ref const a);
-  template i64 alength(obj::char_array_ref const a);
-  template i64 alength(obj::u8_array_ref const a);
-  template i64 alength(obj::i8_array_ref const a);
-  template i64 alength(obj::u16_array_ref const a);
-  template i64 alength(obj::i16_array_ref const a);
-  template i64 alength(obj::u32_array_ref const a);
-  template i64 alength(obj::i32_array_ref const a);
-  template i64 alength(obj::u64_array_ref const a);
-  template i64 alength(obj::i64_array_ref const a);
-  template i64 alength(obj::f32_array_ref const a);
-  template i64 alength(obj::f64_array_ref const a);
-  template i64 alength(obj::object_array_ref const a);
+  template usize alength(obj::bool_array_ref const a);
+  template usize alength(obj::char_array_ref const a);
+  template usize alength(obj::u8_array_ref const a);
+  template usize alength(obj::i8_array_ref const a);
+  template usize alength(obj::u16_array_ref const a);
+  template usize alength(obj::i16_array_ref const a);
+  template usize alength(obj::u32_array_ref const a);
+  template usize alength(obj::i32_array_ref const a);
+  template usize alength(obj::u64_array_ref const a);
+  template usize alength(obj::i64_array_ref const a);
+  template usize alength(obj::f32_array_ref const a);
+  template usize alength(obj::f64_array_ref const a);
+  template usize alength(obj::object_array_ref const a);
 
-  i64 alength(object_ref const a)
+  usize alength(object_ref const a)
   {
     return sequence_length(a);
   }

@@ -154,32 +154,32 @@ namespace jank::runtime
   object_ref aset(object_ref a, i64 const i, object_ref const val);
 
   template <typename T>
-  i64 alength(obj::array_ref<T> const a)
+  usize alength(obj::array_ref<T> const a)
   {
     return static_cast<i64>(a->size);
   }
 
-  extern template i64 alength(obj::bool_array_ref const a);
-  extern template i64 alength(obj::char_array_ref const a);
-  extern template i64 alength(obj::u8_array_ref const a);
-  extern template i64 alength(obj::i8_array_ref const a);
-  extern template i64 alength(obj::u16_array_ref const a);
-  extern template i64 alength(obj::i16_array_ref const a);
-  extern template i64 alength(obj::u32_array_ref const a);
-  extern template i64 alength(obj::i32_array_ref const a);
-  extern template i64 alength(obj::u64_array_ref const a);
-  extern template i64 alength(obj::i64_array_ref const a);
-  extern template i64 alength(obj::f32_array_ref const a);
-  extern template i64 alength(obj::f64_array_ref const a);
-  extern template i64 alength(obj::object_array_ref const a);
+  extern template usize alength(obj::bool_array_ref const a);
+  extern template usize alength(obj::char_array_ref const a);
+  extern template usize alength(obj::u8_array_ref const a);
+  extern template usize alength(obj::i8_array_ref const a);
+  extern template usize alength(obj::u16_array_ref const a);
+  extern template usize alength(obj::i16_array_ref const a);
+  extern template usize alength(obj::u32_array_ref const a);
+  extern template usize alength(obj::i32_array_ref const a);
+  extern template usize alength(obj::u64_array_ref const a);
+  extern template usize alength(obj::i64_array_ref const a);
+  extern template usize alength(obj::f32_array_ref const a);
+  extern template usize alength(obj::f64_array_ref const a);
+  extern template usize alength(obj::object_array_ref const a);
 
   template <typename T, size_t N>
-  i64 alength(T const (&)[N])
+  usize alength(T const (&)[N])
   {
-    return static_cast<i64>(N);
+    return N;
   }
 
-  i64 alength(object_ref const a);
+  usize alength(object_ref const a);
 
   template <typename T>
   obj::array_ref<T> aclone(obj::array_ref<T> const a)
