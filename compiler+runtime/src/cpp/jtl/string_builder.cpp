@@ -306,7 +306,7 @@ namespace jtl
 
   string_builder &string_builder::operator()(terminal::text_style const s) &
   {
-    if(!terminal::is_interactive())
+    if(!terminal::is_stdout_interactive())
     {
       return *this;
     }

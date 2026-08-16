@@ -187,7 +187,7 @@ namespace jank::terminal_repl
 
   static jtl::option<std::string> read_line(std::string const &prompt)
   {
-    if(!jtl::terminal::is_interactive())
+    if(!jtl::terminal::is_stdin_interactive())
     {
       std::string input;
       if(!std::getline(std::cin, input))
@@ -265,7 +265,7 @@ namespace jank::terminal_repl
       return __rt_ctx->current_ns()->name->to_code_string() + suffix;
     });
 
-    if(!jtl::terminal::is_interactive())
+    if(jtl::terminal::is_stdin_interactive())
     {
       ic_set_history(".jank-repl-history", 200);
       init_isocline();
@@ -351,7 +351,7 @@ namespace jank::terminal_repl
       __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>(util::cli::opts.target_module));
     }
 
-    if(!jtl::terminal::is_interactive())
+    if(jtl::terminal::is_stdin_interactive())
     {
       ic_set_history(".jank-native-repl-history", 200);
       init_isocline();
