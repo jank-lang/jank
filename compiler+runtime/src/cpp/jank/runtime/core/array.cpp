@@ -366,7 +366,7 @@ namespace jank::runtime
 
   i64 alength(object_ref const a)
   {
-    return static_cast<i64>(try_object<obj::array<i64>>(a)->size);
+    return sequence_length(a);
   }
 
   template obj::bool_array_ref aclone(obj::bool_array_ref const a);
