@@ -6783,8 +6783,8 @@
   [x]
   (if (nil? x)
     false
-    (and (cpp/== (.get_type x)
-                 cpp/jank.runtime.object_type.array))))
+    (and (cpp/== (.get_type x) cpp/jank.runtime.object_type.array)
+         (cpp/== (.get_element_type x) cpp/jank.runtime.array_element_type.u8))))
 
 (defn seque
   "Creates a queued seq on another (presumably lazy) seq s. The queued
