@@ -29,6 +29,20 @@ namespace jank::runtime
     return a;
   }
 
+  extern template obj::bool_array_ref try_array(object_ref const o);
+  extern template obj::char_array_ref try_array(object_ref const o);
+  extern template obj::u8_array_ref try_array(object_ref const o);
+  extern template obj::i8_array_ref try_array(object_ref const o);
+  extern template obj::u16_array_ref try_array(object_ref const o);
+  extern template obj::i16_array_ref try_array(object_ref const o);
+  extern template obj::u32_array_ref try_array(object_ref const o);
+  extern template obj::i32_array_ref try_array(object_ref const o);
+  extern template obj::u64_array_ref try_array(object_ref const o);
+  extern template obj::i64_array_ref try_array(object_ref const o);
+  extern template obj::f32_array_ref try_array(object_ref const o);
+  extern template obj::f64_array_ref try_array(object_ref const o);
+  extern template obj::object_array_ref try_array(object_ref const o);
+
   template <typename T>
   T aget(obj::array_ref<T> const a, i64 const i)
   {
@@ -41,6 +55,19 @@ namespace jank::runtime
 
     return a->data[i];
   }
+
+  extern template bool aget(obj::bool_array_ref const a, i64 const i);
+  extern template char aget(obj::char_array_ref const a, i64 const i);
+  extern template u8 aget(obj::u8_array_ref const a, i64 const i);
+  extern template i8 aget(obj::i8_array_ref const a, i64 const i);
+  extern template u16 aget(obj::u16_array_ref const a, i64 const i);
+  extern template i16 aget(obj::i16_array_ref const a, i64 const i);
+  extern template u32 aget(obj::u32_array_ref const a, i64 const i);
+  extern template i32 aget(obj::i32_array_ref const a, i64 const i);
+  extern template u64 aget(obj::u64_array_ref const a, i64 const i);
+  extern template i64 aget(obj::i64_array_ref const a, i64 const i);
+  extern template f32 aget(obj::f32_array_ref const a, i64 const i);
+  extern template f64 aget(obj::f64_array_ref const a, i64 const i);
 
   template <typename T, size_t N>
   T aget(T const (&a)[N], i64 const i)
@@ -72,11 +99,37 @@ namespace jank::runtime
     return val;
   }
 
+  extern template bool aset(obj::bool_array_ref const a, i64 const i, bool const val);
+  extern template char aset(obj::char_array_ref const a, i64 const i, char const val);
+  extern template u8 aset(obj::u8_array_ref const a, i64 const i, u8 const val);
+  extern template i8 aset(obj::i8_array_ref const a, i64 const i, i8 const val);
+  extern template u16 aset(obj::u16_array_ref const a, i64 const i, u16 const val);
+  extern template i16 aset(obj::i16_array_ref const a, i64 const i, i16 const val);
+  extern template u32 aset(obj::u32_array_ref const a, i64 const i, u32 const val);
+  extern template i32 aset(obj::i32_array_ref const a, i64 const i, i32 const val);
+  extern template u64 aset(obj::u64_array_ref const a, i64 const i, u64 const val);
+  extern template i64 aset(obj::i64_array_ref const a, i64 const i, i64 const val);
+  extern template f32 aset(obj::f32_array_ref const a, i64 const i, f32 const val);
+  extern template f64 aset(obj::f64_array_ref const a, i64 const i, f64 const val);
+
   template <typename T>
   T aset(obj::array_ref<T> const a, i64 const i, object_ref const val)
   {
     return aset(a, i, convert<T>::from_object(val));
   }
+
+  extern template bool aset(obj::bool_array_ref const a, i64 const i, object_ref const val);
+  extern template char aset(obj::char_array_ref const a, i64 const i, object_ref const val);
+  extern template u8 aset(obj::u8_array_ref const a, i64 const i, object_ref const val);
+  extern template i8 aset(obj::i8_array_ref const a, i64 const i, object_ref const val);
+  extern template u16 aset(obj::u16_array_ref const a, i64 const i, object_ref const val);
+  extern template i16 aset(obj::i16_array_ref const a, i64 const i, object_ref const val);
+  extern template u32 aset(obj::u32_array_ref const a, i64 const i, object_ref const val);
+  extern template i32 aset(obj::i32_array_ref const a, i64 const i, object_ref const val);
+  extern template u64 aset(obj::u64_array_ref const a, i64 const i, object_ref const val);
+  extern template i64 aset(obj::i64_array_ref const a, i64 const i, object_ref const val);
+  extern template f32 aset(obj::f32_array_ref const a, i64 const i, object_ref const val);
+  extern template f64 aset(obj::f64_array_ref const a, i64 const i, object_ref const val);
 
   template <typename T, size_t N>
   T aset(T (&a)[N], i64 const i, T const val)
@@ -106,6 +159,20 @@ namespace jank::runtime
     return static_cast<i64>(a->size);
   }
 
+  extern template i64 alength(obj::bool_array_ref const a);
+  extern template i64 alength(obj::char_array_ref const a);
+  extern template i64 alength(obj::u8_array_ref const a);
+  extern template i64 alength(obj::i8_array_ref const a);
+  extern template i64 alength(obj::u16_array_ref const a);
+  extern template i64 alength(obj::i16_array_ref const a);
+  extern template i64 alength(obj::u32_array_ref const a);
+  extern template i64 alength(obj::i32_array_ref const a);
+  extern template i64 alength(obj::u64_array_ref const a);
+  extern template i64 alength(obj::i64_array_ref const a);
+  extern template i64 alength(obj::f32_array_ref const a);
+  extern template i64 alength(obj::f64_array_ref const a);
+  extern template i64 alength(obj::object_array_ref const a);
+
   template <typename T, size_t N>
   i64 alength(T const (&)[N])
   {
@@ -122,6 +189,20 @@ namespace jank::runtime
     std::copy(a->data.data, a->data.data + size, clone->data.data);
     return clone;
   }
+
+  extern template obj::bool_array_ref aclone(obj::bool_array_ref const a);
+  extern template obj::char_array_ref aclone(obj::char_array_ref const a);
+  extern template obj::u8_array_ref aclone(obj::u8_array_ref const a);
+  extern template obj::i8_array_ref aclone(obj::i8_array_ref const a);
+  extern template obj::u16_array_ref aclone(obj::u16_array_ref const a);
+  extern template obj::i16_array_ref aclone(obj::i16_array_ref const a);
+  extern template obj::u32_array_ref aclone(obj::u32_array_ref const a);
+  extern template obj::i32_array_ref aclone(obj::i32_array_ref const a);
+  extern template obj::u64_array_ref aclone(obj::u64_array_ref const a);
+  extern template obj::i64_array_ref aclone(obj::i64_array_ref const a);
+  extern template obj::f32_array_ref aclone(obj::f32_array_ref const a);
+  extern template obj::f64_array_ref aclone(obj::f64_array_ref const a);
+  extern template obj::object_array_ref aclone(obj::object_array_ref const a);
 
   object_ref aclone(object_ref const a);
 
