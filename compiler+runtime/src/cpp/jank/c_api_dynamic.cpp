@@ -27,23 +27,36 @@ extern "C"
     llvm::InitializeNativeTargetAsmParser();
     llvm::InitializeNativeTargetAsmPrinter();
 
+    int ret{};
+
     /* This try needs to come AFTER we initialize LLVM. If we have it before, we'll be
      * unable to catch some exceptions thrown by JIT-compiled frames. */
-    JANK_TRY
-    {
-      if(pch_data)
-      {
-        jank::aot::register_resource("incremental.pch", { pch_data, pch_size });
-      }
-      if(init_default_ctx)
-      {
-        jank::runtime::__rt_ctx = new(UseGC) jank::runtime::context{};
-      }
+    cpptrace::try_catch(
+      [&] {
+        if(pch_data)
+        {
+          jank::aot::register_resource("incremental.pch", { pch_data, pch_size });
+        }
+        if(init_default_ctx)
+        {
+          jank::runtime::__rt_ctx = new(UseGC) jank::runtime::context{};
+        }
 
-      return fn(argc, argv);
-    }
-    JANK_CATCH_THEN(jank::util::print_exception, return 1)
+        ret = fn(argc, argv);
+      },
+      [&](std::exception const &e) {
+        ret = 1;
+        jank::util::print_exception(e);
+      },
+      [&](jank::runtime::object_ref const e) {
+        ret = 1;
+        jank::util::print_exception(e);
+      },
+      [&](jank::error_ref const e) {
+        ret = 1;
+        jank::util::print_exception(e);
+      });
 
-    return 0;
+    return ret;
   }
 }

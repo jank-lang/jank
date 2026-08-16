@@ -306,6 +306,11 @@ namespace jtl
 
   string_builder &string_builder::operator()(terminal::text_style const s) &
   {
+    if(!terminal::is_interactive())
+    {
+      return *this;
+    }
+
     if(s == terminal::text_style::reset)
     {
       (*this)("\u001b[0m");

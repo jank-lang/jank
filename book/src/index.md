@@ -1,5 +1,5 @@
 # Welcome to the jank alpha!
-*by Jeaye Wilkerson, without LLMs, with feedback from the jank community.*
+*by Jeaye Wilkerson, with feedback from the jank community.*
 
 This book is written for jank's alpha release. It is incomplete, although its
 incompleteness matches jank's. It's still early to jump into jank, but your

@@ -335,76 +335,84 @@ namespace jank::environment
 
     bool error{};
 
-    JANK_TRY
-    {
-      auto const tmp{ std::filesystem::temp_directory_path() };
-      std::string path_tmp{ (tmp / "jank-aot-XXXXXX").string() };
-      int const fd{ mkstemp(path_tmp.data()) };
-      close(fd);
-      std::filesystem::remove(path_tmp);
-      std::filesystem::create_directories(path_tmp);
+    cpptrace::try_catch(
+      [&] {
+        auto const tmp{ std::filesystem::temp_directory_path() };
+        std::string path_tmp{ (tmp / "jank-aot-XXXXXX").string() };
+        int const fd{ mkstemp(path_tmp.data()) };
+        close(fd);
+        std::filesystem::remove(path_tmp);
+        std::filesystem::create_directories(path_tmp);
 
-      {
-        std::ofstream ofs{ std::filesystem::path{ path_tmp } / "health.jank" };
-        ofs << "(ns health)\n(defn -main [& args] (println \"healthy\"))";
-      }
-      auto const exe{ "a.out" };
-      auto const exe_path{ std::filesystem::path{ path_tmp } / exe };
+        {
+          std::ofstream ofs{ std::filesystem::path{ path_tmp } / "health.jank" };
+          ofs << "(ns health)\n(defn -main [& args] (println \"healthy\"))";
+        }
+        auto const exe{ "a.out" };
+        auto const exe_path{ std::filesystem::path{ path_tmp } / exe };
 
-      auto const saved_opts{ util::cli::opts };
-      util::cli::opts.target_module = "health";
-      util::cli::opts.output_target = util::cli::compilation_target::object;
-      util::cli::opts.target_dir = path_tmp;
-      util::cli::opts.build_dir = util::format("{}/_cache", path_tmp);
-      util::cli::opts.output_filename = exe;
-      util::cli::opts.module_path = path_tmp;
-      util::scope_exit const finally{ /* NOLINTNEXTLINE(bugprone-exception-escape) */
-                                      [=] { util::cli::opts = saved_opts; }
-      };
+        auto const saved_opts{ util::cli::opts };
+        util::cli::opts.target_module = "health";
+        util::cli::opts.output_target = util::cli::compilation_target::object;
+        util::cli::opts.target_dir = path_tmp;
+        util::cli::opts.build_dir = util::format("{}/_cache", path_tmp);
+        util::cli::opts.output_filename = exe;
+        util::cli::opts.module_path = path_tmp;
+        util::scope_exit const finally{ /* NOLINTNEXTLINE(bugprone-exception-escape) */
+                                        [=] { util::cli::opts = saved_opts; }
+        };
 
 #ifdef JANK_PHASE_2
-      jank_load_clojure_core();
+        jank_load_clojure_core();
 #else
-      runtime::__rt_ctx->load_module("clojure.core", runtime::module::origin::latest).expect_ok();
+        runtime::__rt_ctx->load_module("clojure.core", runtime::module::origin::latest).expect_ok();
 #endif
 
-      runtime::__rt_ctx->module_loader.add_path(path_tmp);
-      runtime::__rt_ctx->compile_module(util::cli::opts.target_module).expect_ok();
+        runtime::__rt_ctx->module_loader.add_path(path_tmp);
+        runtime::__rt_ctx->compile_module(util::cli::opts.target_module).expect_ok();
 
-      jank::aot::processor const aot_prc{};
-      aot_prc.build_executable(util::cli::opts.target_module).expect_ok();
+        jank::aot::processor const aot_prc{};
+        aot_prc.build_executable(util::cli::opts.target_module).expect_ok();
 
-      auto const stdout_file{ std::filesystem::path{ path_tmp } / "stdout" };
-      std::string const stdout_file_str{ stdout_file.string() };
-      auto const proc_code{ llvm::sys::ExecuteAndWait(
-        exe_path.string(),
-        { exe_path.string() },
-        std::nullopt,
-        { std::nullopt, stdout_file_str.c_str(), std::nullopt },
-        5) };
-      if(proc_code != 0)
-      {
-        util::println(stderr, R"(Compiled program exited with code '{}'.)", proc_code);
-        error = true;
-      }
+        auto const stdout_file{ std::filesystem::path{ path_tmp } / "stdout" };
+        std::string const stdout_file_str{ stdout_file.string() };
+        auto const proc_code{ llvm::sys::ExecuteAndWait(
+          exe_path.string(),
+          { exe_path.string() },
+          std::nullopt,
+          { std::nullopt, stdout_file_str.c_str(), std::nullopt },
+          5) };
+        if(proc_code != 0)
+        {
+          util::println(stderr, R"(Compiled program exited with code '{}'.)", proc_code);
+          error = true;
+        }
 
-      std::ifstream ifs{ stdout_file };
-      std::string line;
-      std::getline(ifs, line);
-      if(line != "healthy")
-      {
-        util::println(stderr, "{}", line);
-        while(std::getline(ifs, line))
+        std::ifstream ifs{ stdout_file };
+        std::string line;
+        std::getline(ifs, line);
+        if(line != "healthy")
         {
           util::println(stderr, "{}", line);
+          while(std::getline(ifs, line))
+          {
+            util::println(stderr, "{}", line);
+          }
+          error = true;
         }
+      },
+      [&](std::exception const &e) {
         error = true;
-      }
-    }
-    JANK_CATCH([&](auto const &e) {
-      jank::util::print_exception(e);
-      error = true;
-    })
+        jank::util::print_exception(e);
+      },
+      [&](jank::runtime::object_ref const e) {
+        error = true;
+        jank::util::print_exception(e);
+      },
+      [&](jank::error_ref const e) {
+        error = true;
+        jank::util::print_exception(e);
+      });
 
     fatal_error |= error;
 

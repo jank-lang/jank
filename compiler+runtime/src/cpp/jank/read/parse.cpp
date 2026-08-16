@@ -14,6 +14,7 @@
 #include <jank/runtime/sequence_range.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/util/try.hpp>
 
 /* TODO: Make common symbol boxes once and reuse those. */
 namespace jank::read::parse
@@ -325,7 +326,7 @@ namespace jank::read::parse
           return ok(none);
         default:
           {
-            return error::internal_parse_failure(
+            return error::parse_internal_failure(
               util::format("Unexpected token kind '{}'.", lex::token_kind_str(latest_token.kind)),
               { latest_token.start, latest_token.end });
           }
@@ -524,7 +525,7 @@ namespace jank::read::parse
     else if(val_result.expect_ok().is_none())
     {
       return error::parse_invalid_quote({ start_token.start, latest_token.end },
-                                        "Quote form is missing its value.");
+                                        "A quote form is missing its value.");
     }
 
     return object_source_info{ make_box<obj::persistent_list>(
@@ -571,7 +572,7 @@ namespace jank::read::parse
 
         if(!is_utf8_char(str))
         {
-          auto const err("Invalid Unicode character.");
+          auto const err("This Unicode character literal is invalid.");
           return error::parse_invalid_unicode({ start_token.start, latest_token.end }, err);
         }
 
@@ -643,7 +644,7 @@ namespace jank::read::parse
     else if(target_val_result.expect_ok().is_none())
     {
       return error::parse_invalid_meta_hint_target({ start_token.start, latest_token.end },
-                                                   "Value missing after hint.");
+                                                   "A value after the meta hint is missing.");
     }
 
     /* TODO: Port visit_object: metadatable. */
@@ -660,7 +661,7 @@ namespace jank::read::parse
         {
           return error::parse_invalid_meta_hint_target(
             { start_token.start, latest_token.end },
-            "Target value for meta hint must accept metadata.");
+            "The target value for a meta hint must support metadata.");
         }
       },
       target_val_result.expect_ok().unwrap().ptr);
@@ -763,7 +764,7 @@ namespace jank::read::parse
     else if(list_result.expect_ok().is_none()
             || list_result.expect_ok().unwrap().ptr.get_type() != object_type::persistent_list)
     {
-      return error::internal_parse_failure("Value after #( must be present.",
+      return error::parse_internal_failure("A value after `#(` must be present.",
                                            { start_token.start, latest_token.end });
     }
 
@@ -786,7 +787,11 @@ namespace jank::read::parse
 
     auto const args(make_box<obj::persistent_vector>(arg_trans.persistent()));
     auto const wrapped(
-      make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("fn*"), args, call));
+      make_box<obj::persistent_list>(source_to_meta(start_token.start, latest_token.end),
+                                     std::in_place,
+                                     make_box<obj::symbol>("fn*"),
+                                     args,
+                                     call));
 
     shorthand = none;
 
@@ -806,19 +811,22 @@ namespace jank::read::parse
     else if(sym_result.expect_ok().is_none())
     {
       return error::parse_invalid_reader_var({ start_token.start, latest_token.end },
-                                             "Value after #' must be present.");
+                                             "A value after `#'` must be present.");
     }
     else if(sym_result.expect_ok().unwrap().ptr.get_type() != object_type::symbol)
     {
       return error::parse_invalid_reader_var({ start_token.start, latest_token.end },
-                                             "Value after #' must be a symbol.");
+                                             "A value after `#'` must be a symbol.");
     }
 
     auto const sym(expect_object<obj::symbol>(sym_result.expect_ok().unwrap().ptr));
     auto const sym_end(sym_result.expect_ok().unwrap().end);
 
     auto const wrapped(
-      make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("var"), sym));
+      make_box<obj::persistent_list>(source_to_meta(start_token.start, latest_token.end),
+                                     std::in_place,
+                                     make_box<obj::symbol>("var"),
+                                     sym));
 
     return object_source_info{ wrapped, start_token, sym_end };
   }
@@ -836,12 +844,12 @@ namespace jank::read::parse
     }
     else if(sym_result.expect_ok().is_none())
     {
-      return error::parse_invalid_reader_symbolic_value("Value after ## must be present.",
+      return error::parse_invalid_reader_symbolic_value("A value after `##` must be present.",
                                                         { start_token.start, latest_token.end });
     }
     else if(sym_result.expect_ok().unwrap().ptr.get_type() != object_type::symbol)
     {
-      return error::parse_invalid_reader_symbolic_value("Value after ## must be a symbol.",
+      return error::parse_invalid_reader_symbolic_value("A value after `##` must be a symbol.",
                                                         { start_token.start, latest_token.end });
     }
 
@@ -863,7 +871,7 @@ namespace jank::read::parse
     }
     else
     {
-      return error::parse_invalid_reader_symbolic_value("Invalid symbolic value.",
+      return error::parse_invalid_reader_symbolic_value("This symbolic value is invalid.",
                                                         { start_token.start, latest_token.end });
     }
 
@@ -887,10 +895,14 @@ namespace jank::read::parse
     {
       return error::parse_invalid_regex(e.what(), { start_token.start, latest_token.end });
     }
-    catch(jank::runtime::object * const e)
+    catch(object_ref const e)
     {
       return error::parse_invalid_regex(try_object<obj::persistent_string>(e)->data,
                                         { start_token.start, latest_token.end });
+    }
+    catch(error_ref const e)
+    {
+      return e;
     }
   }
 
@@ -912,10 +924,18 @@ namespace jank::read::parse
       auto const wrapped(make_box<obj::uuid>(str->data));
       return object_source_info{ wrapped, start_token, str_end };
     }
-    catch(jank::runtime::object * const e)
+    catch(std::exception const &e)
+    {
+      return error::parse_invalid_uuid(e.what(), { start_token.start, latest_token.end });
+    }
+    catch(object_ref const e)
     {
       return error::parse_invalid_uuid(try_object<obj::persistent_string>(e)->data,
                                        { start_token.start, latest_token.end });
+    }
+    catch(error_ref const e)
+    {
+      return e;
     }
   }
 
@@ -937,10 +957,18 @@ namespace jank::read::parse
       auto const wrapped(make_box<obj::inst>(str->data));
       return object_source_info{ wrapped, start_token, str_end };
     }
-    catch(jank::runtime::object * const e)
+    catch(std::exception const &e)
+    {
+      return error::parse_invalid_inst(e.what(), { start_token.start, latest_token.end });
+    }
+    catch(object_ref const e)
     {
       return error::parse_invalid_inst(try_object<obj::persistent_string>(e)->data,
                                        { start_token.start, latest_token.end });
+    }
+    catch(error_ref const e)
+    {
+      return e;
     }
   }
 
@@ -956,7 +984,10 @@ namespace jank::read::parse
       case lex::token_kind::close_paren:
         {
           auto const wrapped(
-            make_box<obj::persistent_list>(std::in_place, make_box<obj::symbol>("cpp/dsl"), form));
+            make_box<obj::persistent_list>(source_to_meta(start_token.start, latest_token.end),
+                                           std::in_place,
+                                           make_box<obj::symbol>("cpp/dsl"),
+                                           form));
 
           return object_source_info{ wrapped, start_token, str_end };
         }
@@ -1099,7 +1130,7 @@ namespace jank::read::parse
     else if(ignored_result.expect_ok().is_none())
     {
       return error::parse_invalid_reader_comment({ start_token.start, latest_token.end },
-                                                 "Value after #_ must be present.");
+                                                 "A value after `#_` must be present.");
     }
 
     return ok(none);
@@ -1114,8 +1145,8 @@ namespace jank::read::parse
     {
       return error::parse_invalid_reader_conditional(
         { start_token.start, latest_token.end },
-        "Conditional read is not allowed by default. Set the :read-cond reader option to either "
-        ":preserve or :allow.");
+        "Reader conditionals are not allowed by default. Set the `:read-cond` reader option to "
+        "`:preserve` or `:allow`.");
     }
 
     if(token_current->is_err())
@@ -1126,12 +1157,12 @@ namespace jank::read::parse
     if(token_current->expect_ok().kind == lex::token_kind::eof)
     {
       return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
-                                                     "Value after #? must be present.");
+                                                     "A value after `#?` must be present.");
     }
     else if(token_current->expect_ok().kind != lex::token_kind::open_paren)
     {
       return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
-                                                     "Value after #? must be a list.");
+                                                     "A value after `#?` must be a list.");
     }
 
     ++token_current;
@@ -1156,8 +1187,9 @@ namespace jank::read::parse
 
       if(feature.ptr.get_type() != object_type::keyword)
       {
-        return error::parse_invalid_reader_conditional({ feature.start.start, feature.end.end },
-                                                       "Feature must be a keyword.");
+        return error::parse_invalid_reader_conditional(
+          { feature.start.start, feature.end.end },
+          "Each feature in a reader conditional must be a keyword.");
       }
 
       auto const feature_kw(expect_object<obj::keyword>(feature.ptr));
@@ -1178,8 +1210,9 @@ namespace jank::read::parse
       }
       else if(form_result.expect_ok().is_none())
       {
-        return error::parse_invalid_reader_conditional({ start_token.start, latest_token.end },
-                                                       "#? expects an even number of forms.");
+        return error::parse_invalid_reader_conditional(
+          { start_token.start, latest_token.end },
+          "Reader conditionals must contain an even number of forms.");
       }
 
       auto const form{ form_result.expect_ok().unwrap().ptr };
@@ -1206,14 +1239,14 @@ namespace jank::read::parse
         if(!truthy(splicing_allowed_var->deref()))
         {
           return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
-                                                    "Top-level #?@ usage is not allowed.");
+                                                    "Top-level `#?@` usage is not allowed.");
         }
 
         if(!form.has_behavior(object_behavior::seqable))
         {
           /* TODO: Get the source of just this form. */
           return error::parse_invalid_reader_splice({ start_token.start, latest_token.end },
-                                                    "#?@ must be used on a sequence.");
+                                                    "`#?@` must be used with a sequence.");
         }
 
         auto const r{ make_sequence_range(form) };
@@ -1288,7 +1321,7 @@ namespace jank::read::parse
     if(!seq.has_behavior(object_behavior::seqable))
     {
       return err(
-        error::internal_parse_failure(util::format("syntax_quote_expand_seq arg is seqable: {}.",
+        error::parse_internal_failure(util::format("syntax_quote_expand_seq arg is seqable: {}.",
                                                    object_type_str(seq.get_type()))));
     }
 
@@ -1330,7 +1363,7 @@ namespace jank::read::parse
 
     if(!seq.has_behavior(object_behavior::seqable))
     {
-      return err(error::internal_parse_failure(
+      return err(error::parse_internal_failure(
         util::format("syntax_quote_flatten_map arg is not seqable: {}.",
                      object_type_str(seq.get_type()))));
     }
@@ -1355,7 +1388,7 @@ namespace jank::read::parse
 
     if(!seq.has_behavior(object_behavior::seqable))
     {
-      return err(error::internal_parse_failure("syntax_quote_expand_seq arg not seqable."));
+      return err(error::parse_internal_failure("syntax_quote_expand_seq arg not seqable."));
     }
 
     runtime::detail::native_transient_vector ret;
@@ -1445,7 +1478,7 @@ namespace jank::read::parse
         auto const env(__rt_ctx->gensym_env_var->deref());
         if(env.get_type() == object_type::nil)
         {
-          return err(error::internal_parse_failure("Missing gensym env."));
+          return err(error::parse_internal_failure("Missing gensym env."));
         }
 
         auto gensym(get(env, sym));
@@ -1481,7 +1514,8 @@ namespace jank::read::parse
     }
     else if(syntax_quote_is_unquote(form, true))
     {
-      return err(error::parse_invalid_syntax_unquote_splice(meta_source(form)));
+      return err(
+        error::parse_invalid_syntax_unquote_splice(object_source(form.seq().next().first())));
     }
     /* Clojure treats these specially, perhaps as a small optimization, by not quoting. We can
      * do the same for now, but quoting all of these has no effect. */
@@ -1597,7 +1631,7 @@ namespace jank::read::parse
           else
           {
             return err(
-              error::internal_parse_failure(util::format("Unsupported collection: {} [{}]",
+              error::parse_internal_failure(util::format("Unsupported collection: {} [{}]",
                                                          typed_form->to_code_string(),
                                                          object_type_str(typed_form->type))));
           }
@@ -1663,7 +1697,7 @@ namespace jank::read::parse
     else if(quoted_form.expect_ok().is_none())
     {
       return error::parse_invalid_syntax_quote({ start_token.start, latest_token.end },
-                                               "Value after ` must be present.");
+                                               "A value after the syntax quote must be present.");
     }
 
     auto const res(syntax_quote(quoted_form.expect_ok().unwrap().ptr));
@@ -1690,6 +1724,7 @@ namespace jank::read::parse
     }
 
     return object_source_info{ make_box<obj::persistent_list>(
+                                 source_to_meta(start_token.start, latest_token.end),
                                  std::in_place,
                                  make_box<obj::symbol>("clojure.core",
                                                        (splice ? "unquote-splicing" : "unquote")),
@@ -1713,9 +1748,11 @@ namespace jank::read::parse
       return error::parse_invalid_reader_deref({ start_token.start, latest_token.end });
     }
 
-    return object_source_info{ make_box<obj::persistent_list>(std::in_place,
-                                                              make_box<obj::symbol>("deref"),
-                                                              val_result.expect_ok().unwrap().ptr)
+    return object_source_info{ make_box<obj::persistent_list>(
+                                 source_to_meta(start_token.start, latest_token.end),
+                                 std::in_place,
+                                 make_box<obj::symbol>("deref"),
+                                 val_result.expect_ok().unwrap().ptr)
                                  .erase(),
                                start_token,
                                latest_token };
@@ -1895,7 +1932,7 @@ namespace jank::read::parse
     }
     else
     {
-      return error::internal_parse_failure("Unexpected token ratio data.",
+      return error::parse_internal_failure("The ratio token contains unexpected data.",
                                            { token.start, latest_token.end });
     }
   }
@@ -1926,8 +1963,8 @@ namespace jank::read::parse
     auto res(util::unescape({ sv.data(), sv.size() }));
     if(res.is_err())
     {
-      return error::internal_parse_failure(res.expect_err().message,
-                                           { token.start, latest_token.end });
+      return error::parse_invalid_string_escape(res.expect_err().message,
+                                                { token.start, latest_token.end });
     }
     return object_source_info{ make_box<obj::persistent_string>(res.expect_ok_move()),
                                token,

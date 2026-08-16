@@ -86,12 +86,12 @@
 ; Syntax quoting.
 (def ^{:arglists '([_])}
   unquote
-  (fn* unquote [_]
-    (throw "~ cannot be used outside of syntax quote")))
+  (fn* unquote [arg]
+    (cpp/clojure.core_native.throw_parse_invalid_syntax_unquote "~ cannot be used outside of a syntax quote.")))
 (def ^{:arglists '([_])}
   unquote-splicing
-  (fn* unquote-splicing [_]
-    (throw "~@ cannot be used outside of syntax quote")))
+  (fn* unquote-splicing [arg]
+    (cpp/clojure.core_native.throw_parse_invalid_syntax_unquote_splice "~@ cannot be used outside of a syntax quote.")))
 
 (def ^{:arglists '([o])}
   type
@@ -112,30 +112,38 @@
   ex-info
   (fn* ex-info
     ([msg map]
-     {:error msg
-      :data map})
+     (cpp/jank.runtime.ex_info msg map))
     ([msg map cause]
-     {:error msg
-      :data map
-      :cause cause})))
+     (cpp/jank.runtime.ex_info msg map cause))))
 
 (def ^{:arglists '([ex])
        :doc "Returns the message attached to ex if ex is a Throwable.
   Otherwise returns nil."}
   ex-message
-  :error)
+  (fn* ex-message [o]
+    (cpp/jank.runtime.ex_message o)))
 
 (def ^{:arglists '([ex])
        :doc "Returns exception data (a map) if ex is an IExceptionInfo.
    Otherwise returns nil."}
   ex-data
-  :data)
+  (fn* ex-data [o]
+    (cpp/jank.runtime.ex_data o)))
 
 (def ^{:arglists '([ex])
        :doc "Returns the cause of ex if ex is a Throwable.
   Otherwise returns nil."}
   ex-cause
-  :cause)
+  (fn* ex-cause [o]
+    (cpp/jank.runtime.ex_cause o)))
+
+; XXX: jank addition.
+(def ^{:arglists '([ex])
+       :doc "Returns a map representation of an exception info."}
+  ex-map
+  (fn* ex-map [o]
+    (cpp/jank.runtime.ex_map o)))
+(def Throwable->map ex-map)
 
 ; Relations.
 ;; Miscellaneous.
@@ -4543,7 +4551,7 @@
                (case* ~ge ~shift ~mask ~default ~imap))))))))
 
 ;; Miscellaneous.
-; TODO: jank.core
+; TODO: jank.util
 (defn- sleep [ms]
   (cpp/clojure.core_native.sleep ms))
 (defn- current-time []
@@ -7180,8 +7188,8 @@ fails, attempts to require sym's namespace and retries."
   {:forms '[(letfn [fnspecs*] exprs*)],
    :special-form true}
   [fnspecs & body]
-  `(letfn* ~(vec (interleave (map first fnspecs)
-                             (map #(cons `fn %) fnspecs)))
+  `(letfn* [~@(interleave (map first fnspecs)
+                          (map #(cons `fn %) fnspecs))]
      ~@body))
 
 (defn stream-reduce!

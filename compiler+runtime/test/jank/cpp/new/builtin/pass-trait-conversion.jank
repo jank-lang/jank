@@ -1,0 +1,3 @@
+(let* [a (cpp/new cpp/float (identity 5.0))]
+  (if (= 5.0 (cpp/* a))
+    :success))

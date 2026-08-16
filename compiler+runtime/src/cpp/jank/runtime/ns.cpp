@@ -231,9 +231,7 @@ namespace jank::runtime
 
   object_ref ns::with_meta(object_ref const)
   {
-    throw std::runtime_error{
-      "Value of type 'ns' does not support 'with-meta'.",
-    };
+    throw std::runtime_error{ "Objects of type `ns` do not support `with-meta`." };
   }
 
   object_ref ns::get_meta() const

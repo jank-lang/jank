@@ -1,4 +1,4 @@
-─ internal/parse-failure ───────────────────────────────────────────────────────
+─ parse/invalid-string-escape ──────────────────────────────────────────────────
 error: String contains invalid escape sequence '\p'.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
@@ -8,4 +8,6 @@ error: String contains invalid escape sequence '\p'.
   2  │ 
   3  │ (def m {:foo "foo\pbar" :bar "bar"}) ; boop
      │              ^^^^^^^^^^ Found here.
+─────┼──────────────────────────────────────────────────────────────────────────
+  🗎  │ https://book.jank-lang.org/reference/error/parse/invalid-string-escape.html
 ─────┴──────────────────────────────────────────────────────────────────────────

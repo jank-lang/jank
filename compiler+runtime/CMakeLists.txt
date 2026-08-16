@@ -492,6 +492,7 @@ include(cmake/dependency/cpptrace.cmake)
 include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
 include(cmake/dependency/folly.cmake)
+include(cmake/dependency/isocline.cmake)
 
 if(jank_test)
   include(cmake/dependency/doctest.cmake)
@@ -620,6 +621,7 @@ add_library(
   src/cpp/jank/runtime/obj/promise.cpp
   src/cpp/jank/runtime/obj/reduced.cpp
   src/cpp/jank/runtime/obj/reader_conditional.cpp
+  src/cpp/jank/runtime/obj/exception_info.cpp
   src/cpp/jank/runtime/behavior/metadatable.cpp
   src/cpp/jank/codegen/api.cpp
   src/cpp/jank/aot/resource.cpp
@@ -658,6 +660,7 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/boost-process/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/json/include>"
+  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/isocline/include>"
   ${OPENSSL_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
 )
@@ -735,6 +738,7 @@ add_library(
   src/cpp/jank/runtime/module/loader_dynamic.cpp
   src/cpp/jank/runtime/context_dynamic.cpp
   src/cpp/jank/runtime/ns_dynamic.cpp
+  src/cpp/jank/jit/object_dynamic.cpp
   src/cpp/jank/jit/processor_dynamic.cpp
   src/cpp/jank/codegen/api_dynamic.cpp
 )
@@ -756,6 +760,7 @@ add_library(
   src/cpp/jank/runtime/module/loader_static.cpp
   src/cpp/jank/runtime/context_static.cpp
   src/cpp/jank/runtime/ns_static.cpp
+  src/cpp/jank/jit/object_static.cpp
   src/cpp/jank/jit/processor_static.cpp
   src/cpp/jank/codegen/api_static.cpp
 )
@@ -855,6 +860,7 @@ set_target_properties(jank_compiler_lib PROPERTIES ENABLE_EXPORTS 1)
 add_executable(
   jank_exe_phase_1
   src/cpp/main.cpp
+  src/cpp/jank/terminal_repl_client.cpp
   src/cpp/jank/environment/check_health.cpp
 )
 add_executable(jank::exe ALIAS jank_exe_phase_1)
@@ -877,6 +883,7 @@ target_link_libraries(
   jank_exe_phase_1 PUBLIC
   ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a ${jank_link_whole_end}
   LLVM clang-cpp
+  isocline
   z
   OpenSSL::Crypto
 )

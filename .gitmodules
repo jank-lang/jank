@@ -37,3 +37,6 @@
 [submodule "compiler+runtime/third-party/json"]
 	path = compiler+runtime/third-party/json
 	url = https://github.com/jank-lang/json
+[submodule "compiler+runtime/third-party/isocline"]
+	path = compiler+runtime/third-party/isocline
+	url = https://github.com/daanx/isocline.git

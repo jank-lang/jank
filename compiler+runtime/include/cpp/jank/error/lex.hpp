@@ -30,8 +30,6 @@ namespace jank::error
                                 jtl::immutable_string const &note);
   error_ref lex_unterminated_string(read::source const &source);
   error_ref
-  lex_invalid_string_escape(jtl::immutable_string const &message, read::source const &source);
-  error_ref
   lex_unexpected_character(jtl::immutable_string const &message, read::source const &source);
-  error_ref internal_lex_failure(read::source const &source);
+  error_ref lex_internal_failure(read::source const &source);
 }

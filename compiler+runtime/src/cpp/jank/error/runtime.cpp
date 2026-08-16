@@ -36,9 +36,9 @@ namespace jank::error
     return e;
   }
 
-  error_ref internal_runtime_failure(jtl::immutable_string const &message)
+  error_ref runtime_internal_failure(jtl::immutable_string const &message)
   {
-    return make_error(kind::internal_runtime_failure, message, read::source::unknown());
+    return make_error(kind::runtime_internal_failure, message, read::source::unknown());
   }
 
   error_ref

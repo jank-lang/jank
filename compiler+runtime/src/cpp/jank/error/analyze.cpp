@@ -97,13 +97,6 @@ namespace jank::error
     return make_error(kind::analyze_invalid_letfn, message, source, expansion);
   }
 
-  error_ref analyze_invalid_loop(jtl::immutable_string const &message,
-                                 read::source const &source,
-                                 runtime::object_ref const expansion)
-  {
-    return make_error(kind::analyze_invalid_loop, message, source, expansion);
-  }
-
   error_ref analyze_invalid_if(jtl::immutable_string const &message,
                                read::source const &source,
                                runtime::object_ref const expansion)
@@ -170,7 +163,7 @@ namespace jank::error
   }
 
   error_ref analyze_macro_expansion_exception(std::exception const &e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion)
   {
@@ -178,11 +171,11 @@ namespace jank::error
                       e.what(),
                       source,
                       expansion,
-                      std::make_unique<cpptrace::stacktrace>(trace));
+                      std::make_unique<cpptrace::raw_trace>(trace));
   }
 
   error_ref analyze_macro_expansion_exception(runtime::object_ref const e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion)
   {
@@ -191,23 +184,11 @@ namespace jank::error
                                                                               : e.to_code_string(),
                       source,
                       expansion,
-                      std::make_unique<cpptrace::stacktrace>(trace));
-  }
-
-  error_ref analyze_macro_expansion_exception(jtl::immutable_string const &e,
-                                              cpptrace::stacktrace const &trace,
-                                              read::source const &source,
-                                              runtime::object_ref const expansion)
-  {
-    return make_error(kind::analyze_macro_expansion_exception,
-                      e,
-                      source,
-                      expansion,
-                      std::make_unique<cpptrace::stacktrace>(trace));
+                      std::make_unique<cpptrace::raw_trace>(trace));
   }
 
   error_ref analyze_macro_expansion_exception(error_ref const e,
-                                              cpptrace::stacktrace const &trace,
+                                              cpptrace::raw_trace const &trace,
                                               read::source const &source,
                                               runtime::object_ref const expansion)
   {
@@ -217,12 +198,7 @@ namespace jank::error
                       source,
                       expansion,
                       e,
-                      std::make_unique<cpptrace::stacktrace>(trace));
-  }
-
-  error_ref analyze_invalid_conversion(jtl::immutable_string const &message)
-  {
-    return make_error(kind::analyze_invalid_conversion, message, read::source::unknown());
+                      std::make_unique<cpptrace::raw_trace>(trace));
   }
 
   error_ref analyze_invalid_cpp_operator_call(jtl::immutable_string const &message,
@@ -289,6 +265,12 @@ namespace jank::error
                                      runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_call, message, source, expansion);
+  }
+
+  error_ref
+  analyze_invalid_cpp_conversion(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::analyze_invalid_cpp_conversion, message, source);
   }
 
   error_ref analyze_invalid_cpp_conversion(jtl::immutable_string const &message,
@@ -411,23 +393,16 @@ namespace jank::error
     return make_error(kind::analyze_invalid_cpp_member_access, message, source, expansion);
   }
 
-  error_ref analyze_known_issue(jtl::immutable_string const &message,
-                                read::source const &source,
-                                runtime::object_ref const expansion)
-  {
-    return make_error(kind::analyze_known_issue, message, source, expansion);
-  }
-
-  error_ref internal_analyze_failure(jtl::immutable_string const &message,
+  error_ref analyze_internal_failure(jtl::immutable_string const &message,
                                      runtime::object_ref const expansion)
   {
-    return make_error(kind::internal_analyze_failure, message, read::source::unknown(), expansion);
+    return make_error(kind::analyze_internal_failure, message, read::source::unknown(), expansion);
   }
 
-  error_ref internal_analyze_failure(jtl::immutable_string const &message,
+  error_ref analyze_internal_failure(jtl::immutable_string const &message,
                                      read::source const &source,
                                      runtime::object_ref const expansion)
   {
-    return make_error(kind::internal_analyze_failure, message, source, expansion);
+    return make_error(kind::analyze_internal_failure, message, source, expansion);
   }
 }
