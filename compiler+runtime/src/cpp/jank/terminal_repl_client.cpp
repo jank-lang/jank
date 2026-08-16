@@ -6,6 +6,8 @@
 
 #include <isocline.h>
 
+#include <jtl/terminal.hpp>
+
 #include <jank/read/lex.hpp>
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
@@ -185,6 +187,16 @@ namespace jank::terminal_repl
 
   static jtl::option<std::string> read_line(std::string const &prompt)
   {
+    if(!jtl::terminal::is_interactive())
+    {
+      std::string input;
+      if(!std::getline(std::cin, input))
+      {
+        return jank::none;
+      }
+      return input;
+    }
+
     auto * const line{ ic_readline(prompt.c_str()) };
     if(!line)
     {
@@ -253,10 +265,13 @@ namespace jank::terminal_repl
       return __rt_ctx->current_ns()->name->to_code_string() + suffix;
     });
 
-    ic_set_history(".jank-repl-history", 200);
-    init_isocline();
-    ic_set_default_completer(repl_completer, nullptr);
-    ic_set_default_highlighter(repl_highlighter, nullptr);
+    if(!jtl::terminal::is_interactive())
+    {
+      ic_set_history(".jank-repl-history", 200);
+      init_isocline();
+      ic_set_default_completer(repl_completer, nullptr);
+      ic_set_default_highlighter(repl_highlighter, nullptr);
+    }
 
     auto const tmp{ std::filesystem::temp_directory_path() };
     std::string path_tmp{ (tmp / "jank-repl-XXXXXX").string() };
@@ -336,8 +351,11 @@ namespace jank::terminal_repl
       __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>(util::cli::opts.target_module));
     }
 
-    ic_set_history(".jank-native-repl-history", 200);
-    init_isocline();
+    if(!jtl::terminal::is_interactive())
+    {
+      ic_set_history(".jank-native-repl-history", 200);
+      init_isocline();
+    }
 
     while(true)
     {
