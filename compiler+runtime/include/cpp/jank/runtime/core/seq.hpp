@@ -13,6 +13,12 @@ namespace jank::runtime
     using keyword_ref = oref<struct keyword>;
   }
 
+  template <typename T>
+  auto seq(oref<T> const &s)
+  {
+    return s.seq();
+  }
+
   object_ref more(object_ref const s);
   object_ref rest(object_ref const s);
 

@@ -219,7 +219,7 @@
        should not be used on any Iterable whose iterator repeatedly
        returns the same mutable object."
        :inline (fn* [o]
-                 (list '.seq o))}
+                 (list 'cpp/jank.runtime.seq o))}
   seq
   (fn* seq [o]
     (.seq o)))
