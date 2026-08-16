@@ -126,6 +126,13 @@ namespace jank::runtime::obj
       return element_type;
     }
 
+    jtl::immutable_string to_code_string() const override
+    {
+      jtl::string_builder buff;
+      util::format_to(buff, "#array [{} {} {}]", element_type_str(element_type), size, this);
+      return buff.release();
+    }
+
     object_ref aset(i64 const index, object_ref const val) override
     {
       auto const i(static_cast<usize>(index));
