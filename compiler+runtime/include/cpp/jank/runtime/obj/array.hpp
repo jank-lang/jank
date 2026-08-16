@@ -16,20 +16,21 @@ namespace jank::runtime::obj
     static constexpr object_type obj_type{ object_type::array };
     static constexpr object_behavior obj_behaviors{ object_behavior::get | object_behavior::seqable
                                                     | object_behavior::sequence_like
-                                                    | object_behavior::indexable };
+                                                    | object_behavior::indexable
+                                                    | object_behavior::array_like };
     static constexpr bool pointer_free{ false };
 
-    array(jtl::immutable_string const &canonical_type, usize const size)
+    array(array_element_type const element_type, usize const size)
       : object{ obj_type, obj_behaviors }
-      , canonical_type{ canonical_type }
+      , element_type{ element_type }
       , size{ size }
       , data{ new(UseGC) T[size]{} }
     {
     }
 
-    array(jtl::immutable_string const &canonical_type, usize const size, T init_value)
+    array(array_element_type const element_type, usize const size, T init_value)
       : object{ obj_type, obj_behaviors }
-      , canonical_type{ canonical_type }
+      , element_type{ element_type }
       , size{ size }
       , data{ new(UseGC) T[size]{} }
     {
@@ -37,6 +38,30 @@ namespace jank::runtime::obj
       {
         data[i] = init_value;
       }
+    }
+
+    array_element_type get_element_type() const override
+    {
+      return element_type;
+    }
+
+    object_ref aset(i64 const index, object_ref const val) override
+    {
+      auto const i(static_cast<usize>(index));
+      operator[](i) = convert<T>::from_object(val);
+      return val;
+    }
+
+    object_ref aclone() const override
+    {
+      auto const clone(make_box<array<T>>(element_type, size));
+
+      for(usize i{}; i < size; ++i)
+      {
+        clone->data[i] = data[i];
+      }
+
+      return clone;
     }
 
     T &operator[](usize const i)
@@ -144,7 +169,7 @@ namespace jank::runtime::obj
       return size;
     }
 
-    jtl::immutable_string canonical_type{};
+    array_element_type element_type;
     usize size{};
     jtl::ptr<T> data{};
   };
@@ -154,11 +179,15 @@ namespace jank::runtime::obj
 
   using bool_array_ref = array_ref<bool>;
   using char_array_ref = array_ref<char>;
-  using f32_array_ref = array_ref<f32>;
-  using f64_array_ref = array_ref<f64>;
+  using u8_array_ref = array_ref<u8>;
+  using i8_array_ref = array_ref<i8>;
+  using u16_array_ref = array_ref<u16>;
   using i16_array_ref = array_ref<i16>;
+  using u32_array_ref = array_ref<u32>;
   using i32_array_ref = array_ref<i32>;
+  using u64_array_ref = array_ref<u64>;
   using i64_array_ref = array_ref<i64>;
   using object_array_ref = array_ref<object_ref>;
-  using u8_array_ref = array_ref<u8>;
+  using f32_array_ref = array_ref<f32>;
+  using f64_array_ref = array_ref<f64>;
 }

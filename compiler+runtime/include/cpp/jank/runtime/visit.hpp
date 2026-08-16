@@ -248,46 +248,39 @@ namespace jank::runtime
         /* TODO: Remove arrays from visit. It is still required for certain
          * clojure functions such as nth. */
         {
-          auto const type(get_element_type(erased));
-          if(type == "bool")
+          auto const type(erased.get_element_type());
+          switch(type)
           {
-            return fn(booleans(erased), std::forward<Args>(args)...);
-          }
-          else if(type == "char")
-          {
-            return fn(chars(erased), std::forward<Args>(args)...);
-          }
-          else if(type == "f32")
-          {
-            return fn(floats(erased), std::forward<Args>(args)...);
-          }
-          else if(type == "f64")
-          {
-            return fn(doubles(erased), std::forward<Args>(args)...);
-          }
-          else if(type == "i16")
-          {
-            return fn(shorts(erased), std::forward<Args>(args)...);
-          }
-          else if(type == "i32")
-          {
-            return fn(ints(erased), std::forward<Args>(args)...);
-          }
-          else if(type == "i64")
-          {
-            return fn(longs(erased), std::forward<Args>(args)...);
-          }
-          else if(type == "object")
-          {
-            return fn(objects(erased), std::forward<Args>(args)...);
-          }
-          else if(type == "u8")
-          {
-            return fn(bytes(erased), std::forward<Args>(args)...);
-          }
-          else
-          {
-            throw std::runtime_error{ "visit not supported for 'array'" };
+            case array_element_type::boolean:
+              return fn(expect_object<obj::array<bool>>(erased), std::forward<Args>(args)...);
+            case array_element_type::character:
+              return fn(expect_object<obj::array<char>>(erased), std::forward<Args>(args)...);
+            case array_element_type::u8:
+              return fn(expect_object<obj::array<u8>>(erased), std::forward<Args>(args)...);
+            case array_element_type::i8:
+              return fn(expect_object<obj::array<i8>>(erased), std::forward<Args>(args)...);
+            case array_element_type::u16:
+              return fn(expect_object<obj::array<u16>>(erased), std::forward<Args>(args)...);
+            case array_element_type::i16:
+              return fn(expect_object<obj::array<i16>>(erased), std::forward<Args>(args)...);
+            case array_element_type::u32:
+              return fn(expect_object<obj::array<u32>>(erased), std::forward<Args>(args)...);
+            case array_element_type::i32:
+              return fn(expect_object<obj::array<i32>>(erased), std::forward<Args>(args)...);
+            case array_element_type::u64:
+              return fn(expect_object<obj::array<u64>>(erased), std::forward<Args>(args)...);
+            case array_element_type::i64:
+              return fn(expect_object<obj::array<i64>>(erased), std::forward<Args>(args)...);
+            case array_element_type::f32:
+              return fn(expect_object<obj::array<f32>>(erased), std::forward<Args>(args)...);
+            case array_element_type::f64:
+              return fn(expect_object<obj::array<f64>>(erased), std::forward<Args>(args)...);
+            case array_element_type::object:
+              return fn(expect_object<obj::array<object_ref>>(erased), std::forward<Args>(args)...);
+            default:
+              throw std::runtime_error{ util::format(
+                "visit not supported for 'array' with element type: '{}'",
+                element_type_str(type)) };
           }
         }
       case object_type::reader_conditional:

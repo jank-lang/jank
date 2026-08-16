@@ -10,19 +10,18 @@
 
 namespace jank::runtime
 {
-  jtl::immutable_string get_element_type(object_ref const o);
-
   template <typename T>
-  obj::array_ref<T> try_array(jtl::immutable_string const &canonical_type, object_ref const o)
+  obj::array_ref<T> try_array(array_element_type const element_type, object_ref const o)
   {
     auto const a(try_object<obj::array<T>>(o));
+    auto const o_element_type(o.get_element_type());
 
-    if(a->canonical_type != canonical_type)
+    if(o_element_type != element_type)
     {
       throw std::runtime_error{ util::format(
-        "Array cast failed, 'canonical_type' mismatch: expected '{}', received '{}'.",
-        canonical_type,
-        a->canonical_type) };
+        "Array cast failed, 'element_type' mismatch: expected '{}', received '{}'.",
+        element_type_str(element_type),
+        element_type_str(o_element_type)) };
     }
 
     return a;
@@ -97,7 +96,7 @@ namespace jank::runtime
     return aset(a, i, convert<T>::from_object(val));
   }
 
-  object_ref aset(object_ref const a, i64 const i, object_ref const val);
+  object_ref aset(object_ref a, i64 const i, object_ref const val);
 
   template <typename T>
   i64 alength(obj::array_ref<T> const a)
@@ -117,7 +116,7 @@ namespace jank::runtime
   obj::array_ref<T> aclone(obj::array_ref<T> const a)
   {
     auto const size(a->size);
-    auto const clone(make_box<obj::array<T>>(a->canonical_type, size));
+    auto const clone(make_box<obj::array<T>>(a->element_type, size));
 
     for(usize i{}; i < size; ++i)
     {
