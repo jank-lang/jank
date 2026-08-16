@@ -1027,12 +1027,27 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::throw_ref const inst, builder &b)
   {
     b.next_instruction();
-    /* We static_cast to object_ref here, since we'll be trying to catch an object_ref in any
-     * try/catch forms. This loses us our type info, but C++ doesn't do implicit conversions
-     * when catching and we're not using inheritance. */
-    util::format_to(b.body_buffer,
-                    "throw static_cast<jank::runtime::object_ref>({});\n",
-                    inst->value);
+
+    if(inst->value.is_some())
+    {
+      if(analyze::cpp_util::is_any_object(inst->value.unwrap().type))
+      {
+        /* We static_cast to object_ref here, since we'll be trying to catch an object_ref in any
+         * try/catch forms. This loses us our type info, but C++ doesn't do implicit conversions
+         * when catching and we're not using inheritance. */
+        util::format_to(b.body_buffer,
+                        "throw static_cast<jank::runtime::object_ref>({});\n",
+                        inst->value.unwrap().name);
+      }
+      else
+      {
+        util::format_to(b.body_buffer, "throw {};\n", inst->value.unwrap().name);
+      }
+    }
+    else
+    {
+      util::format_to(b.body_buffer, "throw;\n");
+    }
 
     /* If there are any instructions after the throw, like scope closes, we need to handle
      * them, too. */

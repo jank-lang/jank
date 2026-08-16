@@ -611,12 +611,16 @@ namespace jank::ir
      * a block after a throw. */
     struct throw_ : instruction
     {
-      throw_(identifier const &name, read::source const &location, identifier const &value);
+      throw_(identifier const &name, read::source const &location);
+      throw_(identifier const &name,
+             read::source const &location,
+             identifier const &value,
+             jtl::ptr<void> const value_type);
 
       bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;
 
-      identifier value;
+      jtl::option<detail::typed_identifier> value;
     };
 
     using throw_ref = jtl::ref<throw_>;

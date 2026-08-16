@@ -663,8 +663,11 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::throw_ref const expr, builder &b)
   {
-    /* TODO: Any code after this shouldn't be added to the block. */
-    return b.throw_(gen(expr->value, b).unwrap());
+    if(expr->value.is_some())
+    {
+      return b.throw_(gen(expr->value.unwrap(), b).unwrap(), expr->value.unwrap()->get_type());
+    }
+    return b.throw_();
   }
 
   jtl::option<identifier> gen(analyze::expr::try_ref const expr, builder &b)

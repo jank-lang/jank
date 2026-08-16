@@ -500,11 +500,19 @@ namespace jank::ir
     return name;
   }
 
-  identifier builder::throw_(identifier const &value)
+  identifier builder::throw_()
   {
     auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::throw_>(name, location, value));
+      jtl::make_ref<inst::throw_>(name, location));
+    return name;
+  }
+
+  identifier builder::throw_(identifier const &value, jtl::ptr<void> const type)
+  {
+    auto name{ next_ident() };
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::throw_>(name, location, value, type));
     return name;
   }
 

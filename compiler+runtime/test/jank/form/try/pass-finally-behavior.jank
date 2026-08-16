@@ -15,7 +15,7 @@
   (try
     (try
       (swap! a conj :inner-try)
-      (throw "skip finally")
+      (throw (identity "skip finally"))
       (swap! a conj :inner-try-after-throw)
       (finally
         (swap! a conj :inner-finally)))

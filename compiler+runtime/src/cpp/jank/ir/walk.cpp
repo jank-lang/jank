@@ -662,7 +662,10 @@ namespace jank::ir
 
   void walk_references_typed(ir::inst::throw_ref const instr, reference_walk_function const &f)
   {
-    f(instr->value);
+    if(instr->value.is_some())
+    {
+      f(instr->value.unwrap().name);
+    }
   }
 
   void walk_references_typed(ir::inst::try_ref const, reference_walk_function const &)

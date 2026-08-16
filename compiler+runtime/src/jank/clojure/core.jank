@@ -219,7 +219,7 @@
        should not be used on any Iterable whose iterator repeatedly
        returns the same mutable object."
        :inline (fn* [o]
-                 (list '.seq o))}
+                 (list 'cpp/jank.runtime.seq o))}
   seq
   (fn* seq [o]
     (.seq o)))
@@ -472,7 +472,7 @@
        (if kvs
          (if (next kvs)
            (recur res (first kvs) (second kvs) (nnext kvs))
-           (throw "assoc expects even number of args after the first"))
+           (throw (ex-info "assoc expects even number of args after the first" {})))
          res)))))
 
 ;; Strings.
@@ -724,7 +724,7 @@
   (fn* defn [&form &env name & fdecl]
     ;; Note: Cannot delegate this check to def because of the call to (with-meta name ..)
     (if (not (symbol? name))
-      (throw "First argument to defn must be a symbol"))
+      (throw (ex-info "First argument to defn must be a symbol" {})))
     (let* [m (if (string? (first fdecl))
                {:doc (first fdecl)}
                {})
@@ -1835,7 +1835,7 @@
   Note - uses a primitive operator subject to overflow."
   [x]
   ;; (. clojure.lang.Numbers (unchecked_int_inc x))
-  (throw "TODO: port unchecked-inc-int"))
+  (throw (ex-info "TODO: port unchecked-inc-int" {})))
 
 (defn unchecked-inc
   "Returns a number one greater than x, a long.
@@ -1850,90 +1850,90 @@
   Note - uses a primitive operator subject to overflow."
   [x]
   ;; (. clojure.lang.Numbers (unchecked_int_dec x))
-  (throw "TODO: port unchecked-dec-int"))
+  (throw (ex-info "TODO: port unchecked-dec-int" {})))
 
 (defn unchecked-dec
   "Returns a number one less than x, a long.
   Note - uses a primitive operator subject to overflow."
   [x]
   ;; (. clojure.lang.Numbers (unchecked_dec x))
-  (throw "TODO: port unchecked-dec"))
+  (throw (ex-info "TODO: port unchecked-dec" {})))
 
 (defn unchecked-negate-int
   "Returns the negation of x, an int.
   Note - uses a primitive operator subject to overflow."
   [x]
   ;; (. clojure.lang.Numbers (unchecked_int_negate x))
-  (throw "TODO: port unchecked-negate-int"))
+  (throw (ex-info "TODO: port unchecked-negate-int" {})))
 
 (defn unchecked-negate
   "Returns the negation of x, a long.
   Note - uses a primitive operator subject to overflow."
   [x]
   ;; (. clojure.lang.Numbers (unchecked_minus x))
-  (throw "TODO: port unchecked-negate"))
+  (throw (ex-info "TODO: port unchecked-negate" {})))
 
 (defn unchecked-add-int
   "Returns the sum of x and y, both int.
   Note - uses a primitive operator subject to overflow."
   [x y]
   ;; (. clojure.lang.Numbers (unchecked_int_add x y))
-  (throw "TODO: port unchecked-add-int"))
+  (throw (ex-info "TODO: port unchecked-add-int" {})))
 
 (defn unchecked-add
   "Returns the sum of x and y, both long.
   Note - uses a primitive operator subject to overflow."
   [x y]
   ;; (. clojure.lang.Numbers (unchecked_add x y))
-  (throw "TODO: port unchecked-add"))
+  (throw (ex-info "TODO: port unchecked-add" {})))
 
 (defn unchecked-subtract-int
   "Returns the difference of x and y, both int.
   Note - uses a primitive operator subject to overflow."
   [x y]
   ;; (. clojure.lang.Numbers (unchecked_int_subtract x y))
-  (throw "TODO: port unchecked-subtract-int"))
+  (throw (ex-info "TODO: port unchecked-subtract-int" {})))
 
 (defn unchecked-subtract
   "Returns the difference of x and y, both long.
   Note - uses a primitive operator subject to overflow."
   [x y]
   ;; (. clojure.lang.Numbers (unchecked_minus x y))
-  (throw "TODO: port unchecked-subtract"))
+  (throw (ex-info "TODO: port unchecked-subtract" {})))
 
 (defn unchecked-multiply-int
   "Returns the product of x and y, both int.
   Note - uses a primitive operator subject to overflow."
   [x y]
   ;; (. clojure.lang.Numbers (unchecked_int_multiply x y))
-  (throw "TODO: port unchecked-multiply-int"))
+  (throw (ex-info "TODO: port unchecked-multiply-int" {})))
 
 (defn unchecked-multiply
   "Returns the product of x and y, both long.
   Note - uses a primitive operator subject to overflow."
   [x y]
   ;; (. clojure.lang.Numbers (unchecked_multiply x y))
-  (throw "TODO: port unchecked-multiply"))
+  (throw (ex-info "TODO: port unchecked-multiply" {})))
 
 (defn unchecked-divide-int
   "Returns the division of x by y, both int.
   Note - uses a primitive operator subject to truncation."
   [x y]
   ;; (. clojure.lang.Numbers (unchecked_int_divide x y))
-  (throw "TODO: port unchecked-divide-int"))
+  (throw (ex-info "TODO: port unchecked-divide-int"  {})))
 
 (defn unchecked-remainder-int
   "Returns the remainder of division of x by y, both int.
   Note - uses a primitive operator subject to truncation."
   [x y]
   ;; (. clojure.lang.Numbers (unchecked_int_remainder x y))
-  (throw "TODO: port unchecked-remainder-int"))
+  (throw (ex-info "TODO: port unchecked-remainder-int"  {})))
 
 (defn rationalize
   "returns the rational value of num"
   [num]
   ;; (. clojure.lang.Numbers (rationalize num))
-  (throw "TODO: port rationalize"))
+  (throw (ex-info "TODO: port rationalize"  {})))
 
 (defn int?
   "Return true if x is a fixed precision integer"
@@ -2440,7 +2440,7 @@
    comparator.  Any equal keys are handled as if by repeated uses of
    conj."
   ([comparator & keys]
-   (throw "not yet implemented: sorted-set-by")))
+   (throw (ex-info "not yet implemented: sorted-set-by"  {}))))
 
 (defn
   ^{:inline (fn* [m k]
@@ -3408,7 +3408,7 @@
                                                     true)
                                (= firstb :as) (pb ret (second bs) gvec)
                                :else (if seen-rest?
-                                       (throw "Unsupported binding form, only :as can follow & parameter")
+                                       (throw (ex-info "Unsupported binding form, only :as can follow & parameter"  {}))
                                        (recur (pb (if has-rest
                                                     (conj ret
                                                           gfirst `(first ~gseq)
@@ -5013,20 +5013,20 @@
   c. Returns true or false"
   [c x]
   ;; (. c (isInstance x))
-  (throw "TODO: port instance?"))
+  (throw (ex-info "TODO: port instance?" {})))
 
 (defn to-array
   "Returns an array of Objects containing the contents of coll, which
   can be any Collection.  Maps to java.util.Collection.toArray()."
   [coll]
   ;; (. clojure.lang.RT (toArray coll))
-  (throw "TODO: port to-array"))
+  (throw (ex-info "TODO: port to-array" {})))
 
 (defn cast
   "Throws a ClassCastException if x is not a c, else returns x."
   [c x]
   ;; (. c (cast x))
-  (throw "TODO: port cast"))
+  (throw (ex-info "TODO: port cast" {})))
 
 (defn sorted-map-by
   "keyval => key val
@@ -5035,7 +5035,7 @@
   repeated uses of assoc."
   ([comparator & keyvals]
   ;;  (clojure.lang.PersistentTreeMap/create comparator keyvals)
-   (throw "TODO: port sorted-map-by")))
+   (throw (ex-info "TODO: port sorted-map-by" {}))))
 
 (defn any?
   "Returns true given any argument."
@@ -5050,10 +5050,10 @@
   ;;  (cond (keyword? name) name
   ;;        (symbol? name) (clojure.lang.Keyword/find ^clojure.lang.Symbol name)
   ;;        (string? name) (clojure.lang.Keyword/find ^String name))
-   (throw "TODO: port find-keyword"))
+   (throw (ex-info "TODO: port find-keyword" {})))
   ([ns name]
   ;;  (clojure.lang.Keyword/find ns name)
-   (throw "TODO: port find-keyword")))
+   (throw (ex-info "TODO: port find-keyword" {}))))
 
 (defn delay?
   "returns true if x is a Delay created with delay"
@@ -5082,7 +5082,7 @@
   can be a vector or sorted-map), in reverse order. If rev is empty returns nil"
   [#_clojure.lang.Reversible rev]
     ;; (. rev (rseq))
-  (throw "TODO: port rseq"))
+  (throw (ex-info "TODO: port rseq" {})))
 
 (defmacro locking
   "Executes exprs in an implicit do, while holding the monitor of x.
@@ -5113,10 +5113,10 @@
 ;;   but is easier to write, read, and understand."
 ;;   ([x form]
 ;;   ;;  `(. ~x ~form)
-;;    (throw "TODO: port"))
+;;    (throw (ex-info "TODO: port" {})))
 ;;   ([x form & more]
 ;;   ;;  `(.. (. ~x ~form) ~@more))
-;;   (throw "TODO: port"))
+;;   (throw (ex-info "TODO: port" {})))
 
 
 ;;;;;;;;; var stuff
@@ -5192,19 +5192,19 @@
     ;;    (.setErrorMode a (or (:error-mode opts)
     ;;                         (if (:error-handler opts) :continue :fail)))
     ;;    a)
-   (throw "TODO: port agent")))
+   (throw (ex-info "TODO: port agent" {}))))
 
 (defn set-agent-send-executor!
   "Sets the ExecutorService to be used by send"
   [executor]
   ;; (set! clojure.lang.Agent/pooledExecutor executor)
-  (throw "TODO: port set-agent-send-executor!"))
+  (throw (ex-info "TODO: port set-agent-send-executor!" {})))
 
 (defn set-agent-send-off-executor!
   "Sets the ExecutorService to be used by send-off"
   [executor]
   ;; (set! clojure.lang.Agent/soloExecutor executor)
-  (throw "TODO: port set-agent-send-off-executor!"))
+  (throw (ex-info "TODO: port set-agent-send-off-executor!" {})))
 
 (defn send-via
   "Dispatch an action to an agent. Returns the agent immediately.
@@ -5214,7 +5214,7 @@
   (apply action-fn state-of-agent args)"
   [executor #_clojure.lang.Agent a f & args]
   ;; (.dispatch a (binding [*agent* a] (binding-conveyor-fn f)) args executor)
-  (throw "TODO: port send-via"))
+  (throw (ex-info "TODO: port send-via"  {})))
 
 (defn send
   "Dispatch an action to an agent. Returns the agent immediately.
@@ -5224,7 +5224,7 @@
   (apply action-fn state-of-agent args)"
   [#_clojure.lang.Agent a f & args]
   ;; (apply send-via clojure.lang.Agent/pooledExecutor a f args)
-  (throw "TODO: port send"))
+  (throw (ex-info "TODO: port send"  {})))
 
 (defn send-off
   "Dispatch a potentially blocking action to an agent. Returns the
@@ -5234,7 +5234,7 @@
   (apply action-fn state-of-agent args)"
   [#_clojure.lang.Agent a f & args]
   ;; (apply send-via clojure.lang.Agent/soloExecutor a f args)
-  (throw "TODO: port send-off"))
+  (throw (ex-info "TODO: port send-off"  {})))
 
 (defn release-pending-sends
   "Normally, actions sent directly or indirectly during another action
@@ -5245,7 +5245,7 @@
   occurring, does nothing. Returns the number of actions dispatched."
   []
   ;; (clojure.lang.Agent/releasePendingSends)
-  (throw "TODO: port release-pending-sends"))
+  (throw (ex-info "TODO: port release-pending-sends"  {})))
 
 (defn add-watch
   "Adds a watch function to an agent/atom/var/ref reference. The watch
@@ -5275,7 +5275,7 @@
   failed."
   [#_clojure.lang.Agent a]
   ;; (.getError a)
-  (throw "TODO: port agent-error"))
+  (throw (ex-info "TODO: port agent-error"  {})))
 
 (defn restart-agent
   "When an agent is failed, changes the agent state to new-state and
@@ -5290,7 +5290,7 @@
   [#_clojure.lang.Agent a, new-state & options]
   ;; (let [opts (apply hash-map options)]
   ;;   (.restart a new-state (if (:clear-actions opts) true false)))
-  (throw "TODO: port restart-agent"))
+  (throw (ex-info "TODO: port restart-agent"  {})))
 
 (defn set-error-handler!
   "Sets the error-handler of agent a to handler-fn.  If an action
@@ -5299,14 +5299,14 @@
   agent and the exception."
   [#_clojure.lang.Agent a, handler-fn]
   ;; (.setErrorHandler a handler-fn)
-  (throw "TODO: port set-error-handler!"))
+  (throw (ex-info "TODO: port set-error-handler!"  {})))
 
 (defn error-handler
   "Returns the error-handler of agent a, or nil if there is none.
   See set-error-handler!"
   [#_clojure.lang.Agent a]
   ;; (.getErrorHandler a)
-  (throw "TODO: port error-handler"))
+  (throw (ex-info "TODO: port error-handler"  {})))
 
 (defn set-error-mode!
   "Sets the error-mode of agent a to mode-keyword, which must be
@@ -5322,13 +5322,13 @@
   still work, returning the state of the agent before the error."
   [#_clojure.lang.Agent a, mode-keyword]
   ;; (.setErrorMode a mode-keyword)
-  (throw "TODO: port set-error-mode!"))
+  (throw (ex-info "TODO: port set-error-mode!"  {})))
 
 (defn error-mode
   "Returns the error-mode of agent a.  See set-error-mode!"
   [#_clojure.lang.Agent a]
   ;; (.getErrorMode a)
-  (throw "TODO: port error-mode"))
+  (throw (ex-info "TODO: port error-mode"  {})))
 
 (defn agent-errors
   "DEPRECATED: Use 'agent-error' instead.
@@ -5344,7 +5344,7 @@
   agent, allowing subsequent actions to occur."
   [#_clojure.lang.Agent a]
   ;; (restart-agent a (.deref a))
-  (throw "TODO: port clear-agent-errors"))
+  (throw (ex-info "TODO: port clear-agent-errors"  {})))
 
 (defn shutdown-agents
   "Initiates a shutdown of the thread pools that back the agent
@@ -5352,7 +5352,7 @@
   accepted"
   []
   ;; (. clojure.lang.Agent shutdown)
-  (throw "TODO: port shutdown-agents"))
+  (throw (ex-info "TODO: port shutdown-agents"  {})))
 
 (defn ref
   "Creates and returns a Ref with an initial value of x and zero or
@@ -5379,7 +5379,7 @@
   with :max-history."
   ([x]
   ;;  (new clojure.lang.Ref x)
-   (throw "TODO: port ref"))
+   (throw (ex-info "TODO: port ref"  {})))
   ([x & options]
   ;;  (let [r  ^clojure.lang.Ref (setup-reference (ref x) options)
   ;;        opts (apply hash-map options)]
@@ -5388,17 +5388,17 @@
   ;;   (when (:min-history opts)
   ;;     (.setMinHistory r (:min-history opts)))
   ;;   r)
-   (throw "TODO: port ref")))
+   (throw (ex-info "TODO: port ref"  {}))))
 
 (defn- deref-future
   ([#_java.util.concurrent.Future fut]
     ;;  (.get fut)
-   (throw "TODO: port deref-future"))
+   (throw (ex-info "TODO: port deref-future"  {})))
   ([#_java.util.concurrent.Future fut timeout-ms timeout-val]
     ;;  (try (.get fut timeout-ms java.util.concurrent.TimeUnit/MILLISECONDS)
     ;;       (catch java.util.concurrent.TimeoutException e
     ;;         timeout-val))
-   (throw "TODO: port deref-future")))
+   (throw (ex-info "TODO: port deref-future"  {}))))
 
 (defn set-validator!
   "Sets the validator-fn for a var/ref/agent/atom. validator-fn must be nil or a
@@ -5432,7 +5432,7 @@
   ref-set."
   [#_clojure.lang.Ref ref fun & args]
     ;; (. ref (commute fun args))
-  (throw "TODO: port commute"))
+  (throw (ex-info "TODO: port commute"  {})))
 
 (defn alter
   "Must be called in a transaction. Sets the in-transaction-value of
@@ -5443,38 +5443,38 @@
   and returns the in-transaction-value of ref."
   [#_clojure.lang.Ref ref fun & args]
     ;; (. ref (alter fun args))
-  (throw "TODO: port alter"))
+  (throw (ex-info "TODO: port alter"  {})))
 
 (defn ref-set
   "Must be called in a transaction. Sets the value of ref.
   Returns val."
   [#_clojure.lang.Ref ref val]
     ;; (. ref (set val))
-  (throw "TODO: port ref-set"))
+  (throw (ex-info "TODO: port ref-set"  {})))
 
 (defn ref-history-count
   "Returns the history count of a ref"
   [#_clojure.lang.Ref ref]
     ;; (.getHistoryCount ref)
-  (throw "TODO: port ref-history-count"))
+  (throw (ex-info "TODO: port ref-history-count"  {})))
 
 (defn ref-min-history
   "Gets the min-history of a ref, or sets it and returns the ref"
   ([#_clojure.lang.Ref ref]
     ;; (.getMinHistory ref)
-   (throw "TODO: port ref-min-history"))
+   (throw (ex-info "TODO: port ref-min-history"  {})))
   ([#_clojure.lang.Ref ref n]
     ;; (.setMinHistory ref n)
-   (throw "TODO: port ref-min-history")))
+   (throw (ex-info "TODO: port ref-min-history"  {}))))
 
 (defn ref-max-history
   "Gets the max-history of a ref, or sets it and returns the ref"
   ([#_clojure.lang.Ref ref]
     ;; (.getMaxHistory ref)
-   (throw "TODO: port ref-max-history"))
+   (throw (ex-info "TODO: port ref-max-history"  {})))
   ([#_clojure.lang.Ref ref n]
     ;; (.setMaxHistory ref n)
-   (throw "TODO: port ref-max-history")))
+   (throw (ex-info "TODO: port ref-max-history"  {}))))
 
 (defn ensure
   "Must be called in a transaction. Protects the ref from modification
@@ -5483,7 +5483,7 @@
   [#_clojure.lang.Ref ref]
     ;; (. ref (touch))
     ;; (. ref (deref))
-  (throw "TODO: port ensure"))
+  (throw (ex-info "TODO: port ensure"  {})))
 
 (defmacro sync
   "transaction-flags => TBD, pass nil for now
@@ -5496,7 +5496,7 @@
   [flags-ignored-for-now & body]
   ;; `(. clojure.lang.LockingTransaction
   ;;     (runInTransaction (fn [] ~@body)))
-  (throw "TODO: port sync"))
+  (throw (ex-info "TODO: port sync"  {})))
 
 (defmacro io!
   "If an io! block occurs in a transaction, throws an
@@ -5509,7 +5509,7 @@
   ;;   `(if (clojure.lang.LockingTransaction/isRunning)
   ;;      (throw (new IllegalStateException ~(or message "I/O in transaction")))
   ;;      (do ~@body)))
-  (throw "TODO: port io!"))
+  (throw (ex-info "TODO: port io!"  {})))
 
 ;;;;;;;;;;;;;;;;;;; sequence fns  ;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5529,14 +5529,14 @@
     ;;  (or (clojure.lang.RT/chunkIteratorSeq
     ;;      (clojure.lang.TransformerIterator/create xform (clojure.lang.RT/iter coll)))
     ;;    ())
-   (throw "TODO: port sequence"))
+   (throw (ex-info "TODO: port sequence"  {})))
   ([xform coll & colls]
     ;;  (or (clojure.lang.RT/chunkIteratorSeq
     ;;      (clojure.lang.TransformerIterator/createMulti
     ;;        xform
     ;;        (map #(clojure.lang.RT/iter %) (cons coll colls))))
     ;;    ())
-   (throw "TODO: port sequence")))
+   (throw (ex-info "TODO: port sequence"  {}))))
 
 (defn not-every?
   "Returns false if (pred x) is logical true for every x in
@@ -5647,7 +5647,7 @@
   [#_java.io.BufferedReader rdr]
   ;; (when-let [line (.readLine rdr)]
   ;;   (cons line (lazy-seq (line-seq rdr))))
-  (throw "TODO: port line-seq"))
+  (throw (ex-info "TODO: port line-seq"  {})))
 
 (defn comparator
   "Returns an implementation of java.util.Comparator based upon pred."
@@ -5699,13 +5699,13 @@
   ;;     (doseq [agent agents]
   ;;       (send agent count-down))
   ;;     (. latch (await))))
-  (throw "TODO: port await"))
+  (throw (ex-info "TODO: port await"  {})))
 
 (defn await1 [#_clojure.lang.Agent a]
   ;; (when (pos? (.getQueueCount a))
   ;;   (await a))
   ;;   a
-  (throw "TODO: port await1"))
+  (throw (ex-info "TODO: port await1"  {})))
 
 (defn await-for
   "Blocks the current thread until all actions dispatched thus
@@ -5721,12 +5721,12 @@
     ;;    (doseq [agent agents]
     ;;        (send agent count-down))
     ;;    (. latch (await  timeout-ms (. java.util.concurrent.TimeUnit MILLISECONDS)))))
-  (throw "TODO: port await-for"))
+  (throw (ex-info "TODO: port await-for"  {})))
 
 (defn import
   "import is not implemented for jank, but a var is still bound to its symbol for portability. import always throws an exception"
   [& _]
-  (throw "import is not supported in jank, for C/C++ dependency interoperability use cpp/raw with #include, e.g. (cpp/raw \"#include \"dependency.h\")\")"))
+  (throw (ex-info "`import` is not supported in jank. For C/C++ dependencies, use `include` instead." {})))
 
 (defmacro include
   [& headers]
@@ -5747,10 +5747,10 @@
   using, e.g., Integer/TYPE."
   ([aseq]
     ;;  (clojure.lang.RT/seqToTypedArray (seq aseq))
-   (throw "TODO: port into-array"))
+   (throw (ex-info "TODO: port into-array"  {})))
   ([type aseq]
     ;;  (clojure.lang.RT/seqToTypedArray type (seq aseq))
-   (throw "TODO: port into-array")))
+   (throw (ex-info "TODO: port into-array"  {}))))
 
 (defn-
   array [& items]
@@ -5760,7 +5760,7 @@
   "Returns the Class of x"
   #_Class [#_Object x]
   ;; (if (nil? x) x (. x (getClass)))
-  (throw "TODO: port class"))
+  (throw (ex-info "TODO: port class"  {})))
 
 (defn num
   "Coerce to Number"
@@ -5781,13 +5781,13 @@
   "Coerce to short"
   [#_Number x]
   ;; (clojure.lang.RT/shortCast x)
-  (throw "TODO: port short"))
+  (throw (ex-info "TODO: port short"  {})))
 
 (defn byte
   "Coerce to byte"
   [#_Number x]
   ;; (clojure.lang.RT/byteCast x)
-  (throw "TODO: port byte"))
+  (throw (ex-info "TODO: port byte"  {})))
 
 (defn char
   "Coerce to char"
@@ -5798,43 +5798,43 @@
   "Coerce to byte. Subject to rounding or truncation."
   [#_Number x]
   ;; (clojure.lang.RT/uncheckedByteCast x)
-  (throw "TODO: port unchecked-byte"))
+  (throw (ex-info "TODO: port unchecked-byte"  {})))
 
 (defn unchecked-short
   "Coerce to short. Subject to rounding or truncation."
   [#_Number x]
   ;; (clojure.lang.RT/uncheckedShortCast x)
-  (throw "TODO: port unchecked-short"))
+  (throw (ex-info "TODO: port unchecked-short"  {})))
 
 (defn unchecked-char
   "Coerce to char. Subject to rounding or truncation."
   [x]
   ;; (. clojure.lang.RT (uncheckedCharCast x))
-  (throw "TODO: port unchecked-char"))
+  (throw (ex-info "TODO: port unchecked-char"  {})))
 
 (defn unchecked-int
   "Coerce to int. Subject to rounding or truncation."
   [#_Number x]
   ;; (clojure.lang.RT/uncheckedIntCast x)
-  (throw "TODO: port unchecked-int"))
+  (throw (ex-info "TODO: port unchecked-int"  {})))
 
 (defn unchecked-long
   "Coerce to long. Subject to rounding or truncation."
   [#_Number x]
   ;; (clojure.lang.RT/uncheckedLongCast x)
-  (throw "TODO: port unchecked-long"))
+  (throw (ex-info "TODO: port unchecked-long"  {})))
 
 (defn unchecked-float
   "Coerce to float. Subject to rounding."
   [#_Number x]
   ;; (clojure.lang.RT/uncheckedFloatCast x)
-  (throw "TODO: port unchecked-float"))
+  (throw (ex-info "TODO: port unchecked-float"  {})))
 
 (defn unchecked-double
   "Coerce to double. Subject to rounding."
   [#_Number x]
   ;; (clojure.lang.RT/uncheckedDoubleCast x)
-  (throw "TODO: port unchecked-double"))
+  (throw (ex-info "TODO: port unchecked-double"  {})))
 
 (defn ratio?
   "Returns true if n is a Ratio"
@@ -5894,7 +5894,7 @@
   []
     ;; (. *out* (append system-newline))
     ;; nil
-  (throw "TODO: port newline"))
+  (throw (ex-info "TODO: port newline"  {})))
 
 (defn flush
   "Flushes the output stream that is the current value of
@@ -5902,7 +5902,7 @@
   []
     ;; (. *out* (flush))
     ;; nil
-  (throw "TODO: port flesh"))
+  (throw (ex-info "TODO: port flesh"  {})))
 
 (defn read
   "Reads the next object from stream, which must be an instance of
@@ -5928,10 +5928,10 @@
    (read stream eof-error? eof-value false))
   ([stream eof-error? eof-value recursive?]
   ;;  (. clojure.lang.LispReader (read stream (boolean eof-error?) eof-value recursive?))
-   (throw "TODO: port read"))
+   (throw (ex-info "TODO: port read"  {})))
   ([opts stream]
   ;;  (. clojure.lang.LispReader (read stream opts))
-   (throw "TODO: port read")))
+   (throw (ex-info "TODO: port read"  {}))))
 
 (defn read+string
   "Like read, and taking the same args. stream must be a LineNumberingPushbackReader.
@@ -5948,7 +5948,7 @@
   ;;    (catch Throwable ex
   ;;      (.getString stream)
   ;;      (throw ex)))
-   (throw "TODO: port read+string"))
+   (throw (ex-info "TODO: port read+string"  {})))
   ([opts #_clojure.lang.LineNumberingPushbackReader stream]
   ;;  (try
   ;;    (.captureString stream)
@@ -5958,7 +5958,7 @@
   ;;    (catch Throwable ex
   ;;      (.getString stream)
   ;;      (throw ex)))
-   (throw "TODO: port read+string")))
+   (throw (ex-info "TODO: port read+string"  {}))))
 
 (defn read-line
   "Reads the next line from stream that is the current value of *in* ."
@@ -5966,7 +5966,7 @@
   ;; (if (instance? clojure.lang.LineNumberingPushbackReader *in*)
   ;;   (.readLine ^clojure.lang.LineNumberingPushbackReader *in*)
   ;;   (.readLine ^java.io.BufferedReader *in*))
-  (throw "TODO: port read-line"))
+  (throw (ex-info "TODO: port read-line"  {})))
 
 (defn read-string
   "Reads one object from the string s. Optionally include reader
@@ -6000,7 +6000,7 @@
   ;;                                 (. ~(bindings 0) ~'close))))
   ;;   :else (throw (IllegalArgumentException.
   ;;                  "with-open only allows Symbols in bindings")))
-  (throw "TODO: port with-open"))
+  (throw (ex-info "TODO: port with-open"  {})))
 
 (defmacro memfn
   "Expands into code that creates a fn that expects to be passed an
@@ -6013,28 +6013,28 @@
   ;;           (meta name))]
   ;;   `(fn [~t ~@args]
   ;;      (. ~t (~name ~@args))))
-  (throw "TODO: port memfn"))
+  (throw (ex-info "TODO: port memfn"  {})))
 
 (defn alength
   "Returns the length of the Java array. Works on arrays of all
   types."
   [array]
   ;; (. clojure.lang.RT (alength array))
-  (throw "TODO: port alength"))
+  (throw (ex-info "TODO: port alength"  {})))
 
 (defn aclone
   "Returns a clone of the Java array. Works on arrays of known
   types."
   [array]
   ;; (. clojure.lang.RT (aclone array))
-  (throw "TODO: port aclone"))
+  (throw (ex-info "TODO: port aclone"  {})))
 
 (defn aget
   "Returns the value at the index/indices. Works on Java arrays of all
   types."
   ([array idx]
   ;;  (clojure.lang.Reflector/prepRet (.getComponentType (class array)) (. Array (get array idx)))
-   (throw "TODO: port aget"))
+   (throw (ex-info "TODO: port aget"  {})))
   ([array idx & idxs]
    (apply aget (aget array idx) idxs)))
 
@@ -6048,7 +6048,7 @@
          (cpp/= (cpp/aget ~array ~idx) ~val)
          ~val))
     ;; Nested case: (aset array idx1 idx2 & idxv) - not yet implemented
-    `(throw "TODO: Nested array indexing not yet implemented")))
+    `(throw (ex-info "TODO: Nested array indexing not yet implemented"  {}))))
 
 (defmacro
   ^{:private true}
@@ -6101,14 +6101,14 @@
   Class objects for the primitive types can be obtained using, e.g., Integer/TYPE."
   ([#_Class type len]
   ;;  (. Array (newInstance type (int len)))
-   (throw "TODO: port make-array"))
+   (throw (ex-info "TODO: port make-array"  {})))
   ([#_Class type dim & more-dims]
   ;;  (let [dims (cons dim more-dims)
   ;;        ^"[I" dimarray (make-array (. Integer TYPE)  (count dims))]
   ;;    (dotimes [i (alength dimarray)]
   ;;      (aset-int dimarray i (nth dims i)))
   ;;    (. Array (newInstance type dimarray))))
-   (throw "TODO: port make-array")))
+   (throw (ex-info "TODO: port make-array"  {}))))
 
 (defn to-array-2d
   "Returns a (potentially-ragged) 2-dimensional array of Objects
@@ -6121,13 +6121,13 @@
     ;;       (aset ret i (to-array (first xs)))
     ;;       (recur (inc i) (next xs))))
     ;;   ret)
-  (throw "TODO: port to-array-2d"))
+  (throw (ex-info "TODO: port to-array-2d"  {})))
 
 (defn create-struct
   "Returns a structure basis object."
   [& keys]
     ;; (. clojure.lang.PersistentStructMap (createSlotMap keys))
-  (throw "TODO: port create-struct"))
+  (throw (ex-info "TODO: port create-struct"  {})))
 
 (defmacro defstruct
   "Same as (def name (create-struct keys...))"
@@ -6141,7 +6141,7 @@
   keyvals can also contain keys not in the basis."
   [s & inits]
     ;; (. clojure.lang.PersistentStructMap (create s inits))
-  (throw "TODO: port struct-map"))
+  (throw (ex-info "TODO: port struct-map"  {})))
 
 (defn struct
   "Returns a new structmap instance with the keys of the
@@ -6149,7 +6149,7 @@
   where values are not supplied they will default to nil."
   [s & vals]
     ;; (. clojure.lang.PersistentStructMap (construct s vals))
-  (throw "TODO: port struct"))
+  (throw (ex-info "TODO: port struct"  {})))
 
 (defn accessor
   "Returns a fn that, given an instance of a structmap with the basis,
@@ -6159,14 +6159,14 @@
   performance-critical areas."
   [s key]
     ;; (. clojure.lang.PersistentStructMap (getAccessor s key))
-  (throw "TODO: port accessor"))
+  (throw (ex-info "TODO: port accessor"  {})))
 
 (defn load-reader
   "Sequentially read and evaluate the set of forms contained in the
   stream/file"
   [rdr]
   ;; (. clojure.lang.Compiler (load rdr))
-  (throw "TODO: port load-reader"))
+  (throw (ex-info "TODO: port load-reader"  {})))
 
 (defn load-string
   "Sequentially read and evaluate the set of forms contained in the
@@ -6175,7 +6175,7 @@
   ;; (let [rdr (-> (java.io.StringReader. s)
   ;;               (clojure.lang.LineNumberingPushbackReader.))]
   ;;   (load-reader rdr))
-  (throw "TODO: port load-string"))
+  (throw (ex-info "TODO: port load-string"  {})))
 
 (defn-
   filter-key [keyfn pred amap]
@@ -6200,7 +6200,7 @@
   "Returns a map of the import mappings for the namespace."
   [ns]
   ;; (filter-key val (partial instance? Class) (ns-map ns))
-  (throw "TODO: port ns-imports"))
+  (throw (ex-info "TODO: port ns-imports"  {})))
 
 (defn ns-interns
   "Returns a map of the intern mappings for the namespace."
@@ -6217,13 +6217,13 @@
   ;;   (filter-key val (fn [^clojure.lang.Var v] (and (instance? clojure.lang.Var v)
   ;;                                (not= ns (.ns v))))
   ;;               (ns-map ns)))
-  (throw "TODO: port ns-refers"))
+  (throw (ex-info "TODO: port ns-refers"  {})))
 
 (defn ns-aliases
   "Returns a map of the aliases for the namespace."
   [ns]
   ;; (.getAliases (the-ns ns))
-  (throw "TODO: port ns-aliases"))
+  (throw (ex-info "TODO: port ns-aliases"  {})))
 
 (defn ns-unalias
   "Removes the alias for the symbol from the namespace."
@@ -6235,7 +6235,7 @@
  thread-locally bound."
   [#_clojure.lang.Var x val]
   ;; (. x (set val))
-  (throw "TODO: port var-set"))
+  (throw (ex-info "TODO: port var-set"  {})))
 
 (defmacro with-local-vars
   "varbinding=> symbol init-expr
@@ -6254,7 +6254,7 @@
   ;;    (try
   ;;     (do ~@body)
   ;;     (finally (. clojure.lang.Var (popThreadBindings)))))
-  (throw "TODO: port with-local-vars"))
+  (throw (ex-info "TODO: port with-local-vars"  {})))
 
 (defn array-map
   "Constructs an array-map. If any keys are equal, they are handled as
@@ -6271,7 +6271,7 @@
   ;; (if (next s)
   ;;   (clojure.lang.PersistentArrayMap/createAsIfByAssoc (to-array s))
   ;;   (if (seq s) (first s) clojure.lang.PersistentArrayMap/EMPTY))
-  (throw "TODO: port seq-to-map-for-destructuring"))
+  (throw (ex-info "TODO: port seq-to-map-for-destructuring"  {})))
 
 (defmacro lazy-cat
   "Expands to code which yields a lazy sequence of the concatenation
@@ -6317,7 +6317,7 @@
   "Evaluates body in a context in which *in* is bound to a fresh
   StringReader initialized with the string s."
   [s & body]
-  (throw "TODO: port with-in-str")
+  (throw (ex-info "TODO: port with-in-str"  {}))
   #_`(with-open [s# (-> (java.io.StringReader. ~s) clojure.lang.LineNumberingPushbackReader.)]
      (binding [*in* s#]
        ~@body)))
@@ -6348,7 +6348,7 @@
   ;;       (when tr
   ;;         (into-array StackTraceElement
   ;;           (drop-while #(= class-name (.getClassName ^StackTraceElement %1)) tr))))))
-  (throw "TODO: port elide-top-frames"))
+  (throw (ex-info "TODO: port elide-top-frames"  {})))
 
 (defn test
   "test [v] finds fn at key :test in var metadata and calls it,
@@ -6417,7 +6417,7 @@
     ;;  (fn [^java.io.File f] (. f (isDirectory)))
     ;;  (fn [^java.io.File d] (seq (. d (listFiles))))
     ;;  dir)
-  (throw "TODO: port file-seq"))
+  (throw (ex-info "TODO: port file-seq"  {})))
 
 (defn xml-seq
   "A tree seq on the xml elements as per xml/parse"
@@ -6431,7 +6431,7 @@
   "Returns true if s names a special form"
   [s]
     ;; (contains? (. clojure.lang.Compiler specials) s)
-  (throw "TODO: port special-symbol?"))
+  (throw (ex-info "TODO: port special-symbol?"  {})))
 
 (defn max-key
   "Returns the x for which (k x), a number, is greatest.
@@ -6509,13 +6509,13 @@
     ;;                   [exprs nil])]
     ;;   `(binding [*math-context* (java.math.MathContext. ~precision ~@rm)]
     ;;      ~@body))
-  (throw "TODO: port with-precision"))
+  (throw (ex-info "TODO: port with-precision"  {})))
 
 (defn- mk-bound-fn
   [#_clojure.lang.Sorted sc test key]
   ;; (fn [e]
   ;;   (test (.. sc comparator (compare (. sc entryKey e) key)) 0))
-  (throw "TODO: port mk-bound-fn"))
+  (throw (ex-info "TODO: port mk-bound-fn"  {})))
 
 (defn subseq
   "sc must be a sorted collection, test(s) one of <, <=, > or
@@ -6527,12 +6527,12 @@
   ;;      (when-let [[e :as s] (. sc seqFrom key true)]
   ;;        (if (include e) s (next s)))
   ;;      (take-while include (. sc seq true))))
-   (throw "TODO: port subseq"))
+   (throw (ex-info "TODO: port subseq"  {})))
   ([#_clojure.lang.Sorted sc start-test start-key end-test end-key]
   ;;  (when-let [[e :as s] (. sc seqFrom start-key true)]
   ;;    (take-while (mk-bound-fn sc end-test end-key)
   ;;                (if ((mk-bound-fn sc start-test start-key) e) s (next s))))
-   (throw "TODO: port subseq")))
+   (throw (ex-info "TODO: port subseq"  {}))))
 
 (defn rsubseq
   "sc must be a sorted collection, test(s) one of <, <=, > or
@@ -6544,12 +6544,12 @@
   ;;      (when-let [[e :as s] (. sc seqFrom key false)]
   ;;        (if (include e) s (next s)))
   ;;      (take-while include (. sc seq false))))
-   (throw "TODO: port rsubseq"))
+   (throw (ex-info "TODO: port rsubseq"  {})))
   ([#_clojure.lang.Sorted sc start-test start-key end-test end-key]
   ;;  (when-let [[e :as s] (. sc seqFrom end-key false)]
   ;;    (take-while (mk-bound-fn sc start-test start-key)
   ;;                (if ((mk-bound-fn sc end-test end-key) e) s (next s))))
-   (throw "TODO: port rsubseq")))
+   (throw (ex-info "TODO: port rsubseq"  {}))))
 
 (defn add-classpath
   "DEPRECATED
@@ -6559,7 +6559,7 @@
   [url]
   (println "WARNING: add-classpath is deprecated")
   ;; (clojure.lang.RT/addURL url)
-  (throw "TODO: port add-classpath"))
+  (throw (ex-info "TODO: port add-classpath"  {})))
 
 (defn mix-collection-hash
   "Mix final collection hash for ordered or unordered collections.
@@ -6570,7 +6570,7 @@
   #_long
   [#_long hash-basis #_long count]
   ;; (clojure.lang.Murmur3/mixCollHash hash-basis count)
-  (throw "TODO: port mix-collection-hash"))
+  (throw (ex-info "TODO: port mix-collection-hash"  {})))
 
 (defn hash-ordered-coll
   "Returns the hash code, consistent with =, for an external ordered
@@ -6579,7 +6579,7 @@
   #_long
   [coll]
   ;; (clojure.lang.Murmur3/hashOrdered coll)
-  (throw "TODO: port hash-ordered-coll"))
+  (throw (ex-info "TODO: port hash-ordered-coll"  {})))
 
 (defn hash-unordered-coll
   "Returns the hash code, consistent with =, for an external unordered
@@ -6631,79 +6631,79 @@
   "Creates an array of floats"
   ([size-or-seq]
   ;;  (. clojure.lang.Numbers float_array size-or-seq)
-   (throw "TODO: port float-array"))
+   (throw (ex-info "TODO: port float-array"  {})))
   ([size init-val-or-seq]
   ;;  (. clojure.lang.Numbers float_array size init-val-or-seq)
-   (throw "TODO: port float-array") ))
+   (throw (ex-info "TODO: port float-array"  {})) ))
 
 (defn boolean-array
   "Creates an array of booleans"
   ([size-or-seq]
   ;;  (. clojure.lang.Numbers boolean_array size-or-seq)
-   (throw "TODO: port boolean-array"))
+   (throw (ex-info "TODO: port boolean-array"  {})))
   ([size init-val-or-seq]
   ;;  (. clojure.lang.Numbers boolean_array size init-val-or-seq)
-   (throw "TODO: port boolean-array")))
+   (throw (ex-info "TODO: port boolean-array"  {}))))
 
 (defn byte-array
   "Creates an array of bytes"
   ([size-or-seq]
   ;;  (. clojure.lang.Numbers byte_array size-or-seq)
-   (throw "TODO: port byte-array"))
+   (throw (ex-info "TODO: port byte-array"  {})))
   ([size init-val-or-seq]
   ;;  (. clojure.lang.Numbers byte_array size init-val-or-seq)
-   (throw "TODO: port byte-array")))
+   (throw (ex-info "TODO: port byte-array"  {}))))
 
 (defn char-array
   "Creates an array of chars"
   ([size-or-seq]
   ;;  (. clojure.lang.Numbers char_array size-or-seq)
-   (throw "TODO: port char-array"))
+   (throw (ex-info "TODO: port char-array"  {})))
   ([size init-val-or-seq]
   ;;  (. clojure.lang.Numbers char_array size init-val-or-seq)
-   (throw "TODO: port char-array")))
+   (throw (ex-info "TODO: port char-array"  {}))))
 
 (defn short-array
   "Creates an array of shorts"
   ([size-or-seq]
   ;;  (. clojure.lang.Numbers short_array size-or-seq)
-   (throw "TODO: port short-array"))
+   (throw (ex-info "TODO: port short-array"  {})))
   ([size init-val-or-seq]
   ;;  (. clojure.lang.Numbers short_array size init-val-or-seq)
-   (throw "TODO: port short-array")))
+   (throw (ex-info "TODO: port short-array"  {}))))
 
 (defn double-array
   "Creates an array of doubles"
   ([size-or-seq]
   ;;  (. clojure.lang.Numbers double_array size-or-seq)
-   (throw "TODO: port double-array"))
+   (throw (ex-info "TODO: port double-array"  {})))
   ([size init-val-or-seq]
   ;;  (. clojure.lang.Numbers double_array size init-val-or-seq)
-   (throw "TODO: port double-array")))
+   (throw (ex-info "TODO: port double-array"  {}))))
 
 (defn object-array
   "Creates an array of objects"
   ([size-or-seq]
   ;;  (. clojure.lang.RT object_array size-or-seq)
-   (throw "TODO: port object-array")))
+   (throw (ex-info "TODO: port object-array"  {}))))
 
 (defn int-array
   "Creates an array of ints"
   ([size-or-seq]
   ;;  (. clojure.lang.Numbers int_array size-or-seq)
-   (throw "TODO: port int-array"))
+   (throw (ex-info "TODO: port int-array"  {})))
   ([size init-val-or-seq]
   ;;  (. clojure.lang.Numbers int_array size init-val-or-seq)
-   (throw "TODO: port int-array")))
+   (throw (ex-info "TODO: port int-array"  {}))))
 
 (defn long-array
   "Creates an array of longs"
   ([size-or-seq]
   ;;  (. clojure.lang.Numbers long_array size-or-seq)
-   (throw "TODO: port long-array"))
+   (throw (ex-info "TODO: port long-array"  {})))
   ([size init-val-or-seq]
   ;;  (. clojure.lang.Numbers long_array size init-val-or-seq)
-   (throw "TODO: port long-array")))
+   (throw (ex-info "TODO: port long-array"  {}))))
 
 ;; definline doesn't work without eval
 
@@ -6761,7 +6761,7 @@
   ;; (if (nil? x)
   ;;   false
   ;;   (-> x class .getComponentType (= Byte/TYPE)))
-  (throw "TODO: port bytes?"))
+  (throw (ex-info "TODO: port bytes?"  {})))
 
 (defn seque
   "Creates a queued seq on another (presumably lazy) seq s. The queued
@@ -6806,18 +6806,18 @@
   ;;                       (cons (if (identical? x NIL) nil x) (drain)))))))]
   ;;    (send-off agt fill)
   ;;    (drain))
-     (throw "TODO: port seque")))
+     (throw (ex-info "TODO: port seque"  {}))))
 
 (defn class?
   "Returns true if x is an instance of Class"
   [x]
   ;; (instance? Class x)
-  (throw "TODO: port class?"))
+  (throw (ex-info "TODO: port class?"  {})))
 
 (defn- is-annotation? [c]
   ;; (and (class? c)
   ;;      (.isAssignableFrom java.lang.annotation.Annotation c))
-  (throw "TODO: port is-annotation?"))
+  (throw (ex-info "TODO: port is-annotation?"  {})))
 
 (defn- is-runtime-annotation? [#_Class c]
   ;; (boolean
@@ -6825,11 +6825,11 @@
   ;;       (when-let [^java.lang.annotation.Retention r
   ;;                  (.getAnnotation c java.lang.annotation.Retention)]
   ;;         (= (.value r) java.lang.annotation.RetentionPolicy/RUNTIME))))
-  (throw "TODO: port is-runtime-annotation?"))
+  (throw (ex-info "TODO: port is-runtime-annotation?"  {})))
 
 (defn- descriptor [#_Class c]
   ;; (clojure.asm.Type/getDescriptor c)
-  (throw "TODO: port descriptor"))
+  (throw (ex-info "TODO: port descriptor"  {})))
 
 (declare process-annotation)
 
@@ -6852,7 +6852,7 @@
   ;;             (process-annotation nav nv)
   ;;             (.visitEnd nav))
   ;;  :else (.visit av name v))
-  (throw "TODO: port add-annotation"))
+  (throw (ex-info "TODO: port add-annotation"  {})))
 
 (defn- process-annotation [av v]
   (if (map? v)
@@ -6875,7 +6875,7 @@
     ;;                                       (is-runtime-annotation? c)))]
     ;;            (process-annotation av v)
     ;;            (.visitEnd av))))))
-   (throw "TODO: port add-annotations")))
+   (throw (ex-info "TODO: port add-annotations"  {}))))
 
 (defn bases
   "Returns the immediate superclass and direct interfaces of c, if any"
@@ -6884,7 +6884,7 @@
   ;;   (let [i (seq (.getInterfaces c))
   ;;         s (.getSuperclass c)]
   ;;     (if s (cons s i) i)))
-  (throw "TODO: port bases"))
+  (throw (ex-info "TODO: port bases"  {})))
 
 (defn supers
   "Returns the immediate and indirect superclasses and interfaces of c, if any"
@@ -6913,7 +6913,7 @@
     ;;              (when (. rs (next))
     ;;                (cons (apply struct row-struct (row-values)) (lazy-seq (thisfn)))))]
     ;;   (rows))
-  (throw "TODO: port resultset-seq"))
+  (throw (ex-info "TODO: port resultset-seq"  {})))
 
 (defn iterator-seq
   "Returns a seq on a java.util.Iterator. Note that most collections
@@ -6922,13 +6922,13 @@
   iterator that repeatedly returns the same mutable object."
   [iter]
   ;; (clojure.lang.RT/chunkIteratorSeq iter)
-  (throw "TODO: port iterator-seq"))
+  (throw (ex-info "TODO: port iterator-seq"  {})))
 
 (defn enumeration-seq
   "Returns a seq on a java.util.Enumeration"
   [e]
   ;; (clojure.lang.EnumerationSeq/create e)
-  (throw "TODO: port enumeration-seq"))
+  (throw (ex-info "TODO: port enumeration-seq"  {})))
 
 (defn format
   "Formats a string using std::format."
@@ -6950,7 +6950,7 @@
   ;;        (do ~@body)
   ;;        (finally
   ;;         (. clojure.lang.Var (popThreadBindings))))))
-  (throw "TODO: port with-loading-context"))
+  (throw (ex-info "TODO: port with-loading-context"  {})))
 
 (defonce
   ^{:private true
@@ -6965,7 +6965,7 @@
   [& args]
   ;; (locking clojure.lang.RT/REQUIRE_LOCK
   ;;   (apply require args))
-  (throw "TODO: port serialized-require"))
+  (throw (ex-info "TODO: port serialized-require"  {})))
 
 (defn requiring-resolve
   "Resolves namespace-qualified sym per 'resolve'. If initial resolve
@@ -6976,7 +6976,7 @@ fails, attempts to require sym's namespace and retries."
   ;;       (do (-> sym namespace symbol serialized-require)
   ;;           (resolve sym)))
   ;;   (throw (IllegalArgumentException. (str "Not a qualified symbol: " sym))))
-  (throw "TODO: port requiring-resolve"))
+  (throw (ex-info "TODO: port requiring-resolve"  {})))
 
 (defn loaded-libs
   "Returns a sorted set of symbols naming the currently loaded libs"
@@ -6996,13 +6996,13 @@ fails, attempts to require sym's namespace and retries."
  "Returns true if coll implements Reversible"
   [coll]
   ;; (instance? clojure.lang.Reversible coll)
-  (throw "TODO: port reversible?"))
+  (throw (ex-info "TODO: port reversible?"  {})))
 
 (defn indexed?
   "Return true if coll implements Indexed, indicating efficient lookup by index"
   [coll]
   ;; (instance? clojure.lang.Indexed coll)
-  (throw "TODO: port indexed?"))
+  (throw (ex-info "TODO: port indexed?"  {})))
 
 (defn trampoline
   "trampoline can be used to convert algorithms requiring mutual
@@ -7171,13 +7171,13 @@ fails, attempts to require sym's namespace and retries."
   "Returns true if x is a future"
   [x]
   ;; (instance? java.util.concurrent.Future x)
-  (throw "TODO: port future?"))
+  (throw (ex-info "TODO: port future?"  {})))
 
 (defn future-done?
   "Returns true if future f is done"
   [#_java.util.concurrent.Future f]
   ;; (.isDone f)
-  (throw "TODO: port future-done?"))
+  (throw (ex-info "TODO: port future-done?"  {})))
 
 (defmacro letfn
   "fnspec ==> (fname [params*] exprs) or (fname ([params*] exprs)+)
@@ -7197,17 +7197,17 @@ fails, attempts to require sym's namespace and retries."
   Honors 'reduced', is a terminal operation on the stream"
   ([f #_java.util.stream.BaseStream s]
   ;;  (clojure.core.protocols/iterator-reduce! (.iterator s) f)
-   (throw "TODO: port stream-reduce!"))
+   (throw (ex-info "TODO: port stream-reduce!"  {})))
   ([f init #_java.util.stream.BaseStream s]
   ;;  (clojure.core.protocols/iterator-reduce! (.iterator s) f init)
-   (throw "TODO: port stream-reduce!")))
+   (throw (ex-info "TODO: port stream-reduce!"  {}))))
 
 (defn stream-seq!
   "Takes a java.util.stream.BaseStream instance s and returns a seq of its
   contents. This is a terminal operation on the stream."
   [#_java.util.stream.BaseStream stream]
   ;; (iterator-seq (.iterator stream))
-  (throw "TODO: port stream-seq!"))
+  (throw (ex-info "TODO: port stream-seq!"  {})))
 
 (defn stream-transduce!
   "Works like transduce but takes a java.util.stream.BaseStream as its source.
@@ -7226,12 +7226,12 @@ fails, attempts to require sym's namespace and retries."
   ;;  (if (instance? clojure.lang.IEditableCollection to)
   ;;    (with-meta (persistent! (stream-reduce! conj! (transient to) stream)) (meta to))
   ;;    (stream-reduce! conj to stream))
-   (throw "TODO: port stream-into!"))
+   (throw (ex-info "TODO: port stream-into!"  {})))
   ([to xform #_java.util.stream.BaseStream stream]
   ;;  (if (instance? clojure.lang.IEditableCollection to)
   ;;    (with-meta (persistent! (stream-transduce! xform conj! (transient to) stream)) (meta to))
   ;;    (stream-transduce! xform conj to stream))
-   (throw "TODO: port stream-into!")))
+   (throw (ex-info "TODO: port stream-into!"  {}))))
 
 
 (defmacro ^:private when-class [class-name & body]
@@ -7239,7 +7239,7 @@ fails, attempts to require sym's namespace and retries."
   ;;    (Class/forName ^String ~class-name)
   ;;    ~@body
   ;;    (catch ClassNotFoundException _#))
-  (throw "TODO: port when-class"))
+  (throw (ex-info "TODO: port when-class"  {})))
 
 ;; (defprotocol Inst
 ;;   (inst-ms* [inst]))
@@ -7376,7 +7376,7 @@ fails, attempts to require sym's namespace and retries."
   ;;                  (cons (deref x) (step xs (rest s)))
   ;;                  (map deref vs))))]
   ;;    (step rets (drop n rets)))
-   (throw "TODO: port pmap"))
+   (throw (ex-info "TODO: port pmap"  {})))
   ([f coll & colls]
   ;;  (let [step (fn step [cs]
   ;;               (lazy-seq
@@ -7384,7 +7384,7 @@ fails, attempts to require sym's namespace and retries."
   ;;                  (when (every? identity ss)
   ;;                    (cons (map first ss) (step (map rest ss)))))))]
   ;;    (pmap #(apply f %) (step (cons coll colls))))
-   (throw "TODO: port pmap")))
+   (throw (ex-info "TODO: port pmap"  {}))))
 
 
 (defn pcalls
@@ -7524,7 +7524,7 @@ fails, attempts to require sym's namespace and retries."
 (defn- ^{:dynamic true} assert-valid-fdecl
   "A good fdecl looks like (([a] ...) ([a b] ...)) near the end of defn."
   [fdecl]
-  (when (empty? fdecl) (throw "Parameter declaration missing"))
+  (when (empty? fdecl) (throw (ex-info "Parameter declaration missing"  {})))
   (let [argdecls (map
                    #(if (seq? %)
                       (first %)
@@ -7625,7 +7625,7 @@ fails, attempts to require sym's namespace and retries."
   ;;                    (recur acc (step k))
   ;;                    acc)))
   ;;              acc))))
-  (throw "TODO: port iteration"))
+  (throw (ex-info "TODO: port iteration"  {})))
 
 (defn tagged-literal?
   "Return true if the value is the data representation of a tagged literal"
@@ -7642,14 +7642,14 @@ fails, attempts to require sym's namespace and retries."
   "Return true if the value is the data representation of a reader conditional"
   [value]
   ;; (instance? clojure.lang.ReaderConditional value)
-  (throw "TODO: port reader-conditional?"))
+  (throw (ex-info "TODO: port reader-conditional?"  {})))
 
 (defn reader-conditional
   "Construct a data representation of a reader conditional.
   If true, splicing? indicates read-cond-splicing."
   [form #_Boolean splicing?]
   ;; (clojure.lang.ReaderConditional/create form splicing?)
-  (throw "TODO: port reader-conditional"))
+  (throw (ex-info "TODO: port reader-conditional"  {})))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; data readers ;;;;;;;;;;;;;;;;;;
 

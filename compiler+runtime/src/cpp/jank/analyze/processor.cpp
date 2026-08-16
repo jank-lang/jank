@@ -1041,7 +1041,7 @@ namespace jank::analyze
     if(is_ctor && !Cpp::IsComplete(Cpp::GetScopeFromType(val->type)))
     {
       return error::analyze_invalid_cpp_constructor_call(
-               util::format("Unable to construct incomplete type '{}'. Are you missing an include?",
+               util::format("Unable to construct incomplete type `{}`. Are you missing an include?",
                             cpp_util::get_qualified_type_name(val->type)),
                object_source(val->form),
                latest_expansion(macro_expansions))
@@ -1071,12 +1071,12 @@ namespace jank::analyze
     for(usize i{}; i != arg_types.size(); ++i)
     {
       util::format_to(sb,
-                      " With argument {} having type '{}'.",
+                      " With argument {} having type `{}`.",
                       i,
                       cpp_util::get_qualified_type_name(arg_types[i].m_Type));
     }
 
-    return error::analyze_invalid_cpp_call(util::format("No matching call to '{}' {}.{}",
+    return error::analyze_invalid_cpp_call(util::format("No matching call to `{}` {}.{}",
                                                         scope_name,
                                                         is_ctor ? "constructor" : "function",
                                                         sb.release()),
@@ -1110,7 +1110,7 @@ namespace jank::analyze
       {
         return error::analyze_invalid_cpp_call(
           util::format(
-            "Invalid pointer to member invocation. An argument of type '{}' is required.",
+            "Invalid pointer to member invocation. An argument of type `{}` is required.",
             cpp_util::get_qualified_type_name(parent_type)),
           object_source(o),
           latest_expansion(macro_expansions));
@@ -1125,7 +1125,7 @@ namespace jank::analyze
         return error::analyze_invalid_cpp_call(
                  util::format(
                    "Invalid pointer to member invocation. The pointer to member is for type "
-                   "'{}', but the object supplied is of type '{}'.",
+                   "`{}`, but the object supplied is of type `{}`.",
                    cpp_util::get_qualified_type_name(parent_type),
                    cpp_util::get_qualified_type_name(arg_type)),
                  object_source(second(o)),
@@ -1139,7 +1139,7 @@ namespace jank::analyze
         return error::analyze_invalid_cpp_call(
                  util::format(
                    "Invalid pointer to member invocation. The object supplied has the type "
-                   "'{}', which is const, but the member function to call is non-const.",
+                   "`{}`, which is const, but the member function to call is non-const.",
                    cpp_util::get_qualified_type_name(arg_type)),
                  object_source(second(o)),
                  latest_expansion(macro_expansions))
@@ -1183,7 +1183,7 @@ namespace jank::analyze
       }
 
       return error::analyze_invalid_cpp_call(
-        util::format("Unable to find call operator for '{}'.",
+        util::format("Unable to find call operator for `{}`.",
                      cpp_util::get_qualified_type_name(source_type)),
         object_source(o),
         latest_expansion(macro_expansions));
@@ -1210,7 +1210,7 @@ namespace jank::analyze
       {
         return error::analyze_invalid_cpp_call(
           util::format(
-            "Unable to call function since argument {} is not convertible from '{}' to '{}'.",
+            "Unable to call function since argument {} is not convertible from `{}` to `{}`.",
             i,
             cpp_util::get_qualified_type_name(arg_types[i].m_Type),
             cpp_util::get_qualified_type_name(param_type)),
@@ -1720,7 +1720,7 @@ namespace jank::analyze
         if(!Cpp::IsConstructible(Cpp::GetNonReferenceType(binding_type), binding_type))
         {
           return error::analyze_invalid_cpp_capture(
-            util::format("Unable to capture '{}', since its type '{}' is not copyable.",
+            util::format("The `{}` local cannot be captured, since its type `{}` is not copyable.",
                          sym->to_string(),
                          cpp_util::get_qualified_type_name(binding_type)),
             meta_source(sym->get_meta()),
@@ -1962,7 +1962,7 @@ namespace jank::analyze
       {
         /* TODO: Error. */
         return error::analyze_invalid_cpp_conversion(
-          util::format("This function is returning a native object of type '{}', which is not "
+          util::format("This function is returning a native object of type `{}`, which is not "
                        "convertible to a jank runtime object.",
                        cpp_util::get_qualified_type_name(last_expression_type)),
           object_source(list),
@@ -2887,7 +2887,7 @@ namespace jank::analyze
     else
     {
       return error::analyze_mismatched_if_types(
-        util::format("Mismatched 'if' branch types '{}' and '{}'. Each branch of an 'if' must have "
+        util::format("Mismatched 'if' branch types `{}` and `{}`. Each branch of an 'if' must have "
                      "the same type, a common type, or a trait conversion.",
                      cpp_util::get_qualified_type_name(then_type),
                      cpp_util::get_qualified_type_name(else_type)),
@@ -2952,7 +2952,7 @@ namespace jank::analyze
     if(found_var.is_nil())
     {
       return error::analyze_unresolved_var(
-        util::format("Unable to resolve var '{}'.", qualified_sym->to_string()),
+        util::format("This `{}` cannot be resolved as a var.", qualified_sym->to_string()),
         meta_source(arg_sym->get_meta()),
         latest_expansion(macro_expansions));
     }
@@ -2986,11 +2986,18 @@ namespace jank::analyze
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
 
-    if(o->count() != 2)
+    if(3 <= o->count())
     {
-      return error::analyze_invalid_throw("The `throw` form requires exactly one argument.",
+      return error::analyze_invalid_throw("The `throw` form requires at most one argument.",
                                           meta_source(o->get_meta()),
                                           latest_expansion(macro_expansions));
+    }
+
+    /* Throwing without an argument just re-throws the current exception. This can
+     * be done anywhere, not even just within a catch. */
+    if(o->count() == 1)
+    {
+      return jtl::make_ref<expr::throw_>(position, current_frame, true, o);
     }
 
     auto const arg(o->data.rest().first().unwrap());
@@ -2999,12 +3006,31 @@ namespace jank::analyze
     {
       return arg_expr.expect_err();
     }
-    arg_expr = apply_implicit_conversion(arg_expr.expect_ok(),
-                                         cpp_util::untyped_object_ref_type(),
-                                         macro_expansions);
-    if(arg_expr.is_err())
+
+    /* By default, thrown values will be moved. If there is no move ctor, the copy ctor can
+     * also be used. But if the move ctor is deleted, even if there is a copy ctor, the
+     * value is not throwable. These are C++'s semantics and we mirror them here. */
+    auto const arg_type{ arg_expr.expect_ok()->get_type() };
+    auto const arg_scope{ Cpp::GetScopeFromType(arg_type) };
+    if(arg_scope
+       && (!Cpp::HasUsableCopyConstructor(arg_scope) && !Cpp::HasUsableMoveConstructor(arg_scope)))
     {
-      return arg_expr.expect_err();
+      return error::analyze_invalid_throw(
+        util::format("This value of type `{}` cannot be thrown. It is neither copy constructible "
+                     "nor move constructible.",
+                     cpp_util::get_qualified_type_name(arg_type)),
+        meta_source(o->get_meta()),
+        latest_expansion(macro_expansions));
+    }
+    else if(arg_scope
+            && (Cpp::HasUsableCopyConstructor(arg_scope)
+                && Cpp::HasDeletedMoveConstructor(arg_scope)))
+    {
+      return error::analyze_invalid_throw(
+        util::format("This value of type `{}` cannot be thrown. Its move constructor is deleted.",
+                     cpp_util::get_qualified_type_name(arg_type)),
+        meta_source(o->get_meta()),
+        latest_expansion(macro_expansions));
     }
 
     return jtl::make_ref<expr::throw_>(position, current_frame, true, o, arg_expr.unwrap_move());
@@ -3804,7 +3830,7 @@ namespace jank::analyze
     {
       /* TODO: Specify what's missing, where the template is defined, etc. */
       return error::analyze_invalid_cpp_constructor_call(
-        util::format("'{}' cannot be constructed because it's missing the necessary type "
+        util::format("`{}` cannot be constructed because it's missing the necessary type "
                      "parameters. You may want 'cpp/value' in order to specify them.",
                      cpp_util::get_qualified_name(scope)),
         object_source(sym),
@@ -3816,7 +3842,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_symbol(
         util::format("The '.' suffix for constructors may only be used on types. In this case, "
-                     "'{}' is a value of type '{}'.",
+                     "`{}` is a value of type `{}`.",
                      cpp_util::get_qualified_name(scope),
                      cpp_util::get_qualified_type_name(type)),
         object_source(sym),
@@ -4335,7 +4361,7 @@ namespace jank::analyze
 
     return error::analyze_invalid_cpp_cast(
              util::format(
-               "Invalid cast from '{}' to '{}'. This is impossible considering both constructors "
+               "Invalid cast from `{}` to `{}`. This is impossible considering both constructors "
                "and any specializations of 'jank::runtime::convert'.",
                cpp_util::get_qualified_type_name(value_type),
                cpp_util::get_qualified_type_name(type)),
@@ -4434,7 +4460,7 @@ namespace jank::analyze
     }
 
     return error::analyze_invalid_cpp_unsafe_cast(
-             util::format("Invalid unsafe-cast from '{}' to '{}'.",
+             util::format("Invalid unsafe-cast from `{}` to `{}`.",
                           cpp_util::get_qualified_type_name(value_type),
                           cpp_util::get_qualified_type_name(type)),
              object_source(l->next().next().first()),
@@ -4482,7 +4508,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_box(
                util::format(
-                 "Unable to create an opaque box from '{}', since it's not a raw pointer type."
+                 "Unable to create an opaque box from `{}`, since it's not a raw pointer type."
                  " In most cases, wrapping the value in a 'cpp/&' will work, but be mindful of "
                  "its lifetime.",
                  cpp_util::get_qualified_type_name(value_type)),
@@ -4494,7 +4520,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_box(
                util::format(
-                 "Unable to create an opaque box from '{}', since it's already a boxed jank object."
+                 "Unable to create an opaque box from `{}`, since it's already a boxed jank object."
                  " Opaque boxes are meant to be for native raw pointers only.",
                  cpp_util::get_qualified_type_name(value_type)),
                object_source(value_obj),
@@ -4565,7 +4591,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_unbox(
                util::format(
-                 "Unable to unbox to '{}', since it's not a raw pointer type."
+                 "Unable to unbox to `{}`, since it's not a raw pointer type."
                  " The type specified here should be the exact type of the value originally "
                  "passed to 'cpp/box'.",
                  cpp_util::get_qualified_type_name(type)),
@@ -4578,7 +4604,7 @@ namespace jank::analyze
     if(!cpp_util::is_any_object(value_type))
     {
       return error::analyze_invalid_cpp_unbox(
-               util::format("Unable to unbox value of type '{}', since it's not a jank object type."
+               util::format("Unable to unbox value of type `{}`, since it's not a jank object type."
                             " You can only unbox the same object you get back from 'cpp/box'.",
                             cpp_util::get_qualified_type_name(value_type)),
                object_source(value_obj),
@@ -4713,7 +4739,7 @@ namespace jank::analyze
     if(count < 2)
     {
       return error::analyze_invalid_cpp_member_access(
-               util::format("Missing value from which to access '{}' member.", name),
+               util::format("Missing value from which to access `{}` member.", name),
                object_source(l->first()),
                latest_expansion(macro_expansions))
         ->add_usage(read::parse::reparse_nth(l, 0));
@@ -4722,7 +4748,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_member_access(
                util::format(
-                 "Excess arguments provided for '{}' member access. Only one is expected.",
+                 "Excess arguments provided for `{}` member access. Only one is expected.",
                  name),
                object_source(l->next().next().first()),
                latest_expansion(macro_expansions))
@@ -4744,7 +4770,7 @@ namespace jank::analyze
     if(!parent_scope)
     {
       return error::analyze_invalid_cpp_member_access(
-               util::format("Unable to find any members within '{}'.",
+               util::format("Unable to find any members within `{}`.",
                             cpp_util::get_qualified_type_name(parent_type)),
                object_source(member),
                latest_expansion(macro_expansions))
@@ -4754,7 +4780,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_member_access(
                util::format(
-                 "The '{}' member within '{}' is private. It can only be accessed if it's public.",
+                 "The `{}` member within `{}` is private. It can only be accessed if it's public.",
                  name,
                  cpp_util::get_qualified_name(parent_scope)),
                object_source(member),
@@ -4764,7 +4790,7 @@ namespace jank::analyze
     if(member_scope && Cpp::IsProtectedVariable(member_scope))
     {
       return error::analyze_invalid_cpp_member_access(
-               util::format("The '{}' member within '{}' is protected. It can only be accessed if "
+               util::format("The `{}` member within `{}` is protected. It can only be accessed if "
                             "it's public.",
                             name,
                             cpp_util::get_qualified_name(parent_scope)),
@@ -4790,7 +4816,7 @@ namespace jank::analyze
       if(!member_scope)
       {
         return error::analyze_invalid_cpp_member_access(
-                 util::format("There is no '{}' member within '{}'.",
+                 util::format("There is no `{}` member within `{}`.",
                               name,
                               cpp_util::get_qualified_name(parent_scope)),
                  object_source(member),
@@ -5002,7 +5028,7 @@ namespace jank::analyze
               {
                 return error::analyze_invalid_cpp_dsl(
                   util::format(
-                    "C++ does not allow pointers to references. The full type here is '{}'.",
+                    "C++ does not allow pointers to references. The full type here is `{}`.",
                     cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5040,7 +5066,7 @@ namespace jank::analyze
               if(Cpp::IsVoid(type))
               {
                 return error::analyze_invalid_cpp_dsl(
-                  util::format("C++ does not allow references to void. The full type here is '{}'.",
+                  util::format("C++ does not allow references to void. The full type here is `{}`.",
                                cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5062,7 +5088,7 @@ namespace jank::analyze
                 return error::analyze_invalid_cpp_dsl(
                   util::format("C++ does not allow const references. Note that there's a "
                                "difference between a const reference and a reference to const. "
-                               "You likely want the latter. The full type here is '{}'.",
+                               "You likely want the latter. The full type here is `{}`.",
                                cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5085,7 +5111,7 @@ namespace jank::analyze
                   util::format(
                     "C++ does not allow volatile references. Note that there's a "
                     "difference between a volatile reference and a reference to volatile. "
-                    "You likely want the latter. The full type here is '{}'.",
+                    "You likely want the latter. The full type here is `{}`.",
                     cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5106,7 +5132,7 @@ namespace jank::analyze
               {
                 return error::analyze_invalid_cpp_dsl(
                   util::format("Only integral types can be signed. "
-                               "The full type here is '{}'.",
+                               "The full type here is `{}`.",
                                cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5127,7 +5153,7 @@ namespace jank::analyze
               {
                 return error::analyze_invalid_cpp_dsl(
                   util::format("Only integral types can be unsigned. "
-                               "The full type here is '{}'.",
+                               "The full type here is `{}`.",
                                cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5149,7 +5175,7 @@ namespace jank::analyze
               {
                 return error::analyze_invalid_cpp_dsl(
                   util::format("Only integer types can be short. "
-                               "The full type here is '{}'.",
+                               "The full type here is `{}`.",
                                cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5158,7 +5184,7 @@ namespace jank::analyze
               {
                 return error::analyze_invalid_cpp_dsl(
                   util::format("This type is already short. "
-                               "The full type here is '{}'.",
+                               "The full type here is `{}`.",
                                cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5182,7 +5208,7 @@ namespace jank::analyze
               {
                 return error::analyze_invalid_cpp_dsl(
                   util::format("Only integer types and double can be long. "
-                               "The full type here is '{}'.",
+                               "The full type here is `{}`.",
                                cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5191,7 +5217,7 @@ namespace jank::analyze
               {
                 return error::analyze_invalid_cpp_dsl(
                   util::format("This type is already short, so it cannot be made long. "
-                               "The full type here is '{}'.",
+                               "The full type here is `{}`.",
                                cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5227,7 +5253,7 @@ namespace jank::analyze
               {
                 return error::analyze_invalid_cpp_dsl(
                   util::format(
-                    "C++ does not allow arrays of references. The full type here is '{}'.",
+                    "C++ does not allow arrays of references. The full type here is `{}`.",
                     cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5235,7 +5261,7 @@ namespace jank::analyze
               else if(Cpp::IsVoid(type))
               {
                 return error::analyze_invalid_cpp_dsl(
-                  util::format("C++ does not allow arrays of void. The full type here is '{}'.",
+                  util::format("C++ does not allow arrays of void. The full type here is `{}`.",
                                cpp_util::get_qualified_type_name(type)),
                   object_source(o),
                   latest_expansion(macro_expansions));
@@ -5348,7 +5374,7 @@ namespace jank::analyze
           if(!parent_scope)
           {
             return error::analyze_invalid_cpp_dsl(
-              util::format("There is no '{}' member within '{}'.",
+              util::format("There is no `{}` member within `{}`.",
                            member_arg.to_string(),
                            cpp_util::get_qualified_type_name(type)),
               object_source(member_arg),
@@ -5361,7 +5387,7 @@ namespace jank::analyze
           if(!member_scope)
           {
             return error::analyze_invalid_cpp_dsl(
-              util::format("There is no '{}' member within '{}'.",
+              util::format("There is no `{}` member within `{}`.",
                            member_arg.to_string(),
                            cpp_util::get_qualified_type_name(type)),
               object_source(member_arg),
@@ -5480,7 +5506,7 @@ namespace jank::analyze
           if(!parent_scope)
           {
             return error::analyze_invalid_cpp_dsl(
-                     util::format("There is no '{}' member within '{}'.",
+                     util::format("There is no `{}` member within `{}`.",
                                   member_arg.to_string(),
                                   cpp_util::get_qualified_type_name(type)),
                      object_source(member_arg),
@@ -5494,7 +5520,7 @@ namespace jank::analyze
           if(!member_scope)
           {
             return error::analyze_invalid_cpp_dsl(
-                     util::format("There is no '{}' member within '{}'.",
+                     util::format("There is no `{}` member within `{}`.",
                                   member_arg.to_string(),
                                   cpp_util::get_qualified_type_name(type)),
                      object_source(member_arg),
@@ -5544,7 +5570,7 @@ namespace jank::analyze
         }
 
         return error::analyze_invalid_cpp_dsl(
-                 util::format("Invalid C++ type modifier '{}'.", kw->to_code_string()),
+                 util::format("Invalid C++ type modifier `{}`.", kw->to_code_string()),
                  object_source(o),
                  latest_expansion(macro_expansions))
           ->add_usage(object_source(o));
@@ -5568,7 +5594,7 @@ namespace jank::analyze
         {
           return error::analyze_invalid_cpp_dsl(
                    util::format(
-                     "Unable to use '{}' as a template. If you just want the type, remove "
+                     "Unable to use `{}` as a template. If you just want the type, remove "
                      "the surrounding parens.",
                      cpp_util::get_qualified_type_name(type)),
                    object_source(first),
@@ -5588,7 +5614,7 @@ namespace jank::analyze
         {
           return error::analyze_invalid_cpp_dsl(
                    util::format(
-                     "Unable to use '{}' as a template. If you just want the type, remove "
+                     "Unable to use `{}` as a template. If you just want the type, remove "
                      "the surrounding parens.",
                      cpp_util::get_qualified_name(scope.expect_ok())),
                    object_source(first),

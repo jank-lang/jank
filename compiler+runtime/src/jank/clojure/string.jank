@@ -14,7 +14,7 @@
   necessary escaping of special characters in the replacement."
   [replacement]
   ;(Matcher/quoteReplacement (.toString replacement))
-  (throw "TODO: port clojure.string/re-quote-replacement"))
+  (throw (ex-info "TODO: port clojure.string/re-quote-replacement"  {})))
 
 (defn replace
   "Replaces all instance of match with replacement in s.
@@ -42,7 +42,7 @@
   -> \"lmostAay igPay atinLay\""
   [s match replacement]
   (when (nil? s)
-    (throw "replace does not support nil"))
+    (throw (ex-info "replace does not support nil"  {})))
   (let [s (cpp/cast jtl.immutable_string (str s))]
     (cond
       (and (char? match) (char? replacement))
@@ -143,14 +143,14 @@
   "Converts string to all upper-case."
   [s]
   (when (nil? s)
-    (throw "upper-case does not support nil"))
+    (throw (ex-info "upper-case does not support nil"  {})))
   (cpp/jank.util.to_uppercase (.to_string s)))
 
 (defn lower-case
   "Converts string to all lower-case."
   [s]
   (when (nil? s)
-    (throw "lower-case does not support nil"))
+    (throw (ex-info "lower-case does not support nil"  {})))
   (cpp/jank.util.to_lowercase (.to_string s)))
 
 (defn capitalize
@@ -158,7 +158,7 @@
   characters to lower-case."
   [s]
   (when (nil? s)
-    (throw "capitalize does not support nil"))
+    (throw (ex-info "capitalize does not support nil"  {})))
   (-> (.to_string s)
       (cpp/jank.util.to_lowercase)
       (cpp/jank.util.capitalize)))
@@ -212,7 +212,7 @@
   If (cmap ch) is non-nil, append (str (cmap ch)) instead."
   [s cmap]
   (when (nil? s)
-    (throw "escape does not support nil"))
+    (throw (ex-info "escape does not support nil"  {})))
   (let [c (count s)]
     (loop [index (int 0)
            out ""]
@@ -254,14 +254,14 @@
   "True if s starts with substr."
   [s substr]
   (when (nil? s)
-    (throw "starts-with? does not support nil"))
+    (throw (ex-info "starts-with? does not support nil"  {})))
   (cpp/clojure.string_native.starts_with (.to_string s) substr))
 
 (defn ends-with?
   "True if s ends with substr."
   [s substr]
   (when (nil? s)
-    (throw "ends-with? does not support nil"))
+    (throw (ex-info "ends-with? does not support nil"  {})))
   (cpp/clojure.string_native.ends_with (.to_string s) substr))
 
 (defn includes?

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/analyze/expression.hpp>
 
 namespace jank::analyze::expr
@@ -13,6 +15,10 @@ namespace jank::analyze::expr
     throw_(expression_position position,
            local_frame_ptr frame,
            bool needs_box,
+           runtime::object_ref form);
+    throw_(expression_position position,
+           local_frame_ptr frame,
+           bool needs_box,
            runtime::object_ref form,
            expression_ref value);
 
@@ -20,6 +26,8 @@ namespace jank::analyze::expr
     void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     /* TODO: Rename to value_expr. */
-    expression_ref value;
+    /* A throw without a value will re-throw the current exception. If there is no current
+     * exception, the program will terminate. */
+    jtl::option<expression_ref> value;
   };
 }
