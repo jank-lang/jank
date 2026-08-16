@@ -256,7 +256,21 @@ namespace jank::runtime::obj
   using i32_array_ref = array_ref<i32>;
   using u64_array_ref = array_ref<u64>;
   using i64_array_ref = array_ref<i64>;
-  using object_array_ref = array_ref<object_ref>;
   using f32_array_ref = array_ref<f32>;
   using f64_array_ref = array_ref<f64>;
+  using object_array_ref = array_ref<object_ref>;
+
+  extern template struct array<bool>;
+  extern template struct array<char>;
+  extern template struct array<u8>;
+  extern template struct array<i8>;
+  extern template struct array<u16>;
+  extern template struct array<i16>;
+  extern template struct array<u32>;
+  extern template struct array<i32>;
+  extern template struct array<u64>;
+  extern template struct array<i64>;
+  extern template struct array<f32>;
+  extern template struct array<f64>;
+  extern template struct array<object_ref>;
 }
