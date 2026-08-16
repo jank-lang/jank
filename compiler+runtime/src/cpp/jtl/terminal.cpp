@@ -49,7 +49,7 @@ namespace jtl::terminal
 #if defined(_WIN32)
     return true;
 #else
-    static bool res{ isatty(STDIN_FILENO) != 0 && isatty(STDOUT_FILENO) != 0 };
+    static bool const res{ isatty(STDIN_FILENO) != 0 && isatty(STDOUT_FILENO) != 0 };
     return res;
 #endif
   }

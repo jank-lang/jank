@@ -191,4 +191,5 @@
      1)))
 
 (when (= *file* (System/getProperty "babashka.file"))
-  (apply -main *command-line-args*))
+  (when-not (fs/windows?)
+    (apply -main *command-line-args*)))
