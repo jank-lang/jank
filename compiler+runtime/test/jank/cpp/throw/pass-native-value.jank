@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::cpp::throw_::pass_native_value
+          {
+            struct foo
+            { int a{ }; };
+          }")
+
+(try
+  (throw (cpp/jank.cpp.throw_.pass_native_value.foo 5))
+  (catch jank.cpp.throw_.pass_native_value.foo f
+    (if (= 5 (.-a f))
+      :success)))

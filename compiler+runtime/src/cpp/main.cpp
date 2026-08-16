@@ -1,7 +1,9 @@
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 
-#include <llvm/LineEditor/LineEditor.h>
+#include <isocline.h>
 
 #include <CppInterOp/Compatibility.h>
 #include <CppInterOp/CppInterOp.h>
@@ -29,6 +31,7 @@
 #include <jank/error/report.hpp>
 #include <jank/environment/check_health.hpp>
 #include <jank/runtime/convert/builtin.hpp>
+#include <jank/terminal_repl_client.hpp>
 
 #include <jank/compiler_native.hpp>
 #include <clojure/core_native.hpp>
@@ -184,168 +187,6 @@ namespace jank
     __rt_ctx->compile_module(opts.target_module).expect_ok();
   }
 
-  static void repl()
-  {
-    using namespace jank;
-    using namespace jank::runtime;
-
-    {
-      profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
-    }
-
-    {
-      profile::timer const timer{ "require jank.nrepl.server.core" };
-      __rt_ctx->load_module("jank.nrepl.server.core", module::origin::latest).expect_ok();
-    }
-
-    auto const repl_main{
-      __rt_ctx->intern_var("jank.nrepl.server.core", "background-main").expect_ok()
-    };
-    repl_main.call();
-
-    __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>("user"));
-    __rt_ctx->intern_var("clojure.core", "refer")
-      .expect_ok()
-      .call(make_box<obj::symbol>("clojure.core"));
-
-    if(!opts.target_module.empty())
-    {
-      profile::timer const timer{ "load main" };
-      __rt_ctx->load_module(opts.target_module, module::origin::latest).expect_ok();
-      __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>(opts.target_module));
-    }
-
-    auto const get_prompt([](jtl::immutable_string const &suffix) {
-      return __rt_ctx->current_ns()->name->to_code_string() + suffix;
-    });
-
-    /* By default we are placed in clojure.core ns as of now.
-     * TODO: Set default ns to `user` when we are dropped in that ns.*/
-    llvm::LineEditor le("jank", ".jank-repl-history");
-    le.setPrompt(get_prompt("=> "));
-    native_transient_string input{};
-
-    /* We write every REPL expression to a temporary file, which then allows us
-     * to later review that for error reporting. We automatically clean it up
-     * and we reuse the same file over and over. */
-    auto const tmp{ std::filesystem::temp_directory_path() };
-    std::string path_tmp{ (tmp / "jank-repl-XXXXXX").string() };
-    int const fd{ mkstemp(path_tmp.data()) };
-    close(fd);
-
-    auto const first_res_var{ __rt_ctx->find_var("clojure.core", "*1") };
-    auto const second_res_var{ __rt_ctx->find_var("clojure.core", "*2") };
-    auto const third_res_var{ __rt_ctx->find_var("clojure.core", "*3") };
-    auto const error_var{ __rt_ctx->find_var("clojure.core", "*e") };
-
-    context::binding_scope const scope{ obj::persistent_hash_map::create_unique(
-      std::make_pair(first_res_var, jank_nil),
-      std::make_pair(second_res_var, jank_nil),
-      std::make_pair(third_res_var, jank_nil),
-      std::make_pair(error_var, jank_nil)) };
-
-    /* TODO: Completion. */
-    /* TODO: Syntax highlighting. */
-    while(auto buf = le.readLine())
-    {
-      auto &line(*buf);
-      util::trim(line);
-
-      if(line.empty())
-      {
-        util::println("");
-        continue;
-      }
-
-      if(line.ends_with('\\'))
-      {
-        input.append(line.substr(0, line.size() - 1));
-        input.append("\n");
-        le.setPrompt(get_prompt("=>... "));
-        continue;
-      }
-
-      input += line;
-
-      util::scope_exit const finally{ [&] { std::filesystem::remove(path_tmp); } };
-      JANK_TRY
-      {
-        {
-          std::ofstream ofs{ path_tmp };
-          ofs << input;
-        }
-
-        auto const res(__rt_ctx->eval_file(path_tmp));
-
-        if(res.is_some())
-        {
-          third_res_var->set(second_res_var->deref()).expect_ok();
-          second_res_var->set(first_res_var->deref()).expect_ok();
-          first_res_var->set(res.unwrap()).expect_ok();
-
-          util::println("{}", res.unwrap().to_code_string());
-        }
-      }
-      JANK_CATCH(jank::util::print_exception)
-
-      input.clear();
-      util::println("");
-      le.setPrompt(get_prompt("=> "));
-    }
-  }
-
-  static void cpp_repl()
-  {
-    using namespace jank;
-    using namespace jank::runtime;
-
-    {
-      profile::timer const timer{ "require clojure.core" };
-      __rt_ctx->load_module("clojure.core", module::origin::latest).expect_ok();
-    }
-
-    if(!opts.target_module.empty())
-    {
-      profile::timer const timer{ "load main" };
-      __rt_ctx->load_module(opts.target_module, module::origin::latest).expect_ok();
-      __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>(opts.target_module));
-    }
-
-    llvm::LineEditor le("jank-native", ".jank-native-repl-history");
-    le.setPrompt("native> ");
-    native_transient_string input{};
-
-    while(auto buf = le.readLine())
-    {
-      auto &line(*buf);
-      util::trim(line);
-
-      if(line.empty())
-      {
-        continue;
-      }
-
-      if(line.ends_with('\\'))
-      {
-        input.append(line.substr(0, line.size() - 1));
-        le.setPrompt("native>... ");
-        continue;
-      }
-
-      input += line;
-
-      JANK_TRY
-      {
-        __rt_ctx->jit_prc.eval_string(input);
-      }
-      JANK_CATCH(jank::util::print_exception)
-
-      input.clear();
-      le.setPrompt("native> ");
-    }
-  }
-
   static void compile()
   {
     using namespace jank;
@@ -487,10 +328,10 @@ int main(int const argc, char const **argv)
           compile_module();
           break;
         case util::cli::command::repl:
-          repl();
+          jank::terminal_repl::repl();
           break;
         case util::cli::command::cpp_repl:
-          cpp_repl();
+          jank::terminal_repl::cpp_repl();
           break;
         case util::cli::command::run_main:
           run_main();

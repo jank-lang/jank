@@ -223,7 +223,10 @@ namespace jank::ir
       case instruction_kind::throw_:
         {
           auto &i{ static_cast<inst::throw_ &>(*inst.data) };
-          rewritten |= rewrite(i.value, old_name, new_name);
+          if(i.value.is_some())
+          {
+            rewritten |= rewrite(i.value.unwrap().name, old_name, new_name);
+          }
         }
         break;
       case instruction_kind::ret:

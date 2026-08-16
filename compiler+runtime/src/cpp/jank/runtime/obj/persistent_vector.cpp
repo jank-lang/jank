@@ -119,8 +119,14 @@ namespace jank::runtime::obj
 
   i64 persistent_vector::compare(object const &o) const
   {
-    return visit_type<persistent_vector>([this](auto const typed_o) { return compare(*typed_o); },
-                                         runtime::detail::untagged(&o));
+    auto const v{ dyn_cast<obj::persistent_vector>(runtime::detail::untagged(&o)) };
+    if(v.is_nil())
+    {
+      throw std::runtime_error{ util::format(
+        "The value for comparison must be a `persistent_vector`, not a `{}`.",
+        object_type_str(o.type)) };
+    }
+    return compare(*v);
   }
 
   i64 persistent_vector::compare(persistent_vector const &v) const
@@ -261,7 +267,9 @@ namespace jank::runtime::obj
   {
     if(!is_integral(key))
     {
-      throw std::runtime_error{ "Key must be integer." };
+      throw std::runtime_error{ util::format(
+        "The `assoc` operation on a `persistent_vector` requires an integer key, not a `{}`.",
+        object_type_str(key.get_type())) };
     }
 
     auto const i(to_i64(key));
@@ -269,7 +277,9 @@ namespace jank::runtime::obj
 
     if(i > size || 0 > i)
     {
-      throw std::runtime_error{ "Index out of bounds." };
+      throw std::runtime_error{
+        util::format("The index `{}` is out of bounds for this `persistent_vector`.", i)
+      };
     }
 
     if(i == size)
@@ -284,7 +294,9 @@ namespace jank::runtime::obj
 
   persistent_vector_ref persistent_vector::dissoc(object_ref const /*key*/) const
   {
-    throw std::runtime_error{ "Type 'persistent_vector' does not support 'dissoc'." };
+    throw std::runtime_error{
+      "The `dissoc` operation is not supported for `persistent_vector` values."
+    };
   }
 
   object_ref persistent_vector::peek() const
@@ -301,7 +313,7 @@ namespace jank::runtime::obj
   {
     if(data.empty())
     {
-      throw std::runtime_error{ "cannot pop an empty vector" };
+      throw std::runtime_error{ "Cannot pop from an empty `persistent_vector`." };
     }
 
     return make_box<persistent_vector>(meta, data.take(data.size() - 1));
@@ -315,15 +327,16 @@ namespace jank::runtime::obj
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{
-          util::format("out of bounds index {}; vector has a size of {}", i, data.size())
+          util::format("The index `{}` is out of bounds for this `persistent_vector`.", i)
         };
       }
       return data[i];
     }
     else
     {
-      throw std::runtime_error{ util::format("nth on a vector must be an integer; found {}",
-                                             index.to_string()) };
+      throw std::runtime_error{ util::format(
+        "The `nth` operation on a `persistent_vector` requires an integer index, not a `{}`.",
+        object_type_str(index.get_type())) };
     }
   }
 

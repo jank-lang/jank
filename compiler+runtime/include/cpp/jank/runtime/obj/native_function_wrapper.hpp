@@ -54,8 +54,8 @@ namespace jank::runtime
   struct invalid_arity : std::runtime_error
   {
     invalid_arity(jtl::immutable_string const &name)
-      : std::runtime_error{ std::string{ "invalid call to " } + name + " with "
-                            + std::to_string(Arity) + " args provided" }
+      : std::runtime_error{ std::string{ "Invalid call to `" } + name + "` with `"
+                            + std::to_string(Arity) + "` args provided." }
     {
     }
   };

@@ -14,7 +14,7 @@ namespace jank::runtime::obj
 
   bool opaque_box::equal(object const &o) const
   {
-    if(o.type != object_type::tagged_literal)
+    if(o.type != object_type::opaque_box)
     {
       return false;
     }

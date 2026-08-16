@@ -16,6 +16,10 @@ admonitions = true
 git-repository-url = "https://github.com/jank-lang/jank"
 additional-js = ["asset/mermaid.min.js", "asset/mermaid-init.js"]
 
+[output.html.fold]
+enable = true
+level = 1
+
 [preprocessor]
 
 [preprocessor.mermaid]

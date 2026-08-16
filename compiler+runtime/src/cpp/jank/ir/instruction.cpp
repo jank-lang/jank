@@ -397,9 +397,22 @@ namespace jank::ir::inst
   {
   }
 
-  throw_::throw_(identifier const &name, read::source const &location, identifier const &value)
+  throw_::throw_(identifier const &name, read::source const &location)
     : instruction{ instruction_kind::throw_, name, Cpp::GetVoidType(), location }
-    , value{ value }
+  {
+  }
+
+  throw_::throw_(identifier const &name,
+                 read::source const &location,
+                 identifier const &value,
+                 jtl::ptr<void> const value_type)
+    : instruction{
+      instruction_kind::throw_,
+      name,
+      Cpp::GetVoidType(),
+      location
+  }
+    , value{ detail::typed_identifier{ value, value_type } }
   {
   }
 

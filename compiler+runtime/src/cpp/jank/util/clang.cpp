@@ -262,20 +262,10 @@ namespace jank::util
     print(stderr,
           "Note: Looks like your first run with these flags. Building pre-compiled header… ");
 
-    std::filesystem::path const jank_path{ process_dir().c_str() };
-    auto include_path{ jank_path / "../include/cpp/jank/prelude.hpp" };
-    if(!std::filesystem::exists(include_path))
+    auto include_path{ prelude_hpp_path() };
+    if(include_path.is_err())
     {
-      auto const install_path{ util::resource_dir() + "/include/jank/prelude.hpp" };
-      if(!std::filesystem::exists(install_path.c_str()))
-      {
-        println(stderr, "failed!");
-        return err(error::system_failure(
-          util::format("Unable to find PCH entrypoint. Tried these paths:\n\n{}\n{}",
-                       include_path.c_str(),
-                       install_path)));
-      }
-      include_path = install_path.c_str();
+      return include_path;
     }
 
     std::filesystem::path const output_path{
@@ -283,8 +273,7 @@ namespace jank::util
     };
     std::filesystem::create_directories(output_path.parent_path());
 
-    std::string const output_path_str = output_path.string();
-    std::string const include_path_str = include_path.string();
+    std::string const &output_path_str{ output_path.string() };
 
     args.emplace_back("-Xclang");
     args.emplace_back("-fincremental-extensions");
@@ -303,7 +292,7 @@ namespace jank::util
     args.emplace_back("-o");
     args.emplace_back(output_path_str.c_str());
     args.emplace_back("-c");
-    args.emplace_back(include_path_str.c_str());
+    args.emplace_back(include_path.expect_ok().c_str());
     /* We need to add this again for it to get through. Not sure why. */
     args.emplace_back("-std=gnu++20");
 

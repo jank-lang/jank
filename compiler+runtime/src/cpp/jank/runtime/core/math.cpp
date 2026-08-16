@@ -24,8 +24,9 @@ namespace jank::runtime
       return bi->to_integer();
     }
 
-    throw std::runtime_error{ util::format("An integer was required here, but a {} was provided.",
-                                           object_type_str(o.get_type())) };
+    throw std::runtime_error{ util::format(
+      "An `integer` value was required here, but a `{}` was provided.",
+      object_type_str(o.get_type())) };
   }
 
   f64 to_f64(object_ref const o)
@@ -40,8 +41,9 @@ namespace jank::runtime
       return i->data;
     }
 
-    throw std::runtime_error{ util::format("A real was required here, but a {} was provided.",
-                                           object_type_str(o.get_type())) };
+    throw std::runtime_error{ util::format(
+      "A `real` value was required here, but a `{}` was provided.",
+      object_type_str(o.get_type())) };
   }
 
   object_ref promoting_add(object_ref const l, object_ref const r)
@@ -210,7 +212,7 @@ namespace jank::runtime
 
               if(r_real == 0)
               {
-                throw std::runtime_error{ "Illegal divide by zero in 'rem'" };
+                throw std::runtime_error{ "Division by zero is not permitted." };
               }
 
               auto const l_real{ to_real(typed_l_data) };
@@ -238,7 +240,7 @@ namespace jank::runtime
             if(typed_r_data == 0ll)
             {
 #pragma clang diagnostic pop
-              throw make_box("Illegal divide by zero in 'quot'").erase();
+              throw make_box("Division by zero is not permitted.").erase();
             }
             else
             {
@@ -609,7 +611,9 @@ namespace jank::runtime
     }
     else
     {
-      throw make_box(util::format("Expected string, got {}", object_type_str(o.get_type())))
+      throw make_box(
+        util::format("The `parse-long` function expects a `persistent_string`, not a `{}`.",
+                     object_type_str(o.get_type())))
         .erase();
     }
   }
@@ -641,7 +645,9 @@ namespace jank::runtime
     }
     else
     {
-      throw make_box(util::format("Expected string, got {}", object_type_str(o.get_type())))
+      throw make_box(
+        util::format("The `parse-double` function expects a `persistent_string`, not a `{}`.",
+                     object_type_str(o.get_type())))
         .erase();
     }
   }
@@ -681,7 +687,8 @@ namespace jank::runtime
         else
         {
           throw make_box(
-            util::format("Expected a numeric value, got {}", object_type_str(o.get_type())))
+            util::format("The `to-big-integer` function expects a numeric value, not a `{}`.",
+                         object_type_str(o.get_type())))
             .erase();
         }
       },
@@ -708,12 +715,12 @@ namespace jank::runtime
         {
           if(std::isnan(typed_o->data))
           {
-            throw make_box("Cannot convert ##NaN to 'big_decimal'").erase();
+            throw make_box("`##NaN` cannot be converted to a `big_decimal`.").erase();
           }
 
           if(std::isinf(typed_o->data))
           {
-            throw make_box("Cannot convert ##Inf to 'big_decimal'").erase();
+            throw make_box("`##Inf` cannot be converted to a `big_decimal`.").erase();
           }
 
           return make_box<obj::big_decimal>(typed_o->data);
@@ -733,7 +740,8 @@ namespace jank::runtime
         else
         {
           throw make_box(
-            util::format("Expected a numeric value, got {}", object_type_str(o.get_type())))
+            util::format("The `to-big-decimal` function expects a numeric value, not a `{}`.",
+                         object_type_str(o.get_type())))
             .erase();
         }
       },

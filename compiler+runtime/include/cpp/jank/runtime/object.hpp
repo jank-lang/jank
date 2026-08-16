@@ -107,8 +107,9 @@ namespace jank::runtime
 
     reader_conditional,
 
-    /* Max must always be equal to the last object_type defined. */
-    max = reader_conditional,
+    exception_info,
+
+    max = exception_info,
   };
 
   constexpr char const *object_type_str(object_type const type)
@@ -276,6 +277,9 @@ namespace jank::runtime
 
       case object_type::reader_conditional:
         return "reader_conditional";
+
+      case object_type::exception_info:
+        return "exception_info";
     }
     return "unknown";
   }

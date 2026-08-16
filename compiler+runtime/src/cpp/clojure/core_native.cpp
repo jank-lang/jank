@@ -7,6 +7,7 @@
 #include <jank/runtime/core/call.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/sequence_range.hpp>
+#include <jank/error/parse.hpp>
 #include <jank/error/runtime.hpp>
 #include <jank/util/fmt/print.hpp>
 
@@ -247,14 +248,25 @@ namespace clojure::core_native
     return {};
   }
 
-  object_ref throw_runtime_invalid_referred_global_rename(jtl::immutable_string const &msg,
-                                                          object_ref const rename,
-                                                          object_ref const existing)
+  void throw_parse_invalid_syntax_unquote(jtl::immutable_string const &msg)
+  {
+    /* TODO: We'll need to get source info from the stack trace. */
+    throw error::parse_invalid_syntax_unquote(msg, read::source::unknown());
+  }
+
+  void throw_parse_invalid_syntax_unquote_splice(jtl::immutable_string const &msg)
+  {
+    /* TODO: We'll need to get source info from the stack trace. */
+    throw error::parse_invalid_syntax_unquote_splice(msg, read::source::unknown());
+  }
+
+  void throw_runtime_invalid_referred_global_rename(jtl::immutable_string const &msg,
+                                                    object_ref const rename,
+                                                    object_ref const existing)
   {
     throw error::runtime_invalid_referred_global_rename(msg,
                                                         object_source(rename),
                                                         object_source(existing));
-    return {};
   }
 
   object_ref load_module(object_ref const path)

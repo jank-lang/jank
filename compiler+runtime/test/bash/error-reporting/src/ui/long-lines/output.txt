@@ -8,4 +8,6 @@ error: Odd number of entries in map.
  38  │ (defn generate-strings [n] (map (fn [i] (apply str (repeat 20 (char (+ 65 (mod i 26)))))) (range n))) ;; Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum.
  39  │ (defn deep-map [n] (if (zero? n) {:val} {:val n :nested (deep-map (dec n))})) ;; Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis ipsum.
      │                                   ^^^^ No value for this key.
+─────┼──────────────────────────────────────────────────────────────────────────
+  🗎  │ https://book.jank-lang.org/reference/error/parse/odd-entries-in-map.html
 ─────┴──────────────────────────────────────────────────────────────────────────

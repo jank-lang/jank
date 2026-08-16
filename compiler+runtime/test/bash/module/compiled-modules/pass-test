@@ -192,7 +192,7 @@
     (with-hidden-file (module-a-path)
       (is (true? (-> (jank "run-main" module-a)
                      :out
-                     (string/includes? "No sources for registered module")))))))
+                     (string/includes? "The registered module `jank-test.a` has no source files.")))))))
 
 (defn -main []
   (System/exit

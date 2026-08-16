@@ -62,6 +62,12 @@ namespace jank::error
       read::source{ token.start, token.end });
   }
 
+  error_ref
+  parse_invalid_string_escape(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::parse_invalid_string_escape, message, source);
+  }
+
   error_ref parse_unexpected_closing_character(read::lex::token const &token)
   {
     /* TODO: Add a note to show last open token. */
@@ -163,15 +169,9 @@ namespace jank::error
     });
   }
 
-  error_ref
-  parse_invalid_shorthand_function(read::source const &source, jtl::immutable_string const &note)
-  {
-    return make_error(kind::parse_invalid_shorthand_function, source, note);
-  }
-
   error_ref parse_invalid_shorthand_function_parameter(read::source const &source)
   {
-    return make_error(kind::parse_invalid_shorthand_function,
+    return make_error(kind::parse_invalid_shorthand_function_parameter,
                       source,
                       "Arg literal must be %, %&, or %n where n >= 1.");
   }
@@ -237,9 +237,21 @@ namespace jank::error
     return make_error(kind::parse_invalid_syntax_quote, source, note);
   }
 
+  error_ref
+  parse_invalid_syntax_unquote(jtl::immutable_string const &message, read::source const &source)
+  {
+    return make_error(kind::parse_invalid_syntax_unquote, message, source);
+  }
+
   error_ref parse_invalid_syntax_unquote(read::source const &source)
   {
     return make_error(kind::parse_invalid_syntax_unquote, source);
+  }
+
+  error_ref parse_invalid_syntax_unquote_splice(jtl::immutable_string const &message,
+                                                read::source const &source)
+  {
+    return make_error(kind::parse_invalid_syntax_unquote_splice, message, source);
   }
 
   error_ref parse_invalid_syntax_unquote_splice(read::source const &source)
@@ -268,13 +280,13 @@ namespace jank::error
     return make_error(kind::parse_invalid_data_reader, message, source);
   }
 
-  error_ref internal_parse_failure(jtl::immutable_string const &message, read::source const &source)
+  error_ref parse_internal_failure(jtl::immutable_string const &message, read::source const &source)
   {
-    return make_error(kind::internal_parse_failure, message, source);
+    return make_error(kind::parse_internal_failure, message, source);
   }
 
-  error_ref internal_parse_failure(jtl::immutable_string const &message)
+  error_ref parse_internal_failure(jtl::immutable_string const &message)
   {
-    return make_error(kind::internal_parse_failure, message, read::source::unknown());
+    return make_error(kind::parse_internal_failure, message, read::source::unknown());
   }
 }

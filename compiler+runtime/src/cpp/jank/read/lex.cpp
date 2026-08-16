@@ -458,11 +458,11 @@ namespace jank::read::lex
 
     if(std::cmp_equal(len, static_cast<size_t>(-1)))
     {
-      return error::lex_invalid_unicode("Unfinished character.", pos);
+      return error::lex_invalid_unicode("The Unicode character literal is unfinished.", pos);
     }
     else if(std::cmp_equal(len, static_cast<size_t>(-2)))
     {
-      return error::lex_invalid_unicode("Invalid Unicode character.", pos);
+      return error::lex_invalid_unicode("The Unicode character literal is invalid.", pos);
     }
     return ok(codepoint{ static_cast<char32_t>(wc), static_cast<u8>(len) });
   }
@@ -739,17 +739,18 @@ namespace jank::read::lex
               if(contains_dot || is_scientific || !contains_leading_digit || found_N)
               {
                 ++pos;
-                return error::lex_invalid_number("Unexpected '.' found in number.",
-                                                 { token_start, pos },
-                                                 error::note{ "Found the '.' here.", pos });
+                return error::lex_invalid_number(
+                  "A number literal cannot contain a `.` in this position.",
+                  { token_start, pos },
+                  error::note{ "Found a `.` here.", pos });
               }
               if(found_r)
               {
                 ++pos;
                 return error::lex_invalid_number(
-                  "An arbitrary radix number can only be an integer, so it may not contain a '.'.",
+                  "An arbitrary-radix number must be an integer; it may not contain a `.`.",
                   { token_start, pos },
-                  error::note{ "Found a '.' here.", pos });
+                  error::note{ "Found a `.` here.", pos });
               }
               contains_dot = true;
               if(radix != 10 && radix != 8)
@@ -769,9 +770,9 @@ namespace jank::read::lex
               if(found_N)
               {
                 ++pos;
-                return error::lex_invalid_number("Unexpected 'N' found in number.",
+                return error::lex_invalid_number("A number literal contains an unexpected `N`.",
                                                  { token_start, pos },
-                                                 error::note{ "Found 'N' here.", pos });
+                                                 error::note{ "Found `N` here.", pos });
               }
               if(radix < 15)
               {
@@ -780,17 +781,18 @@ namespace jank::read::lex
                 if(is_scientific || !contains_leading_digit)
                 {
                   ++pos;
-                  return error::lex_invalid_number("Extraneous 'e' found in number.",
-                                                   { token_start, pos },
-                                                   error::note{ "Found 'e' here.", pos });
+                  return error::lex_invalid_number(
+                    "A decimal number literal contains an unexpected `e`.",
+                    { token_start, pos },
+                    error::note{ "Found `e` here.", pos });
                 }
                 if(found_slash_after_number)
                 {
                   ++pos;
                   found_slash_after_number = false;
-                  return error::lex_invalid_ratio("Ratio cannot have scientific notation.",
+                  return error::lex_invalid_ratio("A ratio cannot use scientific notation.",
                                                   { token_start, pos },
-                                                  error::note{ "Found 'e' here.", pos });
+                                                  error::note{ "Found `e` here.", pos });
                 }
                 is_scientific = true;
                 expecting_exponent = true;
@@ -809,9 +811,10 @@ namespace jank::read::lex
                 {
                   ++pos;
                   return error::lex_invalid_number(
-                    util::format("Unexpected '{}' in number.", static_cast<char>(c)),
+                    util::format("A number literal contains an unexpected `{}`.",
+                                 static_cast<char>(c)),
                     { token_start, pos },
-                    error::note{ util::format("Found '{}' here.", static_cast<char>(c)), pos });
+                    error::note{ util::format("Found `{}` here.", static_cast<char>(c)), pos });
                 }
                 found_exponent_sign = true;
               }
@@ -825,9 +828,9 @@ namespace jank::read::lex
               }
               if(found_N)
               {
-                return error::lex_invalid_number("Unexpected 'N' found in number.",
+                return error::lex_invalid_number("A number literal contains an unexpected `N`.",
                                                  { token_start, pos },
-                                                 error::note{ "Found 'N' here.", pos });
+                                                 error::note{ "Found `N` here.", pos });
               }
               found_r = true;
               expecting_more_digits = true;
@@ -836,7 +839,7 @@ namespace jank::read::lex
                  || expecting_exponent)
               {
                 /* TODO: Add a note for why we're determining this isn't an integer. */
-                return error::lex_invalid_number("Arbitrary radix numbers can only be integers.",
+                return error::lex_invalid_number("An arbitrary-radix number must be an integer.",
                                                  { token_start, pos });
               }
               continue;
@@ -855,9 +858,9 @@ namespace jank::read::lex
               }
               if(found_N)
               {
-                return error::lex_invalid_number("Unexpected 'N' found in number.",
+                return error::lex_invalid_number("A number literal contains an unexpected `N`.",
                                                  { token_start, pos },
-                                                 error::note{ "Found 'N' here.", pos });
+                                                 error::note{ "Found `N` here.", pos });
               }
               found_slash_after_number = true;
               /* Skip the '/' char and look for the denominator number. */
@@ -920,8 +923,9 @@ namespace jank::read::lex
               if(expecting_exponent)
               {
                 ++pos;
-                return error::lex_invalid_number("Missing exponent from end of number.",
-                                                 { token_start, pos });
+                return error::lex_invalid_number(
+                  "The decimal exponent is missing from the end of this number literal.",
+                  { token_start, pos });
               }
               if(!contains_leading_digit)
               {
@@ -938,22 +942,22 @@ namespace jank::read::lex
                 /* big integer */
                 if(found_N)
                 {
-                  return error::lex_invalid_number("Unexpected 'N' found in number.",
+                  return error::lex_invalid_number("A number literal contains an unexpected `N`.",
                                                    { token_start, pos },
-                                                   error::note{ "Found 'N' here.", pos });
+                                                   error::note{ "Found `N` here.", pos });
                 }
                 if(found_slash_after_number)
                 {
                   found_slash_after_number = false;
-                  return error::lex_invalid_number("Unexpected 'N' found in number.",
+                  return error::lex_invalid_number("A number literal contains an unexpected `N`.",
                                                    { token_start, pos },
-                                                   error::note{ "Found 'N' here.", pos });
+                                                   error::note{ "Found `N` here.", pos });
                 }
                 if(found_M)
                 {
-                  return error::lex_invalid_number("Unexpected 'M' found in number.",
+                  return error::lex_invalid_number("A number literal contains an unexpected `M`.",
                                                    { token_start, pos },
-                                                   error::note{ "Found 'M' here.", pos });
+                                                   error::note{ "Found `M` here.", pos });
                 }
                 found_N = true;
                 expecting_more_digits = false;
@@ -965,22 +969,22 @@ namespace jank::read::lex
                 ++pos;
                 if(found_M)
                 {
-                  return error::lex_invalid_number("Unexpected 'M' found in number.",
+                  return error::lex_invalid_number("A number literal contains an unexpected `M`.",
                                                    { token_start, pos },
-                                                   error::note{ "Found 'M' here.", pos });
+                                                   error::note{ "Found `M` here.", pos });
                 }
                 if(found_slash_after_number)
                 {
                   found_slash_after_number = false;
-                  return error::lex_invalid_number("Unexpected 'M' found in number.",
+                  return error::lex_invalid_number("A number literal contains an unexpected `M`.",
                                                    { token_start, pos },
-                                                   error::note{ "Found 'M' here.", pos });
+                                                   error::note{ "Found `M` here.", pos });
                 }
                 if(found_N)
                 {
-                  return error::lex_invalid_number("Unexpected 'N' found in number.",
+                  return error::lex_invalid_number("A number literal contains an unexpected `N`.",
                                                    { token_start, pos },
-                                                   error::note{ "Found 'N' here.", pos });
+                                                   error::note{ "Found `N` here.", pos });
                 }
                 found_M = true;
                 expecting_more_digits = false;
@@ -1000,7 +1004,7 @@ namespace jank::read::lex
                 if(found_r && expecting_more_digits)
                 {
                   ++pos;
-                  return error::lex_invalid_number("Unexpected end of integer.",
+                  return error::lex_invalid_number("This integer literal ended unexpectedly.",
                                                    { token_start, pos });
                 }
                 if(pos == token_start && file[token_start] == '0')
@@ -1025,7 +1029,7 @@ namespace jank::read::lex
           if(expecting_exponent)
           {
             ++pos;
-            return error::lex_invalid_number("Unexpected end of decimal number.",
+            return error::lex_invalid_number("This decimal number literal ended unexpectedly.",
                                              { token_start, pos });
           }
 
@@ -1034,10 +1038,11 @@ namespace jank::read::lex
             ++pos;
             if(found_r)
             {
-              return error::lex_invalid_number("Unexpected end of integer.", { token_start, pos });
+              return error::lex_invalid_number("This integer literal ended unexpectedly.",
+                                               { token_start, pos });
             }
             return error::lex_invalid_number(
-              util::format("Unexpected end of base {} number.", radix),
+              util::format("This base-{} number literal ended unexpectedly.", radix),
               { token_start, pos });
           }
           /* Tokens beginning with - are ambiguous; it's a negative number only if
@@ -1064,9 +1069,9 @@ namespace jank::read::lex
               if(radix < 2 || radix > 36)
               {
                 return error::lex_invalid_number(
-                  util::format(
-                    "Base {} is out of range. The supported bases are 2 through 36, inclusive.",
-                    radix),
+                  util::format("The base `{}` is out of range. The supported bases are `2` through "
+                               "`36`, inclusive.",
+                               radix),
                   { token_start, pos });
               }
               number_start = r_pos + 1llu;
@@ -1090,7 +1095,7 @@ namespace jank::read::lex
             {
               return error::lex_invalid_number(
                 util::format(
-                  "Characters '{}' are invalid for a base {} number.",
+                  "The characters `{}` are invalid for a base-{} number literal.",
                   jtl::immutable_string_view{ invalid_digits.data(), invalid_digits.size() },
                   radix),
                 { token_start, pos });
@@ -1174,7 +1179,7 @@ namespace jank::read::lex
           jtl::immutable_string_view const name{ file.data() + token_start, ++pos - token_start };
           if(name[0] == '/' && name.size() > 1)
           {
-            return error::lex_invalid_symbol("A symbol may not start with a '/'.",
+            return error::lex_invalid_symbol("A symbol may not start with `/`.",
                                              { token_start, pos });
           }
           else if(name == "nil")
@@ -1206,9 +1211,8 @@ namespace jank::read::lex
              || is_special_char(oc.expect_ok().character))
           {
             ++pos;
-            return error::lex_invalid_keyword(
-              "A keyword must contain a valid symbol after the ':'.",
-              { token_start, pos });
+            return error::lex_invalid_keyword("A keyword must contain a valid symbol after `:`.",
+                                              { token_start, pos });
           }
 
           auto const c(oc.expect_ok().character);
@@ -1226,7 +1230,7 @@ namespace jank::read::lex
             {
               ++pos;
               return error::lex_invalid_keyword(
-                "An auto-resolved keyword must contain a valid symbol after '::'.",
+                "An auto-resolved keyword must contain a valid symbol after `::`.",
                 { token_start, pos });
             }
 
@@ -1248,9 +1252,9 @@ namespace jank::read::lex
               }
 
               return error::lex_invalid_keyword(
-                ch == '/' ? "The namespace symbol before '/' is missing."
-                          : util::format("This keyword unexpectedly ended. A symbol was expected, "
-                                         "here but '{}' was found.",
+                ch == '/' ? "The namespace symbol before `/` is missing."
+                          : util::format("This keyword ended unexpectedly. A symbol was expected, "
+                                         "but `{}` was found here.",
                                          ch),
                 { token_start, pos });
             }
@@ -1276,14 +1280,15 @@ namespace jank::read::lex
 
           if(name[0] == '/' && name.size() > 1)
           {
-            return error::lex_invalid_keyword("A keyword may not start with ':/'.",
+            return error::lex_invalid_keyword("A keyword may not start with `:/`.",
                                               { token_start, pos });
           }
           else if(name[0] == ':' && name[1] == ':')
           {
-            return error::lex_invalid_keyword("Too many ':' for a valid keyword.",
-                                              { token_start, pos },
-                                              "Only one or two ':' is valid.");
+            return error::lex_invalid_keyword(
+              "A keyword may not contain more than two `:` characters.",
+              { token_start, pos },
+              "Only one or two `:` characters are valid.");
           }
 
           return ok(token{ token_start, pos, token_kind::keyword, name });
@@ -1495,7 +1500,7 @@ namespace jank::read::lex
         }
         ++pos;
         return error::lex_unexpected_character(
-          util::format("Unexpected character '{}'.", file[token_start]),
+          util::format("The character `{}` is not valid in this token.", file[token_start]),
           { token_start, pos });
     }
   }

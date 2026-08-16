@@ -105,8 +105,7 @@ namespace jank::runtime
         }
         else
         {
-          throw std::runtime_error{ util::format("not metadatable: {} [{}]",
-                                                 typed_o->to_code_string(),
+          throw std::runtime_error{ util::format("Objects of type `{}` are not metadatable.",
                                                  object_type_str(typed_o.get_type())) };
         }
       },

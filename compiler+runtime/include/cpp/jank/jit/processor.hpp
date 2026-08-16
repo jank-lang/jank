@@ -1,7 +1,7 @@
 #pragma once
 
 #include <filesystem>
-#include <memory>
+#include <map>
 
 #include <jtl/result.hpp>
 #include <jtl/string_builder.hpp>
@@ -70,12 +70,14 @@ namespace jank::jit
 
     /*** XXX: Everything here is immutable after initialization. ***/
     /*** XXX: Calls through the interpreter and LLVM JIT runtime are thread-safe. ***/
-    jtl::ptr<CppInternal::Interpreter> interpreter;
     native_vector<std::filesystem::path> library_dirs;
 
     /* The files within this map will get added into Clang's VFS prior to the creation of
      * the `clang::Interpreter`. This allows us to embed the PCH into AOT compiled programs
      * while still being able to include it. */
     std::map<char const *, std::string_view> vfs;
+
+    /*** XXX: Everything here is thread-safe. ***/
+    jtl::ptr<CppInternal::Interpreter> interpreter;
   };
 }

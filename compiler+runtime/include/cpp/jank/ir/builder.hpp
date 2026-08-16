@@ -128,7 +128,8 @@ namespace jank::ir
                       jtl::option<identifier> const &shadow,
                       jtl::option<identifier> const &finally_block);
     identifier finally(identifier const &merge_block);
-    identifier throw_(identifier const &value);
+    identifier throw_();
+    identifier throw_(identifier const &value, jtl::ptr<void> const type);
     identifier ret(identifier const &value, jtl::ptr<void> const type);
 
     identifier cpp_scope_open();

@@ -124,15 +124,18 @@ namespace jank::runtime::obj
 
     if(head.get_type() != object_type::persistent_vector)
     {
-      throw std::runtime_error{ util::format("invalid map entry: {}",
+      throw std::runtime_error{ util::format("The `conj` operation on a transient map requires a "
+                                             "two-element `persistent_vector`, not a `{}`.",
                                              object_type_str(head.get_type())) };
     }
 
     auto const vec(expect_object<persistent_vector>(head));
     if(vec->count() != 2)
     {
-      throw std::runtime_error{ util::format("invalid map entry: {}",
-                                             object_type_str(head.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The `conj` operation on a transient map requires a two-element vector entry, not a vector "
+        "of length `{}`.",
+        vec->count()) };
     }
 
     data.set(vec->data[0], vec->data[1]);
@@ -168,7 +171,7 @@ namespace jank::runtime::obj
   {
     if(!active)
     {
-      throw std::runtime_error{ "transient used after it's been made persistent" };
+      throw std::runtime_error{ "This transient map has already been made persistent." };
     }
   }
 }

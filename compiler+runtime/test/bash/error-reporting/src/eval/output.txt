@@ -1,5 +1,5 @@
 ─ analyze/invalid-def ──────────────────────────────────────────────────────────
-error: The var name in a 'def' must be a symbol.
+error: The var name in a `def` form must be a symbol.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ input.jank
@@ -8,4 +8,6 @@ error: The var name in a 'def' must be a symbol.
   2  │ 
   3  │ (eval (read-string "(def :bar 2)"))
      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ A symbol is needed for the name here.
+─────┼──────────────────────────────────────────────────────────────────────────
+  🗎  │ https://book.jank-lang.org/reference/error/analyze/invalid-def.html
 ─────┴──────────────────────────────────────────────────────────────────────────

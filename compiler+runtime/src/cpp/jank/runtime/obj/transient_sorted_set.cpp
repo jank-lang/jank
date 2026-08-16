@@ -97,7 +97,7 @@ namespace jank::runtime::obj
   {
     if(!active)
     {
-      throw std::runtime_error{ "transient used after it's been made persistent" };
+      throw std::runtime_error{ "This `transient_sorted_set` has already been made persistent." };
     }
   }
 }

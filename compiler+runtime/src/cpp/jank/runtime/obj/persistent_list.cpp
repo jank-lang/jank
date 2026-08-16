@@ -181,7 +181,9 @@ namespace jank::runtime::obj
   {
     if(data.empty())
     {
-      throw std::runtime_error{ "cannot pop an empty list" };
+      throw std::runtime_error{
+        "The `pop` operation on an empty `persistent_list` is not allowed."
+      };
     }
 
     return make_box<persistent_list>(data.rest());

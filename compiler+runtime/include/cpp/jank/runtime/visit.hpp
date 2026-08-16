@@ -66,6 +66,7 @@
 #include <jank/runtime/obj/opaque_box.hpp>
 #include <jank/runtime/obj/reader_conditional.hpp>
 #include <jank/runtime/obj/array.hpp>
+#include <jank/runtime/obj/exception_info.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
 #include <jank/runtime/rtti.hpp>
@@ -92,11 +93,12 @@ namespace jank::runtime
   {
     if(detail::is_tagged_small_int(erased.raw()))
     {
-      return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
+      return fn(obj::small_integer_ref{ detail::as_integer(erased.raw()) },
+                std::forward<Args>(args)...);
     }
     if(detail::is_tagged_small_real(erased.raw()))
     {
-      return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
+      return fn(obj::small_real_ref{ detail::as_real(erased.raw()) }, std::forward<Args>(args)...);
     }
 
     switch(erased.get_type())
@@ -285,27 +287,12 @@ namespace jank::runtime
         }
       case object_type::reader_conditional:
         return fn(expect_object<obj::reader_conditional>(erased), std::forward<Args>(args)...);
+      case object_type::exception_info:
+        return fn(expect_object<obj::exception_info>(erased), std::forward<Args>(args)...);
       default:
         jtl::panic("invalid object type: {}, raw value {}",
                    object_type_str(erased.get_type()),
                    static_cast<int>(erased.get_type()));
-    }
-  }
-
-  /* Allows the visiting of a single type. */
-  template <typename T, typename F, typename... Args>
-  [[gnu::hot]]
-  auto visit_type(F const &fn, object_ref const erased, Args &&...args)
-  {
-    if(erased.get_type() == T::obj_type)
-    {
-      return fn(expect_object<T>(erased), std::forward<Args>(args)...);
-    }
-    else
-    {
-      throw std::runtime_error{ util::format("invalid object type: {}, raw value {}",
-                                             object_type_str(erased.get_type()),
-                                             static_cast<int>(erased.get_type())) };
     }
   }
 
@@ -478,11 +465,12 @@ namespace jank::runtime
   {
     if(detail::is_tagged_small_int(erased.raw()))
     {
-      return fn(obj::small_integer_ref{ erased.raw() }, std::forward<Args>(args)...);
+      return fn(obj::small_integer_ref{ detail::as_integer(erased.raw()) },
+                std::forward<Args>(args)...);
     }
     if(detail::is_tagged_small_real(erased.raw()))
     {
-      return fn(obj::small_real_ref{ erased.raw() }, std::forward<Args>(args)...);
+      return fn(obj::small_real_ref{ detail::as_real(erased.raw()) }, std::forward<Args>(args)...);
     }
 
 #pragma clang diagnostic push

@@ -104,7 +104,7 @@ namespace jank::ir
           ++insert_pos;
         }
 
-        /* Copy type info from any of the existing occurrences — they all
+        /* Copy type info from any of the existing occurrences. They all
          * produce the same value so the type is identical. */
         auto const &existing_instr_name{ occurrences[0].second };
         auto &existing_block{ fn.blocks[fn.find_block(occurrences[0].first)] };

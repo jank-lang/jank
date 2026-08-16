@@ -4,5 +4,5 @@
 
 namespace jank::error
 {
-  error_ref internal_codegen_failure(jtl::immutable_string const &message);
+  error_ref codegen_internal_failure(jtl::immutable_string const &message);
 }

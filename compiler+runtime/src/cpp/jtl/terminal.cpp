@@ -43,4 +43,24 @@ namespace jtl::terminal
     return { w.ws_col, w.ws_row };
 #endif
   }
+
+  bool is_stdin_interactive()
+  {
+#if defined(_WIN32)
+    return true;
+#else
+    static bool const res{ isatty(STDIN_FILENO) != 0 };
+    return res;
+#endif
+  }
+
+  bool is_stdout_interactive()
+  {
+#if defined(_WIN32)
+    return true;
+#else
+    static bool const res{ isatty(STDOUT_FILENO) != 0 };
+    return res;
+#endif
+  }
 }

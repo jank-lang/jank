@@ -143,8 +143,8 @@ namespace jank::runtime::module
     if(read_result < 0)
     {
       auto const entry_name{ zip_entry_name(zip) };
-      return error::internal_runtime_failure(
-        util::format("Failed to read jar entry '{}' with error '{}'.",
+      return error::runtime_internal_failure(
+        util::format("The jar entry `{}` could not be read because of the error `{}`.",
                      entry_name,
                      zip_strerror(static_cast<int>(read_result))));
     }
@@ -162,8 +162,10 @@ namespace jank::runtime::module
     zip_ptr const zip{ zip_openwitherror(path.c_str(), 0, 'r', &ziperr), &zip_close };
     if(ziperr < 0)
     {
-      return error::internal_runtime_failure(
-        util::format("Failed to open jar '{}' with error '{}'.", path, zip_strerror(ziperr)));
+      return error::runtime_internal_failure(
+        util::format("The jar `{}` could not be opened because of the error `{}`.",
+                     path,
+                     zip_strerror(ziperr)));
     }
 
     auto const entry_handle{ open_zip_entry(zip.get(), entry.path.c_str()) };
@@ -431,10 +433,9 @@ namespace jank::runtime::module
     zip_ptr const zip{ zip_openwitherror(jar_path.c_str(), 0, 'r', &ziperr), &zip_close };
     if(ziperr < 0)
     {
-      return error::internal_runtime_failure(
-        util::format("Failed to open jar '{}' with error {}, '{}'.",
+      return error::runtime_internal_failure(
+        util::format("The jar `{}` could not be opened because of the error `{}`.",
                      jar_path,
-                     ziperr,
                      zip_strerror(ziperr)));
     }
 
@@ -478,7 +479,8 @@ namespace jank::runtime::module
 
     if(res.is_none())
     {
-      return error::internal_runtime_failure(util::format("Unknown type for module '{}'.", module));
+      return error::runtime_internal_failure(
+        util::format("The module `{}` has an unknown type.", module));
     }
 
     auto const &entry{ res.unwrap() };
@@ -555,7 +557,8 @@ namespace jank::runtime::module
     if(found.is_none())
     {
       /* TODO: If it contains -, suggest using _. Very common issue. */
-      return error::runtime_module_not_found(util::format("Unable to find module '{}'.", module));
+      return error::runtime_module_not_found(
+        util::format("The module `{}` could not be found.", module));
     }
 
     auto const &entry(found.unwrap());
@@ -576,8 +579,8 @@ namespace jank::runtime::module
 
     if(source_entry.is_none())
     {
-      return error::internal_runtime_failure(
-        util::format("No sources for registered module '{}'.", module));
+      return error::runtime_module_binary_without_source(
+        util::format("The registered module `{}` has no source files.", module));
     }
 
     if(ori == origin::source)
@@ -759,7 +762,7 @@ namespace jank::runtime::module
         break;
       case module_type::cpp:
       default:
-        res = error::internal_runtime_failure(
+        res = error::runtime_internal_failure(
           util::format("Unknown module type '{}'.", module_type_str(module_type_to_load)));
     }
 

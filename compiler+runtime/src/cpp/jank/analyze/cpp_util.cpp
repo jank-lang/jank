@@ -9,6 +9,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/array.hpp>
 #include <jank/runtime/core/munge.hpp>
+#include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/rtti.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -75,11 +76,15 @@ namespace jank::analyze::cpp_util
   jtl::string_result<jtl::ptr<void>>
   instantiate(jtl::ptr<void> const scope, native_vector<Cpp::TemplateArgInfo> const &args)
   {
+    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    /* TODO: Capture the diagnostic output instead of showing it. Then put it together
+     * in our own format. Until we have that, we might as well show it. */
+    clang::DiagnosticErrorTrap const trap{ diag };
     clang::Sema::SFINAETrap const sfinae_trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(),
                                                true };
 
     auto const res{ Cpp::InstantiateTemplate(scope, args.data(), args.size()) };
-    if(sfinae_trap.hasErrorOccurred())
+    if(!res || sfinae_trap.hasErrorOccurred() || trap.hasErrorOccurred())
     {
       reset_sfinae_state();
       return err("Unable to instantiate template.");
@@ -390,7 +395,7 @@ namespace jank::analyze::cpp_util
     auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->ParseAndExecute(code.c_str(), &value) };
     if(exec_res || trap.hasErrorOccurred())
     {
-      throw error::internal_codegen_failure(
+      throw error::codegen_internal_failure(
         util::format("Unable to get RTTI for '{}'.", Cpp::GetTypeAsString(type)));
     }
 
@@ -1374,10 +1379,11 @@ namespace jank::analyze::cpp_util
     auto const type{ expression_type(expr) };
     if(!is_any_object(type) && !is_trait_convertible(type))
     {
-      return error::analyze_invalid_conversion(
-        util::format("This function is returning a native object of type '{}', which is not "
-                     "convertible to a jank runtime object.",
-                     Cpp::GetTypeAsString(type)));
+      return error::analyze_invalid_cpp_conversion(
+        util::format("This function returns a native object of type `{}` that is not convertible "
+                     "to a jank runtime object.",
+                     Cpp::GetTypeAsString(type)),
+        runtime::object_source(expr->form));
     }
     return ok();
   }

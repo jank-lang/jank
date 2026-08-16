@@ -7,14 +7,17 @@
 #include <jank/runtime/object.hpp>
 #include <jank/read/source.hpp>
 
+/* NOLINTNEXTLINE(modernize-concat-nested-namespaces): Not doable, due to the inline. */
 namespace cpptrace
 {
-  struct stacktrace;
+  inline namespace v1
+  {
+    struct raw_trace;
+  }
 }
 
 namespace jank::error
 {
-  /* TODO: Rename internal failures to have correct prefix. i.e. lex_internal_failure. */
   enum class kind : u8
   {
     lex_unexpected_eof,
@@ -26,9 +29,8 @@ namespace jank::error
     lex_invalid_symbol,
     lex_invalid_keyword,
     lex_unterminated_string,
-    lex_invalid_string_escape,
     lex_unexpected_character,
-    internal_lex_failure,
+    lex_internal_failure,
 
     parse_unexpected_closing_character,
     parse_unterminated_list,
@@ -46,8 +48,8 @@ namespace jank::error
     parse_invalid_meta_hint_target,
     parse_invalid_unicode,
     parse_invalid_character,
+    parse_invalid_string_escape,
     parse_nested_shorthand_function,
-    parse_invalid_shorthand_function,
     parse_invalid_shorthand_function_parameter,
     parse_invalid_reader_var,
     parse_invalid_reader_comment,
@@ -64,7 +66,7 @@ namespace jank::error
     parse_invalid_ratio,
     parse_invalid_keyword,
     parse_invalid_data_reader,
-    internal_parse_failure,
+    parse_internal_failure,
 
     analyze_invalid_case,
     analyze_invalid_def,
@@ -75,7 +77,6 @@ namespace jank::error
     analyze_invalid_recur_args,
     analyze_invalid_let,
     analyze_invalid_letfn,
-    analyze_invalid_loop,
     analyze_invalid_if,
     analyze_invalid_quote,
     analyze_invalid_var_reference,
@@ -84,7 +85,6 @@ namespace jank::error
     analyze_unresolved_var,
     analyze_unresolved_symbol,
     analyze_macro_expansion_exception,
-    analyze_invalid_conversion,
     analyze_invalid_cpp_operator_call,
     analyze_invalid_cpp_constructor_call,
     analyze_invalid_cpp_member_call,
@@ -108,17 +108,12 @@ namespace jank::error
     analyze_invalid_cpp_capture,
     analyze_invalid_cpp_position,
     analyze_mismatched_if_types,
-    analyze_known_issue,
-    internal_analyze_failure,
+    analyze_internal_failure,
 
-    internal_codegen_failure,
+    codegen_internal_failure,
 
     aot_unresolved_main,
-    aot_compilation_failure,
-    internal_aot_failure,
-
-    system_clang_executable_not_found,
-    system_failure,
+    aot_internal_failure,
 
     runtime_module_not_found,
     runtime_module_binary_without_source,
@@ -131,246 +126,17 @@ namespace jank::error
     runtime_invalid_referred_global_rename,
     runtime_unsupported_behavior,
     runtime_static_feature_disabled,
-    internal_runtime_failure,
+    runtime_uncaught_exception,
+    runtime_internal_failure,
+
+    system_clang_executable_not_found,
+    system_failure,
 
     internal_failure,
   };
 
-  constexpr char const *kind_str(kind const k)
-  {
-    switch(k)
-    {
-      case kind::lex_unexpected_eof:
-        return "lex/unexpected-eof";
-      case kind::lex_expecting_whitespace:
-        return "lex/expecting-whitespace";
-      case kind::lex_invalid_unicode:
-        return "lex/invalid-unicode";
-      case kind::lex_incomplete_character:
-        return "lex/incomplete-character";
-      case kind::lex_invalid_number:
-        return "lex/invalid-number";
-      case kind::lex_invalid_ratio:
-        return "lex/invalid-ratio";
-      case kind::lex_invalid_symbol:
-        return "lex/invalid-symbol";
-      case kind::lex_invalid_keyword:
-        return "lex/invalid-keyword";
-      case kind::lex_unterminated_string:
-        return "lex/unterminated-string";
-      case kind::lex_invalid_string_escape:
-        return "lex/invalid-string-escape";
-      case kind::lex_unexpected_character:
-        return "lex/unexpected-character";
-      case kind::internal_lex_failure:
-        return "internal/lex-failure";
-
-      case kind::parse_invalid_unicode:
-        return "parse/invalid-unicode";
-      case kind::parse_invalid_character:
-        return "parse/invalid-character";
-      case kind::parse_unexpected_closing_character:
-        return "parse/unexpected-closing-character";
-      case kind::parse_unterminated_list:
-        return "parse/unterminated-list";
-      case kind::parse_unterminated_vector:
-        return "parse/unterminated-vector";
-      case kind::parse_unterminated_map:
-        return "parse/unterminated-map";
-      case kind::parse_unterminated_set:
-        return "parse/unterminated-set";
-      case kind::parse_odd_entries_in_map:
-        return "parse/odd-entries-in-map";
-      case kind::parse_duplicate_keys_in_map:
-        return "parse/duplicate-keys-in-map";
-      case kind::parse_duplicate_items_in_set:
-        return "parse/duplicate-items-in-set";
-      case kind::parse_invalid_quote:
-        return "parse/invalid-quote";
-      case kind::parse_invalid_meta_hint_value:
-        return "parse/invalid-meta-hint-value";
-      case kind::parse_invalid_meta_hint_target:
-        return "parse/invalid-meta-hint-target";
-      case kind::parse_unsupported_reader_macro:
-        return "parse/unsupported-reader-macro";
-      case kind::parse_nested_shorthand_function:
-        return "parse/nested-shorthand-function";
-      case kind::parse_invalid_shorthand_function:
-        return "parse/invalid-shorthand-function";
-      case kind::parse_invalid_shorthand_function_parameter:
-        return "parse_invalid_shorthand_function_parameter";
-      case kind::parse_invalid_reader_var:
-        return "parse/invalid-reader-var";
-      case kind::parse_invalid_reader_comment:
-        return "parse/invalid-reader-comment";
-      case kind::parse_invalid_reader_conditional:
-        return "parse/invalid-reader-conditional";
-      case kind::parse_invalid_reader_splice:
-        return "parse/invalid-reader-splice";
-      case kind::parse_invalid_reader_gensym:
-        return "parse/invalid-reader-gensym";
-      case kind::parse_invalid_reader_symbolic_value:
-        return "parse/invalid-reader-symbolic-value";
-      case kind::parse_invalid_reader_tag_value:
-        return "parse/invalid-reader-tag-value";
-      case kind::parse_invalid_regex:
-        return "parse/invalid-regex";
-      case kind::parse_invalid_uuid:
-        return "parse/invalid-uuid";
-      case kind::parse_invalid_inst:
-        return "parse/invalid-inst";
-      case kind::parse_invalid_syntax_quote:
-        return "parse/invalid-syntax-quote";
-      case kind::parse_invalid_syntax_unquote:
-        return "parse/invalid-syntax-unquote";
-      case kind::parse_invalid_syntax_unquote_splice:
-        return "parse/invalid-syntax-unquote-splice";
-      case kind::parse_invalid_reader_deref:
-        return "parse/invalid-reader-deref";
-      case kind::parse_invalid_ratio:
-        return "parse/invalid-ratio";
-      case kind::parse_invalid_keyword:
-        return "parse/invalid-keyword";
-      case kind::parse_invalid_data_reader:
-        return "parse/invalid-data-reader";
-      case kind::internal_parse_failure:
-        return "internal/parse-failure";
-
-      case kind::analyze_invalid_case:
-        return "analyze/invalid-case";
-      case kind::analyze_invalid_def:
-        return "analyze/invalid-def";
-      case kind::analyze_invalid_fn:
-        return "analyze/invalid-fn";
-      case kind::analyze_invalid_fn_parameters:
-        return "analyze/invalid-fn-parameters";
-      case kind::analyze_invalid_recur_position:
-        return "analyze/invalid-recur-position";
-      case kind::analyze_invalid_recur_from_try:
-        return "analyze/invalid-recur-from-try";
-      case kind::analyze_invalid_recur_args:
-        return "analyze/invalid-recur-args";
-      case kind::analyze_invalid_let:
-        return "analyze/invalid-let";
-      case kind::analyze_invalid_letfn:
-        return "analyze/invalid-letfn";
-      case kind::analyze_invalid_loop:
-        return "analyze/invalid-loop";
-      case kind::analyze_invalid_if:
-        return "analyze/invalid-if";
-      case kind::analyze_invalid_quote:
-        return "analyze/invalid-quote";
-      case kind::analyze_invalid_var_reference:
-        return "analyze/invalid-var-reference";
-      case kind::analyze_invalid_throw:
-        return "analyze/invalid-throw";
-      case kind::analyze_invalid_try:
-        return "analyze/invalid-try";
-      case kind::analyze_unresolved_var:
-        return "analyze/unresolved-var";
-      case kind::analyze_unresolved_symbol:
-        return "analyze/unresolved-symbol";
-      case kind::analyze_macro_expansion_exception:
-        return "analyze/macro-expansion-exception";
-      case kind::analyze_invalid_conversion:
-        return "analyze/invalid-conversion";
-
-      case kind::analyze_invalid_cpp_operator_call:
-        return "analyze/invalid-cpp-operator-call";
-      case kind::analyze_invalid_cpp_constructor_call:
-        return "analyze/invalid-cpp-constructor-call";
-      case kind::analyze_invalid_cpp_member_call:
-        return "analyze/invalid-cpp-member-call";
-      case kind::analyze_invalid_cpp_function_call:
-        return "analyze/invalid-cpp-function-call";
-      case kind::analyze_invalid_cpp_call:
-        return "analyze/invalid-cpp-call";
-      case kind::analyze_invalid_cpp_conversion:
-        return "analyze/invalid-cpp-conversion";
-      case kind::analyze_invalid_cpp_symbol:
-        return "analyze/invalid-cpp-symbol";
-      case kind::analyze_unresolved_cpp_symbol:
-        return "analyze/unresolved-cpp-symbol";
-      case kind::analyze_invalid_cpp_raw:
-        return "analyze/invalid-cpp-raw";
-      case kind::analyze_invalid_cpp_type:
-        return "analyze/invalid-cpp-type";
-      case kind::analyze_invalid_cpp_type_position:
-        return "analyze/invalid-cpp-type-position";
-      case kind::analyze_invalid_cpp_dsl:
-        return "analyze/invalid-cpp-dsl";
-      case kind::analyze_invalid_cpp_value:
-        return "analyze/invalid-cpp-value";
-      case kind::analyze_invalid_cpp_cast:
-        return "analyze/invalid-cpp-cast";
-      case kind::analyze_invalid_cpp_unsafe_cast:
-        return "analyze/invalid-cpp-unsafe-cast";
-      case kind::analyze_invalid_cpp_box:
-        return "analyze/invalid-cpp-box";
-      case kind::analyze_invalid_cpp_unbox:
-        return "analyze/invalid-cpp-unbox";
-      case kind::analyze_invalid_cpp_new:
-        return "analyze/invalid-cpp-new";
-      case kind::analyze_invalid_cpp_delete:
-        return "analyze/invalid-cpp-delete";
-      case kind::analyze_invalid_cpp_member_access:
-        return "analyze/invalid-cpp-member-access";
-      case kind::analyze_invalid_cpp_capture:
-        return "analyze/invalid-cpp-capture";
-      case kind::analyze_invalid_cpp_position:
-        return "analyze/invalid-cpp-position";
-      case kind::analyze_mismatched_if_types:
-        return "analyze/mismatched-if-types";
-      case kind::analyze_known_issue:
-        return "analyze/known-issue";
-      case kind::internal_analyze_failure:
-        return "internal/analysis-failure";
-
-      case kind::internal_codegen_failure:
-        return "internal/codegen-failure";
-
-      case kind::aot_unresolved_main:
-        return "aot/unresolved-main";
-      case kind::aot_compilation_failure:
-        return "aot/compilation-failure";
-      case kind::internal_aot_failure:
-        return "internal/aot-failure";
-
-      case kind::system_clang_executable_not_found:
-        return "system/clang-executable-not-found";
-      case kind::system_failure:
-        return "system/failure";
-
-      case kind::runtime_module_not_found:
-        return "runtime/module-not-found";
-      case kind::runtime_module_binary_without_source:
-        return "runtime/module-binary-without-source";
-      case kind::runtime_unable_to_open_file:
-        return "runtime/unable-to-open-file";
-      case kind::runtime_invalid_cpp_eval:
-        return "runtime/invalid-cpp-eval";
-      case kind::runtime_unable_to_load_module:
-        return "runtime/unable-to-load-module";
-      case kind::runtime_invalid_unbox:
-        return "runtime/invalid-unbox";
-      case kind::runtime_non_metadatable_value:
-        return "runtime/non-metadatable-value";
-      case kind::runtime_invalid_referred_global_symbol:
-        return "runtime/invalid-referred-global-symbol";
-      case kind::runtime_invalid_referred_global_rename:
-        return "runtime/invalid-referred-global-rename";
-      case kind::runtime_unsupported_behavior:
-        return "runtime/unsupported-behavior";
-      case kind::runtime_static_feature_disabled:
-        return "runtime/static-feature-disabled";
-      case kind::internal_runtime_failure:
-        return "internal/runtime-failure";
-
-      case kind::internal_failure:
-        return "internal/failure";
-    }
-    return "unknown";
-  }
+  char const *kind_str(kind const k);
+  bool is_internal_failure_kind(kind const k);
 
   /* This is a clang-tidy bug. https://github.com/llvm/llvm-project/issues/61687
    * NOLINTNEXTLINE(clang-analyzer-core.uninitialized.Assign) */
@@ -380,7 +146,13 @@ namespace jank::error
     {
       info,
       warning,
-      error
+      error,
+      /* No column info for these. */
+      line_start,
+      info_line = line_start,
+      warning_line,
+      error_line,
+      line_end = error_line,
     };
 
     static constexpr char const *kind_str(kind const k)
@@ -393,6 +165,13 @@ namespace jank::error
           return "warning";
         case kind::error:
           return "error";
+
+        case kind::info_line:
+          return "info_line";
+        case kind::warning_line:
+          return "warning_line";
+        case kind::error_line:
+          return "error_line";
       }
       return "unknown";
     }
@@ -404,8 +183,7 @@ namespace jank::error
     kind kind{ kind::error };
   };
 
-  /* We need gc_cleanup to run the dtor for the unique_ptr<stacktrace>. This
-   * is because cpptrace doesn't use our GC allocator. */
+  /* TODO: We leak the stack trace. See if we can get these errors off the GC heap. */
   struct base
   {
     static constexpr bool is_error{ true };
@@ -425,7 +203,7 @@ namespace jank::error
          jtl::immutable_string const &message,
          read::source const &source,
          runtime::object_ref const expansion,
-         std::unique_ptr<cpptrace::stacktrace> trace);
+         std::unique_ptr<cpptrace::raw_trace> trace);
     base(kind k,
          jtl::immutable_string const &message,
          read::source const &source,
@@ -460,20 +238,21 @@ namespace jank::error
          read::source const &source,
          runtime::object_ref const expansion,
          jtl::ref<base> cause,
-         std::unique_ptr<cpptrace::stacktrace> trace);
+         std::unique_ptr<cpptrace::raw_trace> trace);
 
     bool operator==(base const &rhs) const;
     bool operator!=(base const &rhs) const;
 
     void sort_notes();
     jtl::ref<base> add_usage(read::source const &usage_source);
+    jtl::ref<base> add_fallback_usage(read::source const &usage_source);
 
     kind kind{};
     jtl::immutable_string message;
     read::source source;
     native_vector<note> notes;
     jtl::ptr<base> cause;
-    std::unique_ptr<cpptrace::stacktrace> trace;
+    std::unique_ptr<cpptrace::raw_trace> trace;
     /* TODO: context */
     /* TODO: suggestions */
   };
@@ -497,5 +276,8 @@ namespace jank
     /* This can be used by jtl helpers which can't reach into jank but which fail. */
     [[noreturn]]
     void throw_internal_failure(jtl::immutable_string const &message);
+
+    [[noreturn]]
+    void throw_result_failure(jtl::immutable_string const &message);
   }
 }

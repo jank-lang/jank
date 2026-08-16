@@ -99,8 +99,9 @@ namespace jank::runtime::obj
       auto const i(to_i64(key));
       return 0 <= i && static_cast<size_t>(i) < data.size();
     }
-    throw std::runtime_error{ util::format("contains? not supported for argument: {}",
-                                           key.to_code_string()) };
+    throw std::runtime_error{ util::format(
+      "The `contains?` operation on a `persistent_string` requires an integer index, not a `{}`.",
+      object_type_str(key.get_type())) };
   }
 
   object_ref persistent_string::nth(object_ref const index) const
@@ -111,15 +112,16 @@ namespace jank::runtime::obj
       if(i < 0 || data.size() <= static_cast<size_t>(i))
       {
         throw std::runtime_error{
-          util::format("out of bounds index {}; string has a size of {}", i, data.size())
+          util::format("The index `{}` is out of bounds for this `persistent_string`.", i)
         };
       }
       return make_box<character>(data[i]);
     }
     else
     {
-      throw std::runtime_error{ util::format("nth on a string must be an integer; found {}",
-                                             object_type_str(index.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The `nth` operation on a `persistent_string` requires an integer index, not a `{}`.",
+        object_type_str(index.get_type())) };
     }
   }
 

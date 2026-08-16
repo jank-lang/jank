@@ -1,8 +1,9 @@
 (ns jank.perf.core
-  (:require
-   [jank.perf.gc :as gc]
-   [jank.perf.stats :as stats])
-  (:include "nanobench.h"))
+  (:require [jank.perf.gc :as gc]
+            [jank.perf.stats :as stats]
+            [jank.perf.print :as print])
+  (:include "nanobench.h"
+            "jank/util/environment.hpp"))
 
 (cpp/raw "
 namespace jank::perf::core
@@ -13,14 +14,23 @@ namespace jank::perf::core
   {
     return [f]{ return f.call(); };
   }
+
+  inline bool is_debug_build()
+#ifndef NDEBUG
+  { return true; }
+#else
+  { return false; }
+#endif
 }
 ")
 
-(defn blackbox [x]
-  (cpp/ankerl.nanobench.doNotOptimizeAway x))
-
 (def elapsed-measure cpp/ankerl.nanobench.Result.Measure.elapsed)
 (def iterations-measure cpp/ankerl.nanobench.Result.Measure.iterations)
+
+(defn ^{:inline (fn* [x]
+                 (list 'cpp/ankerl.nanobench.doNotOptimizeAway x))}
+  blackbox [x]
+  (cpp/ankerl.nanobench.doNotOptimizeAway x))
 
 (defn summarize [result*]
   (let [result  (cpp/unbox (:* cpp/ankerl.nanobench.Result) result*)
@@ -70,6 +80,23 @@ namespace jank::perf::core
                   :collection-time (- final-gc-time init-gc-time)}})))))
 
 (defn run-benchmark [{:keys [label epochs warmups gc-stats]} f]
+  ; Try to catch common benchmarking mistakes.
+  (when (cpp/jank.perf.core.is_debug_build)
+    (println (print/color :bright-red "warning:") "This is a debug build of jank. Benchmark results will be entirely different with a release build."))
+
+  (when (and (cpp/jank.util.is_dynamic_runtime)
+             (not= 3 (.-runtime_optimization_level cpp/jank.util.cli.opts)))
+    (println (print/color :bright-red "warning:")
+             "The current optimization level is"
+             (str "-O" (.-runtime_optimization_level cpp/jank.util.cli.opts))
+             "while the max is -O3.\n"
+             "        Benchmarks results may vary greatly between optimization levels."))
+
+  (when (not= cpp/jank.util.cli.compilation_eagerness.eager
+              (.-eagerness cpp/jank.util.cli.opts))
+    (println (print/color :bright-red "warning:")
+             "Eager compilation is not enabled, which may lead to jank lazily compiling code in the middle of the benchmark."))
+
   ;; Start collecting GC timing metrics, or no-op if we are already doing so.
   (when gc-stats
     (gc/start-performance-measurement))

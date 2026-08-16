@@ -36,7 +36,7 @@ namespace jank::runtime::obj
   {
     if(offset == buffer.size())
     {
-      throw std::runtime_error{ "no more chunk remaining to chunk_next" };
+      throw std::runtime_error{ "There are no more chunks remaining for `chunk-next`." };
     }
     /* TODO: This copying will be slow. Use a persistent_vector? */
     return make_box<array_chunk>(buffer, offset + 1);
@@ -46,7 +46,7 @@ namespace jank::runtime::obj
   {
     if(offset == buffer.size())
     {
-      throw std::runtime_error{ "no more chunk remaining to chunk_next" };
+      throw std::runtime_error{ "There are no more chunks remaining for `chunk-next`." };
     }
     ++offset;
     return runtime::detail::untagged(this);
@@ -64,18 +64,17 @@ namespace jank::runtime::obj
       auto const i(to_i64(index));
       if(i < 0 || buffer.size() - offset <= static_cast<size_t>(i))
       {
-        throw std::runtime_error{ util::format(
-          "out of bounds index {}; array_chunk has a size of {} and offset of {}",
-          i,
-          buffer.size(),
-          offset) };
+        throw std::runtime_error{
+          util::format("The index `{}` is out of bounds for this `array_chunk`.", i)
+        };
       }
       return buffer[offset + i];
     }
     else
     {
-      throw std::runtime_error{ util::format("nth on a array_chunk must be an integer; found {}",
-                                             object_type_str(index.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The `nth` operation on an `array_chunk` requires an integer index, not a `{}`.",
+        object_type_str(index.get_type())) };
     }
   }
 

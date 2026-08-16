@@ -308,7 +308,7 @@ namespace jank::runtime
     }
     else
     {
-      throw std::runtime_error{ "munging only supported for strings right now" };
+      throw std::runtime_error{ "Munging is only supported for strings." };
     }
   }
 

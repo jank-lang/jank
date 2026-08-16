@@ -75,4 +75,4 @@
     (str "l" (apply str (map write x)) "e")
 
     (nil? x)
-    (throw "cannot write nil as bencode")))
+    (throw (ex-info "cannot write nil as bencode" {}))))
