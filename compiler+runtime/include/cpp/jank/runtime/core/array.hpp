@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <utility>
 
 #include <jtl/immutable_string.hpp>
@@ -118,12 +119,7 @@ namespace jank::runtime
   {
     auto const size(a->size);
     auto const clone(make_box<obj::array<T>>(size));
-
-    for(usize i{}; i < size; ++i)
-    {
-      clone->data[i] = a->data[i];
-    }
-
+    std::copy(a->data.data, a->data.data + size, clone->data.data);
     return clone;
   }
 
@@ -136,12 +132,7 @@ namespace jank::runtime
     static obj::array_ref<T> into_object(T (&a)[N])
     {
       auto const clone(make_box<obj::array<T>>(N));
-
-      for(usize i{}; i < N; ++i)
-      {
-        clone->data[i] = a[i];
-      }
-
+      std::copy(a, a + N, clone->data.data);
       return clone;
     }
   };
