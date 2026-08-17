@@ -2,6 +2,10 @@ import re
 import gdb
 from itertools import count
 
+# Ignore GC bits.
+handle SIGPWR nostop noprint
+handle SIGXCPU nostop noprint
+
 def jank_address(oref):
     data_ptr = oref["data"].format_string(raw=True)
     return re.search("(0x[0-9a-fA-F]+)", data_ptr).group(1)

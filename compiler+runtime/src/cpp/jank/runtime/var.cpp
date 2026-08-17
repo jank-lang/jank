@@ -86,7 +86,7 @@ namespace jank::runtime
 
   bool var::is_bound() const
   {
-    return const_cast<var*>(this)->deref().get_type() != object_type::var_unbound_root;
+    return const_cast<var *>(this)->deref().get_type() != object_type::var_unbound_root;
   }
 
   object_ref var::get_root() const
@@ -164,22 +164,22 @@ namespace jank::runtime
 
   object_ref var::call() const
   {
-    return const_cast<var*>(this)->deref().call();
+    return const_cast<var *>(this)->deref().call();
   }
 
   object_ref var::call(object_ref const a1) const
   {
-    return const_cast<var*>(this)->deref().call(a1);
+    return const_cast<var *>(this)->deref().call(a1);
   }
 
   object_ref var::call(object_ref const a1, object_ref const a2) const
   {
-    return const_cast<var*>(this)->deref().call(a1, a2);
+    return const_cast<var *>(this)->deref().call(a1, a2);
   }
 
   object_ref var::call(object_ref const a1, object_ref const a2, object_ref const a3) const
   {
-    return const_cast<var*>(this)->deref().call(a1, a2, a3);
+    return const_cast<var *>(this)->deref().call(a1, a2, a3);
   }
 
   object_ref var::call(object_ref const a1,
@@ -187,7 +187,7 @@ namespace jank::runtime
                        object_ref const a3,
                        object_ref const a4) const
   {
-    return const_cast<var*>(this)->deref().call(a1, a2, a3, a4);
+    return const_cast<var *>(this)->deref().call(a1, a2, a3, a4);
   }
 
   object_ref var::call(object_ref const a1,
@@ -196,7 +196,7 @@ namespace jank::runtime
                        object_ref const a4,
                        object_ref const a5) const
   {
-    return const_cast<var*>(this)->deref().call(a1, a2, a3, a4, a5);
+    return const_cast<var *>(this)->deref().call(a1, a2, a3, a4, a5);
   }
 
   object_ref var::call(object_ref const a1,
@@ -206,7 +206,7 @@ namespace jank::runtime
                        object_ref const a5,
                        object_ref const a6) const
   {
-    return const_cast<var*>(this)->deref().call(a1, a2, a3, a4, a5, a6);
+    return const_cast<var *>(this)->deref().call(a1, a2, a3, a4, a5, a6);
   }
 
   object_ref var::call(object_ref const a1,
@@ -217,7 +217,7 @@ namespace jank::runtime
                        object_ref const a6,
                        object_ref const a7) const
   {
-    return const_cast<var*>(this)->deref().call(a1, a2, a3, a4, a5, a6, a7);
+    return const_cast<var *>(this)->deref().call(a1, a2, a3, a4, a5, a6, a7);
   }
 
   object_ref var::call(object_ref const a1,
@@ -229,7 +229,7 @@ namespace jank::runtime
                        object_ref const a7,
                        object_ref const a8) const
   {
-    return const_cast<var*>(this)->deref().call(a1, a2, a3, a4, a5, a6, a7, a8);
+    return const_cast<var *>(this)->deref().call(a1, a2, a3, a4, a5, a6, a7, a8);
   }
 
   object_ref var::call(object_ref const a1,
@@ -242,7 +242,7 @@ namespace jank::runtime
                        object_ref const a8,
                        object_ref const a9) const
   {
-    return const_cast<var*>(this)->deref().call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+    return const_cast<var *>(this)->deref().call(a1, a2, a3, a4, a5, a6, a7, a8, a9);
   }
 
   object_ref var::call(object_ref const a1,
@@ -256,7 +256,7 @@ namespace jank::runtime
                        object_ref const a9,
                        object_ref const a10) const
   {
-    return const_cast<var*>(this)->deref().call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    return const_cast<var *>(this)->deref().call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
   }
 
   object_ref var::call(object_ref const a1,
@@ -271,7 +271,7 @@ namespace jank::runtime
                        object_ref const a10,
                        object_ref const more) const
   {
-    return const_cast<var*>(this)->deref().call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
+    return const_cast<var *>(this)->deref().call(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, more);
   }
 
   object_ref var::deref()
