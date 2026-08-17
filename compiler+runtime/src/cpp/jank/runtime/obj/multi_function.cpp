@@ -164,7 +164,7 @@ namespace jank::runtime::obj
   {
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
 
-    if(is_preferred(deref(hierarchy), y, x))
+    if(is_preferred(hierarchy.deref(), y, x))
     {
       throw std::runtime_error{ util::format(
         "The `prefer-method` operation on multimethod `{}` cannot prefer `{}` over `{}` because "
@@ -221,7 +221,7 @@ namespace jank::runtime::obj
     static object_ref const isa{
       __rt_ctx->intern_var("clojure.core", "isa?").expect_ok()->deref()
     };
-    return truthy(isa.call(deref(hierarchy), x, y));
+    return truthy(isa.call(hierarchy.deref(), x, y));
   }
 
   bool multi_function::is_dominant(object_ref const hierarchy,
@@ -246,7 +246,7 @@ namespace jank::runtime::obj
 
   object_ref multi_function::get_method(object_ref const dispatch_val) const
   {
-    if(cached_hierarchy != deref(hierarchy))
+    if(cached_hierarchy != hierarchy.deref())
     {
       const_cast<multi_function *>(this)->reset_cache();
     }

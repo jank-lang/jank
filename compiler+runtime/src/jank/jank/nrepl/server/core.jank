@@ -97,5 +97,9 @@
       (let [client* (accept server*)]
         (future (handle-client client*))))))
 
-(defn background-main [& args]
-  (future (apply -main args)))
+(defn background-main
+  "Starts the nREPL server as a background thread. Returns a promise which will be delivered
+   the server is running."
+  [& args]
+  (future (apply -main args))
+  *ready?)

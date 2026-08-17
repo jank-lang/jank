@@ -305,6 +305,13 @@ namespace jank::runtime
     return next();
   }
 
+  object_ref object::deref()
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "deref",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
     if(lhs.get_type() != rhs.get_type())

@@ -1126,6 +1126,25 @@ namespace jank::runtime
       }
     }
 
+    /* behavior::deref */
+    object_ref deref() const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer i{ detail::as_integer(data) };
+        return i.deref();
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.deref();
+      }
+      else
+      {
+        return ptr()->deref();
+      }
+    }
+
     value_type *raw() const
     {
       return data;
@@ -1744,6 +1763,17 @@ namespace jank::runtime
       return static_cast<T *>(data)->nth(index, fallback);
     }
 
+    /* behavior::deref */
+    object_ref deref() const
+    {
+      if(is_nil())
+      {
+        return const_cast<obj::nil &>(_jank_nil).deref();
+      }
+
+      return static_cast<T *>(data)->deref();
+    }
+
     void *raw() const
     {
       return data;
@@ -2103,6 +2133,13 @@ namespace jank::runtime
       return i.nth(index, fallback);
     }
 
+    /* behavior::deref */
+    object_ref deref() const
+    {
+      obj::small_integer i{ data };
+      return i.deref();
+    }
+
     i32 raw() const
     {
       return data;
@@ -2453,6 +2490,13 @@ namespace jank::runtime
     {
       obj::small_real const i{ data };
       return i.nth(index, fallback);
+    }
+
+    /* behavior::deref */
+    object_ref deref() const
+    {
+      obj::small_real i{ data };
+      return i.deref();
     }
 
     f64 raw() const
@@ -2811,6 +2855,12 @@ namespace jank::runtime
     object_ref nth(object_ref const, object_ref const fallback) const
     {
       return fallback;
+    }
+
+    /* behavior::deref */
+    object_ref deref() const
+    {
+      return const_cast<obj::nil &>(_jank_nil).deref();
     }
 
     value_type *raw() const

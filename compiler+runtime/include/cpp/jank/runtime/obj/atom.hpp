@@ -14,14 +14,15 @@ namespace jank::runtime::obj
   {
     static constexpr object_type obj_type{ object_type::atom };
     static constexpr object_behavior obj_behaviors{ object_behavior::compare
-                                                    | object_behavior::ref_like };
+                                                    | object_behavior::ref_like
+                                                    | object_behavior::deref };
     static constexpr bool pointer_free{ false };
 
     atom();
     atom(object_ref const o);
 
-    /* behavior::derefable */
-    object_ref deref() const;
+    /* behavior::deref */
+    object_ref deref() override;
 
     /* behavior::metadatable */
     object_ref with_meta(object_ref const m);
