@@ -311,12 +311,12 @@ namespace jank::runtime
     sequence_like = 1 << 7,
     sequence_like_in_place = 1 << 8,
     indexable = 1 << 9,
+    deref = 1 << 10,
     //associatively_writable,
     //chunkable,
     //collection_like,
     //conjable,
     //countable,
-    //derefable,
     //map_like,
     //metadatable,
     //nameable,
@@ -541,6 +541,9 @@ namespace jank::runtime
      * This enables some checks at the beginning of the member function to be elided when
      * compared to next(), such as bounds or emptiness checks. */
     virtual object_ref next_in_place();
+
+    /* behavior::deref */
+    virtual object_ref deref();
 
     object_type type{};
     object_behavior behaviors{ object_behavior::none };

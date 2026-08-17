@@ -19,7 +19,7 @@ namespace jank::runtime::obj
   {
   }
 
-  object_ref atom::deref() const
+  object_ref atom::deref()
   {
     return val.load();
   }

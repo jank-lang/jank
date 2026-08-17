@@ -20,7 +20,8 @@ namespace jank::runtime
   struct var : object
   {
     static constexpr object_type obj_type{ object_type::var };
-    static constexpr object_behavior obj_behaviors{ object_behavior::call };
+    static constexpr object_behavior obj_behaviors{ object_behavior::call
+                                                    | object_behavior::deref };
     static constexpr bool pointer_free{ false };
 
     var() = delete;
@@ -122,8 +123,8 @@ namespace jank::runtime
                     object_ref const a10,
                     object_ref const more) const override;
 
-    /* behavior::derefable */
-    object_ref deref() const;
+    /* behavior::deref */
+    object_ref deref() override;
 
     /* behavior::metadatable */
     var_ref with_meta(object_ref m);

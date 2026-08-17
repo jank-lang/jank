@@ -9,7 +9,7 @@ namespace jank::runtime::obj
   {
   }
 
-  object_ref volatile_::deref() const
+  object_ref volatile_::deref()
   {
     return val;
   }
