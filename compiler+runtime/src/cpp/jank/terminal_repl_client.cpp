@@ -244,6 +244,9 @@ namespace jank::terminal_repl
       __rt_ctx->load_module("jank.nrepl.server.core", module::origin::latest).expect_ok();
     }
 
+    /* This will start the nREPL server on a background thread. Meanwhile, we'll set up
+     * some stuff for this thread and then we'll later block on an nREPL promise to ensure
+     * that it's completely running before we prompt the user. */
     auto const repl_main{
       __rt_ctx->intern_var("jank.nrepl.server.core", "background-main").expect_ok()
     };
@@ -288,6 +291,11 @@ namespace jank::terminal_repl
       std::make_pair(second_res_var, jank_nil),
       std::make_pair(third_res_var, jank_nil),
       std::make_pair(error_var, jank_nil)) };
+
+    /* We want to wait until the nREPL server is completely initialized, so we'll block on
+     * its promise. */
+    auto const repl_ready{ __rt_ctx->intern_var("jank.nrepl.server.core", "ready?").expect_ok() };
+    repl_ready->deref();
 
     while(true)
     {
