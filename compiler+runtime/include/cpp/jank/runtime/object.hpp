@@ -371,13 +371,13 @@ namespace jank::runtime
     sequence_like = 1 << 7,
     sequence_like_in_place = 1 << 8,
     indexable = 1 << 9,
-    array_like = 1 << 10,
+    deref = 1 << 10,
+    array_like = 1 << 11,
     //associatively_writable,
     //chunkable,
     //collection_like,
     //conjable,
     //countable,
-    //derefable,
     //map_like,
     //metadatable,
     //nameable,
@@ -603,6 +603,10 @@ namespace jank::runtime
      * compared to next(), such as bounds or emptiness checks. */
     virtual object_ref next_in_place();
 
+    /* behavior::deref */
+    virtual object_ref deref();
+
+    /* behavior::array_like */
     virtual array_element_type get_element_type() const;
     virtual object_ref aset(i64 const index, object_ref const val);
     virtual object_ref aclone() const;

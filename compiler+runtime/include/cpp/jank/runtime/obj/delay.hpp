@@ -11,14 +11,14 @@ namespace jank::runtime::obj
   struct delay : object
   {
     static constexpr object_type obj_type{ object_type::delay };
-    static constexpr object_behavior obj_behaviors{ object_behavior::none };
+    static constexpr object_behavior obj_behaviors{ object_behavior::deref };
     static constexpr bool pointer_free{ false };
 
     delay();
     delay(object_ref const fn);
 
-    /* behavior::derefable */
-    object_ref deref();
+    /* behavior::deref */
+    object_ref deref() override;
 
     /* behavior::realizable */
     bool is_realized() const;

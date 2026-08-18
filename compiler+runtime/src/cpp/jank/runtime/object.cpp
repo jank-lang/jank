@@ -305,6 +305,13 @@ namespace jank::runtime
     return next();
   }
 
+  object_ref object::deref()
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "deref",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
   array_element_type object::get_element_type() const
   {
     throw error::runtime_unsupported_behavior(type,

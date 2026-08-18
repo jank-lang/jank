@@ -1,0 +1,7 @@
+(ns clojure.pprint)
+
+(defn pprint [o]
+  (prn o))
+
+(defn write [o & kw-args]
+  (pr o))
