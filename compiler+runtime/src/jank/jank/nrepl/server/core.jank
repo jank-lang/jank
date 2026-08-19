@@ -12,6 +12,7 @@
             [jank.nrepl.server.handler.lookup]))
 
 (def *verbose (atom false))
+(def *ready? (promise))
 
 (defn log [& args]
   (when @*verbose
@@ -91,9 +92,14 @@
     ;; format to assist with setting up a REPL via jack-in.
     (println "nREPL server started on port" (str (.get_port server))
              "on host 127.0.0.1 -" (.get_endpoint server))
+    (deliver *ready? true)
     (while true
       (let [client* (accept server*)]
         (future (handle-client client*))))))
 
-(defn background-main [& args]
-  (future (apply -main args)))
+(defn background-main
+  "Starts the nREPL server as a background thread. Returns a promise which will be delivered
+   the server is running."
+  [& args]
+  (future (apply -main args))
+  *ready?)

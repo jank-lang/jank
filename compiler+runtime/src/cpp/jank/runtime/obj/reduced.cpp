@@ -10,7 +10,7 @@ namespace jank::runtime::obj
     jank_debug_assert(val.is_some());
   }
 
-  object_ref reduced::deref() const
+  object_ref reduced::deref()
   {
     return val;
   }

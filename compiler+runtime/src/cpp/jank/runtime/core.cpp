@@ -11,7 +11,6 @@
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/behavior/nameable.hpp>
-#include <jank/runtime/behavior/derefable.hpp>
 #include <jank/runtime/behavior/ref_like.hpp>
 #include <jank/runtime/behavior/realizable.hpp>
 #include <jank/runtime/core/call.hpp>
@@ -645,22 +644,7 @@ namespace jank::runtime
 
   object_ref deref(object_ref const o)
   {
-    /* TODO: Port visit_object: derefable. */
-    return visit_object(
-      [=](auto const typed_o) -> object_ref {
-        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
-
-        if constexpr(behavior::derefable<T>)
-        {
-          return typed_o->deref();
-        }
-        else
-        {
-          throw std::runtime_error{ util::format("Objects of type `{}` are not dereferenceable.",
-                                                 object_type_str(typed_o.get_type())) };
-        }
-      },
-      o);
+    return o.deref();
   }
 
   bool is_realized(object_ref const o)
