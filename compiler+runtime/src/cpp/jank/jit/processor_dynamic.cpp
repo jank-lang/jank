@@ -103,12 +103,6 @@ namespace jank::jit
      * into a vector for Clang. Since Clang wants a vector<char const*>, we need to
      * dynamically allocate. These will never be freed. */
     std::vector<char const *> args{};
-    std::stringstream flags{ JANK_JIT_FLAGS };
-    std::string flag;
-    while(std::getline(flags, flag, ' '))
-    {
-      args.emplace_back(strdup(flag.c_str()));
-    }
 
     if(auto const extra{ getenv("JANK_EXTRA_FLAGS") }; extra)
     {
@@ -162,6 +156,21 @@ namespace jank::jit
 
     args.emplace_back("-L");
     args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir).c_str()));
+
+    /* We add the JANK_JIT_FLAGS, which come from how jank was configured with CMake,
+     * after all of these others so that the include paths we add above will have
+     * precedence over the system include paths found in JANK_JIT_FLAGS.
+     *
+     * However, we put it before -include-pch, since there are defines and such in
+     * JANK_JIT_FLAGS which are needed for our PCH. */
+    {
+      std::stringstream flags{ JANK_JIT_FLAGS };
+      std::string flag;
+      while(std::getline(flags, flag, ' '))
+      {
+        args.emplace_back(strdup(flag.c_str()));
+      }
+    }
 
     /* We need to include our special runtime PCH. */
     auto pch_path{ util::find_pch(binary_version) };
