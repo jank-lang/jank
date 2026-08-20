@@ -1278,6 +1278,7 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_into_object_ref const inst, builder &b)
   {
     b.next_instruction();
+
     /* There's no need to do a conversion for void, since we always just
      * want nil. There's no need for generating a tmp for it either, since
      * we have a global nil constant. */
@@ -1911,7 +1912,7 @@ namespace jank::codegen
     bool param_shadows_fn{};
     for(auto const &param : fn.arity->params)
     {
-      param_shadows_fn |= param->name == fn.arity->fn_ctx->fn->name;
+      param_shadows_fn |= param.name->name == fn.arity->fn_ctx->fn->name;
     }
 
     util::format_to(
@@ -1921,9 +1922,25 @@ namespace jank::codegen
       fn.arity->params.size(),
       param_shadows_fn ? "" : munged_fn_name);
 
+    /* If parameters have type hints, we'll generate the actual param with a hidden name and
+     * then introduce a local with the param name, along with whatever conversion is necessary
+     * to get it to the right type. */
+    native_vector<jtl::immutable_string> param_names;
+
     for(auto const &param : fn.arity->params)
     {
-      util::format_to(b.body_buffer, ", jank::runtime::object_ref {}", munge(param->name));
+      if(is_untyped_object(param.type))
+      {
+        auto const munged{ munge(param.name->name) };
+        util::format_to(b.body_buffer, ", jank::runtime::object_ref {}", munged);
+        param_names.emplace_back(munged);
+      }
+      else
+      {
+        auto const munged{ munge(__rt_ctx->unique_string(param.name->name)) };
+        util::format_to(b.body_buffer, ", jank::runtime::object_ref {}", munged);
+        param_names.emplace_back(munged);
+      }
     }
 
     util::format_to(b.body_buffer, ") {\n");
@@ -1939,6 +1956,37 @@ namespace jank::codegen
                       closure_ctx,
                       closure_ctx,
                       munged_fn_name);
+    }
+
+    u8 param_index{};
+    for(auto const &param : fn.arity->params)
+    {
+      /* Raw pointers are unboxed from opaque boxes. */
+      if(Cpp::IsPointerType(param.type))
+      {
+        auto const munged{ munge(param.name->name) };
+        auto const type_name{ get_qualified_type_name(Cpp::GetCanonicalType(param.type)) };
+        util::format_to(
+          b.body_buffer,
+          "auto {}{ "
+          "static_cast<{}>(jank_unbox_with_source_c(\"{}\", {}.erase().raw(), \"{}\")) };\n",
+          munged,
+          type_name,
+          type_name,
+          param_names[param_index],
+          util::escape(param.name->get_meta().to_code_string()));
+      }
+      /* Any other non-object_ref uses trait conversion. */
+      else if(!is_untyped_object(param.type))
+      {
+        auto const munged{ munge(param.name->name) };
+        util::format_to(b.body_buffer,
+                        "auto &&{}{ jank::runtime::convert<{}>::from_object({}) };",
+                        munged,
+                        get_qualified_type_name(param.type),
+                        param_names[param_index]);
+      }
+      ++param_index;
     }
 
     b.block_index = 0;

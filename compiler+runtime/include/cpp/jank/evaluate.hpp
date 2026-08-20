@@ -55,9 +55,8 @@ namespace jank::analyze
 
 namespace jank::evaluate
 {
-  analyze::expr::function_ref wrap_expression(analyze::expression_ref const expr,
-                                              jtl::immutable_string const &name,
-                                              native_vector<runtime::obj::symbol_ref> params);
+  analyze::expr::function_ref
+  wrap_expression(analyze::expression_ref const expr, jtl::immutable_string const &name);
   analyze::expr::function_ref wrap_expressions(native_vector<analyze::expression_ref> const &exprs,
                                                analyze::processor const &an_prc,
                                                jtl::immutable_string const &name);

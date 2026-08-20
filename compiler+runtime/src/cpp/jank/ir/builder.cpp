@@ -67,11 +67,11 @@ namespace jank::ir
     block_index = blk_index;
   }
 
-  identifier
-  builder::parameter(analyze::expression_position const pos, jtl::immutable_string const &value)
+  identifier builder::parameter(analyze::expression_position const pos,
+                                jtl::ptr<void> const type,
+                                jtl::immutable_string const &value)
   {
     auto name{ runtime::munge(value) };
-    auto const type{ untyped_object_ref_type() };
     used_identifiers.emplace(name);
     current_function()->blocks[block_index].instructions.emplace_back(
       jtl::make_ref<inst::parameter>(name, type, location));
