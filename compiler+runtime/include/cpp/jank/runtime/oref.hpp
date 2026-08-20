@@ -399,6 +399,21 @@ namespace jank::runtime
       return ptr()->type;
     }
 
+    array_element_type get_element_type() const
+    {
+      return ptr()->get_element_type();
+    }
+
+    object_ref aset(i64 const index, object_ref const val)
+    {
+      return ptr()->aset(index, val);
+    }
+
+    object_ref aclone() const
+    {
+      return ptr()->aclone();
+    }
+
     bool equal(object_ref const o) const
     {
       if(detail::is_tagged_small_int(data))
@@ -1376,6 +1391,21 @@ namespace jank::runtime
         return object_type::nil;
       }
       return static_cast<T *>(data)->type;
+    }
+
+    array_element_type get_element_type() const
+    {
+      return static_cast<T *>(data)->get_element_type();
+    }
+
+    object_ref aset(i64 const index, object_ref const val)
+    {
+      return static_cast<T *>(data)->aset(index, val);
+    }
+
+    object_ref aclone() const
+    {
+      return static_cast<T *>(data)->aclone();
     }
 
     bool equal(object_ref const o) const
