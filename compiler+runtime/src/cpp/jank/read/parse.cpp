@@ -611,13 +611,19 @@ namespace jank::read::parse
                                      start_token,
                                      latest_token };
         }
-        if constexpr(std::same_as<T, obj::symbol>)
+        else if constexpr(jtl::is_any_same<T, obj::symbol, obj::persistent_list>)
         {
-          return object_source_info{ obj::persistent_array_map::create_unique(),
+          static auto const tag_kw(__rt_ctx->intern_keyword("", "tag").expect_ok());
+          return object_source_info{ obj::persistent_array_map::create_unique(
+                                       tag_kw,
+                                       make_box<obj::persistent_list>(
+                                         std::in_place,
+                                         make_box<obj::symbol>("", "quote"),
+                                         typed_val)),
                                      start_token,
                                      latest_token };
         }
-        if constexpr(behavior::map_like<T>)
+        else if constexpr(behavior::map_like<T>)
         {
           return object_source_info{ typed_val, start_token, latest_token };
         }

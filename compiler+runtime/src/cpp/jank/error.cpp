@@ -62,7 +62,7 @@ namespace jank::error
       case kind::parse_invalid_quote:
         return "Invalid quote.";
       case kind::parse_invalid_meta_hint_value:
-        return "Meta hint must be a keyword or map.";
+        return "Meta hint must be a keyword, symbol, list, or map.";
       case kind::parse_invalid_meta_hint_target:
         return "Invalid meta hint target.";
       case kind::parse_unsupported_reader_macro:
@@ -721,11 +721,18 @@ namespace jank::error
     {
       source = usage_source;
       notes[0].source = usage_source;
+      return this;
     }
-    else
+
+    for(auto const &note : notes)
     {
-      notes.emplace_back("Used here.", usage_source, note::kind::info);
+      if(usage_source.overlaps(note.source))
+      {
+        return this;
+      }
     }
+
+    notes.emplace_back("Used here.", usage_source, note::kind::info);
     return this;
   }
 
