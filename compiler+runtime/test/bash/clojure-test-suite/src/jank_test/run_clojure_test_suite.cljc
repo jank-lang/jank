@@ -16,7 +16,7 @@
     clojure.core-test.atom
     clojure.core-test.bigdec
     clojure.core-test.bigint
-    clojure.core-test.binding ; TODO: port future
+    clojure.core-test.binding
     clojure.core-test.bit-and
     clojure.core-test.bit-and-not
     clojure.core-test.bit-clear
@@ -40,6 +40,7 @@
     ; clojure.core-test.coll-qmark ; FIXME: `seq` does not satisfy `coll?`
     clojure.core-test.comment
     clojure.core-test.compare
+    clojure.core-test.concat
     clojure.core-test.conj
     clojure.core-test.conj-bang
     clojure.core-test.cons
@@ -57,6 +58,7 @@
     clojure.core-test.disj-bang
     clojure.core-test.dissoc
     clojure.core-test.dissoc-bang
+    clojure.core-test.distinct
     clojure.core-test.doseq
     clojure.core-test.double
     clojure.core-test.double-qmark
@@ -68,6 +70,7 @@
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
     clojure.core-test.eval
     clojure.core-test.even-qmark
+    clojure.core-test.every-qmark
     clojure.core-test.false-qmark
     clojure.core-test.ffirst
     clojure.core-test.find
@@ -80,12 +83,14 @@
     ; clojure.core-test.format ; TODO: port format
     clojure.core-test.get
     clojure.core-test.get-in
+    ; clojure.core-test.group-by
     clojure.core-test.gt
     clojure.core-test.gt-eq
     clojure.core-test.hash-map
     clojure.core-test.hash-set
     clojure.core-test.ident-qmark
     clojure.core-test.identical-qmark
+    ; clojure.core-test.identity ; runtime/unable-to-load-module error: "'#inst' parsing not currently supported."
     clojure.core-test.ifn-qmark
     clojure.core-test.inc
     clojure.core-test.int
@@ -95,16 +100,19 @@
     clojure.core-test.intern
     clojure.core-test.interpose
     clojure.core-test.juxt
-    ; clojure.core-test.key ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
+    clojure.core-test.key
     clojure.core-test.keys
     clojure.core-test.keyword
     clojure.core-test.keyword-qmark
     clojure.core-test.last
+    clojure.core-test.lazy-seq
+    clojure.core-test.list
     clojure.core-test.list-qmark
     clojure.core-test.long
     clojure.core-test.lt
     clojure.core-test.lt-eq
     clojure.core-test.make-hierarchy
+    clojure.core-test.map
     clojure.core-test.map-qmark
     clojure.core-test.mapcat
     ; clojure.core-test.max ; FIXME: Failing tests.
@@ -125,6 +133,7 @@
     clojure.core-test.not
     ; clojure.core-test.not_empty ; libc++abi: terminating due to uncaught exception of type jank::runtime::oref<jank::runtime::object>.
     ; clojure.core-test.not-eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
+    clojure.core-test.not-every-qmark
     clojure.core-test.nth
     clojure.core-test.nthnext
     clojure.core-test.nthrest
@@ -140,6 +149,7 @@
     clojure.core-test.parse-long
     clojure.core-test.parse-uuid
     clojure.core-test.partial
+    clojure.core-test.partition
     clojure.core-test.peek
     clojure.core-test.persistent-bang
     ; clojure.core-test.plus ; FIXME: Failing tests.
@@ -167,12 +177,15 @@
     ; clojure.core-test.realized-qmark ; TODO: port promise
     ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map. TODO: into-array.
     ; clojure.core-test.rem ; FIXME: Failing tests.
+    clojure.core-test.remove
     ; clojure.core-test.remove-watch ; TODO: port sync
     clojure.core-test.repeat
+    clojure.core-test.repeatedly
     ; clojure.core-test.rest ; "TODO: port int-array"
     clojure.core-test.reverse
     ; clojure.core-test.reversible-qmark ; TODO: port reversible?, TODO: port object-array
     ; clojure.core-test.rseq ; TODO: port rseq
+    clojure.core-test.run-bang
     clojure.core-test.second
     clojure.core-test.select-keys
     ; clojure.core-test.seq ; FIXME: There is no 'seq' member function within 'const char[5]'.
@@ -213,7 +226,7 @@
     clojure.core-test.unsigned-bit-shift-right
     clojure.core-test.update
     clojure.core-test.uuid-qmark
-    ; clojure.core-test.val ; analyze/unresolved-symbol error: Unable to resolve symbol 'clojure.lang.MapEntry/create'.
+    clojure.core-test.val
     clojure.core-test.vals
     clojure.core-test.var-qmark
     ; clojure.core-test.vec ; analyze/invalid-cpp-operator-call error: Binary operator aget is not supported for 'jank::runtime::object *' and 'jank::runtime::object *'.
@@ -227,6 +240,8 @@
     ; clojure.core-test.with-precision ; TODO: port with-precision, INFO: SKIP - defprotocol
     clojure.core-test.zero-qmark
     clojure.core-test.zipmap
+
+    ; clojure.edn_test.read-string ; Unable to find the module.
 
     clojure.string-test.blank-qmark
     clojure.string-test.capitalize
