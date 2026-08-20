@@ -1,9 +1,12 @@
 #pragma once
 
+#include <utility>
+
 #include <jtl/option.hpp>
 #include <jtl/primitive.hpp>
 
 #include <jank/runtime/convert/builtin.hpp>
+#include <jank/runtime/obj/native_array_sequence.hpp>
 #include <jank/runtime/obj/opaque_box.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/util/fmt.hpp>
@@ -77,7 +80,6 @@ namespace jank::runtime::obj
   {
     static constexpr object_type obj_type{ object_type::array };
     static constexpr object_behavior obj_behaviors{ object_behavior::get | object_behavior::seqable
-                                                    | object_behavior::sequence_like
                                                     | object_behavior::indexable
                                                     | object_behavior::array_like };
     static constexpr bool pointer_free{ false };
@@ -120,12 +122,7 @@ namespace jank::runtime::obj
     object_ref aclone() const override
     {
       auto const clone(make_box<array<T>>(size));
-
-      for(usize i{}; i < size; ++i)
-      {
-        clone->data[i] = data[i];
-      }
-
+      std::copy(data.data, data.data + size, clone->data.data);
       return clone;
     }
 
@@ -208,24 +205,24 @@ namespace jank::runtime::obj
     /* behavior::seqable */
     object_ref seq() const override
     {
-      return runtime::detail::untagged(this);
+      if(size == 0)
+      {
+        return {};
+      }
+
+      auto const a(new(UseGC) object_ref[size]);
+
+      for(usize i{}; i < size; ++i)
+      {
+        a[i] = convert<T>::into_object(data[i]);
+      }
+
+      return make_box<native_array_sequence>(a, size);
     }
 
     object_ref fresh_seq() const override
     {
-      return runtime::detail::untagged(this);
-    }
-
-    /* behavior::sequence_like */
-    object_ref first() const override
-    {
-      return convert<T>::into_object(data[0]);
-    }
-
-    object_ref next() const override
-    {
-      /* TODO: How should we implement this? */
-      return {};
+      return seq();
     }
 
     /* behavior::countable */

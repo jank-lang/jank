@@ -32,7 +32,7 @@
     clojure.core-test.boolean-qmark
     clojure.core-test.bound-fn
     clojure.core-test.bound-fn-star
-    ; clojure.core-test.butlast ; "TODO: port int-array"
+    clojure.core-test.butlast
     ; clojure.core-test.byte ; TODO: port byte, Expecting whitespace after the last token. due to M.
     ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
     clojure.core-test.char
@@ -63,7 +63,7 @@
     clojure.core-test.double
     clojure.core-test.double-qmark
     clojure.core-test.drop
-    ; clojure.core-test.drop-last ; "TODO: port int-array"
+    clojure.core-test.drop-last
     ; clojure.core-test.drop-while ; "TODO: port int-array" /  "TODO: port sequence"
     clojure.core-test.empty
     clojure.core-test.empty-qmark
@@ -126,7 +126,7 @@
     clojure.core-test.nan-qmark
     clojure.core-test.neg-int-qmark
     clojure.core-test.neg-qmark
-    ; clojure.core-test.next ; FIXME: Failing tests.
+    clojure.core-test.next
     clojure.core-test.nfirst
     clojure.core-test.nil-qmark
     clojure.core-test.nnext
@@ -175,13 +175,13 @@
     clojure.core-test.rational-qmark
     ; clojure.core-test.rationalize ; TODO: port rationalize
     ; clojure.core-test.realized-qmark ; TODO: port promise
-    ; clojure.core-test.reduce ; parse/odd-entries-in-map error: Odd number of entries in map. TODO: into-array.
+    clojure.core-test.reduce
     ; clojure.core-test.rem ; FIXME: Failing tests.
     clojure.core-test.remove
     ; clojure.core-test.remove-watch ; TODO: port sync
     clojure.core-test.repeat
     clojure.core-test.repeatedly
-    ; clojure.core-test.rest ; "TODO: port int-array"
+    clojure.core-test.rest
     clojure.core-test.reverse
     ; clojure.core-test.reversible-qmark ; TODO: port reversible?, TODO: port object-array
     ; clojure.core-test.rseq ; TODO: port rseq
@@ -200,7 +200,7 @@
     clojure.core-test.simple-keyword-qmark
     clojure.core-test.simple-symbol-qmark
     ; clojure.core-test.slash ; FIXME: Failing tests.
-    ; clojure.core-test.some ; TODO: port int-array, TODO: port long-array, TODO: port double-array & TODO: port float-array.
+    clojure.core-test.some
     clojure.core-test.some-fn
     clojure.core-test.some-qmark
     clojure.core-test.sort
