@@ -318,6 +318,12 @@ namespace jank::ir
           }
         }
         break;
+      case instruction_kind::cpp_def:
+        {
+          auto &i{ static_cast<inst::cpp_def &>(*inst.data) };
+          rewrite(i.value, old_name, new_name);
+        }
+        break;
       case instruction_kind::cpp_delete:
         {
           auto &i{ static_cast<inst::cpp_delete &>(*inst.data) };

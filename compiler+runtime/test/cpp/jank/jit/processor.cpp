@@ -11,6 +11,7 @@
 
 #include <jtl/terminal.hpp>
 
+#include <jank/error.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/read/lex.hpp>
@@ -203,7 +204,8 @@ namespace jank::jit
           }
           else if(expect_success)
           {
-            failures.push_back({ dir_entry.path(), "Unknown exception thrown" });
+            failures.push_back(
+              { dir_entry.path(), util::format("Exception thrown: {}", e->message) });
             passed = false;
           }
         }
