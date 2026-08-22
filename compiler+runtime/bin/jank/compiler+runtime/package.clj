@@ -110,7 +110,7 @@ package() {
 ;;   pkgbuild-template    - selmer PKGBUILD template to render for packaging
 ;;   win-depends          - runtime dependency list for the package
 ;;
-;; Outputs: mingw-w64-clang-x86_64-jank-<pkgver>-<rev-count>.<commit>-any.pkg.tar.zst
+;; Outputs: mingw-w64-clang-x86_64-jank-<pkgver>-<commit-epoch>.<commit>-any.pkg.tar.zst
 ;;   in build/makepkg-jank/.
 ;; When GITHUB_OUTPUT exists in the environment (i.e. on CI) writes
 ;;   path to it as msys2-pkg=<package-path>.
@@ -118,7 +118,7 @@ package() {
   (let [repo-root (b.f/canonicalize (b.f/path compiler+runtime-dir ".."))
         build-dir (b.f/path compiler+runtime-dir "build" "makepkg-jank")
         commit-count (str/trim (:out @(util/quiet-shell {:dir repo-root}
-                                                        "git rev-list --count HEAD")))
+                                                        "git log -1 --format=%ct")))
         commit-hash (str/trim (:out @(util/quiet-shell {:dir repo-root}
                                                        "git rev-parse --short HEAD")))
         pkgbuild (selmer/render pkgbuild-template
