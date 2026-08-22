@@ -435,7 +435,8 @@ namespace jank::error
   static usize display_length(jtl::immutable_string const &line)
   {
     usize length{};
-    for(usize i{ 0 }; i < line.size() - 2; ++i)
+    /* TODO: Had -2 here? */
+    for(usize i{ 0 }; i < line.size(); ++i)
     {
       if(line[i] == '\u001b')
       {
@@ -654,10 +655,45 @@ namespace jank::error
     return sb.release();
   }
 
+  static native_vector<native_vector<usize>>
+  determine_column_padding(native_vector<native_vector<jtl::immutable_string>> const &rows,
+                           usize const min_width)
+  {
+    if(rows.empty())
+    {
+      return {};
+    }
+
+    native_vector<usize> col_widths;
+    col_widths.resize(rows.at(0).size(), min_width);
+    for(auto const &cols : rows)
+    {
+      for(usize col{}; col < cols.size(); ++col)
+      {
+        col_widths[col] = std::max(col_widths[col], display_length(cols[col]));
+      }
+    }
+
+    native_vector<native_vector<usize>> col_padding;
+    col_padding.resize(rows.size());
+    auto const additional_padding{ 2 };
+    for(usize row{}; row < rows.size(); ++row)
+    {
+      col_padding[row].resize(col_widths.size());
+      for(usize col{}; col < rows[row].size(); ++col)
+      {
+        col_padding[row][col]
+          = (additional_padding + col_widths[col]) - display_length(rows[row][col]);
+      }
+    }
+
+    return col_padding;
+  }
+
   static jtl::immutable_string
-  columns(jtl::immutable_string const &prefix,
-          native_vector<native_vector<jtl::immutable_string>> const &rows,
-          u8 const min_width)
+  render_columns(jtl::immutable_string const &prefix,
+                 native_vector<native_vector<jtl::immutable_string>> const &rows,
+                 native_vector<native_vector<usize>> const &col_padding)
   {
     if(rows.empty())
     {
@@ -666,24 +702,13 @@ namespace jank::error
 
     jtl::string_builder sb;
 
-    native_vector<usize> col_widths;
-    col_widths.resize(rows.at(0).size(), min_width);
-    for(auto const &cols : rows)
-    {
-      for(usize col{}; col < cols.size(); ++col)
-      {
-        col_widths[col] = std::max(col_widths[col], cols[col].size());
-      }
-    }
-
-    for(auto const &cols : rows)
+    for(usize row{}; row < rows.size(); ++row)
     {
       sb(prefix);
-      for(usize col{}; col < cols.size(); ++col)
+      for(usize col{}; col < rows[row].size(); ++col)
       {
-        std::string col_str(col_widths[col] + 2, ' ');
-        std::copy(cols[col].begin(), cols[col].end(), col_str.begin());
-        sb(col_str);
+        sb(rows[row][col]);
+        sb(jtl::immutable_string(col_padding[row][col], ' '));
       }
       sb('\n');
     }
@@ -793,7 +818,7 @@ namespace jank::error
           util::print("  {}✗{}", text_style::red, text_style::reset);
         }
         util::print(" {}", format_and_highlight_cpp(c.signature, "    "));
-        util::println("    {}╰─ declared at {}{}",
+        util::println("  {}╰─ declared at {}{}",
                       text_style::bright_black,
                       shorten_path(c.source),
                       text_style::reset);
@@ -828,7 +853,8 @@ namespace jank::error
           rows.emplace_back(jtl::move(row));
         }
 
-        util::print("{}", columns("    ", rows, 4));
+        auto const column_padding{ determine_column_padding(rows, 4) };
+        util::print("{}", render_columns("    ", rows, column_padding));
 
         util::println("    {}──────────────────────────────────────────────────────────{}",
                       text_style::bright_black,

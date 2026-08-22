@@ -950,10 +950,10 @@ namespace jank::analyze
     };
     if(new_types_res.is_err())
     {
-      return error::analyze_invalid_cpp_function_call(new_types_res.expect_err(),
-                                                      object_source(val->form),
-                                                      latest_expansion(macro_expansions))
-        ->add_usage(object_source(form));
+      return new_types_res.expect_err()
+        ->add_usage(object_source(val->form))
+        ->add_usage(object_source(form))
+        ->add_expansion_note(latest_expansion(macro_expansions));
     }
 
     /* TODO: We don't actually use this. Is it needed? */

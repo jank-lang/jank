@@ -40,12 +40,16 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> non_void_type(jtl::ptr<void> const type);
   jtl::ptr<void> expression_scope(expression_ref const expr);
 
-  jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
+  jtl::result<std::vector<Cpp::TemplateArgInfo>, error_ref>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
                                        std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                        bool is_member_call);
 
   error::candidate resolve_candidate(jtl::ptr<void> const fn,
+                                     jtl::immutable_string const &reason,
+                                     bool const viable);
+  error::candidate resolve_candidate(jtl::ptr<void> const fn,
+                                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                      jtl::immutable_string const &reason,
                                      bool const viable);
 

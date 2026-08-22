@@ -978,7 +978,7 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
-  jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
+  jtl::result<std::vector<Cpp::TemplateArgInfo>, error_ref>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
                                        std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                        bool const is_member_call)
@@ -1036,9 +1036,17 @@ namespace jank::analyze::cpp_util
         {
           if(needed_conversion.is_some())
           {
-            /* TODO: Show possible matches. */
-            return err("No normal overload match was found. When considering automatic trait "
-                       "conversions, this call is ambiguous.");
+            native_vector<error::candidate> candidates;
+            candidates.reserve(matching_fns.size());
+            for(auto const match : matching_fns)
+            {
+              candidates.emplace_back(
+                resolve_candidate(match, arg_types, "This candidate is ambiguous.", true));
+            }
+            return error::analyze_invalid_cpp_call(
+              util::format("No normal overload match was found. When considering automatic trait "
+                           "conversions, this call is ambiguous."),
+              candidates);
           }
           needed_conversion = fn_idx;
           converted_args[arg_idx + member_offset] = param_type;
@@ -1061,7 +1069,7 @@ namespace jank::analyze::cpp_util
   }
 
   error::candidate resolve_candidate(jtl::ptr<void> const fn,
-                                     std::vector<Cpp::TemplateArgInfo> &arg_types,
+                                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                      jtl::immutable_string const &reason,
                                      bool const viable)
   {
@@ -1127,7 +1135,7 @@ namespace jank::analyze::cpp_util
             resolve_candidate(match, arg_types, "This candidate is ambiguous.", true));
         }
         return error::analyze_invalid_cpp_call(
-          util::format("This call is ambiguous between `{}` different overloads.", matches.size()),
+          util::format("This call is ambiguous between {} different overloads.", matches.size()),
           candidates);
       }
 
