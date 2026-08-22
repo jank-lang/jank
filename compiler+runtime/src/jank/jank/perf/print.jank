@@ -102,7 +102,7 @@
     (printf "{}: {} samples from {} evaluations collected in {}\n" label (count samples) (:evaluations report) sum)
     (printf " Time  ({})   : {}\n" (bold :blue "median") median)
     (printf " Time  ({} ± {}) : {} ± {}\n" (bold :green "mean") (color :green "σ") mean stddev)
-    (printf " Range ({} … {}): {} … {}\n" (bold :cyan "min") (color :magenta "max") min max)))
+    (printf " Range ({} ... {}): {} ... {}\n" (bold :cyan "min") (color :magenta "max") min max)))
 
 (defn print-gc [report]
   (let [{:keys [allocated-bytes collections collection-time]} (:gc report)

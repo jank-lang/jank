@@ -44,7 +44,12 @@ namespace jank::analyze::cpp_util
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
                                        std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                        bool is_member_call);
-  jtl::string_result<jtl::ptr<void>>
+
+  error::candidate resolve_candidate(jtl::ptr<void> const fn,
+                                     jtl::immutable_string const &reason,
+                                     bool const viable);
+
+  jtl::result<jtl::ptr<void>, error_ref>
   find_best_overload(std::vector<void *> const &fns,
                      std::vector<Cpp::TemplateArgInfo> &arg_types,
                      std::vector<Cpp::TCppScope_t> const &arg_scopes);

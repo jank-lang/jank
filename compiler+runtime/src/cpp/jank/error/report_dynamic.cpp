@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <deque>
 
+#include <boost/algorithm/string/replace.hpp>
+
 #include <jtl/terminal.hpp>
 
 #include <jank/util/string.hpp>
@@ -15,6 +17,9 @@
 #include <jank/runtime/rtti.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/path.hpp>
+#include <jank/util/environment.hpp>
+#include <jank/analyze/cpp_util.hpp>
+#include <jank/util/clang_format.hpp>
 
 namespace jank::error
 {
@@ -649,6 +654,88 @@ namespace jank::error
     return sb.release();
   }
 
+  static jtl::immutable_string
+  columns(jtl::immutable_string const &prefix,
+          native_vector<native_vector<jtl::immutable_string>> const &rows,
+          u8 const min_width)
+  {
+    if(rows.empty())
+    {
+      return "";
+    }
+
+    jtl::string_builder sb;
+
+    native_vector<usize> col_widths;
+    col_widths.resize(rows.at(0).size(), min_width);
+    for(auto const &cols : rows)
+    {
+      for(usize col{}; col < cols.size(); ++col)
+      {
+        col_widths[col] = std::max(col_widths[col], cols[col].size());
+      }
+    }
+
+    for(auto const &cols : rows)
+    {
+      sb(prefix);
+      for(usize col{}; col < cols.size(); ++col)
+      {
+        std::string col_str(col_widths[col] + 2, ' ');
+        std::copy(cols[col].begin(), cols[col].end(), col_str.begin());
+        sb(col_str);
+      }
+      sb('\n');
+    }
+
+    return sb.release();
+  }
+
+  static bool is_subpath(std::filesystem::path const &path, std::filesystem::path const &base)
+  {
+    auto const mismatch_pair{ std::mismatch(path.begin(), path.end(), base.begin(), base.end()) };
+    return mismatch_pair.second == base.end();
+  }
+
+  /* Path shortening works in the follow sequence:
+   *
+   * If the path is relative to the CWD, replace the CWD with `./`.
+   *
+   * Otherwise, if the path is relative to the home directory, replace HOME with `~/`.
+   *
+   * Otherwise, return the path unmodified. */
+  jtl::immutable_string shorten_path(jtl::immutable_string const &path_str)
+  {
+    std::filesystem::path const path{ path_str.c_str() };
+    auto const cwd{ std::filesystem::current_path() };
+    if(is_subpath(path, cwd))
+    {
+      return "./" + std::filesystem::relative(path, cwd).string();
+    }
+
+    std::filesystem::path const home{ util::user_home_dir() };
+    if(is_subpath(path, home))
+    {
+      return "~/" + std::filesystem::relative(path, home).string();
+    }
+
+    return path.string();
+  }
+
+  jtl::immutable_string
+  format_and_highlight_cpp(jtl::immutable_string const &code, jtl::immutable_string const &prefix)
+  {
+    auto const formatted{ util::format_cpp_source(code) };
+    if(formatted.is_err())
+    {
+      return ui::highlight_cpp(code);
+    }
+
+    std::string source{ formatted.expect_ok() };
+    boost::replace_all(source, "\n", util::format("\n{}", prefix));
+    return ui::highlight_cpp(source);
+  }
+
   void report(error_ref const e)
   {
     plan const p{ e };
@@ -685,11 +772,69 @@ namespace jank::error
     }
     if(p.snippets.empty())
     {
-      util::println("https://book.jank-lang.org/reference/error/{}.html\n", kind_str(e->kind));
+      util::println("https://book.jank-lang.org/reference/error/{}.html", kind_str(e->kind));
     }
     else
     {
-      util::println("{}\n", documentation_box(e, max_width));
+      util::println("{}", documentation_box(e, max_width));
+    }
+
+    if(!e->candidates.empty())
+    {
+      util::println("  Candidates considered:\n");
+      for(auto const &c : e->candidates)
+      {
+        if(c.viable)
+        {
+          util::print("  {}✓{}", text_style::green, text_style::reset);
+        }
+        else
+        {
+          util::print("  {}✗{}", text_style::red, text_style::reset);
+        }
+        util::print(" {}", format_and_highlight_cpp(c.signature, "    "));
+        util::println("    {}╰─ declared at {}{}",
+                      text_style::bright_black,
+                      shorten_path(c.source),
+                      text_style::reset);
+
+        native_vector<native_vector<jtl::immutable_string>> rows;
+        for(auto const &a : c.arguments)
+        {
+          native_vector<jtl::immutable_string> row;
+          jtl::string_builder conversion;
+          switch(a.conversion)
+          {
+            case error::argument_conversion_type::none:
+              util::format_to(conversion, "{}✓ exact match", text_style::green);
+              break;
+            case error::argument_conversion_type::implicit:
+              util::format_to(conversion, "{}~ implicit conversion", text_style::yellow);
+              break;
+            case error::argument_conversion_type::trait:
+              util::format_to(conversion, "{}⇝ trait conversion", text_style::blue);
+              break;
+            case error::argument_conversion_type::invalid:
+              util::format_to(conversion, "{}✗ no conversion", text_style::red);
+              break;
+          }
+          conversion(text_style::reset);
+          row.emplace_back(a.name);
+          row.emplace_back(util::format(
+            ": {} → {}",
+            ui::highlight_cpp(analyze::cpp_util::get_qualified_type_name(a.arg_type)),
+            ui::highlight_cpp(analyze::cpp_util::get_qualified_type_name(a.param_type))));
+          row.emplace_back(conversion.release());
+          rows.emplace_back(jtl::move(row));
+        }
+
+        util::print("{}", columns("    ", rows, 4));
+
+        util::println("    {}──────────────────────────────────────────────────────────{}",
+                      text_style::bright_black,
+                      text_style::reset);
+        util::println("    {}{}\n", (c.viable ? "Viable: " : "Not viable: "), c.reason);
+      }
     }
 
     if(e->cause)

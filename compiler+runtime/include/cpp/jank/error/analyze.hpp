@@ -113,6 +113,8 @@ namespace jank::error
   error_ref analyze_invalid_cpp_call(jtl::immutable_string const &message,
                                      read::source const &source,
                                      runtime::object_ref const expansion);
+  error_ref analyze_invalid_cpp_call(jtl::immutable_string const &message,
+                                     native_vector<error::candidate> const &candidates);
   error_ref
   analyze_invalid_cpp_conversion(jtl::immutable_string const &message, read::source const &source);
   error_ref analyze_invalid_cpp_conversion(jtl::immutable_string const &message,

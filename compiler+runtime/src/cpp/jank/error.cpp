@@ -480,20 +480,6 @@ namespace jank::error
       .release();
   }
 
-  static void add_expansion_note(base &e, runtime::object_ref const expansion)
-  {
-    auto source{ runtime::object_source(expansion) };
-    if(source == read::source::unknown())
-    {
-      return;
-    }
-
-    /* We just want to point at the start of the expansion, not underline the
-     * whole thing. It may be huge! */
-    source.end = source.start;
-    e.notes.emplace_back("Expanded from this macro.", source, note::kind::info);
-  }
-
   base::base(enum kind const k, read::source const &source)
     : kind{
       k
@@ -520,7 +506,7 @@ namespace jank::error
     , source{ source }
     , notes{ { default_note_message, source } }
   {
-    add_expansion_note(*this, expansion);
+    add_expansion_note(expansion);
   }
 
   base::base(enum kind const k, jtl::immutable_string const &message, read::source const &source)
@@ -544,7 +530,7 @@ namespace jank::error
     , source{ source }
     , notes{ { default_note_message, source } }
   {
-    add_expansion_note(*this, expansion);
+    add_expansion_note(expansion);
   }
 
   base::base(enum kind const k,
@@ -560,7 +546,7 @@ namespace jank::error
     , notes{ { default_note_message, source } },
     trace{ std::move(trace) }
   {
-    add_expansion_note(*this, expansion);
+    add_expansion_note(expansion);
   }
 
   base::base(enum kind const k,
@@ -600,7 +586,7 @@ namespace jank::error
     , source{ source }
     , notes{ { note_message, source } }
   {
-    add_expansion_note(*this, expansion);
+    add_expansion_note(expansion);
   }
 
   base::base(enum kind const k, read::source const &source, note const &note)
@@ -632,7 +618,7 @@ namespace jank::error
     , source{ source }
     , notes{ note }
   {
-    add_expansion_note(*this, expansion);
+    add_expansion_note(expansion);
   }
 
   base::base(enum kind const k,
@@ -659,7 +645,7 @@ namespace jank::error
     , notes{ { default_note_message, source } },
     cause{ cause }
   {
-    add_expansion_note(*this, expansion);
+    add_expansion_note(expansion);
   }
 
   base::base(enum kind const k,
@@ -676,7 +662,7 @@ namespace jank::error
     , notes{ { default_note_message, source } },
     cause{ cause }, trace{ std::move(trace) }
   {
-    add_expansion_note(*this, expansion);
+    add_expansion_note(expansion);
   }
 
   bool base::operator==(base const &rhs) const
@@ -743,6 +729,22 @@ namespace jank::error
       source = usage_source;
       notes[0].source = usage_source;
     }
+    return this;
+  }
+
+  jtl::ref<base> base::add_expansion_note(runtime::object_ref const expansion)
+  {
+    auto source{ runtime::object_source(expansion) };
+    if(source == read::source::unknown())
+    {
+      return this;
+    }
+
+    /* We just want to point at the start of the expansion, not underline the
+     * whole thing. It may be huge! */
+    source.end = source.start;
+    notes.emplace_back("Expanded from this macro.", source, note::kind::info);
+
     return this;
   }
 

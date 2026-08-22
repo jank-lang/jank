@@ -839,10 +839,10 @@ namespace jank::analyze
     auto const match_res{ cpp_util::find_best_overload(fns, arg_types, arg_scopes) };
     if(match_res.is_err())
     {
-      return error::analyze_invalid_cpp_function_call(util::format("{}", match_res.expect_err()),
-                                                      object_source(val->form),
-                                                      latest_expansion(macro_expansions))
-        ->add_usage(object_source(form));
+      return match_res.expect_err()
+        ->add_usage(object_source(val->form))
+        ->add_usage(object_source(form))
+        ->add_expansion_note(latest_expansion(macro_expansions));
     }
     jtl::ptr<void> match{ match_res.expect_ok() };
     if(match)
@@ -964,11 +964,10 @@ namespace jank::analyze
     auto const conversion_match_res{ cpp_util::find_best_overload(fns, new_types, empty_scopes) };
     if(conversion_match_res.is_err())
     {
-      return error::analyze_invalid_cpp_function_call(
-               util::format("{}", conversion_match_res.expect_err()),
-               object_source(val->form),
-               latest_expansion(macro_expansions))
-        ->add_usage(object_source(form));
+      return match_res.expect_err()
+        ->add_usage(object_source(val->form))
+        ->add_usage(object_source(form))
+        ->add_expansion_note(latest_expansion(macro_expansions));
     }
     match = conversion_match_res.expect_ok();
     if(match)
@@ -4212,18 +4211,25 @@ namespace jank::analyze
 
     auto const raw_string{ expect_object<runtime::obj::persistent_string>(obj)->data };
 
+    auto const source{ object_source(l) };
+    auto const has_source{ source != read::source::unknown() };
+
     /* We wrap all cpp/raw strings in unique preprocessor guards because jank currently does
-       codegen twice when compiling and this can lead to ODR violations. */
+     * codegen twice when compiling and this can lead to ODR violations. */
     auto const content_hash{ std::hash<jtl::immutable_string>{}(raw_string) };
     auto const guard_name{ util::format("JANK_CPP_RAW_{}", content_hash) };
-    auto const guarded_code{ util::format("#ifndef {}\n"
-                                          "#define {}\n"
-                                          "\n"
-                                          "{}\n"
-                                          "#endif\n",
-                                          guard_name,
-                                          guard_name,
-                                          raw_string) };
+    auto const guarded_code{ util::format(
+      "#ifndef {}\n"
+      "#define {}\n"
+      "\n"
+      "{}\n"
+      "{}\n"
+      "#endif\n",
+      guard_name,
+      guard_name,
+      (has_source ? util::format("#line {} \"{}\"", source.start.line, util::escape(source.file))
+                  : ""),
+      raw_string) };
 
     return jtl::make_ref<expr::cpp_raw>(position, current_frame, needs_box, l, guarded_code);
   }

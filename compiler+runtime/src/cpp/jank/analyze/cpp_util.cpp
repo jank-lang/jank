@@ -149,12 +149,12 @@ namespace jank::analyze::cpp_util
             auto const old_scope_name{ Cpp::GetQualifiedName(old_scope) };
             if(old_scope_name.empty())
             {
-              return err(util::format("Unable to find '{}' within the global namespace.", subs));
+              return err(util::format("Unable to find `{}` within the global namespace.", subs));
             }
             else
             {
               return err(
-                util::format("Unable to find '{}' within namespace '{}'.", subs, old_scope_name));
+                util::format("Unable to find `{}` within namespace `{}`.", subs, old_scope_name));
             }
           }
           if(auto const res{ instantiate_if_needed(fns[0]) }; res.is_err())
@@ -173,7 +173,7 @@ namespace jank::analyze::cpp_util
       if(!scope)
       {
         return err(
-          util::format("Unable to find '{}' within namespace '{}' while trying to resolve '{}'.",
+          util::format("Unable to find `{}` within namespace `{}` while trying to resolve `{}`.",
                        subs,
                        Cpp::GetQualifiedName(old_scope),
                        sym));
@@ -395,7 +395,7 @@ namespace jank::analyze::cpp_util
     if(exec_res || trap.hasErrorOccurred())
     {
       throw error::codegen_internal_failure(
-        util::format("Unable to get RTTI for '{}'.", Cpp::GetTypeAsString(type)));
+        util::format("Unable to get RTTI for `{}`.", Cpp::GetTypeAsString(type)));
     }
 
     auto const lljit{ runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine() };
@@ -1049,7 +1049,60 @@ namespace jank::analyze::cpp_util
     return ok(std::move(converted_args));
   }
 
-  jtl::string_result<jtl::ptr<void>>
+  error::candidate
+  resolve_candidate(jtl::ptr<void> const fn, jtl::immutable_string const &reason, bool const viable)
+  {
+    error::candidate ret;
+    ret.signature = Cpp::GetFunctionSignature(fn);
+    ret.reason = reason;
+    ret.source = Cpp::GetFunctionSourceInfo(fn);
+    ret.viable = viable;
+    return ret;
+  }
+
+  error::candidate resolve_candidate(jtl::ptr<void> const fn,
+                                     std::vector<Cpp::TemplateArgInfo> &arg_types,
+                                     jtl::immutable_string const &reason,
+                                     bool const viable)
+  {
+    auto ret{ resolve_candidate(fn, reason, viable) };
+    auto const num_args{ Cpp::GetFunctionNumArgs(fn) };
+    for(usize i{}; i < num_args; ++i)
+    {
+      auto const param_type{ Cpp::GetFunctionArgType(fn, i) };
+      auto const conversion{ determine_implicit_conversion(arg_types[i].m_Type, param_type) };
+      error::argument_conversion_type arg_conversion{};
+      switch(conversion)
+      {
+        case implicit_conversion_action::unknown:
+          break;
+        case implicit_conversion_action::none:
+          if(Cpp::GetCanonicalType(arg_types[i].m_Type) == Cpp::GetCanonicalType(param_type))
+          {
+            break;
+          }
+          /* Fallthrough. */
+        case implicit_conversion_action::cast:
+          arg_conversion = error::argument_conversion_type::implicit;
+          break;
+        case implicit_conversion_action::into_object:
+        case implicit_conversion_action::from_object:
+          arg_conversion = error::argument_conversion_type::trait;
+          break;
+      }
+      auto arg_name{ Cpp::GetFunctionArgName(fn, i) };
+      if(arg_name.empty())
+      {
+        arg_name = "arg" + std::to_string(i);
+      }
+
+      ret.arguments.emplace_back(arg_name, arg_types[i].m_Type, param_type, arg_conversion);
+    }
+
+    return ret;
+  }
+
+  jtl::result<jtl::ptr<void>, error_ref>
   find_best_overload(std::vector<void *> const &fns,
                      std::vector<Cpp::TemplateArgInfo> &arg_types,
                      std::vector<Cpp::TCppScope_t> const &arg_scopes)
@@ -1066,27 +1119,39 @@ namespace jank::analyze::cpp_util
       auto const match{ matches[0] };
       if(matches.size() != 1)
       {
-        /* TODO: Show all matches. */
-        return err("This call is ambiguous.");
+        native_vector<error::candidate> candidates;
+        candidates.reserve(matches.size());
+        for(auto const match : matches)
+        {
+          candidates.emplace_back(
+            resolve_candidate(match, arg_types, "This candidate is ambiguous.", true));
+        }
+        return error::analyze_invalid_cpp_call(
+          util::format("This call is ambiguous between `{}` different overloads.", matches.size()),
+          candidates);
       }
 
       auto const member{ is_non_static_member_function(match) };
       if(Cpp::IsFunctionDeleted(match))
       {
-        /* TODO: Would be great to point at the C++ source for where it's deleted. */
-        return err(util::format("Unable to call '{}' since it's deleted.", Cpp::GetName(match)));
+        return error::analyze_invalid_cpp_call(
+          util::format("The `{}` function cannot be called, since it's deleted.",
+                       Cpp::GetName(match)),
+          { resolve_candidate(match, "This function is deleted.", false) });
       }
       if(Cpp::IsPrivateMethod(match))
       {
-        return err(
-          util::format("The '{}' function is private. It can only be accessed if it's public.",
-                       Cpp::GetName(match)));
+        return error::analyze_invalid_cpp_call(
+          util::format("The `{}` function is private. It can only be accessed if it's public.",
+                       Cpp::GetName(match)),
+          { resolve_candidate(match, "This function is private.", false) });
       }
       if(Cpp::IsProtectedMethod(match))
       {
-        return err(
-          util::format("The '{}' function is protected. It can only be accessed if it's public.",
-                       Cpp::GetName(match)));
+        return error::analyze_invalid_cpp_call(
+          util::format("The `{}` function is protected. It can only be accessed if it's public.",
+                       Cpp::GetName(match)),
+          { resolve_candidate(match, "This function is protected.", false) });
       }
 
       /* It's possible that we instantiated some unresolved templates during overload resolution.
