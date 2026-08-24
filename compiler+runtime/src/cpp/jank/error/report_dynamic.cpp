@@ -464,12 +464,15 @@ namespace jank::error
       case note::kind::info:
       case note::kind::info_line:
         sb(text_style::bright_blue);
+        break;
       case note::kind::warning:
       case note::kind::warning_line:
         sb(text_style::yellow);
+        break;
       case note::kind::error:
       case note::kind::error_line:
         sb(text_style::red);
+        break;
     }
 
     if(note::kind::line_start <= n.kind && n.kind <= note::kind::line_end)
@@ -818,7 +821,7 @@ namespace jank::error
           util::print("  {}✗{}", text_style::red, text_style::reset);
         }
         util::print(" {}", format_and_highlight_cpp(c.signature, "    "));
-        util::println("  {}╰─ declared at {}{}",
+        util::println("{}╰─ declared at {}{}",
                       text_style::bright_black,
                       shorten_path(c.source),
                       text_style::reset);

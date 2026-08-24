@@ -1065,20 +1065,10 @@ namespace jank::analyze
       }
     }
 
-    /* TODO: Find a better way to render this. */
-    jtl::string_builder sb;
-    for(usize i{}; i != arg_types.size(); ++i)
-    {
-      util::format_to(sb,
-                      " With argument {} having type `{}`.",
-                      i,
-                      cpp_util::get_qualified_type_name(arg_types[i].m_Type));
-    }
-
-    return error::analyze_invalid_cpp_call(util::format("No matching call to `{}` {}.{}",
+    return error::analyze_invalid_cpp_call(util::format("No matching call to `{}` {}.",
                                                         scope_name,
-                                                        is_ctor ? "constructor" : "function",
-                                                        sb.release()),
+                                                        is_ctor ? "constructor" : "function"),
+                                           cpp_util::resolve_candidates(fns, arg_types),
                                            object_source(val->form),
                                            latest_expansion(macro_expansions))
       ->add_usage(object_source(form));
@@ -1182,7 +1172,7 @@ namespace jank::analyze
       }
 
       return error::analyze_invalid_cpp_call(
-        util::format("Unable to find call operator for `{}`.",
+        util::format("There is no call operator for `{}`.",
                      cpp_util::get_qualified_type_name(source_type)),
         object_source(o),
         latest_expansion(macro_expansions));

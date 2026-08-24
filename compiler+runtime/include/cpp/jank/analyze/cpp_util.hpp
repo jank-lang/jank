@@ -52,6 +52,9 @@ namespace jank::analyze::cpp_util
                                      std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                      jtl::immutable_string const &reason,
                                      bool const viable);
+  native_vector<error::candidate>
+  resolve_candidates(std::vector<void *> const &,
+                     std::vector<Cpp::TemplateArgInfo> const &arg_types);
 
   jtl::result<jtl::ptr<void>, error_ref>
   find_best_overload(std::vector<void *> const &fns,

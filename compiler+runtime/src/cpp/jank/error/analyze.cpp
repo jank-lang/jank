@@ -275,6 +275,16 @@ namespace jank::error
     return ret;
   }
 
+  error_ref analyze_invalid_cpp_call(jtl::immutable_string const &message,
+                                     native_vector<error::candidate> const &candidates,
+                                     read::source const &source,
+                                     runtime::object_ref const expansion)
+  {
+    auto const ret{ make_error(kind::analyze_invalid_cpp_call, message, source, expansion) };
+    ret->candidates = candidates;
+    return ret;
+  }
+
   error_ref
   analyze_invalid_cpp_conversion(jtl::immutable_string const &message, read::source const &source)
   {

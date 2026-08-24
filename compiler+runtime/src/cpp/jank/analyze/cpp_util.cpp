@@ -1074,40 +1074,113 @@ namespace jank::analyze::cpp_util
                                      bool const viable)
   {
     auto ret{ resolve_candidate(fn, reason, viable) };
-    auto const num_args{ Cpp::GetFunctionNumArgs(fn) };
-    for(usize i{}; i < num_args; ++i)
+    auto const num_params{ Cpp::GetFunctionNumArgs(fn) };
+    for(usize i{}; i < num_params; ++i)
     {
+      auto arg_conversion{ error::argument_conversion_type::invalid };
       auto const param_type{ Cpp::GetFunctionArgType(fn, i) };
-      auto const conversion{ determine_implicit_conversion(arg_types[i].m_Type, param_type) };
-      error::argument_conversion_type arg_conversion{};
-      switch(conversion)
-      {
-        case implicit_conversion_action::unknown:
-          break;
-        case implicit_conversion_action::none:
-          if(Cpp::GetCanonicalType(arg_types[i].m_Type) == Cpp::GetCanonicalType(param_type))
-          {
-            break;
-          }
-          /* Fallthrough. */
-        case implicit_conversion_action::cast:
-          arg_conversion = error::argument_conversion_type::implicit;
-          break;
-        case implicit_conversion_action::into_object:
-        case implicit_conversion_action::from_object:
-          arg_conversion = error::argument_conversion_type::trait;
-          break;
-      }
       auto arg_name{ Cpp::GetFunctionArgName(fn, i) };
       if(arg_name.empty())
       {
         arg_name = "arg" + std::to_string(i);
       }
 
+      if(param_type)
+      {
+        auto const conversion{ determine_implicit_conversion(arg_types[i].m_Type, param_type) };
+        switch(conversion)
+        {
+          case implicit_conversion_action::unknown:
+            if(ret.reason.empty())
+            {
+              ret.reason = util::format("No known conversion for argument `{}`.", arg_name);
+            }
+            break;
+          case implicit_conversion_action::none:
+            if(Cpp::GetCanonicalType(arg_types[i].m_Type) == Cpp::GetCanonicalType(param_type))
+            {
+              arg_conversion = error::argument_conversion_type::none;
+              break;
+            }
+            /* Fallthrough. */
+          case implicit_conversion_action::cast:
+            arg_conversion = error::argument_conversion_type::implicit;
+            break;
+          case implicit_conversion_action::into_object:
+          case implicit_conversion_action::from_object:
+            arg_conversion = error::argument_conversion_type::trait;
+            break;
+        }
+      }
+
       ret.arguments.emplace_back(arg_name, arg_types[i].m_Type, param_type, arg_conversion);
     }
 
     return ret;
+  }
+
+  error::candidate resolve_failed_candidate(jtl::ptr<void> const fn,
+                                            std::vector<Cpp::TemplateArgInfo> const &arg_types)
+  {
+    if(Cpp::IsFunctionDeleted(fn))
+    {
+      return resolve_candidate(fn, "This function is deleted.", false);
+    }
+    if(Cpp::IsPrivateMethod(fn))
+    {
+      return resolve_candidate(fn, "This member function is private.", false);
+    }
+    if(Cpp::IsProtectedMethod(fn))
+    {
+      return resolve_candidate(fn, "This member function is protected.", false);
+    }
+
+    auto const num_params{ Cpp::GetFunctionRequiredArgs(fn) };
+    auto const is_member_call{ is_non_static_member_function(fn) };
+    auto const arg_count{ is_member_call ? arg_types.size() - 1 : arg_types.size() };
+    if((arg_count < num_params) || (!Cpp::IsFunctionVariadic(fn) && num_params < arg_count))
+    {
+      return resolve_candidate(
+        fn,
+        util::format("This function requires {} argument{}, but {} {} provided.",
+                     num_params,
+                     num_params == 1 ? "" : "s",
+                     arg_count,
+                     arg_count == 1 ? "was" : "were"),
+        false);
+    }
+
+    if(is_member_call)
+    {
+      if(Cpp::IsMethod(fn) && !Cpp::IsConstMethod(fn) && !Cpp::IsConstType(arg_types[0].m_Type))
+      {
+        return resolve_candidate(
+          fn,
+          "This member function is non-const, but the invoking object is const.",
+          false);
+      }
+
+      auto member_arg_types{ arg_types };
+      member_arg_types.erase(member_arg_types.begin());
+      return resolve_candidate(fn, member_arg_types, "", false);
+    }
+    else
+    {
+      return resolve_candidate(fn, arg_types, "", false);
+    }
+  }
+
+  native_vector<error::candidate>
+  resolve_candidates(std::vector<void *> const &fns,
+                     std::vector<Cpp::TemplateArgInfo> const &arg_types)
+  {
+    native_vector<error::candidate> candidates;
+    candidates.reserve(fns.size());
+    for(auto const fn : fns)
+    {
+      candidates.emplace_back(resolve_failed_candidate(fn, arg_types));
+    }
+    return candidates;
   }
 
   jtl::result<jtl::ptr<void>, error_ref>
