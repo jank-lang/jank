@@ -117,15 +117,26 @@ package() {
 (defmethod create-package! :win [_props]
   (let [repo-root (b.f/canonicalize (b.f/path compiler+runtime-dir ".."))
         build-dir (b.f/path compiler+runtime-dir "build" "makepkg-jank")
-        commit-count (str/trim (:out @(util/quiet-shell {:dir repo-root}
+        commit-epoch (str/trim (:out @(util/quiet-shell {:dir repo-root}
                                                         "git log -1 --format=%ct")))
         commit-hash (str/trim (:out @(util/quiet-shell {:dir repo-root}
                                                        "git rev-parse --short HEAD")))
         pkgbuild (selmer/render pkgbuild-template
                                 {:pkgver jank-version
-                                 :pkgrel (str commit-count "." commit-hash)
+                                 :pkgrel (str commit-epoch "." commit-hash)
                                  :deps win-depends})
         pkgbuild-dest (b.f/path build-dir "PKGBUILD")]
+
+
+    ;; DEBUG
+    (util/log-info "compiler+runtime-dir: " compiler+runtime-dir)
+    (util/log-info "repo-root: " repo-root)
+    (util/log-info "portable-cmd: "
+                   (util/command-make-portable "git log -1 --format=%ct"))
+    (util/log-info "git-date: "
+                   (pr-str  @(util/quiet-shell
+                              {:dir repo-root}
+                              "git log -1 --format=%ct")))
 
     ;; Clean and create the makepkg build directory
     (b.f/delete-tree build-dir)
