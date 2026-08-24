@@ -1097,7 +1097,11 @@ namespace jank::analyze::cpp_util
             }
             break;
           case implicit_conversion_action::none:
-            if(Cpp::GetCanonicalType(arg_types[i].m_Type) == Cpp::GetCanonicalType(param_type))
+            if(Cpp::GetCanonicalType(arg_types[i].m_Type) == Cpp::GetCanonicalType(param_type)
+               || (Cpp::GetCanonicalType(arg_types[i].m_Type)
+                   == Cpp::GetCanonicalType(Cpp::GetTypeWithConst(param_type)))
+               || (Cpp::GetCanonicalType(Cpp::GetTypeWithConst(arg_types[i].m_Type))
+                   == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(param_type))))
             {
               arg_conversion = error::argument_conversion_type::none;
               break;
