@@ -4,6 +4,7 @@
 #include <boost/algorithm/string/replace.hpp>
 
 #include <jtl/terminal.hpp>
+#include <jtl/utf8.hpp>
 
 #include <jank/util/string.hpp>
 #include <jank/util/fmt.hpp>
@@ -430,12 +431,10 @@ namespace jank::error
     return sb.release();
   }
 
-  /* TODO: Support Unicode as well. */
   /* Counts the length of a string, ignoring ANSI escape sequences. */
   static usize display_length(jtl::immutable_string const &line)
   {
     usize length{};
-    /* TODO: Had -2 here? */
     for(usize i{ 0 }; i < line.size(); ++i)
     {
       if(line[i] == '\u001b')
@@ -448,6 +447,7 @@ namespace jank::error
         continue;
       }
 
+      i += jtl::next_char_size(line, i) - 1;
       ++length;
     }
 
@@ -850,10 +850,8 @@ namespace jank::error
           row.emplace_back(a.name);
           row.emplace_back(util::format(
             ": {} → {}",
-            ui::highlight_cpp(
-              analyze::cpp_util::get_qualified_truncated_type_name(a.arg_type)),
-            ui::highlight_cpp(
-              analyze::cpp_util::get_qualified_truncated_type_name(a.param_type))));
+            ui::highlight_cpp(analyze::cpp_util::get_qualified_truncated_type_name(a.arg_type)),
+            ui::highlight_cpp(analyze::cpp_util::get_qualified_truncated_type_name(a.param_type))));
           row.emplace_back(conversion.release());
           rows.emplace_back(jtl::move(row));
         }
