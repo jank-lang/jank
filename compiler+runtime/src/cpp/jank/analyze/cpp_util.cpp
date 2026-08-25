@@ -981,6 +981,7 @@ namespace jank::analyze::cpp_util
   jtl::result<std::vector<Cpp::TemplateArgInfo>, error_ref>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
                                        std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                                       std::vector<Cpp::TCppScope_t> const &arg_scopes,
                                        bool const is_member_call)
   {
     auto const member_offset{ (is_member_call ? 1 : 0) };
@@ -1040,8 +1041,11 @@ namespace jank::analyze::cpp_util
             candidates.reserve(matching_fns.size());
             for(auto const match : matching_fns)
             {
-              candidates.emplace_back(
-                resolve_candidate(match, arg_types, "This candidate is ambiguous.", true));
+              candidates.emplace_back(resolve_candidate(match,
+                                                        arg_types,
+                                                        arg_scopes,
+                                                        "This candidate is ambiguous.",
+                                                        true));
             }
             return error::analyze_invalid_cpp_call(
               util::format("No normal overload match was found. When considering automatic trait "
@@ -1070,10 +1074,20 @@ namespace jank::analyze::cpp_util
 
   error::candidate resolve_candidate(jtl::ptr<void> const fn,
                                      std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                                     std::vector<Cpp::TCppScope_t> const &arg_scopes,
                                      jtl::immutable_string const &reason,
                                      bool const viable)
   {
     auto ret{ resolve_candidate(fn, reason, viable) };
+
+    auto const cand_info{ Cpp::GetOverloadCandidateInfo(fn, arg_types, arg_scopes) };
+    if(cand_info.m_IsTemplateInstantiationFailure)
+    {
+      ret.reason = "Template instantiation failure.";
+      ret.clang_reason = cand_info.m_Reason;
+      return ret;
+    }
+
     auto const num_params{ Cpp::GetFunctionNumArgs(fn) };
     for(usize i{}; i < num_params; ++i)
     {
@@ -1124,7 +1138,8 @@ namespace jank::analyze::cpp_util
   }
 
   error::candidate resolve_failed_candidate(jtl::ptr<void> const fn,
-                                            std::vector<Cpp::TemplateArgInfo> const &arg_types)
+                                            std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                                            std::vector<Cpp::TCppScope_t> const &arg_scopes)
   {
     if(Cpp::IsFunctionDeleted(fn))
     {
@@ -1166,23 +1181,24 @@ namespace jank::analyze::cpp_util
 
       auto member_arg_types{ arg_types };
       member_arg_types.erase(member_arg_types.begin());
-      return resolve_candidate(fn, member_arg_types, "", false);
+      return resolve_candidate(fn, member_arg_types, arg_scopes, "", false);
     }
     else
     {
-      return resolve_candidate(fn, arg_types, "", false);
+      return resolve_candidate(fn, arg_types, arg_scopes, "", false);
     }
   }
 
   native_vector<error::candidate>
   resolve_candidates(std::vector<void *> const &fns,
-                     std::vector<Cpp::TemplateArgInfo> const &arg_types)
+                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                     std::vector<Cpp::TCppScope_t> const &arg_scopes)
   {
     native_vector<error::candidate> candidates;
     candidates.reserve(fns.size());
     for(auto const fn : fns)
     {
-      candidates.emplace_back(resolve_failed_candidate(fn, arg_types));
+      candidates.emplace_back(resolve_failed_candidate(fn, arg_types, arg_scopes));
     }
     return candidates;
   }
@@ -1209,7 +1225,7 @@ namespace jank::analyze::cpp_util
         for(auto const match : matches)
         {
           candidates.emplace_back(
-            resolve_candidate(match, arg_types, "This candidate is ambiguous.", true));
+            resolve_candidate(match, arg_types, arg_scopes, "This candidate is ambiguous.", true));
         }
         return error::analyze_invalid_cpp_call(
           util::format("This call is ambiguous between {} different overloads.", matches.size()),

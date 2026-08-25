@@ -945,8 +945,11 @@ namespace jank::analyze
     }
 
     //util::println("looking for conversion match");
+    /* We don't bother with figuring out scopes for conversion calls. They need to match up
+     * perfectly or we just won't do it. */
+    std::vector<Cpp::TCppScope_t> const empty_scopes(arg_scopes.size(), nullptr);
     auto const new_types_res{
-      cpp_util::find_best_arg_types_with_conversions(fns, arg_types, is_member_call)
+      cpp_util::find_best_arg_types_with_conversions(fns, arg_types, empty_scopes, is_member_call)
     };
     if(new_types_res.is_err())
     {
@@ -958,9 +961,6 @@ namespace jank::analyze
 
     /* TODO: We don't actually use this. Is it needed? */
     auto new_types{ new_types_res.expect_ok() };
-    /* We don't bother with figuring out scopes for conversion calls. They need to match up
-     * perfectly or we just won't do it. */
-    std::vector<Cpp::TCppScope_t> const empty_scopes(arg_scopes.size(), nullptr);
     auto const conversion_match_res{ cpp_util::find_best_overload(fns, new_types, empty_scopes) };
     if(conversion_match_res.is_err())
     {
@@ -1068,7 +1068,7 @@ namespace jank::analyze
     return error::analyze_invalid_cpp_call(util::format("No matching call to `{}` {}.",
                                                         scope_name,
                                                         is_ctor ? "constructor" : "function"),
-                                           cpp_util::resolve_candidates(fns, arg_types),
+                                           cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
                                            object_source(val->form),
                                            latest_expansion(macro_expansions))
       ->add_usage(object_source(form));

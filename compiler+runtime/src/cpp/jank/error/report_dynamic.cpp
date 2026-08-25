@@ -862,7 +862,15 @@ namespace jank::error
         util::println("    {}──────────────────────────────────────────────────────────{}",
                       text_style::bright_black,
                       text_style::reset);
-        util::println("    {}{}\n", (c.viable ? "Viable: " : "Not viable: "), c.reason);
+        util::println("    {}{}", (c.viable ? "Viable: " : "Not viable: "), c.reason);
+        if(!c.clang_reason.empty())
+        {
+          util::println("    {}╰─ {}{}",
+                        text_style::bright_black,
+                        c.clang_reason,
+                        text_style::reset);
+        }
+        util::println("");
       }
     }
 

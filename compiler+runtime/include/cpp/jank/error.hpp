@@ -204,6 +204,7 @@ namespace jank::error
     jtl::immutable_string signature;
     jtl::immutable_string source;
     jtl::immutable_string reason;
+    jtl::immutable_string clang_reason;
     native_vector<argument> arguments;
     bool viable{};
   };
