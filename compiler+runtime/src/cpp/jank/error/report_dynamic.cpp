@@ -850,8 +850,10 @@ namespace jank::error
           row.emplace_back(a.name);
           row.emplace_back(util::format(
             ": {} → {}",
-            ui::highlight_cpp(analyze::cpp_util::get_qualified_type_name(a.arg_type)),
-            ui::highlight_cpp(analyze::cpp_util::get_qualified_type_name(a.param_type))));
+            ui::highlight_cpp(
+              analyze::cpp_util::get_qualified_truncated_type_name(a.arg_type)),
+            ui::highlight_cpp(
+              analyze::cpp_util::get_qualified_truncated_type_name(a.param_type))));
           row.emplace_back(conversion.release());
           rows.emplace_back(jtl::move(row));
         }

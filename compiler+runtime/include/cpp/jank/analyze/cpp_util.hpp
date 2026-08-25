@@ -30,6 +30,7 @@ namespace jank::analyze::cpp_util
 
   jtl::immutable_string get_qualified_name(jtl::ptr<void> scope);
   jtl::immutable_string get_qualified_type_name(jtl::ptr<void> type);
+  jtl::immutable_string get_qualified_truncated_type_name(jtl::ptr<void> type);
   void register_rtti(jtl::ptr<void> type);
 
   jtl::ptr<void> expression_type(expression_ref expr);

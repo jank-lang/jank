@@ -316,20 +316,34 @@ namespace jank::analyze::cpp_util
     return ret;
   }
 
+  jtl::immutable_string get_qualified_name_helper(jtl::ptr<void> const scope, bool const truncated)
+  {
+    auto res{ truncated ? Cpp::GetTruncatedQualifiedCompleteName(scope)
+                        : Cpp::GetQualifiedCompleteName(scope) };
+    if(res == "<unnamed>")
+    {
+      if(truncated)
+      {
+        res = Cpp::GetTypeAsTruncatedString(Cpp::GetTypeFromScope(scope));
+      }
+      else
+      {
+        res = Cpp::GetTypeAsString(Cpp::GetTypeFromScope(scope));
+      }
+    }
+    return res;
+  }
+
   /* For some scopes, CppInterOp will give an <unnamed> result here. That's not
    * helpful for error reporting, so we turn that into the full type name if
    * needed. */
   jtl::immutable_string get_qualified_name(jtl::ptr<void> const scope)
   {
-    auto res{ Cpp::GetQualifiedCompleteName(scope) };
-    if(res == "<unnamed>")
-    {
-      res = Cpp::GetTypeAsString(Cpp::GetTypeFromScope(scope));
-    }
-    return res;
+    return get_qualified_name_helper(scope, false);
   }
 
-  jtl::immutable_string get_qualified_type_name(jtl::ptr<void> const type)
+  static jtl::immutable_string
+  get_qualified_type_name_helper(jtl::ptr<void> const type, bool const truncated)
   {
     if(type == untyped_object_ptr_type())
     {
@@ -354,7 +368,7 @@ namespace jank::analyze::cpp_util
     {
       if(auto const *alias_decl{ alias->getDecl() }; alias_decl)
       {
-        return get_qualified_name(alias_decl);
+        return get_qualified_name_helper(alias_decl, truncated);
       }
     }
 
@@ -371,7 +385,7 @@ namespace jank::analyze::cpp_util
 
     if(auto const scope{ Cpp::GetScopeFromType(type) }; scope)
     {
-      auto name{ get_qualified_name(scope) };
+      auto name{ get_qualified_name_helper(scope, truncated) };
       if(Cpp::IsPointerType(type))
       {
         name = name + "*";
@@ -379,7 +393,22 @@ namespace jank::analyze::cpp_util
       return name;
     }
 
+    if(truncated)
+    {
+      return Cpp::GetTypeAsTruncatedString(type);
+    }
+
     return Cpp::GetTypeAsString(type);
+  }
+
+  jtl::immutable_string get_qualified_type_name(jtl::ptr<void> const type)
+  {
+    return get_qualified_type_name_helper(type, false);
+  }
+
+  jtl::immutable_string get_qualified_truncated_type_name(jtl::ptr<void> const type)
+  {
+    return get_qualified_type_name_helper(type, true);
   }
 
   /* This is a quick and dirty helper to get the RTTI for a given QualType. We need
