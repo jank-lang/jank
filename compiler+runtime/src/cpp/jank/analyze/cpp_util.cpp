@@ -1117,10 +1117,12 @@ namespace jank::analyze::cpp_util
       auto const is_member_call{ is_non_static_member_function(fn) };
       auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
                                                                  : arg_types.size() };
-      auto const required_args{ Cpp::GetFunctionRequiredArgs(fn) };
-      auto const has_arity_mismatch{
-        (arg_count < required_args) || (!Cpp::IsFunctionVariadic(fn) && required_args < arg_count)
-      };
+      auto const num_required_params{ Cpp::GetFunctionRequiredArgs(fn) };
+      auto const num_params{ Cpp::GetFunctionNumArgs(fn) };
+      auto const has_arity_mismatch{ (arg_count < num_required_params)
+                                     || (!Cpp::IsFunctionVariadic(fn)
+                                         && !Cpp::IsFunctionVariadicTemplate(fn)
+                                         && num_params < arg_count) };
       auto const cand_info{ Cpp::GetOverloadCandidateInfo(fn, arg_types, arg_scopes) };
 
       if(Cpp::IsFunctionDeleted(fn))
@@ -1133,8 +1135,8 @@ namespace jank::analyze::cpp_util
       }
       if(has_arity_mismatch)
       {
-        auto const arity_delta{ arg_count < required_args ? required_args - arg_count
-                                                          : arg_count - required_args };
+        auto const arity_delta{ arg_count < num_required_params ? num_required_params - arg_count
+                                                                : arg_count - num_required_params };
         return {
           fn,
           { candidate_rank_tier::arity_mismatch, 0, arity_delta },
@@ -1290,7 +1292,8 @@ namespace jank::analyze::cpp_util
       auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
                                                                  : arg_types.size() };
       if((arg_count < num_required_params)
-         || (!Cpp::IsFunctionVariadic(ranked.fn) && num_params < arg_count))
+         || (!Cpp::IsFunctionVariadic(ranked.fn) && !Cpp::IsFunctionVariadicTemplate(ranked.fn)
+             && num_params < arg_count))
       {
         return resolve_candidate(
           ranked.fn,
