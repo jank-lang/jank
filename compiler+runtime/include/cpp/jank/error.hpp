@@ -88,7 +88,6 @@ namespace jank::error
     analyze_invalid_cpp_operator_call,
     analyze_invalid_cpp_constructor_call,
     analyze_invalid_cpp_member_call,
-    analyze_invalid_cpp_function_call,
     analyze_invalid_cpp_call,
     analyze_invalid_cpp_conversion,
     analyze_invalid_cpp_symbol,

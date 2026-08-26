@@ -781,7 +781,7 @@ namespace jank::analyze
       case expr::cpp_value::value_kind::variable:
       case expr::cpp_value::value_kind::enum_constant:
       case expr::cpp_value::value_kind::member_access:
-        return error::analyze_invalid_cpp_function_call(
+        return error::analyze_invalid_cpp_call(
                  util::format("This value is not callable.", scope_name),
                  object_source(val->form),
                  latest_expansion(macro_expansions))
@@ -801,7 +801,7 @@ namespace jank::analyze
         fns = Cpp::GetFunctionsUsingName(Cpp::GetParentScope(val->scope), scope_name);
         if(fns.empty())
         {
-          return error::analyze_invalid_cpp_function_call(
+          return error::analyze_invalid_cpp_call(
                    util::format("There is no function named `{}`.", scope_name),
                    object_source(val->form),
                    latest_expansion(macro_expansions))
@@ -839,7 +839,6 @@ namespace jank::analyze
     auto const match_res{ cpp_util::find_best_overload(fns, arg_types, arg_scopes) };
     if(match_res.is_err())
     {
-      /* TODO: invalid-cpp-function-call? */
       return error::analyze_invalid_cpp_call(
                util::format("{}", match_res.expect_err()),
                cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
@@ -857,9 +856,9 @@ namespace jank::analyze
 
       if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
       {
-        return error::analyze_invalid_cpp_function_call(res.expect_err(),
-                                                        object_source(val->form),
-                                                        latest_expansion(macro_expansions))
+        return error::analyze_invalid_cpp_call(res.expect_err(),
+                                               object_source(val->form),
+                                               latest_expansion(macro_expansions))
           ->add_usage(object_source(form));
       }
 
@@ -887,9 +886,9 @@ namespace jank::analyze
 
       if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
       {
-        return error::analyze_invalid_cpp_function_call(res.expect_err(),
-                                                        object_source(val->form),
-                                                        latest_expansion(macro_expansions))
+        return error::analyze_invalid_cpp_call(res.expect_err(),
+                                               object_source(val->form),
+                                               latest_expansion(macro_expansions))
           ->add_usage(object_source(form));
       }
 

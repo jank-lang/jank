@@ -154,8 +154,6 @@ namespace jank::error
         return "Unable to use this form as a first-class value. It needs to be called directly.";
       case kind::analyze_mismatched_if_types:
         return "Mismatched if types.";
-      case kind::analyze_invalid_cpp_function_call:
-        return "Invalid C++ function call.";
       case kind::analyze_invalid_cpp_call:
         return "Invalid C++ call.";
       case kind::analyze_invalid_cpp_conversion:
@@ -376,8 +374,6 @@ namespace jank::error
         return "analyze/invalid-cpp-constructor-call";
       case kind::analyze_invalid_cpp_member_call:
         return "analyze/invalid-cpp-member-call";
-      case kind::analyze_invalid_cpp_function_call:
-        return "analyze/invalid-cpp-function-call";
       case kind::analyze_invalid_cpp_call:
         return "analyze/invalid-cpp-call";
       case kind::analyze_invalid_cpp_conversion:

@@ -1181,142 +1181,143 @@ namespace jank::analyze::cpp_util
         cand_info
       };
     }
-  }
 
-  error::candidate
-  resolve_candidate(jtl::ptr<void> const fn, jtl::immutable_string const &reason, bool const viable)
-  {
-    error::candidate ret;
-    ret.signature = Cpp::GetFunctionSignature(fn);
-    ret.reason = reason;
-    ret.source = Cpp::GetFunctionSourceInfo(fn);
-    ret.viable = viable;
-    return ret;
-  }
-
-  error::candidate resolve_candidate_impl(jtl::ptr<void> const fn,
-                                          std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                                          std::vector<Cpp::TCppScope_t> const &arg_scopes,
-                                          bool const viable)
-  {
-    auto ret{ resolve_candidate(fn, "", viable) };
-
-    auto const cand_info{ Cpp::GetOverloadCandidateInfo(fn, arg_types, arg_scopes) };
-    if(cand_info.m_IsTemplateInstantiationFailure)
+    error::candidate resolve_candidate(jtl::ptr<void> const fn,
+                                       jtl::immutable_string const &reason,
+                                       bool const viable)
     {
-      ret.reason = "Template instantiation failure.";
-      ret.clang_reason = cand_info.m_Reason;
+      error::candidate ret;
+      ret.signature = Cpp::GetFunctionSignature(fn);
+      ret.reason = reason;
+      ret.source = Cpp::GetFunctionSourceInfo(fn);
+      ret.viable = viable;
       return ret;
     }
 
-    if(viable)
+    error::candidate resolve_candidate_impl(jtl::ptr<void> const fn,
+                                            std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                                            std::vector<Cpp::TCppScope_t> const &arg_scopes,
+                                            bool const viable)
     {
-      ret.reason = "This candidate is ambiguous.";
-    }
+      auto ret{ resolve_candidate(fn, "", viable) };
 
-    for(usize i{}; i < cand_info.m_Arguments.size(); ++i)
-    {
-      auto arg_conversion{ error::argument_conversion_type::invalid };
-      auto const param_type{ cand_info.m_Arguments[i].m_ParamType };
-      auto arg_name{ Cpp::GetFunctionArgName(fn, i) };
-      if(arg_name.empty())
+      auto const cand_info{ Cpp::GetOverloadCandidateInfo(fn, arg_types, arg_scopes) };
+      if(cand_info.m_IsTemplateInstantiationFailure)
       {
-        arg_name = "arg" + std::to_string(i);
+        ret.reason = "Template instantiation failure.";
+        ret.clang_reason = cand_info.m_Reason;
+        return ret;
       }
 
-      if(param_type)
+      if(viable)
       {
-        auto const conversion{ determine_implicit_conversion(arg_types[i].m_Type, param_type) };
-        switch(conversion)
+        ret.reason = "This candidate is ambiguous.";
+      }
+
+      for(usize i{}; i < cand_info.m_Arguments.size(); ++i)
+      {
+        auto arg_conversion{ error::argument_conversion_type::invalid };
+        auto const param_type{ cand_info.m_Arguments[i].m_ParamType };
+        auto arg_name{ Cpp::GetFunctionArgName(fn, i) };
+        if(arg_name.empty())
         {
-          case implicit_conversion_action::unknown:
-            if(ret.reason.empty())
-            {
-              ret.reason = util::format("No known conversion for argument `{}`.", arg_name);
-            }
-            break;
-          case implicit_conversion_action::none:
-            if(Cpp::GetCanonicalType(arg_types[i].m_Type) == Cpp::GetCanonicalType(param_type)
-               || (Cpp::GetCanonicalType(arg_types[i].m_Type)
-                   == Cpp::GetCanonicalType(Cpp::GetTypeWithConst(param_type)))
-               || (Cpp::GetCanonicalType(Cpp::GetTypeWithConst(arg_types[i].m_Type))
-                   == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(param_type))))
-            {
-              arg_conversion = error::argument_conversion_type::none;
-              break;
-            }
-            /* Fallthrough. */
-          case implicit_conversion_action::cast:
-            arg_conversion = error::argument_conversion_type::implicit;
-            break;
-          case implicit_conversion_action::into_object:
-          case implicit_conversion_action::from_object:
-            arg_conversion = error::argument_conversion_type::trait;
-            break;
+          arg_name = "arg" + std::to_string(i);
         }
+
+        if(param_type)
+        {
+          auto const conversion{ determine_implicit_conversion(arg_types[i].m_Type, param_type) };
+          switch(conversion)
+          {
+            case implicit_conversion_action::unknown:
+              if(ret.reason.empty())
+              {
+                ret.reason = util::format("No known conversion for argument `{}`.", arg_name);
+              }
+              break;
+            case implicit_conversion_action::none:
+              if(Cpp::GetCanonicalType(arg_types[i].m_Type) == Cpp::GetCanonicalType(param_type)
+                 || (Cpp::GetCanonicalType(arg_types[i].m_Type)
+                     == Cpp::GetCanonicalType(Cpp::GetTypeWithConst(param_type)))
+                 || (Cpp::GetCanonicalType(Cpp::GetTypeWithConst(arg_types[i].m_Type))
+                     == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(param_type))))
+              {
+                arg_conversion = error::argument_conversion_type::none;
+                break;
+              }
+              /* Fallthrough. */
+            case implicit_conversion_action::cast:
+              arg_conversion = error::argument_conversion_type::implicit;
+              break;
+            case implicit_conversion_action::into_object:
+            case implicit_conversion_action::from_object:
+              arg_conversion = error::argument_conversion_type::trait;
+              break;
+          }
+        }
+
+        ret.arguments.emplace_back(arg_name, arg_types[i].m_Type, param_type, arg_conversion);
       }
 
-      ret.arguments.emplace_back(arg_name, arg_types[i].m_Type, param_type, arg_conversion);
+      return ret;
     }
 
-    return ret;
-  }
+    error::candidate resolve_candidate(ranked_fn const &ranked,
+                                       std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                                       std::vector<Cpp::TCppScope_t> const &arg_scopes)
+    {
+      if(Cpp::IsFunctionDeleted(ranked.fn))
+      {
+        return resolve_candidate(ranked.fn, "This function is deleted.", false);
+      }
+      if(Cpp::IsPrivateMethod(ranked.fn))
+      {
+        return resolve_candidate(ranked.fn, "This member function is private.", false);
+      }
+      if(Cpp::IsProtectedMethod(ranked.fn))
+      {
+        return resolve_candidate(ranked.fn, "This member function is protected.", false);
+      }
 
-  error::candidate resolve_candidate(ranked_fn const &ranked,
-                                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                                     std::vector<Cpp::TCppScope_t> const &arg_scopes)
-  {
-    /* TODO: Clean up duplication. Use tier. */
-    if(Cpp::IsFunctionDeleted(ranked.fn))
-    {
-      return resolve_candidate(ranked.fn, "This function is deleted.", false);
-    }
-    if(Cpp::IsPrivateMethod(ranked.fn))
-    {
-      return resolve_candidate(ranked.fn, "This member function is private.", false);
-    }
-    if(Cpp::IsProtectedMethod(ranked.fn))
-    {
-      return resolve_candidate(ranked.fn, "This member function is protected.", false);
-    }
-
-    auto const num_params{ Cpp::GetFunctionRequiredArgs(ranked.fn) };
-    auto const is_member_call{ is_non_static_member_function(ranked.fn) };
-    auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
-                                                               : arg_types.size() };
-    if((arg_count < num_params) || (!Cpp::IsFunctionVariadic(ranked.fn) && num_params < arg_count))
-    {
-      return resolve_candidate(
-        ranked.fn,
-        util::format("This function requires {} argument{}, but {} {} provided.",
-                     num_params,
-                     num_params == 1 ? "" : "s",
-                     arg_count,
-                     arg_count == 1 ? "was" : "were"),
-        false);
-    }
-
-    if(is_member_call)
-    {
-      if(Cpp::IsMethod(ranked.fn) && !arg_types.empty() && !Cpp::IsConstMethod(ranked.fn)
-         && !Cpp::IsConstType(arg_types[0].m_Type))
+      auto const num_params{ Cpp::GetFunctionRequiredArgs(ranked.fn) };
+      auto const is_member_call{ is_non_static_member_function(ranked.fn) };
+      auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
+                                                                 : arg_types.size() };
+      if((arg_count < num_params)
+         || (!Cpp::IsFunctionVariadic(ranked.fn) && num_params < arg_count))
       {
         return resolve_candidate(
           ranked.fn,
-          "This member function is non-const, but the invoking object is const.",
+          util::format("This function requires {} argument{}, but {} {} provided.",
+                       num_params,
+                       num_params == 1 ? "" : "s",
+                       arg_count,
+                       arg_count == 1 ? "was" : "were"),
           false);
       }
 
-      auto member_arg_types{ arg_types };
-      member_arg_types.erase(member_arg_types.begin());
-      return resolve_candidate_impl(ranked.fn,
-                                    member_arg_types,
-                                    arg_scopes,
-                                    ranked.cand_info.m_Viable);
-    }
-    else
-    {
-      return resolve_candidate_impl(ranked.fn, arg_types, arg_scopes, ranked.cand_info.m_Viable);
+      if(is_member_call)
+      {
+        if(Cpp::IsMethod(ranked.fn) && !arg_types.empty() && !Cpp::IsConstMethod(ranked.fn)
+           && !Cpp::IsConstType(arg_types[0].m_Type))
+        {
+          return resolve_candidate(
+            ranked.fn,
+            "This member function is non-const, but the invoking object is const.",
+            false);
+        }
+
+        auto member_arg_types{ arg_types };
+        member_arg_types.erase(member_arg_types.begin());
+        return resolve_candidate_impl(ranked.fn,
+                                      member_arg_types,
+                                      arg_scopes,
+                                      ranked.cand_info.m_Viable);
+      }
+      else
+      {
+        return resolve_candidate_impl(ranked.fn, arg_types, arg_scopes, ranked.cand_info.m_Viable);
+      }
     }
   }
 
