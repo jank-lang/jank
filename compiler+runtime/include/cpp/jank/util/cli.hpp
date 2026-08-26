@@ -154,7 +154,7 @@ namespace jank::util::cli
     compilation_target output_target{ compilation_target::unspecified };
 
     /* Error reporting. */
-    u8 max_error_candidates{ 2 };
+    u8 max_error_candidates{ 3 };
 
     /* Extra flags, which will be passed to main. */
     native_vector<jtl::immutable_string> extra_opts;

@@ -8,10 +8,10 @@
 
 TEST_SUITE("analyze/cpp_util")
 {
-  TEST_CASE("rank_candidates orders candidates by relevance")
+  TEST_CASE("resolve_candidates orders candidates by relevance")
   {
     auto parse_result{ jank::runtime::__rt_ctx->jit_prc.interpreter->Parse(R"cpp(
-      namespace jank::test::rank_candidates
+      namespace jank::test::resolve_candidates
       {
         int foo(int);
         int foo(double*);
@@ -22,7 +22,7 @@ TEST_SUITE("analyze/cpp_util")
     auto const parse_succeeded{ static_cast<bool>(parse_result) };
     REQUIRE(parse_succeeded);
 
-    auto const scope{ Cpp::GetScopeFromCompleteName("jank::test::rank_candidates") };
+    auto const scope{ Cpp::GetScopeFromCompleteName("jank::test::resolve_candidates") };
     REQUIRE(scope);
 
     auto const fns{ Cpp::GetFunctionsUsingName(scope, "foo") };
@@ -30,7 +30,9 @@ TEST_SUITE("analyze/cpp_util")
 
     std::vector<Cpp::TemplateArgInfo> const arg_types{ { jank::analyze::cpp_util::int_type() } };
     std::vector<Cpp::TCppScope_t> const arg_scopes{ nullptr };
-    auto const candidates{ jank::analyze::cpp_util::rank_candidates(fns, arg_types, arg_scopes) };
+    auto const candidates{
+      jank::analyze::cpp_util::resolve_candidates(fns, arg_types, arg_scopes)
+    };
 
     REQUIRE(candidates.size() == 4);
     jank::usize one_arg_index{};
@@ -67,10 +69,10 @@ TEST_SUITE("analyze/cpp_util")
     CHECK(candidates[3].signature == arity_signature);
   }
 
-  TEST_CASE("rank_candidates ranks access/const violations above conversion failures")
+  TEST_CASE("resolve_candidates ranks access/const violations above conversion failures")
   {
     auto parse_result{ jank::runtime::__rt_ctx->jit_prc.interpreter->Parse(R"cpp(
-      namespace jank::test::rank_candidates_members
+      namespace jank::test::resolve_candidates_members
       {
         struct widget
         {
@@ -85,7 +87,7 @@ TEST_SUITE("analyze/cpp_util")
     REQUIRE(parse_succeeded);
 
     auto const scope{ Cpp::GetScopeFromCompleteName(
-      "jank::test::rank_candidates_members::widget") };
+      "jank::test::resolve_candidates_members::widget") };
     REQUIRE(scope);
 
     auto const fns{ Cpp::GetFunctionsUsingName(scope, "run") };
@@ -103,7 +105,9 @@ TEST_SUITE("analyze/cpp_util")
     std::vector<Cpp::TemplateArgInfo> const arg_types{ { const_widget_type },
                                                        { jank::analyze::cpp_util::int_type() } };
     std::vector<Cpp::TCppScope_t> const arg_scopes{ nullptr, nullptr };
-    auto const candidates{ jank::analyze::cpp_util::rank_candidates(fns, arg_types, arg_scopes) };
+    auto const candidates{
+      jank::analyze::cpp_util::resolve_candidates(fns, arg_types, arg_scopes)
+    };
 
     REQUIRE(candidates.size() == 2);
     jank::usize private_index{};

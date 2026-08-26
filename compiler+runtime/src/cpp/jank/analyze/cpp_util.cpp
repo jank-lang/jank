@@ -1007,10 +1007,9 @@ namespace jank::analyze::cpp_util
     return type;
   }
 
-  jtl::result<std::vector<Cpp::TemplateArgInfo>, error_ref>
+  jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
                                        std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                                       std::vector<Cpp::TCppScope_t> const &arg_scopes,
                                        bool const is_member_call)
   {
     auto const member_offset{ (is_member_call ? 1 : 0) };
@@ -1066,20 +1065,8 @@ namespace jank::analyze::cpp_util
         {
           if(needed_conversion.is_some())
           {
-            native_vector<error::candidate> candidates;
-            candidates.reserve(matching_fns.size());
-            for(auto const match : matching_fns)
-            {
-              candidates.emplace_back(resolve_candidate(match,
-                                                        arg_types,
-                                                        arg_scopes,
-                                                        "This candidate is ambiguous.",
-                                                        true));
-            }
-            return error::analyze_invalid_cpp_call(
-              util::format("No normal overload match was found. When considering automatic trait "
-                           "conversions, this call is ambiguous."),
-              candidates);
+            return err("No normal overload match was found. When considering automatic trait "
+                       "conversions, this call is ambiguous.");
           }
           needed_conversion = fn_idx;
           converted_args[arg_idx + member_offset] = param_type;
@@ -1117,9 +1104,16 @@ namespace jank::analyze::cpp_util
       usize arity_delta{};
     };
 
-    candidate_rank rank_candidate(jtl::ptr<void> const fn,
-                                  std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                                  std::vector<Cpp::TCppScope_t> const &arg_scopes)
+    struct ranked_fn
+    {
+      jtl::ptr<void> fn;
+      candidate_rank rank{};
+      Cpp::OverloadCandidateInfo cand_info;
+    };
+
+    ranked_fn rank_candidate(jtl::ptr<void> const fn,
+                             std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                             std::vector<Cpp::TCppScope_t> const &arg_scopes)
     {
       auto const is_member_call{ is_non_static_member_function(fn) };
       auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
@@ -1128,35 +1122,39 @@ namespace jank::analyze::cpp_util
       auto const has_arity_mismatch{
         (arg_count < required_args) || (!Cpp::IsFunctionVariadic(fn) && required_args < arg_count)
       };
+      auto const cand_info{ Cpp::GetOverloadCandidateInfo(fn, arg_types, arg_scopes) };
 
       if(Cpp::IsFunctionDeleted(fn))
       {
-        return { candidate_rank_tier::deleted };
+        return { fn, { candidate_rank_tier::deleted }, cand_info };
       }
       if(Cpp::IsPrivateMethod(fn) || Cpp::IsProtectedMethod(fn))
       {
-        return { candidate_rank_tier::access_violation };
+        return { fn, { candidate_rank_tier::access_violation }, cand_info };
       }
       if(has_arity_mismatch)
       {
         auto const arity_delta{ arg_count < required_args ? required_args - arg_count
                                                           : arg_count - required_args };
-        return { candidate_rank_tier::arity_mismatch, 0, arity_delta };
+        return {
+          fn,
+          { candidate_rank_tier::arity_mismatch, 0, arity_delta },
+          cand_info
+        };
       }
       if(is_member_call && !arg_types.empty() && !Cpp::IsConstMethod(fn)
          && !Cpp::IsConstType(arg_types[0].m_Type))
       {
-        return { candidate_rank_tier::const_mismatch };
+        return { fn, { candidate_rank_tier::const_mismatch }, cand_info };
       }
 
-      auto const cand_info{ Cpp::GetOverloadCandidateInfo(fn, arg_types, arg_scopes) };
       if(cand_info.m_Viable)
       {
-        return { candidate_rank_tier::viable };
+        return { fn, { candidate_rank_tier::viable }, cand_info };
       }
       if(cand_info.m_IsTemplateInstantiationFailure)
       {
-        return { candidate_rank_tier::template_failure };
+        return { fn, { candidate_rank_tier::template_failure }, cand_info };
       }
 
       usize conversion_score{};
@@ -1177,7 +1175,11 @@ namespace jank::analyze::cpp_util
             break;
         }
       }
-      return { candidate_rank_tier::conversion_failure, conversion_score };
+      return {
+        fn,
+        { candidate_rank_tier::conversion_failure, conversion_score },
+        cand_info
+      };
     }
   }
 
@@ -1192,13 +1194,12 @@ namespace jank::analyze::cpp_util
     return ret;
   }
 
-  error::candidate resolve_candidate(jtl::ptr<void> const fn,
-                                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                                     std::vector<Cpp::TCppScope_t> const &arg_scopes,
-                                     jtl::immutable_string const &reason,
-                                     bool const viable)
+  error::candidate resolve_candidate_impl(jtl::ptr<void> const fn,
+                                          std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                                          std::vector<Cpp::TCppScope_t> const &arg_scopes,
+                                          bool const viable)
   {
-    auto ret{ resolve_candidate(fn, reason, viable) };
+    auto ret{ resolve_candidate(fn, "", viable) };
 
     auto const cand_info{ Cpp::GetOverloadCandidateInfo(fn, arg_types, arg_scopes) };
     if(cand_info.m_IsTemplateInstantiationFailure)
@@ -1208,11 +1209,15 @@ namespace jank::analyze::cpp_util
       return ret;
     }
 
-    auto const num_params{ Cpp::GetFunctionNumArgs(fn) };
-    for(usize i{}; i < num_params; ++i)
+    if(viable)
+    {
+      ret.reason = "This candidate is ambiguous.";
+    }
+
+    for(usize i{}; i < cand_info.m_Arguments.size(); ++i)
     {
       auto arg_conversion{ error::argument_conversion_type::invalid };
-      auto const param_type{ Cpp::GetFunctionArgType(fn, i) };
+      auto const param_type{ cand_info.m_Arguments[i].m_ParamType };
       auto arg_name{ Cpp::GetFunctionArgName(fn, i) };
       if(arg_name.empty())
       {
@@ -1257,31 +1262,32 @@ namespace jank::analyze::cpp_util
     return ret;
   }
 
-  error::candidate resolve_failed_candidate(jtl::ptr<void> const fn,
-                                            std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                                            std::vector<Cpp::TCppScope_t> const &arg_scopes)
+  error::candidate resolve_candidate(ranked_fn const &ranked,
+                                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                                     std::vector<Cpp::TCppScope_t> const &arg_scopes)
   {
-    if(Cpp::IsFunctionDeleted(fn))
+    /* TODO: Clean up duplication. Use tier. */
+    if(Cpp::IsFunctionDeleted(ranked.fn))
     {
-      return resolve_candidate(fn, "This function is deleted.", false);
+      return resolve_candidate(ranked.fn, "This function is deleted.", false);
     }
-    if(Cpp::IsPrivateMethod(fn))
+    if(Cpp::IsPrivateMethod(ranked.fn))
     {
-      return resolve_candidate(fn, "This member function is private.", false);
+      return resolve_candidate(ranked.fn, "This member function is private.", false);
     }
-    if(Cpp::IsProtectedMethod(fn))
+    if(Cpp::IsProtectedMethod(ranked.fn))
     {
-      return resolve_candidate(fn, "This member function is protected.", false);
+      return resolve_candidate(ranked.fn, "This member function is protected.", false);
     }
 
-    auto const num_params{ Cpp::GetFunctionRequiredArgs(fn) };
-    auto const is_member_call{ is_non_static_member_function(fn) };
+    auto const num_params{ Cpp::GetFunctionRequiredArgs(ranked.fn) };
+    auto const is_member_call{ is_non_static_member_function(ranked.fn) };
     auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
                                                                : arg_types.size() };
-    if((arg_count < num_params) || (!Cpp::IsFunctionVariadic(fn) && num_params < arg_count))
+    if((arg_count < num_params) || (!Cpp::IsFunctionVariadic(ranked.fn) && num_params < arg_count))
     {
       return resolve_candidate(
-        fn,
+        ranked.fn,
         util::format("This function requires {} argument{}, but {} {} provided.",
                      num_params,
                      num_params == 1 ? "" : "s",
@@ -1292,41 +1298,38 @@ namespace jank::analyze::cpp_util
 
     if(is_member_call)
     {
-      if(Cpp::IsMethod(fn) && !arg_types.empty() && !Cpp::IsConstMethod(fn)
+      if(Cpp::IsMethod(ranked.fn) && !arg_types.empty() && !Cpp::IsConstMethod(ranked.fn)
          && !Cpp::IsConstType(arg_types[0].m_Type))
       {
         return resolve_candidate(
-          fn,
+          ranked.fn,
           "This member function is non-const, but the invoking object is const.",
           false);
       }
 
       auto member_arg_types{ arg_types };
       member_arg_types.erase(member_arg_types.begin());
-      return resolve_candidate(fn, member_arg_types, arg_scopes, "", false);
+      return resolve_candidate_impl(ranked.fn,
+                                    member_arg_types,
+                                    arg_scopes,
+                                    ranked.cand_info.m_Viable);
     }
     else
     {
-      return resolve_candidate(fn, arg_types, arg_scopes, "", false);
+      return resolve_candidate_impl(ranked.fn, arg_types, arg_scopes, ranked.cand_info.m_Viable);
     }
   }
 
   native_vector<error::candidate>
-  rank_candidates(std::vector<void *> const &fns,
-                  std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                  std::vector<Cpp::TCppScope_t> const &arg_scopes)
+  resolve_candidates(std::vector<void *> const &fns,
+                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                     std::vector<Cpp::TCppScope_t> const &arg_scopes)
   {
-    struct ranked_fn
-    {
-      jtl::ptr<void> fn;
-      candidate_rank rank{};
-    };
-
     std::vector<ranked_fn> ranked_fns;
     ranked_fns.reserve(fns.size());
     for(auto const fn : fns)
     {
-      ranked_fns.emplace_back(fn, rank_candidate(fn, arg_types, arg_scopes));
+      ranked_fns.emplace_back(rank_candidate(fn, arg_types, arg_scopes));
     }
 
     std::ranges::stable_sort(ranked_fns, [](ranked_fn const &left, ranked_fn const &right) {
@@ -1346,20 +1349,12 @@ namespace jank::analyze::cpp_util
     candidates.reserve(ranked_fns.size());
     for(auto const &ranked : ranked_fns)
     {
-      candidates.emplace_back(resolve_failed_candidate(ranked.fn, arg_types, arg_scopes));
+      candidates.emplace_back(resolve_candidate(ranked, arg_types, arg_scopes));
     }
     return candidates;
   }
 
-  native_vector<error::candidate>
-  resolve_candidates(std::vector<void *> const &fns,
-                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                     std::vector<Cpp::TCppScope_t> const &arg_scopes)
-  {
-    return rank_candidates(fns, arg_types, arg_scopes);
-  }
-
-  jtl::result<jtl::ptr<void>, error_ref>
+  jtl::string_result<jtl::ptr<void>>
   find_best_overload(std::vector<void *> const &fns,
                      std::vector<Cpp::TemplateArgInfo> &arg_types,
                      std::vector<Cpp::TCppScope_t> const &arg_scopes)
@@ -1376,39 +1371,27 @@ namespace jank::analyze::cpp_util
       auto const match{ matches[0] };
       if(matches.size() != 1)
       {
-        native_vector<error::candidate> candidates;
-        candidates.reserve(matches.size());
-        for(auto const match : matches)
-        {
-          candidates.emplace_back(
-            resolve_candidate(match, arg_types, arg_scopes, "This candidate is ambiguous.", true));
-        }
-        return error::analyze_invalid_cpp_call(
-          util::format("This call is ambiguous between {} different overloads.", matches.size()),
-          candidates);
+        return err(
+          util::format("This call is ambiguous between {} different overloads.", matches.size()));
       }
 
       auto const member{ is_non_static_member_function(match) };
       if(Cpp::IsFunctionDeleted(match))
       {
-        return error::analyze_invalid_cpp_call(
-          util::format("The `{}` function cannot be called, since it's deleted.",
-                       Cpp::GetName(match)),
-          { resolve_candidate(match, "This function is deleted.", false) });
+        return err(util::format("The `{}` function cannot be called, since it's deleted.",
+                                Cpp::GetName(match)));
       }
       if(Cpp::IsPrivateMethod(match))
       {
-        return error::analyze_invalid_cpp_call(
+        return err(
           util::format("The `{}` function is private. It can only be accessed if it's public.",
-                       Cpp::GetName(match)),
-          { resolve_candidate(match, "This function is private.", false) });
+                       Cpp::GetName(match)));
       }
       if(Cpp::IsProtectedMethod(match))
       {
-        return error::analyze_invalid_cpp_call(
+        return err(
           util::format("The `{}` function is protected. It can only be accessed if it's public.",
-                       Cpp::GetName(match)),
-          { resolve_candidate(match, "This function is protected.", false) });
+                       Cpp::GetName(match)));
       }
 
       /* It's possible that we instantiated some unresolved templates during overload resolution.

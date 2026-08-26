@@ -41,30 +41,17 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> non_void_type(jtl::ptr<void> const type);
   jtl::ptr<void> expression_scope(expression_ref const expr);
 
-  jtl::result<std::vector<Cpp::TemplateArgInfo>, error_ref>
+  jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
                                        std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                                       std::vector<Cpp::TCppScope_t> const &arg_scopes,
                                        bool is_member_call);
 
-  error::candidate resolve_candidate(jtl::ptr<void> const fn,
-                                     jtl::immutable_string const &reason,
-                                     bool const viable);
-  error::candidate resolve_candidate(jtl::ptr<void> const fn,
-                                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                                     std::vector<Cpp::TCppScope_t> const &arg_scopes,
-                                     jtl::immutable_string const &reason,
-                                     bool const viable);
   native_vector<error::candidate>
   resolve_candidates(std::vector<void *> const &,
                      std::vector<Cpp::TemplateArgInfo> const &arg_types,
                      std::vector<Cpp::TCppScope_t> const &arg_scopes);
-  native_vector<error::candidate>
-  rank_candidates(std::vector<void *> const &fns,
-                  std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                  std::vector<Cpp::TCppScope_t> const &arg_scopes);
 
-  jtl::result<jtl::ptr<void>, error_ref>
+  jtl::string_result<jtl::ptr<void>>
   find_best_overload(std::vector<void *> const &fns,
                      std::vector<Cpp::TemplateArgInfo> &arg_types,
                      std::vector<Cpp::TCppScope_t> const &arg_scopes);
