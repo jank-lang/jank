@@ -284,8 +284,8 @@ namespace jank::ui
     do
     {
       lexer.LexFromRawLexer(tok);
-      llvm::StringRef text(code.begin() + lexer.getCurrentBufferOffset() - tok.getLength(),
-                           tok.getLength());
+      llvm::StringRef const text(code.begin() + lexer.getCurrentBufferOffset() - tok.getLength(),
+                                 tok.getLength());
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"

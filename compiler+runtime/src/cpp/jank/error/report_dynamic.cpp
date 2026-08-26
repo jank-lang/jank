@@ -721,8 +721,8 @@ namespace jank::error
 
   static bool is_subpath(std::filesystem::path const &path, std::filesystem::path const &base)
   {
-    auto const mismatch_pair{ std::mismatch(path.begin(), path.end(), base.begin(), base.end()) };
-    return mismatch_pair.second == base.end();
+    auto const mismatch_pair{ std::ranges::mismatch(path, base) };
+    return mismatch_pair.in2 == base.end();
   }
 
   /* Path shortening works in the follow sequence:

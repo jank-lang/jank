@@ -1329,20 +1329,18 @@ namespace jank::analyze::cpp_util
       ranked_fns.emplace_back(fn, rank_candidate(fn, arg_types, arg_scopes));
     }
 
-    std::stable_sort(ranked_fns.begin(),
-                     ranked_fns.end(),
-                     [](ranked_fn const &left, ranked_fn const &right) {
-                       if(left.rank.tier != right.rank.tier)
-                       {
-                         return left.rank.tier < right.rank.tier;
-                       }
-                       if(left.rank.tier == candidate_rank_tier::arity_mismatch
-                          && left.rank.arity_delta != right.rank.arity_delta)
-                       {
-                         return left.rank.arity_delta < right.rank.arity_delta;
-                       }
-                       return left.rank.conversion_score < right.rank.conversion_score;
-                     });
+    std::ranges::stable_sort(ranked_fns, [](ranked_fn const &left, ranked_fn const &right) {
+      if(left.rank.tier != right.rank.tier)
+      {
+        return left.rank.tier < right.rank.tier;
+      }
+      if(left.rank.tier == candidate_rank_tier::arity_mismatch
+         && left.rank.arity_delta != right.rank.arity_delta)
+      {
+        return left.rank.arity_delta < right.rank.arity_delta;
+      }
+      return left.rank.conversion_score < right.rank.conversion_score;
+    });
 
     native_vector<error::candidate> candidates;
     candidates.reserve(ranked_fns.size());
