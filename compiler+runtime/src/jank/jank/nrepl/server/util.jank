@@ -6,7 +6,7 @@
   [form n]
   (letfn [(inner [x]
             (if (and (string? x) (>= (count x) n))
-              (str (subs x 0 n) "...")
+              (str (subs x 0 n) "…")
               x))]
     (postwalk inner form)))
 
