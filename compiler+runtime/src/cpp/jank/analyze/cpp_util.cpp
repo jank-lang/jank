@@ -1044,6 +1044,13 @@ namespace jank::analyze::cpp_util
       jtl::option<usize> needed_conversion;
       for(usize fn_idx{}; fn_idx < matching_fns.size(); ++fn_idx)
       {
+        /* Function templates have dependent parameter types until they are instantiated, so
+         * they cannot be considered for implicit or trait conversions here. */
+        if(Cpp::IsTemplatedFunction(matching_fns[fn_idx]))
+        {
+          continue;
+        }
+
         auto const param_type{ Cpp::GetFunctionArgType(matching_fns[fn_idx], arg_idx) };
         if(!param_type)
         {
