@@ -809,9 +809,15 @@ namespace jank::error
 
     if(!e->candidates.empty())
     {
-      util::println("  Candidates considered:\n");
-      for(auto const &c : e->candidates)
+      auto const show_count{ std::min(e->candidates.size(),
+                                      static_cast<size_t>(util::cli::opts.max_error_candidates)) };
+      util::println("  Candidates considered (showing {} of {}):\n",
+                    show_count,
+                    e->candidates.size());
+      for(size_t i{}; i < show_count; ++i)
       {
+        auto const &c{ e->candidates[i] };
+
         if(c.viable)
         {
           util::print("  {}✓{}", text_style::green, text_style::reset);

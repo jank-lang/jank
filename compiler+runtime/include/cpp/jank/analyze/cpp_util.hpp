@@ -59,6 +59,10 @@ namespace jank::analyze::cpp_util
   resolve_candidates(std::vector<void *> const &,
                      std::vector<Cpp::TemplateArgInfo> const &arg_types,
                      std::vector<Cpp::TCppScope_t> const &arg_scopes);
+  native_vector<error::candidate>
+  rank_candidates(std::vector<void *> const &fns,
+                  std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                  std::vector<Cpp::TCppScope_t> const &arg_scopes);
 
   jtl::result<jtl::ptr<void>, error_ref>
   find_best_overload(std::vector<void *> const &fns,

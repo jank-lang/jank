@@ -1090,6 +1090,97 @@ namespace jank::analyze::cpp_util
     return ok(std::move(converted_args));
   }
 
+  namespace
+  {
+    /* Declaration order here is significant: rank_candidates sorts candidates by
+     * ascending tier value, so earlier enumerators are treated as more relevant and
+     * are placed earlier in the resulting candidate list.
+     *
+     * This doesn't follow the C++ standard for resolution ranking, since we're ranking
+     * failures, not viable candidates. Our goal is to determine which failed candidates
+     * are most likely what the user intended. */
+    enum class candidate_rank_tier : u8
+    {
+      viable,
+      deleted,
+      access_violation,
+      conversion_failure,
+      const_mismatch,
+      template_failure,
+      arity_mismatch,
+    };
+
+    struct candidate_rank
+    {
+      candidate_rank_tier tier{};
+      usize conversion_score{};
+      usize arity_delta{};
+    };
+
+    candidate_rank rank_candidate(jtl::ptr<void> const fn,
+                                  std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                                  std::vector<Cpp::TCppScope_t> const &arg_scopes)
+    {
+      auto const is_member_call{ is_non_static_member_function(fn) };
+      auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
+                                                                 : arg_types.size() };
+      auto const required_args{ Cpp::GetFunctionRequiredArgs(fn) };
+      auto const has_arity_mismatch{
+        (arg_count < required_args) || (!Cpp::IsFunctionVariadic(fn) && required_args < arg_count)
+      };
+
+      if(Cpp::IsFunctionDeleted(fn))
+      {
+        return { candidate_rank_tier::deleted };
+      }
+      if(Cpp::IsPrivateMethod(fn) || Cpp::IsProtectedMethod(fn))
+      {
+        return { candidate_rank_tier::access_violation };
+      }
+      if(has_arity_mismatch)
+      {
+        auto const arity_delta{ arg_count < required_args ? required_args - arg_count
+                                                          : arg_count - required_args };
+        return { candidate_rank_tier::arity_mismatch, 0, arity_delta };
+      }
+      if(is_member_call && !arg_types.empty() && !Cpp::IsConstMethod(fn)
+         && !Cpp::IsConstType(arg_types[0].m_Type))
+      {
+        return { candidate_rank_tier::const_mismatch };
+      }
+
+      auto const cand_info{ Cpp::GetOverloadCandidateInfo(fn, arg_types, arg_scopes) };
+      if(cand_info.m_Viable)
+      {
+        return { candidate_rank_tier::viable };
+      }
+      if(cand_info.m_IsTemplateInstantiationFailure)
+      {
+        return { candidate_rank_tier::template_failure };
+      }
+
+      usize conversion_score{};
+      for(auto const &argument : cand_info.m_Arguments)
+      {
+        switch(argument.m_Conversion)
+        {
+          case Cpp::OverloadCandidateConversion::Invalid:
+            conversion_score += 3;
+            break;
+          case Cpp::OverloadCandidateConversion::UserDefined:
+            conversion_score += 2;
+            break;
+          case Cpp::OverloadCandidateConversion::Implicit:
+            conversion_score += 1;
+            break;
+          case Cpp::OverloadCandidateConversion::None:
+            break;
+        }
+      }
+      return { candidate_rank_tier::conversion_failure, conversion_score };
+    }
+  }
+
   error::candidate
   resolve_candidate(jtl::ptr<void> const fn, jtl::immutable_string const &reason, bool const viable)
   {
@@ -1185,7 +1276,8 @@ namespace jank::analyze::cpp_util
 
     auto const num_params{ Cpp::GetFunctionRequiredArgs(fn) };
     auto const is_member_call{ is_non_static_member_function(fn) };
-    auto const arg_count{ is_member_call ? arg_types.size() - 1 : arg_types.size() };
+    auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
+                                                               : arg_types.size() };
     if((arg_count < num_params) || (!Cpp::IsFunctionVariadic(fn) && num_params < arg_count))
     {
       return resolve_candidate(
@@ -1200,7 +1292,8 @@ namespace jank::analyze::cpp_util
 
     if(is_member_call)
     {
-      if(Cpp::IsMethod(fn) && !Cpp::IsConstMethod(fn) && !Cpp::IsConstType(arg_types[0].m_Type))
+      if(Cpp::IsMethod(fn) && !arg_types.empty() && !Cpp::IsConstMethod(fn)
+         && !Cpp::IsConstType(arg_types[0].m_Type))
       {
         return resolve_candidate(
           fn,
@@ -1219,17 +1312,53 @@ namespace jank::analyze::cpp_util
   }
 
   native_vector<error::candidate>
+  rank_candidates(std::vector<void *> const &fns,
+                  std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                  std::vector<Cpp::TCppScope_t> const &arg_scopes)
+  {
+    struct ranked_fn
+    {
+      jtl::ptr<void> fn;
+      candidate_rank rank{};
+    };
+
+    std::vector<ranked_fn> ranked_fns;
+    ranked_fns.reserve(fns.size());
+    for(auto const fn : fns)
+    {
+      ranked_fns.emplace_back(fn, rank_candidate(fn, arg_types, arg_scopes));
+    }
+
+    std::stable_sort(ranked_fns.begin(),
+                     ranked_fns.end(),
+                     [](ranked_fn const &left, ranked_fn const &right) {
+                       if(left.rank.tier != right.rank.tier)
+                       {
+                         return left.rank.tier < right.rank.tier;
+                       }
+                       if(left.rank.tier == candidate_rank_tier::arity_mismatch
+                          && left.rank.arity_delta != right.rank.arity_delta)
+                       {
+                         return left.rank.arity_delta < right.rank.arity_delta;
+                       }
+                       return left.rank.conversion_score < right.rank.conversion_score;
+                     });
+
+    native_vector<error::candidate> candidates;
+    candidates.reserve(ranked_fns.size());
+    for(auto const &ranked : ranked_fns)
+    {
+      candidates.emplace_back(resolve_failed_candidate(ranked.fn, arg_types, arg_scopes));
+    }
+    return candidates;
+  }
+
+  native_vector<error::candidate>
   resolve_candidates(std::vector<void *> const &fns,
                      std::vector<Cpp::TemplateArgInfo> const &arg_types,
                      std::vector<Cpp::TCppScope_t> const &arg_scopes)
   {
-    native_vector<error::candidate> candidates;
-    candidates.reserve(fns.size());
-    for(auto const fn : fns)
-    {
-      candidates.emplace_back(resolve_failed_candidate(fn, arg_types, arg_scopes));
-    }
-    return candidates;
+    return rank_candidates(fns, arg_types, arg_scopes);
   }
 
   jtl::result<jtl::ptr<void>, error_ref>

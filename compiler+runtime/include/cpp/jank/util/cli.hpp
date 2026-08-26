@@ -153,6 +153,9 @@ namespace jank::util::cli
     jtl::immutable_string output_module_filename;
     compilation_target output_target{ compilation_target::unspecified };
 
+    /* Error reporting. */
+    u8 max_error_candidates{ 2 };
+
     /* Extra flags, which will be passed to main. */
     native_vector<jtl::immutable_string> extra_opts;
 
