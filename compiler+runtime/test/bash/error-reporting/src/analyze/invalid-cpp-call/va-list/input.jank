@@ -1,0 +1,13 @@
+(cpp/raw
+"
+inline void add(int a, long b, ...)
+{
+}
+
+inline void add(int a, short b, ...)
+{
+}
+")
+
+(defn foo []
+  (cpp/add 1 2 3))

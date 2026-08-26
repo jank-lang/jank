@@ -1,0 +1,33 @@
+─ analyze/invalid-cpp-call ─────────────────────────────────────────────────────
+error: No matching call to `add` function.
+
+─────┬──────────────────────────────────────────────────────────────────────────
+     │ input.jank
+─────┼──────────────────────────────────────────────────────────────────────────
+ 22  │ ")
+ 23  │ 
+ 24  │ (defn foo []
+     │ ^ Expanded from this macro.
+ 25  │   (cpp/add 1))
+     │    ^^^^^^^ Found here.
+─────┼──────────────────────────────────────────────────────────────────────────
+  🗎  │ https://book.jank-lang.org/reference/error/analyze/invalid-cpp-call.html
+─────┴──────────────────────────────────────────────────────────────────────────
+
+  Candidates considered (showing 3 of 5):
+
+  ✗ inline void add(char const *s)
+    ╰─ declared at input.jank:18
+    s  int → const char *  ✗ no conversion  
+    ──────────────────────────────────────────────────────────
+    Not viable: No known conversion for argument `s`.
+
+  ✗ inline void add(int a, long b)
+    ╰─ declared at input.jank:6
+    ──────────────────────────────────────────────────────────
+    Not viable: This function requires 2 arguments, but 1 was provided.
+
+  ✗ inline void add(int a, short b)
+    ╰─ declared at input.jank:10
+    ──────────────────────────────────────────────────────────
+    Not viable: This function requires 2 arguments, but 1 was provided.
