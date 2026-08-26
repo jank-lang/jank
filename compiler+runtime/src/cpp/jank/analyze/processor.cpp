@@ -3613,7 +3613,10 @@ namespace jank::analyze
                          __rt_ctx->intern_keyword("", "inline", true).expect_ok()));
           if(inline_fn.is_some())
           {
-            auto const expanded{ apply_to(inline_fn, o->next()) };
+            /* Forward metadata from the original call to the inline result. This allows us
+             * to keep source info for inline calls sanely. */
+            auto expanded{ apply_to(inline_fn, o->next()) };
+            expanded = runtime::with_meta_graceful(expanded, runtime::meta(o));
             return analyze(expanded, current_frame, position, fn_ctx, needs_box);
           }
         }
