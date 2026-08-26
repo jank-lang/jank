@@ -1071,12 +1071,13 @@ namespace jank::analyze
       }
     }
 
-    return error::analyze_invalid_cpp_call(util::format("No matching call to `{}` {}.",
-                                                        scope_name,
-                                                        is_ctor ? "constructor" : "function"),
-                                           cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
-                                           object_source(val->form),
-                                           latest_expansion(macro_expansions))
+    return error::analyze_invalid_cpp_call(
+             util::format("This call to the `{}` {} cannot be resolved.",
+                          scope_name,
+                          is_ctor ? "constructor" : "function"),
+             cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
+             object_source(val->form),
+             latest_expansion(macro_expansions))
       ->add_usage(object_source(form));
   }
 
