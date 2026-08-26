@@ -855,14 +855,14 @@ namespace jank::error
           conversion(text_style::reset);
           row.emplace_back(a.name);
           row.emplace_back(util::format(
-            ": {} → {}",
+            "{} → {}",
             ui::highlight_cpp(analyze::cpp_util::get_qualified_truncated_type_name(a.arg_type)),
             ui::highlight_cpp(analyze::cpp_util::get_qualified_truncated_type_name(a.param_type))));
           row.emplace_back(conversion.release());
           rows.emplace_back(jtl::move(row));
         }
 
-        auto const column_padding{ determine_column_padding(rows, 4) };
+        auto const column_padding{ determine_column_padding(rows, 1) };
         util::print("{}", render_columns("    ", rows, column_padding));
 
         util::println("    {}──────────────────────────────────────────────────────────{}",

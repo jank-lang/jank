@@ -318,8 +318,7 @@ namespace jank::analyze::cpp_util
 
   jtl::immutable_string get_qualified_name_helper(jtl::ptr<void> const scope, bool const truncated)
   {
-    auto res{ truncated ? Cpp::GetTruncatedQualifiedCompleteName(scope)
-                        : Cpp::GetQualifiedCompleteName(scope) };
+    auto res{ truncated ? Cpp::GetTruncatedName(scope) : Cpp::GetQualifiedCompleteName(scope) };
     if(res == "<unnamed>")
     {
       if(truncated)
@@ -1259,6 +1258,12 @@ namespace jank::analyze::cpp_util
         ret.arguments.emplace_back(arg_name, arg_types[i].m_Type, param_type, arg_conversion);
       }
 
+      if(ret.reason.empty())
+      {
+        ret.reason = "See details below.";
+        ret.clang_reason = cand_info.m_Reason;
+      }
+
       return ret;
     }
 
@@ -1279,18 +1284,19 @@ namespace jank::analyze::cpp_util
         return resolve_candidate(ranked.fn, "This member function is protected.", false);
       }
 
-      auto const num_params{ Cpp::GetFunctionRequiredArgs(ranked.fn) };
+      auto const num_required_params{ Cpp::GetFunctionRequiredArgs(ranked.fn) };
+      auto const num_params{ Cpp::GetFunctionNumArgs(ranked.fn) };
       auto const is_member_call{ is_non_static_member_function(ranked.fn) };
       auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
                                                                  : arg_types.size() };
-      if((arg_count < num_params)
+      if((arg_count < num_required_params)
          || (!Cpp::IsFunctionVariadic(ranked.fn) && num_params < arg_count))
       {
         return resolve_candidate(
           ranked.fn,
           util::format("This function requires {} argument{}, but {} {} provided.",
-                       num_params,
-                       num_params == 1 ? "" : "s",
+                       num_required_params,
+                       num_required_params == 1 ? "" : "s",
                        arg_count,
                        arg_count == 1 ? "was" : "were"),
           false);
