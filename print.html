@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-83c255c6.js";
+            window.path_to_searchindex_js = "searchindex-f111e03d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-f6752db7.js"></script>
+        <script src="toc-846aad8b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -2406,14 +2406,9 @@ a valid <code>\uXXXX</code> escape.</p>
 <h2 id="mitigations-66"><a class="header" href="#mitigations-66">Mitigations</a></h2>
 <p>Change the branches so they produce compatible types. jank can handle some implicit conversions and trait conversions automatically. If that is not enough, wrap both branches in a common type such as <code>std::variant</code>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
-<h1 id="analyzeinvalid-cpp-function-call"><a class="header" href="#analyzeinvalid-cpp-function-call">analyze/invalid-cpp-function-call</a></h1>
-<p>This happens when a direct C++ function-style call cannot be resolved. The target may not be callable. No overload may match. The requested function may not exist.</p>
-<h2 id="mitigations-67"><a class="header" href="#mitigations-67">Mitigations</a></h2>
-<p>Check the function name. Check the template arguments. Check the call arguments. Make sure a matching callable target exists.</p>
-<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-call"><a class="header" href="#analyzeinvalid-cpp-call">analyze/invalid-cpp-call</a></h1>
 <p>This happens when jank cannot form a valid indirect or generic C++ call. That can include calls through function pointers. It can also include calls through functors or other callable values.</p>
-<h2 id="mitigations-68"><a class="header" href="#mitigations-68">Mitigations</a></h2>
+<h2 id="mitigations-67"><a class="header" href="#mitigations-67">Mitigations</a></h2>
 <p>Make sure the target is actually callable. Make sure the argument list matches an available call operator or function type.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-conversion"><a class="header" href="#analyzeinvalid-cpp-conversion">analyze/invalid-cpp-conversion</a></h1>
@@ -2423,7 +2418,7 @@ native value for an <code>if</code> condition and it can’t implicitly convert 
 <p>This can also happen for unsupported trait conversions. In that case, a jank object is
 expected and a native value is provided, but there is no conversion trait which
 allows jank to get from the native value to the jank object.</p>
-<h2 id="mitigations-69"><a class="header" href="#mitigations-69">Mitigations</a></h2>
+<h2 id="mitigations-68"><a class="header" href="#mitigations-68">Mitigations</a></h2>
 <p>If you’re implicitly casting between two native types, you’ll need to sort out
 how that can be done more explicitly.</p>
 <p>If you’re converting a native value into a jank object, you have a few options.</p>
@@ -2436,95 +2431,95 @@ how that can be done more explicitly.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-symbol"><a class="header" href="#analyzeinvalid-cpp-symbol">analyze/invalid-cpp-symbol</a></h1>
 <p>This happens when a C++ symbol form is malformed. It may refer to a namespace as a value. It may use an invalid dotted name. It may use constructor syntax on something that is not a type.</p>
-<h2 id="mitigations-70"><a class="header" href="#mitigations-70">Mitigations</a></h2>
+<h2 id="mitigations-69"><a class="header" href="#mitigations-69">Mitigations</a></h2>
 <p>Rewrite the symbol as a valid C++ namespace, type, function, member name. Only use constructor syntax with actual types.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeunresolved-cpp-symbol"><a class="header" href="#analyzeunresolved-cpp-symbol">analyze/unresolved-cpp-symbol</a></h1>
 <p>This happens when a referenced C++ name cannot be resolved to any known symbol.</p>
-<h2 id="mitigations-71"><a class="header" href="#mitigations-71">Mitigations</a></h2>
+<h2 id="mitigations-70"><a class="header" href="#mitigations-70">Mitigations</a></h2>
 <p>Check the spelling. Check the qualification. Check the includes. Check the surrounding scope. Make sure the C++ name is available where it is used.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-raw"><a class="header" href="#analyzeinvalid-cpp-raw">analyze/invalid-cpp-raw</a></h1>
 <p>This happens when <code>cpp/raw</code> is missing its string argument. It can also happen when it has extra arguments or when it is given something other than a string literal of C++ code.</p>
-<h2 id="mitigations-72"><a class="header" href="#mitigations-72">Mitigations</a></h2>
+<h2 id="mitigations-71"><a class="header" href="#mitigations-71">Mitigations</a></h2>
 <p>Call <code>cpp/raw</code> with exactly one string literal containing the raw C++ code.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-type"><a class="header" href="#analyzeinvalid-cpp-type">analyze/invalid-cpp-type</a></h1>
 <p>This happens when a form that requires a C++ type is malformed or when it receives a value form instead of a type form.</p>
-<h2 id="mitigations-73"><a class="header" href="#mitigations-73">Mitigations</a></h2>
+<h2 id="mitigations-72"><a class="header" href="#mitigations-72">Mitigations</a></h2>
 <p>Pass a valid C++ type form in that position.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-type-position"><a class="header" href="#analyzeinvalid-cpp-type-position">analyze/invalid-cpp-type-position</a></h1>
 <p>This happens when a C++ type name is used where jank expects a value instead of a type.</p>
-<h2 id="mitigations-74"><a class="header" href="#mitigations-74">Mitigations</a></h2>
+<h2 id="mitigations-73"><a class="header" href="#mitigations-73">Mitigations</a></h2>
 <p>Move the type form to a type position. Otherwise use a value-producing form instead.</p>
 <p>Types cannot be used as first-class values in jank because there is no runtime reflection.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-dsl"><a class="header" href="#analyzeinvalid-cpp-dsl">analyze/invalid-cpp-dsl</a></h1>
 <p>This happens when a <code>#cpp</code> type form is malformed. Common cases include invalid modifiers. They also include invalid template usage. Malformed function type forms can trigger it. Malformed array type forms can trigger it. Using a value form where a type form is required can trigger it too.</p>
-<h2 id="mitigations-75"><a class="header" href="#mitigations-75">Mitigations</a></h2>
+<h2 id="mitigations-74"><a class="header" href="#mitigations-74">Mitigations</a></h2>
 <p>Rewrite the <code>#cpp</code> form so each part is a valid C++ type description. Make sure each part appears in the correct position.</p>
 <p>For full documentation on the C++ DSL, see <a href="/cpp-interop/dsl.html">here</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-value"><a class="header" href="#analyzeinvalid-cpp-value">analyze/invalid-cpp-value</a></h1>
 <p>This happens when a resolved C++ form is not usable as a value in the current position.</p>
-<h2 id="mitigations-76"><a class="header" href="#mitigations-76">Mitigations</a></h2>
+<h2 id="mitigations-75"><a class="header" href="#mitigations-75">Mitigations</a></h2>
 <p>Make sure the form names an actual value. Otherwise rewrite it as the correct type form or call form for that position.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-cast"><a class="header" href="#analyzeinvalid-cpp-cast">analyze/invalid-cpp-cast</a></h1>
 <p>This happens when <code>cpp/cast</code> is malformed or when the requested cast is not allowed for the source type and target type.</p>
-<h2 id="mitigations-77"><a class="header" href="#mitigations-77">Mitigations</a></h2>
+<h2 id="mitigations-76"><a class="header" href="#mitigations-76">Mitigations</a></h2>
 <p>Call <code>cpp/cast</code> with exactly a target type and a value. Choose a conversion that is valid for those types.</p>
 <p><code>cpp/cast</code> behaves like C++ <code>static_cast</code>. If you need a less restricted cast, use <code>cpp/unsafe-cast</code>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-unsafe-cast"><a class="header" href="#analyzeinvalid-cpp-unsafe-cast">analyze/invalid-cpp-unsafe-cast</a></h1>
 <p>This happens when <code>cpp/unsafe-cast</code> is malformed or when even an unsafe C-style cast cannot be formed for the given types.</p>
-<h2 id="mitigations-78"><a class="header" href="#mitigations-78">Mitigations</a></h2>
+<h2 id="mitigations-77"><a class="header" href="#mitigations-77">Mitigations</a></h2>
 <p>Call <code>cpp/unsafe-cast</code> with exactly a target type and a value. Make sure the cast is actually possible.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-box"><a class="header" href="#analyzeinvalid-cpp-box">analyze/invalid-cpp-box</a></h1>
 <p>This happens when <code>cpp/box</code> is malformed. It can also happen when it receives the wrong number of arguments or when the value cannot be boxed this way.</p>
 <p><code>cpp/box</code> must receive a raw pointer value. The pointed-to value must outlive the returned opaque box.</p>
-<h2 id="mitigations-79"><a class="header" href="#mitigations-79">Mitigations</a></h2>
+<h2 id="mitigations-78"><a class="header" href="#mitigations-78">Mitigations</a></h2>
 <p>Call <code>cpp/box</code> with exactly one suitable pointer value.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-unbox"><a class="header" href="#analyzeinvalid-cpp-unbox">analyze/invalid-cpp-unbox</a></h1>
 <p>This happens when <code>cpp/unbox</code> is malformed. It can also happen when it receives the wrong number of arguments. Using a non-pointer target type triggers it too. Applying it to something that is not a boxed jank object also triggers it.</p>
-<h2 id="mitigations-80"><a class="header" href="#mitigations-80">Mitigations</a></h2>
+<h2 id="mitigations-79"><a class="header" href="#mitigations-79">Mitigations</a></h2>
 <p>Call <code>cpp/unbox</code> with a pointer target type and a compatible boxed jank value.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-new"><a class="header" href="#analyzeinvalid-cpp-new">analyze/invalid-cpp-new</a></h1>
 <p>This happens when <code>cpp/new</code> is missing the type it should allocate.</p>
-<h2 id="mitigations-81"><a class="header" href="#mitigations-81">Mitigations</a></h2>
+<h2 id="mitigations-80"><a class="header" href="#mitigations-80">Mitigations</a></h2>
 <p>Pass the type to allocate, followed by any constructor arguments.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-delete"><a class="header" href="#analyzeinvalid-cpp-delete">analyze/invalid-cpp-delete</a></h1>
 <p>This happens when <code>cpp/delete</code> is malformed. It can also happen when it receives the wrong number of arguments or when the value is not a pointer.</p>
-<h2 id="mitigations-82"><a class="header" href="#mitigations-82">Mitigations</a></h2>
+<h2 id="mitigations-81"><a class="header" href="#mitigations-81">Mitigations</a></h2>
 <p>Call <code>cpp/delete</code> with exactly one pointer value. The pointed-to value must have been allocated via <code>cpp/new</code>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinvalid-cpp-member-access"><a class="header" href="#analyzeinvalid-cpp-member-access">analyze/invalid-cpp-member-access</a></h1>
 <p>This happens when a <code>.-member</code> form is malformed. It can also happen when the target object is missing. Extra arguments can trigger it too. A missing field on the target type can also trigger it.</p>
-<h2 id="mitigations-83"><a class="header" href="#mitigations-83">Mitigations</a></h2>
+<h2 id="mitigations-82"><a class="header" href="#mitigations-82">Mitigations</a></h2>
 <p>Pass exactly one target object. Make sure the named member exists on that type. Make sure it is accessible. The member must be public.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="analyzeinternal-failure"><a class="header" href="#analyzeinternal-failure">analyze/internal-failure</a></h1>
 <p>This indicates an internal analyzer problem or inconsistent internal state. It is not a normal code mistake.</p>
-<h2 id="mitigations-84"><a class="header" href="#mitigations-84">Mitigations</a></h2>
+<h2 id="mitigations-83"><a class="header" href="#mitigations-83">Mitigations</a></h2>
 <p>Try to simplify the source. Then <a href="/troubleshooting/getting-help.html">report it as a jank bug</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="codegen"><a href="#codegen" class="header">Codegen</a></h1>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="codegeninternal-failure"><a class="header" href="#codegeninternal-failure">codegen/internal-failure</a></h1>
 <p>This indicates an internal code generation bug rather than a normal user-facing code mistake.</p>
-<h2 id="mitigations-85"><a class="header" href="#mitigations-85">Mitigations</a></h2>
+<h2 id="mitigations-84"><a class="header" href="#mitigations-84">Mitigations</a></h2>
 <p>Try to simplify the source. Then <a href="/troubleshooting/getting-help.html">report it as a jank bug</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="aot"><a href="#aot" class="header">AOT</a></h1>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="aotunresolved-main"><a class="header" href="#aotunresolved-main">aot/unresolved-main</a></h1>
 <p>This happens when jank is building an executable and the target module does not define <code>-main</code>.</p>
-<h2 id="mitigations-86"><a class="header" href="#mitigations-86">Mitigations</a></h2>
+<h2 id="mitigations-85"><a class="header" href="#mitigations-85">Mitigations</a></h2>
 <p>Define <code>-main</code> in the target module. Make sure you are compiling the module that
 is meant to be the program entrypoint. A normal <code>-main</code> looks like this:</p>
 <pre><code class="language-clojure">(ns my-app.main)
@@ -2536,7 +2531,7 @@ is meant to be the program entrypoint. A normal <code>-main</code> looks like th
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="aotinternal-failure"><a class="header" href="#aotinternal-failure">aot/internal-failure</a></h1>
 <p>This indicates an internal AOT build-state problem.</p>
-<h2 id="mitigations-87"><a class="header" href="#mitigations-87">Mitigations</a></h2>
+<h2 id="mitigations-86"><a class="header" href="#mitigations-86">Mitigations</a></h2>
 <p>Try to simplify the source. Then <a href="/troubleshooting/getting-help.html">report it as a jank bug</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtime"><a href="#runtime" class="header">Runtime</a></h1>
@@ -2545,7 +2540,7 @@ is meant to be the program entrypoint. A normal <code>-main</code> looks like th
 <p>This happens when jank cannot find the requested module. Common causes include a
 missing dependency, a wrong module path, or asking for a module that is not
 available in the current build.</p>
-<h2 id="mitigations-88"><a class="header" href="#mitigations-88">Mitigations</a></h2>
+<h2 id="mitigations-87"><a class="header" href="#mitigations-87">Mitigations</a></h2>
 <p>Make sure the module exists. Then check that the module path, build mode, and
 current dependencies make it available to jank.</p>
 <p>Note that it’s very common to have a module name with a <code>-</code> in it, but the
@@ -2557,87 +2552,87 @@ corresponding file system path will use <code>_</code> instead. So <code>my-app.
 but it does have an object file. jank will refuse to load object files for
 modules which don’t have a corresponding source, since jank is a source-first
 language.</p>
-<h2 id="mitigations-89"><a class="header" href="#mitigations-89">Mitigations</a></h2>
+<h2 id="mitigations-88"><a class="header" href="#mitigations-88">Mitigations</a></h2>
 <p>Verify that the module’s source is present on the module path.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtimeunable-to-open-file"><a class="header" href="#runtimeunable-to-open-file">runtime/unable-to-open-file</a></h1>
 <p>This happens when jank cannot open or read a required file. Common causes include a missing file, a bad path, or a filesystem access problem.</p>
-<h2 id="mitigations-90"><a class="header" href="#mitigations-90">Mitigations</a></h2>
+<h2 id="mitigations-89"><a class="header" href="#mitigations-89">Mitigations</a></h2>
 <p>Check that the file exists and is readable. Then verify that the path being used is the one you intended.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtimeinvalid-cpp-eval"><a class="header" href="#runtimeinvalid-cpp-eval">runtime/invalid-cpp-eval</a></h1>
 <p>This happens when runtime C++ evaluation fails. The provided C++ may be invalid
 or the JIT toolchain may have failed while compiling it.</p>
-<h2 id="mitigations-91"><a class="header" href="#mitigations-91">Mitigations</a></h2>
+<h2 id="mitigations-90"><a class="header" href="#mitigations-90">Mitigations</a></h2>
 <p>Check the accompanying compiler output first. Then fix the C++ source or the
 local Clang and JIT setup before trying again.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtimeunable-to-load-module"><a class="header" href="#runtimeunable-to-load-module">runtime/unable-to-load-module</a></h1>
 <p>This happens when jank finds a module but fails while loading or initializing it.</p>
-<h2 id="mitigations-92"><a class="header" href="#mitigations-92">Mitigations</a></h2>
+<h2 id="mitigations-91"><a class="header" href="#mitigations-91">Mitigations</a></h2>
 <p>Read the accompanying error details closely. Then fix the exception or nested
 error that occurred during module loading.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtimeinvalid-unbox"><a class="header" href="#runtimeinvalid-unbox">runtime/invalid-unbox</a></h1>
 <p>This happens when a boxed foreign value is unboxed as the wrong type.</p>
-<h2 id="mitigations-93"><a class="header" href="#mitigations-93">Mitigations</a></h2>
+<h2 id="mitigations-92"><a class="header" href="#mitigations-92">Mitigations</a></h2>
 <p>Make sure the unbox operation uses the same type that was originally boxed. The
 jank error output should provide you with source information, as well as the
 expected type for the given box.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtimenon-metadatable-value"><a class="header" href="#runtimenon-metadatable-value">runtime/non-metadatable-value</a></h1>
 <p>This happens when metadata is applied to a value type that cannot carry metadata.</p>
-<h2 id="mitigations-94"><a class="header" href="#mitigations-94">Mitigations</a></h2>
+<h2 id="mitigations-93"><a class="header" href="#mitigations-93">Mitigations</a></h2>
 <p>Only use metadata with values that support it. If needed, wrap the value in a
 metadatable form first, such as an atom.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtimeinvalid-referred-global-symbol"><a class="header" href="#runtimeinvalid-referred-global-symbol">runtime/invalid-referred-global-symbol</a></h1>
 <p>This happens when a referred C++ global name is malformed.</p>
-<h2 id="mitigations-95"><a class="header" href="#mitigations-95">Mitigations</a></h2>
+<h2 id="mitigations-94"><a class="header" href="#mitigations-94">Mitigations</a></h2>
 <p>Use a simple symbol name for the referred C++ global. Avoid namespace-qualified
 names in that position.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtimeinvalid-referred-global-rename"><a class="header" href="#runtimeinvalid-referred-global-rename">runtime/invalid-referred-global-rename</a></h1>
 <p>This happens when a requested local rename for a referred C++ global would conflict with an existing name in the namespace.</p>
-<h2 id="mitigations-96"><a class="header" href="#mitigations-96">Mitigations</a></h2>
+<h2 id="mitigations-95"><a class="header" href="#mitigations-95">Mitigations</a></h2>
 <p>Choose a different local name that does not collide with an existing var.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtimeunsupported-behavior"><a class="header" href="#runtimeunsupported-behavior">runtime/unsupported-behavior</a></h1>
 <p>This happens when an operation is used on a value whose type does not support that behavior. Common examples include sequence operations, associative lookup, indexed access, comparison, or numeric conversion on the wrong kind of value.</p>
-<h2 id="mitigations-97"><a class="header" href="#mitigations-97">Mitigations</a></h2>
+<h2 id="mitigations-96"><a class="header" href="#mitigations-96">Mitigations</a></h2>
 <p>Use the operation only with values that support it. If needed, convert the value to a compatible type first.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtimestatic-feature-disabled"><a class="header" href="#runtimestatic-feature-disabled">runtime/static-feature-disabled</a></h1>
 <p>This happens when a dynamic-only feature is used in a static runtime build.</p>
-<h2 id="mitigations-98"><a class="header" href="#mitigations-98">Mitigations</a></h2>
+<h2 id="mitigations-97"><a class="header" href="#mitigations-97">Mitigations</a></h2>
 <p>Avoid that feature in a static runtime, or switch to a dynamic runtime if you need it.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtimeuncaught-exception"><a class="header" href="#runtimeuncaught-exception">runtime/uncaught-exception</a></h1>
 <p>This error happens when an exception, of some kind, was thrown and then not
 caught by your program’s code. The jank runtime caught the exception and then
 surfaced the stack trace, along with the exception message.</p>
-<h2 id="mitigations-99"><a class="header" href="#mitigations-99">Mitigations</a></h2>
+<h2 id="mitigations-98"><a class="header" href="#mitigations-98">Mitigations</a></h2>
 <p>Inspect the stack trace to find where the exception was thrown and whether or
 not that was intended. If the exception was intended, add a <code>try</code> to your
 program so that you can catch the exception yourself.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="runtimeinternal-failure"><a class="header" href="#runtimeinternal-failure">runtime/internal-failure</a></h1>
 <p>This indicates an internal runtime problem or a low-level loading failure rather than a normal language mistake. Current uses include impossible loader states, missing internal artifacts, jar-reading failures, and unsupported generated arities.</p>
-<h2 id="mitigations-100"><a class="header" href="#mitigations-100">Mitigations</a></h2>
+<h2 id="mitigations-99"><a class="header" href="#mitigations-99">Mitigations</a></h2>
 <p>Try again from a clean state if the problem involves loading or compilation artifacts. If it still happens, report it as a jank bug with the exact command and input.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="system"><a href="#system" class="header">System</a></h1>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="systemclang-executable-not-found"><a class="header" href="#systemclang-executable-not-found">system/clang-executable-not-found</a></h1>
 <p>This happens when jank cannot find a suitable Clang executable with the required major version.</p>
-<h2 id="mitigations-101"><a class="header" href="#mitigations-101">Mitigations</a></h2>
+<h2 id="mitigations-100"><a class="header" href="#mitigations-100">Mitigations</a></h2>
 <p>jank should be installed with its own Clang version, so this error indicates an
 issue with the jank install. The first step to troubleshoot this would be a
 <a href="/troubleshooting/health-check.html">health check</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="systemfailure"><a class="header" href="#systemfailure">system/failure</a></h1>
 <p>This covers external tool or environment failures. Common causes include missing Clang resources, missing SDK or Xcode tooling, missing precompiled-header inputs, or Clang itself failing during a build step.</p>
-<h2 id="mitigations-102"><a class="header" href="#mitigations-102">Mitigations</a></h2>
+<h2 id="mitigations-101"><a class="header" href="#mitigations-101">Mitigations</a></h2>
 <p>Read the accompanying error output closely. Then fix the reported system or toolchain problem before trying again.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="internal"><a href="#internal" class="header">Internal</a></h1>
@@ -2645,7 +2640,7 @@ issue with the jank install. The first step to troubleshoot this would be a
 <h1 id="internalfailure"><a class="header" href="#internalfailure">internal/failure</a></h1>
 <p>This is a generic fallback for internal failures. It usually indicates a jank
 bug or an unexpected internal state.</p>
-<h2 id="mitigations-103"><a class="header" href="#mitigations-103">Mitigations</a></h2>
+<h2 id="mitigations-102"><a class="header" href="#mitigations-102">Mitigations</a></h2>
 <p>Try to simplify the source. Then <a href="/troubleshooting/getting-help.html">report it as a jank bug</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="developing-jank"><a class="header" href="#developing-jank">Developing jank</a></h1>
