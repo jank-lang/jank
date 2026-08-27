@@ -1,5 +1,5 @@
 ─ analyze/invalid-cpp-call ─────────────────────────────────────────────────────
-error: No matching call to `foo` function.
+error: This call to the `foo` function cannot be resolved.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ input.jank

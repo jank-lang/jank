@@ -1,5 +1,5 @@
 ─ analyze/invalid-cpp-call ─────────────────────────────────────────────────────
-error: No matching call to `add` function.
+error: This call to the `add` function cannot be resolved.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ input.jank

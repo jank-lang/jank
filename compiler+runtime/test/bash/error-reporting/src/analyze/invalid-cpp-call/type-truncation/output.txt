@@ -1,5 +1,5 @@
 ─ analyze/invalid-cpp-call ─────────────────────────────────────────────────────
-error: No matching call to `big_decl` function.
+error: This call to the `big_decl` function cannot be resolved.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ input.jank
