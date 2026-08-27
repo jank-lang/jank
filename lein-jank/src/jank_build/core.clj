@@ -121,6 +121,7 @@
         ;; Include all build input jars into the classpath.
         bb-classpath (string/join ":" (:build-inputs op))
         build-input  (build-script-input op)
+        cmd ["bb" "--classpath" bb-classpath "--stream" (str (fs/path src-dir jank-build-file))]
         proc         (sandbox/process
                       (not *disable-sandbox*)
                       sandbox-args
@@ -128,7 +129,7 @@
                        ;; Keep tools which honor TMPDIR from writing to a
                        ;; host-global temporary directory.
                        :env {"TMPDIR" (str build-dir)}}
-                      ["bb" "--classpath" bb-classpath "--stream" (fs/path src-dir jank-build-file)])
+                      cmd)
         out-lines    (atom [])]
     (spit (:in proc) (pr-str build-input))
     (future (wrap-stream (:out proc) out-lines *verbose-build* (str "  \u001b[0;34m" dep-name ">\u001b[0m")))
@@ -143,7 +144,8 @@
         (when-not *verbose-build*
           (println (string/join "\n" @out-lines))
           (println (string/join "\n" @out-lines)))
-        (util/abort "failed to run build command")))))
+        (util/abort (str "The build command failed with code " @(:exit proc) ".")
+                    (pr-str cmd))))))
 
 (defn collect-build-deps
   "Given a dependency tree, identify its jank-build scoped elements and resolve
