@@ -781,7 +781,7 @@ namespace jank::analyze
       case expr::cpp_value::value_kind::variable:
       case expr::cpp_value::value_kind::enum_constant:
       case expr::cpp_value::value_kind::member_access:
-        return error::analyze_invalid_cpp_function_call(
+        return error::analyze_invalid_cpp_call(
                  util::format("This value is not callable.", scope_name),
                  object_source(val->form),
                  latest_expansion(macro_expansions))
@@ -801,7 +801,7 @@ namespace jank::analyze
         fns = Cpp::GetFunctionsUsingName(Cpp::GetParentScope(val->scope), scope_name);
         if(fns.empty())
         {
-          return error::analyze_invalid_cpp_function_call(
+          return error::analyze_invalid_cpp_call(
                    util::format("There is no function named `{}`.", scope_name),
                    object_source(val->form),
                    latest_expansion(macro_expansions))
@@ -839,9 +839,11 @@ namespace jank::analyze
     auto const match_res{ cpp_util::find_best_overload(fns, arg_types, arg_scopes) };
     if(match_res.is_err())
     {
-      return error::analyze_invalid_cpp_function_call(util::format("{}", match_res.expect_err()),
-                                                      object_source(val->form),
-                                                      latest_expansion(macro_expansions))
+      return error::analyze_invalid_cpp_call(
+               util::format("{}", match_res.expect_err()),
+               cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
+               object_source(val->form),
+               latest_expansion(macro_expansions))
         ->add_usage(object_source(form));
     }
     jtl::ptr<void> match{ match_res.expect_ok() };
@@ -854,9 +856,9 @@ namespace jank::analyze
 
       if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
       {
-        return error::analyze_invalid_cpp_function_call(res.expect_err(),
-                                                        object_source(val->form),
-                                                        latest_expansion(macro_expansions))
+        return error::analyze_invalid_cpp_call(res.expect_err(),
+                                               object_source(val->form),
+                                               latest_expansion(macro_expansions))
           ->add_usage(object_source(form));
       }
 
@@ -884,9 +886,9 @@ namespace jank::analyze
 
       if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
       {
-        return error::analyze_invalid_cpp_function_call(res.expect_err(),
-                                                        object_source(val->form),
-                                                        latest_expansion(macro_expansions))
+        return error::analyze_invalid_cpp_call(res.expect_err(),
+                                               object_source(val->form),
+                                               latest_expansion(macro_expansions))
           ->add_usage(object_source(form));
       }
 
@@ -950,9 +952,11 @@ namespace jank::analyze
     };
     if(new_types_res.is_err())
     {
-      return error::analyze_invalid_cpp_function_call(new_types_res.expect_err(),
-                                                      object_source(val->form),
-                                                      latest_expansion(macro_expansions))
+      return error::analyze_invalid_cpp_call(
+               new_types_res.expect_err(),
+               cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
+               object_source(val->form),
+               latest_expansion(macro_expansions))
         ->add_usage(object_source(form));
     }
 
@@ -964,8 +968,9 @@ namespace jank::analyze
     auto const conversion_match_res{ cpp_util::find_best_overload(fns, new_types, empty_scopes) };
     if(conversion_match_res.is_err())
     {
-      return error::analyze_invalid_cpp_function_call(
+      return error::analyze_invalid_cpp_call(
                util::format("{}", conversion_match_res.expect_err()),
+               cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
                object_source(val->form),
                latest_expansion(macro_expansions))
         ->add_usage(object_source(form));
@@ -1066,22 +1071,13 @@ namespace jank::analyze
       }
     }
 
-    /* TODO: Find a better way to render this. */
-    jtl::string_builder sb;
-    for(usize i{}; i != arg_types.size(); ++i)
-    {
-      util::format_to(sb,
-                      " With argument {} having type `{}`.",
-                      i,
-                      cpp_util::get_qualified_type_name(arg_types[i].m_Type));
-    }
-
-    return error::analyze_invalid_cpp_call(util::format("No matching call to `{}` {}.{}",
-                                                        scope_name,
-                                                        is_ctor ? "constructor" : "function",
-                                                        sb.release()),
-                                           object_source(val->form),
-                                           latest_expansion(macro_expansions))
+    return error::analyze_invalid_cpp_call(
+             util::format("This call to the `{}` {} cannot be resolved.",
+                          scope_name,
+                          is_ctor ? "constructor" : "function"),
+             cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
+             object_source(val->form),
+             latest_expansion(macro_expansions))
       ->add_usage(object_source(form));
   }
 
@@ -1183,7 +1179,7 @@ namespace jank::analyze
       }
 
       return error::analyze_invalid_cpp_call(
-        util::format("Unable to find call operator for `{}`.",
+        util::format("There is no call operator for `{}`.",
                      cpp_util::get_qualified_type_name(source_type)),
         object_source(o),
         latest_expansion(macro_expansions));
@@ -3618,7 +3614,10 @@ namespace jank::analyze
                          __rt_ctx->intern_keyword("", "inline", true).expect_ok()));
           if(inline_fn.is_some())
           {
-            auto const expanded{ apply_to(inline_fn, o->next()) };
+            /* Forward metadata from the original call to the inline result. This allows us
+             * to keep source info for inline calls sanely. */
+            auto expanded{ apply_to(inline_fn, o->next()) };
+            expanded = runtime::with_meta_graceful(expanded, runtime::meta(o));
             return analyze(expanded, current_frame, position, fn_ctx, needs_box);
           }
         }
@@ -4212,18 +4211,25 @@ namespace jank::analyze
 
     auto const raw_string{ expect_object<runtime::obj::persistent_string>(obj)->data };
 
+    auto const source{ object_source(l) };
+    auto const has_source{ source != read::source::unknown() };
+
     /* We wrap all cpp/raw strings in unique preprocessor guards because jank currently does
-       codegen twice when compiling and this can lead to ODR violations. */
+     * codegen twice when compiling and this can lead to ODR violations. */
     auto const content_hash{ std::hash<jtl::immutable_string>{}(raw_string) };
     auto const guard_name{ util::format("JANK_CPP_RAW_{}", content_hash) };
-    auto const guarded_code{ util::format("#ifndef {}\n"
-                                          "#define {}\n"
-                                          "\n"
-                                          "{}\n"
-                                          "#endif\n",
-                                          guard_name,
-                                          guard_name,
-                                          raw_string) };
+    auto const guarded_code{ util::format(
+      "#ifndef {}\n"
+      "#define {}\n"
+      "\n"
+      "{}\n"
+      "{}\n"
+      "#endif\n",
+      guard_name,
+      guard_name,
+      (has_source ? util::format("#line {} \"{}\"", source.start.line, util::escape(source.file))
+                  : ""),
+      raw_string) };
 
     return jtl::make_ref<expr::cpp_raw>(position, current_frame, needs_box, l, guarded_code);
   }
