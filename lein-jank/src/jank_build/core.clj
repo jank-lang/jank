@@ -103,10 +103,11 @@
   (fs/delete-tree out-dir)
   (fs/create-dirs out-dir)
   (let [dep-name     (first (:coord (:dep op)))
-        build-dir    (fs/create-temp-dir {:prefix "jank-build-"})
+        build-dir    (fs/create-temp-dir {:prefix "jank-build-"
+                                          :posix-file-permissions "rwx------"})
         op           (assoc op :build-dir (str build-dir))
-        ;; The sandbox gets standard mounts for a scratch directory and build
-        ;; output directory. It also mounts as RO each input and build input.
+        ;; The sandbox gets standard runtime paths, a scratch directory, and
+        ;; a build output directory. It also exposes each input read-only.
         sandbox-args (into [[:ro-bind src-dir src-dir]
                             [:bind out-dir out-dir]
                             [:tmpfs build-dir]
@@ -123,7 +124,10 @@
         proc         (sandbox/process
                       (not *disable-sandbox*)
                       sandbox-args
-                      {}
+                      {:dir (str build-dir)
+                       ;; Keep tools which honor TMPDIR from writing to a
+                       ;; host-global temporary directory.
+                       :env {"TMPDIR" (str build-dir)}}
                       ["bb" "--classpath" bb-classpath "--stream" (fs/path src-dir jank-build-file)])
         out-lines    (atom [])]
     (spit (:in proc) (pr-str build-input))
