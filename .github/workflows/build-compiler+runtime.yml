@@ -280,12 +280,8 @@ jobs:
           path: |
             ${{ github.workspace }}/compiler+runtime/.ctcache
           key: ctcache-${{ env.JANK_MATRIX_ID }}-${{ github.ref_name }}
-      - uses: thejerrybao/setup-swap-space@466d59798fb9263b9c2331c83cf71f9b7bfd0c78
+      - uses: ./.github/actions/setup-swap
         if: runner.os == 'Linux'
-        with:
-          swap-space-path: /swapfile
-          swap-size-gb: 8
-          remove-existing-swap-files: true
       - name: Build and test jank
         id: jank-build-step
         run: |
@@ -476,12 +472,8 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: 'recursive'
-    - uses: thejerrybao/setup-swap-space@466d59798fb9263b9c2331c83cf71f9b7bfd0c78
+    - uses: ./.github/actions/setup-swap
       if: runner.os == 'Linux'
-      with:
-        swap-space-path: /swapfile
-        swap-size-gb: 8
-        remove-existing-swap-files: true
     - name: "Build jank"
       run: nix build .?submodules=1 -L
     - name: "Check health"

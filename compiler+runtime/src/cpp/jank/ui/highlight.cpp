@@ -1,5 +1,9 @@
 #include <isocline.h>
 
+#include <clang/Basic/IdentifierTable.h>
+#include <clang/Basic/LangOptions.h>
+#include <clang/Lex/Lexer.h>
+
 #include <jtl/terminal.hpp>
 
 #include <jank/ui/highlight.hpp>
@@ -262,5 +266,77 @@ namespace jank::ui
                    static_cast<long>(token.end.offset - token.start.offset),
                    style);
     }
+  }
+
+  jtl::immutable_string highlight_cpp(jtl::immutable_string const &code)
+  {
+    clang::LangOptions opts;
+    opts.CPlusPlus = 1;
+    opts.CPlusPlus20 = 1;
+
+    clang::IdentifierTable idents(opts);
+    clang::Lexer lexer(clang::SourceLocation(), opts, code.begin(), code.begin(), code.end());
+    lexer.SetKeepWhitespaceMode(true);
+
+    jtl::string_builder sb;
+    clang::Token tok{};
+    /* NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) */
+    do
+    {
+      lexer.LexFromRawLexer(tok);
+      llvm::StringRef const text(code.begin() + lexer.getCurrentBufferOffset() - tok.getLength(),
+                                 tok.getLength());
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+      switch(tok.getKind())
+      {
+        case clang::tok::l_square:
+        case clang::tok::r_square:
+        case clang::tok::l_paren:
+        case clang::tok::r_paren:
+        case clang::tok::l_brace:
+        case clang::tok::r_brace:
+        case clang::tok::greater:
+        case clang::tok::greatergreater:
+        case clang::tok::less:
+        case clang::tok::lessless:
+        case clang::tok::amp:
+        case clang::tok::star:
+        case clang::tok::ellipsis:
+        case clang::tok::comma:
+        case clang::tok::colon:
+        case clang::tok::coloncolon:
+        case clang::tok::semi:
+          sb(text_style::yellow);
+          break;
+        case clang::tok::raw_identifier:
+          {
+            auto &II{ idents.get(text) };
+            sb(II.getTokenID() != clang::tok::identifier
+                 ? text_style::bright_cyan | text_style::bold
+                 : text_style::reset);
+            break;
+          }
+        case clang::tok::string_literal:
+        case clang::tok::char_constant:
+          sb(text_style::bright_green);
+          break;
+        case clang::tok::numeric_constant:
+          sb(text_style::bright_magenta);
+          break;
+        case clang::tok::comment:
+          sb(text_style::bright_black);
+          break;
+        default:
+          break;
+      }
+#pragma clang diagnostic pop
+
+      sb(text.str());
+      sb(text_style::reset);
+    } while(tok.isNot(clang::tok::eof));
+
+    return sb.release();
   }
 }

@@ -1,0 +1,24 @@
+─ analyze/invalid-cpp-call ─────────────────────────────────────────────────────
+error: This call to the `foo` function cannot be resolved.
+
+─────┬──────────────────────────────────────────────────────────────────────────
+     │ input.jank
+─────┼──────────────────────────────────────────────────────────────────────────
+  6  │ ")
+  7  │ 
+  8  │ (defn bar []
+     │ ^ Expanded from this macro.
+  9  │   (cpp/foo "" 1 2 3))
+     │    ^^^^^^^ Found here.
+─────┼──────────────────────────────────────────────────────────────────────────
+  🗎  │ https://book.jank-lang.org/reference/error/analyze/invalid-cpp-call.html
+─────┴──────────────────────────────────────────────────────────────────────────
+
+  Candidates considered (showing 1 of 1):
+
+  ✗ void foo(int, Args...)
+    ╰─ declared at input.jank:3
+    arg0  const char (&)[1] → int  ✗ no conversion  
+    arg1  int → Args...            ✗ no conversion  
+    ──────────────────────────────────────────────────────────
+    Not viable: No known conversion for argument `arg0`.
