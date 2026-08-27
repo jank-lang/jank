@@ -741,7 +741,7 @@ namespace jank::error
       return "./" + std::filesystem::relative(path, cwd).string();
     }
 
-    std::filesystem::path const home{ util::user_home_dir() };
+    std::filesystem::path const home{ util::user_home_dir().c_str() };
     if(is_subpath(path, home))
     {
       return "~/" + std::filesystem::relative(path, home).string();
