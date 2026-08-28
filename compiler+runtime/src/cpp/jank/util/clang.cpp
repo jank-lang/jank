@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include <unistd.h>
+
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Basic/DiagnosticIDs.h>
 #include <clang/Basic/DiagnosticOptions.h>
@@ -31,7 +33,7 @@ namespace jank::util
     auto const tmp{ std::filesystem::temp_directory_path() };
     std::string path_tmp{ (tmp / "jank-clang-XXXXXX").string() };
     int const fd{ mkstemp(path_tmp.data()) };
-    ::close(fd);
+    close(fd);
     auto const proc_code{ llvm::sys::ExecuteAndWait(path.string(),
                                                     { path.string(), "--version" },
                                                     std::nullopt,

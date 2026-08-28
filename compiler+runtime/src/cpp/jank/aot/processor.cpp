@@ -2,6 +2,8 @@
 #include <vector>
 #include <cstdlib>
 
+#include <unistd.h>
+
 #include <jtl/result.hpp>
 #include <jtl/string_builder.hpp>
 
@@ -146,7 +148,7 @@ int main(int argc, const char** argv)
     std::string main_file_path{ (tmp_dir / "jank-main-XXXXXX").string() };
 
     auto const fd{ mkstemp(main_file_path.data()) };
-    ::close(fd);
+    close(fd);
 
     std::ofstream out(main_file_path);
     out << sb.release();
