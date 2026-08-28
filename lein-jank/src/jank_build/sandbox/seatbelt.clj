@@ -181,6 +181,10 @@
        ;; directories which contain an allowed path.
        "(allow file-read-metadata (literal \"/\") (literal \"/private\")"
        "  (literal \"/etc\") (literal \"/var\"))"
+       ;; dyld reads the contents of the root directory itself (not just its
+       ;; metadata) while locating the shared cache during process startup.
+       ;; Without this, dynamically linked binaries abort before main() runs.
+       "(allow file-read-data (literal \"/\"))"
        ;; Some toolchains probe /dev before opening standard devices.
        "(allow file-read-metadata (literal \"/dev\"))"
        ;; Standard devices are explicitly listed so the host device tree is
