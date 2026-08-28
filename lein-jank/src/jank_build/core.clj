@@ -17,6 +17,10 @@
 (def jank-build-cache-file "jank-build-cache.txt")
 (def jank-build-fingerprint-file "jank-build-fingerprint.txt")
 
+; We watch PKG_CONFIG_PATH by default, since any changes to it can affect which packages are found.
+; This can either make or break native dependencies, so it's worth watching.
+(def default-directives {:rerun-if-env-changed ["PKG_CONFIG_PATH"]})
+
 (def default-build-opts
   {:target-dir         "target"
    :optimization-level 3
@@ -251,7 +255,9 @@
 
   Returns nil if the build output cannot be read."
   [compile-op]
-  (when-let [directives (read-build-directives (:out-dir compile-op))]
+  (when-let [directives (merge-with into
+                                    default-directives
+                                    (read-build-directives (:out-dir compile-op)))]
     (let [paths (if (empty? (:rerun-if-changed directives))
                   [(:src-dir compile-op)]
                   (->> (:rerun-if-changed directives)

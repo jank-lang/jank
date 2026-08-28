@@ -76,8 +76,9 @@ Informs the jank build system to re-run this build script if the environment
 variable `FOO` changes. This is mainly expected to be used for variables like
 `CC` and `CXX`, but anything can work.
 
-Note: If no `rerun-if-env-changed` directive is provided, no environment
-variables will be watched.
+Note: The following variables will be watched by default and cannot be unwatched.
+
+- `PKG_CONFIG_PATH`
 
 ## Finding or building things
 The second thing build scripts can do is prepare files for jank consumption.
