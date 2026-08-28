@@ -16,7 +16,15 @@
    [:ro-bind "/bin" "/bin"]
    [:ro-bind "/sbin" "/sbin"]
    [:ro-bind "/private/etc" "/private/etc"]
+   ;; The /var/select/* symlinks resolve to the active "sh" and Xcode
+   ;; developer directory selections. Different tools reference them via
+   ;; either the /var or /private/var form (e.g. bash uses the /private/var
+   ;; form for "sh", but xcode-select uses the bare /var form for
+   ;; "developer_dir"), so both forms are allowlisted for each.
    [:ro-bind "/private/var/select/sh" "/private/var/select/sh"]
+   [:ro-bind "/var/select/sh" "/var/select/sh"]
+   [:ro-bind "/private/var/select/developer_dir" "/private/var/select/developer_dir"]
+   [:ro-bind "/var/select/developer_dir" "/var/select/developer_dir"]
    [:ro-bind "/Library/Developer/CommandLineTools" "/Library/Developer/CommandLineTools"]
    [:ro-bind "/Applications/Xcode.app/Contents/Developer"
              "/Applications/Xcode.app/Contents/Developer"]
