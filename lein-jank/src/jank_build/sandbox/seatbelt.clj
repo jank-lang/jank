@@ -205,7 +205,15 @@
        "(allow ipc-sysv*)"
        "(allow signal (target same-sandbox))"
        ;; getpwuid and related libc calls use this specific service.
-       "(allow mach-lookup (global-name \"com.apple.system.opendirectoryd.libinfo\"))"]
+       "(allow mach-lookup (global-name \"com.apple.system.opendirectoryd.libinfo\"))"
+       ;; file-search only reveals whether a name exists in a directory (not
+       ;; its contents or metadata), so Apple's own bundled profiles grant it
+       ;; unconditionally (e.g. mdworker.sb). It is distinct from
+       ;; file-read-metadata and file-write*, and without it directory
+       ;; lookups fail on both read (traversing to an allowed path) and
+       ;; write (e.g. mkdir checking whether a new entry already exists)
+       ;; operations.
+       "(allow file-search)"]
       (map #(allow-literal-rule ["file-read-metadata"] %) metadata-dirs)
       [;; dyld reads the contents of the root directory itself (not just its
        ;; metadata) while locating the shared cache during process startup.
