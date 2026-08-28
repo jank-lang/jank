@@ -3,7 +3,7 @@
             [jank-build.sandbox.seatbelt :as seatbelt]
             [jank-build.util :as util]))
 
-(defn- process-options [sandbox-opts sh-opts]
+(defn process-options [sandbox-opts sh-opts]
   (if-let [chdir (some (fn [[kind dir]]
                          (when (= :chdir kind) dir))
                        sandbox-opts)]
