@@ -1,5 +1,11 @@
 (ns jank-build.util
-  (:require [clojure.java.process :as proc]))
+  (:require [clojure.java.process :as proc]
+            [clojure.string :as string]))
+
+(defn macos? []
+  (contains? #{"mac os x" "darwin"}
+             (some-> (System/getProperty "os.name")
+                     string/lower-case)))
 
 (defn warn [& args]
   (apply println args))
