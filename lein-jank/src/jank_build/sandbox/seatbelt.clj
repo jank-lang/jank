@@ -117,7 +117,7 @@
 
 (defn parse-options [cmds]
   (reduce
-    (fn [{:keys [network?] :as parsed} [kind & args]]
+    (fn [parsed [kind & args]]
       (case kind
         :ro-bind
         (let [[src dst] (ensure-option-args kind args 2)]
@@ -150,7 +150,7 @@
 
         :net
         (let [[enabled?] (ensure-option-args kind args 1)]
-          (assoc parsed :network? (or network? (boolean enabled?))))
+          (assoc parsed :network? (boolean enabled?)))
 
         (throw
           (IllegalArgumentException.
