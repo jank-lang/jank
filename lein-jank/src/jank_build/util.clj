@@ -2,9 +2,7 @@
   (:require [clojure.java.process :as proc]
             [clojure.string :as string]))
 
-(defn macos?
-  "Return true when running on macOS."
-  []
+(defn macos? []
   (contains? #{"mac os x" "darwin"}
              (some-> (System/getProperty "os.name")
                      string/lower-case)))
