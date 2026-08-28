@@ -58,20 +58,34 @@
    ""
    (str value)))
 
-(defn- ancestor-dirs
-  "Returns the canonical ancestor directories of `path`, from its immediate
-  parent up to (and including) the filesystem root."
+(defn- path-variants
+  "Returns the distinct path strings that a Seatbelt filter for `path` must
+  list to reliably match. macOS commonly exposes the same real directory
+  under both a symlinked form (e.g. /var/folders/...) and its fully
+  resolved canonical form (e.g. /private/var/folders/...) -- notably
+  $TMPDIR, /tmp, and /var/tmp. Seatbelt's `subpath`/`literal` filters do
+  not treat these as automatically equivalent, so real-world profiles (e.g.
+  the x-cmd sandbox library) list both forms explicitly for every such
+  path."
   [path]
-  (loop [dir (fs/parent (fs/canonicalize path))
+  (distinct [(str (fs/absolutize path)) (str (fs/canonicalize path))]))
+
+(defn- ancestor-dirs
+  "Returns the ancestor directories of `path`, from its immediate parent up
+  to (and including) the filesystem root."
+  [path]
+  (loop [dir (fs/parent path)
          acc []]
     (if (nil? dir)
       acc
       (recur (fs/parent dir) (conj acc (str dir))))))
 
 (defn- path-filter [path]
-  (let [path (fs/canonicalize path)
+  (let [variants (path-variants path)
         filter-kind (if (fs/directory? path) "subpath" "literal")]
-    (str "(" filter-kind " \"" (escape-scheme-string path) "\")")))
+    (str "(" filter-kind " "
+         (string/join " " (map #(str "\"" (escape-scheme-string %) "\"") variants))
+         ")")))
 
 (defn- allow-rule [operations path]
   (str "(allow " (string/join " " operations) " " (path-filter path) ")"))
@@ -82,7 +96,7 @@
   widen into a `subpath` grant covering the whole subtree."
   [operations path]
   (str "(allow " (string/join " " operations) " (literal \""
-       (escape-scheme-string (fs/canonicalize path)) "\"))"))
+       (escape-scheme-string path) "\"))"))
 
 (defn- option-args [kind args expected-count]
   (when-not (= expected-count (count args))
@@ -189,8 +203,12 @@
         ;; Without this, deeply nested endpoints like
         ;; /private/var/select/sh fail to open even though the endpoint
         ;; itself is allowlisted, because an intermediate directory (e.g.
-        ;; /private/var/select) was never made visible.
+        ;; /private/var/select) was never made visible. Ancestors are
+        ;; computed for both the symlinked and canonical form of each
+        ;; endpoint (see `path-variants`), since e.g. /var/folders/... and
+        ;; /private/var/folders/... need independent coverage.
         metadata-dirs (->> (concat read-paths executable-paths writable-paths scratch-paths)
+                          (mapcat path-variants)
                           (mapcat ancestor-dirs)
                           distinct)]
     (string/join
