@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-f111e03d.js";
+            window.path_to_searchindex_js = "searchindex-22ff51b3.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-846aad8b.js"></script>
@@ -1276,8 +1276,10 @@ directory will be watched.</p>
 <p>Informs the jank build system to re-run this build script if the environment
 variable <code>FOO</code> changes. This is mainly expected to be used for variables like
 <code>CC</code> and <code>CXX</code>, but anything can work.</p>
-<p>Note: If no <code>rerun-if-env-changed</code> directive is provided, no environment
-variables will be watched.</p>
+<p>Note: The following variables will be watched by default and cannot be unwatched.</p>
+<ul>
+<li><code>PKG_CONFIG_PATH</code></li>
+</ul>
 <h2 id="finding-or-building-things"><a class="header" href="#finding-or-building-things">Finding or building things</a></h2>
 <p>The second thing build scripts can do is prepare files for jank consumption.
 This may involve building projects with CMake or similar. In order to do this
