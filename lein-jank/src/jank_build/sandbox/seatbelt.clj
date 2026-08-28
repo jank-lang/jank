@@ -58,17 +58,31 @@
    ""
    (str value)))
 
+(defn- ancestor-dirs
+  "Returns the canonical ancestor directories of `path`, from its immediate
+  parent up to (and including) the filesystem root."
+  [path]
+  (loop [dir (fs/parent (fs/canonicalize path))
+         acc []]
+    (if (nil? dir)
+      acc
+      (recur (fs/parent dir) (conj acc (str dir))))))
+
 (defn- path-filter [path]
-  ;; :nofollow-links avoids resolving the final path component, since some
-  ;; allowed paths (e.g. /private/var/select/sh) are themselves symlinks that
-  ;; tools open directly. Resolving them here would generate a rule for the
-  ;; symlink's target instead of the path actually passed to open(2).
-  (let [path (fs/canonicalize path {:nofollow-links true})
+  (let [path (fs/canonicalize path)
         filter-kind (if (fs/directory? path) "subpath" "literal")]
     (str "(" filter-kind " \"" (escape-scheme-string path) "\")")))
 
 (defn- allow-rule [operations path]
   (str "(allow " (string/join " " operations) " " (path-filter path) ")"))
+
+(defn- allow-literal-rule
+  "Like `allow-rule`, but always emits a `literal` filter, even for
+  directories. Used for ancestor-directory metadata grants, which must not
+  widen into a `subpath` grant covering the whole subtree."
+  [operations path]
+  (str "(allow " (string/join " " operations) " (literal \""
+       (escape-scheme-string (fs/canonicalize path)) "\"))"))
 
 (defn- option-args [kind args expected-count]
   (when-not (= expected-count (count args))
@@ -167,7 +181,18 @@
         scratch-paths (->> scratch-paths
                            (filter fs/exists?)
                            (map str)
-                           distinct)]
+                           distinct)
+        ;; Path filters only grant access to their endpoint. The kernel must
+        ;; still look up (and read the metadata of) every intermediate
+        ;; directory while resolving that endpoint's path, so every ancestor
+        ;; directory of every allowed path needs file-read-metadata too.
+        ;; Without this, deeply nested endpoints like
+        ;; /private/var/select/sh fail to open even though the endpoint
+        ;; itself is allowlisted, because an intermediate directory (e.g.
+        ;; /private/var/select) was never made visible.
+        metadata-dirs (->> (concat read-paths executable-paths writable-paths scratch-paths)
+                          (mapcat ancestor-dirs)
+                          distinct)]
     (string/join
      "\n"
      (concat
@@ -180,12 +205,9 @@
        "(allow ipc-sysv*)"
        "(allow signal (target same-sandbox))"
        ;; getpwuid and related libc calls use this specific service.
-       "(allow mach-lookup (global-name \"com.apple.system.opendirectoryd.libinfo\"))"
-       ;; Path filters still need metadata access while traversing the
-       ;; directories which contain an allowed path.
-       "(allow file-read-metadata (literal \"/\") (literal \"/private\")"
-       "  (literal \"/etc\") (literal \"/var\"))"
-       ;; dyld reads the contents of the root directory itself (not just its
+       "(allow mach-lookup (global-name \"com.apple.system.opendirectoryd.libinfo\"))"]
+      (map #(allow-literal-rule ["file-read-metadata"] %) metadata-dirs)
+      [;; dyld reads the contents of the root directory itself (not just its
        ;; metadata) while locating the shared cache during process startup.
        ;; Without this, dynamically linked binaries abort before main() runs.
        "(allow file-read-data (literal \"/\"))"
