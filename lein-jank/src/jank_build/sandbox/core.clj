@@ -17,6 +17,7 @@
   Setting the `enable?` flag to false allows sandboxing to be skipped entirely
   and the command will be run as a standard shell process."
   [enable? sandbox-opts sh-opts cmd]
+  ; TODO: Add Windows support.
   (let [sh-opts (process-options sandbox-opts sh-opts)]
     (cond
       (not enable?)
