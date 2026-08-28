@@ -59,7 +59,11 @@
    (str value)))
 
 (defn- path-filter [path]
-  (let [path (fs/canonicalize path)
+  ;; :nofollow-links avoids resolving the final path component, since some
+  ;; allowed paths (e.g. /private/var/select/sh) are themselves symlinks that
+  ;; tools open directly. Resolving them here would generate a rule for the
+  ;; symlink's target instead of the path actually passed to open(2).
+  (let [path (fs/canonicalize path {:nofollow-links true})
         filter-kind (if (fs/directory? path) "subpath" "literal")]
     (str "(" filter-kind " \"" (escape-scheme-string path) "\")")))
 
@@ -192,7 +196,12 @@
        "(allow file* (literal \"/dev/null\") (literal \"/dev/random\")"
        "  (literal \"/dev/stderr\") (literal \"/dev/stdin\")"
        "  (literal \"/dev/stdout\") (literal \"/dev/urandom\")"
-       "  (literal \"/dev/zero\"))"]
+       "  (literal \"/dev/zero\"))"
+       ;; Shell process substitution (e.g. `<(...)`) and some build scripts
+       ;; (Homebrew's os.sh) read and write through /dev/fd/N, which refers
+       ;; to a file descriptor already open in the process rather than a
+       ;; real file on disk.
+       "(allow file* (regex #\"^/dev/fd/[0-9]+$\"))"]
        (map #(allow-rule ["file-read*"] %) read-paths)
        (map #(allow-rule ["file-read*" "file-map-executable"] %) executable-paths)
        (map #(allow-rule ["process-exec"] %) executable-paths)
