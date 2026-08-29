@@ -65,10 +65,7 @@ namespace jank::runtime
     auto const size(s.size());
     auto const a(char_array(size));
 
-    for(usize i{}; i < size; ++i)
-    {
-      a->data[i] = s[i];
-    }
+    std::copy(s.data(), s.data() + size, a->data.data);
 
     return a;
   }
