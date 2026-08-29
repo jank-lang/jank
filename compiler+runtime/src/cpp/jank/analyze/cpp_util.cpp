@@ -816,6 +816,10 @@ namespace jank::analyze::cpp_util
                   resolve_scope("jank.runtime.obj.object_array_ref").expect_ok()) };
                 return type;
               }
+            default:
+              throw error::codegen_internal_failure(util::format(
+                "Unable to resolve literal_type for `array` with element type of `{}`.",
+                element_type_str(type)));
           }
         }
       default:

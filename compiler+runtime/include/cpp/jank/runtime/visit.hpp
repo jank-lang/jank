@@ -3,6 +3,7 @@
 #include <jtl/assert.hpp>
 #include <jtl/panic.hpp>
 
+#include <jank/error/runtime.hpp>
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/obj/nil.hpp>
 #include <jank/runtime/obj/number.hpp>
@@ -278,9 +279,9 @@ namespace jank::runtime
             case array_element_type::object:
               return fn(expect_object<obj::array<object_ref>>(erased), std::forward<Args>(args)...);
             default:
-              throw std::runtime_error{ util::format(
-                "visit not supported for 'array' with element type: '{}'",
-                element_type_str(type)) };
+              throw error::runtime_internal_failure(
+                util::format("Visit is not supported for `array` with element type of `{}`.",
+                             element_type_str(type)));
           }
         }
       case object_type::reader_conditional:
