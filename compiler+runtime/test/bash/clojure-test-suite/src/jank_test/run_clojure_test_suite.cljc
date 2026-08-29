@@ -188,7 +188,7 @@
     clojure.core-test.run-bang
     clojure.core-test.second
     clojure.core-test.select-keys
-    ; clojure.core-test.seq ; FIXME: There is no 'seq' member function within 'const char[5]'.
+    clojure.core-test.seq
     ; clojure.core-test.seq-qmark ; TODO: port rseq, TODO: port array-map, TODO: port object-array
     clojure.core-test.seqable-qmark
     ; clojure.core-test.sequential-qmark ; FIXME There is no 'seq' member function within 'const char[4]'.
