@@ -76,6 +76,7 @@ namespace jank::runtime::obj
   }
 
   template <typename T>
+  requires is_array_element_type<T>
   struct array : object
   {
     static constexpr object_type obj_type{ object_type::array };
@@ -86,7 +87,6 @@ namespace jank::runtime::obj
 
     array(usize const size)
       : object{ obj_type, obj_behaviors }
-      , element_type{ get_array_element_type<T>() }
       , size{ size }
       , data{ new(UseGC) T[size]{} }
     {
@@ -94,7 +94,6 @@ namespace jank::runtime::obj
 
     array(usize const size, T init_value)
       : object{ obj_type, obj_behaviors }
-      , element_type{ get_array_element_type<T>() }
       , size{ size }
       , data{ new(UseGC) T[size]{ init_value } }
     {
@@ -127,18 +126,6 @@ namespace jank::runtime::obj
     }
 
     T &operator[](usize const i)
-    {
-      if(i >= size)
-      {
-        throw std::runtime_error{
-          util::format("out of bounds index {}; array has a size of {}", i, size)
-        };
-      }
-
-      return data[i];
-    }
-
-    T operator[](usize const i) const
     {
       if(i >= size)
       {
@@ -231,7 +218,7 @@ namespace jank::runtime::obj
       return size;
     }
 
-    array_element_type element_type;
+    array_element_type element_type{ get_array_element_type<T>() };
     usize size{};
     jtl::ptr<T> data{};
   };
