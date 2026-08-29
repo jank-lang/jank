@@ -17,6 +17,10 @@
 (def jank-build-cache-file "jank-build-cache.txt")
 (def jank-build-fingerprint-file "jank-build-fingerprint.txt")
 
+; We watch PKG_CONFIG_PATH by default, since any changes to it can affect which packages are found.
+; This can either make or break native dependencies, so it's worth watching.
+(def default-directives {:rerun-if-env-changed ["PKG_CONFIG_PATH"]})
+
 (def default-build-opts
   {:target-dir         "target"
    :optimization-level 3
@@ -103,10 +107,11 @@
   (fs/delete-tree out-dir)
   (fs/create-dirs out-dir)
   (let [dep-name     (first (:coord (:dep op)))
-        build-dir    (fs/create-temp-dir {:prefix "jank-build-"})
+        build-dir    (fs/create-temp-dir {:prefix "jank-build-"
+                                          :posix-file-permissions "rwx------"})
         op           (assoc op :build-dir (str build-dir))
-        ;; The sandbox gets standard mounts for a scratch directory and build
-        ;; output directory. It also mounts as RO each input and build input.
+        ;; The sandbox gets standard runtime paths, a scratch directory, and
+        ;; a build output directory. It also exposes each input read-only.
         sandbox-args (into [[:ro-bind src-dir src-dir]
                             [:bind out-dir out-dir]
                             [:tmpfs build-dir]
@@ -120,11 +125,15 @@
         ;; Include all build input jars into the classpath.
         bb-classpath (string/join ":" (:build-inputs op))
         build-input  (build-script-input op)
+        cmd ["bb" "--classpath" bb-classpath "--stream" (str (fs/path src-dir jank-build-file))]
         proc         (sandbox/process
                       (not *disable-sandbox*)
                       sandbox-args
-                      {}
-                      ["bb" "--classpath" bb-classpath "--stream" (fs/path src-dir jank-build-file)])
+                      {:dir (str build-dir)
+                       ;; Keep tools which honor TMPDIR from writing to a
+                       ;; host-global temporary directory.
+                       :env {"TMPDIR" (str build-dir)}}
+                      cmd)
         out-lines    (atom [])]
     (spit (:in proc) (pr-str build-input))
     (future (wrap-stream (:out proc) out-lines *verbose-build* (str "  \u001b[0;34m" dep-name ">\u001b[0m")))
@@ -139,7 +148,8 @@
         (when-not *verbose-build*
           (println (string/join "\n" @out-lines))
           (println (string/join "\n" @out-lines)))
-        (util/abort "failed to run build command")))))
+        (util/abort (str "The build command failed with code " @(:exit proc) ".")
+                    (pr-str cmd))))))
 
 (defn collect-build-deps
   "Given a dependency tree, identify its jank-build scoped elements and resolve
@@ -245,7 +255,9 @@
 
   Returns nil if the build output cannot be read."
   [compile-op]
-  (when-let [directives (read-build-directives (:out-dir compile-op))]
+  (when-let [directives (merge-with into
+                                    default-directives
+                                    (read-build-directives (:out-dir compile-op)))]
     (let [paths (if (empty? (:rerun-if-changed directives))
                   [(:src-dir compile-op)]
                   (->> (:rerun-if-changed directives)

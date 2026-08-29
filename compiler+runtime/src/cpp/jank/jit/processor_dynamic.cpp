@@ -17,6 +17,7 @@
 #include <llvm/Support/Signals.h>
 
 #include <cstdlib>
+#include <filesystem>
 
 #include <CppInterOp/Compatibility.h>
 #include <CppInterOp/CppInterOp.h>
@@ -172,17 +173,19 @@ namespace jank::jit
       }
     }
 
-    /* We need to include our special runtime PCH. */
+    auto const pch_build_args{ args };
+
     auto pch_path{ util::find_pch(binary_version) };
     if(pch_path.is_none())
     {
-      auto const res{ util::build_pch(args, binary_version) };
+      auto const res{ util::build_pch(pch_build_args, binary_version) };
       if(res.is_err())
       {
         throw res.expect_err();
       }
       pch_path = res.expect_ok();
     }
+
     auto const &pch_path_str{ pch_path.unwrap() };
     args.emplace_back("-include-pch");
     args.emplace_back(strdup(pch_path_str.c_str()));
@@ -241,9 +244,54 @@ namespace jank::jit
 
     //util::println("jit flags {}", args);
 
-    /* We don't actually own this interpreter. CppInterOp does. */
-    interpreter.reset(static_cast<CppInternal::Interpreter *>(
-      Cpp::CreateInterpreter(args, {}, vfs, static_cast<int>(llvm::CodeModel::Large))));
+    /* We need to try to initialize the JIT runtime in order to know if our PCH is stale.
+     * If it is, we'll try to remove it, rebuild it, and then initialize again.
+     *
+     * This should only happen when system headers change, such as on a system update. */
+    bool pch_out_of_date{};
+    auto const create_interpreter{ [&] {
+      pch_out_of_date = false;
+      return static_cast<CppInternal::Interpreter *>(
+        Cpp::CreateInterpreter(args,
+                               {},
+                               vfs,
+                               static_cast<int>(llvm::CodeModel::Large),
+                               &pch_out_of_date));
+    } };
+
+    auto *created_interpreter{ create_interpreter() };
+    if(created_interpreter == nullptr && pch_out_of_date)
+    {
+      auto const stale_pch_path{ std::filesystem::path{ pch_path.unwrap().c_str() } };
+      std::error_code remove_error;
+      std::filesystem::remove(stale_pch_path, remove_error);
+      if(remove_error)
+      {
+        throw error::system_failure(
+          util::format("The stale pre-compiled header at `{}` could not be removed, but jank needs "
+                       "to rebuild a new one. The system error provided is: {}",
+                       stale_pch_path.string(),
+                       remove_error.message()));
+      }
+
+      auto const rebuilt_pch{ util::build_pch(pch_build_args, binary_version) };
+      if(rebuilt_pch.is_err())
+      {
+        throw rebuilt_pch.expect_err();
+      }
+
+      created_interpreter = create_interpreter();
+    }
+
+    if(created_interpreter == nullptr)
+    {
+      throw error::system_failure(
+        "The JIT runtime failed to initialize. Clang most likely has printed some error "
+        "diagnostics. Consider running `jank check-health` and reporting this issue.");
+    }
+
+    /* We need to include our special runtime PCH. */
+    interpreter.reset(created_interpreter);
 
     auto const ee{ interpreter->getExecutionEngine() };
 

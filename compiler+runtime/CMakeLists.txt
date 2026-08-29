@@ -977,6 +977,7 @@ if(jank_test)
     test/cpp/jank/runtime/obj/integer_range.cpp
     test/cpp/jank/runtime/obj/repeat.cpp
     test/cpp/jank/jit/processor.cpp
+    test/cpp/jank/analyze/cpp_util.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)
   add_dependencies(jank_test_exe jank_core_libraries)

@@ -30,6 +30,7 @@ namespace jank::analyze::cpp_util
 
   jtl::immutable_string get_qualified_name(jtl::ptr<void> scope);
   jtl::immutable_string get_qualified_type_name(jtl::ptr<void> type);
+  jtl::immutable_string get_qualified_truncated_type_name(jtl::ptr<void> type);
   void register_rtti(jtl::ptr<void> type);
 
   jtl::ptr<void> expression_type(expression_ref expr);
@@ -44,6 +45,12 @@ namespace jank::analyze::cpp_util
   find_best_arg_types_with_conversions(std::vector<void *> const &fns,
                                        std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                        bool is_member_call);
+
+  native_vector<error::candidate>
+  resolve_candidates(std::vector<void *> const &,
+                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                     std::vector<Cpp::TCppScope_t> const &arg_scopes);
+
   jtl::string_result<jtl::ptr<void>>
   find_best_overload(std::vector<void *> const &fns,
                      std::vector<Cpp::TemplateArgInfo> &arg_types,
