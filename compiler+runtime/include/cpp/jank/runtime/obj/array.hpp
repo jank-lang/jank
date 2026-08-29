@@ -129,7 +129,7 @@ namespace jank::runtime::obj
       if(i < 0 || std::cmp_greater_equal(i, size))
       {
         throw std::runtime_error{
-          util::format("out of bounds index {}; array has a size of {}", i, size)
+          util::format("Index `{}` is out of bounds for an `array` of length `{}`.", i, size)
         };
       }
 

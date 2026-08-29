@@ -309,8 +309,9 @@ namespace jank::runtime
   {
     if(a.get_type() != object_type::array)
     {
-      throw std::runtime_error{ util::format("aget not supported on value of type: '{}'",
-                                             object_type_str(a.get_type())) };
+      throw std::runtime_error{ util::format(
+        "The first argument to `aget` must be an `array`, not `{}`.",
+        object_type_str(a.get_type())) };
     }
 
     return a.nth(convert<i64>::into_object(i));

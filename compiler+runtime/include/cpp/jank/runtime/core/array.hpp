@@ -21,9 +21,9 @@ namespace jank::runtime
     if(actual_element_type != expected_element_type)
     {
       throw std::runtime_error{ util::format(
-        "Array cast failed, 'element_type' mismatch: expected '{}', received '{}'.",
-        element_type_str(expected_element_type),
-        element_type_str(actual_element_type)) };
+        "Array with element type of `{}` cannot be cast to array of element type `{}`.",
+        element_type_str(actual_element_type),
+        element_type_str(expected_element_type)) };
     }
 
     return a;
@@ -46,14 +46,7 @@ namespace jank::runtime
   template <typename T>
   T aget(obj::array_ref<T> const a, i64 const i)
   {
-    if(i < 0 || std::cmp_greater_equal(i, a->size))
-    {
-      throw std::runtime_error{
-        util::format("out of bounds index {}; array has a size of {}", i, a->size)
-      };
-    }
-
-    return a->data[i];
+    return (*a)[i];
   }
 
   extern template bool aget(obj::bool_array_ref const a, i64 const i);
@@ -72,7 +65,14 @@ namespace jank::runtime
   template <typename T, size_t N>
   T aget(T const (&a)[N], i64 const i)
   {
-    return (*a)[i];
+    if(i < 0 || std::cmp_greater_equal(i, N))
+    {
+      throw std::runtime_error{
+        util::format("Index `{}` is out of bounds for an `array` of length `{}`.", i, N)
+      };
+    }
+
+    return a[i];
   }
 
   object_ref aget(object_ref const a, i64 const i);
@@ -122,7 +122,7 @@ namespace jank::runtime
     if(i < 0 || std::cmp_greater_equal(i, N))
     {
       throw std::runtime_error{
-        util::format("out of bounds index {}; array has a size of {}", i, N)
+        util::format("Index `{}` is out of bounds for an `array` of length `{}`.", i, N)
       };
     }
 
