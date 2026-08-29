@@ -191,7 +191,7 @@
     clojure.core-test.seq
     ; clojure.core-test.seq-qmark ; TODO: port rseq, TODO: port array-map, TODO: port object-array
     clojure.core-test.seqable-qmark
-    ; clojure.core-test.sequential-qmark ; FIXME There is no 'seq' member function within 'const char[4]'.
+    clojure.core-test.sequential-qmark
     clojure.core-test.set
     clojure.core-test.set-qmark
     ; clojure.core-test.short ; analyze/macro-expansion-exception error: index out of bounds: 2,  TODO: port short, TODO: Port instance?
