@@ -111,9 +111,8 @@ namespace jank::runtime::obj
       return buff.release();
     }
 
-    object_ref aset(i64 const index, object_ref const val) override
+    object_ref aset(i64 const i, object_ref const val) override
     {
-      auto const i(static_cast<usize>(index));
       operator[](i) = convert<T>::from_object(val);
       return val;
     }
@@ -125,9 +124,9 @@ namespace jank::runtime::obj
       return clone;
     }
 
-    T &operator[](usize const i)
+    T &operator[](i64 const i) const
     {
-      if(i >= size)
+      if(i < 0 || std::cmp_greater_equal(i, size))
       {
         throw std::runtime_error{
           util::format("out of bounds index {}; array has a size of {}", i, size)
@@ -140,24 +139,18 @@ namespace jank::runtime::obj
     /* behavior::indexable */
     object_ref nth(object_ref const index) const override
     {
-      auto const i(static_cast<usize>(index.to_integer()));
-      if(i >= size)
-      {
-        throw std::runtime_error{
-          util::format("out of bounds index {}; array has a size of {}", i, size)
-        };
-      }
-      return convert<T>::into_object(data[i]);
+      auto const i(index.to_integer());
+      return convert<T>::into_object(operator[](i));
     }
 
     object_ref nth(object_ref const index, object_ref const fallback) const override
     {
-      auto const i(static_cast<usize>(index.to_integer()));
-      if(i >= size)
+      auto const i(index.to_integer());
+      if(i < 0 || std::cmp_greater_equal(i, size))
       {
         return fallback;
       }
-      return convert<T>::into_object(data[i]);
+      return convert<T>::into_object(operator[](i));
     }
 
     /* behavior::get */
@@ -165,8 +158,8 @@ namespace jank::runtime::obj
 
     object_ref get(object_ref const key) const override
     {
-      auto const i(static_cast<usize>(key.to_integer()));
-      if(i >= size)
+      auto const i(key.to_integer());
+      if(i < 0 || std::cmp_greater_equal(i, size))
       {
         return {};
       }
@@ -175,8 +168,8 @@ namespace jank::runtime::obj
 
     object_ref get(object_ref const key, object_ref const fallback) const override
     {
-      auto const i(static_cast<usize>(key.to_integer()));
-      if(i >= size)
+      auto const i(key.to_integer());
+      if(i < 0 || std::cmp_greater_equal(i, size))
       {
         return fallback;
       }
@@ -185,8 +178,8 @@ namespace jank::runtime::obj
 
     bool contains(object_ref const key) const override
     {
-      auto const i(static_cast<usize>(key.to_integer()));
-      return i < size;
+      auto const i(key.to_integer());
+      return i >= 0 && std::cmp_less(i, size);
     }
 
     /* behavior::seqable */

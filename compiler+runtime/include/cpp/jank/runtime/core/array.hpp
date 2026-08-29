@@ -46,7 +46,7 @@ namespace jank::runtime
   template <typename T>
   T aget(obj::array_ref<T> const a, i64 const i)
   {
-    if(i < 0 || static_cast<usize>(i) >= a->size)
+    if(i < 0 || std::cmp_greater_equal(i, a->size))
     {
       throw std::runtime_error{
         util::format("out of bounds index {}; array has a size of {}", i, a->size)
@@ -72,14 +72,7 @@ namespace jank::runtime
   template <typename T, size_t N>
   T aget(T const (&a)[N], i64 const i)
   {
-    if(i < 0 || std::cmp_greater_equal(i, N))
-    {
-      throw std::runtime_error{
-        util::format("out of bounds index {}; array has a size of {}", i, N)
-      };
-    }
-
-    return a[i];
+    return (*a)[i];
   }
 
   object_ref aget(object_ref const a, i64 const i);
@@ -87,15 +80,7 @@ namespace jank::runtime
   template <typename T>
   T aset(obj::array_ref<T> const a, i64 const i, T const val)
   {
-    if(i < 0 || static_cast<usize>(i) >= a->size)
-    {
-      throw std::runtime_error{
-        util::format("out of bounds index {}; array has a size of {}", i, a->size)
-      };
-    }
-
-    a->data[i] = val;
-
+    (*a)[i] = val;
     return val;
   }
 
@@ -156,7 +141,7 @@ namespace jank::runtime
   template <typename T>
   usize alength(obj::array_ref<T> const a)
   {
-    return static_cast<i64>(a->size);
+    return a->size;
   }
 
   extern template usize alength(obj::bool_array_ref const a);
