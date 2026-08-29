@@ -191,6 +191,8 @@ namespace jank::runtime
 
   object_ref aclone(object_ref const a);
 
+  /* TODO: Move to `jank/runtime/convert/builtin.hpp`. Currently this causes a
+   * circular dependency. */
   template <typename T, size_t N>
   requires(!jtl::is_same<T, char> && obj::is_array_element_type<T>)
   struct convert<T[N]>
