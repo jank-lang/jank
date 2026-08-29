@@ -1,0 +1,4 @@
+(cpp/def int jank-cpp-def-pass-implicit-conversion-foo 1.5)
+
+(if (= jank-cpp-def-pass-implicit-conversion-foo 1)
+  :success)
