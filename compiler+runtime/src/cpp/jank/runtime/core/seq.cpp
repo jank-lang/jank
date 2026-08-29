@@ -107,6 +107,11 @@ namespace jank::runtime
 
   bool is_associative(object_ref const o)
   {
+    if(o.is_nil())
+    {
+      return false;
+    }
+
     /* TODO: Port visit_object: associatively_writable. */
     return visit_object(
       [=](auto const typed_o) -> bool {

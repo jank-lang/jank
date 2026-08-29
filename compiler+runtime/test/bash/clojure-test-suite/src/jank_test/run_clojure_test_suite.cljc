@@ -12,7 +12,7 @@
     clojure.core-test.apply
     clojure.core-test.assoc
     clojure.core-test.assoc-bang
-    ; clojure.core-test.associative-qmark ; FIXME: There is no 'seq' member function within 'const char[3]'.
+    clojure.core-test.associative-qmark
     clojure.core-test.atom
     clojure.core-test.bigdec
     clojure.core-test.bigint
