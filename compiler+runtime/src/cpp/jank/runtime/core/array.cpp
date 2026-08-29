@@ -38,7 +38,7 @@ namespace jank::runtime
       return boolean_array(o.to_integer());
     }
 
-    auto a(boolean_array(sequence_length(o)));
+    auto const a(boolean_array(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -63,7 +63,7 @@ namespace jank::runtime
   obj::char_array_ref char_array(jtl::immutable_string const &s)
   {
     auto const size(s.size());
-    auto a(char_array(size));
+    auto const a(char_array(size));
 
     for(usize i{}; i < size; ++i)
     {
@@ -85,7 +85,7 @@ namespace jank::runtime
       return char_array(expect_object<obj::persistent_string>(o)->data);
     }
 
-    auto a(char_array(sequence_length(o)));
+    auto const a(char_array(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -114,7 +114,7 @@ namespace jank::runtime
       return float_array(o.to_integer());
     }
 
-    auto a(float_array(sequence_length(o)));
+    auto const a(float_array(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -143,7 +143,7 @@ namespace jank::runtime
       return double_array(o.to_integer());
     }
 
-    auto a(double_array(sequence_length(o)));
+    auto const a(double_array(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -172,7 +172,7 @@ namespace jank::runtime
       return short_array(o.to_integer());
     }
 
-    auto a(short_array(sequence_length(o)));
+    auto const a(short_array(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -201,7 +201,7 @@ namespace jank::runtime
       return int_array(o.to_integer());
     }
 
-    auto a(int_array(sequence_length(o)));
+    auto const a(int_array(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -230,7 +230,7 @@ namespace jank::runtime
       return long_array(o.to_integer());
     }
 
-    auto a(long_array(sequence_length(o)));
+    auto const a(long_array(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -254,7 +254,7 @@ namespace jank::runtime
       return object_array(o.to_integer());
     }
 
-    auto a(object_array(sequence_length(o)));
+    auto const a(object_array(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -283,7 +283,7 @@ namespace jank::runtime
       return byte_array(o.to_integer());
     }
 
-    auto a(byte_array(sequence_length(o)));
+    auto const a(byte_array(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
