@@ -1342,7 +1342,7 @@ namespace jank::read::parse
     {
       if(syntax_quote_is_unquote(item, false))
       {
-        /* `~x` just needs `x` evaluated in place; no quoting needed. */
+        /* `~x` just needs `x` evaluated in place. No quoting needed. */
         pending.push_back(second(item));
       }
       else if(syntax_quote_is_unquote(item, true))
@@ -1350,13 +1350,13 @@ namespace jank::read::parse
         auto const spliced(second(item));
 
         /* When the `~@` operand is itself a literal vector/set written directly at the
-         * splice site (e.g. `~@[a b]`), we know its elements are evaluated in place and
-         * then spliced, which is exactly equivalent to unquoting each element
-         * individually (`~a ~b`). This lets us fold it directly into the surrounding
-         * segment, avoiding `concat` entirely. This doesn't apply to quoted forms (e.g.
-         * `~@'(a b)`), since their elements are data, not expressions to evaluate. */
+         * splice site (i.e. `~@[a b]`), we know its elements are evaluated in place and
+         * then spliced. This is exactly the same as unquoting each element
+         * individually. This lets us fold it directly into the surrounding
+         * segment, avoiding `concat` entirely. However, this doesn't apply to quoted forms
+         * (i.e. `~@'(a b)`), since their elements are data, not expressions to evaluate. */
         if(spliced.get_type() == object_type::persistent_vector
-          || spliced.get_type() == object_type::persistent_hash_set)
+           || spliced.get_type() == object_type::persistent_hash_set)
         {
           for(auto const elem : make_sequence_range(spliced.seq()))
           {
@@ -1528,31 +1528,30 @@ namespace jank::read::parse
 
           /* Builds a minimal wrapper for a collection kind whose constructor function
            * (`vec`/`seq`/`set`) takes a single seqable argument. When there's exactly one
-           * segment, `concat*` isn't even needed, since there's nothing to concatenate. */
-          auto const wrap_dynamic(
-            [](syntax_quote_segments const &segs, char const * const wrap_fn) -> object_ref {
-              if(segs.segments.size() == 1)
-              {
-                return make_box<obj::persistent_list>(std::in_place,
-                                                       make_box<obj::symbol>("clojure.core",
-                                                                             wrap_fn),
-                                                       segs.segments[0].expr)
-                  .erase();
-              }
-
-              runtime::detail::native_transient_vector concat_args;
-              for(auto const &s : segs.segments)
-              {
-                concat_args.push_back(s.expr);
-              }
-
-              return make_box<obj::persistent_list>(
-                       std::in_place,
-                       make_box<obj::symbol>("clojure.core", wrap_fn),
-                       cons(make_box<obj::symbol>("clojure.core", "concat*"),
-                           make_box<obj::persistent_vector>(concat_args.persistent())->seq()))
+           * segment, `concat*` isn't even needed. */
+          auto const wrap_dynamic([](syntax_quote_segments const &segs,
+                                     char const * const wrap_fn) -> object_ref {
+            if(segs.segments.size() == 1)
+            {
+              return make_box<obj::persistent_list>(std::in_place,
+                                                    make_box<obj::symbol>("clojure.core", wrap_fn),
+                                                    segs.segments[0].expr)
                 .erase();
-            });
+            }
+
+            runtime::detail::native_transient_vector concat_args;
+            for(auto const &s : segs.segments)
+            {
+              concat_args.push_back(s.expr);
+            }
+
+            return make_box<obj::persistent_list>(
+                     std::in_place,
+                     make_box<obj::symbol>("clojure.core", wrap_fn),
+                     cons(make_box<obj::symbol>("clojure.core", "concat*"),
+                          make_box<obj::persistent_vector>(concat_args.persistent())->seq()))
+              .erase();
+          });
 
           if constexpr(jtl::is_same<T, obj::persistent_vector>)
           {
@@ -1563,9 +1562,7 @@ namespace jank::read::parse
             }
             auto const &segs(expanded.expect_ok());
 
-            /* No `~@` was used (or it was fully flattened at parse time), so we can
-             * return the already-built literal vector directly. This is the minimal
-             * expansion: no `concat`/`apply`/`seq` scaffolding at all. */
+            /* No `~@` was used, so we can return the already-built literal vector directly. */
             if(!segs.has_dynamic_splice)
             {
               if(segs.segments.empty())
@@ -1601,7 +1598,7 @@ namespace jank::read::parse
               }
 
               return cons(make_box<obj::symbol>("clojure.core", "hash-map"),
-                         segs.segments[0].expr.seq());
+                          segs.segments[0].expr.seq());
             }
 
             if(segs.segments.size() == 1)
@@ -1625,7 +1622,7 @@ namespace jank::read::parse
                      make_box<obj::symbol>("clojure.core", "apply*"),
                      make_box<obj::symbol>("clojure.core", "hash-map"),
                      cons(make_box<obj::symbol>("clojure.core", "concat*"),
-                         make_box<obj::persistent_vector>(concat_args.persistent())->seq()))
+                          make_box<obj::persistent_vector>(concat_args.persistent())->seq()))
               .erase();
           }
           if constexpr(behavior::set_like<T>)
@@ -1644,8 +1641,7 @@ namespace jank::read::parse
                 return make_box<obj::persistent_hash_set>().erase();
               }
 
-              return obj::persistent_hash_set::create_from_seq(segs.segments[0].expr.seq())
-                .erase();
+              return obj::persistent_hash_set::create_from_seq(segs.segments[0].expr.seq()).erase();
             }
 
             return wrap_dynamic(segs, "set");
@@ -1663,13 +1659,13 @@ namespace jank::read::parse
             {
               if(segs.segments.empty())
               {
-                return make_box<obj::persistent_list>(std::in_place,
-                                                      make_box<obj::symbol>("clojure.core",
-                                                                            "list"));
+                return make_box<obj::persistent_list>(
+                  std::in_place,
+                  make_box<obj::symbol>("clojure.core", "list"));
               }
 
               return cons(make_box<obj::symbol>("clojure.core", "list"),
-                         segs.segments[0].expr.seq());
+                          segs.segments[0].expr.seq());
             }
 
             return wrap_dynamic(segs, "seq");

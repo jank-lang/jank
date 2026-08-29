@@ -128,9 +128,6 @@ namespace jank::read::parse
       struct segment
       {
         runtime::object_ref expr;
-        /* True if `expr` is a dynamic (non-literal) `~@` splice operand which must be
-         * evaluated and spliced at run time. False if `expr` is a literal vector of
-         * already fully expanded/quoted items. */
         bool dynamic{};
       };
 
