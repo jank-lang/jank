@@ -247,8 +247,6 @@ namespace jank::runtime
       case object_type::opaque_box:
         return fn(expect_object<obj::opaque_box>(erased), std::forward<Args>(args)...);
       case object_type::array:
-        /* TODO: Remove arrays from visit. It is still required for certain
-         * clojure functions such as nth. */
         {
           auto const type(erased.get_element_type());
           switch(type)
