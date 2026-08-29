@@ -1311,47 +1311,78 @@ namespace jank::read::parse
     return result.unwrap();
   }
 
-  jtl::result<object_ref, error_ref> processor::syntax_quote_expand_seq(object_ref const seq)
+  jtl::result<processor::syntax_quote_segments, error_ref>
+  processor::syntax_quote_expand_segments(object_ref const seq)
   {
+    syntax_quote_segments result;
+
     if(seq.is_nil())
     {
-      return seq;
+      return result;
     }
 
     if(!seq.has_behavior(object_behavior::seqable))
     {
-      return err(
-        error::parse_internal_failure(util::format("syntax_quote_expand_seq arg is seqable: {}.",
-                                                   object_type_str(seq.get_type()))));
+      return err(error::parse_internal_failure(
+        util::format("syntax_quote_expand_segments arg is not seqable: {}.",
+                     object_type_str(seq.get_type()))));
     }
 
-    runtime::detail::native_transient_vector ret;
+    runtime::detail::native_transient_vector pending;
+    auto const flush_pending([&]() {
+      if(!pending.empty())
+      {
+        result.segments.push_back(
+          { make_box<obj::persistent_vector>(pending.persistent()).erase(), false });
+        pending = runtime::detail::native_transient_vector{};
+      }
+    });
+
     for(auto const item : make_sequence_range(seq))
     {
       if(syntax_quote_is_unquote(item, false))
       {
-        ret.push_back(make_box<obj::persistent_list>(std::in_place,
-                                                     make_box<obj::symbol>("clojure.core", "list"),
-                                                     second(item)));
+        /* `~x` just needs `x` evaluated in place; no quoting needed. */
+        pending.push_back(second(item));
       }
       else if(syntax_quote_is_unquote(item, true))
       {
-        ret.push_back(second(item));
+        auto const spliced(second(item));
+
+        /* When the `~@` operand is itself a literal vector/set written directly at the
+         * splice site (e.g. `~@[a b]`), we know its elements are evaluated in place and
+         * then spliced, which is exactly equivalent to unquoting each element
+         * individually (`~a ~b`). This lets us fold it directly into the surrounding
+         * segment, avoiding `concat` entirely. This doesn't apply to quoted forms (e.g.
+         * `~@'(a b)`), since their elements are data, not expressions to evaluate. */
+        if(spliced.get_type() == object_type::persistent_vector
+          || spliced.get_type() == object_type::persistent_hash_set)
+        {
+          for(auto const elem : make_sequence_range(spliced.seq()))
+          {
+            pending.push_back(elem);
+          }
+        }
+        else
+        {
+          flush_pending();
+          result.segments.push_back({ spliced, true });
+          result.has_dynamic_splice = true;
+        }
       }
       else
       {
         auto quoted_item(syntax_quote(item));
         if(quoted_item.is_err())
         {
-          return quoted_item;
+          return quoted_item.expect_err();
         }
-        ret.push_back(make_box<obj::persistent_list>(std::in_place,
-                                                     make_box<obj::symbol>("clojure.core", "list"),
-                                                     quoted_item.expect_ok()));
+        pending.push_back(quoted_item.expect_ok());
       }
     }
-    auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
-    return vec;
+    flush_pending();
+
+    return result;
   }
 
   jtl::result<object_ref, error_ref> processor::syntax_quote_flatten_map(object_ref const seq)
@@ -1374,47 +1405,6 @@ namespace jank::read::parse
       auto const item_seq{ item.seq() };
       ret.push_back(item_seq.first());
       ret.push_back(item_seq.next().first());
-    }
-    auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
-    return vec;
-  }
-
-  jtl::result<object_ref, error_ref> processor::syntax_quote_expand_set(object_ref const seq)
-  {
-    if(seq.is_nil())
-    {
-      return seq;
-    }
-
-    if(!seq.has_behavior(object_behavior::seqable))
-    {
-      return err(error::parse_internal_failure("syntax_quote_expand_seq arg not seqable."));
-    }
-
-    runtime::detail::native_transient_vector ret;
-    for(auto const item : make_sequence_range(seq))
-    {
-      if(syntax_quote_is_unquote(item, false))
-      {
-        ret.push_back(make_box<obj::persistent_list>(std::in_place,
-                                                     make_box<obj::symbol>("clojure.core", "list"),
-                                                     second(item)));
-      }
-      else if(syntax_quote_is_unquote(item, true))
-      {
-        ret.push_back(second(item));
-      }
-      else
-      {
-        auto quoted_item(syntax_quote(item));
-        if(quoted_item.is_err())
-        {
-          return quoted_item;
-        }
-        ret.push_back(make_box<obj::persistent_list>(std::in_place,
-                                                     make_box<obj::symbol>("clojure.core", "list"),
-                                                     quoted_item.expect_ok()));
-      }
     }
     auto vec(make_box<obj::persistent_vector>(ret.persistent())->seq());
     return vec;
@@ -1536,30 +1526,57 @@ namespace jank::read::parse
         [&](auto const typed_form) -> jtl::result<object_ref, error_ref> {
           using T = typename jtl::decay_t<decltype(typed_form)>::value_type;
 
+          /* Builds a minimal wrapper for a collection kind whose constructor function
+           * (`vec`/`seq`/`set`) takes a single seqable argument. When there's exactly one
+           * segment, `concat*` isn't even needed, since there's nothing to concatenate. */
+          auto const wrap_dynamic(
+            [](syntax_quote_segments const &segs, char const * const wrap_fn) -> object_ref {
+              if(segs.segments.size() == 1)
+              {
+                return make_box<obj::persistent_list>(std::in_place,
+                                                       make_box<obj::symbol>("clojure.core",
+                                                                             wrap_fn),
+                                                       segs.segments[0].expr)
+                  .erase();
+              }
+
+              runtime::detail::native_transient_vector concat_args;
+              for(auto const &s : segs.segments)
+              {
+                concat_args.push_back(s.expr);
+              }
+
+              return make_box<obj::persistent_list>(
+                       std::in_place,
+                       make_box<obj::symbol>("clojure.core", wrap_fn),
+                       cons(make_box<obj::symbol>("clojure.core", "concat*"),
+                           make_box<obj::persistent_vector>(concat_args.persistent())->seq()))
+                .erase();
+            });
+
           if constexpr(jtl::is_same<T, obj::persistent_vector>)
           {
-            auto const seq(typed_form->seq());
-            if(seq.is_nil())
-            {
-              return make_box<obj::persistent_list>(
-                std::in_place,
-                make_box<obj::symbol>("clojure.core", "vector"));
-            }
-
-            auto expanded(syntax_quote_expand_seq(seq));
+            auto expanded(syntax_quote_expand_segments(typed_form->seq()));
             if(expanded.is_err())
             {
-              return expanded;
+              return expanded.expect_err();
+            }
+            auto const &segs(expanded.expect_ok());
+
+            /* No `~@` was used (or it was fully flattened at parse time), so we can
+             * return the already-built literal vector directly. This is the minimal
+             * expansion: no `concat`/`apply`/`seq` scaffolding at all. */
+            if(!segs.has_dynamic_splice)
+            {
+              if(segs.segments.empty())
+              {
+                return make_box<obj::persistent_vector>().erase();
+              }
+
+              return segs.segments[0].expr;
             }
 
-            return make_box<obj::persistent_list>(
-              std::in_place,
-              make_box<obj::symbol>("clojure.core", "apply*"),
-              make_box<obj::symbol>("clojure.core", "vector"),
-              make_box<obj::persistent_list>(
-                std::in_place,
-                make_box<obj::symbol>("clojure.core", "seq"),
-                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
+            return wrap_dynamic(segs, "vec");
           }
           if constexpr(behavior::map_like<T>)
           {
@@ -1569,64 +1586,93 @@ namespace jank::read::parse
               return flattened;
             }
 
-            auto expanded(syntax_quote_expand_seq(flattened.expect_ok()));
+            auto expanded(syntax_quote_expand_segments(flattened.expect_ok()));
             if(expanded.is_err())
             {
-              return expanded;
+              return expanded.expect_err();
+            }
+            auto const &segs(expanded.expect_ok());
+
+            if(!segs.has_dynamic_splice)
+            {
+              if(segs.segments.empty())
+              {
+                return make_box<obj::persistent_array_map>().erase();
+              }
+
+              return cons(make_box<obj::symbol>("clojure.core", "hash-map"),
+                         segs.segments[0].expr.seq());
+            }
+
+            if(segs.segments.size() == 1)
+            {
+              return make_box<obj::persistent_list>(
+                       std::in_place,
+                       make_box<obj::symbol>("clojure.core", "apply*"),
+                       make_box<obj::symbol>("clojure.core", "hash-map"),
+                       segs.segments[0].expr)
+                .erase();
+            }
+
+            runtime::detail::native_transient_vector concat_args;
+            for(auto const &s : segs.segments)
+            {
+              concat_args.push_back(s.expr);
             }
 
             return make_box<obj::persistent_list>(
-              std::in_place,
-              make_box<obj::symbol>("clojure.core", "apply*"),
-              make_box<obj::symbol>("clojure.core", "hash-map"),
-              make_box<obj::persistent_list>(
-                std::in_place,
-                make_box<obj::symbol>("clojure.core", "seq"),
-                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
+                     std::in_place,
+                     make_box<obj::symbol>("clojure.core", "apply*"),
+                     make_box<obj::symbol>("clojure.core", "hash-map"),
+                     cons(make_box<obj::symbol>("clojure.core", "concat*"),
+                         make_box<obj::persistent_vector>(concat_args.persistent())->seq()))
+              .erase();
           }
           if constexpr(behavior::set_like<T>)
           {
-            auto const seq(typed_form->seq());
-            if(seq.is_nil())
-            {
-              return make_box<obj::persistent_list>(
-                std::in_place,
-                make_box<obj::symbol>("clojure.core", "hash-set"));
-            }
-            auto expanded(syntax_quote_expand_seq(seq));
+            auto expanded(syntax_quote_expand_segments(typed_form->seq()));
             if(expanded.is_err())
             {
-              return expanded;
+              return expanded.expect_err();
+            }
+            auto const &segs(expanded.expect_ok());
+
+            if(!segs.has_dynamic_splice)
+            {
+              if(segs.segments.empty())
+              {
+                return make_box<obj::persistent_hash_set>().erase();
+              }
+
+              return obj::persistent_hash_set::create_from_seq(segs.segments[0].expr.seq())
+                .erase();
             }
 
-            return make_box<obj::persistent_list>(
-              std::in_place,
-              make_box<obj::symbol>("clojure.core", "apply*"),
-              make_box<obj::symbol>("clojure.core", "hash-set"),
-              make_box<obj::persistent_list>(
-                std::in_place,
-                make_box<obj::symbol>("clojure.core", "seq"),
-                cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok())));
+            return wrap_dynamic(segs, "set");
           }
           if constexpr(behavior::sequence_like<T>)
           {
-            auto const seq(typed_form->seq());
-            if(seq.is_nil())
-            {
-              return make_box<obj::persistent_list>(std::in_place,
-                                                    make_box<obj::symbol>("clojure.core", "list"));
-            }
-            auto expanded(syntax_quote_expand_seq(seq));
+            auto expanded(syntax_quote_expand_segments(typed_form->seq()));
             if(expanded.is_err())
             {
-              return expanded;
+              return expanded.expect_err();
+            }
+            auto const &segs(expanded.expect_ok());
+
+            if(!segs.has_dynamic_splice)
+            {
+              if(segs.segments.empty())
+              {
+                return make_box<obj::persistent_list>(std::in_place,
+                                                      make_box<obj::symbol>("clojure.core",
+                                                                            "list"));
+              }
+
+              return cons(make_box<obj::symbol>("clojure.core", "list"),
+                         segs.segments[0].expr.seq());
             }
 
-            /* TODO: Need seq? */
-            return make_box<obj::persistent_list>(
-              std::in_place,
-              make_box<obj::symbol>("clojure.core", "seq"),
-              cons(make_box<obj::symbol>("clojure.core", "concat*"), expanded.expect_ok()));
+            return wrap_dynamic(segs, "seq");
           }
           else
           {

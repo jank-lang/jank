@@ -115,10 +115,31 @@ namespace jank::read::parse
     parse_upto(lex::token_kind const &upto,
                jtl::ref<error_ref(read::source const &)> const unterminated_form_error);
     jtl::result<runtime::object_ref, error_ref> syntax_quote(runtime::object_ref const form);
-    jtl::result<runtime::object_ref, error_ref>
-    syntax_quote_expand_seq(runtime::object_ref const seq);
-    jtl::result<runtime::object_ref, error_ref>
-    syntax_quote_expand_set(runtime::object_ref const seq);
+
+    /* The result of grouping a syntax-quoted collection's items into segments.
+     * Consecutive items which don't need `~@` splicing are grouped into a single
+     * literal vector segment; each dynamic (non-literal) `~@` becomes its own
+     * standalone segment. If `has_dynamic_splice` is false, `segments` holds at
+     * most one entry, since nothing ever forced a new segment to be started. This
+     * lets callers emit a minimal expansion (no `concat`/`apply`/`seq`) whenever
+     * no dynamic splicing is present. */
+    struct syntax_quote_segments
+    {
+      struct segment
+      {
+        runtime::object_ref expr;
+        /* True if `expr` is a dynamic (non-literal) `~@` splice operand which must be
+         * evaluated and spliced at run time. False if `expr` is a literal vector of
+         * already fully expanded/quoted items. */
+        bool dynamic{};
+      };
+
+      native_vector<segment> segments;
+      bool has_dynamic_splice{};
+    };
+
+    jtl::result<syntax_quote_segments, error_ref>
+    syntax_quote_expand_segments(runtime::object_ref const seq);
     static jtl::result<runtime::object_ref, error_ref>
     syntax_quote_flatten_map(runtime::object_ref const seq);
     static bool syntax_quote_is_unquote(runtime::object_ref const form, bool splice);
