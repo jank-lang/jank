@@ -131,7 +131,7 @@
     clojure.core-test.nil-qmark
     clojure.core-test.nnext
     clojure.core-test.not
-    ; clojure.core-test.not_empty ; libc++abi: terminating due to uncaught exception of type jank::runtime::oref<jank::runtime::object>.
+    clojure.core-test.not-empty
     ; clojure.core-test.not-eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
     clojure.core-test.not-every-qmark
     clojure.core-test.nth
