@@ -95,8 +95,12 @@ namespace jank::runtime::obj
     array(usize const size, T init_value)
       : object{ obj_type, obj_behaviors }
       , size{ size }
-      , data{ new(UseGC) T[size]{ init_value } }
+      , data{ new(UseGC) T[size]{} }
     {
+      for(usize i{}; i < size; ++i)
+      {
+        data[i] = init_value;
+      }
     }
 
     array_element_type get_element_type() const override
