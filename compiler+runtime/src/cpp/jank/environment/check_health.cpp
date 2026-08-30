@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include <unistd.h>
+
 #include <llvm/TargetParser/Host.h>
 #include <llvm/Support/Program.h>
 
@@ -340,7 +342,7 @@ namespace jank::environment
         auto const tmp{ std::filesystem::temp_directory_path() };
         std::string path_tmp{ (tmp / "jank-aot-XXXXXX").string() };
         int const fd{ mkstemp(path_tmp.data()) };
-        ::close(fd);
+        close(fd);
         std::filesystem::remove(path_tmp);
         std::filesystem::create_directories(path_tmp);
 
