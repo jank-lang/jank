@@ -128,16 +128,6 @@ package() {
         pkgbuild-dest (b.f/path build-dir "PKGBUILD")]
 
 
-    ;; DEBUG
-    (util/log-info "compiler+runtime-dir: " compiler+runtime-dir)
-    (util/log-info "repo-root: " repo-root)
-    (util/log-info "portable-cmd: "
-                   (util/command-make-portable "git log -1 --format=%ct"))
-    (util/log-info "git-date: "
-                   (pr-str  @(util/quiet-shell
-                              {:dir repo-root}
-                              "git log -1 --format=%ct")))
-
     ;; Clean and create the makepkg build directory
     (b.f/delete-tree build-dir)
     (b.f/create-dirs build-dir)
