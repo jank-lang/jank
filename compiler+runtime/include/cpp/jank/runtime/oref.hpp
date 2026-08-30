@@ -399,21 +399,6 @@ namespace jank::runtime
       return ptr()->type;
     }
 
-    array_element_type get_element_type() const
-    {
-      return ptr()->get_element_type();
-    }
-
-    object_ref aset(i64 const index, object_ref const val)
-    {
-      return ptr()->aset(index, val);
-    }
-
-    object_ref aclone() const
-    {
-      return ptr()->aclone();
-    }
-
     bool equal(object_ref const o) const
     {
       if(detail::is_tagged_small_int(data))
@@ -1160,6 +1145,61 @@ namespace jank::runtime
       }
     }
 
+    /* behavior::array_like */
+    array_element_type get_element_type() const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer i{ detail::as_integer(data) };
+        return i.get_element_type();
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.get_element_type();
+      }
+      else
+      {
+        return ptr()->get_element_type();
+      }
+    }
+
+    object_ref aset(i64 const index, object_ref const val)
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer i{ detail::as_integer(data) };
+        return i.aset(index, val);
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.aset(index, val);
+      }
+      else
+      {
+        return ptr()->aset(index, val);
+      }
+    }
+
+    object_ref aclone() const
+    {
+      if(detail::is_tagged_small_int(data))
+      {
+        obj::small_integer i{ detail::as_integer(data) };
+        return i.aclone();
+      }
+      else if(detail::is_tagged_small_real(data))
+      {
+        obj::small_real i{ detail::as_real(data) };
+        return i.aclone();
+      }
+      else
+      {
+        return ptr()->aclone();
+      }
+    }
+
     value_type *raw() const
     {
       return data;
@@ -1391,21 +1431,6 @@ namespace jank::runtime
         return object_type::nil;
       }
       return static_cast<T *>(data)->type;
-    }
-
-    array_element_type get_element_type() const
-    {
-      return static_cast<T *>(data)->get_element_type();
-    }
-
-    object_ref aset(i64 const index, object_ref const val)
-    {
-      return static_cast<T *>(data)->aset(index, val);
-    }
-
-    object_ref aclone() const
-    {
-      return static_cast<T *>(data)->aclone();
     }
 
     bool equal(object_ref const o) const
@@ -1804,6 +1829,37 @@ namespace jank::runtime
       return static_cast<T *>(data)->deref();
     }
 
+    /* behavior::array_like */
+    array_element_type get_element_type() const
+    {
+      if(is_nil())
+      {
+        return const_cast<obj::nil &>(_jank_nil).get_element_type();
+      }
+
+      return static_cast<T *>(data)->get_element_type();
+    }
+
+    object_ref aset(i64 const index, object_ref const val)
+    {
+      if(is_nil())
+      {
+        return const_cast<obj::nil &>(_jank_nil).aset(index, val);
+      }
+
+      return static_cast<T *>(data)->aset(index, val);
+    }
+
+    object_ref aclone() const
+    {
+      if(is_nil())
+      {
+        return const_cast<obj::nil &>(_jank_nil).aclone();
+      }
+
+      return static_cast<T *>(data)->aclone();
+    }
+
     void *raw() const
     {
       return data;
@@ -2170,6 +2226,25 @@ namespace jank::runtime
       return i.deref();
     }
 
+    /* behavior::array_like */
+    array_element_type get_element_type() const
+    {
+      obj::small_integer i{ data };
+      return i.get_element_type();
+    }
+
+    object_ref aset(i64 const index, object_ref const val)
+    {
+      obj::small_integer i{ data };
+      return i.aset(index, val);
+    }
+
+    object_ref aclone() const
+    {
+      obj::small_integer i{ data };
+      return i.aclone();
+    }
+
     i32 raw() const
     {
       return data;
@@ -2527,6 +2602,25 @@ namespace jank::runtime
     {
       obj::small_real i{ data };
       return i.deref();
+    }
+
+    /* behavior::array_like */
+    array_element_type get_element_type() const
+    {
+      obj::small_real i{ data };
+      return i.get_element_type();
+    }
+
+    object_ref aset(i64 const index, object_ref const val)
+    {
+      obj::small_real i{ data };
+      return i.aset(index, val);
+    }
+
+    object_ref aclone() const
+    {
+      obj::small_real i{ data };
+      return i.aclone();
     }
 
     f64 raw() const
@@ -2891,6 +2985,22 @@ namespace jank::runtime
     object_ref deref() const
     {
       return const_cast<obj::nil &>(_jank_nil).deref();
+    }
+
+    /* behavior::array_like */
+    array_element_type get_element_type() const
+    {
+      return const_cast<obj::nil &>(_jank_nil).get_element_type();
+    }
+
+    object_ref aset(i64 const index, object_ref const val)
+    {
+      return const_cast<obj::nil &>(_jank_nil).aset(index, val);
+    }
+
+    object_ref aclone() const
+    {
+      return const_cast<obj::nil &>(_jank_nil).aclone();
     }
 
     value_type *raw() const
