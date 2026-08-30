@@ -7,7 +7,6 @@
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
 #include <jank/runtime/context.hpp>
-#include <jank/runtime/core/array.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/meta.hpp>
 #include <jank/runtime/rtti.hpp>
