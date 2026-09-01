@@ -556,7 +556,8 @@ namespace jank::analyze
                  expression_position const position,
                  bool const needs_box,
                  object_ref const form,
-                 native_vector<runtime::object_ref> const &macro_expansions)
+                 native_vector<runtime::object_ref> const &macro_expansions,
+                 bool const allow_implicit_conversions = true)
   {
     /* TODO: Make this a set. */
     std::vector<void *> fns;
@@ -892,13 +893,17 @@ namespace jank::analyze
           ->add_usage(object_source(form));
       }
 
-      auto const conversion_res{
-        apply_implicit_conversions(match, arg_exprs, arg_types, macro_expansions)
-      };
-      if(conversion_res.is_err())
+      if(allow_implicit_conversions)
       {
-        return conversion_res.expect_err();
+        auto const conversion_res{
+          apply_implicit_conversions(match, arg_exprs, arg_types, macro_expansions)
+        };
+        if(conversion_res.is_err())
+        {
+          return conversion_res.expect_err();
+        }
       }
+
       if(is_member_call)
       {
         arg_types.erase(arg_types.begin());
@@ -1072,7 +1077,7 @@ namespace jank::analyze
     }
 
     return error::analyze_invalid_cpp_call(
-             util::format("This call to the `{}` {} cannot be resolved.",
+             util::format("No matching overload of the `{}` {} was found for this call.",
                           scope_name,
                           is_ctor ? "constructor" : "function"),
              cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
@@ -1323,7 +1328,8 @@ namespace jank::analyze
                                               cast_position,
                                               expr->needs_box,
                                               expr->form,
-                                              macro_expansions) };
+                                              macro_expansions,
+                                              false) };
           if(new_expr.is_err())
           {
             return new_expr.expect_err();

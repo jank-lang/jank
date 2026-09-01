@@ -107,7 +107,10 @@
   [{:keys [src-dir out-dir] :as op}]
   (fs/delete-tree out-dir)
   (fs/create-dirs out-dir)
-  (let [dep-name     (first (:coord (:dep op)))
+  (let [bb (fs/which "bb")
+        _ (when-not bb
+            (throw (IllegalArgumentException. "No 'bb' executable is available.")))
+        dep-name     (first (:coord (:dep op)))
         build-dir    (fs/create-temp-dir {:prefix "jank-build-"
                                           :posix-file-permissions "rwx------"})
         op           (assoc op :build-dir (str build-dir))
@@ -136,7 +139,9 @@
                        :env {"TMPDIR" (str build-dir)}}
                       cmd)
         out-lines    (atom [])]
-    (spit (:in proc) (pr-str build-input))
+    (try
+      (spit (:in proc) (pr-str build-input))
+      (catch Throwable _))
     (future (wrap-stream (:out proc) out-lines *verbose-build* (str "  \u001b[0;34m" dep-name ">\u001b[0m")))
     (future (wrap-stream (:err proc) out-lines *verbose-build* (str "  \u001b[0;31m" dep-name ">\u001b[0m")))
     (if (zero? @(:exit proc))
