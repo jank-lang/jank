@@ -20,6 +20,7 @@ namespace jank::util
    * clang/lib/Driver/ToolChains/Linux.cpp. The original is private to Clang's
    * Linux toolchain, so keep this mapping in sync for the host architectures
    * supported by jank. */
+  /* NOLINTNEXTLINE(clang-diagnostic-unneeded-internal-declaration) */
   static std::string linux_multiarch_triple(llvm::Triple const &target_triple)
   {
     auto const arch{ target_triple.getArch() };
@@ -27,8 +28,7 @@ namespace jank::util
 
     if(arch == llvm::Triple::arm || arch == llvm::Triple::thumb)
     {
-      if(environment == llvm::Triple::GNUEABIHF
-         || environment == llvm::Triple::MuslEABIHF
+      if(environment == llvm::Triple::GNUEABIHF || environment == llvm::Triple::MuslEABIHF
          || environment == llvm::Triple::EABIHF)
       {
         return "arm-linux-gnueabihf";
@@ -38,8 +38,7 @@ namespace jank::util
 
     if(arch == llvm::Triple::armeb || arch == llvm::Triple::thumbeb)
     {
-      if(environment == llvm::Triple::GNUEABIHF
-         || environment == llvm::Triple::MuslEABIHF
+      if(environment == llvm::Triple::GNUEABIHF || environment == llvm::Triple::MuslEABIHF
          || environment == llvm::Triple::EABIHF)
       {
         return "armeb-linux-gnueabihf";
@@ -200,9 +199,8 @@ namespace jank::util
     if constexpr(jtl::current_platform == jtl::platform::linux_like)
     {
       llvm::Triple const target_triple{ llvm::sys::getDefaultTargetTriple() };
-      std::filesystem::path const multiarch_lib_path{
-        std::filesystem::path{ "/usr/lib" } / linux_multiarch_triple(target_triple)
-      };
+      std::filesystem::path const multiarch_lib_path{ std::filesystem::path{ "/usr/lib" }
+                                                      / linux_multiarch_triple(target_triple) };
       if(std::filesystem::exists(multiarch_lib_path))
       {
         args.emplace_back(strdup("-L"));
