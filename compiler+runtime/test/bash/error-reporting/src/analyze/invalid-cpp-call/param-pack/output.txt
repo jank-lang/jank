@@ -1,5 +1,5 @@
 ─ analyze/invalid-cpp-call ─────────────────────────────────────────────────────
-error: This call to the `foo` function cannot be resolved.
+error: No matching overload of the `foo` function was found for this call.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ input.jank

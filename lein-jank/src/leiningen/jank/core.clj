@@ -103,6 +103,9 @@
     :linked-libraries
     (map (fn [v] (str "-l" v)) value)
 
+    :linked-static-libraries
+    (map (fn [v] (str "-l:" v)) value)
+
     ;; pass through to jank-build
     :static?
     []
