@@ -92,6 +92,21 @@ namespace jank::util
     return target_triple.str();
   }
 
+  jtl::immutable_string multi_arch_lib_path()
+  {
+    if constexpr(jtl::current_platform == jtl::platform::linux_like)
+    {
+      llvm::Triple const target_triple{ llvm::sys::getDefaultTargetTriple() };
+      auto const multiarch_lib_path{ std::filesystem::path{ "/usr/lib" }
+                                     / linux_multiarch_triple(target_triple) };
+      return multiarch_lib_path.string();
+    }
+    else
+    {
+      return "/usr/lib";
+    }
+  }
+
   /* The binary version is composed of two things:
    *
    * 1. The LLVM target triplet
@@ -195,18 +210,6 @@ namespace jank::util
 
   void add_system_flags(std::vector<char const *> &args)
   {
-    if constexpr(jtl::current_platform == jtl::platform::linux_like)
-    {
-      llvm::Triple const target_triple{ llvm::sys::getDefaultTargetTriple() };
-      std::filesystem::path const multiarch_lib_path{ std::filesystem::path{ "/usr/lib" }
-                                                      / linux_multiarch_triple(target_triple) };
-      if(std::filesystem::exists(multiarch_lib_path))
-      {
-        args.emplace_back(strdup("-L"));
-        args.emplace_back(strdup(multiarch_lib_path.string().c_str()));
-      }
-    }
-
     /* Compilation on macOS relies on the XCode developer tools being installed. Clang needs to
      * use this installation as its base for libc. When we install Clang from Homebrew, this is
      * done for us. However, the Clang which we ship alongside jank (for now), cannot know
