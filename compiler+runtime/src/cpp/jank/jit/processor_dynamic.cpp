@@ -99,7 +99,7 @@ namespace jank::jit
       library_dirs.emplace_back(std::filesystem::absolute(library_dir.c_str()));
     }
 
-    library_dirs.emplace_back(util::multi_arch_lib_path());
+    library_dirs.emplace_back(util::multi_arch_lib_path().c_str());
 
     /* When we AOT compile the jank compiler/runtime, we keep track of the compiler
      * flags used so we can use the same set during JIT compilation. Here we parse these
