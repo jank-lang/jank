@@ -20,7 +20,8 @@ namespace jank::util
    * clang/lib/Driver/ToolChains/Linux.cpp. The original is private to Clang's
    * Linux toolchain, so keep this mapping in sync for the host architectures
    * supported by jank. */
-  static inline std::string linux_multiarch_triple(llvm::Triple const &target_triple)
+  [[maybe_unused]]
+  static std::string linux_multiarch_triple(llvm::Triple const &target_triple)
   {
     auto const arch{ target_triple.getArch() };
     auto const environment{ target_triple.getEnvironment() };
