@@ -378,6 +378,10 @@ OPTIONS
         {
           opts.libs.emplace_back(value);
         }
+        else if(check_flag(it, end, value, "--framework", true))
+        {
+          opts.frameworks.emplace_back(value);
+        }
         else if(check_flag(it, end, value, "--target-dir", true))
         {
           opts.target_dir = value;
