@@ -63,6 +63,11 @@ Adds the `-l:lib` flag to the jank invocation, which is similar to the `-l` flag
 but it forces the linked library to be static. If no static library is found, an error is raised.
 Library names, relative paths, file names, and absolute paths are supported.
 
+#### `jank-build::link-framework=lib`
+Adds the `--framework lib` flags to the jank invocation, which maps to the
+`-framework lib` flag for Clang. This is specific to macOS, but is needed to
+link some things like OpenGL.
+
 ### Re-run conditions
 Re-run condition directives tell the jank build system when to re-run the build
 script. By default, it will happen whenever any files within the source
