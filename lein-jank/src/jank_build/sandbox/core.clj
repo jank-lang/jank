@@ -4,6 +4,7 @@
             [jank-build.util :as util]))
 
 (defn process-options [sandbox-opts sh-opts]
+  ; TODO: Isolate env vars.
   (if-let [chdir (some (fn [[kind dir]]
                          (when (= :chdir kind) dir))
                        sandbox-opts)]
