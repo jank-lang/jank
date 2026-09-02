@@ -60,6 +60,7 @@
       "link-dir"             {:library-dirs [v]}
       "link-library"         {:linked-libraries [v]}
       "link-static-library"  {:linked-static-libraries [v]}
+      "link-framework"       {:linked-frameworks [v]}
       "rerun-if-changed"     {:rerun-if-changed [v]}
       "rerun-if-env-changed" {:rerun-if-env-changed [v]}
       (do (util/warn "invalid jank-build directive:" line)
@@ -313,13 +314,15 @@
 
   ;; jank flags are extracted from the build cache file
   (select-keys (read-build-directives out-dir)
-               [:defines :include-dirs :library-dirs :linked-libraries :linked-static-libraries]))
+               [:defines :include-dirs
+                :library-dirs :linked-libraries :linked-static-libraries
+                :linked-frameworks]))
 
 (defn run-build!
   "Run the sequence of build steps planned by `plan-build`.
 
    Returns a map of :defines, :include-dirs, :library-dirs, :linked-libraries,
-   and :linked-static-libraries to be passed to the jank compiler."
+   :linked-static-libraries, and :linked-frameworks to be passed to the jank compiler."
   [plan]
   (reduce
    (fn [m op] (merge-with into m (run-build-op! plan op)))
