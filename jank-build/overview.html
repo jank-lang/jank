@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-37a81fb0.js";
+            window.path_to_searchindex_js = "../searchindex-8a2ff3a1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-846aad8b.js"></script>
@@ -232,6 +232,10 @@ behavior. Library names, relative paths, file names, and absolute paths are supp
 <p>Adds the <code>-l:lib</code> flag to the jank invocation, which is similar to the <code>-l</code> flag
 but it forces the linked library to be static. If no static library is found, an error is raised.
 Library names, relative paths, file names, and absolute paths are supported.</p>
+<h4 id="jank-buildlink-frameworklib"><a class="header" href="#jank-buildlink-frameworklib"><code>jank-build::link-framework=lib</code></a></h4>
+<p>Adds the <code>--framework lib</code> flags to the jank invocation, which maps to the
+<code>-framework lib</code> flag for Clang. This is specific to macOS, but is needed to
+link some things like OpenGL.</p>
 <h3 id="re-run-conditions"><a class="header" href="#re-run-conditions">Re-run conditions</a></h3>
 <p>Re-run condition directives tell the jank build system when to re-run the build
 script. By default, it will happen whenever any files within the source
