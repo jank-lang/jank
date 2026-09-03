@@ -3,6 +3,8 @@
 #include <fstream>
 #include <optional>
 
+#include <unistd.h>
+
 #include <isocline.h>
 
 #include <CppInterOp/Compatibility.h>
