@@ -529,7 +529,7 @@ extern "C"
     if(!op_box->canonical_type.empty() && op_box->canonical_type != type)
     {
       throw error::runtime_invalid_unbox(
-        util::format("This opaque box holds a '{}', but it was unboxed as a '{}'.",
+        util::format("This opaque box holds a `{}`, but it was unboxed as a `{}`.",
                      op_box->canonical_type,
                      type),
         object_source(op_box));
@@ -548,10 +548,29 @@ extern "C"
     if(!op_box->canonical_type.empty() && op_box->canonical_type != type)
     {
       throw error::runtime_invalid_unbox(
-        util::format("This opaque box holds a '{}', but it was unboxed as a '{}'.",
+        util::format("This opaque box holds a `{}`, but it was unboxed as a `{}`.",
                      op_box->canonical_type,
                      type),
         meta_source(source_obj),
+        object_source(op_box));
+    }
+
+    return op_box->data;
+  }
+
+  void *jank_unbox_with_source_c(char const * const type,
+                                 jank_object_ref const o,
+                                 char const * const source)
+  {
+    object_ref const box_obj(reinterpret_cast<object *>(o));
+    auto const op_box{ try_object<obj::opaque_box>(box_obj) };
+    if(!op_box->canonical_type.empty() && op_box->canonical_type != type)
+    {
+      throw error::runtime_invalid_unbox(
+        util::format("This opaque box holds a `{}`, but it was unboxed as a `{}`.",
+                     op_box->canonical_type,
+                     type),
+        meta_source(__rt_ctx->read_string(source)),
         object_source(op_box));
     }
 
@@ -1079,6 +1098,10 @@ extern "C"
       [&](jank::error_ref const e) {
         ret = 1;
         jank::util::print_exception(e);
+      },
+      [&]() {
+        ret = 1;
+        jank::util::print_current_exception();
       });
 
     return 0;

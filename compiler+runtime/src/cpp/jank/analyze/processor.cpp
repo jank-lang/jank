@@ -1843,7 +1843,7 @@ namespace jank::analyze
 
     auto frame{ jtl::make_ref<local_frame>(local_frame::frame_type::fn, current_frame) };
 
-    native_vector<runtime::obj::symbol_ref> param_symbols;
+    native_vector<expr::parameter> param_symbols;
     param_symbols.reserve(params->data.size());
     native_set<runtime::obj::symbol> unique_param_symbols;
 
@@ -1892,24 +1892,69 @@ namespace jank::analyze
         continue;
       }
 
+      static auto const tag_kw(__rt_ctx->intern_keyword("", "tag").expect_ok());
+      auto type_meta{ sym->get_meta().get(tag_kw) };
+      auto param_type{ cpp_util::untyped_object_ref_type() };
+      if(type_meta.is_some())
+      {
+        type_meta = __rt_ctx->eval(type_meta);
+        if(type_meta.get_type() != object_type::symbol
+           && type_meta.get_type() != object_type::persistent_list)
+        {
+          return error::analyze_invalid_cpp_type(
+            util::format(
+              "Parameter type meta data is expected to be a symbol or list which resolves to a "
+              "C++ type. The `:tag` meta for this parameter is a `{}` instead.",
+              object_type_str(type_meta.get_type())),
+            object_source(p),
+            latest_expansion(macro_expansions));
+        }
+
+        auto const type_expr(analyze_type(type_meta, current_frame, none));
+        if(type_expr.is_err())
+        {
+          return type_expr.expect_err();
+        }
+
+        param_type = type_expr.expect_ok();
+
+        if(Cpp::IsReferenceType(param_type))
+        {
+          return error::analyze_invalid_cpp_type(
+            "Type-hints for parameters cannot be reference types.",
+            object_source(p),
+            latest_expansion(macro_expansions));
+        }
+
+        if(!cpp_util::is_trait_convertible(param_type) && !Cpp::IsPointerType(param_type))
+        {
+          return error::analyze_invalid_cpp_type(
+            "Type-hints for parameters either need to be jank object types, trait-convertible "
+            "types, or raw pointers which will be extracted from opaque boxes.",
+            object_source(p),
+            latest_expansion(macro_expansions));
+        }
+      }
+
       auto const unique_res(unique_param_symbols.emplace(*sym));
       if(!unique_res.second)
       {
         /* TODO: Output a warning here. */
         for(auto &param : param_symbols)
         {
-          if(param->equal(*sym))
+          if(param.name->equal(*sym))
           {
             /* C++ doesn't allow multiple params with the same name, so we generate a unique
              * name for shared params. */
-            param = make_box<runtime::obj::symbol>(__rt_ctx->unique_string("shadowed"));
+            param.name = make_box<runtime::obj::symbol>(__rt_ctx->unique_string("shadowed"));
             break;
           }
         }
       }
 
       frame->locals[sym].emplace_back(sym, sym->name, none, current_frame);
-      param_symbols.emplace_back(sym);
+      frame->locals[sym].back().type = param_type;
+      param_symbols.emplace_back(sym, param_type);
     }
 
     /* We do this after building the symbols vector, since the & symbol isn't a param
@@ -4342,12 +4387,27 @@ namespace jank::analyze
         type,
         Cpp::GetScopeFromType(type),
         expr::cpp_value::value_kind::constructor) };
+
       /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
        * want to remove the cpp/cast and the type and then add back in a new head. Since
        * cpp_call takes in a cpp_value, it doesn't look at the head, but it needs to be there. */
       auto const call_l{ make_box(l->data.rest().rest().conj({})) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
+
+    if((cpp_util::is_typed_object(type) && cpp_util::is_untyped_object(value_type))
+       || (cpp_util::is_any_object(value_type) && cpp_util::is_trait_convertible(type)))
+    {
+      return jtl::make_ref<expr::cpp_conversion>(position,
+                                                 current_frame,
+                                                 needs_box,
+                                                 l,
+                                                 type,
+                                                 type,
+                                                 conversion_policy::from_object,
+                                                 value_expr);
+    }
+
     if(cpp_util::is_any_object(type) && cpp_util::is_trait_convertible(value_type))
     {
       return jtl::make_ref<expr::cpp_conversion>(position,
@@ -4357,17 +4417,6 @@ namespace jank::analyze
                                                  type,
                                                  value_type,
                                                  conversion_policy::into_object,
-                                                 value_expr);
-    }
-    if(cpp_util::is_any_object(value_type) && cpp_util::is_trait_convertible(type))
-    {
-      return jtl::make_ref<expr::cpp_conversion>(position,
-                                                 current_frame,
-                                                 needs_box,
-                                                 l,
-                                                 type,
-                                                 type,
-                                                 conversion_policy::from_object,
                                                  value_expr);
     }
 
