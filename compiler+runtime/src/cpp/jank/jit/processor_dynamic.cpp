@@ -219,6 +219,12 @@ namespace jank::jit
       args.emplace_back(strdup(util::format("-D{}", define_macro).c_str()));
     }
 
+    for(auto const &framework : util::cli::opts.frameworks)
+    {
+      args.emplace_back(strdup("-framework"));
+      args.emplace_back(strdup(framework.c_str()));
+    }
+
     switch(util::cli::opts.runtime_optimization_level)
     {
       case 0:

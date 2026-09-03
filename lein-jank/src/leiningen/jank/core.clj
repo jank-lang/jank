@@ -106,6 +106,9 @@
     :linked-static-libraries
     (map (fn [v] (str "-l:" v)) value)
 
+    :linked-frameworks
+    (mapcat (fn [v] ["--framework" v]) value)
+
     ;; pass through to jank-build
     :static?
     []

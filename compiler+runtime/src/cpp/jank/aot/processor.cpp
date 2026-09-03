@@ -242,6 +242,12 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(util::format("-D{}", define).c_str()));
     }
 
+    for(auto const &framework : util::cli::opts.frameworks)
+    {
+      compiler_args.emplace_back(strdup("-framework"));
+      compiler_args.emplace_back(strdup(framework.c_str()));
+    }
+
     /* We always enable debug info. Users can later strip the binary, if they want. */
     compiler_args.push_back(strdup("-g"));
 
