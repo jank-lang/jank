@@ -50,6 +50,7 @@ set(jank_resource_dir
   "../lib/jank/${CMAKE_PROJECT_VERSION}"
   CACHE STRING
   "Where jank's runtime files are installed. Relative paths are based on the runtime jank binary path")
+set(jank_extra_runtime_flags "$ENV{JANK_CMAKE_RUNTIME_FLAGS}" CACHE STRING "Any extra compiler/linker flags needed for the environment.")
 
 find_package(Git REQUIRED)
 execute_process(
@@ -709,11 +710,12 @@ endforeach()
 list(APPEND jank_lib_linker_flags_list ${jank_linker_flags})
 list(APPEND jank_lib_linker_flags_list ${CMAKE_CXX_FLAGS})
 list(APPEND jank_lib_linker_flags_list ${CMAKE_SHARED_LINKER_FLAGS})
+list(APPEND jank_lib_linker_flags_list ${jank_extra_runtime_flags})
 list(JOIN jank_lib_linker_flags_list " " jank_lib_linker_flags_unescaped)
 string(REPLACE "\"" "\\\"" jank_lib_linker_flags_str "${jank_lib_linker_flags_unescaped}")
 
 # Build a string of all of our JIT compilation flags so we can load them up in the runtime.
-set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes})
+set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes} ${jank_extra_runtime_flags})
 list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str_unescaped)
 string(REPLACE "\"" "\\\"" jank_jit_compile_flags_str "${jank_jit_compile_flags_str_unescaped}")
 

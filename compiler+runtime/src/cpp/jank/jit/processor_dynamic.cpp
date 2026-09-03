@@ -172,6 +172,11 @@ namespace jank::jit
       while(std::getline(flags, flag, ' '))
       {
         args.emplace_back(strdup(flag.c_str()));
+
+        if(flag.starts_with("-L"))
+        {
+          library_dirs.emplace_back(flag.substr(2));
+        }
       }
     }
 
