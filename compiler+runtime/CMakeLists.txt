@@ -50,7 +50,7 @@ set(jank_resource_dir
   "../lib/jank/${CMAKE_PROJECT_VERSION}"
   CACHE STRING
   "Where jank's runtime files are installed. Relative paths are based on the runtime jank binary path")
-set(jank_extra_runtime_flags "${ENV{JANK_CMAKE_RUNTIME_FLAGS}}" CACHE STRING "Any extra compiler/linker flags needed for the environment.")
+set(jank_extra_runtime_flags "$ENV{JANK_CMAKE_RUNTIME_FLAGS}" CACHE STRING "Any extra compiler/linker flags needed for the environment.")
 
 find_package(Git REQUIRED)
 execute_process(
