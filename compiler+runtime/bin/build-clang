@@ -5,7 +5,7 @@ set -euo pipefail
 llvm_url="https://github.com/jank-lang/llvm-project.git"
 llvm_version=23
 llvm_branch="jank-snapshot/llvm${llvm_version}"
-llvm_commit="106644f6c835f9d2137aeb9cbfe1b9a60d03d17f"
+llvm_commit="169d56c4f80537fb062b4a0c69a1160fa25aba5f"
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 build_dir="${here}/../build"
