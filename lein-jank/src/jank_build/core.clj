@@ -143,20 +143,31 @@
     (try
       (spit (:in proc) (pr-str build-input))
       (catch Throwable _))
-    (future (wrap-stream (:out proc) out-lines *verbose-build* (str "  \u001b[0;34m" dep-name ">\u001b[0m")))
-    (future (wrap-stream (:err proc) out-lines *verbose-build* (str "  \u001b[0;31m" dep-name ">\u001b[0m")))
-    (if (zero? @(:exit proc))
-      ;; Build succeeded. Cache all of the build stdout output. Later we will
-      ;; parse the build directives.
-      (fs/write-lines (fs/path out-dir jank-build-cache-file) @out-lines)
-      ;; Build failed. Echo stdout/stderr on build failure, only when it was not
-      ;; already live-echoed above. Abort the build.
-      (do
-        (when-not *verbose-build*
-          (println (string/join "\n" @out-lines))
-          (println (string/join "\n" @out-lines)))
-        (util/abort (str "The build command failed with code " @(:exit proc) ".")
-                    (pr-str cmd))))))
+    (let [out-reader (future (wrap-stream (:out proc)
+                                           out-lines
+                                           *verbose-build*
+                                           (str "  \u001b[0;34m" dep-name ">\u001b[0m")))
+          err-reader (future (wrap-stream (:err proc)
+                                           out-lines
+                                           *verbose-build*
+                                           (str "  \u001b[0;31m" dep-name ">\u001b[0m")))
+          exit       @(:exit proc)]
+      ;; Process exit does not imply that the reader futures have drained the
+      ;; output streams. Wait for both before caching or printing their output.
+      @out-reader
+      @err-reader
+      (if (zero? exit)
+        ;; Build succeeded. Cache all of the build stdout output. Later we will
+        ;; parse the build directives.
+        (fs/write-lines (fs/path out-dir jank-build-cache-file) @out-lines)
+        ;; Build failed. Echo stdout/stderr on build failure, only when it was not
+        ;; already live-echoed above. Abort the build.
+        (do
+          (when-not *verbose-build*
+            (println (string/join "\n" @out-lines))
+            (println (string/join "\n" @out-lines)))
+          (util/abort (str "The build command failed with code " exit ".")
+                      (pr-str cmd)))))))
 
 (defn collect-build-deps
   "Given a dependency tree, identify its jank-build scoped elements and resolve
