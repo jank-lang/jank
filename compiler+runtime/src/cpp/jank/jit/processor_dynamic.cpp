@@ -1,3 +1,7 @@
+#include <dlfcn.h>
+#include <cstdlib>
+#include <filesystem>
+
 #include <clang/AST/Type.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -15,9 +19,6 @@
 #include <llvm/Object/SymbolSize.h>
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/Signals.h>
-
-#include <cstdlib>
-#include <filesystem>
 
 #include <CppInterOp/Compatibility.h>
 #include <CppInterOp/CppInterOp.h>
@@ -703,6 +704,20 @@ namespace jank::jit
       if(std::filesystem::is_regular_file(lib_abs_path.c_str()))
       {
         return lib_abs_path;
+      }
+    }
+
+    /* On macOS, since Big Sur, dylib files aren't just stored on the filesystem. So, if we
+     * want to load libz.dylib, we can't just look for it normally. Instead, there's a whole
+     * dyld shared cache, a new .tbd file format, and custom linker support. We could add all
+     * of that into jank, but a simpler way is to just try to open the lib via `dlopen`, which
+     * will handle all of this for us. If it opens, we clearly found it and we can just
+     * return the lib name as is. This short-circuits the rest of the searching machinery. */
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      if(::dlopen(lib.c_str(), RTLD_LAZY | RTLD_GLOBAL))
+      {
+        return lib;
       }
     }
 
