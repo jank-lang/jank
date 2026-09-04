@@ -1205,8 +1205,7 @@ namespace jank::analyze::cpp_util
     error::candidate resolve_candidate_impl(jtl::ptr<void> const fn,
                                             std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                             std::vector<Cpp::TCppScope_t> const &arg_scopes,
-                                            bool const viable,
-                                            bool const is_member_call)
+                                            bool const viable)
     {
       auto ret{ resolve_candidate(fn, "", viable) };
 
@@ -1330,16 +1329,11 @@ namespace jank::analyze::cpp_util
         return resolve_candidate_impl(ranked.fn,
                                       member_arg_types,
                                       arg_scopes,
-                                      ranked.cand_info.m_Viable,
-                                      is_member_call);
+                                      ranked.cand_info.m_Viable);
       }
       else
       {
-        return resolve_candidate_impl(ranked.fn,
-                                      arg_types,
-                                      arg_scopes,
-                                      ranked.cand_info.m_Viable,
-                                      is_member_call);
+        return resolve_candidate_impl(ranked.fn, arg_types, arg_scopes, ranked.cand_info.m_Viable);
       }
     }
   }
