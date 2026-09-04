@@ -208,7 +208,7 @@ namespace jank::jit
     }
   }
 
-  bool is_object_file(jtl::immutable_string const &path)
+  bool is_elf_file(jtl::immutable_string const &path)
   {
     std::array<unsigned char, 4> magic{};
     std::ifstream file{ path.c_str(), std::ios::binary };
@@ -218,33 +218,7 @@ namespace jank::jit
       return false;
     }
 
-    if(/* ELF (Linux). */
-       magic == std::array<unsigned char, 4>{ 0x7f, 'E', 'L', 'F' }
-
-       /* Mach-O 32-bit, big-endian. */
-       || magic == std::array<unsigned char, 4>{ 0xfe, 0xed, 0xfa, 0xce }
-       /* Mach-O 32-bit, little-endian. */
-       || magic == std::array<unsigned char, 4>{ 0xce, 0xfa, 0xed, 0xfe }
-       /* Mach-O 64-bit, big-endian. */
-       || magic == std::array<unsigned char, 4>{ 0xfe, 0xed, 0xfa, 0xcf }
-       /* Mach-O 64-bit, little-endian (macOS). */
-       || magic == std::array<unsigned char, 4>{ 0xcf, 0xfa, 0xed, 0xfe }
-       /* Mach-O fat/universal binary, big-endian. */
-       || magic == std::array<unsigned char, 4>{ 0xca, 0xfe, 0xba, 0xbe }
-       /* Mach-O fat/universal binary, little-endian. */
-       || magic == std::array<unsigned char, 4>{ 0xbe, 0xba, 0xfe, 0xca }
-       /* Mach-O fat/universal binary, 64-bit, big-endian. */
-       || magic == std::array<unsigned char, 4>{ 0xca, 0xfe, 0xba, 0xbf }
-       /* Mach-O fat/universal binary, 64-bit, little-endian. */
-       || magic == std::array<unsigned char, 4>{ 0xbf, 0xba, 0xfe, 0xca })
-    {
-      return true;
-    }
-
-    /* PE/COFF (Windows DLLs) start with the "MZ" DOS header magic; we don't need to look any
-     * further into the PE header, since only the first two bytes are needed to disambiguate
-     * this from a text-based ld script. */
-    return magic[0] == 'M' && magic[1] == 'Z';
+    return magic == std::array<unsigned char, 4>{ 0x7f, 'E', 'L', 'F' };
   }
 
   /* Attempts to parse `path` as a GNU ld linker script and extract the real shared library it

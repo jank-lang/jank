@@ -810,35 +810,38 @@ namespace jank::jit
                                    jtl::immutable_string const &path,
                                    usize const depth)
     {
-      if(!is_object_file(path))
+      if constexpr(jtl::current_platform == jtl::platform::linux_like)
       {
-        if(auto const resolved{ parse_ld_script(path) }; resolved.is_some())
+        if(!is_elf_file(path))
         {
-          if(depth >= max_ld_script_depth)
+          if(auto const resolved{ parse_ld_script(path) }; resolved.is_some())
           {
-            throw std::runtime_error{ util::format(
-              "Exceeded the maximum GNU ld script nesting depth while loading `{}`.",
-              path) };
-          }
+            if(depth >= max_ld_script_depth)
+            {
+              throw std::runtime_error{ util::format(
+                "Exceeded the maximum GNU ld script nesting depth while loading `{}`.",
+                path) };
+            }
 
-          auto const script_path{ std::filesystem::path{ path.c_str() } };
-          auto resolved_path{ std::filesystem::path{ resolved.unwrap().c_str() } };
-          if(resolved_path.is_relative())
-          {
-            resolved_path = script_path.parent_path() / resolved_path;
-          }
-          resolved_path = resolved_path.lexically_normal();
+            auto const script_path{ std::filesystem::path{ path.c_str() } };
+            auto resolved_path{ std::filesystem::path{ resolved.unwrap().c_str() } };
+            if(resolved_path.is_relative())
+            {
+              resolved_path = script_path.parent_path() / resolved_path;
+            }
+            resolved_path = resolved_path.lexically_normal();
 
-          if(resolved_path == script_path.lexically_normal())
-          {
-            throw std::runtime_error{ util::format("This GNU ld script `{}` refers to itself.",
-                                                   path) };
-          }
+            if(resolved_path == script_path.lexically_normal())
+            {
+              throw std::runtime_error{ util::format("This GNU ld script `{}` refers to itself.",
+                                                     path) };
+            }
 
-          load_dynamic_library_impl(prc,
-                                    jtl::immutable_string{ resolved_path.string() },
-                                    depth + 1);
-          return;
+            load_dynamic_library_impl(prc,
+                                      jtl::immutable_string{ resolved_path.string() },
+                                      depth + 1);
+            return;
+          }
         }
       }
 

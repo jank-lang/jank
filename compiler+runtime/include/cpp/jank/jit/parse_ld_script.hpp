@@ -5,6 +5,6 @@
 
 namespace jank::jit
 {
-  bool is_object_file(jtl::immutable_string const &path);
+  bool is_elf_file(jtl::immutable_string const &path);
   jtl::option<jtl::immutable_string> parse_ld_script(jtl::immutable_string const &path);
 }
