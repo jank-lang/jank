@@ -1205,7 +1205,7 @@ namespace jank::analyze::cpp_util
     error::candidate resolve_candidate_impl(jtl::ptr<void> const fn,
                                             std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                             std::vector<Cpp::TCppScope_t> const &arg_scopes,
-                                            bool viable,
+                                            bool const viable,
                                             bool const is_member_call)
     {
       auto ret{ resolve_candidate(fn, "", viable) };
@@ -1230,7 +1230,6 @@ namespace jank::analyze::cpp_util
         if(viable_with_conversions)
         {
           ret.viable = true;
-          viable = true;
           ret.reason = "This candidate is ambiguous.";
         }
       }
