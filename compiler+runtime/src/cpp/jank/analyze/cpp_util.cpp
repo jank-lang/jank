@@ -1218,20 +1218,10 @@ namespace jank::analyze::cpp_util
         return ret;
       }
 
+      /* TODO: Detect trait ambiguity, too. */
       if(viable)
       {
         ret.reason = "This candidate is ambiguous.";
-      }
-      else
-      {
-        auto const viable_with_conversions{
-          find_best_arg_types_with_conversions({ fn }, arg_types, is_member_call).is_err()
-        };
-        if(viable_with_conversions)
-        {
-          ret.viable = true;
-          ret.reason = "This candidate is ambiguous.";
-        }
       }
 
       for(usize i{}; i < cand_info.m_Arguments.size(); ++i)
