@@ -716,13 +716,12 @@ namespace jank::jit
      * of that into jank, but a simpler way is to just try to open the lib via `dlopen`, which
      * will handle all of this for us. If it opens, we clearly found it and we can just
      * return the lib name as is. This short-circuits the rest of the searching machinery. */
-    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+#ifdef JANK_MACOS_LIKE
+    if(::dlopen(lib.c_str(), RTLD_LAZY | RTLD_GLOBAL))
     {
-      if(::dlopen(lib.c_str(), RTLD_LAZY | RTLD_GLOBAL))
-      {
-        return lib;
-      }
+      return lib;
     }
+#endif
 
     return none;
   }
