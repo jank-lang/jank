@@ -741,6 +741,7 @@ add_library(
   src/cpp/jank/runtime/context_dynamic.cpp
   src/cpp/jank/runtime/ns_dynamic.cpp
   src/cpp/jank/jit/object_dynamic.cpp
+  src/cpp/jank/jit/parse_ld_script.cpp
   src/cpp/jank/jit/processor_dynamic.cpp
   src/cpp/jank/codegen/api_dynamic.cpp
 )
@@ -977,6 +978,7 @@ if(jank_test)
     test/cpp/jank/runtime/obj/integer_range.cpp
     test/cpp/jank/runtime/obj/repeat.cpp
     test/cpp/jank/jit/processor.cpp
+    test/cpp/jank/jit/parse_ld_script.cpp
     test/cpp/jank/analyze/cpp_util.cpp
   )
   add_executable(jank::test_exe ALIAS jank_test_exe)

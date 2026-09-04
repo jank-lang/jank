@@ -1,3 +1,6 @@
+#include <cstdlib>
+#include <filesystem>
+
 #include <clang/AST/Type.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -16,13 +19,11 @@
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/Signals.h>
 
-#include <cstdlib>
-#include <filesystem>
-
 #include <CppInterOp/Compatibility.h>
 #include <CppInterOp/CppInterOp.h>
 
 #include <jank/jit/object.hpp>
+#include <jank/jit/parse_ld_script.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/environment.hpp>
@@ -39,6 +40,10 @@
 #include <jank/error/system.hpp>
 #include <jank/error/runtime.hpp>
 #include <jank/error/codegen.hpp>
+
+#ifdef JANK_MACOS_LIKE
+  #include <dlfcn.h>
+#endif
 
 namespace jank::jit
 {
@@ -705,6 +710,19 @@ namespace jank::jit
       }
     }
 
+    /* On macOS, since Big Sur, dylib files aren't just stored on the filesystem. So, if we
+     * want to load libz.dylib, we can't just look for it normally. Instead, there's a whole
+     * dyld shared cache, a new .tbd file format, and custom linker support. We could add all
+     * of that into jank, but a simpler way is to just try to open the lib via `dlopen`, which
+     * will handle all of this for us. If it opens, we clearly found it and we can just
+     * return the lib name as is. This short-circuits the rest of the searching machinery. */
+#ifdef JANK_MACOS_LIKE
+    if(::dlopen(lib.c_str(), RTLD_LAZY | RTLD_GLOBAL))
+    {
+      return lib;
+    }
+#endif
+
     return none;
   }
 
@@ -797,9 +815,61 @@ namespace jank::jit
     return ok();
   }
 
+  namespace
+  {
+    constexpr usize max_ld_script_depth{ 8 };
+
+    /* On Linux, shared libraries (.so files) can actually be text files which are ld scripts
+     * teling the linker which libs to bring in. The LLVM JIT doesn't handle these, so we do
+     * our own handling here. This is recursive, since the referenced .so in a ld script
+     * may be a ld script itself. We don't want to get stuck in a loop with this, though. */
+    void load_dynamic_library_impl(processor const &prc,
+                                   jtl::immutable_string const &path,
+                                   usize const depth)
+    {
+      if constexpr(jtl::current_platform == jtl::platform::linux_like)
+      {
+        if(!is_elf_file(path))
+        {
+          if(auto const resolved{ parse_ld_script(path) }; resolved.is_some())
+          {
+            if(depth >= max_ld_script_depth)
+            {
+              throw std::runtime_error{ util::format(
+                "Exceeded the maximum GNU ld script nesting depth while loading `{}`.",
+                path) };
+            }
+
+            auto const script_path{ std::filesystem::path{ path.c_str() } };
+            auto resolved_path{ std::filesystem::path{ resolved.unwrap().c_str() } };
+            if(resolved_path.is_relative())
+            {
+              resolved_path = script_path.parent_path() / resolved_path;
+            }
+            resolved_path = resolved_path.lexically_normal();
+
+            if(resolved_path == script_path.lexically_normal())
+            {
+              throw std::runtime_error{ util::format("This GNU ld script `{}` refers to itself.",
+                                                     path) };
+            }
+
+            load_dynamic_library_impl(prc,
+                                      jtl::immutable_string{ resolved_path.string() },
+                                      depth + 1);
+            return;
+          }
+        }
+      }
+
+      llvm::cantFail(
+        static_cast<clang::Interpreter &>(*prc.interpreter).LoadDynamicLibrary(path.data()));
+    }
+  }
+
   void processor::load_dynamic_library(jtl::immutable_string const &path) const
   {
-    llvm::cantFail(static_cast<clang::Interpreter &>(*interpreter).LoadDynamicLibrary(path.data()));
+    load_dynamic_library_impl(*this, path, 0);
   }
 
   void processor::load_static_library(jtl::immutable_string const &path) const
