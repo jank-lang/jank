@@ -1225,7 +1225,7 @@ namespace jank::analyze::cpp_util
       else
       {
         auto const viable_with_conversions{
-          find_best_arg_types_with_conversions({ fn }, arg_types, is_member_call).is_ok()
+          find_best_arg_types_with_conversions({ fn }, arg_types, is_member_call).is_err()
         };
         if(viable_with_conversions)
         {
