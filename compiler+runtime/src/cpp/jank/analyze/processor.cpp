@@ -842,7 +842,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_call(
                util::format("{}", match_res.expect_err()),
-               cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
+               cpp_util::resolve_candidates(fns, arg_types, arg_scopes, is_member_call),
                object_source(val->form),
                latest_expansion(macro_expansions))
         ->add_usage(object_source(form));
@@ -959,7 +959,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_call(
                new_types_res.expect_err(),
-               cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
+               cpp_util::resolve_candidates(fns, arg_types, arg_scopes, is_member_call),
                object_source(val->form),
                latest_expansion(macro_expansions))
         ->add_usage(object_source(form));
@@ -975,7 +975,7 @@ namespace jank::analyze
     {
       return error::analyze_invalid_cpp_call(
                util::format("{}", conversion_match_res.expect_err()),
-               cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
+               cpp_util::resolve_candidates(fns, arg_types, arg_scopes, is_member_call),
                object_source(val->form),
                latest_expansion(macro_expansions))
         ->add_usage(object_source(form));
@@ -1080,7 +1080,7 @@ namespace jank::analyze
              util::format("No matching overload of the `{}` {} was found for this call.",
                           scope_name,
                           is_ctor ? "constructor" : "function"),
-             cpp_util::resolve_candidates(fns, arg_types, arg_scopes),
+             cpp_util::resolve_candidates(fns, arg_types, arg_scopes, is_member_call),
              object_source(val->form),
              latest_expansion(macro_expansions))
       ->add_usage(object_source(form));

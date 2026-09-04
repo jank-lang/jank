@@ -31,7 +31,7 @@ TEST_SUITE("analyze/cpp_util")
     std::vector<Cpp::TemplateArgInfo> const arg_types{ { jank::analyze::cpp_util::int_type() } };
     std::vector<Cpp::TCppScope_t> const arg_scopes{ nullptr };
     auto const candidates{
-      jank::analyze::cpp_util::resolve_candidates(fns, arg_types, arg_scopes)
+      jank::analyze::cpp_util::resolve_candidates(fns, arg_types, arg_scopes, false)
     };
 
     REQUIRE(candidates.size() == 4);
@@ -106,7 +106,7 @@ TEST_SUITE("analyze/cpp_util")
                                                        { jank::analyze::cpp_util::int_type() } };
     std::vector<Cpp::TCppScope_t> const arg_scopes{ nullptr, nullptr };
     auto const candidates{
-      jank::analyze::cpp_util::resolve_candidates(fns, arg_types, arg_scopes)
+      jank::analyze::cpp_util::resolve_candidates(fns, arg_types, arg_scopes, true)
     };
 
     REQUIRE(candidates.size() == 2);
