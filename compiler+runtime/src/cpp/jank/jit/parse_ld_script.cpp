@@ -17,13 +17,13 @@ namespace jank::jit
       usize end{};
     };
 
-    bool is_identifier_character(char const c) noexcept
+    bool is_identifier_character(char const c)
     {
       auto const unsigned_c{ static_cast<unsigned char>(c) };
       return std::isalnum(unsigned_c) != 0 || c == '_';
     }
 
-    bool is_separator(char const c) noexcept
+    bool is_separator(char const c)
     {
       auto const unsigned_c{ static_cast<unsigned char>(c) };
       return std::isspace(unsigned_c) != 0 || c == ',';
@@ -31,7 +31,7 @@ namespace jank::jit
 
     bool matches_directive(std::string_view const source,
                            usize const position,
-                           std::string_view const directive) noexcept
+                           std::string_view const directive)
     {
       if(position + directive.size() > source.size()
          || source.compare(position, directive.size(), directive) != 0)
