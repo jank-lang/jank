@@ -24,8 +24,7 @@
 (def default-build-opts
   {:target-dir         "target"
    :optimization-level 3
-   ;; TODO: enable when jank can link to .a files via -L and -l flags.
-   :static?            false})
+   :static?            true})
 
 (defn has-build-file?
   "Returns true if the given directory or jar file has a `jank-build.bb` file in
