@@ -1071,7 +1071,7 @@ namespace jank::analyze::cpp_util
         {
           if(needed_conversion.is_some())
           {
-            return err("No normal overload match was found. When considering automatic trait "
+            return err("No matching overload was found. When considering automatic trait "
                        "conversions, this call is ambiguous.");
           }
           needed_conversion = fn_idx;
@@ -1119,9 +1119,9 @@ namespace jank::analyze::cpp_util
 
     ranked_fn rank_candidate(jtl::ptr<void> const fn,
                              std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                             std::vector<Cpp::TCppScope_t> const &arg_scopes)
+                             std::vector<Cpp::TCppScope_t> const &arg_scopes,
+                             bool const is_member_call)
     {
-      auto const is_member_call{ is_non_static_member_function(fn) };
       auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
                                                                  : arg_types.size() };
       auto const num_required_params{ Cpp::GetFunctionRequiredArgs(fn) };
@@ -1205,7 +1205,8 @@ namespace jank::analyze::cpp_util
     error::candidate resolve_candidate_impl(jtl::ptr<void> const fn,
                                             std::vector<Cpp::TemplateArgInfo> const &arg_types,
                                             std::vector<Cpp::TCppScope_t> const &arg_scopes,
-                                            bool const viable)
+                                            bool viable,
+                                            bool const is_member_call)
     {
       auto ret{ resolve_candidate(fn, "", viable) };
 
@@ -1220,6 +1221,18 @@ namespace jank::analyze::cpp_util
       if(viable)
       {
         ret.reason = "This candidate is ambiguous.";
+      }
+      else
+      {
+        auto const viable_with_conversions{
+          find_best_arg_types_with_conversions({ fn }, arg_types, is_member_call).is_ok()
+        };
+        if(viable_with_conversions)
+        {
+          ret.viable = true;
+          viable = true;
+          ret.reason = "This candidate is ambiguous.";
+        }
       }
 
       for(usize i{}; i < cand_info.m_Arguments.size(); ++i)
@@ -1278,7 +1291,8 @@ namespace jank::analyze::cpp_util
 
     error::candidate resolve_candidate(ranked_fn const &ranked,
                                        std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                                       std::vector<Cpp::TCppScope_t> const &arg_scopes)
+                                       std::vector<Cpp::TCppScope_t> const &arg_scopes,
+                                       bool const is_member_call)
     {
       if(Cpp::IsFunctionDeleted(ranked.fn))
       {
@@ -1295,7 +1309,6 @@ namespace jank::analyze::cpp_util
 
       auto const num_required_params{ Cpp::GetFunctionRequiredArgs(ranked.fn) };
       auto const num_params{ Cpp::GetFunctionNumArgs(ranked.fn) };
-      auto const is_member_call{ is_non_static_member_function(ranked.fn) };
       auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
                                                                  : arg_types.size() };
       if((arg_count < num_required_params)
@@ -1328,11 +1341,16 @@ namespace jank::analyze::cpp_util
         return resolve_candidate_impl(ranked.fn,
                                       member_arg_types,
                                       arg_scopes,
-                                      ranked.cand_info.m_Viable);
+                                      ranked.cand_info.m_Viable,
+                                      is_member_call);
       }
       else
       {
-        return resolve_candidate_impl(ranked.fn, arg_types, arg_scopes, ranked.cand_info.m_Viable);
+        return resolve_candidate_impl(ranked.fn,
+                                      arg_types,
+                                      arg_scopes,
+                                      ranked.cand_info.m_Viable,
+                                      is_member_call);
       }
     }
   }
@@ -1340,13 +1358,14 @@ namespace jank::analyze::cpp_util
   native_vector<error::candidate>
   resolve_candidates(std::vector<void *> const &fns,
                      std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                     std::vector<Cpp::TCppScope_t> const &arg_scopes)
+                     std::vector<Cpp::TCppScope_t> const &arg_scopes,
+                     bool const is_member_call)
   {
     std::vector<ranked_fn> ranked_fns;
     ranked_fns.reserve(fns.size());
     for(auto const fn : fns)
     {
-      ranked_fns.emplace_back(rank_candidate(fn, arg_types, arg_scopes));
+      ranked_fns.emplace_back(rank_candidate(fn, arg_types, arg_scopes, is_member_call));
     }
 
     std::ranges::stable_sort(ranked_fns, [](ranked_fn const &left, ranked_fn const &right) {
@@ -1366,7 +1385,7 @@ namespace jank::analyze::cpp_util
     candidates.reserve(ranked_fns.size());
     for(auto const &ranked : ranked_fns)
     {
-      candidates.emplace_back(resolve_candidate(ranked, arg_types, arg_scopes));
+      candidates.emplace_back(resolve_candidate(ranked, arg_types, arg_scopes, is_member_call));
     }
     return candidates;
   }
