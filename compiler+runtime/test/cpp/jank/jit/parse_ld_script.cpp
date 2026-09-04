@@ -47,7 +47,7 @@ namespace jank::jit
                                    "OUTPUT_FORMAT(elf64-x86-64)\n"
                                    "GROUP ( /lib/libm.so.6 AS_NEEDED ( /lib/libmvec.so.1 ) )\n" };
 
-      CHECK_FALSE(is_object_file(path_string(script.path)));
+      CHECK_FALSE(is_elf_file(path_string(script.path)));
       auto const result{ parse_ld_script(path_string(script.path)) };
       REQUIRE(result.is_some());
       CHECK(result.unwrap() == "/lib/libm.so.6");
@@ -82,13 +82,13 @@ namespace jank::jit
       CHECK(result.unwrap() == "/lib/librequired.so");
     }
 
-    TEST_CASE("recognizes object files")
+    TEST_CASE("recognizes ELF files")
     {
       temporary_file const object{ std::string{ "\x7f"
                                                 "ELF"
                                                 "binary contents" } };
 
-      CHECK(is_object_file(path_string(object.path)));
+      CHECK(is_elf_file(path_string(object.path)));
       CHECK(parse_ld_script(path_string(object.path)).is_none());
     }
   }
