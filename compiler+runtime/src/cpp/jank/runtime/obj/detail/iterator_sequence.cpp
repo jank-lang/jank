@@ -102,7 +102,7 @@ namespace jank::runtime::obj::detail
       return {};
     }
 
-    return make_box<Derived>(coll, n, end, size);
+    return make_box<Derived>(coll, n, end, size - 1);
   }
 
   template <typename Derived, typename It>

@@ -312,6 +312,27 @@ namespace jank::runtime
                                               object_source(runtime::detail::untagged(this)));
   }
 
+  array_element_type object::get_element_type() const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "array_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  object_ref object::aset(i64 const, object_ref const)
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "array_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
+  object_ref object::aclone() const
+  {
+    throw error::runtime_unsupported_behavior(type,
+                                              "array_like",
+                                              object_source(runtime::detail::untagged(this)));
+  }
+
   bool very_equal_to::operator()(object_ref const lhs, object_ref const rhs) const noexcept
   {
     if(lhs.get_type() != rhs.get_type())

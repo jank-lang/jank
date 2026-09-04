@@ -549,6 +549,7 @@ add_library(
   src/cpp/jank/runtime/core/equal.cpp
   src/cpp/jank/runtime/core/to_string.cpp
   src/cpp/jank/runtime/core/seq.cpp
+  src/cpp/jank/runtime/core/array.cpp
   src/cpp/jank/runtime/core/munge.cpp
   src/cpp/jank/runtime/core/math.cpp
   src/cpp/jank/runtime/core/meta.cpp
@@ -563,6 +564,7 @@ add_library(
   src/cpp/jank/runtime/lazy_meta.cpp
   src/cpp/jank/runtime/ns.cpp
   src/cpp/jank/runtime/var.cpp
+  src/cpp/jank/runtime/obj/array.cpp
   src/cpp/jank/runtime/obj/nil.cpp
   src/cpp/jank/runtime/obj/number.cpp
   src/cpp/jank/runtime/obj/native_function_wrapper.cpp
