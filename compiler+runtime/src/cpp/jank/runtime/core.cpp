@@ -392,7 +392,7 @@ namespace jank::runtime
     if(str.is_nil())
     {
       throw std::runtime_error{ util::format(
-        "The first argument to `subs` must be a `persistent_string`, not a `{}`.",
+        "The first argument to `subs` must be a `persistent_string`, not `{}`.",
         object_type_str(s.get_type())) };
     }
 
@@ -405,7 +405,7 @@ namespace jank::runtime
     if(str.is_nil())
     {
       throw std::runtime_error{ util::format(
-        "The first argument to `subs` must be a `persistent_string`, not a `{}`.",
+        "The first argument to `subs` must be a `persistent_string`, not `{}`.",
         object_type_str(s.get_type())) };
     }
 
@@ -418,7 +418,7 @@ namespace jank::runtime
     if(str.is_nil())
     {
       throw std::runtime_error{ util::format(
-        "The first argument to `first-index-of` must be a `persistent_string`, not a `{}`.",
+        "The first argument to `first-index-of` must be a `persistent_string`, not `{}`.",
         object_type_str(s.get_type())) };
     }
     return str->first_index_of(m);
@@ -430,7 +430,7 @@ namespace jank::runtime
     if(str.is_nil())
     {
       throw std::runtime_error{ util::format(
-        "The first argument to `last-index-of` must be a `persistent_string`, not a `{}`.",
+        "The first argument to `last-index-of` must be a `persistent_string`, not `{}`.",
         object_type_str(s.get_type())) };
     }
     return str->last_index_of(m);
@@ -514,13 +514,13 @@ namespace jank::runtime
     if(!ns.is_nil() && ns.get_type() != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format("The `keyword` function expects the namespace to be "
-                                             "`nil` or a `persistent_string`, not a `{}`.",
+                                             "`nil` or a `persistent_string`, not `{}`.",
                                              object_type_str(ns.get_type())) };
     }
     if(name.get_type() != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format(
-        "The `keyword` function expects the name to be a `persistent_string`, not a `{}`.",
+        "The `keyword` function expects the name to be a `persistent_string`, not `{}`.",
         object_type_str(name.get_type())) };
     }
     if(ns.is_nil())
@@ -833,7 +833,7 @@ namespace jank::runtime
     else
     {
       throw std::runtime_error{ util::format(
-        "The `parse-uuid` function expects a `persistent_string`, not a `{}`.",
+        "The `parse-uuid` function expects a `persistent_string`, not `{}`.",
         object_type_str(o.get_type())) };
     }
   }
@@ -857,9 +857,8 @@ namespace jank::runtime
   {
     if(o.get_type() != object_type::inst)
     {
-      throw std::runtime_error{ util::format(
-        "The `inst-ms` function expects an `inst`, not a `{}`.",
-        object_type_str(o.get_type())) };
+      throw std::runtime_error{ util::format("The `inst-ms` function expects an `inst`, not `{}`.",
+                                             object_type_str(o.get_type())) };
     }
 
     return std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -1049,7 +1048,7 @@ namespace jank::runtime
     if(form_string.get_type() != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format(
-        "The `read-string` function expects a string representing a form, not a `{}`.",
+        "The `read-string` function expects a string representing a form, not `{}`.",
         object_type_str(form_string.get_type())) };
     }
 
@@ -1062,7 +1061,7 @@ namespace jank::runtime
     if(file_path.get_type() != object_type::persistent_string)
     {
       throw std::runtime_error{ util::format(
-        "The `read-file` function expects a string representing a file path, not a `{}`.",
+        "The `read-file` function expects a string representing a file path, not `{}`.",
         object_type_str(file_path.get_type())) };
     }
 
