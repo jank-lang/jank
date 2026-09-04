@@ -1,4 +1,3 @@
-#include <dlfcn.h>
 #include <cstdlib>
 #include <filesystem>
 
@@ -41,6 +40,10 @@
 #include <jank/error/system.hpp>
 #include <jank/error/runtime.hpp>
 #include <jank/error/codegen.hpp>
+
+#ifdef JANK_MACOS_LIKE
+  #include <dlfcn.h>
+#endif
 
 namespace jank::jit
 {
