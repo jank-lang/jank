@@ -23,6 +23,7 @@
 #include <CppInterOp/CppInterOp.h>
 
 #include <jank/jit/object.hpp>
+#include <jank/jit/parse_ld_script.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/environment.hpp>
@@ -797,9 +798,53 @@ namespace jank::jit
     return ok();
   }
 
+  namespace
+  {
+    constexpr usize max_ld_script_depth{ 8 };
+
+    void load_dynamic_library_impl(processor const &prc,
+                                   jtl::immutable_string const &path,
+                                   usize const depth)
+    {
+      if(!is_object_file(path))
+      {
+        if(auto const resolved{ parse_ld_script(path) }; resolved.is_some())
+        {
+          if(depth >= max_ld_script_depth)
+          {
+            throw std::runtime_error{ util::format(
+              "Exceeded the maximum GNU ld script nesting depth while loading '{}'.",
+              path) };
+          }
+
+          auto const script_path{ std::filesystem::path{ path.c_str() } };
+          auto resolved_path{ std::filesystem::path{ resolved.unwrap().c_str() } };
+          if(resolved_path.is_relative())
+          {
+            resolved_path = script_path.parent_path() / resolved_path;
+          }
+          resolved_path = resolved_path.lexically_normal();
+
+          if(resolved_path == script_path.lexically_normal())
+          {
+            throw std::runtime_error{ util::format("GNU ld script '{}' refers to itself.", path) };
+          }
+
+          load_dynamic_library_impl(prc,
+                                    jtl::immutable_string{ resolved_path.string() },
+                                    depth + 1);
+          return;
+        }
+      }
+
+      llvm::cantFail(
+        static_cast<clang::Interpreter &>(*prc.interpreter).LoadDynamicLibrary(path.data()));
+    }
+  }
+
   void processor::load_dynamic_library(jtl::immutable_string const &path) const
   {
-    llvm::cantFail(static_cast<clang::Interpreter &>(*interpreter).LoadDynamicLibrary(path.data()));
+    load_dynamic_library_impl(*this, path, 0);
   }
 
   void processor::load_static_library(jtl::immutable_string const &path) const
