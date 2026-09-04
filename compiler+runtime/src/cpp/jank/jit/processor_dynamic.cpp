@@ -802,6 +802,10 @@ namespace jank::jit
   {
     constexpr usize max_ld_script_depth{ 8 };
 
+    /* On Linux, shared libraries (.so files) can actually be text files which are ld scripts
+     * teling the linker which libs to bring in. The LLVM JIT doesn't handle these, so we do
+     * our own handling here. This is recursive, since the referenced .so in a ld script
+     * may be a ld script itself. We don't want to get stuck in a loop with this, though. */
     void load_dynamic_library_impl(processor const &prc,
                                    jtl::immutable_string const &path,
                                    usize const depth)
@@ -813,7 +817,7 @@ namespace jank::jit
           if(depth >= max_ld_script_depth)
           {
             throw std::runtime_error{ util::format(
-              "Exceeded the maximum GNU ld script nesting depth while loading '{}'.",
+              "Exceeded the maximum GNU ld script nesting depth while loading `{}`.",
               path) };
           }
 
@@ -827,7 +831,8 @@ namespace jank::jit
 
           if(resolved_path == script_path.lexically_normal())
           {
-            throw std::runtime_error{ util::format("GNU ld script '{}' refers to itself.", path) };
+            throw std::runtime_error{ util::format("This GNU ld script `{}` refers to itself.",
+                                                   path) };
           }
 
           load_dynamic_library_impl(prc,
