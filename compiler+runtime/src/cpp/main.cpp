@@ -258,7 +258,9 @@ int main(int const argc, char const **argv)
         {
           util::print("{} ", arg);
         }
-        for(auto const arg : aot::build_linker_args())
+        auto const linker_args_res{ aot::build_linker_args() };
+        auto const &linker_args{ linker_args_res.expect_ok() };
+        for(auto const arg : linker_args)
         {
           util::print("{} ", arg);
         }
