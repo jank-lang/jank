@@ -299,6 +299,8 @@ int main(int argc, const char** argv)
       {
         linker_args.push_back(strdup(lib));
       }
+
+      linker_args.push_back(strdup("-Wl,--gc-sections"));
     }
     else
     {
