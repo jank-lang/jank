@@ -300,7 +300,14 @@ int main(int argc, const char** argv)
         linker_args.push_back(strdup(lib));
       }
 
-      linker_args.push_back(strdup("-Wl,--gc-sections"));
+      if constexpr(jtl::current_platform == jtl::platform::macos_like)
+      {
+        linker_args.push_back(strdup("-Wl,-dead_strip"));
+      }
+      else
+      {
+        linker_args.push_back(strdup("-Wl,--gc-sections"));
+      }
     }
     else
     {
