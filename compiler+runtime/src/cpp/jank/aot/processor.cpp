@@ -8,6 +8,7 @@
 #include <jank/error/aot.hpp>
 #include <jank/error/system.hpp>
 #include <jank/aot/processor.hpp>
+#include <jank/jit/processor.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/util/cli.hpp>
@@ -289,7 +290,7 @@ int main(int argc, const char** argv)
     return compiler_args;
   }
 
-  std::vector<char const *> build_linker_args()
+  jtl::result<std::vector<char const *>, error_ref> build_linker_args()
   {
     std::vector<char const *> linker_args{};
 
@@ -318,9 +319,29 @@ int main(int argc, const char** argv)
       linker_args.push_back(strdup(util::format("-Wl,-rpath,{}", library_dir).c_str()));
     }
 
-    for(auto const &lib : util::cli::opts.libs)
+    /* Resolve the libs first, since jank supports its own `-l:foo` syntax (to force
+     * static lib selection) which Clang doesn't understand. Once resolved, static libs
+     * are passed to Clang as paths, while dynamic libs keep the usual `-l<name>` form. */
+    auto const resolved_libs{ jit::processor::resolve_libs(util::cli::opts.libs) };
+    if(resolved_libs.is_err())
     {
-      linker_args.push_back(strdup(util::format("-l{}", lib).c_str()));
+      return error::aot_internal_failure(resolved_libs.expect_err());
+    }
+
+    {
+      auto const &libs{ util::cli::opts.libs };
+      auto const &resolved{ resolved_libs.expect_ok() };
+      for(usize i{}; i < resolved.size(); ++i)
+      {
+        if(resolved[i].is_static)
+        {
+          linker_args.push_back(strdup(resolved[i].lib.c_str()));
+        }
+        else
+        {
+          linker_args.push_back(strdup(util::format("-l{}", libs[i]).c_str()));
+        }
+      }
     }
 
     /* On non-macOS platforms, explicitly link libstdc++.
@@ -405,8 +426,19 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("c++"));
     compiler_args.push_back(strdup(entrypoint_path.c_str()));
 
-    auto const linker_args{ build_linker_args() };
-    std::ranges::copy(linker_args, std::back_inserter(compiler_args));
+    /* Reset Clang's forced language back to file-extension-based detection. Otherwise,
+     * the `-x c++` above would cause any subsequent bare filename argument (such as a
+     * resolved static lib path from `build_linker_args`) to be treated as C++ source
+     * instead of being linked as a library. */
+    compiler_args.push_back(strdup("-x"));
+    compiler_args.push_back(strdup("none"));
+
+    auto const linker_args_res{ build_linker_args() };
+    if(linker_args_res.is_err())
+    {
+      return linker_args_res.expect_err();
+    }
+    std::ranges::copy(linker_args_res.expect_ok(), std::back_inserter(compiler_args));
 
     /* Required because of `strdup` usage and need to manually free the memory.
      * Clang expects C strings that we own. */

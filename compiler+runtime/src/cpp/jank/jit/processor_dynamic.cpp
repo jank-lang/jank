@@ -95,9 +95,9 @@ namespace jank::jit
     std::exit(gen_crash_diag ? 70 : 1);
   }
 
-  processor::processor(jtl::immutable_string const &binary_version)
+  native_vector<std::filesystem::path> processor::build_library_dirs()
   {
-    profile::timer const timer{ "jit ctor" };
+    native_vector<std::filesystem::path> library_dirs;
 
     for(auto const &library_dir : util::cli::opts.library_dirs)
     {
@@ -105,6 +105,29 @@ namespace jank::jit
     }
 
     library_dirs.emplace_back(util::multi_arch_lib_path().c_str());
+
+    /* JANK_JIT_FLAGS come from how jank was configured with CMake. Any `-L` flags in
+     * there need to be included in the library search paths too. */
+    {
+      std::stringstream flags{ JANK_JIT_FLAGS };
+      std::string flag;
+      while(std::getline(flags, flag, ' '))
+      {
+        if(flag.starts_with("-L"))
+        {
+          library_dirs.emplace_back(flag.substr(2));
+        }
+      }
+    }
+
+    return library_dirs;
+  }
+
+  processor::processor(jtl::immutable_string const &binary_version)
+  {
+    profile::timer const timer{ "jit ctor" };
+
+    library_dirs = build_library_dirs();
 
     /* When we AOT compile the jank compiler/runtime, we keep track of the compiler
      * flags used so we can use the same set during JIT compilation. Here we parse these
@@ -177,11 +200,6 @@ namespace jank::jit
       while(std::getline(flags, flag, ' '))
       {
         args.emplace_back(strdup(flag.c_str()));
-
-        if(flag.starts_with("-L"))
-        {
-          library_dirs.emplace_back(flag.substr(2));
-        }
       }
     }
 
@@ -678,7 +696,9 @@ namespace jank::jit
     return err(util::format("Failed to find symbol: '{}'", name));
   }
 
-  jtl::option<jtl::immutable_string> processor::find_lib(jtl::immutable_string const &lib) const
+  jtl::option<jtl::immutable_string>
+  processor::find_lib(native_vector<std::filesystem::path> const &library_dirs,
+                      jtl::immutable_string const &lib)
   {
     std::filesystem::path const lib_path{ lib.c_str() };
     if(lib_path.is_absolute())
@@ -726,26 +746,23 @@ namespace jank::jit
     return none;
   }
 
-  jtl::result<void, jtl::immutable_string>
-  processor::load_libs(native_vector<jtl::immutable_string> const &libs) const
+  jtl::result<native_vector<resolved_lib>, jtl::immutable_string>
+  processor::resolve_libs(native_vector<jtl::immutable_string> const &libs)
   {
+    auto const library_dirs{ build_library_dirs() };
+    native_vector<resolved_lib> resolved;
+    resolved.reserve(libs.size());
+
     for(auto const &lib : libs)
     {
       /* Try finding the lib literally, in case it contains a file name or a path.
        * Example: -llibfoo.a or -l./libfoo.so or -l/path/to/libfoo.a */
       {
-        auto const result{ processor::find_lib(lib) };
+        auto const result{ processor::find_lib(library_dirs, lib) };
         if(result.is_some())
         {
           auto const &found_lib{ result.unwrap() };
-          if(is_static_lib(found_lib))
-          {
-            load_static_library(found_lib);
-          }
-          else
-          {
-            load_dynamic_library(found_lib);
-          }
+          resolved.emplace_back(found_lib, is_static_lib(found_lib));
           continue;
         }
       }
@@ -755,7 +772,7 @@ namespace jank::jit
        * Example: -l:foo or -l:libfoo.a or -l:./libfoo.so or -l:/path/to/libfoo.a */
       if(lib.starts_with(':'))
       {
-        auto result{ processor::find_lib(lib.substr(1)) };
+        auto result{ processor::find_lib(library_dirs, lib.substr(1)) };
         if(result.is_some())
         {
           if(!is_static_lib(result.unwrap()))
@@ -764,12 +781,12 @@ namespace jank::jit
               util::format("Failed to find static library '{}'. This library is not static.",
                            lib.substr(1)));
           }
-          load_static_library(result.unwrap());
+          resolved.emplace_back(result.unwrap(), true);
           continue;
         }
 
         auto const &stat{ static_lib_name(lib.substr(1)) };
-        result = processor::find_lib(stat);
+        result = processor::find_lib(library_dirs, stat);
         if(result.is_none())
         {
           return err(util::format("Failed to find static library '{}'.", lib.substr(1)));
@@ -782,7 +799,7 @@ namespace jank::jit
               util::format("Failed to find static library '{}'. This library is not static.",
                            lib.substr(1)));
           }
-          load_static_library(result.unwrap());
+          resolved.emplace_back(result.unwrap(), true);
         }
       }
       /* Otherwise, just try to find the lib as first a dynamic lib and then a static lib.
@@ -791,24 +808,48 @@ namespace jank::jit
       else
       {
         auto const &shared{ shared_lib_name(lib) };
-        auto result{ processor::find_lib(shared) };
+        auto result{ processor::find_lib(library_dirs, shared) };
         if(result.is_none())
         {
           auto const &stat{ static_lib_name(lib) };
-          result = processor::find_lib(stat);
+          result = processor::find_lib(library_dirs, stat);
           if(result.is_none())
           {
             return err(util::format("Failed to find library '{}'.", lib));
           }
           else
           {
-            load_static_library(result.unwrap());
+            resolved.emplace_back(result.unwrap(), true);
           }
         }
         else
         {
-          load_dynamic_library(result.unwrap());
+          resolved.emplace_back(result.unwrap(), false);
         }
+      }
+    }
+
+    return ok(jtl::move(resolved));
+  }
+
+  jtl::result<void, jtl::immutable_string>
+  processor::load_libs(native_vector<jtl::immutable_string> const &libs) const
+  {
+    auto result{ resolve_libs(libs) };
+    if(result.is_err())
+    {
+      return err(result.expect_err());
+    }
+
+    for(auto const &lib : result.expect_ok())
+    {
+      if(lib.is_static)
+      {
+        load_static_library(lib.lib);
+      }
+      else
+      {
+        load_dynamic_library(lib.lib);
       }
     }
 
