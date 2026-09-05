@@ -115,12 +115,11 @@
 
     (lmain/warn (str "Unknown flag " flag))))
 
-(defn verify-jank!
-  "Verify that we can run the jank executable, or crash with the
-  reason we cannot."
-  []
+(defn verify-executable!
+  "Verify that we can run the executable, or crash with the reason we cannot."
+  [args]
   (try
-    (util/sh {} ["jank"])
+    (util/sh {} args)
     (catch Exception e
       ;; Will print a nice message on failure like "Cannot run program
       ;; 'jank': ..."
@@ -131,9 +130,10 @@
                   (build-declarative-flag flag value))
                 (:jank project))))
 
-(defn shell-out! [project classpath command compiler-args runtime-args]
-  (verify-jank!)
-  (let [args (concat ["jank" command "--module-path" classpath]
+(defn shell-out! [project classpath prefix command compiler-args runtime-args]
+  (verify-executable! ["jank"])
+  (let [args (concat prefix
+                     ["jank" command "--module-path" classpath]
                      ; The normal build dir would be <target dir>/_cache, but we want
                      ; to nest one level deeper, so that files from this project don't
                      ; interfere with files from the dependencies. So we specify our

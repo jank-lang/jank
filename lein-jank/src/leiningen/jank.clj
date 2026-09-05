@@ -29,9 +29,10 @@
   (find-deprecated-flags project)
   (when (:verbose opts)
     (reset! ljc/verbose? true))
-  (let [project     (ljc/native-build project opts)
-        cp-str      (ljc/build-module-path project)]
-    (ljc/shell-out! project cp-str cmd jank-args prog-args)))
+  (let [project (ljc/native-build project opts)
+        prefix  (when (:debug opts) ["gdb" "--args"])
+        cp-str  (ljc/build-module-path project)]
+    (ljc/shell-out! project cp-str prefix cmd jank-args prog-args)))
 
 (def run-cli-options
   [["-m" "--main NAMESPACE" "override main namespace"]])
@@ -48,6 +49,25 @@ Calls the -main function in the given namespace."
   [project & args]
   (let [cli-options (into ljc/standard-options run-cli-options)
         [opts args] (ljc/parse-opts #'run! args cli-options)]
+    (if-let [main (or (:main opts) (:main project))]
+      (dispatch-jank project opts "run-main" [main] args)
+      (lmain/warn "No :main entrypoint for project."))))
+
+(defn debug!
+  "Run your project under the debugger, starting at the :main entrypoint.
+
+This assumes that `gdb` is on your system path.
+
+USAGE: lein debug [--] [ARGS...]
+(see lein run)
+
+USAGE: lein debug -m/--main NAMESPACE [--] [ARGS...]
+(see lein run)"
+  [project & args]
+  (ljc/verify-executable! ["gdb"])
+  (let [cli-options (into ljc/standard-options run-cli-options)
+        [opts args] (ljc/parse-opts #'run! args cli-options)
+        opts        (assoc opts :debug true)]
     (if-let [main (or (:main opts) (:main project))]
       (dispatch-jank project opts "run-main" [main] args)
       (lmain/warn "No :main entrypoint for project."))))
@@ -124,6 +144,7 @@ namespaces or files."
     (dispatch-jank project opts "check-health" [] args)))
 
 (def subtask-kw->var {:run #'run!
+                      :debug #'debug!
                       :repl #'repl!
                       :compile #'compile!
                       :compile-module #'compile-module!
@@ -157,6 +178,9 @@ namespaces or files."
   {:jank     {:name (:name project)}
    :aliases  {"run" ^{:doc "Run your project, starting at the main entrypoint."}
               ["jank" "run"]
+
+              "debug" ^{:doc "Run your project under the debugger, starting at the :main entrypoint."}
+              ["jank" "debug"]
 
               "repl" ^{:doc "Start a terminal REPL in your :main or user ns."}
               ["jank" "repl"]
