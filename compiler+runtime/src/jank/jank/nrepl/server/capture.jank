@@ -1,7 +1,7 @@
 (ns jank.nrepl.server.capture
   (:include "cstdio"
-            "filesystem")
-  (:require [jank.nrepl.server.util :refer [close dup dup2 unlink]]))
+            "filesystem"
+            "unistd.h"))
 
 (def temp-file-template
   (str (.string (cpp/std.filesystem.temp_directory_path)) "/" "jank-nrepl-XXXXXX"))
@@ -21,15 +21,15 @@
   [fp*]
   (let [fp                  (cpp/unbox (:* FILE) fp*)
         fd                  (cpp/fileno fp)
-        bak-fd              (dup fd)
+        bak-fd              (cpp/dup fd)
         [temp-name temp-fd] (make-temp-file)]
     ;; First flush the stream to ensure any data from before we start capturing
     ;; is written.
     (cpp/fflush fp)
 
     ;; Redirect the stream to a temporary file which we can later read back.
-    (dup2 temp-fd fd)
-    (close temp-fd)
+    (cpp/dup2 temp-fd fd)
+    (cpp/close temp-fd)
 
     ;; Return a handle of what we've changed so that we can revert it later.
     {:fp*       fp*
@@ -47,16 +47,16 @@
     (cpp/fflush fp)
 
     ;; Bring it all back to its original state.
-    (dup2 bak-fd fd)
-    (close bak-fd)
-    (close temp-fd)))
+    (cpp/dup2 bak-fd fd)
+    (cpp/close bak-fd)
+    (cpp/close temp-fd)))
 
 (defn- readback
   "Read back the data which was captured by the handle. The data is deleted, so
   this can only be called once."
   [{:keys [temp-name]}]
   (let [s (slurp temp-name)]
-    (unlink temp-name)
+    (cpp/unlink temp-name)
     s))
 
 (defn with-capture
