@@ -29,8 +29,10 @@
   (find-deprecated-flags project)
   (when (:verbose opts)
     (reset! ljc/verbose? true))
+  (when (:debug opts)
+    (ljc/verify-executable! ljc/debug-tool))
   (let [project (ljc/native-build project opts)
-        prefix  (when (:debug opts) ["gdb" "--args"])
+        prefix  (when (:debug opts) ljc/debug-tool)
         cp-str  (ljc/build-module-path project)]
     (ljc/shell-out! project cp-str prefix cmd jank-args prog-args)))
 

@@ -15,6 +15,11 @@
   [["-v" "--verbose" "Enable verbose output"]
    [nil  "--disable-sandbox" "Disable jank-build sandboxing"]])
 
+(def debug-tool
+  (if (contains? #{"mac os x" "darwin"} (string/lower-case (System/getProperty "os.name")))
+    ["lldb" "--"]
+    ["gdb" "--args"]))
+
 (defn parse-opts
   "Process the args using the given clojure.tools.cli option-specs. If given
   invalid arguments, print and exit. Otherwise, returns a vector of the parsed
