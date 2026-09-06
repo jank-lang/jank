@@ -248,8 +248,15 @@ int main(int argc, const char** argv)
       compiler_args.emplace_back(strdup(framework.c_str()));
     }
 
-    /* We always enable debug info. Users can later strip the binary, if they want. */
-    compiler_args.push_back(strdup("-g"));
+    /* Either include debug symbols or strip everything from the final executable. */
+    if(util::cli::opts.debug)
+    {
+      compiler_args.push_back(strdup("-g"));
+    }
+    else
+    {
+      compiler_args.emplace_back(strdup("-Wl,--strip-all"));
+    }
 
     compiler_args.push_back(strdup("-std=c++20"));
     compiler_args.push_back(strdup("-Wno-c23-extensions"));
