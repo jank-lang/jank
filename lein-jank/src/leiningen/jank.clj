@@ -35,7 +35,8 @@
     (ljc/shell-out! project cp-str prefix cmd jank-args prog-args)))
 
 (def run-cli-options
-  [["-m" "--main NAMESPACE" "override main namespace"]])
+  [["-m" "--main NAMESPACE" "override main namespace"]
+   ["-d" "--debug" "run in the debugger"]])
 
 (defn run!
   "Run your project, starting at the :main entrypoint.
@@ -56,21 +57,13 @@ Calls the -main function in the given namespace."
 (defn debug!
   "Run your project under the debugger, starting at the :main entrypoint.
 
-This assumes that `gdb` is on your system path.
-
 USAGE: lein debug [--] [ARGS...]
 (see lein run)
 
 USAGE: lein debug -m/--main NAMESPACE [--] [ARGS...]
 (see lein run)"
   [project & args]
-  (ljc/verify-executable! ["gdb"])
-  (let [cli-options (into ljc/standard-options run-cli-options)
-        [opts args] (ljc/parse-opts #'run! args cli-options)
-        opts        (assoc opts :debug true)]
-    (if-let [main (or (:main opts) (:main project))]
-      (dispatch-jank project opts "run-main" [main] args)
-      (lmain/warn "No :main entrypoint for project."))))
+  (apply run! project (conj args "--debug")))
 
 (defn repl!
   "Start a terminal REPL and nREPL server in your :main ns, or the user ns if no
