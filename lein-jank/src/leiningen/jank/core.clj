@@ -15,6 +15,11 @@
   [["-v" "--verbose" "Enable verbose output"]
    [nil  "--disable-sandbox" "Disable jank-build sandboxing"]])
 
+(def debug-tool
+  (if (contains? #{"mac os x" "darwin"} (string/lower-case (System/getProperty "os.name")))
+    ["lldb" "--"]
+    ["gdb" "--args"]))
+
 (defn parse-opts
   "Process the args using the given clojure.tools.cli option-specs. If given
   invalid arguments, print and exit. Otherwise, returns a vector of the parsed
@@ -115,12 +120,11 @@
 
     (lmain/warn (str "Unknown flag " flag))))
 
-(defn verify-jank!
-  "Verify that we can run the jank executable, or crash with the
-  reason we cannot."
-  []
+(defn verify-executable!
+  "Verify that we can run the executable, or crash with the reason we cannot."
+  [args]
   (try
-    (util/sh {} ["jank"])
+    (util/sh {} args)
     (catch Exception e
       ;; Will print a nice message on failure like "Cannot run program
       ;; 'jank': ..."
@@ -131,9 +135,10 @@
                   (build-declarative-flag flag value))
                 (:jank project))))
 
-(defn shell-out! [project classpath command compiler-args runtime-args]
-  (verify-jank!)
-  (let [args (concat ["jank" command "--module-path" classpath]
+(defn shell-out! [project classpath prefix command compiler-args runtime-args]
+  (verify-executable! ["jank"])
+  (let [args (concat prefix
+                     ["jank" command "--module-path" classpath]
                      ; The normal build dir would be <target dir>/_cache, but we want
                      ; to nest one level deeper, so that files from this project don't
                      ; interfere with files from the dependencies. So we specify our
