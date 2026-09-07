@@ -76,7 +76,7 @@ packages take priority over those in `[clang64]`:
 ```conf
 [jank]
 SigLevel = Optional TrustAll
-Server = https://ppa.jank-lang.org/msys2
+Server = https://cache.jank-lang.org/msys2
 ```
 
 Then install (or update) jank:
