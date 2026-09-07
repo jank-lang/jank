@@ -67,6 +67,11 @@ If you'd like to install from source on Arch, you can install `jank-git` instead
 ## Windows (MSYS2)
 We have binary jank packages in our own pacman repo, so installation is quick and easy.
 
+> [!NOTE]
+> We provide our own LLVM/Clang packages, which will take precedence over the
+> standard MSYS2 versions. We recommend a dedicated MSYS2 installation for jank
+> so these packages don't affect other MSYS2 projects.
+
 First, install [MSYS2](https://www.msys2.org/) and open a **CLANG64** shell.
 
 Add our package repo to `/etc/pacman.conf` (e.g. with `nano /etc/pacman.conf`).

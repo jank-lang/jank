@@ -164,8 +164,7 @@ jobs:
           fi
           PATH="$PATH:$JAVA_DIR" JANK_INSTALL_DEPS=true ./bin/jank/check_everything.clj
       - name: Upload llvm and msys2 packages for publishing
-        if: steps.jank-build-step-win.outputs.msys2-pkg
-        # if: github.ref == 'refs/heads/main' && steps.jank-build-step-win.outputs.msys2-pkg
+        if: github.ref == 'refs/heads/main' && steps.jank-build-step-win.outputs.msys2-pkg
         uses: actions/upload-artifact@v4
         with:
           name: jank-msys2-pkg
@@ -174,7 +173,7 @@ jobs:
             ${{ github.workspace }}/compiler+runtime/build/llvm-install/*.tar.zst
 
   publish-msys2-pkg:
-    # if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main'
     needs: build-jank
     name: Publish MSYS2 packages
     runs-on: windows-2022
@@ -206,5 +205,4 @@ jobs:
           cd staging
           repo-add jank.db.tar.gz *.tar.zst
           ls -al .
-          # TODO: add --delete to remove old package versions from server
           rsync -avz -e "ssh -i $HOME/.ssh/jank_id_ed25519 -o StrictHostKeyChecking=no" ./ root@cache.jank-lang.org:/var/www/cache.jank-lang.org/html/msys2
