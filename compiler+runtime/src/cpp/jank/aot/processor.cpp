@@ -225,11 +225,6 @@ int main(int argc, const char** argv)
       }
     }
 
-    if constexpr(jtl::current_platform == jtl::platform::macos_like)
-    {
-      compiler_args.push_back(strdup("-L/opt/homebrew/lib"));
-    }
-
     for(auto const &library_dir : util::cli::opts.library_dirs)
     {
       compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
@@ -335,6 +330,14 @@ int main(int argc, const char** argv)
     for(auto const &library_dir : util::cli::opts.library_dirs)
     {
       linker_args.push_back(strdup(util::format("-Wl,-rpath,{}", library_dir).c_str()));
+    }
+
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      /* Homebrew. */
+      linker_args.push_back(strdup("-L/opt/homebrew/lib"));
+      /* Macports. */
+      linker_args.push_back(strdup("-L/opt/local/lib"));
     }
 
     /* Resolve the libs first, since jank supports its own `-l:foo` syntax (to force
@@ -444,17 +447,20 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("c++"));
     compiler_args.push_back(strdup(entrypoint_path.c_str()));
 
-    /* Reset Clang's forced language back to file-extension-based detection. Otherwise,
-     * the `-x c++` above would cause any subsequent bare filename argument (such as a
-     * resolved static lib path from `build_linker_args`) to be treated as C++ source
-     * instead of being linked as a library. */
-    compiler_args.push_back(strdup("-x"));
-    compiler_args.push_back(strdup("none"));
-
     auto const linker_args_res{ build_linker_args() };
     if(linker_args_res.is_err())
     {
       return linker_args_res.expect_err();
+    }
+
+    if(!linker_args_res.expect_ok().empty())
+    {
+      /* Reset Clang's forced language back to file-extension-based detection. Otherwise,
+      * the `-x c++` above would cause any subsequent bare filename argument (such as a
+      * resolved static lib path from `build_linker_args`) to be treated as C++ source
+      * instead of being linked as a library. */
+      compiler_args.push_back(strdup("-x"));
+      compiler_args.push_back(strdup("none"));
     }
     std::ranges::copy(linker_args_res.expect_ok(), std::back_inserter(compiler_args));
 
