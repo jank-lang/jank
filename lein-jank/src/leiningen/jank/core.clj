@@ -135,6 +135,26 @@
                   (build-declarative-flag flag value))
                 (:jank project))))
 
+(def exit-status-str
+  "Mapping of ISO C99/POSIX exit codes to user-displayable strings."
+  ;; Cargo ref: https://github.com/rust-lang/cargo/blob/e7506208ff1b7f01062e410c419f95628dfdb31b/crates/cargo-util/src/process_error.rs#L118C1-L133C25
+  ;;
+  ;; TODO: Windows doesn't use POSIX signals.
+  {6  "SIGABRT: process abort signal"
+   14 "SIGALRM: alarm clock"
+   8  "SIGFPE: erroneous arithmetic operation"
+   1  "SIGHUP: hangup"
+   4  "SIGILL: illegal instruction"
+   2  "SIGINT: terminal interrupt signal"
+   9  "SIGKILL: kill"
+   13 "SIGPIPE: write on a pipe with no one to read"
+   3  "SIGQUIT: terminal quit signal"
+   11 "SIGSEGV: invalid memory reference"
+   15 "SIGTERM: termination signal"
+   10 "SIGBUS: access to undefined memory"
+   12 "SIGSYS: bad system call"
+   5  "SIGTRAP: trace/breakpoint trap"})
+
 (defn shell-out! [project classpath prefix command compiler-args runtime-args]
   (verify-executable! ["jank"])
   (let [args (concat prefix
@@ -161,4 +181,11 @@
                              :dir (:root project)})
                    :exit)]
     (when-not (zero? exit)
+      ;; Exit codes above 128 represent system signals. Ideally we
+      ;; also check WIFSIGNALED but this isn't trivial in a
+      ;; platform-independent way from the JVM.
+      (when (or (util/linux?) (util/macos?))
+        (when-let [exit-str (and (> exit 128) (exit-status-str (- exit 128)))]
+          (binding [*out* *err*]
+            (println "terminated by signal" exit-str))))
       (System/exit exit))))
