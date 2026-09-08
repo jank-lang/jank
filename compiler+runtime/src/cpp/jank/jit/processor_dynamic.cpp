@@ -120,6 +120,14 @@ namespace jank::jit
       }
     }
 
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      /* Homebrew. */
+      library_dirs.emplace_back("/opt/homebrew/lib");
+      /* Macports. */
+      library_dirs.emplace_back("/opt/local/lib");
+    }
+
     return library_dirs;
   }
 
@@ -187,6 +195,15 @@ namespace jank::jit
 
     args.emplace_back("-L");
     args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir).c_str()));
+
+    /* TODO: Helper for include dirs. */
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      /* Homebrew. */
+      args.emplace_back("-I/opt/homebrew/include");
+      /* Macports. */
+      args.emplace_back("-I/opt/local/include");
+    }
 
     /* We add the JANK_JIT_FLAGS, which come from how jank was configured with CMake,
      * after all of these others so that the include paths we add above will have
