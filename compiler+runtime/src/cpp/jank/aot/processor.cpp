@@ -187,6 +187,14 @@ int main(int argc, const char** argv)
     compiler_args.emplace_back(strdup("-L"));
     compiler_args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir.string()).c_str()));
 
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      /* Homebrew. */
+      compiler_args.push_back(strdup("-I/opt/homebrew/include"));
+      /* Macports. */
+      compiler_args.push_back(strdup("-I/opt/local/include"));
+    }
+
     std::stringstream flags{ JANK_JIT_FLAGS };
     std::string flag;
     while(std::getline(flags, flag, ' '))
