@@ -770,10 +770,15 @@ namespace jank::error
 
     auto const terminal_width{ jtl::terminal::get_size().width };
     auto const max_width{ std::min(terminal_width, 100ull) };
+    auto const file_name{ e->source.file.substr(e->source.file.rfind("/") + 1) };
 
     util::println("{}", header(kind_str(e->kind), max_width));
-    util::println("{}error:{} {}\n",
+
+    util::println("{}{}:{}:{}: error:{} {}\n",
                   text_style::bold | text_style::red,
+                  file_name,
+                  e->source.start.line,
+                  e->source.start.col,
                   text_style::reset,
                   e->message);
 

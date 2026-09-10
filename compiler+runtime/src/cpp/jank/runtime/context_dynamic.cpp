@@ -271,6 +271,8 @@ namespace jank::runtime
           }
           return ok();
         }
+      case util::cli::compilation_target::none:
+        return ok();
       case util::cli::compilation_target::unspecified:
       default:
         return err(util::format("Unable to write module, given output target '{}'.",

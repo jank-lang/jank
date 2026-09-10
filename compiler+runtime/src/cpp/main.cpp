@@ -208,8 +208,11 @@ namespace jank
 
     __rt_ctx->compile_module(opts.target_module).expect_ok();
 
-    jank::aot::processor const aot_prc{};
-    aot_prc.build_executable(opts.target_module).expect_ok();
+    if(opts.output_target != util::cli::compilation_target::none)
+    {
+      jank::aot::processor const aot_prc{};
+      aot_prc.build_executable(opts.target_module).expect_ok();
+    }
   }
 }
 
