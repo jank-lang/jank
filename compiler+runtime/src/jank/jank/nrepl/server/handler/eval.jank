@@ -35,6 +35,10 @@
       (not success)
       [{:out stdout}
        {:err stderr}
+       ;; The error contents will be in :ex for CIDER, but also
+       ;; populate :err for clients which don't specially handle :ex
+       ;; responses.
+       {:err (pr-str *e)}
        {:ex     (pr-str *e)
         :status [:done :eval-error]}]
 
