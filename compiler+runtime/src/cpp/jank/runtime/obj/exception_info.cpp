@@ -62,20 +62,23 @@ namespace jank::runtime::obj
       util::format_to(sb, "\n  {}", cause_to_via(cause).to_code_string());
     }
     util::format_to(sb, "]\n");
-    util::format_to(sb, " :trace\n [");
-    bool needs_indent{};
-    for(auto const &frame : resolved_trace->frames)
+    if(resolved_trace)
     {
-      if(needs_indent)
+      util::format_to(sb, " :trace\n [");
+      bool needs_indent{};
+      for(auto const &frame : resolved_trace->frames)
       {
-        util::format_to(sb, "\n  ");
+        if(needs_indent)
+        {
+          util::format_to(sb, "\n  ");
+        }
+
+        util::format_to(sb, "{}", frame_to_vec(frame).to_code_string());
+
+        needs_indent = true;
       }
-
-      util::format_to(sb, "{}", frame_to_vec(frame).to_code_string());
-
-      needs_indent = true;
+      util::format_to(sb, "]}");
     }
-    util::format_to(sb, "]}");
     return sb.release();
   }
 
@@ -113,9 +116,12 @@ namespace jank::runtime::obj
     trans.insert_unique(via_kw, make_box<obj::persistent_vector>(via_trans.persistent()));
 
     runtime::detail::native_transient_vector trace_trans;
-    for(auto const &frame : resolved_trace->frames)
+    if(resolved_trace)
     {
-      trace_trans.push_back(frame_to_vec(frame));
+      for(auto const &frame : resolved_trace->frames)
+      {
+        trace_trans.push_back(frame_to_vec(frame));
+      }
     }
     trans.insert_unique(trace_kw, make_box<obj::persistent_vector>(trace_trans.persistent()));
 

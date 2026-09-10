@@ -23,21 +23,31 @@ namespace jank::nrepl::server::eval
 
       return true;
     }
-    catch(error_ref const e)
-    {
-      var_e->set(make_box(e->message));
-    }
     catch(object_ref const e)
     {
-      var_e->set(e);
+      visit_object(
+        [&](auto const typed_o) {
+          using T = typename decltype(typed_o)::value_type;
+
+          if constexpr(std::is_same_v<T, obj::exception_info>)
+          {
+            var_e->set(typed_o);
+          }
+          else
+          {
+            var_e->set(make_box<obj::exception_info>(typed_o.to_string(), jank_nil));
+          }
+        },
+        e
+      );
     }
     catch(std::exception const &e)
     {
-      var_e->set(make_box(e.what()));
+      var_e->set(make_box<obj::exception_info>(e.what(), jank_nil));
     }
     catch(...)
     {
-      var_e->set(make_box(\"uncaught exception\"));
+      var_e->set(make_box<obj::exception_info>(\"uncaught exception\", jank_nil));
     }
 
     return false;
