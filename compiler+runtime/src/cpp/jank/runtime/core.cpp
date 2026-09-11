@@ -977,6 +977,7 @@ namespace jank::runtime
   {
     /* We need to hold this lock the whole time we're checking, to ensure the thread
      * doesn't finish while we're here checking. */
+    /* NOLINTNEXTLINE(misc-const-correctness): Upgrading requires non-const. */
     auto locked_state{ future->state.ulock() };
     switch(locked_state->status)
     {
