@@ -62,7 +62,8 @@
           dependency-module-path "src/jank_test/reload/dependency.cljc"
           original-dependent-content (slurp dependent-module-path)]
       (with-open [repl-writer (io/writer (:in proc))
-                  repl-reader (io/reader (:out proc))]
+                  repl-out-reader (io/reader (:out proc))
+                  repl-err-reader (io/reader (:err proc))]
         (doto repl-writer
           (send-command "(require '[jank-test.reload.dependent :as d])\n")
           (send-command "(d/first-fn)\n" :111))
@@ -70,14 +71,14 @@
         ;; Wait for repl to start
         (Thread/sleep 2000)
         (is (string/includes?
-             (read-available repl-reader :111)
+             (read-available repl-out-reader :111)
              "Hello"))
 
         (send-command repl-writer "(d/hi)\n" :222)
 
         (Thread/sleep 500)
         (is (string/includes?
-             (read-available repl-reader :222)
+             (read-available repl-err-reader :222)
              "The symbol `d/hi` could not be resolved."))
 
         (testing "new var should be added to the module"
@@ -92,7 +93,7 @@
 
           (Thread/sleep 500)
           (is (string/includes?
-               (read-available repl-reader :333)
+               (read-available repl-out-reader :333)
                "Hi!")))
 
         (testing "var removed from the source should still available"
@@ -103,7 +104,7 @@
 
           (Thread/sleep 500)
           (is (string/includes?
-               (read-available repl-reader :444)
+               (read-available repl-out-reader :444)
                "Hi!")))
         (testing "dependency module should not reload"
           (doto dependency-module-path
@@ -117,7 +118,7 @@
           (Thread/sleep 500)
 
           (is (string/includes?
-               (read-available repl-reader :555)
+               (read-available repl-err-reader :555)
                "The symbol `dep/hi` could not be resolved."))))
       (ps/destroy proc))))
 
@@ -127,7 +128,8 @@
           dependent-module-path "src/jank_test/reload_all/dependent.cljc"
           dependency-module-path "src/jank_test/reload_all/dependency.cljc"]
       (with-open [repl-writer (io/writer (:in proc))
-                  repl-reader (io/reader (:out proc))]
+                  repl-out-reader (io/reader (:out proc))
+                  repl-err-reader (io/reader (:err proc))]
         (doto repl-writer
           (send-command "(require '[jank-test.reload-all.dependent :as d])\n")
           (send-command "(d/first-fn)\n" :111))
@@ -135,14 +137,14 @@
         ;; Wait for repl to start
         (Thread/sleep 2000)
         (is (string/includes?
-             (read-available repl-reader :111)
+             (read-available repl-out-reader :111)
              "Hello"))
 
         (send-command repl-writer "(d/hi)\n" :222)
 
         (Thread/sleep 500)
         (is (string/includes?
-             (read-available repl-reader :222)
+             (read-available repl-err-reader :222)
              "The symbol `d/hi` could not be resolved."))
 
         (testing "module is reloaded"
@@ -157,7 +159,7 @@
 
           (Thread/sleep 500)
           (is (string/includes?
-               (read-available repl-reader :333)
+               (read-available repl-out-reader :333)
                "Hi!")))
 
         (testing "module's dependency is also reloaded"
@@ -171,7 +173,7 @@
 
           (Thread/sleep 500)
           (is (string/includes?
-               (read-available repl-reader :444)
+               (read-available repl-err-reader :444)
                "The symbol `dep/hi` could not be resolved."))
 
           (doto repl-writer
@@ -180,7 +182,7 @@
 
           (Thread/sleep 500)
           (is (string/includes?
-               (read-available repl-reader :555)
+               (read-available repl-out-reader :555)
                "Hi in dependency!"))))
       (ps/destroy proc))))
 
