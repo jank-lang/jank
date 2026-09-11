@@ -1,5 +1,6 @@
 (ns jank.nrepl.server.handler.eval
-  (:require [jank.nrepl.server.handler :refer [handle-message]]
+  (:require [clojure.string :refer [blank?]]
+            [jank.nrepl.server.handler :refer [handle-message]]
             [jank.nrepl.server.eval :refer [safe-eval]]
             [jank.nrepl.server.capture :refer [with-capture]]
             [jank.nrepl.server.inspect :refer [inspect-str]]))
@@ -34,8 +35,8 @@
       ;; Eval results in error. For now, just report the exception as a value.
       ;; If we return :exception then CIDER will try to load clojure.stacktrace.
       (not success)
-      [{:out stdout}
-       {:err stderr}
+      [(when-not (blank? stdout) {:out stdout})
+       (when-not (blank? stderr) {:err stderr})
        {:value  (str *e)
         :status [:done :eval-error]}]
 
@@ -46,8 +47,8 @@
 
       ;; Normal eval result.
       :else
-      [{:out stdout}
-       {:err stderr}
+      [(when-not (blank? stdout) {:out stdout})
+       (when-not (blank? stderr) {:err stderr})
        {:value  (pr-str *1)
         :ns     (str res-ns)}
        ;; CIDER expects :status in a separate response message
