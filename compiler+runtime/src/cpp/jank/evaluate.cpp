@@ -694,15 +694,15 @@ namespace jank::evaluate
     static auto var_3{ __rt_ctx->find_var("clojure.core", "*3") };
     static auto var_e{ __rt_ctx->find_var("clojure.core", "*e") };
 
+    bool success{ false };
     cpptrace::try_catch(
       [&] {
         auto const value{ __rt_ctx->eval_string(code, p).unwrap() };
+        success = true;
 
         var_3->set(var_2->deref()).expect_ok();
         var_2->set(var_1->deref()).expect_ok();
         var_1->set(value).expect_ok();
-
-        return true;
       },
       [&](error_ref const e) { var_e->set(make_box<obj::exception_info>(e)).expect_ok(); },
       [&](object_ref const e) {
@@ -731,6 +731,6 @@ namespace jank::evaluate
         var_e->set(ex).expect_ok();
       });
 
-    return false;
+    return success;
   }
 }
