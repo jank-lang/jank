@@ -732,6 +732,95 @@ namespace jank::analyze::cpp_util
         }
       case jank::runtime::object_type::var:
         return var_type();
+      case jank::runtime::object_type::array:
+        {
+          auto const type(o.get_element_type());
+          switch(type)
+          {
+            case runtime::array_element_type::boolean:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.bool_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::character:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.char_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::u8:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.u8_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::i8:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.i8_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::u16:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.u16_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::i16:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.i16_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::u32:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.u32_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::i32:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.i32_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::u64:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.u64_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::i64:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.i64_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::f32:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.f32_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::f64:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.f64_array_ref").expect_ok()) };
+                return type;
+              }
+            case runtime::array_element_type::object:
+              {
+                static auto const type{ Cpp::GetTypeFromScope(
+                  resolve_scope("jank.runtime.obj.object_array_ref").expect_ok()) };
+                return type;
+              }
+            default:
+              throw error::codegen_internal_failure(util::format(
+                "Unable to resolve literal_type for `array` with element type of `{}`.",
+                element_type_str(type)));
+          }
+        }
       default:
         {
           static auto const type{ untyped_object_ref_type() };

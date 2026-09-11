@@ -66,6 +66,7 @@
 (cpp/raw "#include <sstream>")
 (cpp/raw "#include <filesystem>")
 
+(cpp/raw "#include <jank/runtime/core/array.hpp>")
 (cpp/raw "#include <jank/runtime/core/equal.hpp>")
 (cpp/raw "#include <jank/runtime/core/meta.hpp>")
 (cpp/raw "#include <jank/runtime/obj/repeat.hpp>")
@@ -5019,8 +5020,7 @@
   "Returns an array of Objects containing the contents of coll, which
   can be any Collection.  Maps to java.util.Collection.toArray()."
   [coll]
-  ;; (. clojure.lang.RT (toArray coll))
-  (throw (ex-info "TODO: port to-array" {})))
+  (cpp/jank.runtime.object_array coll))
 
 (defn cast
   "Throws a ClassCastException if x is not a c, else returns x."
@@ -6020,37 +6020,41 @@
 (defn alength
   "Returns the length of the Java array. Works on arrays of all
   types."
+  {:inline-arities #{1}
+   :inline (fn* [array]
+             (list 'cpp/jank.runtime.alength array))}
   [array]
-  ;; (. clojure.lang.RT (alength array))
-  (throw (ex-info "TODO: port alength"  {})))
+  (cpp/jank.runtime.alength array))
 
 (defn aclone
   "Returns a clone of the Java array. Works on arrays of known
   types."
+  {:inline-arities #{1}
+   :inline (fn* [array]
+             (list 'cpp/jank.runtime.aclone array))}
   [array]
-  ;; (. clojure.lang.RT (aclone array))
-  (throw (ex-info "TODO: port aclone"  {})))
+  (cpp/jank.runtime.aclone array))
 
 (defn aget
   "Returns the value at the index/indices. Works on Java arrays of all
   types."
+  {:inline-arities #{2}
+   :inline (fn* [array idx]
+             (list 'cpp/jank.runtime.aget array idx))}
   ([array idx]
-  ;;  (clojure.lang.Reflector/prepRet (.getComponentType (class array)) (. Array (get array idx)))
-   (throw (ex-info "TODO: port aget"  {})))
+   (cpp/jank.runtime.aget array idx))
   ([array idx & idxs]
    (apply aget (aget array idx) idxs)))
 
-(defmacro aset
+(defn aset
   "Sets the value at the index/indices. Returns val."
-  [array idx & more]
-  (if (= 1 (count more))
-    ;; Simple case: (aset array index value)
-    (let [val (first more)]
-      `(do
-         (cpp/= (cpp/aget ~array ~idx) ~val)
-         ~val))
-    ;; Nested case: (aset array idx1 idx2 & idxv) - not yet implemented
-    `(throw (ex-info "TODO: Nested array indexing not yet implemented"  {}))))
+  {:inline-arities #{3}
+   :inline (fn* [array idx val]
+             (list 'cpp/jank.runtime.aset array idx val))}
+  ([array idx val]
+   (cpp/jank.runtime.aset array idx val))
+  ([array idx idx2 & idxv]
+   (throw "TODO: Nested array indexing not yet implemented")))
 
 (defmacro
   ^{:private true}
@@ -6631,139 +6635,166 @@
 
 (defn float-array
   "Creates an array of floats"
+  {:inline-arities #{1 2}
+   :inline (fn*
+            ([size-or-seq]
+             (list 'cpp/jank.runtime.float_array size-or-seq))
+            ([size init-val-or-seq]
+             (list 'cpp/jank.runtime.float_array size init-val-or-seq)))}
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers float_array size-or-seq)
-   (throw (ex-info "TODO: port float-array"  {})))
+   (cpp/jank.runtime.float_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers float_array size init-val-or-seq)
-   (throw (ex-info "TODO: port float-array"  {})) ))
+   (cpp/jank.runtime.float_array size init-val-or-seq)))
 
 (defn boolean-array
   "Creates an array of booleans"
+  {:inline-arities #{1 2}
+   :inline (fn*
+            ([size-or-seq]
+             (list 'cpp/jank.runtime.boolean_array size-or-seq))
+            ([size init-val-or-seq]
+             (list 'cpp/jank.runtime.boolean_array size init-val-or-seq)))}
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers boolean_array size-or-seq)
-   (throw (ex-info "TODO: port boolean-array"  {})))
+   (cpp/jank.runtime.boolean_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers boolean_array size init-val-or-seq)
-   (throw (ex-info "TODO: port boolean-array"  {}))))
+   (cpp/jank.runtime.boolean_array size init-val-or-seq)))
 
 (defn byte-array
   "Creates an array of bytes"
+  {:inline-arities #{1 2}
+   :inline (fn*
+            ([size-or-seq]
+             (list 'cpp/jank.runtime.byte_array size-or-seq))
+            ([size init-val-or-seq]
+             (list 'cpp/jank.runtime.byte_array size init-val-or-seq)))}
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers byte_array size-or-seq)
-   (throw (ex-info "TODO: port byte-array"  {})))
+   (cpp/jank.runtime.byte_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers byte_array size init-val-or-seq)
-   (throw (ex-info "TODO: port byte-array"  {}))))
+   (cpp/jank.runtime.byte_array size init-val-or-seq)))
 
 (defn char-array
   "Creates an array of chars"
+  {:inline-arities #{1 2}
+   :inline (fn*
+            ([size-or-seq]
+             (list 'cpp/jank.runtime.char_array size-or-seq))
+            ([size init-val-or-seq]
+             (list 'cpp/jank.runtime.char_array size init-val-or-seq)))}
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers char_array size-or-seq)
-   (throw (ex-info "TODO: port char-array"  {})))
+   (cpp/jank.runtime.char_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers char_array size init-val-or-seq)
-   (throw (ex-info "TODO: port char-array"  {}))))
+   (cpp/jank.runtime.char_array size init-val-or-seq)))
 
 (defn short-array
   "Creates an array of shorts"
+  {:inline-arities #{1 2}
+   :inline (fn*
+            ([size-or-seq]
+             (list 'cpp/jank.runtime.short_array size-or-seq))
+            ([size init-val-or-seq]
+             (list 'cpp/jank.runtime.short_array size init-val-or-seq)))}
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers short_array size-or-seq)
-   (throw (ex-info "TODO: port short-array"  {})))
+   (cpp/jank.runtime.short_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers short_array size init-val-or-seq)
-   (throw (ex-info "TODO: port short-array"  {}))))
+   (cpp/jank.runtime.short_array size init-val-or-seq)))
 
 (defn double-array
   "Creates an array of doubles"
+  {:inline-arities #{1 2}
+   :inline (fn*
+            ([size-or-seq]
+             (list 'cpp/jank.runtime.double_array size-or-seq))
+            ([size init-val-or-seq]
+             (list 'cpp/jank.runtime.double_array size init-val-or-seq)))}
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers double_array size-or-seq)
-   (throw (ex-info "TODO: port double-array"  {})))
+   (cpp/jank.runtime.double_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers double_array size init-val-or-seq)
-   (throw (ex-info "TODO: port double-array"  {}))))
+   (cpp/jank.runtime.double_array size init-val-or-seq)))
 
 (defn object-array
   "Creates an array of objects"
+  {:inline-arities #{1}
+   :inline (fn*
+            ([size-or-seq]
+             (list 'cpp/jank.runtime.object_array size-or-seq)))}
   ([size-or-seq]
-  ;;  (. clojure.lang.RT object_array size-or-seq)
-   (throw (ex-info "TODO: port object-array"  {}))))
+   (cpp/jank.runtime.object_array size-or-seq)))
 
 (defn int-array
   "Creates an array of ints"
+  {:inline-arities #{1 2}
+   :inline (fn*
+            ([size-or-seq]
+             (list 'cpp/jank.runtime.int_array size-or-seq))
+            ([size init-val-or-seq]
+             (list 'cpp/jank.runtime.int_array size init-val-or-seq)))}
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers int_array size-or-seq)
-   (throw (ex-info "TODO: port int-array"  {})))
+   (cpp/jank.runtime.int_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers int_array size init-val-or-seq)
-   (throw (ex-info "TODO: port int-array"  {}))))
+   (cpp/jank.runtime.int_array size init-val-or-seq)))
 
 (defn long-array
   "Creates an array of longs"
+  {:inline-arities #{1 2}
+   :inline (fn*
+            ([size-or-seq]
+             (list 'cpp/jank.runtime.long_array size-or-seq))
+            ([size init-val-or-seq]
+             (list 'cpp/jank.runtime.long_array size init-val-or-seq)))}
   ([size-or-seq]
-  ;;  (. clojure.lang.Numbers long_array size-or-seq)
-   (throw (ex-info "TODO: port long-array"  {})))
+   (cpp/jank.runtime.long_array size-or-seq))
   ([size init-val-or-seq]
-  ;;  (. clojure.lang.Numbers long_array size init-val-or-seq)
-   (throw (ex-info "TODO: port long-array"  {}))))
+   (cpp/jank.runtime.long_array size init-val-or-seq)))
 
 ;; definline doesn't work without eval
 
-;; (definline booleans
-;;   "Casts to boolean[]"
-;;   [xs]
-;;   ;; `(. clojure.lang.Numbers booleans ~xs)
-;;   (throw "TODO: port"))
+(definline booleans
+  "Casts to boolean[]"
+  [xs]
+  `(cpp/jank.runtime.booleans ~xs))
 
-;; (definline bytes
-;;   "Casts to bytes[]"
-;;   [xs]
-;;   ;; `(. clojure.lang.Numbers bytes ~xs)
-;;   (throw "TODO: port"))
+(definline bytes
+  "Casts to bytes[]"
+  [xs]
+  `(cpp/jank.runtime.bytes ~xs))
 
-;; (definline chars
-;;   "Casts to chars[]"
-;;   [xs]
-;;   ;; `(. clojure.lang.Numbers chars ~xs)
-;;   (throw "TODO: port"))
+(definline chars
+  "Casts to chars[]"
+  [xs]
+  `(cpp/jank.runtime.chars ~xs))
 
-;; (definline shorts
-;;   "Casts to shorts[]"
-;;   [xs]
-;;   ;; `(. clojure.lang.Numbers shorts ~xs)
-;;   (throw "TODO: port"))
+(definline shorts
+  "Casts to shorts[]"
+  [xs]
+  `(cpp/jank.runtime.shorts ~xs))
 
-;; (definline floats
-;;   "Casts to float[]"
-;;   [xs]
-;;   ;; `(. clojure.lang.Numbers floats ~xs)
-;;   (throw "TODO: port"))
+(definline floats
+  "Casts to float[]"
+  [xs]
+  `(cpp/jank.runtime.floats ~xs))
 
-;; (definline ints
-;;   "Casts to int[]"
-;;   [xs]
-;;   ;; `(. clojure.lang.Numbers ints ~xs)
-;;   (throw "TODO: port"))
+(definline ints
+  "Casts to int[]"
+  [xs]
+  `(cpp/jank.runtime.ints ~xs))
 
-;; (definline doubles
-;;   "Casts to double[]"
-;;   [xs]
-;;   ;; `(. clojure.lang.Numbers doubles ~xs)
-;;   (throw "TODO: port"))
+(definline doubles
+  "Casts to double[]"
+  [xs]
+  `(cpp/jank.runtime.doubles ~xs))
 
-;; (definline longs
-;;   "Casts to long[]"
-;;   [xs]
-;;   ;; `(. clojure.lang.Numbers longs ~xs)
-;;   (throw "TODO: port"))
+(definline longs
+  "Casts to long[]"
+  [xs]
+  `(cpp/jank.runtime.longs ~xs))
 
 (defn bytes?
   "Return true if x is a byte array"
   [x]
-  ;; (if (nil? x)
-  ;;   false
-  ;;   (-> x class .getComponentType (= Byte/TYPE)))
-  (throw (ex-info "TODO: port bytes?"  {})))
+  (if (nil? x)
+    false
+    (and (cpp/== (.get_type x) cpp/jank.runtime.object_type.array)
+         (cpp/== (.get_element_type x) cpp/jank.runtime.array_element_type.u8))))
 
 (defn seque
   "Creates a queued seq on another (presumably lazy) seq s. The queued
