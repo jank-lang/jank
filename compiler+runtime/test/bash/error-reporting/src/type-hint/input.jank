@@ -1,0 +1,5 @@
+(defn foo [^(:* int) i]
+  (if (cpp/== 1 (cpp/* i))
+    :success))
+
+(foo (cpp/box (cpp/new float 1.0)))

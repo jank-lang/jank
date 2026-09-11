@@ -32,7 +32,7 @@ namespace jank::analyze::expr
     object_ref param_maps(make_box<obj::persistent_vector>());
     for(auto const &e : params)
     {
-      param_maps = conj(param_maps, e);
+      param_maps = conj(param_maps, e.name);
     }
 
     return obj::persistent_array_map::create_unique(make_box("params"),

@@ -28,12 +28,6 @@
 
 (def src-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/../../../src"))))
 
-(defn strip-ansi-codes
-  "Removes ANSI color codes from the given string."
-  [s]
-  (-> (clojure.string/replace s #"\x1B\[[0-9;]*[mK]" "")
-      (clojure.string/replace #"\r\n" "\n")))
-
 (defn find-tests! []
   (let [inputs (b.f/glob src-dir "**/input.jank")]
     (map (fn [input]
@@ -55,7 +49,7 @@
                            :err :out
                            :dir (:dir test)}
                           "jank --module-path .:jar.jar run input.jank")]
-    (assoc test :output (strip-ansi-codes (string/trim (:out res))))))
+    (assoc test :output (string/trim (:out res)))))
 
 (defn generate! [tests]
   (doseq [test tests]
