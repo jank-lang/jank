@@ -977,7 +977,7 @@ namespace jank::runtime
   {
     /* We need to hold this lock the whole time we're checking, to ensure the thread
      * doesn't finish while we're here checking. */
-    auto const locked_state{ future->state.ulock() };
+    auto locked_state{ future->state.ulock() };
     switch(locked_state->status)
     {
       case obj::future_status::done:

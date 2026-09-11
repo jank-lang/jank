@@ -190,7 +190,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.jank = entry;
-      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
+      auto const res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.jank = entry;
