@@ -771,8 +771,9 @@ namespace jank::error
     auto const terminal_width{ jtl::terminal::get_size().width };
     auto const max_width{ std::min(terminal_width, 100ull) };
 
-    util::println("{}", header(kind_str(e->kind), max_width));
-    util::println("{}error:{} {}\n",
+    util::println(stderr, "{}", header(kind_str(e->kind), max_width));
+    util::println(stderr,
+                  "{}error:{} {}\n",
                   text_style::bold | text_style::red,
                   text_style::reset,
                   e->message);
@@ -796,22 +797,27 @@ namespace jank::error
 
     for(usize i{}; i < p.snippets.size(); ++i)
     {
-      util::println("{}", code_snippet(p.snippets[i], max_width, i == p.snippets.size() - 1));
+      util::println(stderr,
+                    "{}",
+                    code_snippet(p.snippets[i], max_width, i == p.snippets.size() - 1));
     }
     if(p.snippets.empty())
     {
-      util::println("https://book.jank-lang.org/reference/error/{}.html", kind_str(e->kind));
+      util::println(stderr,
+                    "https://book.jank-lang.org/reference/error/{}.html",
+                    kind_str(e->kind));
     }
     else
     {
-      util::println("{}", documentation_box(e, max_width));
+      util::println(stderr, "{}", documentation_box(e, max_width));
     }
 
     if(!e->candidates.empty())
     {
       auto const show_count{ std::min(e->candidates.size(),
                                       static_cast<size_t>(util::cli::opts.max_error_candidates)) };
-      util::println("  Candidates considered (showing {} of {}):\n",
+      util::println(stderr,
+                    "  Candidates considered (showing {} of {}):\n",
                     show_count,
                     e->candidates.size());
       for(size_t i{}; i < show_count; ++i)
@@ -820,14 +826,15 @@ namespace jank::error
 
         if(c.viable)
         {
-          util::print("  {}✓{}", text_style::green, text_style::reset);
+          util::print(stderr, "  {}✓{}", text_style::green, text_style::reset);
         }
         else
         {
-          util::print("  {}✗{}", text_style::red, text_style::reset);
+          util::print(stderr, "  {}✗{}", text_style::red, text_style::reset);
         }
-        util::print(" {}", format_and_highlight_cpp(c.signature, "    "));
-        util::println("{}╰─ declared at {}{}",
+        util::print(stderr, " {}", format_and_highlight_cpp(c.signature, "    "));
+        util::println(stderr,
+                      "{}╰─ declared at {}{}",
                       text_style::bright_black,
                       shorten_path(c.source),
                       text_style::reset);
@@ -863,20 +870,22 @@ namespace jank::error
         }
 
         auto const column_padding{ determine_column_padding(rows, 1) };
-        util::print("{}", render_columns("    ", rows, column_padding));
+        util::print(stderr, "{}", render_columns("    ", rows, column_padding));
 
-        util::println("    {}──────────────────────────────────────────────────────────{}",
+        util::println(stderr,
+                      "    {}──────────────────────────────────────────────────────────{}",
                       text_style::bright_black,
                       text_style::reset);
-        util::println("    {}{}", (c.viable ? "Viable: " : "Not viable: "), c.reason);
+        util::println(stderr, "    {}{}", (c.viable ? "Viable: " : "Not viable: "), c.reason);
         if(!c.clang_reason.empty())
         {
-          util::println("    {}╰─ {}{}",
+          util::println(stderr,
+                        "    {}╰─ {}{}",
                         text_style::bright_black,
                         c.clang_reason,
                         text_style::reset);
         }
-        util::println("");
+        util::println(stderr, "");
       }
     }
 
