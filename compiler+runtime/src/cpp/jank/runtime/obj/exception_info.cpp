@@ -9,6 +9,7 @@
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/try.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/error/report.hpp>
 
 namespace jank::runtime::obj
 {
@@ -16,6 +17,12 @@ namespace jank::runtime::obj
     : object{ obj_type, obj_behaviors }
     , message{ message }
     , data{ data }
+  {
+  }
+
+  exception_info::exception_info(error_ref error)
+    : object{ obj_type, obj_behaviors }
+    , error{ error }
   {
   }
 
@@ -45,6 +52,19 @@ namespace jank::runtime::obj
     }
 
     return make_box<obj::persistent_hash_map>(trans.persistent());
+  }
+
+  jtl::immutable_string exception_info::to_string() const
+  {
+    /* Pretty-print the error_ref if we have it or else fall back to the exception data. */
+    if(error.is_some())
+    {
+      return jank::error::report(error.unwrap());
+    }
+    else
+    {
+      return to_code_string();
+    }
   }
 
   jtl::immutable_string exception_info::to_code_string() const

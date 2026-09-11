@@ -27,8 +27,7 @@ namespace jank::nrepl::server::eval
     }
     catch(error_ref const e)
     {
-      error::report(e);
-      var_e->set(make_box<obj::exception_info>(e->message, jank_nil));
+      var_e->set(make_box<obj::exception_info>(e));
     }
     catch(object_ref const e)
     {

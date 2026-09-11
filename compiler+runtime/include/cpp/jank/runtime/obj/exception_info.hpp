@@ -12,7 +12,9 @@
 
 #include <memory>
 
+#include <jank/error.hpp>
 #include <jank/runtime/object.hpp>
+#include <jtl/option.hpp>
 
 /* NOLINTNEXTLINE(modernize-concat-nested-namespaces): Not doable, due to the inline. */
 namespace cpptrace
@@ -35,8 +37,10 @@ namespace jank::runtime::obj
     static constexpr bool pointer_free{ false };
 
     exception_info(jtl::immutable_string const &message, object_ref const data);
+    exception_info(error_ref error);
 
     /* behavior::object_like */
+    jtl::immutable_string to_string() const override;
     jtl::immutable_string to_code_string() const override;
 
     void resolve();
@@ -48,5 +52,6 @@ namespace jank::runtime::obj
     exception_info_ref cause;
     std::unique_ptr<cpptrace::raw_trace> raw_trace;
     std::unique_ptr<cpptrace::stacktrace> resolved_trace;
+    jtl::option<error_ref> error;
   };
 }

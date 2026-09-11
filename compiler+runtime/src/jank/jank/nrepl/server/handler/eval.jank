@@ -38,8 +38,8 @@
        ;; The error contents will be in :ex for CIDER, but also
        ;; populate :err for clients which don't specially handle :ex
        ;; responses.
-       {:err (pr-str *e)}
-       {:ex     (pr-str *e)
+       {:err (str *e)}
+       {:ex     (str *e)
         :status [:done :eval-error]}]
 
       ;; Client requests an inspection of the last result.

@@ -3,6 +3,7 @@
 
 #include <boost/algorithm/string/replace.hpp>
 
+#include <jtl/string_builder.hpp>
 #include <jtl/terminal.hpp>
 #include <jtl/utf8.hpp>
 
@@ -764,19 +765,20 @@ namespace jank::error
     return ui::highlight_cpp(source);
   }
 
-  void report(error_ref const e)
+  jtl::immutable_string report(error_ref const e)
   {
+    jtl::string_builder sb;
     plan const p{ e };
 
     auto const terminal_width{ jtl::terminal::get_size().width };
     auto const max_width{ std::min(terminal_width, 100ull) };
 
-    util::println(stderr, "{}", header(kind_str(e->kind), max_width));
-    util::println(stderr,
-                  "{}error:{} {}\n",
-                  text_style::bold | text_style::red,
-                  text_style::reset,
-                  e->message);
+    util::format_to(sb, "{}\n", header(kind_str(e->kind), max_width));
+    util::format_to(sb,
+                    "{}error:{} {}\n\n",
+                    text_style::bold | text_style::red,
+                    text_style::reset,
+                    e->message);
 
     /* TODO: Context. */
     //auto context{ vbox(
@@ -797,47 +799,47 @@ namespace jank::error
 
     for(usize i{}; i < p.snippets.size(); ++i)
     {
-      util::println(stderr,
-                    "{}",
-                    code_snippet(p.snippets[i], max_width, i == p.snippets.size() - 1));
+      util::format_to(sb,
+                      "{}\n",
+                      code_snippet(p.snippets[i], max_width, i == p.snippets.size() - 1));
     }
     if(p.snippets.empty())
     {
-      util::println(stderr,
-                    "https://book.jank-lang.org/reference/error/{}.html",
-                    kind_str(e->kind));
+      util::format_to(sb,
+                      "https://book.jank-lang.org/reference/error/{}.html\n",
+                      kind_str(e->kind));
     }
     else
     {
-      util::println(stderr, "{}", documentation_box(e, max_width));
+      util::format_to(sb, "{}\n", documentation_box(e, max_width));
     }
 
     if(!e->candidates.empty())
     {
       auto const show_count{ std::min(e->candidates.size(),
                                       static_cast<size_t>(util::cli::opts.max_error_candidates)) };
-      util::println(stderr,
-                    "  Candidates considered (showing {} of {}):\n",
-                    show_count,
-                    e->candidates.size());
+      util::format_to(sb,
+                      "  Candidates considered (showing {} of {}):\n\n",
+                      show_count,
+                      e->candidates.size());
       for(size_t i{}; i < show_count; ++i)
       {
         auto const &c{ e->candidates[i] };
 
         if(c.viable)
         {
-          util::print(stderr, "  {}✓{}", text_style::green, text_style::reset);
+          util::format_to(sb, "  {}✓{}", text_style::green, text_style::reset);
         }
         else
         {
-          util::print(stderr, "  {}✗{}", text_style::red, text_style::reset);
+          util::format_to(sb, "  {}✗{}", text_style::red, text_style::reset);
         }
-        util::print(stderr, " {}", format_and_highlight_cpp(c.signature, "    "));
-        util::println(stderr,
-                      "{}╰─ declared at {}{}",
-                      text_style::bright_black,
-                      shorten_path(c.source),
-                      text_style::reset);
+        util::format_to(sb, " {}", format_and_highlight_cpp(c.signature, "    "));
+        util::format_to(sb,
+                        "{}╰─ declared at {}{}\n",
+                        text_style::bright_black,
+                        shorten_path(c.source),
+                        text_style::reset);
 
         native_vector<native_vector<jtl::immutable_string>> rows;
         for(auto const &a : c.arguments)
@@ -870,28 +872,30 @@ namespace jank::error
         }
 
         auto const column_padding{ determine_column_padding(rows, 1) };
-        util::print(stderr, "{}", render_columns("    ", rows, column_padding));
+        util::format_to(sb, "{}", render_columns("    ", rows, column_padding));
 
-        util::println(stderr,
-                      "    {}──────────────────────────────────────────────────────────{}",
-                      text_style::bright_black,
-                      text_style::reset);
-        util::println(stderr, "    {}{}", (c.viable ? "Viable: " : "Not viable: "), c.reason);
+        util::format_to(sb,
+                        "    {}──────────────────────────────────────────────────────────{}\n",
+                        text_style::bright_black,
+                        text_style::reset);
+        util::format_to(sb, "    {}{}\n", (c.viable ? "Viable: " : "Not viable: "), c.reason);
         if(!c.clang_reason.empty())
         {
-          util::println(stderr,
-                        "    {}╰─ {}{}",
-                        text_style::bright_black,
-                        c.clang_reason,
-                        text_style::reset);
+          util::format_to(sb,
+                          "    {}╰─ {}{}\n",
+                          text_style::bright_black,
+                          c.clang_reason,
+                          text_style::reset);
         }
-        util::println(stderr, "");
+        util::format_to(sb, "\n");
       }
     }
 
     if(e->cause)
     {
-      report(e->cause.as_ref());
+      sb.push_back(report(e->cause.as_ref()));
     }
+
+    return sb.release();
   }
 }
