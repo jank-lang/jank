@@ -29,12 +29,16 @@
   (find-deprecated-flags project)
   (when (:verbose opts)
     (reset! ljc/verbose? true))
-  (let [project     (ljc/native-build project opts)
-        cp-str      (ljc/build-module-path project)]
-    (ljc/shell-out! project cp-str cmd jank-args prog-args)))
+  (when (:debug opts)
+    (ljc/verify-executable! ljc/debug-tool))
+  (let [project (ljc/native-build project opts)
+        prefix  (when (:debug opts) ljc/debug-tool)
+        cp-str  (ljc/build-module-path project)]
+    (ljc/shell-out! project cp-str prefix cmd jank-args prog-args)))
 
 (def run-cli-options
-  [["-m" "--main NAMESPACE" "override main namespace"]])
+  [["-m" "--main NAMESPACE" "override main namespace"]
+   ["-d" "--debug" "run in the debugger"]])
 
 (defn run!
   "Run your project, starting at the :main entrypoint.
@@ -51,6 +55,17 @@ Calls the -main function in the given namespace."
     (if-let [main (or (:main opts) (:main project))]
       (dispatch-jank project opts "run-main" [main] args)
       (lmain/warn "No :main entrypoint for project."))))
+
+(defn debug!
+  "Run your project under the debugger, starting at the :main entrypoint.
+
+USAGE: lein debug [--] [ARGS...]
+(see lein run)
+
+USAGE: lein debug -m/--main NAMESPACE [--] [ARGS...]
+(see lein run)"
+  [project & args]
+  (apply run! project (conj args "--debug")))
 
 (defn repl!
   "Start a terminal REPL and nREPL server in your :main ns, or the user ns if no
@@ -124,6 +139,7 @@ namespaces or files."
     (dispatch-jank project opts "check-health" [] args)))
 
 (def subtask-kw->var {:run #'run!
+                      :debug #'debug!
                       :repl #'repl!
                       :compile #'compile!
                       :compile-module #'compile-module!
@@ -157,6 +173,9 @@ namespaces or files."
   {:jank     {:name (:name project)}
    :aliases  {"run" ^{:doc "Run your project, starting at the main entrypoint."}
               ["jank" "run"]
+
+              "debug" ^{:doc "Run your project under the debugger, starting at the :main entrypoint."}
+              ["jank" "debug"]
 
               "repl" ^{:doc "Start a terminal REPL in your :main or user ns."}
               ["jank" "repl"]

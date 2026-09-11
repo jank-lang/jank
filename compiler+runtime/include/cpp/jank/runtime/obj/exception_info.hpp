@@ -1,8 +1,13 @@
 #pragma once
 
-/* Windows defines this and it becomes an issue in unity builds. */
-#ifdef exception_info
-  #undef exception_info
+/* MSYS2's excpt.h is included transitively and defines exception_info
+ * as a macro, which conflicts with our class. Undefine it here to
+ * prevent the macro from leaking. */
+#ifdef __MINGW64__
+  #include <excpt.h>
+  #ifdef exception_info
+    #undef exception_info
+  #endif
 #endif
 
 #include <memory>

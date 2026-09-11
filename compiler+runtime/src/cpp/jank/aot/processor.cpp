@@ -2,12 +2,15 @@
 #include <vector>
 #include <cstdlib>
 
+#include <unistd.h>
+
 #include <jtl/result.hpp>
 #include <jtl/string_builder.hpp>
 
 #include <jank/error/aot.hpp>
 #include <jank/error/system.hpp>
 #include <jank/aot/processor.hpp>
+#include <jank/jit/processor.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/util/cli.hpp>
@@ -146,7 +149,7 @@ int main(int argc, const char** argv)
     std::string main_file_path{ (tmp_dir / "jank-main-XXXXXX").string() };
 
     auto const fd{ mkstemp(main_file_path.data()) };
-    ::close(fd);
+    close(fd);
 
     std::ofstream out(main_file_path);
     out << sb.release();
@@ -183,6 +186,14 @@ int main(int argc, const char** argv)
       strdup(util::format("{}/include", jank_resource_dir.string()).c_str()));
     compiler_args.emplace_back(strdup("-L"));
     compiler_args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir.string()).c_str()));
+
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      /* Homebrew. */
+      compiler_args.push_back(strdup("-I/opt/homebrew/include"));
+      /* Macports. */
+      compiler_args.push_back(strdup("-I/opt/local/include"));
+    }
 
     std::stringstream flags{ JANK_JIT_FLAGS };
     std::string flag;
@@ -222,11 +233,6 @@ int main(int argc, const char** argv)
       }
     }
 
-    if constexpr(jtl::current_platform == jtl::platform::macos_like)
-    {
-      compiler_args.push_back(strdup("-L/opt/homebrew/lib"));
-    }
-
     for(auto const &library_dir : util::cli::opts.library_dirs)
     {
       compiler_args.push_back(strdup(util::format("-L{}", library_dir).c_str()));
@@ -242,8 +248,21 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup(util::format("-D{}", define).c_str()));
     }
 
-    /* We always enable debug info. Users can later strip the binary, if they want. */
-    compiler_args.push_back(strdup("-g"));
+    for(auto const &framework : util::cli::opts.frameworks)
+    {
+      compiler_args.emplace_back(strdup("-framework"));
+      compiler_args.emplace_back(strdup(framework.c_str()));
+    }
+
+    /* Either include debug symbols or strip everything from the final executable. */
+    if(util::cli::opts.debug)
+    {
+      compiler_args.push_back(strdup("-g"));
+    }
+    else
+    {
+      compiler_args.emplace_back(strdup("-Wl,--strip-all"));
+    }
 
     compiler_args.push_back(strdup("-std=c++20"));
     compiler_args.push_back(strdup("-Wno-c23-extensions"));
@@ -283,7 +302,7 @@ int main(int argc, const char** argv)
     return compiler_args;
   }
 
-  std::vector<char const *> build_linker_args()
+  jtl::result<std::vector<char const *>, error_ref> build_linker_args()
   {
     std::vector<char const *> linker_args{};
 
@@ -292,6 +311,15 @@ int main(int argc, const char** argv)
       for(auto const &lib : { "-ljank-static-runtime", "-lm", "-lz", "-lzstd" })
       {
         linker_args.push_back(strdup(lib));
+      }
+
+      if constexpr(jtl::current_platform == jtl::platform::macos_like)
+      {
+        linker_args.push_back(strdup("-Wl,-dead_strip"));
+      }
+      else
+      {
+        linker_args.push_back(strdup("-Wl,--gc-sections"));
       }
     }
     else
@@ -312,9 +340,37 @@ int main(int argc, const char** argv)
       linker_args.push_back(strdup(util::format("-Wl,-rpath,{}", library_dir).c_str()));
     }
 
-    for(auto const &lib : util::cli::opts.libs)
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
     {
-      linker_args.push_back(strdup(util::format("-l{}", lib).c_str()));
+      /* Homebrew. */
+      linker_args.push_back(strdup("-L/opt/homebrew/lib"));
+      /* Macports. */
+      linker_args.push_back(strdup("-L/opt/local/lib"));
+    }
+
+    /* Resolve the libs first, since jank supports its own `-l:foo` syntax (to force
+     * static lib selection) which Clang doesn't understand. Once resolved, static libs
+     * are passed to Clang as paths, while dynamic libs keep the usual `-l<name>` form. */
+    auto const resolved_libs{ jit::processor::resolve_libs(util::cli::opts.libs) };
+    if(resolved_libs.is_err())
+    {
+      return error::aot_internal_failure(resolved_libs.expect_err());
+    }
+
+    {
+      auto const &libs{ util::cli::opts.libs };
+      auto const &resolved{ resolved_libs.expect_ok() };
+      for(usize i{}; i < resolved.size(); ++i)
+      {
+        if(resolved[i].is_static)
+        {
+          linker_args.push_back(strdup(resolved[i].lib.c_str()));
+        }
+        else
+        {
+          linker_args.push_back(strdup(util::format("-l{}", libs[i]).c_str()));
+        }
+      }
     }
 
     /* On non-macOS platforms, explicitly link libstdc++.
@@ -399,8 +455,22 @@ int main(int argc, const char** argv)
     compiler_args.push_back(strdup("c++"));
     compiler_args.push_back(strdup(entrypoint_path.c_str()));
 
-    auto const linker_args{ build_linker_args() };
-    std::ranges::copy(linker_args, std::back_inserter(compiler_args));
+    auto const linker_args_res{ build_linker_args() };
+    if(linker_args_res.is_err())
+    {
+      return linker_args_res.expect_err();
+    }
+
+    if(!linker_args_res.expect_ok().empty())
+    {
+      /* Reset Clang's forced language back to file-extension-based detection. Otherwise,
+      * the `-x c++` above would cause any subsequent bare filename argument (such as a
+      * resolved static lib path from `build_linker_args`) to be treated as C++ source
+      * instead of being linked as a library. */
+      compiler_args.push_back(strdup("-x"));
+      compiler_args.push_back(strdup("none"));
+    }
+    std::ranges::copy(linker_args_res.expect_ok(), std::back_inserter(compiler_args));
 
     /* Required because of `strdup` usage and need to manually free the memory.
      * Clang expects C strings that we own. */

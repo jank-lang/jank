@@ -141,7 +141,7 @@ namespace jank::runtime::module
       CloseHandle(fd->hMapping);
       CloseHandle(fd->hFile);
 #else
-      ::close(*fd);
+      close(*fd);
 #endif
       fd.reset();
     }

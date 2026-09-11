@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::cpp::cast::pass_explicit_into_implicit
+          {
+            void foo(std::string_view s)
+            { }
+          }")
+; The explicit cast is to std::string, but then we have an implicit cast into std::string_view.
+; This has caused a stack overflow before, since it's a tricky case.
+(cpp/jank.cpp.cast.pass_explicit_into_implicit.foo (cpp/cast std.string "hi"))
+:success

@@ -41,6 +41,7 @@
         cmakeLinkerFlags = lib.concatStringsSep " " [
           (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/cc-ldflags"))
           "-Wl,-rpath,${llvmPackages.stdenv.cc.libc}/lib"
+          "-L${lib.getLib pkgs.glibc}/lib"
           "-L${lib.getLib llvmPackages.libllvm.lib}/lib"
           "-L${lib.getLib pkgs.bzip2}/lib"
           "-L${lib.getLib pkgs.openssl}/lib"
@@ -106,6 +107,7 @@
               cmakeFlagsArray+=(
                 "-DCMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags}"
                 "-DCMAKE_EXE_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
+                "-Djank_extra_runtime_flags=${lib.escapeShellArg cmakeLinkerFlags}"
                 "-DCMAKE_SHARED_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
                 "-DCMAKE_MODULE_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
               )
@@ -207,6 +209,7 @@
           shellHook = ''
             export CXXFLAGS=${lib.escapeShellArg cmakeCxxFlags}
             export LDFLAGS=${lib.escapeShellArg cmakeLinkerFlags}
+            export JANK_CMAKE_RUNTIME_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}
             export ASAN_OPTIONS=detect_leaks=0
           '';
 

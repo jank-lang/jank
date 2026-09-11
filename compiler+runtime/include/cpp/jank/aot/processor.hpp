@@ -7,7 +7,7 @@
 namespace jank::aot
 {
   jtl::result<std::vector<char const *>, error_ref> build_compiler_args();
-  std::vector<char const *> build_linker_args();
+  jtl::result<std::vector<char const *>, error_ref> build_linker_args();
 
   struct processor
   {

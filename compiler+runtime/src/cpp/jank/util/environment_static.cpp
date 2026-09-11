@@ -23,4 +23,9 @@ namespace jank::util
   {
     throw error::runtime_static_feature_disabled("prelude_hpp_path");
   }
+
+  jtl::immutable_string multi_arch_lib_path()
+  {
+    return "/usr/lib";
+  }
 }

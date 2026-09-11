@@ -3,6 +3,7 @@
 
 #include <clang/Basic/Version.h>
 #include <llvm/TargetParser/Host.h>
+#include <llvm/TargetParser/Triple.h>
 #include <llvm/Support/Program.h>
 
 #include <jtl/string_builder.hpp>
@@ -15,6 +16,98 @@
 
 namespace jank::util
 {
+  /* This is a reduced version of Clang's Linux::getMultiarchTriple from
+   * clang/lib/Driver/ToolChains/Linux.cpp. The original is private to Clang's
+   * Linux toolchain, so keep this mapping in sync for the host architectures
+   * supported by jank. */
+  [[maybe_unused]]
+  static std::string linux_multiarch_triple(llvm::Triple const &target_triple)
+  {
+    auto const arch{ target_triple.getArch() };
+    auto const environment{ target_triple.getEnvironment() };
+
+    if(arch == llvm::Triple::arm || arch == llvm::Triple::thumb)
+    {
+      if(environment == llvm::Triple::GNUEABIHF || environment == llvm::Triple::MuslEABIHF
+         || environment == llvm::Triple::EABIHF)
+      {
+        return "arm-linux-gnueabihf";
+      }
+      return "arm-linux-gnueabi";
+    }
+
+    if(arch == llvm::Triple::armeb || arch == llvm::Triple::thumbeb)
+    {
+      if(environment == llvm::Triple::GNUEABIHF || environment == llvm::Triple::MuslEABIHF
+         || environment == llvm::Triple::EABIHF)
+      {
+        return "armeb-linux-gnueabihf";
+      }
+      return "armeb-linux-gnueabi";
+    }
+
+    if(arch == llvm::Triple::x86)
+    {
+      return "i386-linux-gnu";
+    }
+
+    if(arch == llvm::Triple::x86_64)
+    {
+      if(environment == llvm::Triple::GNUX32)
+      {
+        return "x86_64-linux-gnux32";
+      }
+      return "x86_64-linux-gnu";
+    }
+
+    if(arch == llvm::Triple::aarch64)
+    {
+      return "aarch64-linux-gnu";
+    }
+
+    if(arch == llvm::Triple::aarch64_be)
+    {
+      return "aarch64_be-linux-gnu";
+    }
+
+    if(arch == llvm::Triple::ppc64)
+    {
+      return "powerpc64-linux-gnu";
+    }
+
+    if(arch == llvm::Triple::ppc64le)
+    {
+      return "powerpc64le-linux-gnu";
+    }
+
+    if(arch == llvm::Triple::riscv64)
+    {
+      return "riscv64-linux-gnu";
+    }
+
+    if(arch == llvm::Triple::systemz)
+    {
+      return "s390x-linux-gnu";
+    }
+
+    return target_triple.str();
+  }
+
+  jtl::immutable_string multi_arch_lib_path()
+  {
+    if constexpr(jtl::current_platform == jtl::platform::linux_like)
+    {
+      llvm::Triple const target_triple{ llvm::sys::getDefaultTargetTriple() };
+      auto const multiarch_lib_path{ std::filesystem::path{ "/usr/lib" }
+                                     / linux_multiarch_triple(target_triple) };
+      return multiarch_lib_path.string();
+    }
+    else
+    {
+      return "/usr/lib";
+    }
+  }
+
   /* The binary version is composed of two things:
    *
    * 1. The LLVM target triplet

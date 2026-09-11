@@ -15,6 +15,11 @@
   [["-v" "--verbose" "Enable verbose output"]
    [nil  "--disable-sandbox" "Disable jank-build sandboxing"]])
 
+(def debug-tool
+  (if (contains? #{"mac os x" "darwin"} (string/lower-case (System/getProperty "os.name")))
+    ["lldb" "--"]
+    ["gdb" "--args"]))
+
 (defn parse-opts
   "Process the args using the given clojure.tools.cli option-specs. If given
   invalid arguments, print and exit. Otherwise, returns a vector of the parsed
@@ -103,18 +108,23 @@
     :linked-libraries
     (map (fn [v] (str "-l" v)) value)
 
+    :linked-static-libraries
+    (map (fn [v] (str "-l:" v)) value)
+
+    :linked-frameworks
+    (mapcat (fn [v] ["--framework" v]) value)
+
     ;; pass through to jank-build
     :static?
     []
 
     (lmain/warn (str "Unknown flag " flag))))
 
-(defn verify-jank!
-  "Verify that we can run the jank executable, or crash with the
-  reason we cannot."
-  []
+(defn verify-executable!
+  "Verify that we can run the executable, or crash with the reason we cannot."
+  [args]
   (try
-    (util/sh {} ["jank"])
+    (util/sh {} args)
     (catch Exception e
       ;; Will print a nice message on failure like "Cannot run program
       ;; 'jank': ..."
@@ -125,9 +135,30 @@
                   (build-declarative-flag flag value))
                 (:jank project))))
 
-(defn shell-out! [project classpath command compiler-args runtime-args]
-  (verify-jank!)
-  (let [args (concat ["jank" command "--module-path" classpath]
+(def exit-status-str
+  "Mapping of ISO C99/POSIX exit codes to user-displayable strings."
+  ;; Cargo ref: https://github.com/rust-lang/cargo/blob/e7506208ff1b7f01062e410c419f95628dfdb31b/crates/cargo-util/src/process_error.rs#L118C1-L133C25
+  ;;
+  ;; TODO: Windows doesn't use POSIX signals.
+  {6  "SIGABRT: process abort signal"
+   14 "SIGALRM: alarm clock"
+   8  "SIGFPE: erroneous arithmetic operation"
+   1  "SIGHUP: hangup"
+   4  "SIGILL: illegal instruction"
+   2  "SIGINT: terminal interrupt signal"
+   9  "SIGKILL: kill"
+   13 "SIGPIPE: write on a pipe with no one to read"
+   3  "SIGQUIT: terminal quit signal"
+   11 "SIGSEGV: invalid memory reference"
+   15 "SIGTERM: termination signal"
+   10 "SIGBUS: access to undefined memory"
+   12 "SIGSYS: bad system call"
+   5  "SIGTRAP: trace/breakpoint trap"})
+
+(defn shell-out! [project classpath prefix command compiler-args runtime-args]
+  (verify-executable! ["jank"])
+  (let [args (concat prefix
+                     ["jank" command "--module-path" classpath]
                      ; The normal build dir would be <target dir>/_cache, but we want
                      ; to nest one level deeper, so that files from this project don't
                      ; interfere with files from the dependencies. So we specify our
@@ -150,4 +181,11 @@
                              :dir (:root project)})
                    :exit)]
     (when-not (zero? exit)
+      ;; Exit codes above 128 represent system signals. Ideally we
+      ;; also check WIFSIGNALED but this isn't trivial in a
+      ;; platform-independent way from the JVM.
+      (when (or (util/linux?) (util/macos?))
+        (when-let [exit-str (and (> exit 128) (exit-status-str (- exit 128)))]
+          (binding [*out* *err*]
+            (println "terminated by signal" exit-str))))
       (System/exit exit))))
