@@ -57,7 +57,7 @@
 
 (deftest a-single-module-reload
   (with-backup "src/jank_test/reload"
-    (let [proc (ps/process ["jank" "--module-path" "src" "repl"])
+    (let [proc (ps/process {:err :out} "jank --module-path src repl")
           dependent-module-path "src/jank_test/reload/dependent.cljc"
           dependency-module-path "src/jank_test/reload/dependency.cljc"
           original-dependent-content (slurp dependent-module-path)]
@@ -123,7 +123,7 @@
 
 (deftest reload-all
   (with-backup "src/jank_test/reload_all"
-    (let [proc (ps/process ["jank" "--module-path" "src" "repl"])
+    (let [proc (ps/process {:err :out} "jank --module-path src repl")
           dependent-module-path "src/jank_test/reload_all/dependent.cljc"
           dependency-module-path "src/jank_test/reload_all/dependency.cljc"]
       (with-open [repl-writer (io/writer (:in proc))

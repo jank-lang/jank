@@ -4,6 +4,8 @@
 #include <CppInterOp/CppInterOpInterpreter.h>
 #include <CppInterOp/CppInterOp.h>
 
+#include <cpptrace/from_current.hpp>
+
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/visit.hpp>
@@ -683,5 +685,52 @@ namespace jank::evaluate
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
     return eval(wrap_expression(expr, "cpp_delete", {})).call();
+  }
+
+  bool safe_eval(jtl::immutable_string const &code, read::source_position const &p)
+  {
+    static auto var_1{ __rt_ctx->find_var("clojure.core", "*1") };
+    static auto var_2{ __rt_ctx->find_var("clojure.core", "*2") };
+    static auto var_3{ __rt_ctx->find_var("clojure.core", "*3") };
+    static auto var_e{ __rt_ctx->find_var("clojure.core", "*e") };
+
+    bool success{ false };
+    cpptrace::try_catch(
+      [&] {
+        auto const value{ __rt_ctx->eval_string(code, p).unwrap() };
+        success = true;
+
+        var_3->set(var_2->deref()).expect_ok();
+        var_2->set(var_1->deref()).expect_ok();
+        var_1->set(value).expect_ok();
+      },
+      [&](error_ref const e) { var_e->set(make_box<obj::exception_info>(e)).expect_ok(); },
+      [&](object_ref const e) {
+        if(e.get_type() == runtime::object_type::exception_info)
+        {
+          var_e->set(e).expect_ok();
+        }
+        else
+        {
+          auto const ex{ runtime::ex_info(e.to_string(), {}) };
+          ex->raw_trace
+            = std::make_unique<cpptrace::raw_trace>(cpptrace::raw_trace_from_current_exception());
+          var_e->set(ex).expect_ok();
+        }
+      },
+      [&](std::exception const &e) {
+        auto const ex{ runtime::ex_info(e.what(), {}) };
+        ex->raw_trace
+          = std::make_unique<cpptrace::raw_trace>(cpptrace::raw_trace_from_current_exception());
+        var_e->set(ex).expect_ok();
+      },
+      [] {
+        auto const ex{ runtime::ex_info("uncaught exception", {}) };
+        ex->raw_trace
+          = std::make_unique<cpptrace::raw_trace>(cpptrace::raw_trace_from_current_exception());
+        var_e->set(ex).expect_ok();
+      });
+
+    return success;
   }
 }

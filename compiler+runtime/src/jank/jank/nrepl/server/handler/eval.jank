@@ -31,12 +31,15 @@
                                           [(safe-eval code line col) *ns*])))
         [success res-ns] ret]
     (cond
-      ;; Eval results in error. For now, just report the exception as a value.
-      ;; If we return :exception then CIDER will try to load clojure.stacktrace.
+      ;; Eval results in error.
       (not success)
       [{:out stdout}
        {:err stderr}
-       {:value  (str *e)
+       ;; The error contents will be in :ex for CIDER, but also
+       ;; populate :err for clients which don't specially handle :ex
+       ;; responses.
+       {:err (str *e)}
+       {:ex     (str *e)
         :status [:done :eval-error]}]
 
       ;; Client requests an inspection of the last result.

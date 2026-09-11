@@ -1,0 +1,6 @@
+(ns clojure.stacktrace)
+
+(defn print-cause-trace
+  "Pretty-print an exception_info."
+  ([tr] (print-cause-trace tr nil))
+  ([tr n] (print (str tr))))

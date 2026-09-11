@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/read/source.hpp>
 
 namespace jank::runtime::obj
 {
@@ -102,4 +103,6 @@ namespace jank::evaluate
   runtime::object_ref eval(analyze::expr::cpp_unbox_ref);
   runtime::object_ref eval(analyze::expr::cpp_new_ref);
   runtime::object_ref eval(analyze::expr::cpp_delete_ref);
+
+  bool safe_eval(jtl::immutable_string const &code, read::source_position const &p);
 }
