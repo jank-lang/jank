@@ -1,6 +1,8 @@
 (ns jank.nrepl.server.eval)
 
 (cpp/raw "
+#include <jank/error/report.hpp>
+
 namespace jank::nrepl::server::eval
 {
   using namespace jank;
@@ -22,6 +24,11 @@ namespace jank::nrepl::server::eval
       var_1->set(value).expect_ok();
 
       return true;
+    }
+    catch(error_ref const e)
+    {
+      error::report(e);
+      var_e->set(make_box<obj::exception_info>(e->message, jank_nil));
     }
     catch(object_ref const e)
     {
