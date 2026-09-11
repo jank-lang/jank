@@ -316,9 +316,9 @@ namespace jank::runtime
         /* End of a top-level format specification, process it in-situ. */
         if(depth == 0)
         {
-          auto nargs{ arg_indices.size() };
-          auto next_arg{ [&]() {
-            auto idx{ arg_indices.front() };
+          auto const nargs{ arg_indices.size() };
+          auto const next_arg{ [&]() {
+            auto const idx{ arg_indices.front() };
             arg_indices.pop_front();
 
             if(idx >= args_vec->count())
@@ -332,7 +332,7 @@ namespace jank::runtime
 
           /* Depending on the number of embedded replacement fields we
            * encountered, pop the right number of values off the argument stack. */
-          auto v1{ next_arg() };
+          auto const v1{ next_arg() };
 
           /* Width and precision are the only supported nested field
            * replacements in std::format as of C++20, so we only need to support
@@ -977,7 +977,7 @@ namespace jank::runtime
   {
     /* We need to hold this lock the whole time we're checking, to ensure the thread
      * doesn't finish while we're here checking. */
-    auto locked_state{ future->state.ulock() };
+    auto const locked_state{ future->state.ulock() };
     switch(locked_state->status)
     {
       case obj::future_status::done:

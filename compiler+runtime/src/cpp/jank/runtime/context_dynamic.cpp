@@ -153,7 +153,7 @@ namespace jank::runtime
      * moves the `llvm::Module` held in the `PartialTranslationUnit`. */
     if(truthy(compile_files_var->deref()))
     {
-      auto module_name{ current_module_var->deref().to_string() };
+      auto const module_name{ current_module_var->deref().to_string() };
       write_module(module_name, code).expect_ok();
     }
 

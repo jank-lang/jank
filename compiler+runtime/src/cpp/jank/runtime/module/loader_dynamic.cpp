@@ -201,7 +201,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.cljc = entry;
-      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
+      auto const res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.cljc = entry;
@@ -212,7 +212,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.cpp = entry;
-      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
+      auto const res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.cpp = entry;
@@ -223,7 +223,7 @@ namespace jank::runtime::module
       registered = true;
       loader::entry e;
       e.o = entry;
-      auto res(entries.insert({ path_to_module(module_path), std::move(e) }));
+      auto const res(entries.insert({ path_to_module(module_path), std::move(e) }));
       if(!res.second)
       {
         res.first->second.o = entry;
