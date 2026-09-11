@@ -458,6 +458,10 @@ OPTIONS
           {
             opts.output_target = compilation_target::object;
           }
+          else if(value == "none")
+          {
+            opts.output_target = compilation_target::none;
+          }
           else
           {
             throw util::format("Invalid output type '{}'.", value);

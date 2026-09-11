@@ -132,6 +132,19 @@ namespaces or files."
           test-runner      (generate-test-runner! nses (vec selectors))]
       (dispatch-jank project opts "run" [test-runner] []))))
 
+(defn check!
+  "Check the project for errors without running codegen, starting at
+the :main entrypoint.
+
+USAGE: lein check"
+  [project & args]
+  ;; TODO: a project shouldn't need a main namespace to check.
+  (let [[opts args] (ljc/parse-opts #'compile! args ljc/standard-options)
+        check-opts  ["--output-target" "none"]] ;; don't to codegen
+    (if-let [main (:main project)]
+      (dispatch-jank project opts "compile" (concat [main] check-opts) args)
+      (lmain/warn "No :main entrypoint for project."))))
+
 (defn check-health!
   "Perform a health check on your jank install."
   [project & args]
@@ -143,6 +156,7 @@ namespaces or files."
                       :repl #'repl!
                       :compile #'compile!
                       :compile-module #'compile-module!
+                      :check #'check!
                       :check-health #'check-health!
                       :test #'test!})
 
@@ -188,6 +202,9 @@ namespaces or files."
 
               "test" ^{:doc "Run your project's test suite."}
               ["jank" "test"]
+
+              "check" ^{:doc "Check the project for errors."}
+              ["jank" "check"]
 
               "check-health" ^{:doc "Perform a health check on your jank install."}
               ["jank" "check-health"]}})

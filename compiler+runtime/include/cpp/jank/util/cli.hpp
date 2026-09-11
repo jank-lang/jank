@@ -23,7 +23,8 @@ namespace jank::util::cli
      * If that's not possible, we'll error out. */
     unspecified,
     cpp,
-    object
+    object,
+    none,
   };
 
   constexpr char const *compilation_target_str(compilation_target const target)
@@ -36,6 +37,8 @@ namespace jank::util::cli
         return "cpp";
       case compilation_target::object:
         return "object";
+      case compilation_target::none:
+        return "none";
       default:
         return "unknown";
     }
@@ -51,6 +54,8 @@ namespace jank::util::cli
         return "cpp";
       case compilation_target::object:
         return "o";
+      case compilation_target::none:
+        return "";
       default:
         return "unknown";
     }
