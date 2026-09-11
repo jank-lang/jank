@@ -67,7 +67,7 @@ namespace jank::analyze::step
 
     if(!do_->values.empty())
     {
-      auto &last(do_->values.back());
+      auto const &last(do_->values.back());
       walk(last, [](auto &typed_expr) {
         //using T = std::decay_t<decltype(typed_expr)>;
         typed_expr->needs_box = true;

@@ -428,7 +428,7 @@ namespace jank::runtime
 
   ns_ref context::find_ns(obj::symbol_ref const sym)
   {
-    auto locked_namespaces(namespaces.rlock());
+    auto const locked_namespaces(namespaces.rlock());
     auto const found(locked_namespaces->find(sym));
     if(found != locked_namespaces->end())
     {
@@ -456,7 +456,7 @@ namespace jank::runtime
 
   native_vector<ns_ref> context::all_ns() const
   {
-    auto locked_namespaces(namespaces.rlock());
+    auto const locked_namespaces(namespaces.rlock());
     native_vector<ns_ref> ret;
     ret.reserve(locked_namespaces->size());
     for(auto const p : *locked_namespaces)
@@ -497,7 +497,7 @@ namespace jank::runtime
     obj::symbol_ref const ns_sym{ make_box<obj::symbol>(qualified_name->ns) };
     ns_ref found_ns;
     {
-      auto locked_namespaces(namespaces.rlock());
+      auto const locked_namespaces(namespaces.rlock());
       auto const found{ locked_namespaces->find(ns_sym) };
       if(found != locked_namespaces->end())
       {
@@ -538,7 +538,7 @@ namespace jank::runtime
     obj::symbol_ref const ns_sym{ make_box<obj::symbol>(qualified_sym->ns) };
     ns_ref found_ns;
     {
-      auto locked_namespaces(namespaces.rlock());
+      auto const locked_namespaces(namespaces.rlock());
       auto const found{ locked_namespaces->find(ns_sym) };
       if(found != locked_namespaces->end())
       {
@@ -674,7 +674,7 @@ namespace jank::runtime
     auto bindings(obj::persistent_hash_map::empty());
     {
       auto const thread_id{ std::this_thread::get_id() };
-      auto tbfs_map(thread_binding_frames.rlock());
+      auto const tbfs_map(thread_binding_frames.rlock());
       auto const tbfs(thread_binding_frames->find(thread_id));
       if(tbfs != thread_binding_frames->end() && !tbfs->second.empty())
       {
@@ -759,7 +759,7 @@ namespace jank::runtime
   obj::persistent_hash_map_ref context::get_thread_bindings() const
   {
     auto const thread_id{ std::this_thread::get_id() };
-    auto tbfs_map(thread_binding_frames.rlock());
+    auto const tbfs_map(thread_binding_frames.rlock());
     auto const tbfs{ tbfs_map->find(thread_id) };
     if(tbfs == tbfs_map->end() || tbfs->second.empty())
     {

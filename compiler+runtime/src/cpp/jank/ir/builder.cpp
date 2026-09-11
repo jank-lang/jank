@@ -305,7 +305,7 @@ namespace jank::ir
   {
     static jtl::immutable_string const dot{ "\\." };
     auto const us{ runtime::__rt_ctx->unique_string(qualified_var) };
-    auto var_name{ runtime::munge_and_replace(us, dot, "_") };
+    auto const var_name{ runtime::munge_and_replace(us, dot, "_") };
     mod->lifted_vars.emplace(qualified_var, module::lifted_var{ var_name, false });
     auto const type{ var_type() };
     auto name{ next_ident() };

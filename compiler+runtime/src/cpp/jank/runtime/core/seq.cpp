@@ -982,7 +982,7 @@ namespace jank::runtime
 
         if constexpr(behavior::chunkable<T>)
         {
-          auto ret{ typed_o->chunked_next() };
+          auto const ret{ typed_o->chunked_next() };
           if(ret.is_nil())
           {
             return obj::persistent_list::empty();

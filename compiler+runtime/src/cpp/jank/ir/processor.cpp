@@ -233,7 +233,7 @@ namespace jank::ir
 
     if(arity.fn_ctx->is_recur_recursive)
     {
-      auto recur_shadow{ b.next_shadow() };
+      auto const recur_shadow{ b.next_shadow() };
       native_vector<inst::loop::binding_shadow_details> shadows;
       shadows.reserve(arity.params.size());
       for(auto const param : arity.params)

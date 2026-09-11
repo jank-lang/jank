@@ -75,12 +75,9 @@ namespace jank::runtime::obj
 
   object_ref jit_variadic_closure::call() const
   {
-    switch(arity_flags)
+    if(arity_flags == mask_variadic_arity(0))
     {
-      case mask_variadic_arity(0):
-        return do_call(arity_1, this, object_ref{});
-      default:
-        return do_call(arity_0, this);
+      return do_call(arity_1, this, object_ref{});
     }
     return do_call(arity_0, this);
   }
