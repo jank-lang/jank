@@ -1,6 +1,8 @@
 (ns jank.nrepl.server.eval)
 
 (cpp/raw "
+#include <cpptrace/basic.hpp>
+
 #include <jank/error/report.hpp>
 
 namespace jank::nrepl::server::eval
@@ -31,21 +33,16 @@ namespace jank::nrepl::server::eval
     }
     catch(object_ref const e)
     {
-      visit_object(
-        [&](auto const typed_o) {
-          using T = typename decltype(typed_o)::value_type;
-
-          if constexpr(std::is_same_v<T, obj::exception_info>)
-          {
-            var_e->set(typed_o);
-          }
-          else
-          {
-            var_e->set(make_box<obj::exception_info>(typed_o.to_string(), jank_nil));
-          }
-        },
-        e
-      );
+      if(e.get_type() == runtime::object_type::exception_info)
+      {
+        var_e->set(e);
+      }
+      else
+      {
+        auto const ex{ runtime::ex_info(e.to_string(), {}) };
+        ex->raw_trace = std::make_unique<cpptrace::raw_trace>(cpptrace::generate_raw_trace());
+        var_e->set(ex);
+      }
     }
     catch(std::exception const &e)
     {
