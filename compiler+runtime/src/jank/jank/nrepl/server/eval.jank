@@ -1,61 +1,5 @@
-(ns jank.nrepl.server.eval)
-
-(cpp/raw "
-#include <cpptrace/basic.hpp>
-
-#include <jank/error/report.hpp>
-
-namespace jank::nrepl::server::eval
-{
-  using namespace jank;
-  using namespace jank::runtime;
-
-  inline bool safe_eval(jtl::immutable_string const &code, read::source_position const &p)
-  {
-    static auto var_1{ __rt_ctx->find_var(\"clojure.core\", \"*1\") };
-    static auto var_2{ __rt_ctx->find_var(\"clojure.core\", \"*2\") };
-    static auto var_3{ __rt_ctx->find_var(\"clojure.core\", \"*3\") };
-    static auto var_e{ __rt_ctx->find_var(\"clojure.core\", \"*e\") };
-
-    try
-    {
-      auto const value{ __rt_ctx->eval_string(code, p).unwrap() };
-
-      var_3->set(var_2->deref()).expect_ok();
-      var_2->set(var_1->deref()).expect_ok();
-      var_1->set(value).expect_ok();
-
-      return true;
-    }
-    catch(error_ref const e)
-    {
-      var_e->set(make_box<obj::exception_info>(e));
-    }
-    catch(object_ref const e)
-    {
-      if(e.get_type() == runtime::object_type::exception_info)
-      {
-        var_e->set(e);
-      }
-      else
-      {
-        auto const ex{ runtime::ex_info(e.to_string(), {}) };
-        ex->raw_trace = std::make_unique<cpptrace::raw_trace>(cpptrace::generate_raw_trace());
-        var_e->set(ex);
-      }
-    }
-    catch(std::exception const &e)
-    {
-      var_e->set(make_box<obj::exception_info>(e.what(), jank_nil));
-    }
-    catch(...)
-    {
-      var_e->set(make_box<obj::exception_info>(\"uncaught exception\", jank_nil));
-    }
-
-    return false;
-  }
-}")
+(ns jank.nrepl.server.eval
+  (:include "jank/evaluate.hpp"))
 
 (defn safe-eval
   "Evaluate code similar to `eval`, but catch any errors. Returns whether the
@@ -65,15 +9,11 @@ namespace jank::nrepl::server::eval
   ;; means we can't as easily intercept them. This is unlike java where
   ;; everything goes through System.out/System.err.
 
-  ;; TODO(jank): We can't catch cpp exceptions from jank code, so any evaluation
-  ;; error will crash the server. Instead we create a safe evaluation wrapper in
-  ;; C++ and catch the exceptions there.
-
   (let [p (cpp/jank.read.source_position.
            (cpp/jtl.usize 0)
            (cpp/jtl.usize line)
            (cpp/jtl.usize col))]
-    (cpp/jank.nrepl.server.eval.safe_eval code p)))
+    (cpp/jank.evaluate.safe_eval code p)))
 
 (comment
   (+ 1 2)
