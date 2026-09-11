@@ -2,6 +2,7 @@
 #include <jank/read/parse.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/meta.hpp>
+#include <jank/runtime/rtti.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/module/loader.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -105,10 +106,13 @@ namespace jank::read::parse
      * see if it's one of the types we support. If not, we'll error out.
      * We can do more here, going forward, by supporting various sequences and such,
      * but this will be fine for now. */
-    if(o.get_type() == object_type::persistent_list
-       || o.get_type() == object_type::persistent_vector)
+    if(o.get_type() == object_type::persistent_list)
     {
-      return reparse_nth(o, n);
+      return reparse_nth(expect_object<runtime::obj::persistent_list>(o), n);
+    }
+    else if(o.get_type() == object_type::persistent_vector)
+    {
+      return reparse_nth(expect_object<runtime::obj::persistent_vector>(o), n);
     }
     else
     {
