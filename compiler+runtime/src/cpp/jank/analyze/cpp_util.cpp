@@ -31,7 +31,8 @@ namespace jank::analyze::cpp_util
    * After that failure, Clang gets back into a good state. */
   static void reset_sfinae_state()
   {
-    static_cast<void>(runtime::__rt_ctx->jit_prc.interpreter->Parse("1"));
+    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    static_cast<void>((*locked_interpreter)->Parse("1"));
   }
 
   jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> scope)
@@ -75,12 +76,12 @@ namespace jank::analyze::cpp_util
   jtl::string_result<jtl::ptr<void>>
   instantiate(jtl::ptr<void> const scope, native_vector<Cpp::TemplateArgInfo> const &args)
   {
-    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     /* TODO: Capture the diagnostic output instead of showing it. Then put it together
      * in our own format. Until we have that, we might as well show it. */
     clang::DiagnosticErrorTrap const trap{ diag };
-    clang::Sema::SFINAETrap const sfinae_trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(),
-                                               true };
+    clang::Sema::SFINAETrap const sfinae_trap{ (*locked_interpreter)->getSema(), true };
 
     auto const res{ Cpp::InstantiateTemplate(scope, args.data(), args.size()) };
     if(!res || sfinae_trap.hasErrorOccurred() || trap.hasErrorOccurred())
@@ -190,13 +191,14 @@ namespace jank::analyze::cpp_util
 
   jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal)
   {
-    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     /* We add a new line so that a trailing // comment won't interfere with our code. */
     auto const code{ util::format("using {} = {}\n;", runtime::munge(alias), literal) };
-    auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
+    auto parse_res{ (*locked_interpreter)->Parse(code.c_str()) };
     if(!parse_res || trap.hasErrorOccurred())
     {
       reset_sfinae_state();
@@ -244,7 +246,8 @@ namespace jank::analyze::cpp_util
   jtl::string_result<literal_value_result>
   resolve_literal_value(jtl::immutable_string const &literal)
   {
-    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
 
     auto const alias{ runtime::munge(runtime::__rt_ctx->unique_namespaced_string()) };
@@ -257,7 +260,7 @@ namespace jank::analyze::cpp_util
       alias,
       literal) };
     //util::println("cpp/value code: {}", code);
-    auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
+    auto parse_res{ (*locked_interpreter)->Parse(code.c_str()) };
     if(!parse_res || trap.hasErrorOccurred())
     {
       return err("Unable to parse C++ literal.");
@@ -272,7 +275,7 @@ namespace jank::analyze::cpp_util
       return err("Invalid C++ literal.");
     }
 
-    auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->Execute(*parse_res) };
+    auto exec_res{ (*locked_interpreter)->Execute(*parse_res) };
     if(exec_res)
     {
       return err("Unable to load C++ literal.");
@@ -414,19 +417,20 @@ namespace jank::analyze::cpp_util
    * this for exception catching. */
   void register_rtti(jtl::ptr<void> const type)
   {
-    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     auto const code{ util::format("&typeid({})", Cpp::GetTypeAsString(type)) };
     clang::Value value;
-    auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->ParseAndExecute(code.c_str(), &value) };
+    auto exec_res{ (*locked_interpreter)->ParseAndExecute(code.c_str(), &value) };
     if(exec_res || trap.hasErrorOccurred())
     {
       throw error::codegen_internal_failure(
         util::format("Unable to get RTTI for `{}`.", Cpp::GetTypeAsString(type)));
     }
 
-    auto const lljit{ runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine() };
+    auto const lljit{ (*locked_interpreter)->getExecutionEngine() };
     llvm::orc::SymbolMap symbols;
     llvm::orc::MangleAndInterner interner{ lljit->getExecutionSession(), lljit->getDataLayout() };
     auto const &symbol{ Cpp::MangleRTTI(type) };
@@ -1486,12 +1490,13 @@ namespace jank::analyze::cpp_util
   bool is_trait_convertible(jtl::ptr<void> const type)
   {
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
+    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     Cpp::TemplateArgInfo const arg{ Cpp::GetCanonicalType(
       Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
-    clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
+    clang::Sema::SFINAETrap const trap{ (*locked_interpreter)->getSema(), true };
     Cpp::TCppScope_t instantiation{};
     {
-      auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+      auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
       auto old_client{ diag.takeClient() };
       diag.setClient(new clang::IgnoringDiagConsumer{}, true);
       util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };

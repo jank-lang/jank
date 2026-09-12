@@ -10,7 +10,8 @@ TEST_SUITE("analyze/cpp_util")
 {
   TEST_CASE("resolve_candidates orders candidates by relevance")
   {
-    auto parse_result{ jank::runtime::__rt_ctx->jit_prc.interpreter->Parse(R"cpp(
+    auto locked_interpreter{ jank::runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto parse_result{ (*locked_interpreter)->Parse(R"cpp(
       namespace jank::test::resolve_candidates
       {
         int foo(int);
@@ -71,7 +72,8 @@ TEST_SUITE("analyze/cpp_util")
 
   TEST_CASE("resolve_candidates ranks access/const violations above conversion failures")
   {
-    auto parse_result{ jank::runtime::__rt_ctx->jit_prc.interpreter->Parse(R"cpp(
+    auto locked_interpreter{ jank::runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto parse_result{ (*locked_interpreter)->Parse(R"cpp(
       namespace jank::test::resolve_candidates_members
       {
         struct widget

@@ -216,7 +216,8 @@ namespace jank::jit
 
   void install_object_tracking_plugin()
   {
-    auto const ee{ runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine() };
+    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto const ee{ (*locked_interpreter)->getExecutionEngine() };
     auto &ol{ ee->getObjLinkingLayer() };
     auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
     oll.addPlugin(std::make_shared<object_tracking_plugin>(global_tracker()));
