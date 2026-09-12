@@ -89,12 +89,13 @@ namespace jank::runtime
     if(redefined)
     {
       auto const v{ expect_object<var>(*found_var) };
-      error::warn(
-        util::format("'{}' already referred to {} in namespace '{}' but has been replaced by {}",
-                     unqualified_sym->to_string(),
-                     v->to_code_string(),
-                     name->to_string(),
-                     new_var->to_code_string()));
+      util::print("{}",
+                  error::warn(util::format(
+                    "'{}' already referred to {} in namespace '{}' but has been replaced by {}",
+                    unqualified_sym->to_string(),
+                    v->to_code_string(),
+                    name->to_string(),
+                    new_var->to_code_string())));
     }
     *locked_vars
       = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(unqualified_sym, new_var));

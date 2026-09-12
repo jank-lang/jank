@@ -9,6 +9,7 @@
 #include <jank/runtime/core/make_box.hpp>
 #include <jank/util/try.hpp>
 #include <jank/util/fmt.hpp>
+#include <jank/error/report.hpp>
 
 namespace jank::runtime::obj
 {
@@ -16,6 +17,12 @@ namespace jank::runtime::obj
     : object{ obj_type, obj_behaviors }
     , message{ message }
     , data{ data }
+  {
+  }
+
+  exception_info::exception_info(error_ref error)
+    : object{ obj_type, obj_behaviors }
+    , error{ error }
   {
   }
 
@@ -47,6 +54,19 @@ namespace jank::runtime::obj
     return make_box<obj::persistent_hash_map>(trans.persistent());
   }
 
+  jtl::immutable_string exception_info::to_string() const
+  {
+    /* Pretty-print the error_ref if we have it or else fall back to the exception data. */
+    if(error.is_some())
+    {
+      return jank::error::report(error.unwrap());
+    }
+    else
+    {
+      return to_code_string();
+    }
+  }
+
   jtl::immutable_string exception_info::to_code_string() const
   {
     const_cast<exception_info *>(this)->resolve();
@@ -62,20 +82,23 @@ namespace jank::runtime::obj
       util::format_to(sb, "\n  {}", cause_to_via(cause).to_code_string());
     }
     util::format_to(sb, "]\n");
-    util::format_to(sb, " :trace\n [");
-    bool needs_indent{};
-    for(auto const &frame : resolved_trace->frames)
+    if(resolved_trace)
     {
-      if(needs_indent)
+      util::format_to(sb, " :trace\n [");
+      bool needs_indent{};
+      for(auto const &frame : resolved_trace->frames)
       {
-        util::format_to(sb, "\n  ");
+        if(needs_indent)
+        {
+          util::format_to(sb, "\n  ");
+        }
+
+        util::format_to(sb, "{}", frame_to_vec(frame).to_code_string());
+
+        needs_indent = true;
       }
-
-      util::format_to(sb, "{}", frame_to_vec(frame).to_code_string());
-
-      needs_indent = true;
+      util::format_to(sb, "]}");
     }
-    util::format_to(sb, "]}");
     return sb.release();
   }
 
@@ -113,9 +136,12 @@ namespace jank::runtime::obj
     trans.insert_unique(via_kw, make_box<obj::persistent_vector>(via_trans.persistent()));
 
     runtime::detail::native_transient_vector trace_trans;
-    for(auto const &frame : resolved_trace->frames)
+    if(resolved_trace)
     {
-      trace_trans.push_back(frame_to_vec(frame));
+      for(auto const &frame : resolved_trace->frames)
+      {
+        trace_trans.push_back(frame_to_vec(frame));
+      }
     }
     trans.insert_unique(trace_kw, make_box<obj::persistent_vector>(trace_trans.persistent()));
 
