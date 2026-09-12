@@ -1,5 +1,6 @@
 (ns jank.nrepl.server.handler.eval
-  (:require [jank.nrepl.server.handler :refer [handle-message]]
+  (:require [clojure.string :refer [blank?]]
+            [jank.nrepl.server.handler :refer [handle-message]]
             [jank.nrepl.server.eval :refer [safe-eval]]
             [jank.nrepl.server.capture :refer [with-capture]]
             [jank.nrepl.server.inspect :refer [inspect-str]]))
@@ -33,8 +34,8 @@
     (cond
       ;; Eval results in error.
       (not success)
-      [{:out stdout}
-       {:err stderr}
+      [(when-not (blank? stdout) {:out stdout})
+       (when-not (blank? stderr) {:err stderr})
        ;; The error contents will be in :ex for CIDER, but also
        ;; populate :err for clients which don't specially handle :ex
        ;; responses.
@@ -49,8 +50,8 @@
 
       ;; Normal eval result.
       :else
-      [{:out stdout}
-       {:err stderr}
+      [(when-not (blank? stdout) {:out stdout})
+       (when-not (blank? stderr) {:err stderr})
        {:value  (pr-str *1)
         :ns     (str res-ns)}
        ;; CIDER expects :status in a separate response message
