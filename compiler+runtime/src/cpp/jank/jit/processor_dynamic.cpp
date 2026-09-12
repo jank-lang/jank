@@ -427,6 +427,8 @@ namespace jank::jit
 
   runtime::object_ref processor::eval(ir::module const &module) const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ interpreter_mutex };
+
     auto const generated{ codegen::gen_cpp(module) };
     eval_string(generated.declaration);
     native_vector<u8> arities;
@@ -447,6 +449,8 @@ namespace jank::jit
                                                  native_vector<u8> const &arities,
                                                  bool const is_variadic) const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ interpreter_mutex };
+
     /* TODO: Clean up with template. */
     if(is_variadic)
     {
@@ -568,11 +572,15 @@ namespace jank::jit
 
   void processor::eval_string(jtl::immutable_string const &s) const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ interpreter_mutex };
+
     eval_string(s, nullptr);
   }
 
   void processor::eval_string(jtl::immutable_string const &s, clang::Value * const ret) const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ interpreter_mutex };
+
     profile::timer const timer{ "jit eval_string" };
     auto formatted{ s };
 
@@ -592,6 +600,8 @@ namespace jank::jit
 
   void processor::load_object(jtl::immutable_string_view const &path) const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ interpreter_mutex };
+
     auto const ee{ interpreter->getExecutionEngine() };
     auto file{ llvm::MemoryBuffer::getFile(std::string_view{ path }) };
     if(!file)
@@ -659,6 +669,8 @@ namespace jank::jit
 
   void processor::load_ir_module(llvm::orc::ThreadSafeModule &&m) const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ interpreter_mutex };
+
     auto const &module_name{ m.getModuleUnlocked()->getName() };
     profile::timer const timer{ util::format(
       "jit ir module {}",
@@ -673,6 +685,8 @@ namespace jank::jit
   void processor::load_bitcode(jtl::immutable_string const &module,
                                jtl::immutable_string_view const &bitcode) const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ interpreter_mutex };
+
     auto ctx{ std::make_unique<llvm::LLVMContext>() };
     llvm::SMDiagnostic err{};
     llvm::MemoryBufferRef const buf{
@@ -691,6 +705,8 @@ namespace jank::jit
 
   jtl::string_result<void> processor::remove_symbol(jtl::immutable_string const &name) const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ interpreter_mutex };
+
     auto const ee{ interpreter->getExecutionEngine() };
     llvm::orc::SymbolNameSet to_remove{};
     to_remove.insert(ee->mangleAndIntern(name.c_str()));
@@ -705,6 +721,8 @@ namespace jank::jit
 
   jtl::string_result<void *> processor::find_symbol(jtl::immutable_string const &name) const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ interpreter_mutex };
+
     if(auto symbol{ interpreter->getSymbolAddress(name.c_str()) })
     {
       return symbol.get().toPtr<void *>();
@@ -927,11 +945,15 @@ namespace jank::jit
 
   void processor::load_dynamic_library(jtl::immutable_string const &path) const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ interpreter_mutex };
+
     load_dynamic_library_impl(*this, path, 0);
   }
 
   void processor::load_static_library(jtl::immutable_string const &path) const
   {
+    std::lock_guard<std::recursive_mutex> const lock{ interpreter_mutex };
+
     auto const ee{ interpreter->getExecutionEngine() };
     llvm::cantFail(ee->linkStaticLibraryInto(ee->getMainJITDylib(), path.c_str()));
   }
