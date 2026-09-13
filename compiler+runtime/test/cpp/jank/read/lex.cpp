@@ -117,17 +117,6 @@ namespace jank::read::lex
     return os << "]";
   }
 
-  template <typename T, usize N>
-  static std::ostream &operator<<(std::ostream &os, std::array<T, N> const &rs)
-  {
-    os << "[ ";
-    for(auto const &r : rs)
-    {
-      os << r << " ";
-    }
-    return os << "]";
-  }
-
   static std::ostream &operator<<(std::ostream &os, jtl::result<token, error_ref> const &r)
   {
     if(r.is_ok())

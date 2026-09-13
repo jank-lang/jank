@@ -164,7 +164,7 @@ namespace jank::codegen
        * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
        * our object. */
       [[maybe_unused]]
-      auto * const root{ new(NoGC) object *{ o.raw() } };
+      auto const * const root{ new(NoGC) object *{ o.raw() } };
       auto const type{ literal_type(o, true) };
       auto const ptr{ static_cast<void *>(o.raw()) };
       jtl::immutable_string fmt_str;

@@ -162,7 +162,7 @@ namespace jank::runtime
 
   ns_ref ns::find_alias(obj::symbol_ref const sym) const
   {
-    auto locked_aliases(aliases.rlock());
+    auto const locked_aliases(aliases.rlock());
     auto const found((*locked_aliases)->data.find(sym));
     if(found)
     {
@@ -193,7 +193,7 @@ namespace jank::runtime
 
   obj::symbol_ref ns::find_referred_global(obj::symbol_ref const sym)
   {
-    auto locked_globals(referred_cpp_globals.rlock());
+    auto const locked_globals(referred_cpp_globals.rlock());
     auto const found{ (*locked_globals)->data.find(sym) };
     return found ? try_object<obj::symbol>(*found) : obj::symbol_ref{};
   }

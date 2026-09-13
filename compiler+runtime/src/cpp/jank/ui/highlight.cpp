@@ -312,7 +312,7 @@ namespace jank::ui
           break;
         case clang::tok::raw_identifier:
           {
-            auto &II{ idents.get(text) };
+            auto const &II{ idents.get(text) };
             sb(II.getTokenID() != clang::tok::identifier
                  ? text_style::bright_cyan | text_style::bold
                  : text_style::reset);

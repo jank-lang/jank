@@ -70,7 +70,7 @@ namespace std
   {
     size_t operator()(jank::runtime::obj::keyword const &o) const
     {
-      static auto hasher(std::hash<jank::runtime::obj::keyword_ref>{});
+      static auto const hasher(std::hash<jank::runtime::obj::keyword_ref>{});
       return hasher(const_cast<jank::runtime::obj::keyword *>(&o));
     }
   };

@@ -96,8 +96,9 @@ namespace jank::analyze
     for(auto const &crossed_fn : result.crossed_fns)
     {
       /* We intentionally copy the binding here. */
-      auto res(crossed_fn->captures.emplace(result.binding->name,
-                                            local_capture{ *result.binding, result.binding }));
+      auto const res(
+        crossed_fn->captures.emplace(result.binding->name,
+                                     local_capture{ *result.binding, result.binding }));
 
       res.first->second.binding.is_capture = true;
       /* We know it needs a box, since it's captured. */

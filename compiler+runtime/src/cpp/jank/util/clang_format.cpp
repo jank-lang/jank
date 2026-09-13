@@ -62,7 +62,7 @@ namespace jank::util
   {
     std::string const code{ source };
     auto const &style(clang_format_style());
-    auto replacements(reformat(style, code, llvm::ArrayRef(tooling::Range(0, code.size()))));
+    auto const replacements(reformat(style, code, llvm::ArrayRef(tooling::Range(0, code.size()))));
     auto formatted_code(tooling::applyAllReplacements(code, replacements));
     if(!formatted_code)
     {

@@ -280,7 +280,7 @@ namespace jank::jit
         continue;
       }
 
-      auto token{ read_token(script, position, range.end) };
+      auto const token{ read_token(script, position, range.end) };
       if(token.empty())
       {
         continue;

@@ -677,7 +677,7 @@ namespace jank::read::parse
     {
       return next_token_result.err().unwrap();
     }
-    auto next_token(next_token_result.expect_ok());
+    auto const next_token(next_token_result.expect_ok());
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -1297,7 +1297,7 @@ namespace jank::read::parse
     {
       auto const front(pending_forms.begin());
 
-      for(auto &i : spliced_forms)
+      for(auto const &i : spliced_forms)
       {
         pending_forms.insert(front, i);
       }
@@ -1481,7 +1481,7 @@ namespace jank::read::parse
       }
       else if(sym->ns.empty() && sym->name != "&")
       {
-        auto var(__rt_ctx->find_var(sym));
+        auto const var(__rt_ctx->find_var(sym));
         if(var.is_nil())
         {
           sym = make_box<obj::symbol>(__rt_ctx->current_ns()->name->name, sym->name);
