@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include <unistd.h>
+
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Basic/DiagnosticIDs.h>
 #include <clang/Basic/DiagnosticOptions.h>
@@ -239,7 +241,7 @@ namespace jank::util
       return virtual_path;
     }
 
-    auto dev_path{ jank_path / "incremental.pch" };
+    auto const dev_path{ jank_path / "incremental.pch" };
     if(std::filesystem::exists(dev_path))
     {
       return dev_path.string();
@@ -319,7 +321,7 @@ namespace jank::util
     }
 
     jank_debug_assert(runtime::__rt_ctx);
-    return result
-      = runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine()->getTargetTriple().str();
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    return result = (*locked_interpreter)->getExecutionEngine()->getTargetTriple().str();
   }
 }

@@ -23,5 +23,7 @@ namespace jank
     highlight_str(runtime::module::file_view const &code, usize line_start, usize line_end);
 
     void highlight_for_ic(ic_highlight_env_t * const henv, jtl::immutable_string_view const input);
+
+    jtl::immutable_string highlight_cpp(jtl::immutable_string const &code);
   }
 }

@@ -96,7 +96,7 @@ namespace std
   size_t hash<jank::analyze::expr::arity_key>::operator()(
     jank::analyze::expr::arity_key const &k) const noexcept
   {
-    static auto hasher(std::hash<decltype(jank::analyze::expr::arity_key::param_count)>{});
+    static auto const hasher(std::hash<decltype(jank::analyze::expr::arity_key::param_count)>{});
     return jank::hash::combine(hasher(k.param_count), k.is_variadic);
   }
 }

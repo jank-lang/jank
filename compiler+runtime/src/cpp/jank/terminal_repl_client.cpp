@@ -4,6 +4,8 @@
 #include <set>
 #include <string>
 
+#include <unistd.h>
+
 #include <isocline.h>
 
 #include <jtl/terminal.hpp>

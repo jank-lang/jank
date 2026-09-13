@@ -54,8 +54,19 @@ Adds the `-I path` flag to the jank invocation. The path should be absolute.
 Adds the `-L path` flag to the jank invocation. The path should be absolute.
 
 #### `jank-build::link-library=lib`
-Adds the `-l lib` flag to the jank invocation. Library names, relative paths,
-file names, and absolute paths are supported.
+Adds the `-l lib` flag to the jank invocation, which supports both static and dynamic libraries.
+If both are present, dynamic libraries will be preferred, which matches Clang's
+behavior. Library names, relative paths, file names, and absolute paths are supported.
+
+#### `jank-build::link-static-library=lib`
+Adds the `-l:lib` flag to the jank invocation, which is similar to the `-l` flag
+but it forces the linked library to be static. If no static library is found, an error is raised.
+Library names, relative paths, file names, and absolute paths are supported.
+
+#### `jank-build::link-framework=lib`
+Adds the `--framework lib` flags to the jank invocation, which maps to the
+`-framework lib` flag for Clang. This is specific to macOS, but is needed to
+link some things like OpenGL.
 
 ### Re-run conditions
 Re-run condition directives tell the jank build system when to re-run the build
@@ -76,8 +87,9 @@ Informs the jank build system to re-run this build script if the environment
 variable `FOO` changes. This is mainly expected to be used for variables like
 `CC` and `CXX`, but anything can work.
 
-Note: If no `rerun-if-env-changed` directive is provided, no environment
-variables will be watched.
+Note: The following variables will be watched by default and cannot be unwatched.
+
+- `PKG_CONFIG_PATH`
 
 ## Finding or building things
 The second thing build scripts can do is prepare files for jank consumption.

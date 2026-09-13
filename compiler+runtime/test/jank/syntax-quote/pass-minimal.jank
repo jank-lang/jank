@@ -1,0 +1,79 @@
+; Every form read from a file carries `:jank/source` metadata, so the code generated
+; by syntax quoting is always wrapped in a `with-meta` call. We use `second` here to
+; skip over the `with-meta` and grab the value.
+(defn expansion [quoted-syntax-quoted-form]
+  (second quoted-syntax-quoted-form))
+
+; Empty collections need no scaffolding at all.
+(assert (= [] (expansion '`[])) (expansion '`[]))
+(assert (= [] `[]) `[])
+(assert (= #{} (expansion '`#{})) (expansion '`#{}))
+(assert (= #{} `#{}) `#{})
+(assert (= {} `{}) `{})
+(assert (= '() `()) `())
+
+; Literal collections stay literal.
+(assert (= '[1 2 3] (expansion '`[1 2 3])) (expansion '`[1 2 3]))
+(assert (= [1 2 3] `[1 2 3]) `[1 2 3])
+(assert (= '#{1 2 3} (expansion '`#{1 2 3})) (expansion '`#{1 2 3}))
+
+; Normal unquoting.
+(assert (= '[a] (expansion '`[~a])) (expansion '`[~a]))
+(assert (= '#{a b} (expansion '`#{~a ~b})) (expansion '`#{~a ~b}))
+(assert (= '[a b c] (expansion '`[~a ~b ~c])) (expansion '`[~a ~b ~c]))
+(assert (= '(clojure.core/list a b) (expansion '`(~a ~b))) (expansion '`(~a ~b)))
+(let [a 1]
+  (assert (= [a] `[~a])))
+(let [a 1 b 2 c 3]
+  (assert (= [a b c] `[~a ~b ~c])))
+(let [a 1 b 2]
+  (assert (= (list a b) `(~a ~b))))
+(let [a 1 b 2]
+  (assert (= #{a b} `#{~a ~b})))
+(let [a :a b :b]
+  (assert (= {a b} `{~a ~b})))
+
+; Mixed literal + unquote.
+(assert (= '[1 a 3] (expansion '`[1 ~a 3])) (expansion '`[1 ~a 3]))
+(let [a 2]
+  (assert (= [1 a 3] `[1 ~a 3])))
+
+; Splicing a single value doesn't need `concat`.
+(assert (= '(clojure.core/vec a) (expansion '`[~@a])) (expansion '`[~@a]))
+(assert (= '(clojure.core/seq a) (expansion '`(~@a))) (expansion '`(~@a)))
+(assert (= '(clojure.core/set a) (expansion '`#{~@a})) (expansion '`#{~@a}))
+(let [a [1 2 3]]
+  (assert (= a `[~@a])))
+(let [a '(1 2 3)]
+  (assert (= a `(~@a))))
+(let [a #{1 2 3}]
+  (assert (= a `#{~@a})))
+
+; Splicing in literals results in a literal.
+(let [a [2 3]]
+  (assert (= [1 2 3 4] `[1 ~@a 4])))
+(let [a '(2 3)]
+  (assert (= '(1 2 3 4) `(1 ~@a 4))))
+(let [a [1 2] b [3 4]]
+  (assert (= [0 1 2 3 4 5] `[0 ~@a ~@b 5])))
+(let [a [2] b [4]]
+  (assert (= [1 2 3 4 5] `[1 ~@a 3 ~@b 5])))
+
+; Splicing a literal vector/set written directly at the splice site is flattened.
+(assert (= '[1 two three 4] (expansion '`[1 ~@[two three] 4]))
+        (expansion '`[1 ~@[two three] 4]))
+(assert (= '(clojure.core/list 1 two three 4) (expansion '`(1 ~@[two three] 4)))
+        (expansion '`(1 ~@[two three] 4)))
+(assert (= '#{one two three} (expansion '`#{~@#{one two three}}))
+        (expansion '`#{~@#{one two three}}))
+(let [two 2 three 3]
+  (assert (= [1 2 3 4] `[1 ~@[two three] 4]))
+  (assert (= (list 1 2 3 4) `(1 ~@[two three] 4))))
+(let [one 1 two 2 three 3]
+  (assert (= #{1 2 3} `#{~@#{one two three}})))
+
+; A literal splice next to a dynamic splice still only uses `concat` on the dynamic part.
+(let [a [3]]
+  (assert (= [1 2 3 4] `[1 ~@[2] ~@a 4])))
+
+:success

@@ -126,7 +126,6 @@ TODO:
       * [analyze/invalid-cpp-capture](reference/error/analyze/invalid-cpp-capture.md)
       * [analyze/invalid-cpp-position](reference/error/analyze/invalid-cpp-position.md)
       * [analyze/mismatched-if-types](reference/error/analyze/mismatched-if-types.md)
-      * [analyze/invalid-cpp-function-call](reference/error/analyze/invalid-cpp-function-call.md)
       * [analyze/invalid-cpp-call](reference/error/analyze/invalid-cpp-call.md)
       * [analyze/invalid-cpp-conversion](reference/error/analyze/invalid-cpp-conversion.md)
       * [analyze/invalid-cpp-symbol](reference/error/analyze/invalid-cpp-symbol.md)

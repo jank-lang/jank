@@ -88,7 +88,6 @@ namespace jank::error
     analyze_invalid_cpp_operator_call,
     analyze_invalid_cpp_constructor_call,
     analyze_invalid_cpp_member_call,
-    analyze_invalid_cpp_function_call,
     analyze_invalid_cpp_call,
     analyze_invalid_cpp_conversion,
     analyze_invalid_cpp_symbol,
@@ -183,6 +182,32 @@ namespace jank::error
     kind kind{ kind::error };
   };
 
+  enum class argument_conversion_type : u8
+  {
+    none,
+    implicit,
+    trait,
+    invalid
+  };
+
+  struct argument
+  {
+    jtl::immutable_string name;
+    jtl::ptr<void> arg_type;
+    jtl::ptr<void> param_type;
+    argument_conversion_type conversion{ argument_conversion_type::none };
+  };
+
+  struct candidate
+  {
+    jtl::immutable_string signature;
+    jtl::immutable_string source;
+    jtl::immutable_string reason;
+    jtl::immutable_string clang_reason;
+    native_vector<argument> arguments;
+    bool viable{};
+  };
+
   /* TODO: We leak the stack trace. See if we can get these errors off the GC heap. */
   struct base
   {
@@ -246,6 +271,7 @@ namespace jank::error
     void sort_notes();
     jtl::ref<base> add_usage(read::source const &usage_source);
     jtl::ref<base> add_fallback_usage(read::source const &usage_source);
+    jtl::ref<base> add_expansion_note(runtime::object_ref const expansion);
 
     kind kind{};
     jtl::immutable_string message;
@@ -253,7 +279,8 @@ namespace jank::error
     native_vector<note> notes;
     jtl::ptr<base> cause;
     std::unique_ptr<cpptrace::raw_trace> trace;
-    /* TODO: context */
+    native_vector<candidate> candidates;
+
     /* TODO: suggestions */
   };
 

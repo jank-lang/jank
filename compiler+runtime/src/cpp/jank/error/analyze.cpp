@@ -253,18 +253,29 @@ namespace jank::error
     return make_error(kind::analyze_mismatched_if_types, message, source, expansion);
   }
 
-  error_ref analyze_invalid_cpp_function_call(jtl::immutable_string const &message,
-                                              read::source const &source,
-                                              runtime::object_ref const expansion)
-  {
-    return make_error(kind::analyze_invalid_cpp_function_call, message, source, expansion);
-  }
-
   error_ref analyze_invalid_cpp_call(jtl::immutable_string const &message,
                                      read::source const &source,
                                      runtime::object_ref const expansion)
   {
     return make_error(kind::analyze_invalid_cpp_call, message, source, expansion);
+  }
+
+  error_ref analyze_invalid_cpp_call(jtl::immutable_string const &message,
+                                     native_vector<error::candidate> const &candidates)
+  {
+    auto const ret{ make_error(kind::analyze_invalid_cpp_call, message, read::source::unknown()) };
+    ret->candidates = candidates;
+    return ret;
+  }
+
+  error_ref analyze_invalid_cpp_call(jtl::immutable_string const &message,
+                                     native_vector<error::candidate> const &candidates,
+                                     read::source const &source,
+                                     runtime::object_ref const expansion)
+  {
+    auto const ret{ make_error(kind::analyze_invalid_cpp_call, message, source, expansion) };
+    ret->candidates = candidates;
+    return ret;
   }
 
   error_ref

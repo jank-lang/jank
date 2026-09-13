@@ -31,7 +31,8 @@ namespace jank::analyze::cpp_util
    * After that failure, Clang gets back into a good state. */
   static void reset_sfinae_state()
   {
-    static_cast<void>(runtime::__rt_ctx->jit_prc.interpreter->Parse("1"));
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    static_cast<void>((*locked_interpreter)->Parse("1"));
   }
 
   jtl::string_result<void> instantiate_if_needed(jtl::ptr<void> scope)
@@ -75,12 +76,12 @@ namespace jank::analyze::cpp_util
   jtl::string_result<jtl::ptr<void>>
   instantiate(jtl::ptr<void> const scope, native_vector<Cpp::TemplateArgInfo> const &args)
   {
-    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     /* TODO: Capture the diagnostic output instead of showing it. Then put it together
      * in our own format. Until we have that, we might as well show it. */
     clang::DiagnosticErrorTrap const trap{ diag };
-    clang::Sema::SFINAETrap const sfinae_trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(),
-                                               true };
+    clang::Sema::SFINAETrap const sfinae_trap{ (*locked_interpreter)->getSema(), true };
 
     auto const res{ Cpp::InstantiateTemplate(scope, args.data(), args.size()) };
     if(!res || sfinae_trap.hasErrorOccurred() || trap.hasErrorOccurred())
@@ -149,12 +150,12 @@ namespace jank::analyze::cpp_util
             auto const old_scope_name{ Cpp::GetQualifiedName(old_scope) };
             if(old_scope_name.empty())
             {
-              return err(util::format("Unable to find '{}' within the global namespace.", subs));
+              return err(util::format("Unable to find `{}` within the global namespace.", subs));
             }
             else
             {
               return err(
-                util::format("Unable to find '{}' within namespace '{}'.", subs, old_scope_name));
+                util::format("Unable to find `{}` within namespace `{}`.", subs, old_scope_name));
             }
           }
           if(auto const res{ instantiate_if_needed(fns[0]) }; res.is_err())
@@ -173,7 +174,7 @@ namespace jank::analyze::cpp_util
       if(!scope)
       {
         return err(
-          util::format("Unable to find '{}' within namespace '{}' while trying to resolve '{}'.",
+          util::format("Unable to find `{}` within namespace `{}` while trying to resolve `{}`.",
                        subs,
                        Cpp::GetQualifiedName(old_scope),
                        sym));
@@ -190,13 +191,14 @@ namespace jank::analyze::cpp_util
 
   jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal)
   {
-    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
 
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     /* We add a new line so that a trailing // comment won't interfere with our code. */
     auto const code{ util::format("using {} = {}\n;", runtime::munge(alias), literal) };
-    auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
+    auto parse_res{ (*locked_interpreter)->Parse(code.c_str()) };
     if(!parse_res || trap.hasErrorOccurred())
     {
       reset_sfinae_state();
@@ -244,7 +246,8 @@ namespace jank::analyze::cpp_util
   jtl::string_result<literal_value_result>
   resolve_literal_value(jtl::immutable_string const &literal)
   {
-    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
 
     auto const alias{ runtime::munge(runtime::__rt_ctx->unique_namespaced_string()) };
@@ -257,7 +260,7 @@ namespace jank::analyze::cpp_util
       alias,
       literal) };
     //util::println("cpp/value code: {}", code);
-    auto parse_res{ runtime::__rt_ctx->jit_prc.interpreter->Parse(code.c_str()) };
+    auto parse_res{ (*locked_interpreter)->Parse(code.c_str()) };
     if(!parse_res || trap.hasErrorOccurred())
     {
       return err("Unable to parse C++ literal.");
@@ -272,7 +275,7 @@ namespace jank::analyze::cpp_util
       return err("Invalid C++ literal.");
     }
 
-    auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->Execute(*parse_res) };
+    auto exec_res{ (*locked_interpreter)->Execute(*parse_res) };
     if(exec_res)
     {
       return err("Unable to load C++ literal.");
@@ -316,20 +319,33 @@ namespace jank::analyze::cpp_util
     return ret;
   }
 
+  jtl::immutable_string get_qualified_name_helper(jtl::ptr<void> const scope, bool const truncated)
+  {
+    auto res{ truncated ? Cpp::GetTruncatedName(scope) : Cpp::GetQualifiedCompleteName(scope) };
+    if(res == "<unnamed>")
+    {
+      if(truncated)
+      {
+        res = Cpp::GetTypeAsTruncatedString(Cpp::GetTypeFromScope(scope));
+      }
+      else
+      {
+        res = Cpp::GetTypeAsString(Cpp::GetTypeFromScope(scope));
+      }
+    }
+    return res;
+  }
+
   /* For some scopes, CppInterOp will give an <unnamed> result here. That's not
    * helpful for error reporting, so we turn that into the full type name if
    * needed. */
   jtl::immutable_string get_qualified_name(jtl::ptr<void> const scope)
   {
-    auto res{ Cpp::GetQualifiedCompleteName(scope) };
-    if(res == "<unnamed>")
-    {
-      res = Cpp::GetTypeAsString(Cpp::GetTypeFromScope(scope));
-    }
-    return res;
+    return get_qualified_name_helper(scope, false);
   }
 
-  jtl::immutable_string get_qualified_type_name(jtl::ptr<void> const type)
+  static jtl::immutable_string
+  get_qualified_type_name_helper(jtl::ptr<void> const type, bool const truncated)
   {
     if(type == untyped_object_ptr_type())
     {
@@ -354,7 +370,7 @@ namespace jank::analyze::cpp_util
     {
       if(auto const *alias_decl{ alias->getDecl() }; alias_decl)
       {
-        return get_qualified_name(alias_decl);
+        return get_qualified_name_helper(alias_decl, truncated);
       }
     }
 
@@ -371,7 +387,7 @@ namespace jank::analyze::cpp_util
 
     if(auto const scope{ Cpp::GetScopeFromType(type) }; scope)
     {
-      auto name{ get_qualified_name(scope) };
+      auto name{ get_qualified_name_helper(scope, truncated) };
       if(Cpp::IsPointerType(type))
       {
         name = name + "*";
@@ -379,26 +395,42 @@ namespace jank::analyze::cpp_util
       return name;
     }
 
+    if(truncated)
+    {
+      return Cpp::GetTypeAsTruncatedString(type);
+    }
+
     return Cpp::GetTypeAsString(type);
+  }
+
+  jtl::immutable_string get_qualified_type_name(jtl::ptr<void> const type)
+  {
+    return get_qualified_type_name_helper(type, false);
+  }
+
+  jtl::immutable_string get_qualified_truncated_type_name(jtl::ptr<void> const type)
+  {
+    return get_qualified_type_name_helper(type, true);
   }
 
   /* This is a quick and dirty helper to get the RTTI for a given QualType. We need
    * this for exception catching. */
   void register_rtti(jtl::ptr<void> const type)
   {
-    auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     auto const code{ util::format("&typeid({})", Cpp::GetTypeAsString(type)) };
     clang::Value value;
-    auto exec_res{ runtime::__rt_ctx->jit_prc.interpreter->ParseAndExecute(code.c_str(), &value) };
+    auto exec_res{ (*locked_interpreter)->ParseAndExecute(code.c_str(), &value) };
     if(exec_res || trap.hasErrorOccurred())
     {
       throw error::codegen_internal_failure(
-        util::format("Unable to get RTTI for '{}'.", Cpp::GetTypeAsString(type)));
+        util::format("Unable to get RTTI for `{}`.", Cpp::GetTypeAsString(type)));
     }
 
-    auto const lljit{ runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine() };
+    auto const lljit{ (*locked_interpreter)->getExecutionEngine() };
     llvm::orc::SymbolMap symbols;
     llvm::orc::MangleAndInterner interner{ lljit->getExecutionSession(), lljit->getDataLayout() };
     auto const &symbol{ Cpp::MangleRTTI(type) };
@@ -1016,6 +1048,13 @@ namespace jank::analyze::cpp_util
       jtl::option<usize> needed_conversion;
       for(usize fn_idx{}; fn_idx < matching_fns.size(); ++fn_idx)
       {
+        /* Function templates have dependent parameter types until they are instantiated, so
+         * they cannot be considered for implicit or trait conversions here. */
+        if(Cpp::IsTemplatedFunction(matching_fns[fn_idx]))
+        {
+          continue;
+        }
+
         auto const param_type{ Cpp::GetFunctionArgType(matching_fns[fn_idx], arg_idx) };
         if(!param_type)
         {
@@ -1036,8 +1075,7 @@ namespace jank::analyze::cpp_util
         {
           if(needed_conversion.is_some())
           {
-            /* TODO: Show possible matches. */
-            return err("No normal overload match was found. When considering automatic trait "
+            return err("No matching overload was found. When considering automatic trait "
                        "conversions, this call is ambiguous.");
           }
           needed_conversion = fn_idx;
@@ -1047,6 +1085,296 @@ namespace jank::analyze::cpp_util
     }
 
     return ok(std::move(converted_args));
+  }
+
+  namespace
+  {
+    /* Declaration order here is significant: rank_candidates sorts candidates by
+     * ascending tier value, so earlier enumerators are treated as more relevant and
+     * are placed earlier in the resulting candidate list.
+     *
+     * This doesn't follow the C++ standard for resolution ranking, since we're ranking
+     * failures, not viable candidates. Our goal is to determine which failed candidates
+     * are most likely what the user intended. */
+    enum class candidate_rank_tier : u8
+    {
+      viable,
+      deleted,
+      access_violation,
+      conversion_failure,
+      const_mismatch,
+      template_failure,
+      arity_mismatch,
+    };
+
+    struct candidate_rank
+    {
+      candidate_rank_tier tier{};
+      usize conversion_score{};
+      usize arity_delta{};
+    };
+
+    struct ranked_fn
+    {
+      jtl::ptr<void> fn;
+      candidate_rank rank{};
+      Cpp::OverloadCandidateInfo cand_info;
+    };
+
+    ranked_fn rank_candidate(jtl::ptr<void> const fn,
+                             std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                             std::vector<Cpp::TCppScope_t> const &arg_scopes,
+                             bool const is_member_call)
+    {
+      auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
+                                                                 : arg_types.size() };
+      auto const num_required_params{ Cpp::GetFunctionRequiredArgs(fn) };
+      auto const num_params{ Cpp::GetFunctionNumArgs(fn) };
+      auto const has_arity_mismatch{ (arg_count < num_required_params)
+                                     || (!Cpp::IsFunctionVariadic(fn)
+                                         && !Cpp::IsFunctionVariadicTemplate(fn)
+                                         && num_params < arg_count) };
+      auto const cand_info{ Cpp::GetOverloadCandidateInfo(fn, arg_types, arg_scopes) };
+
+      if(Cpp::IsFunctionDeleted(fn))
+      {
+        return { fn, { candidate_rank_tier::deleted }, cand_info };
+      }
+      if(Cpp::IsPrivateMethod(fn) || Cpp::IsProtectedMethod(fn))
+      {
+        return { fn, { candidate_rank_tier::access_violation }, cand_info };
+      }
+      if(has_arity_mismatch)
+      {
+        auto const arity_delta{ arg_count < num_required_params ? num_required_params - arg_count
+                                                                : arg_count - num_required_params };
+        return {
+          fn,
+          { candidate_rank_tier::arity_mismatch, 0, arity_delta },
+          cand_info
+        };
+      }
+      if(is_member_call && !arg_types.empty() && !Cpp::IsConstMethod(fn)
+         && !Cpp::IsConstType(arg_types[0].m_Type))
+      {
+        return { fn, { candidate_rank_tier::const_mismatch }, cand_info };
+      }
+
+      if(cand_info.m_Viable)
+      {
+        return { fn, { candidate_rank_tier::viable }, cand_info };
+      }
+      if(cand_info.m_IsTemplateInstantiationFailure)
+      {
+        return { fn, { candidate_rank_tier::template_failure }, cand_info };
+      }
+
+      usize conversion_score{};
+      for(auto const &argument : cand_info.m_Arguments)
+      {
+        switch(argument.m_Conversion)
+        {
+          case Cpp::OverloadCandidateConversion::Invalid:
+            conversion_score += 3;
+            break;
+          case Cpp::OverloadCandidateConversion::UserDefined:
+            conversion_score += 2;
+            break;
+          case Cpp::OverloadCandidateConversion::Implicit:
+            conversion_score += 1;
+            break;
+          case Cpp::OverloadCandidateConversion::None:
+            break;
+        }
+      }
+      return {
+        fn,
+        { candidate_rank_tier::conversion_failure, conversion_score },
+        cand_info
+      };
+    }
+
+    error::candidate resolve_candidate(jtl::ptr<void> const fn,
+                                       jtl::immutable_string const &reason,
+                                       bool const viable)
+    {
+      error::candidate ret;
+      ret.signature = Cpp::GetFunctionSignature(fn);
+      ret.reason = reason;
+      ret.source = Cpp::GetFunctionSourceInfo(fn);
+      ret.viable = viable;
+      return ret;
+    }
+
+    error::candidate resolve_candidate_impl(jtl::ptr<void> const fn,
+                                            std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                                            std::vector<Cpp::TCppScope_t> const &arg_scopes,
+                                            bool const viable)
+    {
+      auto ret{ resolve_candidate(fn, "", viable) };
+
+      auto const cand_info{ Cpp::GetOverloadCandidateInfo(fn, arg_types, arg_scopes) };
+      if(cand_info.m_IsTemplateInstantiationFailure)
+      {
+        ret.reason = "Template instantiation failure.";
+        ret.clang_reason = cand_info.m_Reason;
+        return ret;
+      }
+
+      /* TODO: Detect trait ambiguity, too. */
+      if(viable)
+      {
+        ret.reason = "This candidate is ambiguous.";
+      }
+
+      for(usize i{}; i < cand_info.m_Arguments.size(); ++i)
+      {
+        auto arg_conversion{ error::argument_conversion_type::invalid };
+        auto const param_type{ cand_info.m_Arguments[i].m_ParamType };
+        auto arg_name{ Cpp::GetFunctionArgName(fn, i) };
+        if(arg_name.empty())
+        {
+          arg_name = "arg" + std::to_string(i);
+        }
+
+        if(param_type)
+        {
+          auto const conversion{ determine_implicit_conversion(arg_types[i].m_Type, param_type) };
+          switch(conversion)
+          {
+            case implicit_conversion_action::unknown:
+              if(ret.reason.empty())
+              {
+                ret.reason = util::format("No known conversion for argument `{}`.", arg_name);
+              }
+              break;
+            case implicit_conversion_action::none:
+              if(Cpp::GetCanonicalType(arg_types[i].m_Type) == Cpp::GetCanonicalType(param_type)
+                 || (Cpp::GetCanonicalType(arg_types[i].m_Type)
+                     == Cpp::GetCanonicalType(Cpp::GetTypeWithConst(param_type)))
+                 || (Cpp::GetCanonicalType(Cpp::GetTypeWithConst(arg_types[i].m_Type))
+                     == Cpp::GetCanonicalType(Cpp::GetNonReferenceType(param_type))))
+              {
+                arg_conversion = error::argument_conversion_type::none;
+                break;
+              }
+              /* Fallthrough. */
+            case implicit_conversion_action::cast:
+              arg_conversion = error::argument_conversion_type::implicit;
+              break;
+            case implicit_conversion_action::into_object:
+            case implicit_conversion_action::from_object:
+              arg_conversion = error::argument_conversion_type::trait;
+              break;
+          }
+        }
+
+        ret.arguments.emplace_back(arg_name, arg_types[i].m_Type, param_type, arg_conversion);
+      }
+
+      if(ret.reason.empty())
+      {
+        ret.reason = "See details below.";
+        ret.clang_reason = cand_info.m_Reason;
+      }
+
+      return ret;
+    }
+
+    error::candidate resolve_candidate(ranked_fn const &ranked,
+                                       std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                                       std::vector<Cpp::TCppScope_t> const &arg_scopes,
+                                       bool const is_member_call)
+    {
+      if(Cpp::IsFunctionDeleted(ranked.fn))
+      {
+        return resolve_candidate(ranked.fn, "This function is deleted.", false);
+      }
+      if(Cpp::IsPrivateMethod(ranked.fn))
+      {
+        return resolve_candidate(ranked.fn, "This member function is private.", false);
+      }
+      if(Cpp::IsProtectedMethod(ranked.fn))
+      {
+        return resolve_candidate(ranked.fn, "This member function is protected.", false);
+      }
+
+      auto const num_required_params{ Cpp::GetFunctionRequiredArgs(ranked.fn) };
+      auto const num_params{ Cpp::GetFunctionNumArgs(ranked.fn) };
+      auto const arg_count{ is_member_call && !arg_types.empty() ? arg_types.size() - 1
+                                                                 : arg_types.size() };
+      if((arg_count < num_required_params)
+         || (!Cpp::IsFunctionVariadic(ranked.fn) && !Cpp::IsFunctionVariadicTemplate(ranked.fn)
+             && num_params < arg_count))
+      {
+        return resolve_candidate(
+          ranked.fn,
+          util::format("This function requires {} argument{}, but {} {} provided.",
+                       num_required_params,
+                       num_required_params == 1 ? "" : "s",
+                       arg_count,
+                       arg_count == 1 ? "was" : "were"),
+          false);
+      }
+
+      if(is_member_call)
+      {
+        if(Cpp::IsMethod(ranked.fn) && !arg_types.empty() && !Cpp::IsConstMethod(ranked.fn)
+           && !Cpp::IsConstType(arg_types[0].m_Type))
+        {
+          return resolve_candidate(
+            ranked.fn,
+            "This member function is non-const, but the invoking object is const.",
+            false);
+        }
+
+        auto member_arg_types{ arg_types };
+        member_arg_types.erase(member_arg_types.begin());
+        return resolve_candidate_impl(ranked.fn,
+                                      member_arg_types,
+                                      arg_scopes,
+                                      ranked.cand_info.m_Viable);
+      }
+      else
+      {
+        return resolve_candidate_impl(ranked.fn, arg_types, arg_scopes, ranked.cand_info.m_Viable);
+      }
+    }
+  }
+
+  native_vector<error::candidate>
+  resolve_candidates(std::vector<void *> const &fns,
+                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
+                     std::vector<Cpp::TCppScope_t> const &arg_scopes,
+                     bool const is_member_call)
+  {
+    std::vector<ranked_fn> ranked_fns;
+    ranked_fns.reserve(fns.size());
+    for(auto const fn : fns)
+    {
+      ranked_fns.emplace_back(rank_candidate(fn, arg_types, arg_scopes, is_member_call));
+    }
+
+    std::ranges::stable_sort(ranked_fns, [](ranked_fn const &left, ranked_fn const &right) {
+      if(left.rank.tier != right.rank.tier)
+      {
+        return left.rank.tier < right.rank.tier;
+      }
+      if(left.rank.tier == candidate_rank_tier::arity_mismatch
+         && left.rank.arity_delta != right.rank.arity_delta)
+      {
+        return left.rank.arity_delta < right.rank.arity_delta;
+      }
+      return left.rank.conversion_score < right.rank.conversion_score;
+    });
+
+    native_vector<error::candidate> candidates;
+    candidates.reserve(ranked_fns.size());
+    for(auto const &ranked : ranked_fns)
+    {
+      candidates.emplace_back(resolve_candidate(ranked, arg_types, arg_scopes, is_member_call));
+    }
+    return candidates;
   }
 
   jtl::string_result<jtl::ptr<void>>
@@ -1066,26 +1394,26 @@ namespace jank::analyze::cpp_util
       auto const match{ matches[0] };
       if(matches.size() != 1)
       {
-        /* TODO: Show all matches. */
-        return err("This call is ambiguous.");
+        return err(
+          util::format("This call is ambiguous between {} different overloads.", matches.size()));
       }
 
       auto const member{ is_non_static_member_function(match) };
       if(Cpp::IsFunctionDeleted(match))
       {
-        /* TODO: Would be great to point at the C++ source for where it's deleted. */
-        return err(util::format("Unable to call '{}' since it's deleted.", Cpp::GetName(match)));
+        return err(util::format("The `{}` function cannot be called, since it's deleted.",
+                                Cpp::GetName(match)));
       }
       if(Cpp::IsPrivateMethod(match))
       {
         return err(
-          util::format("The '{}' function is private. It can only be accessed if it's public.",
+          util::format("The `{}` function is private. It can only be accessed if it's public.",
                        Cpp::GetName(match)));
       }
       if(Cpp::IsProtectedMethod(match))
       {
         return err(
-          util::format("The '{}' function is protected. It can only be accessed if it's public.",
+          util::format("The `{}` function is protected. It can only be accessed if it's public.",
                        Cpp::GetName(match)));
       }
 
@@ -1162,12 +1490,13 @@ namespace jank::analyze::cpp_util
   bool is_trait_convertible(jtl::ptr<void> const type)
   {
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     Cpp::TemplateArgInfo const arg{ Cpp::GetCanonicalType(
       Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
-    clang::Sema::SFINAETrap const trap{ runtime::__rt_ctx->jit_prc.interpreter->getSema(), true };
+    clang::Sema::SFINAETrap const trap{ (*locked_interpreter)->getSema(), true };
     Cpp::TCppScope_t instantiation{};
     {
-      auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+      auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
       auto old_client{ diag.takeClient() };
       diag.setClient(new clang::IgnoringDiagConsumer{}, true);
       util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };

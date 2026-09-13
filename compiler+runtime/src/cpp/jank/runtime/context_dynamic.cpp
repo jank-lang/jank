@@ -140,7 +140,8 @@ namespace jank::runtime
   {
     profile::timer const timer{ "rt eval_cpp_string" };
 
-    auto parse_res{ jit_prc.interpreter->Parse({ code.data(), code.size() }) };
+    auto const locked_interpreter{ jit_prc.interpreter.lock() };
+    auto parse_res{ (*locked_interpreter)->Parse({ code.data(), code.size() }) };
     if(!parse_res)
     {
       /* TODO: Helper to turn an llvm::Error into a string. */
@@ -153,11 +154,11 @@ namespace jank::runtime
      * moves the `llvm::Module` held in the `PartialTranslationUnit`. */
     if(truthy(compile_files_var->deref()))
     {
-      auto module_name{ current_module_var->deref().to_string() };
+      auto const module_name{ current_module_var->deref().to_string() };
       write_module(module_name, code).expect_ok();
     }
 
-    auto exec_res(jit_prc.interpreter->Execute(partial_tu));
+    auto exec_res((*locked_interpreter)->Execute(partial_tu));
     if(exec_res)
     {
       llvm::logAllUnhandledErrors(std::move(exec_res), llvm::errs(), "error: ");

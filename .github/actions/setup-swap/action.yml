@@ -1,0 +1,94 @@
+name: 'Set Up Swap'
+description: 'Removes all existing swap files and allocates a fresh swap file of a given size (default 8GB). Works on any Linux runner/host.'
+
+inputs:
+  swap-size:
+    description: 'Size of the new swap file (any value accepted by fallocate/dd, e.g. 8G, 4096M)'
+    required: false
+    default: '8G'
+  swap-path:
+    description: 'Path where the new swap file will be created'
+    required: false
+    default: '/swapfile'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Remove existing swap and allocate new swap
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # Use sudo only if it exists and we're not already root
+        SUDO=""
+        if [ "$(id -u)" -ne 0 ]; then
+          if command -v sudo >/dev/null 2>&1; then
+            SUDO="sudo"
+          else
+            echo "::error::Not running as root and 'sudo' is not available. Cannot manage swap."
+            exit 1
+          fi
+        fi
+
+        echo "== Current swap state =="
+        $SUDO swapon --show || true
+        cat /proc/swaps || true
+
+        # Capture paths of any currently active *file*-backed swaps (ignore partitions/zram/devices)
+        EXISTING_SWAP_FILES=""
+        if [ -f /proc/swaps ]; then
+          EXISTING_SWAP_FILES=$(awk 'NR>1 && $2=="file" {print $1}' /proc/swaps || true)
+        fi
+
+        echo "== Disabling all active swap =="
+        $SUDO swapoff -a || true
+
+        echo "== Removing swap files =="
+        # Remove any file-backed swaps that were active
+        if [ -n "${EXISTING_SWAP_FILES}" ]; then
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            echo "Removing active swap file: $f"
+            $SUDO rm -f "$f"
+          done <<< "${EXISTING_SWAP_FILES}"
+        fi
+
+        # Also remove common/default swap file locations even if they weren't active,
+        # plus whatever path we're about to (re)create.
+        for candidate in /swapfile /swap.img /mnt/swapfile "${{ inputs.swap-path }}"; do
+          if [ -f "$candidate" ]; then
+            echo "Removing leftover swap file: $candidate"
+            $SUDO rm -f "$candidate"
+          fi
+        done
+
+        # Clean up any swap entries left in /etc/fstab pointing at removed files,
+        # so a later reboot/re-mount doesn't try to activate a deleted file.
+        if [ -f /etc/fstab ]; then
+          $SUDO cp /etc/fstab /etc/fstab.bak
+          $SUDO awk '$3 != "swap"' /etc/fstab.bak | $SUDO tee /etc/fstab >/dev/null
+        fi
+
+        SWAP_PATH="${{ inputs.swap-path }}"
+        SWAP_SIZE="${{ inputs.swap-size }}"
+
+        echo "== Allocating new ${SWAP_SIZE} swap file at ${SWAP_PATH} =="
+        if command -v fallocate >/dev/null 2>&1 && $SUDO fallocate -l "${SWAP_SIZE}" "${SWAP_PATH}" 2>/dev/null; then
+          echo "Allocated with fallocate"
+        else
+          echo "fallocate unavailable or failed, falling back to dd"
+          # Convert size like 8G / 4096M into a byte count for dd via numfmt
+          BYTES=$(numfmt --from=iec "${SWAP_SIZE}")
+          COUNT=$((BYTES / 1048576))
+          [ "$COUNT" -lt 1 ] && COUNT=1
+          $SUDO dd if=/dev/zero of="${SWAP_PATH}" bs=1M count="${COUNT}" status=progress
+        fi
+
+        echo "== Securing and enabling swap =="
+        $SUDO chmod 600 "${SWAP_PATH}"
+        $SUDO mkswap "${SWAP_PATH}"
+        $SUDO swapon "${SWAP_PATH}"
+
+        echo "== Final swap state =="
+        $SUDO swapon --show
+        free -h

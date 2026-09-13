@@ -17,7 +17,7 @@ namespace jank::aot
 
   jtl::option<jtl::immutable_string_view> find_resource(jtl::immutable_string const &name)
   {
-    auto locked_resources{ mapped_resources.rlock() };
+    auto const locked_resources{ mapped_resources.rlock() };
     auto const found{ locked_resources->find(name) };
     if(found == locked_resources->end())
     {

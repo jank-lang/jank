@@ -556,7 +556,8 @@ namespace jank::analyze
                  expression_position const position,
                  bool const needs_box,
                  object_ref const form,
-                 native_vector<runtime::object_ref> const &macro_expansions)
+                 native_vector<runtime::object_ref> const &macro_expansions,
+                 bool const allow_implicit_conversions = true)
   {
     /* TODO: Make this a set. */
     std::vector<void *> fns;
@@ -781,7 +782,7 @@ namespace jank::analyze
       case expr::cpp_value::value_kind::variable:
       case expr::cpp_value::value_kind::enum_constant:
       case expr::cpp_value::value_kind::member_access:
-        return error::analyze_invalid_cpp_function_call(
+        return error::analyze_invalid_cpp_call(
                  util::format("This value is not callable.", scope_name),
                  object_source(val->form),
                  latest_expansion(macro_expansions))
@@ -801,7 +802,7 @@ namespace jank::analyze
         fns = Cpp::GetFunctionsUsingName(Cpp::GetParentScope(val->scope), scope_name);
         if(fns.empty())
         {
-          return error::analyze_invalid_cpp_function_call(
+          return error::analyze_invalid_cpp_call(
                    util::format("There is no function named `{}`.", scope_name),
                    object_source(val->form),
                    latest_expansion(macro_expansions))
@@ -839,9 +840,11 @@ namespace jank::analyze
     auto const match_res{ cpp_util::find_best_overload(fns, arg_types, arg_scopes) };
     if(match_res.is_err())
     {
-      return error::analyze_invalid_cpp_function_call(util::format("{}", match_res.expect_err()),
-                                                      object_source(val->form),
-                                                      latest_expansion(macro_expansions))
+      return error::analyze_invalid_cpp_call(
+               util::format("{}", match_res.expect_err()),
+               cpp_util::resolve_candidates(fns, arg_types, arg_scopes, is_member_call),
+               object_source(val->form),
+               latest_expansion(macro_expansions))
         ->add_usage(object_source(form));
     }
     jtl::ptr<void> match{ match_res.expect_ok() };
@@ -854,9 +857,9 @@ namespace jank::analyze
 
       if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
       {
-        return error::analyze_invalid_cpp_function_call(res.expect_err(),
-                                                        object_source(val->form),
-                                                        latest_expansion(macro_expansions))
+        return error::analyze_invalid_cpp_call(res.expect_err(),
+                                               object_source(val->form),
+                                               latest_expansion(macro_expansions))
           ->add_usage(object_source(form));
       }
 
@@ -884,19 +887,23 @@ namespace jank::analyze
 
       if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
       {
-        return error::analyze_invalid_cpp_function_call(res.expect_err(),
-                                                        object_source(val->form),
-                                                        latest_expansion(macro_expansions))
+        return error::analyze_invalid_cpp_call(res.expect_err(),
+                                               object_source(val->form),
+                                               latest_expansion(macro_expansions))
           ->add_usage(object_source(form));
       }
 
-      auto const conversion_res{
-        apply_implicit_conversions(match, arg_exprs, arg_types, macro_expansions)
-      };
-      if(conversion_res.is_err())
+      if(allow_implicit_conversions)
       {
-        return conversion_res.expect_err();
+        auto const conversion_res{
+          apply_implicit_conversions(match, arg_exprs, arg_types, macro_expansions)
+        };
+        if(conversion_res.is_err())
+        {
+          return conversion_res.expect_err();
+        }
       }
+
       if(is_member_call)
       {
         arg_types.erase(arg_types.begin());
@@ -950,9 +957,11 @@ namespace jank::analyze
     };
     if(new_types_res.is_err())
     {
-      return error::analyze_invalid_cpp_function_call(new_types_res.expect_err(),
-                                                      object_source(val->form),
-                                                      latest_expansion(macro_expansions))
+      return error::analyze_invalid_cpp_call(
+               new_types_res.expect_err(),
+               cpp_util::resolve_candidates(fns, arg_types, arg_scopes, is_member_call),
+               object_source(val->form),
+               latest_expansion(macro_expansions))
         ->add_usage(object_source(form));
     }
 
@@ -964,8 +973,9 @@ namespace jank::analyze
     auto const conversion_match_res{ cpp_util::find_best_overload(fns, new_types, empty_scopes) };
     if(conversion_match_res.is_err())
     {
-      return error::analyze_invalid_cpp_function_call(
+      return error::analyze_invalid_cpp_call(
                util::format("{}", conversion_match_res.expect_err()),
+               cpp_util::resolve_candidates(fns, arg_types, arg_scopes, is_member_call),
                object_source(val->form),
                latest_expansion(macro_expansions))
         ->add_usage(object_source(form));
@@ -1066,22 +1076,13 @@ namespace jank::analyze
       }
     }
 
-    /* TODO: Find a better way to render this. */
-    jtl::string_builder sb;
-    for(usize i{}; i != arg_types.size(); ++i)
-    {
-      util::format_to(sb,
-                      " With argument {} having type `{}`.",
-                      i,
-                      cpp_util::get_qualified_type_name(arg_types[i].m_Type));
-    }
-
-    return error::analyze_invalid_cpp_call(util::format("No matching call to `{}` {}.{}",
-                                                        scope_name,
-                                                        is_ctor ? "constructor" : "function",
-                                                        sb.release()),
-                                           object_source(val->form),
-                                           latest_expansion(macro_expansions))
+    return error::analyze_invalid_cpp_call(
+             util::format("No matching overload of the `{}` {} was found for this call.",
+                          scope_name,
+                          is_ctor ? "constructor" : "function"),
+             cpp_util::resolve_candidates(fns, arg_types, arg_scopes, is_member_call),
+             object_source(val->form),
+             latest_expansion(macro_expansions))
       ->add_usage(object_source(form));
   }
 
@@ -1183,7 +1184,7 @@ namespace jank::analyze
       }
 
       return error::analyze_invalid_cpp_call(
-        util::format("Unable to find call operator for `{}`.",
+        util::format("There is no call operator for `{}`.",
                      cpp_util::get_qualified_type_name(source_type)),
         object_source(o),
         latest_expansion(macro_expansions));
@@ -1327,7 +1328,8 @@ namespace jank::analyze
                                               cast_position,
                                               expr->needs_box,
                                               expr->form,
-                                              macro_expansions) };
+                                              macro_expansions,
+                                              false) };
           if(new_expr.is_err())
           {
             return new_expr.expect_err();
@@ -1441,7 +1443,8 @@ namespace jank::analyze
       }
       fn.push_back(parse_current->expect_ok().unwrap().ptr);
     }
-    auto fn_list(make_box<runtime::obj::persistent_list>(std::in_place, fn.rbegin(), fn.rend()));
+    auto const fn_list(
+      make_box<runtime::obj::persistent_list>(std::in_place, fn.rbegin(), fn.rend()));
     return analyze(fn_list, expression_position::value);
   }
 
@@ -1972,7 +1975,7 @@ namespace jank::analyze
     fn_ctx->is_variadic = is_variadic;
     fn_ctx->param_count = param_symbols.size();
     frame->fn_ctx = fn_ctx;
-    auto body_do{ jtl::make_ref<expr::do_>(expression_position::tail, frame, true, list) };
+    auto const body_do{ jtl::make_ref<expr::do_>(expression_position::tail, frame, true, list) };
     usize const form_count{ list->count() - 1 };
     usize i{};
     for(auto const &item : list->data.rest())
@@ -2088,11 +2091,11 @@ namespace jank::analyze
     {
       for(auto it(list->data.rest()); !it.empty(); it = it.rest())
       {
-        auto arity_list_obj(it.first().unwrap());
+        auto const arity_list_obj(it.first().unwrap());
 
         if(arity_list_obj.has_behavior(object_behavior::sequence_like))
         {
-          auto arity_list(runtime::obj::persistent_list::create(arity_list_obj));
+          auto const arity_list(runtime::obj::persistent_list::create(arity_list_obj));
 
           auto result(analyze_fn_arity(arity_list, name, current_frame));
           if(result.is_err())
@@ -2571,7 +2574,7 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
-    auto frame{ make_box<local_frame>(local_frame::frame_type::letfn, current_frame) };
+    auto const frame{ make_box<local_frame>(local_frame::frame_type::letfn, current_frame) };
     auto ret{ make_box<expr::letfn>(
       position,
       frame,
@@ -2621,7 +2624,7 @@ namespace jank::analyze
         return value_res.expect_err()->add_fallback_usage(
           read::parse::reparse_nth(bindings, i + 1));
       }
-      auto maybe_fexpr(value_res.expect_ok());
+      auto const maybe_fexpr(value_res.expect_ok());
       if(maybe_fexpr->kind != expression_kind::function)
       {
         return error::analyze_invalid_letfn(
@@ -3093,7 +3096,8 @@ namespace jank::analyze
     auto try_frame(jtl::make_ref<local_frame>(local_frame::frame_type::try_, current_frame));
     /* We introduce a new frame so that we can register the sym as a local.
      * It holds the exception value which was caught. */
-    auto finally_frame(jtl::make_ref<local_frame>(local_frame::frame_type::finally, current_frame));
+    auto const finally_frame(
+      jtl::make_ref<local_frame>(local_frame::frame_type::finally, current_frame));
     auto ret{
       jtl::make_ref<expr::try_>(position, try_frame, true, list, jtl::make_ref<expr::do_>())
     };
@@ -3251,7 +3255,7 @@ namespace jank::analyze
             }
 
             bool const is_object{ cpp_util::is_any_object(catch_type) };
-            auto catch_frame(
+            auto const catch_frame(
               jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
             catch_frame->locals[catch_sym].emplace_back(catch_sym,
                                                         catch_sym->name,
@@ -3663,7 +3667,10 @@ namespace jank::analyze
                          __rt_ctx->intern_keyword("", "inline", true).expect_ok()));
           if(inline_fn.is_some())
           {
-            auto const expanded{ apply_to(inline_fn, o->next()) };
+            /* Forward metadata from the original call to the inline result. This allows us
+             * to keep source info for inline calls sanely. */
+            auto expanded{ apply_to(inline_fn, o->next()) };
+            expanded = runtime::with_meta_graceful(expanded, runtime::meta(o));
             return analyze(expanded, current_frame, position, fn_ctx, needs_box);
           }
         }
@@ -4087,7 +4094,8 @@ namespace jank::analyze
        *
        * We silence the diagnostics for this because it'll likely fail for any invalid symbols
        * anyway. */
-      auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+      auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+      auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
       auto old_client{ diag.takeClient() };
       diag.setClient(new clang::IgnoringDiagConsumer{}, true);
       util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
@@ -4257,18 +4265,25 @@ namespace jank::analyze
 
     auto const raw_string{ expect_object<runtime::obj::persistent_string>(obj)->data };
 
+    auto const source{ object_source(l) };
+    auto const has_source{ source != read::source::unknown() };
+
     /* We wrap all cpp/raw strings in unique preprocessor guards because jank currently does
-       codegen twice when compiling and this can lead to ODR violations. */
+     * codegen twice when compiling and this can lead to ODR violations. */
     auto const content_hash{ std::hash<jtl::immutable_string>{}(raw_string) };
     auto const guard_name{ util::format("JANK_CPP_RAW_{}", content_hash) };
-    auto const guarded_code{ util::format("#ifndef {}\n"
-                                          "#define {}\n"
-                                          "\n"
-                                          "{}\n"
-                                          "#endif\n",
-                                          guard_name,
-                                          guard_name,
-                                          raw_string) };
+    auto const guarded_code{ util::format(
+      "#ifndef {}\n"
+      "#define {}\n"
+      "\n"
+      "{}\n"
+      "{}\n"
+      "#endif\n",
+      guard_name,
+      guard_name,
+      (has_source ? util::format("#line {} \"{}\"", source.start.line, util::escape(source.file))
+                  : ""),
+      raw_string) };
 
     return jtl::make_ref<expr::cpp_raw>(position, current_frame, needs_box, l, guarded_code);
   }

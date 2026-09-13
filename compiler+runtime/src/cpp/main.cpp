@@ -3,6 +3,8 @@
 #include <fstream>
 #include <optional>
 
+#include <unistd.h>
+
 #include <isocline.h>
 
 #include <CppInterOp/Compatibility.h>
@@ -171,11 +173,13 @@ namespace jank
       if((ext == ".cpp" && opts.output_target != util::cli::compilation_target::cpp)
          || (ext == ".o" && opts.output_target != util::cli::compilation_target::object))
       {
-        error::warn(util::format("The output file name '{}' has the extension '{}', but the output "
-                                 "target is '{}'. These appear to be mismatched.",
-                                 opts.output_module_filename,
-                                 ext.string(),
-                                 util::cli::compilation_target_str(opts.output_target)));
+        util::print("{}",
+                    error::warn(util::format(
+                      "The output file name '{}' has the extension '{}', but the output "
+                      "target is '{}'. These appear to be mismatched.",
+                      opts.output_module_filename,
+                      ext.string(),
+                      util::cli::compilation_target_str(opts.output_target))));
       }
     }
 
@@ -258,7 +262,9 @@ int main(int const argc, char const **argv)
         {
           util::print("{} ", arg);
         }
-        for(auto const arg : aot::build_linker_args())
+        auto const linker_args_res{ aot::build_linker_args() };
+        auto const &linker_args{ linker_args_res.expect_ok() };
+        for(auto const arg : linker_args)
         {
           util::print("{} ", arg);
         }

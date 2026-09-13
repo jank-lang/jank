@@ -1,0 +1,12 @@
+(cpp/raw
+"
+void big_decl
+(
+  std::string const &name,
+  folly::Synchronized<jank::native_unordered_map<std::string, jank::native_vector<jtl::immutable_string>>> const *
+)
+{}
+")
+
+(defn foo []
+  (cpp/big_decl 2 cpp/nullptr))

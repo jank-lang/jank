@@ -1814,6 +1814,11 @@ namespace jank::runtime
     {
     }
 
+    oref(oref<obj::integer> const data) noexcept
+      : data{ static_cast<i32>(data->data) }
+    {
+    }
+
     ~oref() = default;
 
     bool operator==(oref<object> const &rhs) const

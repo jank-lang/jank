@@ -1,0 +1,31 @@
+─ analyze/invalid-cpp-call ─────────────────────────────────────────────────────
+error: This call is ambiguous between 2 different overloads.
+
+─────┬──────────────────────────────────────────────────────────────────────────
+     │ input.jank
+─────┼──────────────────────────────────────────────────────────────────────────
+ 10  │ ")
+ 11  │ 
+ 12  │ (defn foo []
+     │ ^ Expanded from this macro.
+ 13  │   (cpp/add 1 2 3))
+     │    ^^^^^^^ Found here.
+─────┼──────────────────────────────────────────────────────────────────────────
+  🗎  │ https://book.jank-lang.org/reference/error/analyze/invalid-cpp-call.html
+─────┴──────────────────────────────────────────────────────────────────────────
+
+  Candidates considered (showing 2 of 2):
+
+  ✓ inline void add(int a, long b, ...)
+    ╰─ declared at input.jank:2
+    a  int → int   ✓ exact match          
+    b  int → long  ~ implicit conversion  
+    ──────────────────────────────────────────────────────────
+    Viable: This candidate is ambiguous.
+
+  ✓ inline void add(int a, short b, ...)
+    ╰─ declared at input.jank:6
+    a  int → int    ✓ exact match          
+    b  int → short  ~ implicit conversion  
+    ──────────────────────────────────────────────────────────
+    Viable: This candidate is ambiguous.

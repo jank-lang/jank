@@ -2,7 +2,9 @@
 
 #include <filesystem>
 #include <map>
+#include <mutex>
 
+#include <folly/Synchronized.h>
 #include <jtl/result.hpp>
 #include <jtl/string_builder.hpp>
 
@@ -41,6 +43,14 @@ namespace jank::runtime::obj
 
 namespace jank::jit
 {
+  struct resolved_lib
+  {
+    /* The resolved lib name/path. */
+    jtl::immutable_string lib;
+    /* Whether or not the resolved lib is a static lib. */
+    bool is_static{};
+  };
+
   struct processor
   {
     processor(jtl::immutable_string const &binary_version);
@@ -64,12 +74,16 @@ namespace jank::jit
     jtl::string_result<void> remove_symbol(jtl::immutable_string const &name) const;
     jtl::string_result<void *> find_symbol(jtl::immutable_string const &name) const;
 
+    static native_vector<std::filesystem::path> build_library_dirs();
+    static jtl::result<native_vector<resolved_lib>, jtl::immutable_string>
+    resolve_libs(native_vector<jtl::immutable_string> const &libs);
     jtl::result<void, jtl::immutable_string>
     load_libs(native_vector<jtl::immutable_string> const &libs) const;
-    jtl::option<jtl::immutable_string> find_lib(jtl::immutable_string const &lib) const;
+    static jtl::option<jtl::immutable_string>
+    find_lib(native_vector<std::filesystem::path> const &library_dirs,
+             jtl::immutable_string const &lib);
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    /*** XXX: Calls through the interpreter and LLVM JIT runtime are thread-safe. ***/
     native_vector<std::filesystem::path> library_dirs;
 
     /* The files within this map will get added into Clang's VFS prior to the creation of
@@ -78,6 +92,6 @@ namespace jank::jit
     std::map<char const *, std::string_view> vfs;
 
     /*** XXX: Everything here is thread-safe. ***/
-    jtl::ptr<CppInternal::Interpreter> interpreter;
+    folly::Synchronized<jtl::ptr<CppInternal::Interpreter>, std::recursive_mutex> interpreter;
   };
 }

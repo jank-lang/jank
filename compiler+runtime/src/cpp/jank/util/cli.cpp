@@ -378,6 +378,10 @@ OPTIONS
         {
           opts.libs.emplace_back(value);
         }
+        else if(check_flag(it, end, value, "--framework", true))
+        {
+          opts.frameworks.emplace_back(value);
+        }
         else if(check_flag(it, end, value, "--target-dir", true))
         {
           opts.target_dir = value;
@@ -506,7 +510,7 @@ OPTIONS
             util::format_to(sb, " {}", flag.second);
           }
         }
-        error::warn(sb.release());
+        util::print("{}", error::warn(sb.release()));
       }
       else if(!pending_positional_args.empty())
       {

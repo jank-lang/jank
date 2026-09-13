@@ -1,0 +1,9 @@
+(cpp/raw
+"
+  template <typename ...Args>
+  void foo(int, Args...)
+  { }
+")
+
+(defn bar []
+  (cpp/foo "" 1 2 3))

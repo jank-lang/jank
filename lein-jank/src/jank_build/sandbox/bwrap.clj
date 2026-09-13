@@ -35,28 +35,34 @@
     - [:tmpfs dir]
     - [:chdir dir]
     - [:net enabled?]"
-  [cmds]
-  (->>
-   ["bwrap"
-    ;; Without this bwrap processes could outlive this process which spawned it.
-    "--die-with-parent"
-    ;; Prevent the child process from injecting keystrokes into the parent
-    ;; terminal.
-    "--new-session"
-    ;; Start with a clean slate and add namespaces back via '--share-*'
-    ;; commands.
-    "--unshare-all"
-    "--proc" "/proc"
-    "--dev" "/dev"
-    (for [[k & rst] cmds]
-      (case k
-        :ro-bind (let [[src dst] rst] (when (fs/exists? src) ["--ro-bind" src dst]))
-        :bind    (let [[src dst] rst] (when (fs/exists? src) ["--bind" src dst]))
-        :tmpfs   (let [dir rst] ["--tmpfs" dir])
-        :chdir   (let [dir rst] ["--chdir" dir])
-        :net     (let [share rst] (when share ["--share-net"]))))]
-   (flatten)
-   (remove nil?)))
+  ([cmds]
+   (bwrap (which-bwrap) cmds))
+  ([executable cmds]
+   (when-not executable
+     (throw
+      (IllegalArgumentException.
+       "No 'bwrap' executable is available.")))
+   (->>
+    [(str executable)
+     ;; Without this bwrap processes could outlive this process which spawned it.
+     "--die-with-parent"
+     ;; Prevent the child process from injecting keystrokes into the parent
+     ;; terminal.
+     "--new-session"
+     ;; Start with a clean slate and add namespaces back via '--share-*'
+     ;; commands.
+     "--unshare-all"
+     "--proc" "/proc"
+     "--dev" "/dev"
+     (for [[k & rst] cmds]
+       (case k
+         :ro-bind (let [[src dst] rst] (when (fs/exists? src) ["--ro-bind" src dst]))
+         :bind    (let [[src dst] rst] (when (fs/exists? src) ["--bind" src dst]))
+         :tmpfs   (let [[dir] rst] ["--tmpfs" dir])
+         :chdir   (let [[dir] rst] ["--chdir" dir])
+         :net     (let [[share] rst] (when share ["--share-net"]))))]
+    (flatten)
+    (remove nil?))))
 
 (comment
   (bwrap

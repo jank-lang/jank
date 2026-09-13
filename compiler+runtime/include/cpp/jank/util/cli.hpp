@@ -112,6 +112,7 @@ namespace jank::util::cli
     native_vector<jtl::immutable_string> library_dirs;
     native_vector<jtl::immutable_string> define_macros;
     native_vector<jtl::immutable_string> libs;
+    native_vector<jtl::immutable_string> frameworks;
 
     /* Compilation. */
     bool debug{ true };
@@ -152,6 +153,9 @@ namespace jank::util::cli
     /* Compile-module command. */
     jtl::immutable_string output_module_filename;
     compilation_target output_target{ compilation_target::unspecified };
+
+    /* Error reporting. */
+    u8 max_error_candidates{ 3 };
 
     /* Extra flags, which will be passed to main. */
     native_vector<jtl::immutable_string> extra_opts;

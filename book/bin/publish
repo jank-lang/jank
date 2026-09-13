@@ -22,7 +22,7 @@ for file in $(git ls-files);
 do
   rm -rf "${file}";
 done
-rm -rf theme
+rm -rf theme reference
 mv "${tmp}"/* "${tmp}"/.* .
 git add .
 git commit -m "Automated publish" --allow-empty
