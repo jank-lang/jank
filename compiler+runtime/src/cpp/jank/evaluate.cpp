@@ -689,10 +689,10 @@ namespace jank::evaluate
 
   bool safe_eval(jtl::immutable_string const &code, read::source_position const &p)
   {
-    static auto var_1{ __rt_ctx->find_var("clojure.core", "*1") };
-    static auto var_2{ __rt_ctx->find_var("clojure.core", "*2") };
-    static auto var_3{ __rt_ctx->find_var("clojure.core", "*3") };
-    static auto var_e{ __rt_ctx->find_var("clojure.core", "*e") };
+    static auto const var_1{ __rt_ctx->find_var("clojure.core", "*1") };
+    static auto const var_2{ __rt_ctx->find_var("clojure.core", "*2") };
+    static auto const var_3{ __rt_ctx->find_var("clojure.core", "*3") };
+    static auto const var_e{ __rt_ctx->find_var("clojure.core", "*e") };
 
     bool success{ false };
     cpptrace::try_catch(

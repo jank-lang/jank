@@ -1443,7 +1443,8 @@ namespace jank::analyze
       }
       fn.push_back(parse_current->expect_ok().unwrap().ptr);
     }
-    auto fn_list(make_box<runtime::obj::persistent_list>(std::in_place, fn.rbegin(), fn.rend()));
+    auto const fn_list(
+      make_box<runtime::obj::persistent_list>(std::in_place, fn.rbegin(), fn.rend()));
     return analyze(fn_list, expression_position::value);
   }
 
@@ -1929,7 +1930,7 @@ namespace jank::analyze
     fn_ctx->is_variadic = is_variadic;
     fn_ctx->param_count = param_symbols.size();
     frame->fn_ctx = fn_ctx;
-    auto body_do{ jtl::make_ref<expr::do_>(expression_position::tail, frame, true, list) };
+    auto const body_do{ jtl::make_ref<expr::do_>(expression_position::tail, frame, true, list) };
     usize const form_count{ list->count() - 1 };
     usize i{};
     for(auto const &item : list->data.rest())
@@ -2045,11 +2046,11 @@ namespace jank::analyze
     {
       for(auto it(list->data.rest()); !it.empty(); it = it.rest())
       {
-        auto arity_list_obj(it.first().unwrap());
+        auto const arity_list_obj(it.first().unwrap());
 
         if(arity_list_obj.has_behavior(object_behavior::sequence_like))
         {
-          auto arity_list(runtime::obj::persistent_list::create(arity_list_obj));
+          auto const arity_list(runtime::obj::persistent_list::create(arity_list_obj));
 
           auto result(analyze_fn_arity(arity_list, name, current_frame));
           if(result.is_err())
@@ -2528,7 +2529,7 @@ namespace jank::analyze
         latest_expansion(macro_expansions));
     }
 
-    auto frame{ make_box<local_frame>(local_frame::frame_type::letfn, current_frame) };
+    auto const frame{ make_box<local_frame>(local_frame::frame_type::letfn, current_frame) };
     auto ret{ make_box<expr::letfn>(
       position,
       frame,
@@ -2578,7 +2579,7 @@ namespace jank::analyze
         return value_res.expect_err()->add_fallback_usage(
           read::parse::reparse_nth(bindings, i + 1));
       }
-      auto maybe_fexpr(value_res.expect_ok());
+      auto const maybe_fexpr(value_res.expect_ok());
       if(maybe_fexpr->kind != expression_kind::function)
       {
         return error::analyze_invalid_letfn(
@@ -3050,7 +3051,8 @@ namespace jank::analyze
     auto try_frame(jtl::make_ref<local_frame>(local_frame::frame_type::try_, current_frame));
     /* We introduce a new frame so that we can register the sym as a local.
      * It holds the exception value which was caught. */
-    auto finally_frame(jtl::make_ref<local_frame>(local_frame::frame_type::finally, current_frame));
+    auto const finally_frame(
+      jtl::make_ref<local_frame>(local_frame::frame_type::finally, current_frame));
     auto ret{
       jtl::make_ref<expr::try_>(position, try_frame, true, list, jtl::make_ref<expr::do_>())
     };
@@ -3208,7 +3210,7 @@ namespace jank::analyze
             }
 
             bool const is_object{ cpp_util::is_any_object(catch_type) };
-            auto catch_frame(
+            auto const catch_frame(
               jtl::make_ref<local_frame>(local_frame::frame_type::catch_, current_frame));
             catch_frame->locals[catch_sym].emplace_back(catch_sym,
                                                         catch_sym->name,
@@ -4047,7 +4049,7 @@ namespace jank::analyze
        *
        * We silence the diagnostics for this because it'll likely fail for any invalid symbols
        * anyway. */
-      auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+      auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
       auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
       auto old_client{ diag.takeClient() };
       diag.setClient(new clang::IgnoringDiagConsumer{}, true);

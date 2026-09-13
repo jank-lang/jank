@@ -56,7 +56,7 @@ namespace jank::jit
       /* We will intentionally introduce some bad C++ code and we don't want Clang outputting
        * compiler errors to stderr. If there are actual test issues which cause diagnostic
        * issues, the test will fail anyway and we can run it separately to see the errors. */
-      auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+      auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
       auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
       auto old_client{ diag.takeClient() };
       diag.setClient(new clang::IgnoringDiagConsumer{}, true);
@@ -80,7 +80,7 @@ namespace jank::jit
         auto const expect_failure(filename.starts_with("fail-"));
         auto const expect_throw(filename.starts_with("throw-"));
         auto const allow_failure(filename.starts_with("warn-"));
-        auto skip(filename.starts_with("skip-"));
+        auto const skip(filename.starts_with("skip-"));
         CHECK_MESSAGE((expect_success || expect_failure || allow_failure || expect_throw || skip),
                       "Test file needs to begin with pass- or fail- or throw- or warn- or skip-: ",
                       filename);

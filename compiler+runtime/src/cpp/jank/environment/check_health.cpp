@@ -292,7 +292,7 @@ namespace jank::environment
   static jtl::immutable_string check_cpp_jit()
   {
     bool error{};
-    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     auto def_err{ (*locked_interpreter)
                     ->ParseAndExecute(
                       "std::string jank_cpp_health_check(){ return \"healthy\"; }") };

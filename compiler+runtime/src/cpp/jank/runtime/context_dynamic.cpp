@@ -140,7 +140,7 @@ namespace jank::runtime
   {
     profile::timer const timer{ "rt eval_cpp_string" };
 
-    auto locked_interpreter{ jit_prc.interpreter.lock() };
+    auto const locked_interpreter{ jit_prc.interpreter.lock() };
     auto parse_res{ (*locked_interpreter)->Parse({ code.data(), code.size() }) };
     if(!parse_res)
     {
