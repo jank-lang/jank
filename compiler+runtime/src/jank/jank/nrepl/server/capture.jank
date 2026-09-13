@@ -34,13 +34,12 @@
     ;; Return a handle of what we've changed so that we can revert it later.
     {:fp*       fp*
      :bak-fd    bak-fd
-     :temp-name temp-name
-     :temp-fd   temp-fd}))
+     :temp-name temp-name}))
 
 (defn- end
   "End the capture. Make sure to pair this with every `start` call or else the
   stream will remain permanently redirected."
-  [{:keys [fp* bak-fd temp-fd]}]
+  [{:keys [fp* bak-fd]}]
   (let [fp (cpp/unbox (:* FILE) fp*)
         fd (cpp/fileno fp)]
     ;; Flush any remaining data that we want to be included in the capture.
@@ -48,8 +47,7 @@
 
     ;; Bring it all back to its original state.
     (cpp/dup2 bak-fd fd)
-    (cpp/close bak-fd)
-    (cpp/close temp-fd)))
+    (cpp/close bak-fd)))
 
 (defn- readback
   "Read back the data which was captured by the handle. The data is deleted, so

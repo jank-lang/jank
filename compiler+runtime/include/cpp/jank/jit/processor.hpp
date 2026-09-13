@@ -2,7 +2,9 @@
 
 #include <filesystem>
 #include <map>
+#include <mutex>
 
+#include <folly/Synchronized.h>
 #include <jtl/result.hpp>
 #include <jtl/string_builder.hpp>
 
@@ -82,7 +84,6 @@ namespace jank::jit
              jtl::immutable_string const &lib);
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    /*** XXX: Calls through the interpreter and LLVM JIT runtime are thread-safe. ***/
     native_vector<std::filesystem::path> library_dirs;
 
     /* The files within this map will get added into Clang's VFS prior to the creation of
@@ -91,6 +92,6 @@ namespace jank::jit
     std::map<char const *, std::string_view> vfs;
 
     /*** XXX: Everything here is thread-safe. ***/
-    jtl::ptr<CppInternal::Interpreter> interpreter;
+    folly::Synchronized<jtl::ptr<CppInternal::Interpreter>, std::recursive_mutex> interpreter;
   };
 }

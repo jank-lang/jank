@@ -56,7 +56,8 @@ namespace jank::jit
       /* We will intentionally introduce some bad C++ code and we don't want Clang outputting
        * compiler errors to stderr. If there are actual test issues which cause diagnostic
        * issues, the test will fail anyway and we can run it separately to see the errors. */
-      auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+      auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+      auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
       auto old_client{ diag.takeClient() };
       diag.setClient(new clang::IgnoringDiagConsumer{}, true);
       util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };

@@ -321,7 +321,7 @@ namespace jank::util
     }
 
     jank_debug_assert(runtime::__rt_ctx);
-    return result
-      = runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine()->getTargetTriple().str();
+    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    return result = (*locked_interpreter)->getExecutionEngine()->getTargetTriple().str();
   }
 }

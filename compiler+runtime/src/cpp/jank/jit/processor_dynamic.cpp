@@ -344,9 +344,10 @@ namespace jank::jit
     }
 
     /* We need to include our special runtime PCH. */
-    interpreter.reset(created_interpreter);
+    auto locked_interpreter{ interpreter.lock() };
+    locked_interpreter->reset(created_interpreter);
 
-    auto const ee{ interpreter->getExecutionEngine() };
+    auto const ee{ (*locked_interpreter)->getExecutionEngine() };
 
     if constexpr(jtl::current_platform != jtl::platform::windows_like)
     {
@@ -388,7 +389,7 @@ namespace jank::jit
     {
       if(util::cli::opts.perf_profiling_enabled)
       {
-        auto const ee{ interpreter->getExecutionEngine() };
+        auto const ee{ (*locked_interpreter)->getExecutionEngine() };
         auto &es{ ee->getExecutionSession() };
         auto &ol{ ee->getObjLinkingLayer() };
         auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
@@ -582,7 +583,8 @@ namespace jank::jit
       formatted = util::format_cpp_source(s).expect_ok();
       util::println("\n{}\n", formatted);
     }
-    auto err(interpreter->ParseAndExecute({ formatted.data(), formatted.size() }, ret));
+    auto locked_interpreter{ interpreter.lock() };
+    auto err((*locked_interpreter)->ParseAndExecute({ formatted.data(), formatted.size() }, ret));
     if(err)
     {
       llvm::logAllUnhandledErrors(jtl::move(err), llvm::errs(), "error: ");
@@ -592,7 +594,8 @@ namespace jank::jit
 
   void processor::load_object(jtl::immutable_string_view const &path) const
   {
-    auto const ee{ interpreter->getExecutionEngine() };
+    auto locked_interpreter{ interpreter.lock() };
+    auto const ee{ (*locked_interpreter)->getExecutionEngine() };
     auto file{ llvm::MemoryBuffer::getFile(std::string_view{ path }) };
     if(!file)
     {
@@ -665,7 +668,8 @@ namespace jank::jit
       jtl::immutable_string_view{ module_name.data(), module_name.size() }) };
     //m->print(llvm::outs(), nullptr);
 
-    auto const ee(interpreter->getExecutionEngine());
+    auto locked_interpreter{ interpreter.lock() };
+    auto const ee((*locked_interpreter)->getExecutionEngine());
     llvm::cantFail(ee->addIRModule(jtl::move(m)));
     llvm::cantFail(ee->initialize(ee->getMainJITDylib()));
   }
@@ -691,7 +695,8 @@ namespace jank::jit
 
   jtl::string_result<void> processor::remove_symbol(jtl::immutable_string const &name) const
   {
-    auto const ee{ interpreter->getExecutionEngine() };
+    auto locked_interpreter{ interpreter.lock() };
+    auto const ee{ (*locked_interpreter)->getExecutionEngine() };
     llvm::orc::SymbolNameSet to_remove{};
     to_remove.insert(ee->mangleAndIntern(name.c_str()));
     auto const error{ ee->getMainJITDylib().remove(to_remove) };
@@ -705,7 +710,8 @@ namespace jank::jit
 
   jtl::string_result<void *> processor::find_symbol(jtl::immutable_string const &name) const
   {
-    if(auto symbol{ interpreter->getSymbolAddress(name.c_str()) })
+    auto locked_interpreter{ interpreter.lock() };
+    if(auto symbol{ (*locked_interpreter)->getSymbolAddress(name.c_str()) })
     {
       return symbol.get().toPtr<void *>();
     }
@@ -920,8 +926,10 @@ namespace jank::jit
         }
       }
 
+
+      auto locked_interpreter{ prc.interpreter.lock() };
       llvm::cantFail(
-        static_cast<clang::Interpreter &>(*prc.interpreter).LoadDynamicLibrary(path.data()));
+        static_cast<clang::Interpreter &>(**locked_interpreter).LoadDynamicLibrary(path.data()));
     }
   }
 
@@ -932,7 +940,8 @@ namespace jank::jit
 
   void processor::load_static_library(jtl::immutable_string const &path) const
   {
-    auto const ee{ interpreter->getExecutionEngine() };
+    auto locked_interpreter{ interpreter.lock() };
+    auto const ee{ (*locked_interpreter)->getExecutionEngine() };
     llvm::cantFail(ee->linkStaticLibraryInto(ee->getMainJITDylib(), path.c_str()));
   }
 }
