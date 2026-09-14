@@ -19,6 +19,8 @@ namespace jank::runtime
     return s.seq();
   }
 
+  object_ref seq(object_ref const s);
+
   object_ref more(object_ref const s);
   object_ref rest(object_ref const s);
 
