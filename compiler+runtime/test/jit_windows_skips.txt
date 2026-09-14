@@ -44,3 +44,4 @@ throw-default.jank
 throw-return-position.jank
 throw-value.jank
 pass-widen-to-long.jank
+fail-mismatched.jank
