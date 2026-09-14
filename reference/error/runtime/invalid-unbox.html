@@ -36,7 +36,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../../../searchindex-8a2ff3a1.js";
+            window.path_to_searchindex_js = "../../../searchindex-ff43cd9e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-846aad8b.js"></script>
@@ -179,11 +179,14 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="runtimeinvalid-unbox"><a class="header" href="#runtimeinvalid-unbox">runtime/invalid-unbox</a></h1>
-<p>This happens when a boxed foreign value is unboxed as the wrong type.</p>
+<p>This happens when a boxed native pointer is unboxed as the wrong type.</p>
 <h2 id="mitigations"><a class="header" href="#mitigations">Mitigations</a></h2>
-<p>Make sure the unbox operation uses the same type that was originally boxed. The
+<p>Make sure the <code>cpp/unbox</code> operation uses the same type that was originally boxed. The
 jank error output should provide you with source information, as well as the
 expected type for the given box.</p>
+<p>Note that opaque boxes always need to store raw pointers. Additional qualifiers
+like <code>const</code> do matter, when it comes to type comparison. For more information
+on opaque boxes, see <a href="/cpp-interop/native-values.html">here</a>.</p>
 
                     </main>
 
