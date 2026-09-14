@@ -35,36 +35,32 @@
 (defn listen []
   (cpp/box (cpp/new jank.nrepl.server.native_server)))
 
-(defn accept [server*]
-  (let [server (cpp/unbox (:* jank.nrepl.server.native_server) server*)]
-    (cpp/box (.accept server))))
+(defn accept [^(:* jank.nrepl.server.native_server) server]
+  (cpp/box (.accept server)))
 
 (defn connected?
   "Is the client socket connected and available for reading/writing?"
-  [client*]
-  (let [client (cpp/unbox (:* jank.nrepl.server.native_client) client*)]
-    (.is_connected client)))
+  [^(:* jank.nrepl.server.native_client) client]
+  (.is_connected client))
 
 (defn read-message
   "Reads input from the boxed `jank.nrepl.server.native_client` CLIENT*
   and previously uncosumed input BUFFER, returning [msg buffer],
   where msg is the parsed message or nil if incomplete and buffer
   is the unconsumed input."
-  [client* buffer]
-  (let [client  (cpp/unbox (:* jank.nrepl.server.native_client) client*)]
-    (if-let [result (bencode/parse buffer)]
-      result
-      (let [chunk (.read_some client)
-            input (str buffer chunk)]
-        (if-let [result (bencode/parse input)]
-          result
-          [nil input])))))
+  [^(:* jank.nrepl.server.native_client) client buffer]
+  (if-let [result (bencode/parse buffer)]
+    result
+    (let [chunk (.read_some client)
+          input (str buffer chunk)]
+      (if-let [result (bencode/parse input)]
+        result
+        [nil input]))))
 
 (defn write-message
   "Encode the given message and write it to the client socket."
-  [client* msg]
-  (let [client  (cpp/unbox (:* jank.nrepl.server.native_client) client*)
-        msg-str (bencode/write msg)]
+  [^(:* jank.nrepl.server.native_client) client msg]
+  (let [msg-str (bencode/write msg)]
     (.write_some client (cpp/cast std.string msg-str))
     nil))
 
