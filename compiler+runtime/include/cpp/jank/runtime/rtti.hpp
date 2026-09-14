@@ -4,16 +4,6 @@
 
 namespace jank::runtime
 {
-  /* TODO: Remove. */
-  template <typename T>
-  requires behavior::object_like<T>
-  [[gnu::always_inline, gnu::flatten, gnu::hot]]
-  constexpr bool isa(object const * const o)
-  {
-    jank_debug_assert(o);
-    return o->type == T::obj_type;
-  }
-
   template <typename T>
   requires behavior::object_like<T>
   [[gnu::always_inline, gnu::flatten, gnu::hot]]
@@ -34,11 +24,11 @@ namespace jank::runtime
     if(o.get_type() != T::obj_type)
     {
       jtl::string_builder sb;
-      sb("invalid object type (expected ");
+      sb("An object of type `");
       sb(object_type_str(T::obj_type));
-      sb(" found ");
+      sb("` was expected here, but a `");
       sb(object_type_str(o.get_type()));
-      sb(")");
+      sb("` was provided instead.");
       throw std::runtime_error{ sb.str() };
     }
     return static_cast<T *>(o.ptr());

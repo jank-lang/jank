@@ -217,11 +217,14 @@ namespace jank::ir
     auto const fn_scope{ b.cpp_scope_open() };
 
     b.locals[runtime::munge(fn_expr->name)]
-      = b.parameter(analyze::expression_position::value, runtime::munge(fn_expr->name));
+      = b.parameter(analyze::expression_position::value,
+                    analyze::cpp_util::untyped_object_ref_type(),
+                    runtime::munge(fn_expr->name));
     for(auto const &param : arity.params)
     {
-      auto const &name{ runtime::munge(param->get_name()) };
-      b.locals[name] = b.parameter(analyze::expression_position::value, runtime::munge(name));
+      auto const &name{ runtime::munge(param.name->get_name()) };
+      b.locals[name]
+        = b.parameter(analyze::expression_position::value, param.type, runtime::munge(name));
     }
 
     for(auto const &capture : arity.frame->captures)
@@ -239,7 +242,7 @@ namespace jank::ir
       for(auto const param : arity.params)
       {
         auto const shadow{ b.next_shadow() };
-        auto const &name{ runtime::munge(param->get_name()) };
+        auto const &name{ runtime::munge(param.name->get_name()) };
         b.local_to_loop_shadow[name] = shadow;
         shadows.emplace_back(shadow, b.locals[name], untyped_object_ref_type());
       }
@@ -256,7 +259,7 @@ namespace jank::ir
 
       for(auto const &param : arity.params)
       {
-        auto const &name{ runtime::munge(param->get_name()) };
+        auto const &name{ runtime::munge(param.name->get_name()) };
         b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
       }
 
@@ -274,7 +277,7 @@ namespace jank::ir
         b.enter_block(merge_blk);
         for(auto const param : arity.params)
         {
-          auto const &name{ runtime::munge(param->get_name()) };
+          auto const &name{ runtime::munge(param.name->get_name()) };
           b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
         }
       }
@@ -408,7 +411,7 @@ namespace jank::ir
       for(usize i{}; i < b.current_function()->arity->params.size(); ++i)
       {
         auto const shadow{ b.next_shadow() };
-        auto const &name{ runtime::munge(b.current_function()->arity->params[i]->get_name()) };
+        auto const &name{ runtime::munge(b.current_function()->arity->params[i].name->get_name()) };
         b.branch_set(b.local_to_loop_shadow[name], arg_idents[i]);
       }
       return b.jump(b.fn_recur_target.unwrap(), true);

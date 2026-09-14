@@ -1,0 +1,4 @@
+(let* [f (fn* [^(:* int) i]
+           (if (cpp/== 1 (cpp/* i))
+             :success))]
+  (f 1))
