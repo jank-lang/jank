@@ -103,9 +103,13 @@ namespace jank::runtime
 
     opaque_box,
 
+    array,
+
     reader_conditional,
 
     exception_info,
+
+    max = exception_info,
   };
 
   constexpr char const *object_type_str(object_type const type)
@@ -268,6 +272,9 @@ namespace jank::runtime
       case object_type::opaque_box:
         return "opaque_box";
 
+      case object_type::array:
+        return "array";
+
       case object_type::reader_conditional:
         return "reader_conditional";
 
@@ -276,6 +283,59 @@ namespace jank::runtime
     }
     return "unknown";
   }
+
+  enum class array_element_type : u8
+  {
+    boolean = static_cast<u8>(object_type::max) + 1,
+    character,
+    u8,
+    i8,
+    u16,
+    i16,
+    u32,
+    i32,
+    u64,
+    i64,
+    f32,
+    f64,
+    object
+  };
+
+  constexpr char const *element_type_str(array_element_type const type)
+  {
+    switch(type)
+    {
+      case array_element_type::boolean:
+        return "bool";
+      case array_element_type::character:
+        return "char";
+      case array_element_type::u8:
+        return "u8";
+      case array_element_type::i8:
+        return "i8";
+      case array_element_type::u16:
+        return "u16";
+      case array_element_type::i16:
+        return "i16";
+      case array_element_type::u32:
+        return "u32";
+      case array_element_type::i32:
+        return "i32";
+      case array_element_type::u64:
+        return "u64";
+      case array_element_type::i64:
+        return "i64";
+      case array_element_type::f32:
+        return "f32";
+      case array_element_type::f64:
+        return "f64";
+      case array_element_type::object:
+        return "object";
+    }
+
+    return "unknown";
+  }
+
 
   /* The old, closed object model relied on each object having an `object_type`. We would then
    * visit each object type as a means of dynamic dispatch. This worked well for a closed object
@@ -312,6 +372,7 @@ namespace jank::runtime
     sequence_like_in_place = 1 << 8,
     indexable = 1 << 9,
     deref = 1 << 10,
+    array_like = 1 << 11,
     //associatively_writable,
     //chunkable,
     //collection_like,
@@ -544,6 +605,11 @@ namespace jank::runtime
 
     /* behavior::deref */
     virtual object_ref deref();
+
+    /* behavior::array_like */
+    virtual array_element_type get_element_type() const;
+    virtual object_ref aset(i64 const index, object_ref const val);
+    virtual object_ref aclone() const;
 
     object_type type{};
     object_behavior behaviors{ object_behavior::none };
