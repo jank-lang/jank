@@ -25,7 +25,6 @@
                           "CCACHE_MAXSIZE" "1G"
                           "CTCACHE_DIR" (str compiler+runtime-dir "/.ctcache")})
           configure-flags ["-GNinja"
-                           "-Djank_local_clang=on"
                            "-Djank_test=on"
                            "-Djank_unity_build=on"
                            (str "-DCMAKE_BUILD_TYPE=" build-type)
@@ -36,6 +35,8 @@
                            ; compiling to cpp files instead of object files.
                            "-Djank_force_phase_2=on"]
           configure-flags (cond-> configure-flags
+                            (not (b.f/windows?))
+                            (conj "-Djank_local_clang=on")
                             (not= "on" analyze)
                             (conj "-DCMAKE_C_COMPILER_LAUNCHER=ccache"
                                   "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache")
