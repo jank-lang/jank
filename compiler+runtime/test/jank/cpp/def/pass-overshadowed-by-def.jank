@@ -1,0 +1,6 @@
+(cpp/def int pass-overriden-by-def-hello 1)
+
+(def pass-overriden-by-def-hello "hello")
+
+(if (= pass-overriden-by-def-hello "hello")
+  :success)

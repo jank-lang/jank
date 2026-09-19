@@ -102,6 +102,7 @@ namespace jank::error
     analyze_invalid_cpp_box,
     analyze_invalid_cpp_unbox,
     analyze_invalid_cpp_new,
+    analyze_invalid_cpp_def,
     analyze_invalid_cpp_delete,
     analyze_invalid_cpp_member_access,
     analyze_invalid_cpp_capture,
