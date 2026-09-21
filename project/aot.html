@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-ff43cd9e.js";
+            window.path_to_searchindex_js = "../searchindex-b320106a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-846aad8b.js"></script>
@@ -201,7 +201,7 @@ similar to a Graal native image.</p>
 <p>If you need to be able to JIT compile code from your AOT compiled binary, you’ll
 need to enable the <code>dynamic</code> runtime. From jank’s command line, you can use
 <code>--runtime dynamic</code>, but you can also just set this in your Leiningen project.</p>
-<pre><code class="language-clojure">:profiles {:release {:jank {:runtime :dynamic}}}
+<pre><code class="language-clojure">:profiles {:base {:jank {:runtime :dynamic}}}
 </code></pre>
 
                     </main>
