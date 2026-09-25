@@ -1,0 +1,172 @@
+(ns org.jank-lang.example.flappy-bird
+  (:include "raylib.h"
+            "raygui.h"))
+
+(def max-tube-columns 100)
+(def tube-width 80)
+(def bird-speed 2)
+(def bird-radius 24)
+(def screen-width 800)
+(def screen-height 450)
+
+(def default-state {:mode :main-menu ; :main-menu, :playing, :paused, :game-over
+                    :bird {:x 0
+                           :y 0}
+                    :columns []
+                    :score 0
+                    :high-score 0})
+
+(defn start-game [state]
+  (let [bird-y (- (/ screen-height 2) bird-radius)
+        columns (mapv (fn [tube-idx]
+                        (let [x (int (+ (/ screen-width 2) (* 280 tube-idx)))
+                              y (int (- (cpp/GetRandomValue 0 120)))]
+                          {:bottom {:x x
+                                    :y y
+                                    :width tube-width
+                                    :height 255}
+                           :top {:x x
+                                 :y (- (+ y 600) 255)
+                                 :width tube-width
+                                 :height 255}
+                           :active? true}))
+                    (range max-tube-columns))]
+    (-> default-state
+        (assoc :bird {:x 80
+                      :y bird-y})
+        (assoc :columns columns)
+        (assoc :high-score (:high-score state)))))
+
+(defn step-frame [state]
+  (cond
+    (= :main-menu (:mode state))
+    state
+
+    (= :game-over (:mode state))
+    (if (cpp/IsKeyPressed cpp/KEY_ENTER)
+      (start-game state)
+      state)
+
+    (and (cpp/IsKeyPressed (int \P)) (contains? #{:playing :paused} (:mode state)))
+    (update state :mode {:paused :playing
+                         :playing :paused})
+
+    (= :paused (:mode state))
+    state
+
+    :else
+    (let [state (update state
+                        :columns
+                        (fn [cols]
+                          (mapv (fn [col]
+                                  (-> col
+                                      (update-in [:bottom :x] - bird-speed)
+                                      (update-in [:top :x] - bird-speed)))
+                                cols)))
+
+          state (if (cpp/IsKeyDown cpp/KEY_SPACE)
+                  (update-in state [:bird :y] - 3)
+                  (update-in state [:bird :y] + 1))
+          bird-pos (cpp/Vector2 (int (get-in state [:bird :x])) (int (get-in state [:bird :y])))
+          state (reduce (fn [state [{:keys [bottom top active?]} col-idx]]
+                            (let [bottom-rec (cpp/Rectangle (int (:x bottom)) (int (:y bottom))
+                                                            (int (:width bottom)) (int (:height bottom)))
+                                  top-rec (cpp/Rectangle (int (:x top)) (int (:y top))
+                                                         (int (:width top)) (int (:height top)))]
+                              (cond
+                                (or (cpp/CheckCollisionCircleRec bird-pos (int bird-radius) bottom-rec)
+                                    (cpp/CheckCollisionCircleRec bird-pos (int bird-radius) top-rec))
+                                (reduced (assoc state :mode :game-over))
+
+                                (and active? (cpp/< (.-x bottom-rec) (.-x bird-pos)))
+                                (let [score (+ 100 (:score state))
+                                      state (-> (assoc state :score score)
+                                                (assoc-in [:columns col-idx :active?] false))]
+                                  (if (< (:high-score state) score)
+                                    (assoc state :high-score score)
+                                    state))
+
+                                :else
+                                state)))
+                            state
+                            (map vector (:columns state) (range)))]
+      state)))
+
+(defn draw-main-menu! [state]
+  (let [new-game-width 200
+        new-game-height 60
+        changes (volatile! [])]
+    (when-not (zero? (cpp/GuiButton (cpp/Rectangle (int (- (/ screen-width 2) (/ new-game-width 2)))
+                                                   (int (- (/ screen-height 2) (/ new-game-height 2)))
+                                                   (int new-game-width)
+                                                   (int new-game-height))
+                                    "New game"))
+      (vswap! changes conj #(assoc % :mode :playing)))
+
+    (cpp/DrawText (cpp/TextFormat "HIGHEST %04i" (:high-score state)) 20 70 20 (cpp/GetColor 0xff6ec7ff))
+    (reduce #(%2 %1) state @changes)))
+
+(defn draw-frame! [state]
+  (cpp/DrawRectangleGradientV 0
+                              0
+                              screen-width
+                              screen-height
+                              (cpp/GetColor 0x12072fff)
+                              (cpp/GetColor 0x2b0d45ff))
+
+
+  (if (= :main-menu (:mode state))
+    (draw-main-menu! state)
+    (do
+      (cpp/DrawCircle (int (get-in state [:bird :x]))
+                      (int (get-in state [:bird :y]))
+                      (int bird-radius)
+                      (cpp/GetColor 0x00f0ffff))
+      (doseq [{:keys [bottom top]} (:columns state)]
+        (cpp/DrawRectangle (:x bottom)
+                           (:y bottom)
+                           (:width bottom)
+                           (:height bottom)
+                           (cpp/GetColor 0x2d1b4eff))
+        (cpp/DrawRectangleLines (:x bottom) (:y bottom) (:width bottom) (:height bottom) (cpp/GetColor 0xff2bd6ff))
+        (cpp/DrawRectangle (:x top)
+                           (:y top)
+                           (:width top)
+                           (:height top)
+                           (cpp/GetColor 0x241542ff))
+        (cpp/DrawRectangleLines (:x top) (:y top) (:width top) (:height top) (cpp/GetColor 0xff2bd6ff))
+
+        (cpp/DrawText (cpp/TextFormat "%04i" (:score state)) 20 20 40 (cpp/GetColor 0xffe94fff))
+        (cpp/DrawText (cpp/TextFormat "HIGHEST %04i" (:high-score state)) 20 70 20 (cpp/GetColor 0xff6ec7ff))
+
+        (when (= :paused (:mode state))
+          (cpp/DrawText "GAME PAUSED"
+                        (- (/ screen-width 2) (/ (cpp/MeasureText "GAME PAUSED" 40) 2))
+                        (- (/ screen-height 2) 40)
+                        40
+                        (cpp/GetColor 0x00f0ffff))))
+
+      (when (= :game-over (:mode state))
+        (cpp/DrawText "PRESS [ENTER] TO PLAY AGAIN"
+                      (- (/ screen-width 2) (/ (cpp/MeasureText "PRESS [ENTER] TO PLAY AGAIN" 20) 2))
+                      (/ screen-height 2)
+                      20
+                      (cpp/GetColor 0xff2bd6ff)))
+      state)))
+
+(defn -main [& args]
+  (cpp/InitWindow screen-width screen-height "janky bird")
+  (cpp/SetTargetFPS 60)
+
+  (def global-state (start-game default-state))
+  (while (cpp/! (cpp/WindowShouldClose))
+    (let [state (step-frame global-state)
+          _ (cpp/BeginDrawing)
+          state (draw-frame! state)
+          _ (cpp/EndDrawing)]
+      (def global-state state)))
+
+  (cpp/CloseWindow))
+
+(comment
+  (def fut (future (-main))))
