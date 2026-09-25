@@ -5,10 +5,27 @@
 
 namespace jank::runtime::obj
 {
+  /* We strip the whitespace from types so people using the C API don't need to worry about
+   * spaces in their output versus what jank puts. */
+  static jtl::immutable_string strip_whitespace(jtl::immutable_string const &type)
+  {
+    jtl::string_builder sb;
+    sb.reserve(type.size());
+    for(auto const c : type)
+    {
+      if(c == ' ')
+      {
+        continue;
+      }
+      sb(c);
+    }
+    return sb.release();
+  }
+
   opaque_box::opaque_box(jtl::ptr<void> const data, jtl::immutable_string const &canonical_type)
     : object{ obj_type, obj_behaviors }
     , data{ data }
-    , canonical_type{ canonical_type }
+    , canonical_type{ strip_whitespace(canonical_type) }
   {
   }
 

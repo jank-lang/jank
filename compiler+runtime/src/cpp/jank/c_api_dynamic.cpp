@@ -24,6 +24,17 @@ extern "C"
     jank::util::resource_dir_override = jank_resource_dir;
   }
 
+  void jank_set_eagerness(bool const eager)
+  {
+    jank::util::cli::opts.eagerness = eager ? jank::util::cli::compilation_eagerness::eager
+                                            : jank::util::cli::compilation_eagerness::lazy;
+  }
+
+  void jank_add_include_path(char const * const path)
+  {
+    jank::util::cli::opts.include_dirs.emplace_back(path);
+  }
+
   void jank_init_core_libs_phase_1()
   {
     jank::util::println("jank_init_core_libs_phase_1");
@@ -43,29 +54,43 @@ extern "C"
     llvm::InitializeNativeTargetAsmParser();
     llvm::InitializeNativeTargetAsmPrinter();
 
+    int ret{};
+
     /* This try needs to come AFTER we initialize LLVM. If we have it before, we'll be
      * unable to catch some exceptions thrown by JIT-compiled frames. */
-    JANK_TRY
-    {
-      if(pch_data)
-      {
-        jank::aot::register_resource("incremental.pch", { pch_data, pch_size });
-      }
-      if(init_default_ctx)
-      {
-        jank::runtime::__rt_ctx = new(UseGC) jank::runtime::context{};
-      }
+    cpptrace::try_catch(
+      [&] {
+        if(pch_data)
+        {
+          jank::aot::register_resource("incremental.pch", { pch_data, pch_size });
+        }
+        if(init_default_ctx)
+        {
+          jank::runtime::__rt_ctx = new(UseGC) jank::runtime::context{};
+        }
 
-      jank_init_core_libs_phase_1();
-    }
-    JANK_CATCH_THEN(jank::util::print_exception, return 1)
+        jank_init_core_libs_phase_1();
+      },
+      [&](std::exception const &e) {
+        ret = 1;
+        jank::util::print_exception(e);
+      },
+      [&](jank::runtime::object_ref const e) {
+        ret = 1;
+        jank::util::print_exception(e);
+      },
+      [&](jank::error_ref const e) {
+        ret = 1;
+        jank::util::print_exception(e);
+      });
 
-    return 0;
+    return ret;
   }
 
   void jank_shutdown_dynamic_embedded()
   {
     llvm::llvm_shutdown_obj const Y{};
+    /* TODO: Tear down RT context. Stop all background threads. */
   }
 
   int jank_init_dynamic(int const argc,

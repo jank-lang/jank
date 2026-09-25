@@ -28,7 +28,11 @@ namespace jank::util
       path = jank_path / "../share/.clang-format";
       if(!std::filesystem::exists(path))
       {
-        throw std::runtime_error{ "unable to find .clang-format" };
+        path = std::filesystem::path{ resource_dir() } / "../../../share/.clang-format";
+        if(!std::filesystem::exists(path))
+        {
+          throw std::runtime_error{ "No `.clang-format` file was found for this jank install." };
+        }
       }
     }
 

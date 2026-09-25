@@ -64,7 +64,14 @@ extern "C"
 
   jank_object_ref jank_eval_file_c(char const * const path)
   {
-    return __rt_ctx->eval_file(path).unwrap_or(jank_nil).erase().raw();
+    jank::util::println("jank_eval_file_c {}", path);
+    jank_object_ref ret{ jank_const_nil() };
+    cpptrace::try_catch([&] { ret = __rt_ctx->eval_file(path).unwrap_or(jank_nil).erase().raw(); },
+                        [&](std::exception const &e) { jank::util::print_exception(e); },
+                        [&](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
+                        [&](jank::error_ref const e) { jank::util::print_exception(e); },
+                        [&]() { jank::util::print_current_exception(); });
+    return ret;
   }
 
   jank_object_ref jank_read_string(jank_object_ref const s)
@@ -164,7 +171,13 @@ extern "C"
     object_ref const f_obj(reinterpret_cast<object *>(f));
     object_ref const a1_obj(reinterpret_cast<object *>(a1));
     object_ref const a2_obj(reinterpret_cast<object *>(a2));
-    return f_obj.call(a1_obj, a2_obj).erase().raw();
+    jank_object_ref ret{ jank_const_nil() };
+    cpptrace::try_catch([&] { ret = f_obj.call(a1_obj, a2_obj).erase().raw(); },
+                        [](std::exception const &e) { jank::util::print_exception(e); },
+                        [](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
+                        [](jank::error_ref const e) { jank::util::print_exception(e); },
+                        []() { jank::util::print_current_exception(); });
+    return ret;
   }
 
   jank_object_ref jank_call3(jank_object_ref const f,
@@ -956,14 +969,13 @@ extern "C"
   char const *jank_to_string(jank_object_ref const o)
   {
     object_ref const o_obj(reinterpret_cast<object *>(o));
-    return o_obj.to_string().c_str();
+    return strdup(o_obj.to_string().c_str());
   }
 
-  /* TODO: These are not safe. We need to strdup here. */
   char const *jank_to_code_string(jank_object_ref const o)
   {
     object_ref const o_obj(reinterpret_cast<object *>(o));
-    return o_obj.to_code_string().c_str();
+    return strdup(o_obj.to_code_string().c_str());
   }
 
   static i64 to_integer_or_hash(object_ref const o)

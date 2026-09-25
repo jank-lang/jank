@@ -355,6 +355,8 @@ extern "C"
                         int (*fn)(int const, char const ** const));
 
   void jank_override_resource_dir(char const * const jank_resource_dir);
+  void jank_set_eagerness(bool const eager);
+  void jank_add_include_path(char const * const path);
   int jank_init_dynamic_embedded(jank_bool const init_default_ctx,
                                  char const * const pch_data,
                                  jank_usize pch_size);
