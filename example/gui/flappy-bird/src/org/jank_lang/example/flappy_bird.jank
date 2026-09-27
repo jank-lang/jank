@@ -5,7 +5,7 @@
 (def max-tube-columns 100)
 (def tube-width 80)
 (def bird-speed 2)
-(def bird-radius 24)
+(def bird-size 20)
 (def screen-width 800)
 (def screen-height 450)
 
@@ -17,7 +17,7 @@
                     :high-score 0})
 
 (defn start-game [state]
-  (let [bird-y (- (/ screen-height 2) bird-radius)
+  (let [bird-y (- (/ screen-height 2) bird-size)
         columns (mapv (fn [tube-idx]
                         (let [x (int (+ (/ screen-width 2) (* 280 tube-idx)))
                               y (int (- (cpp/GetRandomValue 0 120)))]
@@ -67,18 +67,22 @@
           state (if (cpp/IsKeyDown cpp/KEY_SPACE)
                   (update-in state [:bird :y] - 3)
                   (update-in state [:bird :y] + 1))
-          bird-pos (cpp/Vector2 (int (get-in state [:bird :x])) (int (get-in state [:bird :y])))
+          bird-x (int (get-in state [:bird :x]))
+          bird-y (int (get-in state [:bird :y]))
+          bird-size (int bird-size)
+          bird-rec (cpp/Rectangle (- bird-x bird-size) (- bird-y bird-size)
+                                  (* bird-size 2) (* bird-size 2))
           state (reduce (fn [state [{:keys [bottom top active?]} col-idx]]
                             (let [bottom-rec (cpp/Rectangle (int (:x bottom)) (int (:y bottom))
                                                             (int (:width bottom)) (int (:height bottom)))
                                   top-rec (cpp/Rectangle (int (:x top)) (int (:y top))
                                                          (int (:width top)) (int (:height top)))]
                               (cond
-                                (or (cpp/CheckCollisionCircleRec bird-pos (int bird-radius) bottom-rec)
-                                    (cpp/CheckCollisionCircleRec bird-pos (int bird-radius) top-rec))
+                                (or (cpp/CheckCollisionRecs bird-rec bottom-rec)
+                                    (cpp/CheckCollisionRecs bird-rec top-rec))
                                 (reduced (assoc state :mode :game-over))
 
-                                (and active? (cpp/< (.-x bottom-rec) (.-x bird-pos)))
+                                (and active? (cpp/< (.-x bottom-rec) bird-x))
                                 (let [score (+ 100 (:score state))
                                       state (-> (assoc state :score score)
                                                 (assoc-in [:columns col-idx :active?] false))]
@@ -106,6 +110,35 @@
     (cpp/DrawText (cpp/TextFormat "HIGHEST %04i" (:high-score state)) 20 70 20 (cpp/GetColor 0xff6ec7ff))
     (reduce #(%2 %1) state @changes)))
 
+(defn draw-bird! [state]
+  (let [bird-x (int (get-in state [:bird :x]))
+        bird-y (int (get-in state [:bird :y]))
+        wings-down? (cpp/IsKeyDown cpp/KEY_SPACE)
+        wing-span (int (- bird-size 4))
+        wing-control-offset 10
+        wing-tip-y (if wings-down?
+                     (+ bird-y 14)
+                     (- bird-y 6))
+        wing-peak-y (if wings-down?
+                      (- bird-y 2)
+                      (- bird-y 20))
+        wing-center-y (+ bird-y 5)
+        wing-thickness 8
+        bird-color (cpp/GetColor 0x00f0ffff)]
+    (cpp/DrawSplineSegmentBezierQuadratic (cpp/Vector2 (- bird-x wing-span) wing-tip-y)
+                                          (cpp/Vector2 (- bird-x wing-control-offset) wing-peak-y)
+                                          (cpp/Vector2 bird-x wing-center-y)
+                                          wing-thickness
+                                          bird-color)
+    (cpp/DrawSplineSegmentBezierQuadratic (cpp/Vector2 bird-x wing-center-y)
+                                          (cpp/Vector2 (+ bird-x wing-control-offset) wing-peak-y)
+                                          (cpp/Vector2 (+ bird-x wing-span) wing-tip-y)
+                                          wing-thickness
+                                          bird-color)
+    (cpp/DrawCircle (- bird-x wing-span) wing-tip-y (int (/ wing-thickness 2)) bird-color)
+    (cpp/DrawCircle (+ bird-x wing-span) wing-tip-y (int (/ wing-thickness 2)) bird-color)
+    (cpp/DrawCircle bird-x wing-center-y (int (/ wing-thickness 2)) bird-color)))
+
 (defn draw-frame! [state]
   (cpp/DrawRectangleGradientV 0
                               0
@@ -118,10 +151,7 @@
   (if (= :main-menu (:mode state))
     (draw-main-menu! state)
     (do
-      (cpp/DrawCircle (int (get-in state [:bird :x]))
-                      (int (get-in state [:bird :y]))
-                      (int bird-radius)
-                      (cpp/GetColor 0x00f0ffff))
+      (draw-bird! state)
       (doseq [{:keys [bottom top]} (:columns state)]
         (cpp/DrawRectangle (:x bottom)
                            (:y bottom)

@@ -7,7 +7,8 @@
   :middleware [leiningen.jank/middleware]
   :main org.jank-lang.example.flappy-bird
   :profiles {:base {:jank {:target-dir "target/debug"
-                           :optimization-level 0}}
+                           :optimization-level 0
+                           :eager? true}}
              :release {:jank {:target-dir "target/release"
                               :optimization-level 3
                               :debug? false}}})
