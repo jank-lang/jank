@@ -267,7 +267,7 @@ int main(int argc, const char** argv)
     {
       if constexpr(jtl::current_platform == jtl::platform::macos_like)
       {
-        //compiler_args.emplace_back(strdup("-Wl,-S"));
+        compiler_args.emplace_back(strdup("-Wl,-S"));
       }
       else
       {
