@@ -32,7 +32,6 @@ extern "C"
 
   void jank_init_core_libs()
   {
-    jank::util::println("jank_init_core_libs_phase_2");
     jank::runtime::__rt_ctx->module_loader.add_load_fn("clojure.core", &jank_load_clojure_core);
     jank::runtime::__rt_ctx->module_loader.add_load_fn("clojure.string", &jank_load_clojure_string);
     jank::runtime::__rt_ctx->module_loader.add_load_fn("clojure.walk", &jank_load_clojure_walk);

@@ -37,7 +37,6 @@ extern "C"
 
   void jank_init_core_libs_phase_1()
   {
-    jank::util::println("jank_init_core_libs_phase_1");
     jank_load_clojure_core_native();
 
     jank::runtime::__rt_ctx->module_loader.add_load_fn("jank.compiler-native",
