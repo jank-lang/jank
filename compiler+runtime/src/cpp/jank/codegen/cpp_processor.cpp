@@ -1795,8 +1795,8 @@ namespace jank::codegen
   {
     b.next_instruction();
     auto const value_expr_type{ expression_type(inst->expr->value_expr) };
-    auto const type_str{ get_qualified_type_name(
-      Cpp::GetCanonicalType(Cpp::GetNonReferenceType(value_expr_type))) };
+    auto const type_str{ runtime::obj::opaque_box::strip_whitespace(
+      get_qualified_type_name(Cpp::GetCanonicalType(Cpp::GetNonReferenceType(value_expr_type)))) };
 
     util::format_to(
       b.body_buffer,
@@ -1818,7 +1818,8 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_unbox_ref const inst, builder &b)
   {
     b.next_instruction();
-    auto const type_name{ get_qualified_type_name(Cpp::GetCanonicalType(inst->expr->type)) };
+    auto const type_name{ runtime::obj::opaque_box::strip_whitespace(
+      get_qualified_type_name(Cpp::GetCanonicalType(inst->expr->type))) };
     util::format_to(
       b.body_buffer,
       "auto {}{ "
@@ -1965,7 +1966,8 @@ namespace jank::codegen
       if(Cpp::IsPointerType(param.type))
       {
         auto const munged{ munge(param.name->name) };
-        auto const type_name{ get_qualified_type_name(Cpp::GetCanonicalType(param.type)) };
+        auto const type_name{ runtime::obj::opaque_box::strip_whitespace(
+          get_qualified_type_name(Cpp::GetCanonicalType(param.type))) };
         util::format_to(
           b.body_buffer,
           "auto {}{ "
