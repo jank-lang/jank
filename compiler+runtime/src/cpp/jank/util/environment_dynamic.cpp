@@ -161,6 +161,7 @@ namespace jank::util
     return res;
   }
 
+  /* NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables) */
   jtl::immutable_string resource_dir_override;
 
   jtl::immutable_string resource_dir()
