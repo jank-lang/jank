@@ -1,5 +1,5 @@
 ─ runtime/invalid-unbox ────────────────────────────────────────────────────────
-error: This opaque box holds a `float *`, but it was unboxed as a `int *`.
+error: This opaque box holds a `float*`, but it was unboxed as a `int*`.
 
 ─────┬──────────────────────────────────────────────────────────────────────────
      │ input.jank
