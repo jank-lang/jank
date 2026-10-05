@@ -278,5 +278,4 @@ namespace jank::runtime
                                 util::cli::compilation_target_str(util::cli::opts.output_target)));
     }
   }
-
 }
