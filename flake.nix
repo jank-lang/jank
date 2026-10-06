@@ -159,10 +159,6 @@
             ## Required tools.
             bubblewrap
 
-            ## Required libs.
-            openssl
-            boost
-
             ## Dev tools.
             babashka
             entr
