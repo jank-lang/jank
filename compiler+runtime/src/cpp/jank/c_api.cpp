@@ -56,6 +56,24 @@ extern "C"
     return __rt_ctx->eval(o_obj).erase().raw();
   }
 
+  jank_object_ref jank_eval_file(jank_object_ref const path)
+  {
+    object_ref const path_obj(reinterpret_cast<object *>(path));
+    return __rt_ctx->eval_file(path_obj.to_string()).unwrap_or(jank_nil).erase().raw();
+  }
+
+  jank_object_ref jank_eval_file_c(char const * const path)
+  {
+    jank::util::println("jank_eval_file_c {}", path);
+    jank_object_ref ret{ jank_const_nil() };
+    cpptrace::try_catch([&] { ret = __rt_ctx->eval_file(path).unwrap_or(jank_nil).erase().raw(); },
+                        [&](std::exception const &e) { jank::util::print_exception(e); },
+                        [&](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
+                        [&](jank::error_ref const e) { jank::util::print_exception(e); },
+                        [&]() { jank::util::print_current_exception(); });
+    return ret;
+  }
+
   jank_object_ref jank_read_string(jank_object_ref const s)
   {
     auto const s_obj(try_object<obj::persistent_string>(reinterpret_cast<object *>(s)));
@@ -65,6 +83,11 @@ extern "C"
   jank_object_ref jank_read_string_c(char const * const s)
   {
     return __rt_ctx->read_string(s).erase().raw();
+  }
+
+  void jank_require_c(char const * const ns)
+  {
+    __rt_ctx->load_module(ns, module::origin::latest).expect_ok();
   }
 
   jank_object_ref jank_ns_intern(jank_object_ref const sym)
@@ -148,7 +171,13 @@ extern "C"
     object_ref const f_obj(reinterpret_cast<object *>(f));
     object_ref const a1_obj(reinterpret_cast<object *>(a1));
     object_ref const a2_obj(reinterpret_cast<object *>(a2));
-    return f_obj.call(a1_obj, a2_obj).erase().raw();
+    jank_object_ref ret{ jank_const_nil() };
+    cpptrace::try_catch([&] { ret = f_obj.call(a1_obj, a2_obj).erase().raw(); },
+                        [](std::exception const &e) { jank::util::print_exception(e); },
+                        [](jank::runtime::object_ref const e) { jank::util::print_exception(e); },
+                        [](jank::error_ref const e) { jank::util::print_exception(e); },
+                        []() { jank::util::print_current_exception(); });
+    return ret;
   }
 
   jank_object_ref jank_call3(jank_object_ref const f,
@@ -940,14 +969,13 @@ extern "C"
   char const *jank_to_string(jank_object_ref const o)
   {
     object_ref const o_obj(reinterpret_cast<object *>(o));
-    return o_obj.to_string().c_str();
+    return strdup(o_obj.to_string().c_str());
   }
 
-  /* TODO: These are not safe. We need to strdup here. */
   char const *jank_to_code_string(jank_object_ref const o)
   {
     object_ref const o_obj(reinterpret_cast<object *>(o));
-    return o_obj.to_code_string().c_str();
+    return strdup(o_obj.to_code_string().c_str());
   }
 
   static i64 to_integer_or_hash(object_ref const o)
@@ -964,6 +992,12 @@ extern "C"
   {
     object_ref const o_obj(reinterpret_cast<object *>(o));
     return to_integer_or_hash(o_obj);
+  }
+
+  jank_f64 jank_to_real(jank_object_ref const o)
+  {
+    object_ref const o_obj(reinterpret_cast<object *>(o));
+    return to_real(o_obj);
   }
 
   jank_i64
@@ -985,6 +1019,18 @@ extern "C"
       integer = (integer >> shift) & mask;
     }
     return integer;
+  }
+
+  jank_object_ref jank_first(jank_object_ref o)
+  {
+    object_ref const o_obj(reinterpret_cast<object *>(o));
+    return runtime::first(o_obj).raw();
+  }
+
+  jank_object_ref jank_second(jank_object_ref o)
+  {
+    object_ref const o_obj(reinterpret_cast<object *>(o));
+    return runtime::second(o_obj).raw();
   }
 
   void jank_set_meta(jank_object_ref const o, jank_object_ref const meta)

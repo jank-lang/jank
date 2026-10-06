@@ -186,6 +186,10 @@ int main(int argc, const char** argv)
       strdup(util::format("{}/include", jank_resource_dir.string()).c_str()));
     compiler_args.emplace_back(strdup("-L"));
     compiler_args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir.string()).c_str()));
+#ifndef __MINGW64__
+    compiler_args.emplace_back(
+      strdup(util::format("-Wl,-rpath,{}/lib", jank_resource_dir.string()).c_str()));
+#endif
 
     if constexpr(jtl::current_platform == jtl::platform::macos_like)
     {
@@ -261,7 +265,14 @@ int main(int argc, const char** argv)
     }
     else
     {
-      compiler_args.emplace_back(strdup("-Wl,--strip-all"));
+      if constexpr(jtl::current_platform == jtl::platform::macos_like)
+      {
+        compiler_args.emplace_back(strdup("-Wl,-S"));
+      }
+      else
+      {
+        compiler_args.emplace_back(strdup("-Wl,--strip-all"));
+      }
     }
 
     compiler_args.push_back(strdup("-std=c++20"));
