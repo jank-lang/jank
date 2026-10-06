@@ -106,10 +106,16 @@ namespace jank::jit
 
     library_dirs.emplace_back(util::multi_arch_lib_path().c_str());
 
-    /* JANK_JIT_FLAGS come from how jank was configured with CMake. Any `-L` flags in
-     * there need to be included in the library search paths too. */
+    /* JANK_JIT_FLAGS come from how jank was configured with CMake.
+     * JANK_EXTRA_FLAGS comes from the environment. Any `-L` flags in these need
+     * to be included in the library search paths too. */
     {
       std::stringstream flags{ JANK_JIT_FLAGS };
+      if(auto const extra{ getenv("JANK_EXTRA_FLAGS") }; extra)
+      {
+        flags << " " << extra;
+      }
+
       std::string flag;
       while(std::getline(flags, flag, ' '))
       {

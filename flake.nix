@@ -21,45 +21,31 @@
         libdwarf-lite-src = pkgs.fetchFromGitHub {
           owner = "jeremy-rifkin";
           repo = "libdwarf-lite";
-          rev = "d06f37ed6660b324e458387d43efde3d84c9dd55";
-          sha256 = "sha256-vPSHVrzsLRa29qnXWfkI3EJQeMTSpXHN9I129JjJxtE=";
+          rev = "5dfb2cd2aacf2bf473e5bfea79e41289f88b3a5f";
+          hash = "sha256-K0vmGJhQgNV3mEShPoIMNnInTkttkj1LD7jByj+/RwA=";
         };
         zstd-src = pkgs.fetchFromGitHub {
           owner = "facebook";
           repo = "zstd";
           rev = "v1.5.7";
-          sha256 = "sha256-tNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44=";
+          hash = "sha256-tNFWIT9ydfozB8dWcmTMuZLCQmQudTFJIkSr0aG7S44=";
         };
-        # Manually set compilation and linker flags, rather than depending on
-        # them to be implicitly set in the clang wrapper scripts. This is so
-        # that the jank build process can pick up the flags such that they can
-        # be passed along to downstream jank AOT compilation commands.
-        cmakeCxxFlags = lib.concatStringsSep " " [
-          (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/cc-cflags"))
-          (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/libc-crt1-cflags"))
-        ];
-        cmakeLinkerFlags = lib.concatStringsSep " " [
-          (lib.trim (lib.readFile "${llvmPackages.clang}/nix-support/cc-ldflags"))
-          "-Wl,-rpath,${llvmPackages.stdenv.cc.libc}/lib"
-          "-L${lib.getLib pkgs.glibc}/lib"
-          "-L${lib.getLib llvmPackages.libllvm.lib}/lib"
-          "-L${lib.getLib pkgs.bzip2}/lib"
-          "-L${lib.getLib pkgs.openssl}/lib"
-          "-L${lib.getLib pkgs.zlib}/lib"
-          "-L${lib.getLib pkgs.zstd}/lib"
-          "-L${lib.getLib pkgs.libedit}/lib"
-          "-L${lib.getLib pkgs.libxml2}/lib"
-        ];
       in {
-        legacyPackages = pkgs;
         formatter = pkgs.alejandra;
 
         packages = rec {
           default = jank-release;
 
-          jank-release = llvmPackages.stdenv.mkDerivation (finalAttrs: {
+          jank-release = llvmPackages.stdenv.mkDerivation (finalAttrs: rec {
             pname = "jank";
             version = "git";
+
+            meta = with pkgs.lib; {
+              description = "The native Clojure dialect with seamless C++ interop";
+              homepage = "https://jank-lang.org";
+              license = licenses.mpl20;
+              mainProgram = "jank";
+            };
 
             # Add only essential files so that the source hash is consistent.
             src = lib.cleanSource (lib.fileset.toSource {
@@ -71,46 +57,32 @@
               ];
             });
 
-            nativeBuildInputs =
-              [
-                llvmPackages.clang
-                llvmPackages.libclang.dev
-              ]
-              ++ (with pkgs; [
-                cmake
-                git
-                ninja
-              ]);
-
-            buildInputs =
-              [
-                llvmPackages.libllvm.dev
-              ]
-              ++ (with pkgs; [
-                bzip2
-                openssl
-                zstd
-                libedit
-                libxml2
-                boost
-              ]);
-
-            checkInputs = with pkgs; [
-              glibcLocales
+            nativeBuildInputs = with pkgs; [
+              llvmPackages.clang
+              llvmPackages.libclang.dev
+              cmake
+              git
+              ninja
+              makeWrapper
             ];
+
+            buildInputs = with pkgs; [
+              llvmPackages.libllvm.dev
+              bzip2
+              openssl
+              zstd
+              libedit
+              libxml2
+              boost
+            ];
+
+            nativeCheckInputs = with pkgs;
+              lib.optionals stdenv.hostPlatform.isLinux [
+                glibcLocales
+              ];
 
             postPatch = ''
               patchShebangs ./compiler+runtime/bin/ar-merge
-            '';
-
-            preConfigure = ''
-              cmakeFlagsArray+=(
-                "-DCMAKE_CXX_FLAGS=${lib.escapeShellArg cmakeCxxFlags}"
-                "-DCMAKE_EXE_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
-                "-Djank_extra_runtime_flags=${lib.escapeShellArg cmakeLinkerFlags}"
-                "-DCMAKE_SHARED_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
-                "-DCMAKE_MODULE_LINKER_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}"
-              )
             '';
 
             # Disable _FORTIFY_SOURCE to prevent linker errors for substituted
@@ -140,6 +112,33 @@
               (lib.cmakeBool "jank_force_phase_2" true)
             ];
 
+            # jank will execute clang, but via the low-level clang driver API
+            # rather than the nix wrapper. We need to manually copy over the
+            # flags which would have been filled by the clang wrapper scripts.
+            #
+            # We pass these on to jank via JANK_EXTRA_FLAGS.
+            extraFlags = let
+              sources = [
+                "${pkgs.binutils}/nix-support/libc-ldflags"
+                "${llvmPackages.clang}/nix-support/cc-cflags"
+                "${llvmPackages.clang}/nix-support/libc-cflags"
+                "${llvmPackages.clang}/nix-support/libc-crt1-cflags"
+                "${llvmPackages.clang}/nix-support/libcxx-cxxflags"
+                "${llvmPackages.clang}/nix-support/libcxx-ldflags"
+                "${llvmPackages.clang}/nix-support/cc-ldflags"
+              ];
+            in
+              lib.strings.concatMapStringsSep " " (
+                source: (lib.strings.trim (builtins.readFile source))
+              )
+              sources;
+
+            postFixup = ''
+              wrapProgram "$out/bin/jank" \
+                  --argv0 "$out/bin/.jank-wrapped" \
+                  --prefix JANK_EXTRA_FLAGS ":" "${extraFlags} $NIX_CFLAGS_COMPILE $NIX_LDFLAGS"
+            '';
+
             # Use a UTF-8 locale or else tests which use UTF-8 characters will
             # fail. See: https://github.com/NixOS/nixpkgs/issues/172752
             LC_ALL = "C.UTF-8";
@@ -154,18 +153,13 @@
         };
 
         devShells.default = (pkgs.mkShell.override {stdenv = llvmPackages.stdenv;}) {
+          inputsFrom = [self'.packages.jank-release];
+
           packages = with pkgs; [
             ## Required tools.
-            cmake
-            ninja
-            pkg-config
-            llvmPackages.clang
-            llvmPackages.libclang
-            llvmPackages.libllvm
             bubblewrap
 
             ## Required libs.
-            boehmgc
             openssl
             boost
 
@@ -194,12 +188,12 @@
 
             gnumake
             alsa-lib
-            xorg.libX11
-            xorg.libXcursor
-            xorg.libXi
-            xorg.libXinerama
-            xorg.libXrandr
-            xorg.xorgproto
+            libx11
+            libxcursor
+            libxi
+            libxinerama
+            libxrandr
+            xorgproto
 
             ## Book.
             mdbook
@@ -207,10 +201,8 @@
           ];
 
           shellHook = ''
-            export CXXFLAGS=${lib.escapeShellArg cmakeCxxFlags}
-            export LDFLAGS=${lib.escapeShellArg cmakeLinkerFlags}
-            export JANK_CMAKE_RUNTIME_FLAGS=${lib.escapeShellArg cmakeLinkerFlags}
             export ASAN_OPTIONS=detect_leaks=0
+            export JANK_EXTRA_FLAGS="${self'.packages.jank-release.extraFlags} $NIX_CFLAGS_COMPILE $NIX_LDFLAGS $JANK_EXTRA_FLAGS"
           '';
 
           # Nix assumes fortification by default, but that fails with debug builds.
