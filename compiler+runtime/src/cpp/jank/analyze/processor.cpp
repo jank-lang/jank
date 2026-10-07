@@ -1,6 +1,6 @@
 #include <ranges>
 
-#include <CppInterOp/Compatibility.h>
+#include <clang/Basic/Diagnostic.h>
 
 #include <cpptrace/from_current.hpp>
 
@@ -4099,11 +4099,8 @@ namespace jank::analyze
        *
        * We silence the diagnostics for this because it'll likely fail for any invalid symbols
        * anyway. */
-      auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
-      auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
-      auto old_client{ diag.takeClient() };
-      diag.setClient(new clang::IgnoringDiagConsumer{}, true);
-      util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+      auto const finally{ runtime::__rt_ctx->jit_prc.push_diagnostics_consumer(
+        new clang::IgnoringDiagConsumer{}) };
 
       auto const literal_value{ cpp_util::resolve_literal_value(name) };
       if(literal_value.is_ok())

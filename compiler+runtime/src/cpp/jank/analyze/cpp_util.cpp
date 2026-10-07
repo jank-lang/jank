@@ -2,7 +2,6 @@
 
 #include <clang/Sema/Sema.h>
 #include <CppInterOp/Compatibility.h>
-#include <CppInterOp/CppInterOp.h>
 
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
