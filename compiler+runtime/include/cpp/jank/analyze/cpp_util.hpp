@@ -6,6 +6,7 @@
 #include <jtl/result.hpp>
 
 #include <jank/analyze/expression.hpp>
+#include <jank/analyze/cppinterop.hpp>
 #include <jank/error.hpp>
 
 namespace jank::analyze::cpp_util
@@ -41,25 +42,25 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> non_void_type(jtl::ptr<void> const type);
   jtl::ptr<void> expression_scope(expression_ref const expr);
 
-  jtl::string_result<std::vector<Cpp::TemplateArgInfo>>
-  find_best_arg_types_with_conversions(std::vector<void *> const &fns,
-                                       std::vector<Cpp::TemplateArgInfo> const &arg_types,
+  jtl::string_result<std::vector<cppinterop::clang_type>>
+  find_best_arg_types_with_conversions(std::vector<cppinterop::clang_decl> const &fns,
+                                       std::vector<cppinterop::clang_type> const &arg_types,
                                        bool is_member_call);
 
   native_vector<error::candidate>
-  resolve_candidates(std::vector<void *> const &,
-                     std::vector<Cpp::TemplateArgInfo> const &arg_types,
-                     std::vector<Cpp::TCppScope_t> const &arg_scopes,
+  resolve_candidates(std::vector<cppinterop::clang_decl> const &,
+                     std::vector<cppinterop::clang_type> const &arg_types,
+                     std::vector<cppinterop::clang_decl> const &arg_scopes,
                      bool const is_member_call);
 
   jtl::string_result<jtl::ptr<void>>
-  find_best_overload(std::vector<void *> const &fns,
-                     std::vector<Cpp::TemplateArgInfo> &arg_types,
-                     std::vector<Cpp::TCppScope_t> const &arg_scopes);
+  find_best_overload(std::vector<cppinterop::clang_decl> const &fns,
+                     std::vector<cppinterop::clang_type> &arg_types,
+                     std::vector<cppinterop::clang_decl> const &arg_scopes);
 
-  jtl::option<std::vector<Cpp::TemplateArgInfo>>
-  find_aggregate_match_with_conversions(std::vector<jtl::ptr<void>> const &aggregate_types,
-                                        std::vector<Cpp::TemplateArgInfo> const &arg_types);
+  jtl::option<std::vector<cppinterop::clang_type>>
+  find_aggregate_match_with_conversions(std::vector<cppinterop::clang_type> const &aggregate_types,
+                                        std::vector<cppinterop::clang_type> const &arg_types);
 
   bool is_trait_convertible(jtl::ptr<void> type);
   bool is_untyped_object(jtl::ptr<void> type);

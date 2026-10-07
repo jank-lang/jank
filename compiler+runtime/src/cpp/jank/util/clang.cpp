@@ -12,7 +12,6 @@
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 
 #include <CppInterOp/Compatibility.h>
-#include <CppInterOp/CppInterOp.h>
 
 #include <llvm/TargetParser/Host.h>
 #include <llvm/Support/Program.h>
@@ -23,6 +22,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/analyze/cppinterop.hpp>
 #include <jank/aot/resource.hpp>
 #include <jank/error/system.hpp>
 
@@ -149,7 +149,7 @@ namespace jank::util
       return JANK_CLANG_RESOURCE_DIR;
     }
 
-    auto resource_dir{ Cpp::DetectResourceDir(clang_path.unwrap().c_str()) };
+    auto resource_dir{ analyze::cppinterop::DetectResourceDir(clang_path.unwrap().c_str()) };
 
     if(resource_dir.empty())
     {

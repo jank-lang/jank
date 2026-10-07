@@ -837,6 +837,7 @@ add_library(
   src/cpp/jank/analyze/local_frame.cpp
   src/cpp/jank/analyze/step/force_boxed.cpp
   src/cpp/jank/analyze/cpp_util.cpp
+  src/cpp/jank/analyze/cppinterop.cpp
   src/cpp/jank/analyze/pass/walk.cpp
   src/cpp/jank/analyze/pass/optimize.cpp
   src/cpp/jank/analyze/pass/strip_source_meta.cpp
