@@ -643,8 +643,10 @@ namespace jank::runtime
       if(source != read::source::unknown())
       {
         auto meta{ runtime::meta(expanded) };
-        auto const macro_kw{ __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok() };
-        meta = runtime::assoc(meta, macro_kw, o);
+        static auto const macro_kw{ __rt_ctx->intern_keyword("jank/macro-expansion").expect_ok() };
+        auto const quote_sym{ make_box<obj::symbol>("", "quote") };
+        auto const quoted_o{ make_box<obj::persistent_list>(std::in_place, quote_sym, o) };
+        meta = runtime::assoc(meta, macro_kw, quoted_o);
         expanded = with_meta_graceful(expanded, meta);
       }
 
