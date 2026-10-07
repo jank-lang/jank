@@ -1115,10 +1115,19 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::catch_ref const inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer,
-                    "catch({} {}) {",
-                    get_qualified_type_name(inst->type),
-                    inst->name);
+
+    if(Cpp::IsVoid(inst->type))
+    {
+      util::format_to(b.body_buffer, "catch(...) {\n");
+      util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->name);
+    }
+    else
+    {
+      util::format_to(b.body_buffer,
+                      "catch({} {}) {\n",
+                      get_qualified_type_name(inst->type),
+                      inst->name);
+    }
 
     auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                           : inst->merge_block };

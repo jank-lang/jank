@@ -1,0 +1,6 @@
+(try
+  (throw "meow")
+  (catch int _
+    )
+  (catch :default _
+    :success))
