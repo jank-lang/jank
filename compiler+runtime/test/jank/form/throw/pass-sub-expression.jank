@@ -1,0 +1,6 @@
+((fn* []
+   (try
+     (identity (throw 5))
+     (catch int i
+       (if (= 5 i)
+         :success)))))
