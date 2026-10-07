@@ -7,7 +7,7 @@
             [jank-build.fingerprint :refer [fingerprint fingerprint-file]]
             [jank-build.sandbox.core :as sandbox]
             [jank-build.util :as util])
-  (:import (java.util.jar JarFile)))
+  (:import (java.util.jar JarFile) (java.nio.file FileSystems)))
 
 (def ^:dynamic *disable-sandbox* false)
 
@@ -90,6 +90,11 @@
      :optimization-level optimization-level
      :static?            static?}))
 
+(defn posix-filesystem? []
+  (contains?
+   (.supportedFileAttributeViews (FileSystems/getDefault))
+   "posix"))
+
 (defn build-dep!
   "Run a sandboxed (unless disable-sandbox is set) build on the dependency
   located at `src-dir`, and instruct the build script to place artifacts in the
@@ -111,8 +116,9 @@
         _ (when-not bb
             (throw (IllegalArgumentException. "No 'bb' executable is available.")))
         dep-name     (first (:coord (:dep op)))
-        build-dir    (fs/create-temp-dir {:prefix "jank-build-"
-                                          :posix-file-permissions "rwx------"})
+        build-dir    (fs/create-temp-dir
+                      (cond-> {:prefix "jank-build-"}
+                        (posix-filesystem?) (assoc :posix-file-permissions "rwx------")))
         op           (assoc op :build-dir (str build-dir))
         ;; The sandbox gets standard runtime paths, a scratch directory, and
         ;; a build output directory. It also exposes each input read-only.

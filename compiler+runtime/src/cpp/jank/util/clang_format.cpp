@@ -28,7 +28,11 @@ namespace jank::util
       path = jank_path / "../share/.clang-format";
       if(!std::filesystem::exists(path))
       {
-        throw std::runtime_error{ "unable to find .clang-format" };
+        path = std::filesystem::path{ resource_dir().c_str() } / "../../../share/.clang-format";
+        if(!std::filesystem::exists(path))
+        {
+          throw std::runtime_error{ "No `.clang-format` file was found for this jank install." };
+        }
       }
     }
 
@@ -62,7 +66,7 @@ namespace jank::util
   {
     std::string const code{ source };
     auto const &style(clang_format_style());
-    auto replacements(reformat(style, code, llvm::ArrayRef(tooling::Range(0, code.size()))));
+    auto const replacements(reformat(style, code, llvm::ArrayRef(tooling::Range(0, code.size()))));
     auto formatted_code(tooling::applyAllReplacements(code, replacements));
     if(!formatted_code)
     {

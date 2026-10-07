@@ -50,7 +50,6 @@ set(jank_resource_dir
   "../lib/jank/${CMAKE_PROJECT_VERSION}"
   CACHE STRING
   "Where jank's runtime files are installed. Relative paths are based on the runtime jank binary path")
-set(jank_extra_runtime_flags "$ENV{JANK_CMAKE_RUNTIME_FLAGS}" CACHE STRING "Any extra compiler/linker flags needed for the environment.")
 
 find_package(Git REQUIRED)
 execute_process(
@@ -437,6 +436,7 @@ set(jank_standalone_dynamic_lib_deps
   jank_common_lib
   jank_compiler_lib
   jank_dynamic_lib
+  jank_lib_phase_2
   jank_static_lib
   cpptrace::cpptrace
   Boost::multiprecision
@@ -710,12 +710,11 @@ endforeach()
 list(APPEND jank_lib_linker_flags_list ${jank_linker_flags})
 list(APPEND jank_lib_linker_flags_list ${CMAKE_CXX_FLAGS})
 list(APPEND jank_lib_linker_flags_list ${CMAKE_SHARED_LINKER_FLAGS})
-list(APPEND jank_lib_linker_flags_list ${jank_extra_runtime_flags})
 list(JOIN jank_lib_linker_flags_list " " jank_lib_linker_flags_unescaped)
 string(REPLACE "\"" "\\\"" jank_lib_linker_flags_str "${jank_lib_linker_flags_unescaped}")
 
 # Build a string of all of our JIT compilation flags so we can load them up in the runtime.
-set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes} ${jank_extra_runtime_flags})
+set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes})
 list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str_unescaped)
 string(REPLACE "\"" "\\\"" jank_jit_compile_flags_str "${jank_jit_compile_flags_str_unescaped}")
 
@@ -744,6 +743,7 @@ add_library(
   src/cpp/jank/jit/parse_ld_script.cpp
   src/cpp/jank/jit/processor_dynamic.cpp
   src/cpp/jank/codegen/api_dynamic.cpp
+  src/cpp/jank/environment/check_health.cpp
 )
 set_target_properties(jank_dynamic_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
 set_property(TARGET jank_dynamic_lib PROPERTY OUTPUT_NAME jank-dynamic)
@@ -753,6 +753,20 @@ target_include_directories(jank_dynamic_lib SYSTEM PRIVATE "$<TARGET_PROPERTY:ja
 target_link_options(jank_dynamic_lib PRIVATE ${jank_linker_flags})
 set_target_properties(jank_dynamic_lib PROPERTIES ENABLE_EXPORTS 1)
 # ---- libjank-dynamic.a ----
+
+# ---- libjank-phase-2.a ----
+add_library(
+  jank_lib_phase_2 STATIC
+  src/cpp/jank/c_api_dynamic_phase_2.cpp
+)
+set_target_properties(jank_lib_phase_2 PROPERTIES UNITY_BUILD ${jank_unity_build})
+set_property(TARGET jank_lib_phase_2 PROPERTY OUTPUT_NAME jank-phase-2)
+target_compile_features(jank_lib_phase_2 PUBLIC ${jank_cxx_standard})
+target_compile_options(jank_lib_phase_2 PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
+target_include_directories(jank_lib_phase_2 SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_common_lib,INCLUDE_DIRECTORIES>")
+target_link_options(jank_lib_phase_2 PRIVATE ${jank_linker_flags})
+set_target_properties(jank_lib_phase_2 PROPERTIES ENABLE_EXPORTS 1)
+# ---- libjank-phase-2.a ----
 
 # ---- libjank-static.a ----
 add_library(
@@ -864,7 +878,6 @@ add_executable(
   jank_exe_phase_1
   src/cpp/main.cpp
   src/cpp/jank/terminal_repl_client.cpp
-  src/cpp/jank/environment/check_health.cpp
 )
 add_executable(jank::exe ALIAS jank_exe_phase_1)
 set_property(TARGET jank_exe_phase_1 PROPERTY OUTPUT_NAME jank-phase-1)
@@ -933,6 +946,7 @@ if(jank_enable_phase_2)
   target_link_libraries(
     jank_exe_phase_2 PUBLIC
     "$<TARGET_PROPERTY:jank_exe_phase_1,LINK_LIBRARIES>"
+    jank_lib_phase_2
   )
 
   add_dependencies(jank_exe_phase_2 jank_core_libraries)
@@ -988,6 +1002,7 @@ if(jank_test)
   if(jank_enable_phase_2)
     target_sources(jank_test_exe PUBLIC ${jank_clojure_core_output})
     target_compile_options(jank_test_exe PUBLIC -DJANK_PHASE_2)
+    target_link_libraries(jank_test_exe PUBLIC jank_lib_phase_2)
   endif()
 
   set_property(TARGET jank_test_exe PROPERTY OUTPUT_NAME jank-test)

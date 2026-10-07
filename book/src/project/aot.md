@@ -31,5 +31,5 @@ need to enable the `dynamic` runtime. From jank's command line, you can use
 `--runtime dynamic`, but you can also just set this in your Leiningen project.
 
 ```clojure
-:profiles {:release {:jank {:runtime :dynamic}}}
+:profiles {:base {:jank {:runtime :dynamic}}}
 ```

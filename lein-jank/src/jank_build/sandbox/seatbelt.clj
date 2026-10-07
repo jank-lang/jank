@@ -31,6 +31,7 @@
    [:ro-bind "/Library/Apple/usr" "/Library/Apple/usr"]
 
    [:ro-bind "/opt/homebrew" "/opt/homebrew"]
+   [:ro-bind "/opt/local" "/opt/local"]
    [:ro-bind "/usr/local" "/usr/local"]
    [:ro-bind "/nix" "/nix"]])
 
@@ -42,6 +43,7 @@
    "/sbin"
    "/Library/Developer/CommandLineTools"
    "/opt/homebrew"
+   "/opt/local"
    "/usr/local"
    "/nix"])
 

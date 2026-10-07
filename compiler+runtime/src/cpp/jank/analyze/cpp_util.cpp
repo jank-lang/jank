@@ -31,7 +31,7 @@ namespace jank::analyze::cpp_util
    * After that failure, Clang gets back into a good state. */
   static void reset_sfinae_state()
   {
-    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     static_cast<void>((*locked_interpreter)->Parse("1"));
   }
 
@@ -76,7 +76,7 @@ namespace jank::analyze::cpp_util
   jtl::string_result<jtl::ptr<void>>
   instantiate(jtl::ptr<void> const scope, native_vector<Cpp::TemplateArgInfo> const &args)
   {
-    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     /* TODO: Capture the diagnostic output instead of showing it. Then put it together
      * in our own format. Until we have that, we might as well show it. */
@@ -191,7 +191,7 @@ namespace jank::analyze::cpp_util
 
   jtl::string_result<jtl::ptr<void>> resolve_literal_type(jtl::immutable_string const &literal)
   {
-    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
 
@@ -246,7 +246,7 @@ namespace jank::analyze::cpp_util
   jtl::string_result<literal_value_result>
   resolve_literal_value(jtl::immutable_string const &literal)
   {
-    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
 
@@ -417,7 +417,7 @@ namespace jank::analyze::cpp_util
    * this for exception catching. */
   void register_rtti(jtl::ptr<void> const type)
   {
-    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
     auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
@@ -1490,7 +1490,7 @@ namespace jank::analyze::cpp_util
   bool is_trait_convertible(jtl::ptr<void> const type)
   {
     static auto const convert_template{ Cpp::GetScopeFromCompleteName("jank::runtime::convert") };
-    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     Cpp::TemplateArgInfo const arg{ Cpp::GetCanonicalType(
       Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(type))) };
     clang::Sema::SFINAETrap const trap{ (*locked_interpreter)->getSema(), true };

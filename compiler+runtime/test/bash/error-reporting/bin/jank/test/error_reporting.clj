@@ -23,7 +23,7 @@
 
 ;; Tests that throw exceptions are currently not supported on Windows.
 (def skip-tests (if (b.f/windows?)
-                  #{"aot" "aot-with-reparse" "invalid-throw" "jar"}
+                  #{"aot" "aot-with-reparse" "invalid-throw" "jar" "type-hint"}
                   #{}))
 
 (def src-dir (str (b.f/canonicalize (str (b.f/parent *file*) "/../../../src"))))

@@ -3,6 +3,40 @@
    [clojure.string :refer [starts-with?]]
    [jank.nrepl.server.handler :refer [handle-message]]))
 
+;; from jank/read/parse.cpp
+(def special-forms
+  #{"def"
+    "fn*"
+    "recur"
+    "do"
+    "let*"
+    "letfn*"
+    "loop*"
+    "if"
+    "quote"
+    "var"
+    "throw"
+    "try"
+    "case*"
+    "cpp/raw"
+    "cpp/dsl"
+    "cpp/value"
+    "cpp/cast"
+    "cpp/unsafe-cast"
+    "cpp/box"
+    "cpp/unbox"
+    "cpp/new"
+    "cpp/delete"})
+
+(defn special-candidates
+  [prefix]
+  (->>
+   special-forms
+   (keep (fn [k]
+           (when (starts-with? k prefix)
+             {:type      :special-form
+              :candidate k})))))
+
 (defn- find-str-ns
   "Lookup a namespace from its string name, returning the namespace or nil if it
   does not exist."
@@ -18,22 +52,23 @@
           :else         :var)))
 
 (defn- vars-candidates
-  "Return candidates for the public vars of the given namespace which start with
-  the given prefix string."
+  "Return candidates for the mappings of the given namespace which
+  start with the given prefix string."
   [ns prefix]
   (->>
-   (ns-publics ns)
-   (filter (fn [[k _]] (starts-with? k prefix)))
-   (mapv (fn [[k v]]
-           {:ns        (str ns)
-            :type      (candidate-type v)
-            :candidate (str k)}))))
+   (ns-map ns)
+   (keep (fn [[k v]]
+           (when (starts-with? k prefix)
+             {:ns        (str ns)
+              :type      (candidate-type v)
+              :candidate (str k)})))))
 
 (defmethod handle-message :completions [msg]
   (let [ns     (find-str-ns (get msg "ns"))
         prefix (get msg "prefix")]
     (if ns
       ;; TODO: support namespace candidates, interop candidates, etc.
-      {:completions (vars-candidates ns prefix)
+      {:completions (vec (concat (vars-candidates ns prefix)
+                                 (special-candidates prefix)))
        :status      [:done]}
       {:status [:done :namespace-not-found]})))

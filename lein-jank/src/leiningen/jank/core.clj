@@ -90,6 +90,16 @@
       ["-Odirect-call"]
       [])
 
+    :debug?
+    (if value
+      []
+      ["--no-debug"])
+
+    :eager?
+    (if value
+      ["--eagerness" "eager"]
+      [])
+
     :optimization-level
     [(str "-O" value)]
 

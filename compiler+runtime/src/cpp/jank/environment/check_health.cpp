@@ -105,7 +105,9 @@ namespace jank::environment
 
   static jtl::immutable_string jank_resource_dir()
   {
-    std::filesystem::path dir{ JANK_RESOURCE_DIR };
+    std::filesystem::path dir{ util::resource_dir_override.empty()
+                                 ? JANK_RESOURCE_DIR
+                                 : util::resource_dir_override.c_str() };
     bool relative{};
     std::filesystem::path const jank_path{ util::process_dir().c_str() };
     if(!dir.is_absolute())
@@ -131,7 +133,7 @@ namespace jank::environment
                     icon,
                     text_style::reset,
                     text_style::blue,
-                    JANK_RESOURCE_DIR,
+                    dir.string(),
                     text_style::reset,
                     text_style::bright_black,
                     /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
@@ -292,7 +294,7 @@ namespace jank::environment
   static jtl::immutable_string check_cpp_jit()
   {
     bool error{};
-    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     auto def_err{ (*locked_interpreter)
                     ->ParseAndExecute(
                       "std::string jank_cpp_health_check(){ return \"healthy\"; }") };

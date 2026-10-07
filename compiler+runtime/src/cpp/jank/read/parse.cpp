@@ -611,13 +611,19 @@ namespace jank::read::parse
                                      start_token,
                                      latest_token };
         }
-        if constexpr(std::same_as<T, obj::symbol>)
+        else if constexpr(jtl::is_any_same<T, obj::symbol, obj::persistent_list>)
         {
-          return object_source_info{ obj::persistent_array_map::create_unique(),
+          static auto const tag_kw(__rt_ctx->intern_keyword("", "tag").expect_ok());
+          return object_source_info{ obj::persistent_array_map::create_unique(
+                                       tag_kw,
+                                       make_box<obj::persistent_list>(
+                                         std::in_place,
+                                         make_box<obj::symbol>("", "quote"),
+                                         typed_val)),
                                      start_token,
                                      latest_token };
         }
-        if constexpr(behavior::map_like<T>)
+        else if constexpr(behavior::map_like<T>)
         {
           return object_source_info{ typed_val, start_token, latest_token };
         }
@@ -677,7 +683,7 @@ namespace jank::read::parse
     {
       return next_token_result.err().unwrap();
     }
-    auto next_token(next_token_result.expect_ok());
+    auto const next_token(next_token_result.expect_ok());
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -1297,7 +1303,7 @@ namespace jank::read::parse
     {
       auto const front(pending_forms.begin());
 
-      for(auto &i : spliced_forms)
+      for(auto const &i : spliced_forms)
       {
         pending_forms.insert(front, i);
       }
@@ -1481,7 +1487,7 @@ namespace jank::read::parse
       }
       else if(sym->ns.empty() && sym->name != "&")
       {
-        auto var(__rt_ctx->find_var(sym));
+        auto const var(__rt_ctx->find_var(sym));
         if(var.is_nil())
         {
           sym = make_box<obj::symbol>(__rt_ctx->current_ns()->name->name, sym->name);

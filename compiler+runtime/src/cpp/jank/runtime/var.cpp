@@ -356,13 +356,13 @@ namespace std
 {
   size_t hash<jank::runtime::var>::operator()(jank::runtime::var const &o) const noexcept
   {
-    static auto hasher(std::hash<jank::runtime::obj::symbol>{});
+    static auto const hasher(std::hash<jank::runtime::obj::symbol>{});
     return hasher(*o.name);
   }
 
   size_t hash<jank::runtime::var_ref>::operator()(jank::runtime::var_ref const o) const noexcept
   {
-    static auto hasher(std::hash<jank::runtime::obj::symbol>{});
+    static auto const hasher(std::hash<jank::runtime::obj::symbol>{});
     return hasher(*o->name);
   }
 

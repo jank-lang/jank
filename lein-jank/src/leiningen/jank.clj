@@ -76,7 +76,8 @@ USAGE: lein debug -m/--main NAMESPACE [--] [ARGS...]
     (dispatch-jank project opts "repl" (if main [main] []) args)))
 
 (def compile-cli-options
-  [["-n" "--name FILE" "the output file name"]])
+  [["-m" "--main NAMESPACE" "override main namespace"]
+   ["-n" "--name FILE" "the output file name"]])
 
 (defn compile!
   "Ahead of time compile your project to an executable, starting at the :main
@@ -89,7 +90,7 @@ To override the executable output file, pass `--name FILE`."
   (let [cli-options (into ljc/standard-options compile-cli-options)
         [opts args] (ljc/parse-opts #'compile! args cli-options)
         name-opts   (when (:name opts) ["--name" (:name opts)])]
-    (if-let [main (:main project)]
+    (if-let [main (or (:main opts) (:main project))]
       (dispatch-jank project opts "compile" (concat [main] name-opts) args)
       (lmain/warn "No :main entrypoint for project."))))
 

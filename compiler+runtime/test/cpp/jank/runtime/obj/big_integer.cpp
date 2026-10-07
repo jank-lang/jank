@@ -79,8 +79,8 @@ namespace jank::runtime::obj
         native_big_integer const huge_val{ nbi("1") << 1024 };
         auto const bi_huge_pos(make_box<big_integer>(huge_val));
         auto const bi_huge_neg(make_box<big_integer>(-huge_val));
-        auto r_inf_pos{ make_box<real>(std::numeric_limits<f64>::infinity()) };
-        auto r_inf_neg{ make_box<real>(-std::numeric_limits<f64>::infinity()) };
+        auto const r_inf_pos{ make_box<real>(std::numeric_limits<f64>::infinity()) };
+        auto const r_inf_neg{ make_box<real>(-std::numeric_limits<f64>::infinity()) };
 
         /* Conversion works, but comparison should use epsilon logic which fails for inf. */
         CHECK_FALSE(bi_huge_pos.equal(r_inf_pos));
@@ -163,22 +163,22 @@ namespace jank::runtime::obj
 
     TEST_CASE("compare method")
     {
-      auto bi_10{ make_box<big_integer>(10) };
-      auto bi_20{ make_box<big_integer>(20) };
-      auto bi_10_neg{ make_box<big_integer>(-10) };
-      auto bi_large{ make_box<big_integer>(nbi("100000000000000000000")) };
+      auto const bi_10{ make_box<big_integer>(10) };
+      auto const bi_20{ make_box<big_integer>(20) };
+      auto const bi_10_neg{ make_box<big_integer>(-10) };
+      auto const bi_large{ make_box<big_integer>(nbi("100000000000000000000")) };
 
-      auto i_15{ make_box<integer>(15) };
-      auto i_10{ make_box<integer>(10) };
-      auto i_10_neg{ make_box<integer>(-10) };
+      auto const i_15{ make_box<integer>(15) };
+      auto const i_10{ make_box<integer>(10) };
+      auto const i_10_neg{ make_box<integer>(-10) };
 
-      auto r_10{ make_box<real>(10.0) };
-      auto r_10_5{ make_box<real>(10.5) };
-      auto r_neg_10{ make_box<real>(-10.0) };
-      auto r_neg_9_5{ make_box<real>(-9.5) };
+      auto const r_10{ make_box<real>(10.0) };
+      auto const r_10_5{ make_box<real>(10.5) };
+      auto const r_neg_10{ make_box<real>(-10.0) };
+      auto const r_neg_9_5{ make_box<real>(-9.5) };
 
-      auto ratio_half{ make_box<obj::ratio>(obj::ratio_data(1, 2)) };
-      auto bool_true{ make_box<obj::boolean>(true) };
+      auto const ratio_half{ make_box<obj::ratio>(obj::ratio_data(1, 2)) };
+      auto const bool_true{ make_box<obj::boolean>(true) };
 
       SUBCASE("big_integer vs big_integer")
       {

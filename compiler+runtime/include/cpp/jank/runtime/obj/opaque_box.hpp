@@ -27,6 +27,8 @@ namespace jank::runtime::obj
     object_ref get_meta() const;
     void set_meta(object_ref const o);
 
+    static jtl::immutable_string strip_whitespace(jtl::immutable_string const &type);
+
     /*** XXX: Everything here is immutable after initialization. ***/
     jtl::ptr<void> data{};
     jtl::immutable_string canonical_type;

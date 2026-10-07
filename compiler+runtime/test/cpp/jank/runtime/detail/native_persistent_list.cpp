@@ -39,7 +39,7 @@ namespace jank::runtime::detail
       SUBCASE("Empty")
       {
         native_persistent_list_impl<int> const l;
-        for(auto i : l)
+        for(auto const i : l)
         {
           static_cast<void>(i);
           CHECK(false);
@@ -50,13 +50,13 @@ namespace jank::runtime::detail
       {
         native_persistent_list_impl<int> const l{ 10, 20, 30 };
         int c{ 1 };
-        for(auto i : l)
+        for(auto const i : l)
         {
           CHECK(i == c++ * 10);
         }
         /* Check twice to ensure iterators aren't stateful. */
         c = 1;
-        for(auto i : l)
+        for(auto const i : l)
         {
           CHECK(i == c++ * 10);
         }

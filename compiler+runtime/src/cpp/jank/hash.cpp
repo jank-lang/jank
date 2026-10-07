@@ -158,13 +158,6 @@ namespace jank::hash
     return o.to_hash();
   }
 
-  template <typename T>
-  requires runtime::behavior::object_like<T>
-  static u32 visit(runtime::oref<T> const o)
-  {
-    return o.to_hash();
-  }
-
   u32 ordered(runtime::oref<runtime::object> const sequence)
   {
     if(sequence.has_behavior(runtime::object_behavior::sequence_like))

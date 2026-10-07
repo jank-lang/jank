@@ -151,7 +151,7 @@ namespace jank::jit
       config.PostAllocationPasses.emplace_back([this, resource_key = resource_key.unwrap()](
                                                  llvm::jitlink::LinkGraph &graph) -> llvm::Error {
         using U = std::underlying_type_t<llvm::orc::MemProt>;
-        for(auto *symbol : graph.defined_symbols())
+        for(auto const *symbol : graph.defined_symbols())
         {
           /* We only care about executable symbols here, since these are the ones that can appear
            * as stack frames. */
@@ -216,7 +216,7 @@ namespace jank::jit
 
   void install_object_tracking_plugin()
   {
-    auto locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     auto const ee{ (*locked_interpreter)->getExecutionEngine() };
     auto &ol{ ee->getObjLinkingLayer() };
     auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
@@ -288,7 +288,7 @@ namespace jank::jit
         };
 
     auto const action_flag{ cpptrace::detail::__jit_debug_descriptor.action_flag };
-    auto * const relevant_entry{ cpptrace::detail::__jit_debug_descriptor.relevant_entry };
+    auto const * const relevant_entry{ cpptrace::detail::__jit_debug_descriptor.relevant_entry };
     if(action_flag == cpptrace::detail::JIT_REGISTER_FN && relevant_entry != nullptr
        && register_entry(*relevant_entry))
     {
@@ -304,7 +304,7 @@ namespace jank::jit
     * the first unseen node in the list is our best incremental fallback. If there are multiple
     * adjacent unseen head entries, they're part of the same unpublished burst, so mirror all of
     * them before returning. */
-    for(auto *entry{ cpptrace::detail::__jit_debug_descriptor.first_entry }; entry != nullptr;
+    for(auto const *entry{ cpptrace::detail::__jit_debug_descriptor.first_entry }; entry != nullptr;
         entry = entry->next_entry)
     {
       if(register_entry(*entry))
