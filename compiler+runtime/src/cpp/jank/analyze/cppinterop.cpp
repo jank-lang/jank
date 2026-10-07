@@ -6,15 +6,9 @@ namespace jank::analyze::cppinterop
 {
   namespace
   {
-    std::vector<void *> to_voidp(std::vector<clang_decl> const &handles)
+    std::vector<void *> const &to_voidp(std::vector<clang_decl> const &handles)
     {
-      std::vector<void *> result;
-      result.reserve(handles.size());
-      for(auto const handle : handles)
-      {
-        result.push_back(handle.data);
-      }
-      return result;
+      return *reinterpret_cast<std::vector<void *> const *>(&handles);
     }
 
     std::vector<clang_decl> from_voidp(std::vector<void *> const &handles)
@@ -463,8 +457,7 @@ namespace jank::analyze::cppinterop
 
   clang_type GetFunctionType(clang_type ret, std::vector<clang_type> const &params)
   {
-    auto const cpp_params{ to_voidp(params) };
-    return Cpp::GetFunctionType(ret, cpp_params);
+    return Cpp::GetFunctionType(ret, to_voidp(params));
   }
 
   clang_type GetPointeeType(clang_type type)
@@ -598,14 +591,7 @@ namespace jank::analyze::cppinterop
                    CppImpl::OperatorArity kind)
   {
     std::vector<void *> cpp_operators;
-    /* TODO: Update GetOperator to take vector<type> */
-    std::vector<Cpp::TemplateArgInfo> arg_type_infos;
-    arg_type_infos.reserve(arg_types.size());
-    for(auto const type : arg_types)
-    {
-      arg_type_infos.emplace_back(type);
-    }
-    Cpp::GetOperator(op, arg_type_infos, cpp_operators, kind);
+    Cpp::GetOperator(op, to_voidp(arg_types), cpp_operators, kind);
     operators = from_voidp(cpp_operators);
   }
 
@@ -640,31 +626,14 @@ namespace jank::analyze::cppinterop
                                             std::vector<clang_type> const &arg_types,
                                             std::vector<clang_decl> const &arg_scopes)
   {
-    auto const cpp_candidates{ to_voidp(candidates) };
-    auto const cpp_arg_scopes{ to_voidp(arg_scopes) };
-
-    /* TODO: Update BestOverloadMatch to take vector<type> */
-    std::vector<Cpp::TemplateArgInfo> arg_type_infos;
-    arg_type_infos.reserve(arg_types.size());
-    for(auto const type : arg_types)
-    {
-      arg_type_infos.emplace_back(type);
-    }
-    return from_voidp(Cpp::BestOverloadMatch(cpp_candidates, arg_type_infos, cpp_arg_scopes));
+    return from_voidp(
+      Cpp::BestOverloadMatch(to_voidp(candidates), to_voidp(arg_types), to_voidp(arg_scopes)));
   }
 
   CppImpl::OverloadCandidateInfo GetOverloadCandidateInfo(clang_decl candidate,
                                                           std::vector<clang_type> const &arg_types,
                                                           std::vector<clang_decl> const &arg_scopes)
   {
-    auto const cpp_arg_scopes{ to_voidp(arg_scopes) };
-    /* TODO: Update GetOverloadCandidateInfo to take vector<type> */
-    std::vector<Cpp::TemplateArgInfo> arg_type_infos;
-    arg_type_infos.reserve(arg_types.size());
-    for(auto const type : arg_types)
-    {
-      arg_type_infos.emplace_back(type);
-    }
-    return Cpp::GetOverloadCandidateInfo(candidate, arg_type_infos, cpp_arg_scopes);
+    return Cpp::GetOverloadCandidateInfo(candidate, to_voidp(arg_types), to_voidp(arg_scopes));
   }
 }
