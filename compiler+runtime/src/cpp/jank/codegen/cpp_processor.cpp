@@ -1714,15 +1714,13 @@ namespace jank::codegen
     b.next_instruction();
     auto const fn_name{ Cpp::GetName(inst->expr->fn) };
     auto const is_void{ Cpp::IsVoid(Cpp::GetFunctionReturnType(inst->expr->fn)) };
+    auto const is_ptr{ Cpp::IsPointerType(
+      Cpp::GetNonReferenceType(expression_type(inst->expr->arg_exprs[0]))) };
 
     if(is_void)
     {
       util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {}{ };\n", inst->name);
-      util::format_to(b.body_buffer,
-                      "{}{}{}(",
-                      inst->args[0],
-                      (Cpp::IsPointerType(expression_type(inst->expr->arg_exprs[0])) ? "->" : "."),
-                      fn_name);
+      util::format_to(b.body_buffer, "{}{}{}(", inst->args[0], (is_ptr ? "->" : "."), fn_name);
     }
     else
     {
@@ -1730,7 +1728,7 @@ namespace jank::codegen
                       "auto &&{}({}{}{}(",
                       inst->name,
                       inst->args[0],
-                      (Cpp::IsPointerType(expression_type(inst->expr->arg_exprs[0])) ? "->" : "."),
+                      (is_ptr ? "->" : "."),
                       fn_name);
     }
 

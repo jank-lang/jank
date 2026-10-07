@@ -156,7 +156,8 @@ OPTIONS
                               Absolute or relative path to the directory to search dynamic
                               libraries in. Can be specified multiple times.
   -l <lib>                    Library identifiers, absolute or relative paths eg. -lfoo for
-                              libfoo.so or foo.dylib. Can be specified multiple times.)",
+                              libfoo.so or foo.dylib. Can be specified multiple times.
+          --framework <name>  Links a macOS framework. Can be specified multiple times.)",
                   JANK_VERSION);
     std::exit(1);
   }
