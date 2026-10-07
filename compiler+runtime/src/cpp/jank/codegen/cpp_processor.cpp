@@ -1049,6 +1049,8 @@ namespace jank::codegen
       util::format_to(b.body_buffer, "throw;\n");
     }
 
+    util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->name);
+
     /* If there are any instructions after the throw, like scope closes, we need to handle
      * them, too. */
     while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
