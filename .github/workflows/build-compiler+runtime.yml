@@ -255,6 +255,7 @@ jobs:
       - name: Install boost
         if: runner.os == 'Linux'
         run: |
+          sudo apt update
           sudo apt install -y libboost-all-dev
       - name: Install Homebrew packages
         if: runner.os == 'macOS'

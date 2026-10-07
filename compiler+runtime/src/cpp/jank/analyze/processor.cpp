@@ -88,7 +88,7 @@ namespace jank::analyze
       return nullptr;
     }
 
-    proc.macro_expansions.push_back(expansion);
+    proc.macro_expansions.push_back(runtime::second(expansion));
 
     return std::make_unique<util::scope_exit>([&]() { proc.macro_expansions.pop_back(); });
   }
@@ -110,7 +110,7 @@ namespace jank::analyze
 
       if(expansion.is_some())
       {
-        return expansion;
+        return runtime::second(expansion);
       }
     }
 
