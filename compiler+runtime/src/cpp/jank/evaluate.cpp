@@ -559,13 +559,12 @@ namespace jank::evaluate
 
   object_ref eval(expr::throw_ref const expr)
   {
-    /* XXX: Clojure wraps throw expressions. I _suspect_ it does this because
-     * clojure.main uses the stack trace to provide source info by stripping out
-     * Clojure frames until the first non-Clojure frame is found. If we throw
-     * from an eval, maybe that doesn't happen? For now, we support eval, however. */
     if(expr->value.is_some())
     {
-      throw eval(expr->value.unwrap());
+      /* We wrap throws because we could be throwing native values from native expressions. If
+       * we just wrap the native expression, we'll end up with a Clojure function trying to
+       * return that native value, which could itself be invalid. */
+      return eval(wrap_expression(expr, "throw")).call();
     }
     else
     {
