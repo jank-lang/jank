@@ -29,6 +29,6 @@ namespace jank::analyze::expr
 
   jtl::ptr<void> cpp_raw::get_type() const
   {
-    return cppinterop::GetVoidType();
+    return cppinterop::get_void_type();
   }
 }

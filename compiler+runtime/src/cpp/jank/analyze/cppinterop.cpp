@@ -23,569 +23,569 @@ namespace jank::analyze::cppinterop
     }
   }
 
-  std::string MangleRTTI(clang_type type)
+  std::string mangle_rtti(clang_type type)
   {
     return Cpp::MangleRTTI(type);
   }
 
-  void EnableDebugOutput(bool value)
+  void enable_debug_output(bool value)
   {
     Cpp::EnableDebugOutput(value);
   }
 
-  bool IsNamespace(clang_decl scope)
+  bool is_namespace(clang_decl scope)
   {
     return Cpp::IsNamespace(scope);
   }
 
-  bool IsClass(clang_decl scope)
+  bool is_class(clang_decl scope)
   {
     return Cpp::IsClass(scope);
   }
 
-  bool IsClassTemplate(clang_decl handle)
+  bool is_class_template(clang_decl handle)
   {
     return Cpp::IsClassTemplate(handle);
   }
 
-  bool IsFunction(clang_decl scope)
+  bool is_function(clang_decl scope)
   {
     return Cpp::IsFunction(scope);
   }
 
-  bool IsFunctionPointerType(clang_type type)
+  bool is_function_pointer_type(clang_type type)
   {
     return Cpp::IsFunctionPointerType(type);
   }
 
-  bool IsInlineFriendFunction(clang_decl scope)
+  bool is_inline_friend_function(clang_decl scope)
   {
     return Cpp::IsInlineFriendFunction(scope);
   }
 
-  bool IsComplete(clang_decl scope)
+  bool is_complete(clang_decl scope)
   {
     return Cpp::IsComplete(scope);
   }
 
-  bool IsBuiltin(clang_type type)
+  bool is_builtin(clang_type type)
   {
     return Cpp::IsBuiltin(type);
   }
 
-  bool IsIntegral(clang_type type)
+  bool is_integral(clang_type type)
   {
     return Cpp::IsIntegral(type);
   }
 
-  bool IsVoid(clang_type type)
+  bool is_void(clang_type type)
   {
     return Cpp::IsVoid(type);
   }
 
-  clang_type GetVoidType()
+  clang_type get_void_type()
   {
     return Cpp::GetVoidType();
   }
 
-  bool IsTemplate(clang_decl handle)
+  bool is_template(clang_decl handle)
   {
     return Cpp::IsTemplate(handle);
   }
 
-  bool IsTemplateSpecialization(clang_decl handle)
+  bool is_template_specialization(clang_decl handle)
   {
     return Cpp::IsTemplateSpecialization(handle);
   }
 
-  bool IsTemplateSpecializationOf(clang_decl spec, clang_decl templ)
+  bool is_template_specialization_of(clang_decl spec, clang_decl templ)
   {
     return Cpp::IsTemplateSpecializationOf(spec, templ);
   }
 
-  bool IsTypedefed(clang_decl handle)
+  bool is_typedefed(clang_decl handle)
   {
     return Cpp::IsTypedefed(handle);
   }
 
-  clang_type GetCommonType(clang_type lhs, clang_type rhs)
+  clang_type get_common_type(clang_type lhs, clang_type rhs)
   {
     return Cpp::GetCommonType(lhs, rhs);
   }
 
-  bool IsImplicitlyConvertible(clang_type from_type, clang_type to_type)
+  bool is_implicitly_convertible(clang_type from_type, clang_type to_type)
   {
     return Cpp::IsImplicitlyConvertible(from_type, to_type);
   }
 
-  bool IsCStyleConvertible(clang_type from_type, clang_type to_type)
+  bool is_c_style_convertible(clang_type from_type, clang_type to_type)
   {
     return Cpp::IsCStyleConvertible(from_type, to_type);
   }
 
-  bool IsConstructible(clang_type to_type, clang_type from_type)
+  bool is_constructible(clang_type to_type, clang_type from_type)
   {
     return Cpp::IsConstructible(to_type, from_type);
   }
 
-  bool IsTriviallyDestructible(clang_type type)
+  bool is_trivially_destructible(clang_type type)
   {
     return Cpp::IsTriviallyDestructible(type);
   }
 
-  bool IsEnumScope(clang_decl handle)
+  bool is_enum_scope(clang_decl handle)
   {
     return Cpp::IsEnumScope(handle);
   }
 
-  bool IsEnumConstant(clang_decl handle)
+  bool is_enum_constant(clang_decl handle)
   {
     return Cpp::IsEnumConstant(handle);
   }
 
-  bool IsEnumType(clang_type type)
+  bool is_enum_type(clang_type type)
   {
     return Cpp::IsEnumType(type);
   }
 
-  bool IsVariable(clang_decl scope)
+  bool is_variable(clang_decl scope)
   {
     return Cpp::IsVariable(scope);
   }
 
-  std::string GetName(clang_decl klass)
+  std::string get_name(clang_decl klass)
   {
     return Cpp::GetName(klass);
   }
 
-  std::string GetQualifiedName(clang_decl klass)
+  std::string get_qualified_name(clang_decl klass)
   {
     return Cpp::GetQualifiedName(klass);
   }
 
-  std::string GetQualifiedCompleteName(clang_decl klass)
+  std::string get_qualified_complete_name(clang_decl klass)
   {
     return Cpp::GetQualifiedCompleteName(klass);
   }
 
-  std::string GetTruncatedName(clang_decl klass)
+  std::string get_truncated_name(clang_decl klass)
   {
     return Cpp::GetTruncatedName(klass);
   }
 
-  std::string GetQualifiedCompleteNameWithTemplateArgs(clang_decl klass)
+  std::string get_qualified_complete_name_with_template_args(clang_decl klass)
   {
     return Cpp::GetQualifiedCompleteNameWithTemplateArgs(klass);
   }
 
-  clang_decl GetGlobalScope()
+  clang_decl get_global_scope()
   {
     return Cpp::GetGlobalScope();
   }
 
-  clang_decl GetUnderlyingScope(clang_decl scope)
+  clang_decl get_underlying_scope(clang_decl scope)
   {
     return Cpp::GetUnderlyingScope(scope);
   }
 
-  clang_decl GetScopeFromCompleteName(std::string const &name)
+  clang_decl get_scope_from_complete_name(std::string const &name)
   {
     return Cpp::GetScopeFromCompleteName(name);
   }
 
-  clang_decl GetNamed(std::string const &name, clang_decl parent)
+  clang_decl get_named(std::string const &name, clang_decl parent)
   {
     return Cpp::GetNamed(name, parent);
   }
 
-  clang_decl GetParentScope(clang_decl scope)
+  clang_decl get_parent_scope(clang_decl scope)
   {
     return Cpp::GetParentScope(scope);
   }
 
-  clang_decl GetScopeFromType(clang_type type)
+  clang_decl get_scope_from_type(clang_type type)
   {
     return Cpp::GetScopeFromType(type);
   }
 
-  size_t GetNumBases(clang_decl klass)
+  size_t get_num_bases(clang_decl klass)
   {
     return Cpp::GetNumBases(klass);
   }
 
-  clang_decl GetBaseClass(clang_decl klass, size_t ibase)
+  clang_decl get_base_class(clang_decl klass, size_t ibase)
   {
     return Cpp::GetBaseClass(klass, ibase);
   }
 
-  bool HasUsableCopyConstructor(clang_decl scope)
+  bool has_usable_copy_constructor(clang_decl scope)
   {
     return Cpp::HasUsableCopyConstructor(scope);
   }
 
-  bool HasUsableMoveConstructor(clang_decl scope)
+  bool has_usable_move_constructor(clang_decl scope)
   {
     return Cpp::HasUsableMoveConstructor(scope);
   }
 
-  bool HasDeletedMoveConstructor(clang_decl scope)
+  bool has_deleted_move_constructor(clang_decl scope)
   {
     return Cpp::HasDeletedMoveConstructor(scope);
   }
 
-  std::vector<clang_decl> GetFunctionsUsingName(clang_decl scope, std::string const &name)
+  std::vector<clang_decl> get_functions_using_name(clang_decl scope, std::string const &name)
   {
     return from_voidp(Cpp::GetFunctionsUsingName(scope, name));
   }
 
-  clang_type GetFunctionReturnType(clang_decl func)
+  clang_type get_function_return_type(clang_decl func)
   {
     return Cpp::GetFunctionReturnType(func);
   }
 
-  size_t GetFunctionNumArgs(clang_decl func)
+  size_t get_function_num_args(clang_decl func)
   {
     return Cpp::GetFunctionNumArgs(func);
   }
 
-  size_t GetFunctionRequiredArgs(clang_decl func)
+  size_t get_function_required_args(clang_decl func)
   {
     return Cpp::GetFunctionRequiredArgs(func);
   }
 
-  clang_type GetFunctionArgType(clang_decl func, size_t iarg)
+  clang_type get_function_arg_type(clang_decl func, size_t iarg)
   {
     return Cpp::GetFunctionArgType(func, iarg);
   }
 
-  std::string GetFunctionSignature(clang_type func)
+  std::string get_function_signature(clang_type func)
   {
     return Cpp::GetFunctionSignature(func);
   }
 
-  std::string GetFunctionSourceInfo(clang_decl func)
+  std::string get_function_source_info(clang_decl func)
   {
     return Cpp::GetFunctionSourceInfo(func);
   }
 
-  clang_type GetFunctionReturnTypeFromType(clang_type func)
+  clang_type get_function_return_type_from_type(clang_type func)
   {
     return Cpp::GetFunctionReturnTypeFromType(func);
   }
 
-  size_t GetFunctionNumArgsFromType(clang_type func)
+  size_t get_function_num_args_from_type(clang_type func)
   {
     return Cpp::GetFunctionNumArgsFromType(func);
   }
 
-  clang_type GetFunctionArgTypeFromType(clang_type func, size_t iarg)
+  clang_type get_function_arg_type_from_type(clang_type func, size_t iarg)
   {
     return Cpp::GetFunctionArgTypeFromType(func, iarg);
   }
 
-  bool IsFunctionVariadic(clang_decl function)
+  bool is_function_variadic(clang_decl function)
   {
     return Cpp::IsFunctionVariadic(function);
   }
 
-  bool IsFunctionVariadicTemplate(clang_decl fn)
+  bool is_function_variadic_template(clang_decl fn)
   {
     return Cpp::IsFunctionVariadicTemplate(fn);
   }
 
-  bool IsFunctionDeleted(clang_decl function)
+  bool is_function_deleted(clang_decl function)
   {
     return Cpp::IsFunctionDeleted(function);
   }
 
-  bool IsFunctionTypeConst(clang_type function_type)
+  bool is_function_type_const(clang_type function_type)
   {
     return Cpp::IsFunctionTypeConst(function_type);
   }
 
-  bool IsTemplatedFunction(clang_decl func)
+  bool is_templated_function(clang_decl func)
   {
     return Cpp::IsTemplatedFunction(func);
   }
 
   void
-  LookupConstructors(std::string const &name, clang_decl parent, std::vector<clang_decl> &funcs)
+  lookup_constructors(std::string const &name, clang_decl parent, std::vector<clang_decl> &funcs)
   {
     std::vector<void *> cpp_funcs;
     Cpp::LookupConstructors(name, parent, cpp_funcs);
     funcs = from_voidp(cpp_funcs);
   }
 
-  bool IsMethod(clang_decl method)
+  bool is_method(clang_decl method)
   {
     return Cpp::IsMethod(method);
   }
 
-  bool IsProtectedMethod(clang_decl method)
+  bool is_protected_method(clang_decl method)
   {
     return Cpp::IsProtectedMethod(method);
   }
 
-  bool IsPrivateMethod(clang_decl method)
+  bool is_private_method(clang_decl method)
   {
     return Cpp::IsPrivateMethod(method);
   }
 
-  bool IsConstructor(clang_decl method)
+  bool is_constructor(clang_decl method)
   {
     return Cpp::IsConstructor(method);
   }
 
-  bool IsDestructor(clang_decl method)
+  bool is_destructor(clang_decl method)
   {
     return Cpp::IsDestructor(method);
   }
 
-  bool IsStaticMethod(clang_decl method)
+  bool is_static_method(clang_decl method)
   {
     return Cpp::IsStaticMethod(method);
   }
 
-  void GetDatamembers(clang_decl scope, std::vector<clang_decl> &datamembers)
+  void get_datamembers(clang_decl scope, std::vector<clang_decl> &datamembers)
   {
     std::vector<void *> cpp_datamembers;
     Cpp::GetDatamembers(scope, cpp_datamembers);
     datamembers = from_voidp(cpp_datamembers);
   }
 
-  void GetStaticDatamembers(clang_decl scope, std::vector<clang_decl> &datamembers)
+  void get_static_datamembers(clang_decl scope, std::vector<clang_decl> &datamembers)
   {
     std::vector<void *> cpp_datamembers;
     Cpp::GetStaticDatamembers(scope, cpp_datamembers);
     datamembers = from_voidp(cpp_datamembers);
   }
 
-  clang_decl LookupDatamember(std::string const &name, clang_decl parent)
+  clang_decl lookup_datamember(std::string const &name, clang_decl parent)
   {
     return Cpp::LookupDatamember(name, parent);
   }
 
-  std::vector<clang_decl> LookupMethods(std::string const &name, clang_decl parent)
+  std::vector<clang_decl> lookup_methods(std::string const &name, clang_decl parent)
   {
     return from_voidp(Cpp::LookupMethods(name, parent));
   }
 
-  intptr_t GetVariableOffset(clang_decl var, clang_decl parent)
+  intptr_t get_variable_offset(clang_decl var, clang_decl parent)
   {
     return Cpp::GetVariableOffset(var, parent);
   }
 
-  bool IsProtectedVariable(clang_decl var)
+  bool is_protected_variable(clang_decl var)
   {
     return Cpp::IsProtectedVariable(var);
   }
 
-  bool IsPrivateVariable(clang_decl var)
+  bool is_private_variable(clang_decl var)
   {
     return Cpp::IsPrivateVariable(var);
   }
 
-  bool IsStaticVariable(clang_decl var)
+  bool is_static_variable(clang_decl var)
   {
     return Cpp::IsStaticVariable(var);
   }
 
-  bool IsNonStaticVariable(clang_decl scope)
+  bool is_non_static_variable(clang_decl scope)
   {
     return Cpp::IsNonStaticVariable(scope);
   }
 
-  bool IsConstType(clang_type type)
+  bool is_const_type(clang_type type)
   {
     return Cpp::IsConstType(type);
   }
 
-  bool IsPointerType(clang_type type)
+  bool is_pointer_type(clang_type type)
   {
     return Cpp::IsPointerType(type);
   }
 
-  bool IsPointerToMemberType(clang_type type)
+  bool is_pointer_to_member_type(clang_type type)
   {
     return Cpp::IsPointerToMemberType(type);
   }
 
-  bool IsPointerToMemberVariableType(clang_type type)
+  bool is_pointer_to_member_variable_type(clang_type type)
   {
     return Cpp::IsPointerToMemberVariableType(type);
   }
 
-  bool IsPointerToMemberFunctionType(clang_type type)
+  bool is_pointer_to_member_function_type(clang_type type)
   {
     return Cpp::IsPointerToMemberFunctionType(type);
   }
 
-  clang_type GetParentTypeFromPointerToMember(clang_type type)
+  clang_type get_parent_type_from_pointer_to_member(clang_type type)
   {
     return Cpp::GetParentTypeFromPointerToMember(type);
   }
 
-  clang_type GetFunctionTypeFromPointerToMember(clang_type member_type, clang_type obj_type)
+  clang_type get_function_type_from_pointer_to_member(clang_type member_type, clang_type obj_type)
   {
     return Cpp::GetFunctionTypeFromPointerToMember(member_type, obj_type);
   }
 
-  bool IsArrayType(clang_type type)
+  bool is_array_type(clang_type type)
   {
     return Cpp::IsArrayType(type);
   }
 
-  size_t GetArraySize(clang_type type)
+  size_t get_array_size(clang_type type)
   {
     return Cpp::GetArraySize(type);
   }
 
-  clang_type GetArrayElementType(clang_type type)
+  clang_type get_array_element_type(clang_type type)
   {
     return Cpp::GetArrayElementType(type);
   }
 
-  clang_type GetArrayType(clang_type type)
+  clang_type get_array_type(clang_type type)
   {
     return Cpp::GetArrayType(type);
   }
 
-  clang_type GetArrayType(clang_type type, size_t size)
+  clang_type get_array_type(clang_type type, size_t size)
   {
     return Cpp::GetArrayType(type, size);
   }
 
-  clang_type GetFunctionType(clang_type ret, std::vector<clang_type> const &params)
+  clang_type get_function_type(clang_type ret, std::vector<clang_type> const &params)
   {
     return Cpp::GetFunctionType(ret, to_voidp(params));
   }
 
-  clang_type GetPointeeType(clang_type type)
+  clang_type get_pointee_type(clang_type type)
   {
     return Cpp::GetPointeeType(type);
   }
 
-  clang_type GetPointerType(clang_type type)
+  clang_type get_pointer_type(clang_type type)
   {
     return Cpp::GetPointerType(type);
   }
 
-  clang_type GetPointerToMemberType(clang_decl member)
+  clang_type get_pointer_to_member_type(clang_decl member)
   {
     return Cpp::GetPointerToMemberType(member);
   }
 
-  clang_type GetLValueReferenceType(clang_type type)
+  clang_type get_lvalue_reference_type(clang_type type)
   {
     return Cpp::GetLValueReferenceType(type);
   }
 
-  clang_type GetRValueReferenceType(clang_type type)
+  clang_type get_rvalue_reference_type(clang_type type)
   {
     return Cpp::GetRValueReferenceType(type);
   }
 
-  bool IsReferenceType(clang_type type)
+  bool is_reference_type(clang_type type)
   {
     return Cpp::IsReferenceType(type);
   }
 
-  bool IsRvalueReferenceType(clang_type type)
+  bool is_rvalue_reference_type(clang_type type)
   {
     return Cpp::IsRvalueReferenceType(type);
   }
 
-  clang_type GetNonReferenceType(clang_type type)
+  clang_type get_non_reference_type(clang_type type)
   {
     return Cpp::GetNonReferenceType(type);
   }
 
-  clang_type GetUnderlyingType(clang_type type)
+  clang_type get_underlying_type(clang_type type)
   {
     return Cpp::GetUnderlyingType(type);
   }
 
-  clang_type GetTypeWithoutCv(clang_type type)
+  clang_type get_type_without_cv(clang_type type)
   {
     return Cpp::GetTypeWithoutCv(type);
   }
 
-  clang_type GetTypeWithConst(clang_type type)
+  clang_type get_type_with_const(clang_type type)
   {
     return Cpp::GetTypeWithConst(type);
   }
 
-  clang_type GetTypeWithVolatile(clang_type type)
+  clang_type get_type_with_volatile(clang_type type)
   {
     return Cpp::GetTypeWithVolatile(type);
   }
 
-  clang_type GetSignedType(clang_type type)
+  clang_type get_signed_type(clang_type type)
   {
     return Cpp::GetSignedType(type);
   }
 
-  clang_type GetUnsignedType(clang_type type)
+  clang_type get_unsigned_type(clang_type type)
   {
     return Cpp::GetUnsignedType(type);
   }
 
-  clang_type GetShortType(clang_type type)
+  clang_type get_short_type(clang_type type)
   {
     return Cpp::GetShortType(type);
   }
 
-  clang_type GetLongType(clang_type type)
+  clang_type get_long_type(clang_type type)
   {
     return Cpp::GetLongType(type);
   }
 
-  bool IsShortType(clang_type type)
+  bool is_short_type(clang_type type)
   {
     return Cpp::IsShortType(type);
   }
 
-  std::string GetTypeAsString(clang_type type)
+  std::string get_type_as_string(clang_type type)
   {
     return Cpp::GetTypeAsString(type);
   }
 
-  std::string GetTypeAsTruncatedString(clang_type type)
+  std::string get_type_as_truncated_string(clang_type type)
   {
     return Cpp::GetTypeAsTruncatedString(type);
   }
 
-  clang_type GetCanonicalType(clang_type type)
+  clang_type get_canonical_type(clang_type type)
   {
     return Cpp::GetCanonicalType(type);
   }
 
-  clang_type GetType(std::string const &type)
+  clang_type get_type(std::string const &type)
   {
     return Cpp::GetType(type);
   }
 
-  clang_type GetTypeFromScope(clang_decl klass)
+  clang_type get_type_from_scope(clang_decl klass)
   {
     return Cpp::GetTypeFromScope(klass);
   }
 
-  bool IsTypeDerivedFrom(clang_type derived, clang_type base)
+  bool is_type_derived_from(clang_type derived, clang_type base)
   {
     return Cpp::IsTypeDerivedFrom(derived, base);
   }
 
-  bool IsConstMethod(clang_decl method)
+  bool is_const_method(clang_decl method)
   {
     return Cpp::IsConstMethod(method);
   }
 
-  std::string GetFunctionArgName(clang_decl func, size_t param_index)
+  std::string get_function_arg_name(clang_decl func, size_t param_index)
   {
     return Cpp::GetFunctionArgName(func, param_index);
   }
 
-  void GetOperator(CppImpl::Operator op,
+  void get_operator(CppImpl::Operator op,
                    std::vector<clang_type> const &arg_types,
                    std::vector<clang_decl> &operators,
                    CppImpl::OperatorArity kind)
@@ -595,7 +595,7 @@ namespace jank::analyze::cppinterop
     operators = from_voidp(cpp_operators);
   }
 
-  clang_decl CreateInterpreter(std::vector<char const *> const &args,
+  clang_decl create_interpreter(std::vector<char const *> const &args,
                                std::vector<char const *> const &gpu_args,
                                std::map<char const *, std::string_view> const &vfs,
                                std::optional<int> const &cm,
@@ -604,12 +604,12 @@ namespace jank::analyze::cppinterop
     return Cpp::CreateInterpreter(args, gpu_args, vfs, cm, pch_out_of_date);
   }
 
-  std::string DetectResourceDir(char const *clang_binary_name)
+  std::string detect_resource_dir(char const *clang_binary_name)
   {
     return Cpp::DetectResourceDir(clang_binary_name);
   }
 
-  clang_decl InstantiateTemplate(clang_decl tmpl,
+  clang_decl instantiate_template(clang_decl tmpl,
                                  CppImpl::TemplateArgInfo const *template_args,
                                  size_t template_args_size,
                                  bool instantiate_body)
@@ -617,12 +617,12 @@ namespace jank::analyze::cppinterop
     return Cpp::InstantiateTemplate(tmpl, template_args, template_args_size, instantiate_body);
   }
 
-  bool InstantiateTemplate(clang_decl spec)
+  bool instantiate_template(clang_decl spec)
   {
     return Cpp::InstantiateTemplate(spec);
   }
 
-  std::vector<clang_decl> BestOverloadMatch(std::vector<clang_decl> const &candidates,
+  std::vector<clang_decl> best_overload_match(std::vector<clang_decl> const &candidates,
                                             std::vector<clang_type> const &arg_types,
                                             std::vector<clang_decl> const &arg_scopes)
   {
@@ -630,7 +630,7 @@ namespace jank::analyze::cppinterop
       Cpp::BestOverloadMatch(to_voidp(candidates), to_voidp(arg_types), to_voidp(arg_scopes)));
   }
 
-  CppImpl::OverloadCandidateInfo GetOverloadCandidateInfo(clang_decl candidate,
+  CppImpl::OverloadCandidateInfo get_overload_candidate_info(clang_decl candidate,
                                                           std::vector<clang_type> const &arg_types,
                                                           std::vector<clang_decl> const &arg_scopes)
   {

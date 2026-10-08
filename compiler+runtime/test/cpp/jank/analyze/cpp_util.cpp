@@ -21,10 +21,10 @@ TEST_SUITE("analyze/cpp_util")
     )cpp")
       .expect_ok();
 
-    auto const scope{ cppinterop::GetScopeFromCompleteName("jank::test::resolve_candidates") };
+    auto const scope{ cppinterop::get_scope_from_complete_name("jank::test::resolve_candidates") };
     REQUIRE(scope);
 
-    auto const fns{ cppinterop::GetFunctionsUsingName(scope, "foo") };
+    auto const fns{ cppinterop::get_functions_using_name(scope, "foo") };
     REQUIRE(fns.size() == 4);
 
     std::vector<cppinterop::clang_type> const arg_types{ { cpp_util::int_type() } };
@@ -38,7 +38,7 @@ TEST_SUITE("analyze/cpp_util")
     jank::usize deleted_index{};
     for(jank::usize i{}; i < fns.size(); ++i)
     {
-      auto const num_args{ cppinterop::GetFunctionNumArgs(fns[i]) };
+      auto const num_args{ cppinterop::get_function_num_args(fns[i]) };
       if(num_args == 0)
       {
         deleted_index = i;
@@ -47,7 +47,7 @@ TEST_SUITE("analyze/cpp_util")
       {
         arity_index = i;
       }
-      else if(cppinterop::GetFunctionArgType(fns[i], 0) == cpp_util::int_type())
+      else if(cppinterop::get_function_arg_type(fns[i], 0) == cpp_util::int_type())
       {
         one_arg_index = i;
       }
@@ -56,10 +56,10 @@ TEST_SUITE("analyze/cpp_util")
         conversion_index = i;
       }
     }
-    auto const one_arg_signature{ cppinterop::GetFunctionSignature(fns[one_arg_index]) };
-    auto const conversion_signature{ cppinterop::GetFunctionSignature(fns[conversion_index]) };
-    auto const arity_signature{ cppinterop::GetFunctionSignature(fns[arity_index]) };
-    auto const deleted_signature{ cppinterop::GetFunctionSignature(fns[deleted_index]) };
+    auto const one_arg_signature{ cppinterop::get_function_signature(fns[one_arg_index]) };
+    auto const conversion_signature{ cppinterop::get_function_signature(fns[conversion_index]) };
+    auto const arity_signature{ cppinterop::get_function_signature(fns[arity_index]) };
+    auto const deleted_signature{ cppinterop::get_function_signature(fns[deleted_index]) };
     CHECK(candidates[0].signature == one_arg_signature);
     CHECK(candidates[1].signature == deleted_signature);
     CHECK(candidates[2].signature == conversion_signature);
@@ -84,20 +84,20 @@ TEST_SUITE("analyze/cpp_util")
     )cpp")
       .expect_ok();
 
-    auto const scope{ cppinterop::GetScopeFromCompleteName(
+    auto const scope{ cppinterop::get_scope_from_complete_name(
       "jank::test::resolve_candidates_members::widget") };
     REQUIRE(scope);
 
-    auto const fns{ cppinterop::GetFunctionsUsingName(scope, "run") };
+    auto const fns{ cppinterop::get_functions_using_name(scope, "run") };
     REQUIRE(fns.size() == 2);
 
     /* The implicit object parameter is const, so the public `run(int)` overload
      * (which is non-const) is a const_mismatch, while the private `run(double)`
      * overload is an access_violation regardless of constness. access_violation
      * must rank above const_mismatch. */
-    auto const widget_type{ cppinterop::GetTypeFromScope(scope) };
+    auto const widget_type{ cppinterop::get_type_from_scope(scope) };
     REQUIRE(widget_type);
-    auto const const_widget_type{ cppinterop::GetTypeWithConst(widget_type) };
+    auto const const_widget_type{ cppinterop::get_type_with_const(widget_type) };
     REQUIRE(const_widget_type);
 
     std::vector<cppinterop::clang_type> const arg_types{ { const_widget_type },
@@ -110,7 +110,7 @@ TEST_SUITE("analyze/cpp_util")
     jank::usize public_index{};
     for(jank::usize i{}; i < fns.size(); ++i)
     {
-      if(cppinterop::IsPrivateMethod(fns[i]))
+      if(cppinterop::is_private_method(fns[i]))
       {
         private_index = i;
       }
@@ -119,8 +119,8 @@ TEST_SUITE("analyze/cpp_util")
         public_index = i;
       }
     }
-    auto const private_signature{ cppinterop::GetFunctionSignature(fns[private_index]) };
-    auto const public_signature{ cppinterop::GetFunctionSignature(fns[public_index]) };
+    auto const private_signature{ cppinterop::get_function_signature(fns[private_index]) };
+    auto const public_signature{ cppinterop::get_function_signature(fns[public_index]) };
     CHECK(candidates[0].signature == private_signature);
     CHECK(candidates[1].signature == public_signature);
   }

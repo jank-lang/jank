@@ -149,7 +149,7 @@ namespace jank::util
       return JANK_CLANG_RESOURCE_DIR;
     }
 
-    auto resource_dir{ analyze::cppinterop::DetectResourceDir(clang_path.unwrap().c_str()) };
+    auto resource_dir{ analyze::cppinterop::detect_resource_dir(clang_path.unwrap().c_str()) };
 
     if(resource_dir.empty())
     {

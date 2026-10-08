@@ -111,7 +111,7 @@ namespace jank::analyze
       /* Native values which are captured get copied, so we need to adjust the type
        * of the binding. */
       res.first->second.binding.type
-        = cppinterop::GetNonReferenceType(res.first->second.binding.type);
+        = cppinterop::get_non_reference_type(res.first->second.binding.type);
     }
   }
 
