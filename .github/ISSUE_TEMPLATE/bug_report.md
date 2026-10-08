@@ -25,3 +25,7 @@ assignees: ''
 
 ## Additional context
 > Add any other context about the problem here.
+
+## I acknowledge that
+- [ ] I have searched the jank repository (both open and closed Issues) and confirm this is not a duplicate of an existing issue.
+- [ ] I have checked the "Preview" tab on all text fields to ensure that everything looks right, and have wrapped all configuration and code in code blocks with a group of three backticks (` ``` `) on separate lines.
