@@ -58,3 +58,4 @@ pass-rethrow-catch-all.jank
 pass-rethrow-catch-type.jank
 throw-rethrow.jank
 fail-catch-void.jank
+throw-nested-throws.jank
