@@ -279,13 +279,6 @@ namespace jank::ir
   {
     s.next_instruction();
     f(instr, s.current_block());
-
-    /* If there are any instructions after the throw, like scope closes, we need to handle
-     * them, too. */
-    while(s.instruction_index < s.fn->blocks[s.block_index].instructions.size())
-    {
-      walk(s.fn->blocks[s.block_index].instructions[s.instruction_index], f, s);
-    }
   }
 
   void walk_typed(ir::inst::try_ref const instr, instruction_walk_function const &f, state &s)
@@ -314,6 +307,7 @@ namespace jank::ir
     for(auto const &catch_details : instr->catches)
     {
       s.enter_block(catch_details.second);
+      /* The catch instruction will walk until the jump. */
       walk(s.fn->blocks[s.block_index].instructions[s.instruction_index], f, s);
     }
 

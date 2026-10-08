@@ -3115,7 +3115,7 @@ namespace jank::analyze
 
     static runtime::obj::symbol_ref const catch_{ make_box<obj::symbol>("catch") },
       finally_{ make_box<obj::symbol>("finally") };
-    bool has_catch{}, has_finally{};
+    bool has_catch{}, has_catch_all{}, has_finally{};
 
     usize index{ 1 };
     for(auto it(list->fresh_seq().next_in_place()); it.is_some(); it = it.next_in_place(), ++index)
@@ -3177,6 +3177,14 @@ namespace jank::analyze
                 object_source(item),
                 latest_expansion(macro_expansions));
             }
+            if(has_catch_all)
+            {
+              /* TODO: Note where the catch-all is. */
+              return error::analyze_invalid_try("No 'catch' forms are permitted after a catch-all "
+                                                "(:default) form has been been provided.",
+                                                object_source(item),
+                                                latest_expansion(macro_expansions));
+            }
             has_catch = true;
 
             /* Verify we have (catch cpp/type <sym> ...) */
@@ -3189,21 +3197,54 @@ namespace jank::analyze
                 object_source(item),
                 latest_expansion(macro_expansions));
             }
+
             auto catch_it(catch_list->data.rest());
+
             auto const catch_type_form(catch_it.first().unwrap());
+            /* Void here represents a catch-all. */
+            jtl::ptr<void> catch_type{ Cpp::GetVoidType() };
+            static auto const default_kw{
+              __rt_ctx->intern_keyword("", "default", true).expect_ok()
+            };
+
             catch_it = catch_it.rest();
             auto const catch_sym_form(catch_it.first().unwrap());
-            auto const catch_type_res(analyze_type(catch_type_form, current_frame, fn_ctx));
-            if(catch_type_res.is_err())
+
+            if(catch_type_form.equal(default_kw))
             {
-              return error::analyze_invalid_try(catch_type_res.expect_err()->message,
-                                                object_source(item),
-                                                error::note{
-                                                  "An exception type is required before this form.",
-                                                  object_source(catch_sym_form),
-                                                },
-                                                latest_expansion(macro_expansions))
-                ->add_usage(read::parse::reparse_nth(item, 1));
+              has_catch_all = true;
+            }
+            else
+            {
+              auto const catch_type_res(analyze_type(catch_type_form, current_frame, fn_ctx));
+              if(catch_type_res.is_err())
+              {
+                return error::analyze_invalid_try(
+                         catch_type_res.expect_err()->message,
+                         object_source(item),
+                         error::note{
+                           "An exception type is required before this form.",
+                           object_source(catch_sym_form),
+                         },
+                         latest_expansion(macro_expansions))
+                  ->add_usage(read::parse::reparse_nth(item, 1));
+              }
+              catch_type = catch_type_res.expect_ok();
+
+              if(Cpp::IsVoid(Cpp::GetNonReferenceType(catch_type)))
+              {
+                return error::analyze_invalid_try("Void is not a valid exception type to catch.",
+                                                  object_source(catch_type_form),
+                                                  latest_expansion(macro_expansions))
+                  ->add_usage(read::parse::reparse_nth(item, 1));
+              }
+
+              /* If we're catching a C++ class/struct by value, we want to promote it to a reference
+               * to avoid object slicing and to enable polymorphism. */
+              if(!Cpp::IsPointerType(catch_type))
+              {
+                catch_type = Cpp::GetLValueReferenceType(catch_type);
+              }
             }
 
             if(catch_sym_form.get_type() != runtime::object_type::symbol)
@@ -3227,15 +3268,6 @@ namespace jank::analyze
                        object_source(item),
                        latest_expansion(macro_expansions))
                 ->add_usage(read::parse::reparse_nth(item, 2));
-            }
-
-            auto catch_type{ catch_type_res.expect_ok() };
-
-            /* If we're catching a C++ class/struct by value, we want to promote it to a reference
-             * to avoid object slicing and to enable polymorphism. */
-            if(!Cpp::IsPointerType(catch_type))
-            {
-              catch_type = Cpp::GetLValueReferenceType(catch_type);
             }
 
             /* Check for duplicate catch types. */
