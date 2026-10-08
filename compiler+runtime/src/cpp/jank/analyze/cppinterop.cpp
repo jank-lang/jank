@@ -1,6 +1,10 @@
-#include <jank/analyze/cppinterop.hpp>
+#include <mutex>
 
 #include <CppInterOp/CppInterOp.h>
+
+#include <jank/analyze/cppinterop.hpp>
+
+static std::recursive_mutex global_lock;
 
 namespace jank::analyze::cppinterop
 {
@@ -586,9 +590,9 @@ namespace jank::analyze::cppinterop
   }
 
   void get_operator(CppImpl::Operator op,
-                   std::vector<clang_type> const &arg_types,
-                   std::vector<clang_decl> &operators,
-                   CppImpl::OperatorArity kind)
+                    std::vector<clang_type> const &arg_types,
+                    std::vector<clang_decl> &operators,
+                    CppImpl::OperatorArity kind)
   {
     std::vector<void *> cpp_operators;
     Cpp::GetOperator(op, to_voidp(arg_types), cpp_operators, kind);
@@ -596,10 +600,10 @@ namespace jank::analyze::cppinterop
   }
 
   clang_decl create_interpreter(std::vector<char const *> const &args,
-                               std::vector<char const *> const &gpu_args,
-                               std::map<char const *, std::string_view> const &vfs,
-                               std::optional<int> const &cm,
-                               bool *pch_out_of_date)
+                                std::vector<char const *> const &gpu_args,
+                                std::map<char const *, std::string_view> const &vfs,
+                                std::optional<int> const &cm,
+                                bool *pch_out_of_date)
   {
     return Cpp::CreateInterpreter(args, gpu_args, vfs, cm, pch_out_of_date);
   }
@@ -610,9 +614,9 @@ namespace jank::analyze::cppinterop
   }
 
   clang_decl instantiate_template(clang_decl tmpl,
-                                 CppImpl::TemplateArgInfo const *template_args,
-                                 size_t template_args_size,
-                                 bool instantiate_body)
+                                  CppImpl::TemplateArgInfo const *template_args,
+                                  size_t template_args_size,
+                                  bool instantiate_body)
   {
     return Cpp::InstantiateTemplate(tmpl, template_args, template_args_size, instantiate_body);
   }
@@ -623,16 +627,17 @@ namespace jank::analyze::cppinterop
   }
 
   std::vector<clang_decl> best_overload_match(std::vector<clang_decl> const &candidates,
-                                            std::vector<clang_type> const &arg_types,
-                                            std::vector<clang_decl> const &arg_scopes)
+                                              std::vector<clang_type> const &arg_types,
+                                              std::vector<clang_decl> const &arg_scopes)
   {
     return from_voidp(
       Cpp::BestOverloadMatch(to_voidp(candidates), to_voidp(arg_types), to_voidp(arg_scopes)));
   }
 
-  CppImpl::OverloadCandidateInfo get_overload_candidate_info(clang_decl candidate,
-                                                          std::vector<clang_type> const &arg_types,
-                                                          std::vector<clang_decl> const &arg_scopes)
+  CppImpl::OverloadCandidateInfo
+  get_overload_candidate_info(clang_decl candidate,
+                              std::vector<clang_type> const &arg_types,
+                              std::vector<clang_decl> const &arg_scopes)
   {
     return Cpp::GetOverloadCandidateInfo(candidate, to_voidp(arg_types), to_voidp(arg_scopes));
   }
