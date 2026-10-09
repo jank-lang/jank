@@ -126,7 +126,8 @@
                             [:bind out-dir out-dir]
                             [:tmpfs build-dir]
                             [:chdir build-dir]
-                            [:net false]]
+                            [:net false]
+                            [:ro-bind (str bb) (str bb)]]
                            (map (fn [dir] [:ro-bind dir dir])
                                 (concat (vals (:inputs op))
                                         (:build-inputs op))))
@@ -135,7 +136,7 @@
         ;; Include all build input jars into the classpath.
         bb-classpath (string/join ":" (:build-inputs op))
         build-input  (build-script-input op)
-        cmd ["bb" "--classpath" bb-classpath "--stream" (str (fs/path src-dir jank-build-file))]
+        cmd (mapv str [bb "--classpath" bb-classpath "--stream" (fs/path src-dir jank-build-file)])
         proc         (sandbox/process
                       (not *disable-sandbox*)
                       sandbox-args

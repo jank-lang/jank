@@ -19,7 +19,8 @@
    [:ro-bind "/lib" "/lib"]
    [:ro-bind "/lib64" "/lib64"]
    [:ro-bind "/etc" "/etc"]
-   [:ro-bind "/nix" "/nix"]])
+   [:ro-bind "/nix" "/nix"]
+   [:ro-bind "/usr/share" "/share"]])
 
 (defn which-bwrap
   "Find the `bwrap` executable on the path, or nil if it cannot be found."
