@@ -97,6 +97,9 @@ namespace jank::jit
     std::map<char const *, std::string_view> vfs;
 
     /*** XXX: Everything here is thread-safe. ***/
+
+    /* This mutex is used for everything Clang/LLVM related, including CppInterOp work. Anything
+     * accessing mutable state in the Clang/LLVM JIT runtime needs to go through this. */
     folly::Synchronized<jtl::ptr<CppInternal::Interpreter>, std::recursive_mutex> interpreter;
   };
 }
