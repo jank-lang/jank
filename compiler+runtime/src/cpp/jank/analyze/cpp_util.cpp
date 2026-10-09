@@ -450,7 +450,7 @@ namespace jank::analyze::cpp_util
   {
     static jtl::ptr<void> const ret{ cppinterop::get_pointer_type(cppinterop::get_type_from_scope(
       cppinterop::get_named("object",
-                           cppinterop::get_named("runtime", cppinterop::get_named("jank"))))) };
+                            cppinterop::get_named("runtime", cppinterop::get_named("jank"))))) };
     return ret;
   }
 
@@ -503,7 +503,7 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> c_string_type(usize const size)
   {
     auto const type{ cppinterop::get_array_type(cppinterop::get_type_with_const(char_type()),
-                                              size + 1) };
+                                                size + 1) };
     return type;
   }
 
@@ -800,8 +800,8 @@ namespace jank::analyze::cpp_util
 
   bool is_nullptr(jtl::ptr<void> const type)
   {
-    static jtl::ptr<void> const ret{ cppinterop::get_canonical_type(
-      cppinterop::get_type_from_scope(cppinterop::get_scope_from_complete_name("std::nullptr_t"))) };
+    static jtl::ptr<void> const ret{ cppinterop::get_canonical_type(cppinterop::get_type_from_scope(
+      cppinterop::get_scope_from_complete_name("std::nullptr_t"))) };
     return cppinterop::get_canonical_type(type) == ret;
   }
 
@@ -814,7 +814,8 @@ namespace jank::analyze::cpp_util
 
   bool is_implicitly_convertible(jtl::ptr<void> const from, jtl::ptr<void> const to)
   {
-    auto const from_no_ref{ cppinterop::get_canonical_type(cppinterop::get_non_reference_type(from)) };
+    auto const from_no_ref{ cppinterop::get_canonical_type(
+      cppinterop::get_non_reference_type(from)) };
     auto const to_no_ref{ cppinterop::get_canonical_type(cppinterop::get_non_reference_type(to)) };
     if(from_no_ref == to_no_ref || from_no_ref == cppinterop::get_type_without_cv(to_no_ref)
        || cppinterop::is_type_derived_from(from_no_ref, to_no_ref))
@@ -1261,7 +1262,8 @@ namespace jank::analyze::cpp_util
                  || (cppinterop::get_canonical_type(arg_types[i])
                      == cppinterop::get_canonical_type(cppinterop::get_type_with_const(param_type)))
                  || (cppinterop::get_canonical_type(cppinterop::get_type_with_const(arg_types[i]))
-                     == cppinterop::get_canonical_type(cppinterop::get_non_reference_type(param_type))))
+                     == cppinterop::get_canonical_type(
+                       cppinterop::get_non_reference_type(param_type))))
               {
                 arg_conversion = error::argument_conversion_type::none;
                 break;
@@ -1694,7 +1696,7 @@ namespace jank::analyze::cpp_util
        || (cppinterop::get_canonical_type(cppinterop::get_type_with_const(expr_type))
            == cppinterop::get_canonical_type(cppinterop::get_non_reference_type(expected_type)))
        || cppinterop::is_type_derived_from(cppinterop::get_canonical_type(expr_type),
-                                        cppinterop::get_canonical_type(expected_type))
+                                           cppinterop::get_canonical_type(expected_type))
        || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
     {
       return implicit_conversion_action::none;
@@ -1722,11 +1724,12 @@ namespace jank::analyze::cpp_util
 
     if(/* Up cast. */
        cppinterop::is_type_derived_from(cppinterop::get_underlying_type(expr_type),
-                                     cppinterop::get_underlying_type(expected_type))
+                                        cppinterop::get_underlying_type(expected_type))
        /* Same type or adding reference. */
        || (cppinterop::get_canonical_type(expr_type)
              == cppinterop::get_canonical_type(cppinterop::get_non_reference_type(expected_type))
-           && !cppinterop::is_reference_type(expr_type) && cppinterop::is_reference_type(expected_type))
+           && !cppinterop::is_reference_type(expr_type)
+           && cppinterop::is_reference_type(expected_type))
        /* Matching nullptr to any pointer type. */
        || (cpp_util::is_nullptr(expr_type) && cppinterop::is_pointer_type(expected_type))
        /* TODO: Array size. */
