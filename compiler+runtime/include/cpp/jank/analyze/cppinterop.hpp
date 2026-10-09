@@ -136,25 +136,25 @@ namespace jank::analyze::cppinterop
   bool is_const_method(clang_decl method);
   std::string get_function_arg_name(clang_decl func, size_t param_index);
   void get_operator(CppImpl::Operator op,
-                   std::vector<clang_type> const &arg_types,
-                   std::vector<clang_decl> &operators,
-                   CppImpl::OperatorArity kind);
+                    std::vector<clang_type> const &arg_types,
+                    std::vector<clang_decl> &operators,
+                    CppImpl::OperatorArity kind);
   clang_decl create_interpreter(std::vector<char const *> const &args = {},
-                               std::vector<char const *> const &gpu_args = {},
-                               std::map<char const *, std::string_view> const &vfs = {},
-                               std::optional<int> const &cm = std::nullopt,
-                               bool *pch_out_of_date = nullptr);
+                                std::vector<char const *> const &gpu_args = {},
+                                std::map<char const *, std::string_view> const &vfs = {},
+                                std::optional<int> const &cm = std::nullopt,
+                                bool *pch_out_of_date = nullptr);
   std::string detect_resource_dir(char const *clang_binary_name = "clang");
   clang_decl instantiate_template(clang_decl tmpl,
-                                 CppImpl::TemplateArgInfo const *template_args,
-                                 size_t template_args_size,
-                                 bool instantiate_body = false);
+                                  CppImpl::TemplateArgInfo const *template_args,
+                                  size_t template_args_size,
+                                  bool instantiate_body = false);
   bool instantiate_template(clang_decl spec);
   std::vector<clang_decl> best_overload_match(std::vector<clang_decl> const &candidates,
-                                            std::vector<clang_type> const &arg_types,
-                                            std::vector<clang_decl> const &arg_scopes);
+                                              std::vector<clang_type> const &arg_types,
+                                              std::vector<clang_decl> const &arg_scopes);
   CppImpl::OverloadCandidateInfo
   get_overload_candidate_info(clang_decl candidate,
-                           std::vector<clang_type> const &arg_types,
-                           std::vector<clang_decl> const &arg_scopes);
+                              std::vector<clang_type> const &arg_types,
+                              std::vector<clang_decl> const &arg_scopes);
 }
