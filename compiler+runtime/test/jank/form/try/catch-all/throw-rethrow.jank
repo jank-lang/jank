@@ -1,0 +1,4 @@
+(try
+  (throw :success)
+  (catch :default _
+    (throw)))

@@ -362,11 +362,13 @@ namespace jank::analyze
   {
     if(args.size() == 2)
     {
-      auto const is_arg0_ptr{ cppinterop::is_pointer_type(cppinterop::get_non_reference_type(args[0])) };
+      auto const is_arg0_ptr{ cppinterop::is_pointer_type(
+        cppinterop::get_non_reference_type(args[0])) };
       if((is_arg0_ptr
-          && is_arg0_ptr != cppinterop::is_pointer_type(cppinterop::get_non_reference_type(args[1])))
+          && is_arg0_ptr
+            != cppinterop::is_pointer_type(cppinterop::get_non_reference_type(args[1])))
          || !cppinterop::is_implicitly_convertible(cppinterop::get_non_reference_type(args[0]),
-                                                 cppinterop::get_non_reference_type(args[1])))
+                                                   cppinterop::get_non_reference_type(args[1])))
       {
         return invalid(args, op_name, val, macro_expansions);
       }
@@ -380,7 +382,7 @@ namespace jank::analyze
     if(args.size() == 2)
     {
       auto const ret{ cppinterop::get_common_type(cppinterop::get_non_reference_type(args[0]),
-                                                cppinterop::get_non_reference_type(args[1])) };
+                                                  cppinterop::get_non_reference_type(args[1])) };
       if(ret)
       {
         return ret;
@@ -801,7 +803,8 @@ namespace jank::analyze
         break;
       case expr::cpp_value::value_kind::function:
         scope_name = cppinterop::get_name(val->scope);
-        fns = cppinterop::get_functions_using_name(cppinterop::get_parent_scope(val->scope), scope_name);
+        fns = cppinterop::get_functions_using_name(cppinterop::get_parent_scope(val->scope),
+                                                   scope_name);
         if(fns.empty())
         {
           return error::analyze_invalid_cpp_call(
@@ -1222,13 +1225,14 @@ namespace jank::analyze
       }
     }
 
-    return jtl::make_ref<expr::cpp_call>(position,
-                                         current_frame,
-                                         needs_box,
-                                         o,
-                                         cppinterop::get_function_return_type_from_type(source_type),
-                                         source,
-                                         jtl::move(arg_exprs));
+    return jtl::make_ref<expr::cpp_call>(
+      position,
+      current_frame,
+      needs_box,
+      o,
+      cppinterop::get_function_return_type_from_type(source_type),
+      source,
+      jtl::move(arg_exprs));
   }
 
   /* This function steps through local_reference expressions to find the underlying
@@ -1297,14 +1301,15 @@ namespace jank::analyze
         {
           auto const cast_position{ expr->position };
           expr->propagate_position(expression_position::value);
-          return jtl::make_ref<expr::cpp_conversion>(cast_position,
-                                                     expr->frame,
-                                                     expr->needs_box,
-                                                     expr->form,
-                                                     cppinterop::get_non_reference_type(expected_type),
-                                                     expected_type,
-                                                     conversion_policy::from_object,
-                                                     expr);
+          return jtl::make_ref<expr::cpp_conversion>(
+            cast_position,
+            expr->frame,
+            expr->needs_box,
+            expr->form,
+            cppinterop::get_non_reference_type(expected_type),
+            expected_type,
+            conversion_policy::from_object,
+            expr);
         }
       case cpp_util::implicit_conversion_action::cast:
         {
@@ -1723,7 +1728,7 @@ namespace jank::analyze
       {
         auto const binding_type{ unwrapped_local.binding->type };
         if(!cppinterop::is_constructible(cppinterop::get_non_reference_type(binding_type),
-                                        binding_type))
+                                         binding_type))
         {
           return error::analyze_invalid_cpp_capture(
             util::format("The `{}` local cannot be captured, since its type `{}` is not copyable.",
@@ -2908,7 +2913,8 @@ namespace jank::analyze
        * We also calculate the types again, since they may have changed due to the implicit
        * conversions above. */
       if(cpp_util::is_typed_object(chosen_type) && cpp_util::is_any_object(other_type)
-         && cppinterop::get_canonical_type(chosen_type) != cppinterop::get_canonical_type(other_type))
+         && cppinterop::get_canonical_type(chosen_type)
+           != cppinterop::get_canonical_type(other_type))
       {
         chosen_type = cpp_util::untyped_object_ref_type();
       }
@@ -3120,7 +3126,7 @@ namespace jank::analyze
 
     static runtime::obj::symbol_ref const catch_{ make_box<obj::symbol>("catch") },
       finally_{ make_box<obj::symbol>("finally") };
-    bool has_catch{}, has_finally{};
+    bool has_catch{}, has_catch_all{}, has_finally{};
 
     usize index{ 1 };
     for(auto it(list->fresh_seq().next_in_place()); it.is_some(); it = it.next_in_place(), ++index)
@@ -3182,6 +3188,14 @@ namespace jank::analyze
                 object_source(item),
                 latest_expansion(macro_expansions));
             }
+            if(has_catch_all)
+            {
+              /* TODO: Note where the catch-all is. */
+              return error::analyze_invalid_try("No 'catch' forms are permitted after a catch-all "
+                                                "(:default) form has been been provided.",
+                                                object_source(item),
+                                                latest_expansion(macro_expansions));
+            }
             has_catch = true;
 
             /* Verify we have (catch cpp/type <sym> ...) */
@@ -3194,21 +3208,54 @@ namespace jank::analyze
                 object_source(item),
                 latest_expansion(macro_expansions));
             }
+
             auto catch_it(catch_list->data.rest());
+
             auto const catch_type_form(catch_it.first().unwrap());
+            /* Void here represents a catch-all. */
+            jtl::ptr<void> catch_type{ Cpp::GetVoidType() };
+            static auto const default_kw{
+              __rt_ctx->intern_keyword("", "default", true).expect_ok()
+            };
+
             catch_it = catch_it.rest();
             auto const catch_sym_form(catch_it.first().unwrap());
-            auto const catch_type_res(analyze_type(catch_type_form, current_frame, fn_ctx));
-            if(catch_type_res.is_err())
+
+            if(catch_type_form.equal(default_kw))
             {
-              return error::analyze_invalid_try(catch_type_res.expect_err()->message,
-                                                object_source(item),
-                                                error::note{
-                                                  "An exception type is required before this form.",
-                                                  object_source(catch_sym_form),
-                                                },
-                                                latest_expansion(macro_expansions))
-                ->add_usage(read::parse::reparse_nth(item, 1));
+              has_catch_all = true;
+            }
+            else
+            {
+              auto const catch_type_res(analyze_type(catch_type_form, current_frame, fn_ctx));
+              if(catch_type_res.is_err())
+              {
+                return error::analyze_invalid_try(
+                         catch_type_res.expect_err()->message,
+                         object_source(item),
+                         error::note{
+                           "An exception type is required before this form.",
+                           object_source(catch_sym_form),
+                         },
+                         latest_expansion(macro_expansions))
+                  ->add_usage(read::parse::reparse_nth(item, 1));
+              }
+              catch_type = catch_type_res.expect_ok();
+
+              if(Cpp::IsVoid(Cpp::GetNonReferenceType(catch_type)))
+              {
+                return error::analyze_invalid_try("Void is not a valid exception type to catch.",
+                                                  object_source(catch_type_form),
+                                                  latest_expansion(macro_expansions))
+                  ->add_usage(read::parse::reparse_nth(item, 1));
+              }
+
+              /* If we're catching a C++ class/struct by value, we want to promote it to a reference
+               * to avoid object slicing and to enable polymorphism. */
+              if(!cppinterop::is_pointer_type(catch_type))
+              {
+                catch_type = cppinterop::get_lvalue_reference_type(catch_type);
+              }
             }
 
             if(catch_sym_form.get_type() != runtime::object_type::symbol)
@@ -3232,15 +3279,6 @@ namespace jank::analyze
                        object_source(item),
                        latest_expansion(macro_expansions))
                 ->add_usage(read::parse::reparse_nth(item, 2));
-            }
-
-            auto catch_type{ catch_type_res.expect_ok() };
-
-            /* If we're catching a C++ class/struct by value, we want to promote it to a reference
-             * to avoid object slicing and to enable polymorphism. */
-            if(!cppinterop::is_pointer_type(catch_type))
-            {
-              catch_type = cppinterop::get_lvalue_reference_type(catch_type);
             }
 
             /* Check for duplicate catch types. */
@@ -4570,7 +4608,8 @@ namespace jank::analyze
     }
 
     auto const value_expr{ value_expr_res.expect_ok() };
-    auto const value_type{ cppinterop::get_non_reference_type(cpp_util::expression_type(value_expr)) };
+    auto const value_type{ cppinterop::get_non_reference_type(
+      cpp_util::expression_type(value_expr)) };
     if(!cppinterop::is_pointer_type(value_type))
     {
       return error::analyze_invalid_cpp_box(
@@ -4831,7 +4870,8 @@ namespace jank::analyze
     }
 
     auto const obj_expr{ obj_res.expect_ok() };
-    auto const parent_type{ cppinterop::get_non_reference_type(cpp_util::expression_type(obj_expr)) };
+    auto const parent_type{ cppinterop::get_non_reference_type(
+      cpp_util::expression_type(obj_expr)) };
     auto const parent_scope{ cppinterop::get_scope_from_type(parent_type) };
     auto member_scope{ cppinterop::lookup_datamember(name, parent_scope) };
     if(!parent_scope)
@@ -4892,7 +4932,8 @@ namespace jank::analyze
       }
 
       val->val_kind = expr::cpp_value::value_kind::variable;
-      val->type = cppinterop::get_lvalue_reference_type(cppinterop::get_type_from_scope(member_scope));
+      val->type
+        = cppinterop::get_lvalue_reference_type(cppinterop::get_type_from_scope(member_scope));
       val->scope = member_scope;
       return val;
     }
@@ -5239,7 +5280,8 @@ namespace jank::analyze
             require_one_arg,
             [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
               static auto const char_type{ cpp_util::char_type() };
-              if(!cppinterop::is_integral(type) || cppinterop::get_type_without_cv(type) == char_type)
+              if(!cppinterop::is_integral(type)
+                 || cppinterop::get_type_without_cv(type) == char_type)
               {
                 return error::analyze_invalid_cpp_dsl(
                   util::format("Only integer types can be short. "
@@ -5271,7 +5313,8 @@ namespace jank::analyze
             [&](jtl::ptr<void> const type) -> jtl::result<void, error_ref> {
               static auto const char_type{ cpp_util::char_type() };
               static auto const double_type{ cppinterop::get_type("double") };
-              if((!cppinterop::is_integral(type) || cppinterop::get_type_without_cv(type) == char_type)
+              if((!cppinterop::is_integral(type)
+                  || cppinterop::get_type_without_cv(type) == char_type)
                  && cppinterop::get_type_without_cv(type) != double_type)
               {
                 return error::analyze_invalid_cpp_dsl(

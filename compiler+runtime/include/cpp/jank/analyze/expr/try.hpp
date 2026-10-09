@@ -19,6 +19,8 @@ namespace jank::analyze::expr
     runtime::object_ref to_runtime_data() const;
 
     runtime::obj::symbol_ref sym{};
+    /* This will be the void type if this is a catch-all. We'd rather have _some_ type than
+     * deal with nullptr here. */
     jtl::ptr<void> type{};
     do_ref body;
   };

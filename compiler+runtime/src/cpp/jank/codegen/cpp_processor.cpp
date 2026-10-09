@@ -1049,6 +1049,8 @@ namespace jank::codegen
       util::format_to(b.body_buffer, "throw;\n");
     }
 
+    util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->name);
+
     /* If there are any instructions after the throw, like scope closes, we need to handle
      * them, too. */
     while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
@@ -1113,10 +1115,19 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::catch_ref const inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer,
-                    "catch({} {}) {",
-                    get_qualified_type_name(inst->type),
-                    inst->name);
+
+    if(Cpp::IsVoid(inst->type))
+    {
+      util::format_to(b.body_buffer, "catch(...) {\n");
+      util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->name);
+    }
+    else
+    {
+      util::format_to(b.body_buffer,
+                      "catch({} {}) {\n",
+                      get_qualified_type_name(inst->type),
+                      inst->name);
+    }
 
     auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                           : inst->merge_block };
@@ -1703,15 +1714,13 @@ namespace jank::codegen
     b.next_instruction();
     auto const fn_name{ Cpp::GetName(inst->expr->fn) };
     auto const is_void{ Cpp::IsVoid(Cpp::GetFunctionReturnType(inst->expr->fn)) };
+    auto const is_ptr{ Cpp::IsPointerType(
+      Cpp::GetNonReferenceType(expression_type(inst->expr->arg_exprs[0]))) };
 
     if(is_void)
     {
       util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {}{ };\n", inst->name);
-      util::format_to(b.body_buffer,
-                      "{}{}{}(",
-                      inst->args[0],
-                      (Cpp::IsPointerType(expression_type(inst->expr->arg_exprs[0])) ? "->" : "."),
-                      fn_name);
+      util::format_to(b.body_buffer, "{}{}{}(", inst->args[0], (is_ptr ? "->" : "."), fn_name);
     }
     else
     {
@@ -1719,7 +1728,7 @@ namespace jank::codegen
                       "auto &&{}({}{}{}(",
                       inst->name,
                       inst->args[0],
-                      (Cpp::IsPointerType(expression_type(inst->expr->arg_exprs[0])) ? "->" : "."),
+                      (is_ptr ? "->" : "."),
                       fn_name);
     }
 
