@@ -298,6 +298,7 @@ int main(int const argc, char const **argv)
         case util::cli::command::check_health:
         case util::cli::command::print_binary_version:
         case util::cli::command::print_cflags:
+        case util::cli::command::help:
           break;
       }
       return 0;

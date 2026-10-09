@@ -115,6 +115,7 @@ COMMANDS
   print-binary-version        Print the current binary version to stdout and exit.
   print-cflags                Print the Clang flags for AOT compilation of C++ source code
                               to stdout and exit.
+  help                        Print this help message and exit.
 
 OPTIONS
   -h,     --help              Print this help message and exit.
@@ -232,6 +233,7 @@ OPTIONS
       {         "check-health",         command::check_health },
       { "print-binary-version", command::print_binary_version },
       {         "print-cflags",         command::print_cflags },
+      {                 "help",                 command::help },
     };
 
     options_scratchpad scratch;
@@ -289,6 +291,7 @@ OPTIONS
         if(check_flag(it, end, value, "-h", "--help", false))
         {
           show_help();
+          return ok();
         }
         else if(check_flag(it, end, value, "--module-path", true))
         {
@@ -473,6 +476,11 @@ OPTIONS
         {
           opts.output_target = compilation_target::object;
         }
+      }
+      else if(command == "help")
+      {
+        show_help();
+        return ok();
       }
 
       /* We allow --name to be passed for any command, since lein-jank passes it.*/
