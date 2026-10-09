@@ -5,10 +5,12 @@
 #include <mutex>
 
 #include <folly/Synchronized.h>
+
 #include <jtl/result.hpp>
 #include <jtl/string_builder.hpp>
 
 #include <jank/runtime/object.hpp>
+#include <jank/util/scope_exit.hpp>
 
 namespace llvm
 {
@@ -24,6 +26,7 @@ namespace llvm
 namespace clang
 {
   class Value;
+  class DiagnosticConsumer;
 }
 
 namespace CppInternal
@@ -83,6 +86,8 @@ namespace jank::jit
     find_lib(native_vector<std::filesystem::path> const &library_dirs,
              jtl::immutable_string const &lib);
 
+    util::scope_exit push_diagnostics_consumer(jtl::ref<clang::DiagnosticConsumer> const d);
+
     /*** XXX: Everything here is immutable after initialization. ***/
     native_vector<std::filesystem::path> library_dirs;
 
@@ -92,6 +97,9 @@ namespace jank::jit
     std::map<char const *, std::string_view> vfs;
 
     /*** XXX: Everything here is thread-safe. ***/
+
+    /* This mutex is used for everything Clang/LLVM related, including CppInterOp work. Anything
+     * accessing mutable state in the Clang/LLVM JIT runtime needs to go through this. */
     folly::Synchronized<jtl::ptr<CppInternal::Interpreter>, std::recursive_mutex> interpreter;
   };
 }

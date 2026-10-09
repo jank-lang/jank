@@ -1,0 +1,15 @@
+(cpp/raw "int result{};
+
+          template <typename T>
+          void add(T t)
+          { result += t; }")
+
+(def futures (mapv (fn [_]
+                     (future (eval '(cpp/add 1))))
+                   (range 100)))
+
+(doseq [f futures]
+  @f)
+
+(when-not (= 100 cpp/result)
+  (throw (ex-info "invaid result" {:result cpp/result})))

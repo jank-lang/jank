@@ -2,7 +2,6 @@
 
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 
-#include <CppInterOp/CppInterOp.h>
 #include <CppInterOp/Compatibility.h>
 
 #include <jank/read/lex.hpp>

@@ -950,4 +950,17 @@ namespace jank::jit
     auto const ee{ (*locked_interpreter)->getExecutionEngine() };
     llvm::cantFail(ee->linkStaticLibraryInto(ee->getMainJITDylib(), path.c_str()));
   }
+
+  util::scope_exit processor::push_diagnostics_consumer(jtl::ref<clang::DiagnosticConsumer> const d)
+  {
+    auto const locked_interpreter{ interpreter.lock() };
+    auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
+    auto old_client{ diag.takeClient().release() };
+    diag.setClient(d.data, true);
+    return { [this, old_client] {
+      auto const locked_interpreter{ interpreter.lock() };
+      auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
+      diag.setClient(old_client, true);
+    } };
+  }
 }

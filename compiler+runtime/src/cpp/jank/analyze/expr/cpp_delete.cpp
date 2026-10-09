@@ -1,6 +1,5 @@
-#include <CppInterOp/CppInterOp.h>
-
 #include <jank/analyze/expr/cpp_delete.hpp>
+#include <jank/analyze/cppinterop.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
 namespace jank::analyze::expr
@@ -36,6 +35,6 @@ namespace jank::analyze::expr
 
   jtl::ptr<void> cpp_delete::get_type() const
   {
-    return Cpp::GetVoidType();
+    return cppinterop::get_void_type();
   }
 }
