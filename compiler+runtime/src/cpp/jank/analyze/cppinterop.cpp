@@ -173,6 +173,11 @@ namespace jank::analyze::cppinterop
     return Cpp::IsEnumType(type);
   }
 
+  bool has_type_qualifier(clang_type type, qualifier q)
+  {
+    return Cpp::HasTypeQualifier(type, static_cast<Cpp::QualKind>(q));
+  }
+
   bool is_variable(clang_decl scope)
   {
     return Cpp::IsVariable(scope);
@@ -506,6 +511,11 @@ namespace jank::analyze::cppinterop
     return Cpp::IsArrayType(type);
   }
 
+  bool is_sized_array_type(clang_type type)
+  {
+    return Cpp::IsSizedArrayType(type);
+  }
+
   size_t get_array_size(clang_type type)
   {
     auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
@@ -574,6 +584,11 @@ namespace jank::analyze::cppinterop
   bool is_rvalue_reference_type(clang_type type)
   {
     return Cpp::IsRvalueReferenceType(type);
+  }
+
+  value_category get_value_category(clang_type type)
+  {
+    return static_cast<value_category>(Cpp::GetValueKind(type));
   }
 
   clang_type get_non_reference_type(clang_type type)

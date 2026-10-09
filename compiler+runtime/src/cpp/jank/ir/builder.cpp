@@ -596,7 +596,7 @@ namespace jank::ir
     auto name{ next_ident() };
     if(expr->policy == analyze::conversion_policy::into_object)
     {
-      if(Cpp::IsVoid(expr->type))
+      if(analyze::cppinterop::is_void(expr->type))
       {
         name = literal(expr->position, runtime::jank_nil);
       }

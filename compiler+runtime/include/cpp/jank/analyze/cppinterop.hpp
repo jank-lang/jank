@@ -23,6 +23,20 @@ namespace jank::analyze::cppinterop
   using clang_type = jtl::ptr<void>;
   using clang_decl = jtl::ptr<void>;
 
+  enum class value_category : u8
+  {
+    none,
+    lvalue,
+    rvalue,
+  };
+
+  enum class qualifier : u8
+  {
+    const_ = 1 << 0,
+    volatile_ = 1 << 1,
+    restrict_ = 1 << 2
+  };
+
   std::string mangle_rtti(clang_type type);
   void enable_debug_output(bool value = true);
   bool is_namespace(clang_decl scope);
@@ -48,6 +62,7 @@ namespace jank::analyze::cppinterop
   bool is_enum_scope(clang_decl handle);
   bool is_enum_constant(clang_decl handle);
   bool is_enum_type(clang_type type);
+  bool has_type_qualifier(clang_type type, qualifier q);
   bool is_variable(clang_decl scope);
   std::string get_name(clang_decl klass);
   std::string get_qualified_name(clang_decl klass);
@@ -105,6 +120,7 @@ namespace jank::analyze::cppinterop
   clang_type get_parent_type_from_pointer_to_member(clang_type type);
   clang_type get_function_type_from_pointer_to_member(clang_type member_type, clang_type obj_type);
   bool is_array_type(clang_type type);
+  bool is_sized_array_type(clang_type type);
   size_t get_array_size(clang_type type);
   clang_type get_array_element_type(clang_type type);
   clang_type get_array_type(clang_type type);
@@ -117,6 +133,7 @@ namespace jank::analyze::cppinterop
   clang_type get_rvalue_reference_type(clang_type type);
   bool is_reference_type(clang_type type);
   bool is_rvalue_reference_type(clang_type type);
+  value_category get_value_category(clang_type type);
   clang_type get_non_reference_type(clang_type type);
   clang_type get_underlying_type(clang_type type);
   clang_type get_type_without_cv(clang_type type);

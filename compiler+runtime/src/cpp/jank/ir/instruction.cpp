@@ -38,7 +38,7 @@ namespace jank::ir::inst
   using namespace analyze::cpp_util;
 
   nop::nop(identifier const &name)
-    : instruction{ instruction_kind::nop, name, Cpp::GetVoidType() }
+    : instruction{ instruction_kind::nop, name, analyze::cppinterop::get_void_type() }
   {
   }
 
@@ -164,7 +164,7 @@ namespace jank::ir::inst
   letfn::letfn(identifier const &name,
                read::source const &location,
                native_vector<jtl::immutable_string> &&bindings)
-    : instruction{ instruction_kind::letfn, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::letfn, name, analyze::cppinterop::get_void_type(), location }
     , bindings{ jtl::move(bindings) }
   {
   }
@@ -178,7 +178,10 @@ namespace jank::ir::inst
                        read::source const &location,
                        identifier const &local,
                        identifier const &value)
-    : instruction{ instruction_kind::set_local, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::set_local,
+                   name,
+                   analyze::cppinterop::get_void_type(),
+                   location }
     , local{ local }
     , value{ value }
   {
@@ -264,7 +267,7 @@ namespace jank::ir::inst
   }
 
   jump::jump(identifier const &name, read::source const &location, identifier const &block)
-    : instruction{ instruction_kind::jump, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::jump, name, analyze::cppinterop::get_void_type(), location }
     , block{ block }
   {
   }
@@ -273,7 +276,7 @@ namespace jank::ir::inst
              read::source const &location,
              identifier const &block,
              bool const loop)
-    : instruction{ instruction_kind::jump, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::jump, name, analyze::cppinterop::get_void_type(), location }
     , block{ block }
     , loop{ loop }
   {
@@ -288,7 +291,10 @@ namespace jank::ir::inst
                          read::source const &location,
                          identifier const &shadow,
                          identifier const &value)
-    : instruction{ instruction_kind::branch_set, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::branch_set,
+                   name,
+                   analyze::cppinterop::get_void_type(),
+                   location }
     , shadow{ shadow }
     , value{ value }
   {
@@ -307,7 +313,7 @@ namespace jank::ir::inst
                  identifier const &then_block,
                  identifier const &else_block,
                  identifier const &merge_block)
-    : instruction{ instruction_kind::branch, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::branch, name, analyze::cppinterop::get_void_type(), location }
     , condition{ condition }
     , then_block{ then_block }
     , else_block{ else_block }
@@ -326,7 +332,7 @@ namespace jank::ir::inst
              jtl::option<identifier> const &merge_block,
              jtl::option<detail::typed_identifier> const &shadow,
              native_vector<loop::binding_shadow_details> &&binding_shadows)
-    : instruction{ instruction_kind::loop, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::loop, name, analyze::cppinterop::get_void_type(), location }
     , loop_block{ loop_block }
     , merge_block{ merge_block }
     , shadow{ shadow }
@@ -347,7 +353,7 @@ namespace jank::ir::inst
                native_unordered_map<i64, identifier> &&case_blocks,
                identifier const &default_block,
                identifier const &merge_block)
-    : instruction{ instruction_kind::case_, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::case_, name, analyze::cppinterop::get_void_type(), location }
     , shift{ shift }
     , mask{ mask }
     , value{ value }
@@ -368,7 +374,7 @@ namespace jank::ir::inst
              identifier const &merge_block,
              identifier const &shadow,
              jtl::option<identifier> const &finally_block)
-    : instruction{ instruction_kind::try_, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::try_, name, analyze::cppinterop::get_void_type(), location }
     , catches{ jtl::move(catches) }
     , merge_block{ merge_block }
     , shadow{ shadow }
@@ -392,13 +398,13 @@ namespace jank::ir::inst
   finally::finally(identifier const &name,
                    read::source const &location,
                    identifier const &merge_block)
-    : instruction{ instruction_kind::finally, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::finally, name, analyze::cppinterop::get_void_type(), location }
     , merge_block{ merge_block }
   {
   }
 
   throw_::throw_(identifier const &name, read::source const &location)
-    : instruction{ instruction_kind::throw_, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::throw_, name, analyze::cppinterop::get_void_type(), location }
   {
   }
 
@@ -409,7 +415,7 @@ namespace jank::ir::inst
     : instruction{
       instruction_kind::throw_,
       name,
-      Cpp::GetVoidType(),
+      analyze::cppinterop::get_void_type(),
       location
   }
     , value{ detail::typed_identifier{ value, value_type } }
@@ -436,14 +442,20 @@ namespace jank::ir::inst
   }
 
   cpp_scope_open::cpp_scope_open(identifier const &name, read::source const &location)
-    : instruction{ instruction_kind::cpp_scope_open, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::cpp_scope_open,
+                   name,
+                   analyze::cppinterop::get_void_type(),
+                   location }
   {
   }
 
   cpp_scope_close::cpp_scope_close(identifier const &name,
                                    read::source const &location,
                                    identifier const &scope)
-    : instruction{ instruction_kind::cpp_scope_close, name, Cpp::GetVoidType(), location }
+    : instruction{ instruction_kind::cpp_scope_close,
+                   name,
+                   analyze::cppinterop::get_void_type(),
+                   location }
     , scope{ scope }
   {
   }

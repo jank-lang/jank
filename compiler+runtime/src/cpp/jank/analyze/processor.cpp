@@ -1927,7 +1927,7 @@ namespace jank::analyze
 
         param_type = type_expr.expect_ok();
 
-        if(Cpp::IsReferenceType(param_type))
+        if(cppinterop::is_reference_type(param_type))
         {
           return error::analyze_invalid_cpp_type(
             "Type-hints for parameters cannot be reference types.",
@@ -1935,7 +1935,7 @@ namespace jank::analyze
             latest_expansion(macro_expansions));
         }
 
-        if(!cpp_util::is_trait_convertible(param_type) && !Cpp::IsPointerType(param_type))
+        if(!cpp_util::is_trait_convertible(param_type) && !cppinterop::is_pointer_type(param_type))
         {
           return error::analyze_invalid_cpp_type(
             "Type-hints for parameters either need to be jank object types, trait-convertible "
@@ -3213,7 +3213,7 @@ namespace jank::analyze
 
             auto const catch_type_form(catch_it.first().unwrap());
             /* Void here represents a catch-all. */
-            jtl::ptr<void> catch_type{ Cpp::GetVoidType() };
+            jtl::ptr<void> catch_type{ cppinterop::get_void_type() };
             static auto const default_kw{
               __rt_ctx->intern_keyword("", "default", true).expect_ok()
             };
@@ -3242,7 +3242,7 @@ namespace jank::analyze
               }
               catch_type = catch_type_res.expect_ok();
 
-              if(Cpp::IsVoid(Cpp::GetNonReferenceType(catch_type)))
+              if(cppinterop::is_void(Cpp::GetNonReferenceType(catch_type)))
               {
                 return error::analyze_invalid_try("Void is not a valid exception type to catch.",
                                                   object_source(catch_type_form),

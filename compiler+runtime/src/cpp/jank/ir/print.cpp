@@ -514,7 +514,7 @@ namespace jank::ir
                     R"({:name {} :op :cpp/literal :value {} :type "{}"})",
                     name,
                     obj.to_code_string(),
-                    Cpp::GetTypeAsString(type));
+                    analyze::cppinterop::get_type_as_string(type));
   }
 
   void inst::cpp_into_object::print(jtl::string_builder &sb, usize const) const
