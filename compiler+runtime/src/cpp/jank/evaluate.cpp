@@ -1,9 +1,5 @@
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 
-#include <CppInterOp/Compatibility.h>
-#include <CppInterOp/CppInterOpInterpreter.h>
-#include <CppInterOp/CppInterOp.h>
-
 #include <cpptrace/from_current.hpp>
 
 #include <jank/runtime/context.hpp>

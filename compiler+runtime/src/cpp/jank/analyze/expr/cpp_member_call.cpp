@@ -1,7 +1,6 @@
-#include <CppInterOp/CppInterOp.h>
-
 #include <jank/analyze/expr/cpp_member_call.hpp>
 #include <jank/detail/to_runtime_data.hpp>
+#include <jank/analyze/cppinterop.hpp>
 
 namespace jank::analyze::expr
 {
@@ -43,6 +42,6 @@ namespace jank::analyze::expr
 
   jtl::ptr<void> cpp_member_call::get_type() const
   {
-    return CppImpl::GetFunctionReturnType(fn);
+    return cppinterop::get_function_return_type(fn);
   }
 }

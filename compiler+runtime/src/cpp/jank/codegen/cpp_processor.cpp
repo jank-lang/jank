@@ -1,6 +1,3 @@
-#include <CppInterOp/Compatibility.h>
-#include <CppInterOp/CppInterOp.h>
-
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/ir/processor.hpp>

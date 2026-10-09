@@ -1,5 +1,3 @@
-#include <CppInterOp/CppInterOp.h>
-
 #include <jank/ir/instruction.hpp>
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/analyze/visit.hpp>
