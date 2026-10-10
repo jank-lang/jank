@@ -101,28 +101,29 @@
   *ready?)
 
 (defn ^:private jank-repl-main [port]
-  (let [*ready? (promise)]
+  (let [*err (promise)]
     (future
-      (let [server* (try
-                     (cpp/box
-                      (cpp/new jank.nrepl.server.native_server port))
-                     (catch cpp/std.exception e
-                       (println "Error binding server address: " port)
-                       (println (.what e))
-                       nil))]
-        (if-not server*
-          (deliver *ready? false)
-          ;; else
+      (let [[err server*]
+            (try
+              [nil
+               (cpp/box
+                (cpp/new jank.nrepl.server.native_server port))]
+              (catch cpp/std.exception e
+                [(str "Error binding server address: " port
+                        "\n" (.what e))
+                 nil]))]
+        (if err
+          (deliver *err err)
           (let [server (cpp/unbox (:* jank.nrepl.server.native_server) server*)]
             (spit ".nrepl-port" (str (.get_port server)))
             ;; Certain nREPL clients, such as Calva, depend on this exact string
             ;; format to assist with setting up a REPL via jack-in.
             (println "nREPL server started on port" (str (.get_port server))
                      "on host 127.0.0.1 -" (.get_endpoint server))
-            (deliver *ready? true)
+            (deliver *err nil)
 
             (while true
               (let [client* (.accept server)]
                 (future (handle-client (cpp/box client*)))))))))
-    *ready?))
+    *err))
 
