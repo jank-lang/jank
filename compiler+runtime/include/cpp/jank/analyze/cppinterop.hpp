@@ -156,6 +156,8 @@ namespace jank::analyze::cppinterop
                     std::vector<clang_type> const &arg_types,
                     std::vector<clang_decl> &operators,
                     CppImpl::OperatorArity kind);
+  clang_type get_builtin_operator_type(CppImpl::Operator op,
+                                       std::vector<clang_type> const &arg_types);
   clang_decl create_interpreter(std::vector<char const *> const &args = {},
                                 std::vector<char const *> const &gpu_args = {},
                                 std::map<char const *, std::string_view> const &vfs = {},
