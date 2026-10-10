@@ -182,6 +182,8 @@ namespace jank::error
         return "Invalid C++ unbox.";
       case kind::analyze_invalid_cpp_new:
         return "Invalid C++ new.";
+      case kind::analyze_invalid_cpp_def:
+        return "Invalid C++ def.";
       case kind::analyze_invalid_cpp_delete:
         return "Invalid C++ delete.";
       case kind::analyze_invalid_cpp_member_access:
@@ -402,6 +404,8 @@ namespace jank::error
         return "analyze/invalid-cpp-unbox";
       case kind::analyze_invalid_cpp_new:
         return "analyze/invalid-cpp-new";
+      case kind::analyze_invalid_cpp_def:
+        return "analyze/invalid-cpp-def";
       case kind::analyze_invalid_cpp_delete:
         return "analyze/invalid-cpp-delete";
       case kind::analyze_invalid_cpp_member_access:
