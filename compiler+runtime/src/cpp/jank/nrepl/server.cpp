@@ -100,6 +100,11 @@ namespace jank::nrepl::server
   {
   }
 
+  native_server::native_server(i64 port)
+    : impl_{ std::make_shared<native_server::impl>(tcp::endpoint(ip::address_v4::loopback(), port)) }
+  {
+  }
+
   jtl::immutable_string native_server::get_endpoint() const
   {
     jtl::string_builder sb;

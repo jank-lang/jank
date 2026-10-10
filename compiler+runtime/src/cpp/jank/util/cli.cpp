@@ -398,6 +398,31 @@ OPTIONS
         {
           scratch.forced_binary_version = value;
         }
+        else if(check_flag(it, end, value, "-p", "--port", true))
+        {
+          size_t parsed_upto{};
+          i64 parsed_long{};
+
+          try
+          {
+            parsed_long = std::stoll(value, &parsed_upto);
+          }
+          catch(...)
+          {
+            throw util::format("Could not parse port: '{}'.", value);
+          }
+
+          if(parsed_upto != value.size())
+          {
+            throw util::format("Could not parse port: '{}'.", value);
+          }
+
+          if ( parsed_long > std::numeric_limits<u16>::max() || parsed_long < 0){
+            throw util::format("Port out of range [0...65,535]: '{}'.", value);
+          }
+
+          opts.repl_port = parsed_long;
+        }
 
         /**** These are command-specific flags which we will store until we know the command. ****/
         else if(check_flag(it, end, value, "--name", true))

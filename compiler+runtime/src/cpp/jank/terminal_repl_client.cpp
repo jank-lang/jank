@@ -15,6 +15,7 @@
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/call.hpp>
 #include <jank/runtime/core/to_string.hpp>
+#include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/obj/persistent_hash_map.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
@@ -250,9 +251,9 @@ namespace jank::terminal_repl
      * some stuff for this thread and then we'll later block on an nREPL promise to ensure
      * that it's completely running before we prompt the user. */
     auto const repl_main{
-      __rt_ctx->intern_var("jank.nrepl.server.core", "background-main").expect_ok()
+      __rt_ctx->intern_var("jank.nrepl.server.core", "jank-repl-main").expect_ok()
     };
-    auto const repl_ready{ repl_main.call() };
+    auto const repl_ready{ repl_main.call(make_box<obj::integer>(util::cli::opts.repl_port)) };
 
     __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>("user"));
     __rt_ctx->intern_var("clojure.core", "refer")
@@ -296,7 +297,9 @@ namespace jank::terminal_repl
 
     /* We want to wait until the nREPL server is completely initialized, so we'll block on
      * its promise. */
-    repl_ready.deref();
+    if (!truthy(repl_ready.deref())){
+      return;
+    }
 
     while(true)
     {
