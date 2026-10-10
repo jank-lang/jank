@@ -157,7 +157,19 @@ namespace jank::runtime::obj
       return clone;
     }
 
-    T &operator[](i64 const i) const
+    T &operator[](i64 const i)
+    {
+      if(i < 0 || std::cmp_greater_equal(i, size))
+      {
+        throw std::runtime_error{
+          util::format("Index `{}` is out of bounds for an `array` of length `{}`.", i, size)
+        };
+      }
+
+      return data[i];
+    }
+
+    T const &operator[](i64 const i) const
     {
       if(i < 0 || std::cmp_greater_equal(i, size))
       {
