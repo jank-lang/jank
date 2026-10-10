@@ -80,7 +80,7 @@
     clojure.core-test.fn-qmark
     clojure.core-test.fnext
     clojure.core-test.fnil
-    ; clojure.core-test.format ; TODO: port format
+    clojure.core-test.format
     ; clojure.core-test.get ; TODO: port to-array
     clojure.core-test.get-in
     ; clojure.core-test.group-by
@@ -115,9 +115,9 @@
     clojure.core-test.map
     ; clojure.core-test.map-qmark ; TODO: port array-map, TODO: port object-array
     clojure.core-test.mapcat
-    ; clojure.core-test.max ; FIXME: Failing tests.
+    clojure.core-test.max
     clojure.core-test.merge
-    ; clojure.core-test.min ; FIXME: Failing tests.
+    clojure.core-test.min
     clojure.core-test.min-key
     ; clojure.core-test.minus ; FIXME: Failing tests.
     ; clojure.core-test.mod ; FIXME: Failing tests.
@@ -208,7 +208,7 @@
     ; clojure.core-test.sorted-qmark ; TODO: port sorted-map-by, not yet implemented: sorted-set-by, TODO: port array-map, TODO: port object-array
     ; clojure.core-test.special-symbol-qmark ; TODO: port special-symbol?
     ; clojure.core-test.star ; FIXME: Failing tests.
-    ; clojure.core-test.star-squote ; Assertion failed! is_tagged_pointer(val)
+    clojure.core-test.star-squote
     clojure.core-test.str
     clojure.core-test.string-qmark
     ; clojure.core-test.subs ; FIXME: Failing tests.
