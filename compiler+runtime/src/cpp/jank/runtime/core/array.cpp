@@ -63,7 +63,7 @@ namespace jank::runtime
   obj::char_array_ref char_array(jtl::immutable_string const &s)
   {
     auto const size(s.size());
-    auto const a(char_array(size));
+    auto const a(make_box<obj::array<char>>(size));
 
     std::copy(s.data(), s.data() + size, a->data.data);
 
