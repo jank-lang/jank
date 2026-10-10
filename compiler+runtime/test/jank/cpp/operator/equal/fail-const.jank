@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::cpp::operator_::equal::fail_const
+          {
+            int const& foo()
+            { static int i{}; return i; }
+          }")
+
+(let* [i (cpp/jank.cpp.operator_.equal.fail_const.foo)]
+  (cpp/= i 5)
+  :success)
