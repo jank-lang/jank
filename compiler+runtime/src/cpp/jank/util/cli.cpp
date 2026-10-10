@@ -122,6 +122,9 @@ OPTIONS
           --module-path <path>
                               A colon separated list of directories, JAR files, and ZIP files
                               to search for modules.
+  -p,     --port <port number>
+                              The port number to bind when running a jank nrepl server.
+                              Pass 0 or omit to use a random available port.
           --profile           Enable compiler and runtime profiling.
           --profile-output <path> [default: jank.profile]
                               The file to write profile entries (will be overwritten).
