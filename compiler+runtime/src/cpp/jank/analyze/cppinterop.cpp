@@ -710,8 +710,8 @@ namespace jank::analyze::cppinterop
     operators = from_voidp(cpp_operators);
   }
 
-  clang_type get_builtin_operator_type(CppImpl::Operator op,
-                                       std::vector<clang_type> const &arg_types)
+  clang_type
+  get_builtin_operator_type(CppImpl::Operator op, std::vector<clang_type> const &arg_types)
   {
     auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::GetBuiltinOperatorType(op, to_voidp(arg_types));
