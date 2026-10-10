@@ -38,7 +38,7 @@ namespace jank::runtime
       return boolean_array(o.to_integer());
     }
 
-    auto const a(boolean_array(sequence_length(o)));
+    auto const a(make_box<obj::array<bool>>(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -82,7 +82,7 @@ namespace jank::runtime
       return char_array(expect_object<obj::persistent_string>(o)->data);
     }
 
-    auto const a(char_array(sequence_length(o)));
+    auto const a(make_box<obj::array<char>>(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -111,7 +111,7 @@ namespace jank::runtime
       return float_array(o.to_integer());
     }
 
-    auto const a(float_array(sequence_length(o)));
+    auto const a(make_box<obj::array<f32>>(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -140,7 +140,7 @@ namespace jank::runtime
       return double_array(o.to_integer());
     }
 
-    auto const a(double_array(sequence_length(o)));
+    auto const a(make_box<obj::array<f64>>(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -169,7 +169,7 @@ namespace jank::runtime
       return short_array(o.to_integer());
     }
 
-    auto const a(short_array(sequence_length(o)));
+    auto const a(make_box<obj::array<i16>>(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -198,7 +198,7 @@ namespace jank::runtime
       return int_array(o.to_integer());
     }
 
-    auto const a(int_array(sequence_length(o)));
+    auto const a(make_box<obj::array<i32>>(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -227,7 +227,7 @@ namespace jank::runtime
       return long_array(o.to_integer());
     }
 
-    auto const a(long_array(sequence_length(o)));
+    auto const a(make_box<obj::array<i64>>(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -251,7 +251,7 @@ namespace jank::runtime
       return object_array(o.to_integer());
     }
 
-    auto const a(object_array(sequence_length(o)));
+    auto const a(make_box<obj::array<object_ref>>(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
@@ -280,7 +280,7 @@ namespace jank::runtime
       return byte_array(o.to_integer());
     }
 
-    auto const a(byte_array(sequence_length(o)));
+    auto const a(make_box<obj::array<u8>>(sequence_length(o)));
 
     usize i{};
     for(auto const e : make_sequence_range(o))
