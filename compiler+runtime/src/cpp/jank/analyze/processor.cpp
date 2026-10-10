@@ -133,330 +133,6 @@ namespace jank::analyze
                              std::vector<cppinterop::clang_type> const &arg_types,
                              native_vector<runtime::object_ref> const &macro_expansions);
 
-  static error_ref invalid_unary(std::vector<cppinterop::clang_type> const &args,
-                                 jtl::immutable_string const &op_name,
-                                 expr::cpp_value_ref const val,
-                                 native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    return error::analyze_invalid_cpp_operator_call(
-      util::format("The unary operator `{}` is not supported for the type `{}`.",
-                   op_name,
-                   cpp_util::get_qualified_type_name(args[0])),
-      object_source(val->form),
-      latest_expansion(macro_expansions));
-  }
-
-  static error_ref invalid_binary(std::vector<cppinterop::clang_type> const &args,
-                                  jtl::immutable_string const &op_name,
-                                  expr::cpp_value_ref const val,
-                                  native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    return error::analyze_invalid_cpp_operator_call(
-      util::format("The binary operator `{}` is not supported for the types `{}` and `{}`.",
-                   op_name,
-                   cpp_util::get_qualified_type_name(args[0]),
-                   cpp_util::get_qualified_type_name(args[1])),
-      object_source(val->form),
-      latest_expansion(macro_expansions));
-  }
-
-  static error_ref invalid(std::vector<cppinterop::clang_type> const &args,
-                           jtl::immutable_string const &op_name,
-                           expr::cpp_value_ref const val,
-                           native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    if(args.size() == 1)
-    {
-      return invalid_unary(args, op_name, val, macro_expansions);
-    }
-    return invalid_binary(args, op_name, val, macro_expansions);
-  }
-
-  using validator_ret = jtl::result<void, error_ref>;
-
-  static validator_ret no_binary(std::vector<cppinterop::clang_type> const &args,
-                                 jtl::immutable_string const &op_name,
-                                 expr::cpp_value_ref const val,
-                                 native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    if(args.size() == 1)
-    {
-      return ok();
-    }
-
-    return invalid_binary(args, op_name, val, macro_expansions);
-  }
-
-  static validator_ret no_unary(std::vector<cppinterop::clang_type> const &args,
-                                jtl::immutable_string const &op_name,
-                                expr::cpp_value_ref const val,
-                                native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    if(args.size() == 2)
-    {
-      return ok();
-    }
-
-    return invalid_unary(args, op_name, val, macro_expansions);
-  }
-
-  static validator_ret no_unary_non_ptr(std::vector<cppinterop::clang_type> const &args,
-                                        jtl::immutable_string const &op_name,
-                                        expr::cpp_value_ref const val,
-                                        native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    if(args.size() == 2 || cppinterop::is_pointer_type(cppinterop::get_non_reference_type(args[0]))
-       || cppinterop::is_array_type(cppinterop::get_non_reference_type(args[0])))
-    {
-      return ok();
-    }
-
-    return invalid_unary(args, op_name, val, macro_expansions);
-  }
-
-  static validator_ret no_weird_ptr_math(std::vector<cppinterop::clang_type> const &args,
-                                         jtl::immutable_string const &op_name,
-                                         expr::cpp_value_ref const val,
-                                         native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    if(args.size() == 2
-       && ((cppinterop::is_pointer_type(cppinterop::get_non_reference_type(args[0]))
-            && !cppinterop::is_integral(cppinterop::get_non_reference_type(args[1])))
-           || (cppinterop::is_pointer_type(cppinterop::get_non_reference_type(args[1]))
-               && !cppinterop::is_integral(cppinterop::get_non_reference_type(args[0])))))
-    {
-      return invalid_binary(args, op_name, val, macro_expansions);
-    }
-
-    return ok();
-  }
-
-  static validator_ret no_lhs_ptr_math(std::vector<cppinterop::clang_type> const &args,
-                                       jtl::immutable_string const &op_name,
-                                       expr::cpp_value_ref const val,
-                                       native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    if(args.size() == 2 && cppinterop::is_integral(cppinterop::get_non_reference_type(args[0]))
-       && cppinterop::is_pointer_type(cppinterop::get_non_reference_type(args[1])))
-    {
-      /* TODO: Add a note to swap the arguments. */
-      return invalid_binary(args, op_name, val, macro_expansions);
-    }
-
-    return ok();
-  }
-
-  static validator_ret no_ptrs(std::vector<cppinterop::clang_type> const &args,
-                               jtl::immutable_string const &op_name,
-                               expr::cpp_value_ref const val,
-                               native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    for(auto const &arg : args)
-    {
-      if(cppinterop::is_pointer_type(cppinterop::get_non_reference_type(arg)))
-      {
-        return invalid(args, op_name, val, macro_expansions);
-      }
-    }
-
-    return ok();
-  }
-
-  static validator_ret no_non_subscript(std::vector<cppinterop::clang_type> const &args,
-                                        jtl::immutable_string const &op_name,
-                                        expr::cpp_value_ref const val,
-                                        native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    auto const arr_type{ cppinterop::get_non_reference_type(args[0]) };
-    if(!(cppinterop::is_pointer_type(arr_type) || cppinterop::is_array_type(arr_type)))
-    {
-      return invalid(args, op_name, val, macro_expansions);
-    }
-
-    auto const idx_type{ cppinterop::get_non_reference_type(args[1]) };
-    if(!cppinterop::is_integral(idx_type))
-    {
-      return invalid(args, op_name, val, macro_expansions);
-    }
-
-    return ok();
-  }
-
-  static validator_ret no_nullptr(std::vector<cppinterop::clang_type> const &args,
-                                  jtl::immutable_string const &op_name,
-                                  expr::cpp_value_ref const val,
-                                  native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    for(auto const &arg : args)
-    {
-      if(cpp_util::is_nullptr(cppinterop::get_non_reference_type(arg)))
-      {
-        return invalid(args, op_name, val, macro_expansions);
-      }
-    }
-
-    return ok();
-  }
-
-  static validator_ret no_binary_ptrs(std::vector<cppinterop::clang_type> const &args,
-                                      jtl::immutable_string const &op_name,
-                                      expr::cpp_value_ref const val,
-                                      native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    if(args.size() == 2)
-    {
-      for(auto const &arg : args)
-      {
-        if(cppinterop::is_pointer_type(cppinterop::get_non_reference_type(arg)))
-        {
-          return invalid(args, op_name, val, macro_expansions);
-        }
-      }
-    }
-
-    return ok();
-  }
-
-  static validator_ret no_non_ints(std::vector<cppinterop::clang_type> const &args,
-                                   jtl::immutable_string const &op_name,
-                                   expr::cpp_value_ref const val,
-                                   native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    for(auto const &arg : args)
-    {
-      if(!cppinterop::is_integral(cppinterop::get_non_reference_type(arg)))
-      {
-        return invalid(args, op_name, val, macro_expansions);
-      }
-    }
-
-    return ok();
-  }
-
-  static validator_ret
-  no_binary_non_ints(std::vector<cppinterop::clang_type> const &args,
-                     jtl::immutable_string const &op_name,
-                     expr::cpp_value_ref const val,
-                     native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    if(args.size() == 2)
-    {
-      for(auto const &arg : args)
-      {
-        if(!cppinterop::is_integral(cppinterop::get_non_reference_type(arg)))
-        {
-          return invalid(args, op_name, val, macro_expansions);
-        }
-      }
-    }
-
-    return ok();
-  }
-
-  /* If you have one ptr arg, the other arg must be a compatible ptr arg. */
-  static validator_ret
-  no_binary_incompat_ptrs(std::vector<cppinterop::clang_type> const &args,
-                          jtl::immutable_string const &op_name,
-                          expr::cpp_value_ref const val,
-                          native_vector<runtime::object_ref> const &macro_expansions)
-  {
-    if(args.size() == 2)
-    {
-      auto const is_arg0_ptr{ cppinterop::is_pointer_type(
-        cppinterop::get_non_reference_type(args[0])) };
-      if((is_arg0_ptr
-          && is_arg0_ptr
-            != cppinterop::is_pointer_type(cppinterop::get_non_reference_type(args[1])))
-         || !cppinterop::is_implicitly_convertible(cppinterop::get_non_reference_type(args[0]),
-                                                   cppinterop::get_non_reference_type(args[1])))
-      {
-        return invalid(args, op_name, val, macro_expansions);
-      }
-    }
-
-    return ok();
-  }
-
-  static jtl::ptr<void> common_type(std::vector<cppinterop::clang_type> const &args)
-  {
-    if(args.size() == 2)
-    {
-      auto const ret{ cppinterop::get_common_type(cppinterop::get_non_reference_type(args[0]),
-                                                  cppinterop::get_non_reference_type(args[1])) };
-      if(ret)
-      {
-        return ret;
-      }
-
-      /* For pointer arithmetic, we won't have a common type. We want to return the
-       * pointer type, though. */
-      if(cppinterop::is_pointer_type(cppinterop::get_non_reference_type(args[0])))
-      {
-        return args[0];
-      }
-      if(cppinterop::is_pointer_type(cppinterop::get_non_reference_type(args[1])))
-      {
-        return args[1];
-      }
-    }
-
-    return args[0];
-  }
-
-  static jtl::ptr<void> star_type(std::vector<cppinterop::clang_type> const &args)
-  {
-    if(args.size() == 2)
-    {
-      return common_type(args);
-    }
-    else if(cppinterop::is_array_type(cppinterop::get_non_reference_type(args[0])))
-    {
-      return cppinterop::get_array_element_type(cppinterop::get_non_reference_type(args[0]));
-    }
-
-    /* We don't want to deref into a value type. We always at least want a reference. However,
-     * if we have a pointer to a pointer, we don't care about a reference to a pointer, so for
-     * those cases we just remove a pointer. Otherwise, we remove the pointer and add a reference.
-     *
-     * The reason we don't want value types is that jank doesn't work with C++ value semantics.
-     * The only value types we have are those immediately constructed or returned from C++
-     * functions. Everything else is a reference. */
-    auto const pointee{ cppinterop::get_pointee_type(cppinterop::get_non_reference_type(args[0])) };
-    if(pointee && cppinterop::is_pointer_type(pointee))
-    {
-      return pointee;
-    }
-
-    return cppinterop::get_lvalue_reference_type(pointee);
-  }
-
-  static jtl::ptr<void> amp_type(std::vector<cppinterop::clang_type> const &args)
-  {
-    if(args.size() == 2)
-    {
-      return common_type(args);
-    }
-
-    return cppinterop::get_pointer_type(cppinterop::get_non_reference_type(args[0]));
-  }
-
-  static jtl::ptr<void> bool_type(std::vector<cppinterop::clang_type> const &)
-  {
-    return cppinterop::get_type("bool");
-  }
-
-  static jtl::ptr<void> left_type(std::vector<cppinterop::clang_type> const &args)
-  {
-    /* TODO: Consider reference vs value type. */
-    return args[0];
-  }
-
-  static jtl::ptr<void> subscript_type(std::vector<cppinterop::clang_type> const &args)
-  {
-    return cppinterop::get_lvalue_reference_type(
-      cppinterop::get_pointee_type(cppinterop::get_non_reference_type(args[0])));
-  }
-
   static processor::expression_result
   build_builtin_operator_call(expr::cpp_value_ref const val,
                               Cpp::Operator const op,
@@ -469,87 +145,47 @@ namespace jank::analyze
                               native_vector<runtime::object_ref> const &macro_expansions)
   {
     auto const op_name{ try_object<obj::symbol>(val->form)->name };
-
-    struct op_processor
+    auto query_arg_types{ arg_types };
+    for(auto &arg_type : query_arg_types)
     {
-      native_vector<std::function<validator_ret(std::vector<cppinterop::clang_type> const &,
-                                                jtl::immutable_string const &,
-                                                expr::cpp_value_ref,
-                                                native_vector<runtime::object_ref> const &)>>
-        validators;
-      std::function<jtl::ptr<void>(std::vector<cppinterop::clang_type> const &)> type{
-        common_type
-      };
-    };
-
-    static native_unordered_map<Cpp::Operator, op_processor> ops{
-      //{ Cpp::OP_New, {} },
-      //{ Cpp::OP_Delete, {} },
-      //{ Cpp::OP_Array_New, {} },
-      //{ Cpp::OP_Array_Delete, {} },
-      {                Cpp::OP_Plus,                             { { no_unary, no_weird_ptr_math } } },
-      {               Cpp::OP_Minus,            { { no_unary, no_weird_ptr_math, no_lhs_ptr_math } } },
-      {                Cpp::OP_Star, { { no_unary_non_ptr, no_binary_ptrs, no_nullptr }, star_type } },
-      {               Cpp::OP_Slash,                                       { { no_unary, no_ptrs } } },
-      {             Cpp::OP_Percent,                                   { { no_unary, no_non_ints } } },
-      {               Cpp::OP_Caret,                                   { { no_unary, no_non_ints } } },
-      {                 Cpp::OP_Amp,                { { no_binary_non_ints, no_nullptr }, amp_type } },
-      {                Cpp::OP_Pipe,                            { { no_unary, no_binary_non_ints } } },
-      {               Cpp::OP_Tilde,                                  { { no_binary, no_non_ints } } },
-      {             Cpp::OP_Exclaim,                                    { { no_binary }, bool_type } },
-      {               Cpp::OP_Equal,            { { no_unary, no_binary_incompat_ptrs }, left_type } },
-      {                Cpp::OP_Less,            { { no_unary, no_binary_incompat_ptrs }, bool_type } },
-      {             Cpp::OP_Greater,            { { no_unary, no_binary_incompat_ptrs }, bool_type } },
-      {           Cpp::OP_PlusEqual,                  { { no_unary, no_weird_ptr_math }, left_type } },
-      {          Cpp::OP_MinusEqual,                  { { no_unary, no_weird_ptr_math }, left_type } },
-      {           Cpp::OP_StarEqual,                     { { no_unary, no_binary_ptrs }, left_type } },
-      {          Cpp::OP_SlashEqual,                     { { no_unary, no_binary_ptrs }, left_type } },
-      {        Cpp::OP_PercentEqual,                     { { no_unary, no_binary_ptrs }, left_type } },
-      {          Cpp::OP_CaretEqual,                     { { no_unary, no_binary_ptrs }, left_type } },
-      {            Cpp::OP_AmpEqual,                        { { no_unary, no_non_ints }, left_type } },
-      {           Cpp::OP_PipeEqual,                        { { no_unary, no_non_ints }, left_type } },
-      {            Cpp::OP_LessLess,                        { { no_unary, no_non_ints }, left_type } },
-      {      Cpp::OP_GreaterGreater,                        { { no_unary, no_non_ints }, left_type } },
-      {       Cpp::OP_LessLessEqual,                        { { no_unary, no_non_ints }, left_type } },
-      { Cpp::OP_GreaterGreaterEqual,                        { { no_unary, no_non_ints }, left_type } },
-      {          Cpp::OP_EqualEqual,            { { no_unary, no_binary_incompat_ptrs }, bool_type } },
-      {        Cpp::OP_ExclaimEqual,            { { no_unary, no_binary_incompat_ptrs }, bool_type } },
-      {           Cpp::OP_LessEqual,            { { no_unary, no_binary_incompat_ptrs }, bool_type } },
-      {        Cpp::OP_GreaterEqual,            { { no_unary, no_binary_incompat_ptrs }, bool_type } },
-      //{           Cpp::OP_Spaceship, { { no_unary, no_binary_incompat_ptrs } } },
-      {              Cpp::OP_AmpAmp,                                     { { no_unary }, bool_type } },
-      {            Cpp::OP_PipePipe,                                     { { no_unary }, bool_type } },
-      {            Cpp::OP_PlusPlus,                                    { { no_binary }, left_type } },
-      {          Cpp::OP_MinusMinus,                                    { { no_binary }, left_type } },
-      {           Cpp::OP_Subscript,              { { no_unary, no_non_subscript }, subscript_type } },
-      //{ Cpp::OP_Comma, { {} } },
-      //{ Cpp::OP_ArrowStar, { {} } },
-      //{ Cpp::OP_Arrow, { {} } },
-      //{ Cpp::OP_Call, { {} } },
-    };
-
-    auto const found{ ops.find(op) };
-    if(found != ops.end())
-    {
-      for(auto const &f : found->second.validators)
+      auto const non_reference_type{ cppinterop::get_non_reference_type(arg_type) };
+      if(cppinterop::is_array_type(non_reference_type))
       {
-        auto const res{ f(arg_types, op_name, val, macro_expansions) };
-        if(res.is_err())
-        {
-          return res.expect_err();
-        }
+        /* Array-valued C++ names are materialized as pointers by codegen, so query Clang
+         * with the type of the generated operand rather than the source array type. */
+        arg_type
+          = cppinterop::get_pointer_type(cppinterop::get_array_element_type(non_reference_type));
       }
-
-      return jtl::make_ref<expr::cpp_builtin_operator_call>(position,
-                                                            current_frame,
-                                                            needs_box,
-                                                            form,
-                                                            op,
-                                                            jtl::move(arg_exprs),
-                                                            found->second.type(arg_types));
     }
 
-    return invalid(arg_types, op_name, val, macro_expansions);
+    auto const type{ cppinterop::get_builtin_operator_type(op, query_arg_types) };
+    if(!type)
+    {
+      if(arg_types.size() == 1)
+      {
+        return error::analyze_invalid_cpp_operator_call(
+          util::format("The unary operator `{}` is not supported for the type `{}`.",
+                       op_name,
+                       cpp_util::get_qualified_type_name(arg_types[0])),
+          object_source(val->form),
+          latest_expansion(macro_expansions));
+      }
+      return error::analyze_invalid_cpp_operator_call(
+        util::format("The binary operator `{}` is not supported for the types `{}` and `{}`.",
+                     op_name,
+                     cpp_util::get_qualified_type_name(arg_types[0]),
+                     cpp_util::get_qualified_type_name(arg_types[1])),
+        object_source(val->form),
+        latest_expansion(macro_expansions));
+    }
+
+    return jtl::make_ref<expr::cpp_builtin_operator_call>(position,
+                                                          current_frame,
+                                                          needs_box,
+                                                          form,
+                                                          op,
+                                                          jtl::move(arg_exprs),
+                                                          type);
   }
 
   static processor::expression_result
