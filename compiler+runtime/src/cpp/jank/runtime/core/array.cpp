@@ -7,19 +7,6 @@
 
 namespace jank::runtime
 {
-  template obj::bool_array_ref try_array(object_ref const o);
-  template obj::char_array_ref try_array(object_ref const o);
-  template obj::u8_array_ref try_array(object_ref const o);
-  template obj::i8_array_ref try_array(object_ref const o);
-  template obj::u16_array_ref try_array(object_ref const o);
-  template obj::i16_array_ref try_array(object_ref const o);
-  template obj::u32_array_ref try_array(object_ref const o);
-  template obj::i32_array_ref try_array(object_ref const o);
-  template obj::u64_array_ref try_array(object_ref const o);
-  template obj::i64_array_ref try_array(object_ref const o);
-  template obj::f32_array_ref try_array(object_ref const o);
-  template obj::f64_array_ref try_array(object_ref const o);
-  template obj::object_array_ref try_array(object_ref const o);
 
   obj::bool_array_ref boolean_array(i64 const size)
   {
@@ -292,19 +279,6 @@ namespace jank::runtime
     return a;
   }
 
-  template bool aget(obj::bool_array_ref const a, i64 const i);
-  template char aget(obj::char_array_ref const a, i64 const i);
-  template u8 aget(obj::u8_array_ref const a, i64 const i);
-  template i8 aget(obj::i8_array_ref const a, i64 const i);
-  template u16 aget(obj::u16_array_ref const a, i64 const i);
-  template i16 aget(obj::i16_array_ref const a, i64 const i);
-  template u32 aget(obj::u32_array_ref const a, i64 const i);
-  template i32 aget(obj::i32_array_ref const a, i64 const i);
-  template u64 aget(obj::u64_array_ref const a, i64 const i);
-  template i64 aget(obj::i64_array_ref const a, i64 const i);
-  template f32 aget(obj::f32_array_ref const a, i64 const i);
-  template f64 aget(obj::f64_array_ref const a, i64 const i);
-
   object_ref aget(object_ref const a, i64 const i)
   {
     if(a.get_type() != object_type::array)
@@ -314,72 +288,18 @@ namespace jank::runtime
         object_type_str(a.get_type())) };
     }
 
-    return a.nth(convert<i64>::into_object(i));
+    return a.nth(make_box(i));
   }
-
-  template bool aset(obj::bool_array_ref const a, i64 const i, bool const val);
-  template char aset(obj::char_array_ref const a, i64 const i, char const val);
-  template u8 aset(obj::u8_array_ref const a, i64 const i, u8 const val);
-  template i8 aset(obj::i8_array_ref const a, i64 const i, i8 const val);
-  template u16 aset(obj::u16_array_ref const a, i64 const i, u16 const val);
-  template i16 aset(obj::i16_array_ref const a, i64 const i, i16 const val);
-  template u32 aset(obj::u32_array_ref const a, i64 const i, u32 const val);
-  template i32 aset(obj::i32_array_ref const a, i64 const i, i32 const val);
-  template u64 aset(obj::u64_array_ref const a, i64 const i, u64 const val);
-  template i64 aset(obj::i64_array_ref const a, i64 const i, i64 const val);
-  template f32 aset(obj::f32_array_ref const a, i64 const i, f32 const val);
-  template f64 aset(obj::f64_array_ref const a, i64 const i, f64 const val);
-
-  template bool aset(obj::bool_array_ref const a, i64 const i, object_ref const val);
-  template char aset(obj::char_array_ref const a, i64 const i, object_ref const val);
-  template u8 aset(obj::u8_array_ref const a, i64 const i, object_ref const val);
-  template i8 aset(obj::i8_array_ref const a, i64 const i, object_ref const val);
-  template u16 aset(obj::u16_array_ref const a, i64 const i, object_ref const val);
-  template i16 aset(obj::i16_array_ref const a, i64 const i, object_ref const val);
-  template u32 aset(obj::u32_array_ref const a, i64 const i, object_ref const val);
-  template i32 aset(obj::i32_array_ref const a, i64 const i, object_ref const val);
-  template u64 aset(obj::u64_array_ref const a, i64 const i, object_ref const val);
-  template i64 aset(obj::i64_array_ref const a, i64 const i, object_ref const val);
-  template f32 aset(obj::f32_array_ref const a, i64 const i, object_ref const val);
-  template f64 aset(obj::f64_array_ref const a, i64 const i, object_ref const val);
 
   object_ref aset(object_ref a, i64 const i, object_ref const val)
   {
     return a.aset(i, val);
   }
 
-  template usize alength(obj::bool_array_ref const a);
-  template usize alength(obj::char_array_ref const a);
-  template usize alength(obj::u8_array_ref const a);
-  template usize alength(obj::i8_array_ref const a);
-  template usize alength(obj::u16_array_ref const a);
-  template usize alength(obj::i16_array_ref const a);
-  template usize alength(obj::u32_array_ref const a);
-  template usize alength(obj::i32_array_ref const a);
-  template usize alength(obj::u64_array_ref const a);
-  template usize alength(obj::i64_array_ref const a);
-  template usize alength(obj::f32_array_ref const a);
-  template usize alength(obj::f64_array_ref const a);
-  template usize alength(obj::object_array_ref const a);
-
   usize alength(object_ref const a)
   {
     return sequence_length(a);
   }
-
-  template obj::bool_array_ref aclone(obj::bool_array_ref const a);
-  template obj::char_array_ref aclone(obj::char_array_ref const a);
-  template obj::u8_array_ref aclone(obj::u8_array_ref const a);
-  template obj::i8_array_ref aclone(obj::i8_array_ref const a);
-  template obj::u16_array_ref aclone(obj::u16_array_ref const a);
-  template obj::i16_array_ref aclone(obj::i16_array_ref const a);
-  template obj::u32_array_ref aclone(obj::u32_array_ref const a);
-  template obj::i32_array_ref aclone(obj::i32_array_ref const a);
-  template obj::u64_array_ref aclone(obj::u64_array_ref const a);
-  template obj::i64_array_ref aclone(obj::i64_array_ref const a);
-  template obj::f32_array_ref aclone(obj::f32_array_ref const a);
-  template obj::f64_array_ref aclone(obj::f64_array_ref const a);
-  template obj::object_array_ref aclone(obj::object_array_ref const a);
 
   object_ref aclone(object_ref const a)
   {

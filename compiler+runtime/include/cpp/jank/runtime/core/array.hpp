@@ -29,41 +29,14 @@ namespace jank::runtime
     return a;
   }
 
-  extern template obj::bool_array_ref try_array(object_ref const o);
-  extern template obj::char_array_ref try_array(object_ref const o);
-  extern template obj::u8_array_ref try_array(object_ref const o);
-  extern template obj::i8_array_ref try_array(object_ref const o);
-  extern template obj::u16_array_ref try_array(object_ref const o);
-  extern template obj::i16_array_ref try_array(object_ref const o);
-  extern template obj::u32_array_ref try_array(object_ref const o);
-  extern template obj::i32_array_ref try_array(object_ref const o);
-  extern template obj::u64_array_ref try_array(object_ref const o);
-  extern template obj::i64_array_ref try_array(object_ref const o);
-  extern template obj::f32_array_ref try_array(object_ref const o);
-  extern template obj::f64_array_ref try_array(object_ref const o);
-  extern template obj::object_array_ref try_array(object_ref const o);
-
   template <typename T>
-  T aget(obj::array_ref<T> const a, i64 const i)
+  T &aget(obj::array_ref<T> const a, i64 const i)
   {
     return (*a)[i];
   }
 
-  extern template bool aget(obj::bool_array_ref const a, i64 const i);
-  extern template char aget(obj::char_array_ref const a, i64 const i);
-  extern template u8 aget(obj::u8_array_ref const a, i64 const i);
-  extern template i8 aget(obj::i8_array_ref const a, i64 const i);
-  extern template u16 aget(obj::u16_array_ref const a, i64 const i);
-  extern template i16 aget(obj::i16_array_ref const a, i64 const i);
-  extern template u32 aget(obj::u32_array_ref const a, i64 const i);
-  extern template i32 aget(obj::i32_array_ref const a, i64 const i);
-  extern template u64 aget(obj::u64_array_ref const a, i64 const i);
-  extern template i64 aget(obj::i64_array_ref const a, i64 const i);
-  extern template f32 aget(obj::f32_array_ref const a, i64 const i);
-  extern template f64 aget(obj::f64_array_ref const a, i64 const i);
-
-  template <typename T, size_t N>
-  T aget(T const (&a)[N], i64 const i)
+  template <typename T, usize N>
+  T &aget(T (&a)[N], i64 const i)
   {
     if(i < 0 || std::cmp_greater_equal(i, N))
     {
@@ -78,24 +51,11 @@ namespace jank::runtime
   object_ref aget(object_ref const a, i64 const i);
 
   template <typename T>
-  T aset(obj::array_ref<T> const a, i64 const i, T const val)
+  T &aset(obj::array_ref<T> const a, i64 const i, T const val)
   {
     (*a)[i] = val;
-    return val;
+    return (*a)[i];
   }
-
-  extern template bool aset(obj::bool_array_ref const a, i64 const i, bool const val);
-  extern template char aset(obj::char_array_ref const a, i64 const i, char const val);
-  extern template u8 aset(obj::u8_array_ref const a, i64 const i, u8 const val);
-  extern template i8 aset(obj::i8_array_ref const a, i64 const i, i8 const val);
-  extern template u16 aset(obj::u16_array_ref const a, i64 const i, u16 const val);
-  extern template i16 aset(obj::i16_array_ref const a, i64 const i, i16 const val);
-  extern template u32 aset(obj::u32_array_ref const a, i64 const i, u32 const val);
-  extern template i32 aset(obj::i32_array_ref const a, i64 const i, i32 const val);
-  extern template u64 aset(obj::u64_array_ref const a, i64 const i, u64 const val);
-  extern template i64 aset(obj::i64_array_ref const a, i64 const i, i64 const val);
-  extern template f32 aset(obj::f32_array_ref const a, i64 const i, f32 const val);
-  extern template f64 aset(obj::f64_array_ref const a, i64 const i, f64 const val);
 
   template <typename T>
   T aset(obj::array_ref<T> const a, i64 const i, object_ref const val)
@@ -103,20 +63,7 @@ namespace jank::runtime
     return aset(a, i, convert<T>::from_object(val));
   }
 
-  extern template bool aset(obj::bool_array_ref const a, i64 const i, object_ref const val);
-  extern template char aset(obj::char_array_ref const a, i64 const i, object_ref const val);
-  extern template u8 aset(obj::u8_array_ref const a, i64 const i, object_ref const val);
-  extern template i8 aset(obj::i8_array_ref const a, i64 const i, object_ref const val);
-  extern template u16 aset(obj::u16_array_ref const a, i64 const i, object_ref const val);
-  extern template i16 aset(obj::i16_array_ref const a, i64 const i, object_ref const val);
-  extern template u32 aset(obj::u32_array_ref const a, i64 const i, object_ref const val);
-  extern template i32 aset(obj::i32_array_ref const a, i64 const i, object_ref const val);
-  extern template u64 aset(obj::u64_array_ref const a, i64 const i, object_ref const val);
-  extern template i64 aset(obj::i64_array_ref const a, i64 const i, object_ref const val);
-  extern template f32 aset(obj::f32_array_ref const a, i64 const i, object_ref const val);
-  extern template f64 aset(obj::f64_array_ref const a, i64 const i, object_ref const val);
-
-  template <typename T, size_t N>
+  template <typename T, usize N>
   T aset(T (&a)[N], i64 const i, T const val)
   {
     if(i < 0 || std::cmp_greater_equal(i, N))
@@ -130,7 +77,7 @@ namespace jank::runtime
     return val;
   }
 
-  template <typename T, size_t N>
+  template <typename T, usize N>
   T aset(T (&a)[N], i64 const i, object_ref const val)
   {
     return aset(a, i, convert<T>::from_object(val));
@@ -144,22 +91,8 @@ namespace jank::runtime
     return a->size;
   }
 
-  extern template usize alength(obj::bool_array_ref const a);
-  extern template usize alength(obj::char_array_ref const a);
-  extern template usize alength(obj::u8_array_ref const a);
-  extern template usize alength(obj::i8_array_ref const a);
-  extern template usize alength(obj::u16_array_ref const a);
-  extern template usize alength(obj::i16_array_ref const a);
-  extern template usize alength(obj::u32_array_ref const a);
-  extern template usize alength(obj::i32_array_ref const a);
-  extern template usize alength(obj::u64_array_ref const a);
-  extern template usize alength(obj::i64_array_ref const a);
-  extern template usize alength(obj::f32_array_ref const a);
-  extern template usize alength(obj::f64_array_ref const a);
-  extern template usize alength(obj::object_array_ref const a);
-
-  template <typename T, size_t N>
-  usize alength(T const (&)[N])
+  template <typename T, usize N>
+  usize alength(T (&)[N])
   {
     return N;
   }
@@ -175,25 +108,11 @@ namespace jank::runtime
     return clone;
   }
 
-  extern template obj::bool_array_ref aclone(obj::bool_array_ref const a);
-  extern template obj::char_array_ref aclone(obj::char_array_ref const a);
-  extern template obj::u8_array_ref aclone(obj::u8_array_ref const a);
-  extern template obj::i8_array_ref aclone(obj::i8_array_ref const a);
-  extern template obj::u16_array_ref aclone(obj::u16_array_ref const a);
-  extern template obj::i16_array_ref aclone(obj::i16_array_ref const a);
-  extern template obj::u32_array_ref aclone(obj::u32_array_ref const a);
-  extern template obj::i32_array_ref aclone(obj::i32_array_ref const a);
-  extern template obj::u64_array_ref aclone(obj::u64_array_ref const a);
-  extern template obj::i64_array_ref aclone(obj::i64_array_ref const a);
-  extern template obj::f32_array_ref aclone(obj::f32_array_ref const a);
-  extern template obj::f64_array_ref aclone(obj::f64_array_ref const a);
-  extern template obj::object_array_ref aclone(obj::object_array_ref const a);
-
   object_ref aclone(object_ref const a);
 
   /* TODO: Move to `jank/runtime/convert/builtin.hpp`. Currently this causes a
    * circular dependency. */
-  template <typename T, size_t N>
+  template <typename T, usize N>
   requires(!jtl::is_same<T, char> && obj::is_array_element_type<T>)
   struct convert<T[N]>
   {
