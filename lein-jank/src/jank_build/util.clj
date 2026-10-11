@@ -2,10 +2,16 @@
   (:require [clojure.java.process :as proc]
             [clojure.string :as string]))
 
+(def os-name (System/getProperty "os.name"))
+
 (defn macos? []
   (contains? #{"mac os x" "darwin"}
-             (some-> (System/getProperty "os.name")
-                     string/lower-case)))
+             (some-> os-name string/lower-case)))
+
+(defn linux? []
+  (or
+   (string/includes? os-name "nix")
+   (string/includes? os-name "nux")))
 
 (defn warn [& args]
   (apply println args))

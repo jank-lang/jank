@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/read/source.hpp>
 
 namespace jank::runtime::obj
 {
@@ -55,9 +56,8 @@ namespace jank::analyze
 
 namespace jank::evaluate
 {
-  analyze::expr::function_ref wrap_expression(analyze::expression_ref const expr,
-                                              jtl::immutable_string const &name,
-                                              native_vector<runtime::obj::symbol_ref> params);
+  analyze::expr::function_ref
+  wrap_expression(analyze::expression_ref const expr, jtl::immutable_string const &name);
   analyze::expr::function_ref wrap_expressions(native_vector<analyze::expression_ref> const &exprs,
                                                analyze::processor const &an_prc,
                                                jtl::immutable_string const &name);
@@ -102,4 +102,6 @@ namespace jank::evaluate
   runtime::object_ref eval(analyze::expr::cpp_unbox_ref);
   runtime::object_ref eval(analyze::expr::cpp_new_ref);
   runtime::object_ref eval(analyze::expr::cpp_delete_ref);
+
+  bool safe_eval(jtl::immutable_string const &code, read::source_position const &p);
 }

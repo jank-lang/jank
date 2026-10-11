@@ -11,7 +11,6 @@ cache_dir="@CMAKE_CURRENT_BINARY_DIR@/ar-cache"
 # $1 = subdir
 function find_objects
 {
-  find "${cache_dir}/common" -type f -exec cat {} +
   find "${cache_dir}/${1}" -type f -exec cat {} +
 }
 
@@ -21,6 +20,9 @@ function subdir
   case "${1}" in
     libjank-dynamic.a|libjank-compiler.a|libjankzip.a)
       echo "dynamic"
+      ;;
+    libjank-phase-2.a)
+      echo "phase-2"
       ;;
     libjank-static.a)
       echo "static"
@@ -56,11 +58,11 @@ case "${command}" in
 
   # We use this prior to building the jank executable, but after building all libraries.
   merge-phase-1)
-    object_files="$(find_objects dynamic)"
+    object_files="$(find_objects common) $(find_objects dynamic)"
     merge_output="${cmake_binary_dir}/libjank-dynamic-runtime-phase-1.a"
     build_archive "${object_files}" "${merge_output}"
 
-    object_files="$(find_objects static)"
+    object_files="$(find_objects common) $(find_objects static)"
     merge_output="${cmake_binary_dir}/libjank-static-runtime-phase-1.a"
     build_archive "${object_files}" "${merge_output}"
     ;;
@@ -68,11 +70,11 @@ case "${command}" in
   # This follows merge, but also bundles in the Clojure core library object files, following
   # jank's phase 2 building.
   merge-phase-2)
-    object_files="$(find_objects dynamic) @jank_clojure_core_binary_output@ @jank_nrepl_server_outputs_str@"
+    object_files="$(find_objects common) $(find_objects dynamic) $(find_objects phase-2) @jank_clojure_core_binary_output@ @jank_nrepl_server_outputs_str@"
     merge_output="${cmake_binary_dir}/libjank-dynamic-runtime.a"
     build_archive "${object_files}" "${merge_output}"
 
-    object_files="$(find_objects static) @jank_clojure_core_binary_output@ @jank_nrepl_server_outputs_str@"
+    object_files="$(find_objects common) $(find_objects static) $(find_objects phase-2) @jank_clojure_core_binary_output@ @jank_nrepl_server_outputs_str@"
     merge_output="${cmake_binary_dir}/libjank-static-runtime.a"
     build_archive "${object_files}" "${merge_output}"
     ;;

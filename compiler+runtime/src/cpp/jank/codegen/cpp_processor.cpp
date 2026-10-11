@@ -1,6 +1,3 @@
-#include <CppInterOp/Compatibility.h>
-#include <CppInterOp/CppInterOp.h>
-
 #include <jank/analyze/visit.hpp>
 #include <jank/analyze/cpp_util.hpp>
 #include <jank/ir/processor.hpp>
@@ -164,7 +161,7 @@ namespace jank::codegen
        * GC to hang onto it, though, so we allocate an uncollectable pointer to hold
        * our object. */
       [[maybe_unused]]
-      auto * const root{ new(NoGC) object *{ o.raw() } };
+      auto const * const root{ new(NoGC) object *{ o.raw() } };
       auto const type{ literal_type(o, true) };
       auto const ptr{ static_cast<void *>(o.raw()) };
       jtl::immutable_string fmt_str;
@@ -914,9 +911,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     auto type{ inst->type };
-    if(Cpp::GetValueKind(type) == Cpp::ValueKind::LValue)
+    if(analyze::cppinterop::get_value_category(type) == analyze::cppinterop::value_category::lvalue)
     {
-      type = Cpp::GetNonReferenceType(type);
+      type = analyze::cppinterop::get_non_reference_type(type);
     }
     util::format_to(b.body_buffer, "{} {}{ };\n", get_qualified_type_name(type), inst->name);
     return inst->name;
@@ -1049,6 +1046,8 @@ namespace jank::codegen
       util::format_to(b.body_buffer, "throw;\n");
     }
 
+    util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->name);
+
     /* If there are any instructions after the throw, like scope closes, we need to handle
      * them, too. */
     while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
@@ -1113,10 +1112,19 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::catch_ref const inst, builder &b)
   {
     b.next_instruction();
-    util::format_to(b.body_buffer,
-                    "catch({} {}) {",
-                    get_qualified_type_name(inst->type),
-                    inst->name);
+
+    if(analyze::cppinterop::is_void(inst->type))
+    {
+      util::format_to(b.body_buffer, "catch(...) {\n");
+      util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->name);
+    }
+    else
+    {
+      util::format_to(b.body_buffer,
+                      "catch({} {}) {\n",
+                      get_qualified_type_name(inst->type),
+                      inst->name);
+    }
 
     auto const &jump_block{ inst->finally_block.is_some() ? inst->finally_block
                                                           : inst->merge_block };
@@ -1227,40 +1235,48 @@ namespace jank::codegen
       util::format_to(b.body_buffer, "auto &&{}({});\n", inst->name, val);
     }
     /* Static const primitives need to be copied, since they won't have linkage. */
-    else if(Cpp::IsStaticVariable(inst->expr->scope)
-            && Cpp::IsConstType(Cpp::GetNonReferenceType(inst->expr->type))
-            && is_primitive(Cpp::GetNonReferenceType(inst->expr->type)))
+    else if(analyze::cppinterop::is_static_variable(inst->expr->scope)
+            && analyze::cppinterop::is_const_type(
+              analyze::cppinterop::get_non_reference_type(inst->expr->type))
+            && is_primitive(analyze::cppinterop::get_non_reference_type(inst->expr->type)))
     {
-      util::format_to(b.body_buffer,
-                      "auto {}({});\n",
-                      inst->name,
-                      Cpp::GetQualifiedCompleteNameWithTemplateArgs(inst->expr->scope));
+      util::format_to(
+        b.body_buffer,
+        "auto {}({});\n",
+        inst->name,
+        analyze::cppinterop::get_qualified_complete_name_with_template_args(inst->expr->scope));
     }
     /* Functions referred to by value should get a cast, in case they're overloaded. */
-    else if(Cpp::IsFunction(inst->expr->scope) || Cpp::IsTemplatedFunction(inst->expr->scope))
+    else if(analyze::cppinterop::is_function(inst->expr->scope)
+            || analyze::cppinterop::is_templated_function(inst->expr->scope))
     {
-      util::format_to(b.body_buffer,
-                      "auto &&{}(static_cast<{}>(&{}));\n",
-                      inst->name,
-                      get_qualified_type_name(inst->expr->type),
-                      Cpp::GetQualifiedCompleteNameWithTemplateArgs(inst->expr->scope));
+      util::format_to(
+        b.body_buffer,
+        "auto &&{}(static_cast<{}>(&{}));\n",
+        inst->name,
+        get_qualified_type_name(inst->expr->type),
+        analyze::cppinterop::get_qualified_complete_name_with_template_args(inst->expr->scope));
     }
-    else if(Cpp::IsArrayType(Cpp::GetNonReferenceType(inst->expr->type)))
+    else if(analyze::cppinterop::is_array_type(
+              analyze::cppinterop::get_non_reference_type(inst->expr->type)))
     {
-      util::format_to(b.body_buffer,
-                      "{} {}({});\n",
-                      get_qualified_type_name(Cpp::GetPointerType(
-                        Cpp::GetArrayElementType(Cpp::GetNonReferenceType(inst->expr->type)))),
-                      inst->name,
-                      Cpp::GetQualifiedCompleteNameWithTemplateArgs(inst->expr->scope));
+      util::format_to(
+        b.body_buffer,
+        "{} {}({});\n",
+        get_qualified_type_name(
+          analyze::cppinterop::get_pointer_type(analyze::cppinterop::get_array_element_type(
+            analyze::cppinterop::get_non_reference_type(inst->expr->type)))),
+        inst->name,
+        analyze::cppinterop::get_qualified_complete_name_with_template_args(inst->expr->scope));
     }
     else
     {
-      util::format_to(b.body_buffer,
-                      "auto &&{}({}{});\n",
-                      inst->name,
-                      (Cpp::IsPointerToMemberType(inst->expr->type) ? "&" : ""),
-                      Cpp::GetQualifiedCompleteNameWithTemplateArgs(inst->expr->scope));
+      util::format_to(
+        b.body_buffer,
+        "auto &&{}({}{});\n",
+        inst->name,
+        (analyze::cppinterop::is_pointer_to_member_type(inst->expr->type) ? "&" : ""),
+        analyze::cppinterop::get_qualified_complete_name_with_template_args(inst->expr->scope));
     }
 
     return inst->name;
@@ -1278,10 +1294,11 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_into_object_ref const inst, builder &b)
   {
     b.next_instruction();
+
     /* There's no need to do a conversion for void, since we always just
      * want nil. There's no need for generating a tmp for it either, since
      * we have a global nil constant. */
-    if(Cpp::IsVoid(inst->expr->conversion_type))
+    if(analyze::cppinterop::is_void(inst->expr->conversion_type))
     {
       util::format_to(b.body_buffer, "auto const {}(jank::runtime::jank_nil);\n", inst->name);
       return inst->name;
@@ -1297,7 +1314,7 @@ namespace jank::codegen
 
     /* If we need a boxed integer (not small integer), we can't necessarily rely on just
      * the conversion trait, since we may end up getting a small integer back. */
-    if(integer_ref_type().data == Cpp::GetCanonicalType(inst->expr->type))
+    if(integer_ref_type().data == analyze::cppinterop::get_canonical_type(inst->expr->type))
     {
       util::format_to(b.body_buffer,
                       "auto const {}(jank::runtime::make_box<jank::runtime::obj::integer>({}));\n",
@@ -1310,8 +1327,9 @@ namespace jank::codegen
         b.body_buffer,
         "auto const {}(jank::runtime::convert<{}>::{}({}));\n",
         inst->name,
-        get_qualified_type_name(Cpp::GetCanonicalType(
-          Cpp::GetTypeWithoutCv(Cpp::GetNonReferenceType(inst->expr->conversion_type)))),
+        get_qualified_type_name(
+          analyze::cppinterop::get_canonical_type(analyze::cppinterop::get_type_without_cv(
+            analyze::cppinterop::get_non_reference_type(inst->expr->conversion_type)))),
         (inst->expr->policy == analyze::conversion_policy::into_object ? "into_object"
                                                                        : "from_object"),
         inst->value);
@@ -1354,7 +1372,8 @@ namespace jank::codegen
     {
       auto const source{ static_cast<analyze::expr::cpp_value *>(inst->expr->source_expr.data) };
 
-      auto const is_void{ Cpp::IsVoid(Cpp::GetFunctionReturnType(source->scope)) };
+      auto const is_void{ analyze::cppinterop::is_void(
+        analyze::cppinterop::get_function_return_type(source->scope)) };
       if(is_void)
       {
         util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {};\n", inst->name);
@@ -1364,13 +1383,15 @@ namespace jank::codegen
         util::format_to(b.body_buffer, "auto &&{}(", inst->name);
       }
 
-      if(Cpp::IsInlineFriendFunction(source->scope))
+      if(analyze::cppinterop::is_inline_friend_function(source->scope))
       {
-        util::format_to(b.body_buffer, "{}(", Cpp::GetName(source->scope));
+        util::format_to(b.body_buffer, "{}(", analyze::cppinterop::get_name(source->scope));
       }
       else
       {
-        util::format_to(b.body_buffer, "{}(", Cpp::GetQualifiedCompleteName(source->scope));
+        util::format_to(b.body_buffer,
+                        "{}(",
+                        analyze::cppinterop::get_qualified_complete_name(source->scope));
       }
 
       bool need_comma{};
@@ -1379,7 +1400,7 @@ namespace jank::codegen
         auto const arg_expr{ inst->expr->arg_exprs[arg_idx] };
         auto const arg_type{ expression_type(arg_expr) };
         /* This will be null in variadic positions. */
-        auto const param_type{ Cpp::GetFunctionArgType(source->scope, arg_idx) };
+        auto const param_type{ analyze::cppinterop::get_function_arg_type(source->scope, arg_idx) };
         auto const &arg_tmp{ inst->args[arg_idx] };
 
         if(need_comma)
@@ -1387,12 +1408,13 @@ namespace jank::codegen
           util::format_to(b.body_buffer, ", ");
         }
 
-        if(param_type && Cpp::IsPointerType(param_type) && is_any_object(arg_type))
+        if(param_type && analyze::cppinterop::is_pointer_type(param_type)
+           && is_any_object(arg_type))
         {
           util::format_to(b.body_buffer, "static_cast<jank::runtime::object*>(");
         }
 
-        if(param_type && Cpp::IsRvalueReferenceType(param_type))
+        if(param_type && analyze::cppinterop::is_rvalue_reference_type(param_type))
         {
           util::format_to(b.body_buffer, "std::move({})", arg_tmp);
         }
@@ -1401,7 +1423,8 @@ namespace jank::codegen
           util::format_to(b.body_buffer, "{}", arg_tmp);
         }
 
-        if(param_type && Cpp::IsPointerType(param_type) && is_any_object(arg_type))
+        if(param_type && analyze::cppinterop::is_pointer_type(param_type)
+           && is_any_object(arg_type))
         {
           util::format_to(b.body_buffer, ".erase().raw())");
         }
@@ -1421,9 +1444,9 @@ namespace jank::codegen
 
       return inst->name;
     }
-    else if(Cpp::IsPointerToMemberVariableType(source_type))
+    else if(analyze::cppinterop::is_pointer_to_member_variable_type(source_type))
     {
-      auto const is_void{ Cpp::IsVoid(inst->expr->type) };
+      auto const is_void{ analyze::cppinterop::is_void(inst->expr->type) };
       if(is_void)
       {
         util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref const {};\n", inst->name);
@@ -1433,9 +1456,10 @@ namespace jank::codegen
         util::format_to(b.body_buffer, "auto &&{}(", inst->name);
       }
 
-      auto const obj_type{ Cpp::GetNonReferenceType(expression_type(inst->expr->arg_exprs[0])) };
+      auto const obj_type{ analyze::cppinterop::get_non_reference_type(
+        expression_type(inst->expr->arg_exprs[0])) };
       auto const &obj_name{ inst->args[0] };
-      if(Cpp::IsPointerType(obj_type))
+      if(analyze::cppinterop::is_pointer_type(obj_type))
       {
         util::format_to(b.body_buffer, "{}->*{}", obj_name, inst->value.unwrap());
       }
@@ -1455,9 +1479,9 @@ namespace jank::codegen
 
       return inst->name;
     }
-    else if(Cpp::IsPointerToMemberFunctionType(source_type))
+    else if(analyze::cppinterop::is_pointer_to_member_function_type(source_type))
     {
-      auto const is_void{ Cpp::IsVoid(inst->expr->type) };
+      auto const is_void{ analyze::cppinterop::is_void(inst->expr->type) };
       if(is_void)
       {
         util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref const {};\n", inst->name);
@@ -1467,9 +1491,10 @@ namespace jank::codegen
         util::format_to(b.body_buffer, "auto &&{}(", inst->name);
       }
 
-      auto const obj_type{ Cpp::GetNonReferenceType(expression_type(inst->expr->arg_exprs[0])) };
+      auto const obj_type{ analyze::cppinterop::get_non_reference_type(
+        expression_type(inst->expr->arg_exprs[0])) };
       auto const &obj_name{ inst->args[0] };
-      if(Cpp::IsPointerType(obj_type))
+      if(analyze::cppinterop::is_pointer_type(obj_type))
       {
         util::format_to(b.body_buffer, "({}->*{})(", obj_name, inst->value.unwrap());
       }
@@ -1504,7 +1529,7 @@ namespace jank::codegen
     }
     else
     {
-      auto const is_void{ Cpp::IsVoid(inst->expr->type) };
+      auto const is_void{ analyze::cppinterop::is_void(inst->expr->type) };
       if(is_void)
       {
         util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref const {};", inst->name);
@@ -1545,25 +1570,33 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_constructor_call_ref const inst, builder &b)
   {
     b.next_instruction();
-    auto const non_ref_type{ Cpp::GetNonReferenceType(inst->expr->type) };
+    auto const non_ref_type{ analyze::cppinterop::get_non_reference_type(inst->expr->type) };
 
     if(inst->args.empty())
     {
-      if(Cpp::IsFunctionPointerType(inst->expr->type))
+      if(analyze::cppinterop::is_function_pointer_type(inst->expr->type))
       {
         util::format_to(
           b.body_buffer,
           "{} ",
-          get_qualified_type_name(Cpp::GetFunctionReturnTypeFromType(inst->expr->type)));
-        util::format_to(b.body_buffer,
-                        "(* {} {} {})(",
-                        Cpp::IsConstType(inst->expr->type) ? "const" : "",
-                        Cpp::HasTypeQualifier(inst->expr->type, Cpp::Volatile) ? "volatile" : "",
-                        inst->name);
-        auto const param_count{ Cpp::GetFunctionNumArgsFromType(inst->expr->type) };
+          get_qualified_type_name(
+            analyze::cppinterop::get_function_return_type_from_type(inst->expr->type)));
+        util::format_to(
+          b.body_buffer,
+          "(* {} {} {})(",
+          analyze::cppinterop::is_const_type(inst->expr->type) ? "const" : "",
+          analyze::cppinterop::has_type_qualifier(inst->expr->type,
+                                                  analyze::cppinterop::qualifier::volatile_)
+            ? "volatile"
+            : "",
+          inst->name);
+        auto const param_count{ analyze::cppinterop::get_function_num_args_from_type(
+          inst->expr->type) };
         for(usize i{}; i < param_count; ++i)
         {
-          auto const param_type{ Cpp::GetFunctionArgTypeFromType(inst->expr->type, i) };
+          auto const param_type{
+            analyze::cppinterop::get_function_arg_type_from_type(inst->expr->type, i)
+          };
           util::format_to(b.body_buffer,
                           "{} {}",
                           (i != 0) ? ", " : "",
@@ -1571,23 +1604,26 @@ namespace jank::codegen
         }
         util::format_to(b.body_buffer, "){ };\n");
       }
-      else if(Cpp::IsArrayType(non_ref_type)
-              || (Cpp::IsPointerType(non_ref_type)
-                  && Cpp::IsArrayType(Cpp::GetUnderlyingType(non_ref_type))))
+      else if(analyze::cppinterop::is_array_type(non_ref_type)
+              || (analyze::cppinterop::is_pointer_type(non_ref_type)
+                  && analyze::cppinterop::is_array_type(
+                    analyze::cppinterop::get_underlying_type(non_ref_type))))
       {
-        auto const array_type{ Cpp::IsPointerType(non_ref_type)
-                                 ? Cpp::GetUnderlyingType(non_ref_type)
+        auto const array_type{ analyze::cppinterop::is_pointer_type(non_ref_type)
+                                 ? analyze::cppinterop::get_underlying_type(non_ref_type)
                                  : non_ref_type };
         util::format_to(
           b.body_buffer,
           "{} ({}{})[{}]{ };\n",
-          get_qualified_type_name(Cpp::GetArrayElementType(array_type)),
-          (Cpp::IsPointerType(inst->expr->type)
+          get_qualified_type_name(analyze::cppinterop::get_array_element_type(array_type)),
+          (analyze::cppinterop::is_pointer_type(inst->expr->type)
              ? "*"
              /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
-             : (Cpp::IsReferenceType(inst->expr->type) ? "&" : "")),
+             : (analyze::cppinterop::is_reference_type(inst->expr->type) ? "&" : "")),
           inst->name,
-          Cpp::IsSizedArrayType(array_type) ? std::to_string(Cpp::GetArraySize(array_type)) : "");
+          analyze::cppinterop::is_sized_array_type(array_type)
+            ? std::to_string(analyze::cppinterop::get_array_size(array_type))
+            : "");
       }
       else
       {
@@ -1602,27 +1638,28 @@ namespace jank::codegen
     native_vector<void *> param_types;
     if(inst->expr->fn)
     {
-      auto const param_count{ Cpp::GetFunctionNumArgs(inst->expr->fn) };
+      auto const param_count{ analyze::cppinterop::get_function_num_args(inst->expr->fn) };
       for(usize i{}; i < param_count; ++i)
       {
-        param_types.emplace_back(Cpp::GetFunctionArgType(inst->expr->fn, i));
+        param_types.emplace_back(analyze::cppinterop::get_function_arg_type(inst->expr->fn, i));
       }
     }
-    else if(is_primitive(Cpp::GetNonReferenceType(inst->expr->type)))
+    else if(is_primitive(analyze::cppinterop::get_non_reference_type(inst->expr->type)))
     {
       param_types.emplace_back(inst->expr->type);
     }
     else
     {
       jank_debug_assert(inst->expr->is_aggregate);
-      auto const scope{ Cpp::GetScopeFromType(inst->expr->type) };
+      auto const scope{ analyze::cppinterop::get_scope_from_type(inst->expr->type) };
       jank_debug_assert(scope);
       auto const member_types{ aggregate_initialization_types(scope) };
       std::ranges::copy(member_types, std::back_inserter(param_types));
     }
     jank_debug_assert(inst->expr->arg_exprs.size() <= param_types.size());
 
-    if(Cpp::IsArrayType(Cpp::GetNonReferenceType(inst->expr->type)))
+    if(analyze::cppinterop::is_array_type(
+         analyze::cppinterop::get_non_reference_type(inst->expr->type)))
     {
       util::format_to(b.body_buffer, "auto {} ", inst->name);
     }
@@ -1700,17 +1737,16 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_member_call_ref const inst, builder &b)
   {
     b.next_instruction();
-    auto const fn_name{ Cpp::GetName(inst->expr->fn) };
-    auto const is_void{ Cpp::IsVoid(Cpp::GetFunctionReturnType(inst->expr->fn)) };
+    auto const fn_name{ analyze::cppinterop::get_name(inst->expr->fn) };
+    auto const is_void{ analyze::cppinterop::is_void(
+      analyze::cppinterop::get_function_return_type(inst->expr->fn)) };
+    auto const is_ptr{ analyze::cppinterop::is_pointer_type(
+      analyze::cppinterop::get_non_reference_type(expression_type(inst->expr->arg_exprs[0]))) };
 
     if(is_void)
     {
       util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {}{ };\n", inst->name);
-      util::format_to(b.body_buffer,
-                      "{}{}{}(",
-                      inst->args[0],
-                      (Cpp::IsPointerType(expression_type(inst->expr->arg_exprs[0])) ? "->" : "."),
-                      fn_name);
+      util::format_to(b.body_buffer, "{}{}{}(", inst->args[0], (is_ptr ? "->" : "."), fn_name);
     }
     else
     {
@@ -1718,7 +1754,7 @@ namespace jank::codegen
                       "auto &&{}({}{}{}(",
                       inst->name,
                       inst->args[0],
-                      (Cpp::IsPointerType(expression_type(inst->expr->arg_exprs[0])) ? "->" : "."),
+                      (is_ptr ? "->" : "."),
                       fn_name);
     }
 
@@ -1753,8 +1789,10 @@ namespace jank::codegen
       "auto &&{}({}{}{});\n",
       inst->name,
       inst->value,
-      (Cpp::IsPointerType(Cpp::GetNonReferenceType(expression_type(inst->expr->obj_expr))) ? "->"
-                                                                                           : "."),
+      (analyze::cppinterop::is_pointer_type(
+         analyze::cppinterop::get_non_reference_type(expression_type(inst->expr->obj_expr)))
+         ? "->"
+         : "."),
       inst->expr->name);
 
     return inst->name;
@@ -1794,8 +1832,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     auto const value_expr_type{ expression_type(inst->expr->value_expr) };
-    auto const type_str{ get_qualified_type_name(
-      Cpp::GetCanonicalType(Cpp::GetNonReferenceType(value_expr_type))) };
+    auto const type_str{ runtime::obj::opaque_box::strip_whitespace(
+      get_qualified_type_name(analyze::cppinterop::get_canonical_type(
+        analyze::cppinterop::get_non_reference_type(value_expr_type)))) };
 
     util::format_to(
       b.body_buffer,
@@ -1817,7 +1856,8 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_unbox_ref const inst, builder &b)
   {
     b.next_instruction();
-    auto const type_name{ get_qualified_type_name(Cpp::GetCanonicalType(inst->expr->type)) };
+    auto const type_name{ runtime::obj::opaque_box::strip_whitespace(
+      get_qualified_type_name(analyze::cppinterop::get_canonical_type(inst->expr->type))) };
     util::format_to(
       b.body_buffer,
       "auto {}{ "
@@ -1862,9 +1902,10 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_delete_ref const inst, builder &b)
   {
     b.next_instruction();
-    auto const value_type{ Cpp::GetPointeeType(expression_type(inst->expr->value_expr)) };
+    auto const value_type{ analyze::cppinterop::get_pointee_type(
+      expression_type(inst->expr->value_expr)) };
     auto const type_name{ get_qualified_type_name(value_type) };
-    auto const needs_finalizer{ !Cpp::IsTriviallyDestructible(value_type) };
+    auto const needs_finalizer{ !analyze::cppinterop::is_trivially_destructible(value_type) };
 
     /* Calling GC_free won't trigger the finalizer. Not sure why, but it's explicitly
      * documented in bdwgc. So, we'll invoke it manually if needed, prior to GC_free. */
@@ -1911,7 +1952,7 @@ namespace jank::codegen
     bool param_shadows_fn{};
     for(auto const &param : fn.arity->params)
     {
-      param_shadows_fn |= param->name == fn.arity->fn_ctx->fn->name;
+      param_shadows_fn |= param.name->name == fn.arity->fn_ctx->fn->name;
     }
 
     util::format_to(
@@ -1921,9 +1962,25 @@ namespace jank::codegen
       fn.arity->params.size(),
       param_shadows_fn ? "" : munged_fn_name);
 
+    /* If parameters have type hints, we'll generate the actual param with a hidden name and
+     * then introduce a local with the param name, along with whatever conversion is necessary
+     * to get it to the right type. */
+    native_vector<jtl::immutable_string> param_names;
+
     for(auto const &param : fn.arity->params)
     {
-      util::format_to(b.body_buffer, ", jank::runtime::object_ref {}", munge(param->name));
+      if(is_untyped_object(param.type))
+      {
+        auto const munged{ munge(param.name->name) };
+        util::format_to(b.body_buffer, ", jank::runtime::object_ref {}", munged);
+        param_names.emplace_back(munged);
+      }
+      else
+      {
+        auto const munged{ munge(__rt_ctx->unique_string(param.name->name)) };
+        util::format_to(b.body_buffer, ", jank::runtime::object_ref {}", munged);
+        param_names.emplace_back(munged);
+      }
     }
 
     util::format_to(b.body_buffer, ") {\n");
@@ -1939,6 +1996,38 @@ namespace jank::codegen
                       closure_ctx,
                       closure_ctx,
                       munged_fn_name);
+    }
+
+    u8 param_index{};
+    for(auto const &param : fn.arity->params)
+    {
+      /* Raw pointers are unboxed from opaque boxes. */
+      if(analyze::cppinterop::is_pointer_type(param.type))
+      {
+        auto const munged{ munge(param.name->name) };
+        auto const type_name{ runtime::obj::opaque_box::strip_whitespace(
+          get_qualified_type_name(analyze::cppinterop::get_canonical_type(param.type))) };
+        util::format_to(
+          b.body_buffer,
+          "auto {}{ "
+          "static_cast<{}>(jank_unbox_with_source_c(\"{}\", {}.erase().raw(), \"{}\")) };\n",
+          munged,
+          type_name,
+          type_name,
+          param_names[param_index],
+          util::escape(param.name->get_meta().to_code_string()));
+      }
+      /* Any other non-object_ref uses trait conversion. */
+      else if(!is_untyped_object(param.type))
+      {
+        auto const munged{ munge(param.name->name) };
+        util::format_to(b.body_buffer,
+                        "auto &&{}{ jank::runtime::convert<{}>::from_object({}) };",
+                        munged,
+                        get_qualified_type_name(param.type),
+                        param_names[param_index]);
+      }
+      ++param_index;
     }
 
     b.block_index = 0;

@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include <unistd.h>
+
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Basic/DiagnosticIDs.h>
 #include <clang/Basic/DiagnosticOptions.h>
@@ -10,7 +12,6 @@
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 
 #include <CppInterOp/Compatibility.h>
-#include <CppInterOp/CppInterOp.h>
 
 #include <llvm/TargetParser/Host.h>
 #include <llvm/Support/Program.h>
@@ -21,6 +22,7 @@
 #include <jank/util/fmt/print.hpp>
 #include <jank/util/scope_exit.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/analyze/cppinterop.hpp>
 #include <jank/aot/resource.hpp>
 #include <jank/error/system.hpp>
 
@@ -31,7 +33,7 @@ namespace jank::util
     auto const tmp{ std::filesystem::temp_directory_path() };
     std::string path_tmp{ (tmp / "jank-clang-XXXXXX").string() };
     int const fd{ mkstemp(path_tmp.data()) };
-    ::close(fd);
+    close(fd);
     auto const proc_code{ llvm::sys::ExecuteAndWait(path.string(),
                                                     { path.string(), "--version" },
                                                     std::nullopt,
@@ -147,7 +149,7 @@ namespace jank::util
       return JANK_CLANG_RESOURCE_DIR;
     }
 
-    auto resource_dir{ Cpp::DetectResourceDir(clang_path.unwrap().c_str()) };
+    auto resource_dir{ analyze::cppinterop::detect_resource_dir(clang_path.unwrap().c_str()) };
 
     if(resource_dir.empty())
     {
@@ -239,7 +241,7 @@ namespace jank::util
       return virtual_path;
     }
 
-    auto dev_path{ jank_path / "incremental.pch" };
+    auto const dev_path{ jank_path / "incremental.pch" };
     if(std::filesystem::exists(dev_path))
     {
       return dev_path.string();
@@ -319,7 +321,7 @@ namespace jank::util
     }
 
     jank_debug_assert(runtime::__rt_ctx);
-    return result
-      = runtime::__rt_ctx->jit_prc.interpreter->getExecutionEngine()->getTargetTriple().str();
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    return result = (*locked_interpreter)->getExecutionEngine()->getTargetTriple().str();
   }
 }

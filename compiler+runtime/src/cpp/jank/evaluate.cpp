@@ -1,8 +1,6 @@
 #include <llvm/ExecutionEngine/Orc/LLJIT.h>
 
-#include <CppInterOp/Compatibility.h>
-#include <CppInterOp/CppInterOpInterpreter.h>
-#include <CppInterOp/CppInterOp.h>
+#include <cpptrace/from_current.hpp>
 
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/ns.hpp>
@@ -131,9 +129,8 @@ namespace jank::evaluate
   /* Some expressions don't make sense to eval outright and aren't fns that can be JIT compiled.
    * For those, we wrap them in a fn expression and then JIT compile and call them. */
   template <typename E>
-  static expr::function_ref wrap_expression(jtl::ref<E> const orig_expr,
-                                            jtl::immutable_string const &name,
-                                            native_vector<obj::symbol_ref> params)
+  static expr::function_ref
+  wrap_expression(jtl::ref<E> const orig_expr, jtl::immutable_string const &name)
   {
     auto ret{ jtl::make_ref<expr::function>() };
     auto expr{ make_ref<E>(orig_expr) };
@@ -146,7 +143,7 @@ namespace jank::evaluate
                                                  expr->frame->parent) };
     auto const fn_ctx{ jtl::make_ref<expr::function_context>() };
     expr::function_arity arity{
-      jtl::move(params),
+      {},
       jtl::make_ref<expr::do_>(expression_position::tail, frame, true, jank_nil),
       frame,
       fn_ctx
@@ -162,7 +159,8 @@ namespace jank::evaluate
     arity.fn_ctx->param_count = arity.params.size();
     for(auto const &sym : arity.params)
     {
-      arity.frame->locals[sym].emplace_back(sym, sym->name, none, arity.frame);
+      arity.frame->locals[sym.name].emplace_back(sym.name, sym.name->name, none, arity.frame);
+      arity.frame->locals[sym.name].back().type = sym.type;
     }
 
     auto const expr_type{ cpp_util::expression_type(expr) };
@@ -221,14 +219,13 @@ namespace jank::evaluate
                                                                     true,
                                                                     jank_nil,
                                                                     jank_nil),
-                             name,
-                             {});
+                             name);
     }
     else
     {
       /* We'll cheat a little and build a fn using just the first expression. Then we can just
        * add the rest. I'd rather do this than duplicate all of the wrapping logic. */
-      auto ret(wrap_expression(exprs[0], name, {}));
+      auto ret(wrap_expression(exprs[0], name));
       auto &body(ret->arities[0].body->values);
       /* We normally wrap one expression, which is a return statement, but we'll be potentially
        * adding more, so let's not make assumptions yet. */
@@ -250,13 +247,10 @@ namespace jank::evaluate
     }
   }
 
-  expr::function_ref wrap_expression(expression_ref const expr,
-                                     jtl::immutable_string const &name,
-                                     native_vector<obj::symbol_ref> params)
+  expr::function_ref wrap_expression(expression_ref const expr, jtl::immutable_string const &name)
   {
-    return visit_expr(
-      [&](auto const typed_expr) { return wrap_expression(typed_expr, name, jtl::move(params)); },
-      expr);
+    return visit_expr([&](auto const typed_expr) { return wrap_expression(typed_expr, name); },
+                      expr);
   }
 
   object_ref eval(expression_ref const ex)
@@ -276,7 +270,7 @@ namespace jank::evaluate
 
   object_ref eval(expr::def_ref const expr)
   {
-    auto var(__rt_ctx->intern_var(expr->name).expect_ok());
+    auto const var(__rt_ctx->intern_var(expr->name).expect_ok());
     auto const meta(__rt_ctx->eval(expr->name->get_meta()));
     var->set_meta(meta);
 
@@ -537,12 +531,12 @@ namespace jank::evaluate
 
   object_ref eval(expr::let_ref const expr)
   {
-    return eval(wrap_expression(expr, "let", {})).call();
+    return eval(wrap_expression(expr, "let")).call();
   }
 
   object_ref eval(expr::letfn_ref const expr)
   {
-    return eval(wrap_expression(expr, "letfn", {})).call();
+    return eval(wrap_expression(expr, "letfn")).call();
   }
 
   object_ref eval(expr::if_ref const expr)
@@ -561,13 +555,12 @@ namespace jank::evaluate
 
   object_ref eval(expr::throw_ref const expr)
   {
-    /* XXX: Clojure wraps throw expressions. I _suspect_ it does this because
-     * clojure.main uses the stack trace to provide source info by stripping out
-     * Clojure frames until the first non-Clojure frame is found. If we throw
-     * from an eval, maybe that doesn't happen? For now, we support eval, however. */
     if(expr->value.is_some())
     {
-      throw eval(expr->value.unwrap());
+      /* We wrap throws because we could be throwing native values from native expressions. If
+       * we just wrap the native expression, we'll end up with a Clojure function trying to
+       * return that native value, which could itself be invalid. */
+      return eval(wrap_expression(expr, "throw")).call();
     }
     else
     {
@@ -577,12 +570,12 @@ namespace jank::evaluate
 
   object_ref eval(expr::try_ref const expr)
   {
-    return eval(wrap_expression(expr, "try", {})).call();
+    return eval(wrap_expression(expr, "try")).call();
   }
 
   object_ref eval(expr::case_ref const expr)
   {
-    return eval(wrap_expression(expr, "case", {})).call();
+    return eval(wrap_expression(expr, "case")).call();
   }
 
   object_ref eval(expr::cpp_raw_ref const expr)
@@ -600,7 +593,7 @@ namespace jank::evaluate
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_value", {})).call();
+    return eval(wrap_expression(expr, "cpp_value")).call();
   }
 
   object_ref eval(expr::cpp_literal_ref const expr)
@@ -612,76 +605,123 @@ namespace jank::evaluate
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_conversion", {})).call();
+    return eval(wrap_expression(expr, "cpp_conversion")).call();
   }
 
   object_ref eval(expr::cpp_unsafe_cast_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_unsafe_cast", {})).call();
+    return eval(wrap_expression(expr, "cpp_unsafe_cast")).call();
   }
 
   object_ref eval(expr::cpp_call_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_call", {})).call();
+    return eval(wrap_expression(expr, "cpp_call")).call();
   }
 
   object_ref eval(expr::cpp_constructor_call_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_constructor_call", {})).call();
+    return eval(wrap_expression(expr, "cpp_constructor_call")).call();
   }
 
   object_ref eval(expr::cpp_member_call_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_member_call", {})).call();
+    return eval(wrap_expression(expr, "cpp_member_call")).call();
   }
 
   object_ref eval(expr::cpp_member_access_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_member_access", {})).call();
+    return eval(wrap_expression(expr, "cpp_member_access")).call();
   }
 
   object_ref eval(expr::cpp_builtin_operator_call_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_builtin_operator_call", {})).call();
+    return eval(wrap_expression(expr, "cpp_builtin_operator_call")).call();
   }
 
   object_ref eval(expr::cpp_box_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_box", {})).call();
+    return eval(wrap_expression(expr, "cpp_box")).call();
   }
 
   object_ref eval(expr::cpp_unbox_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_unbox", {})).call();
+    return eval(wrap_expression(expr, "cpp_unbox")).call();
   }
 
   object_ref eval(expr::cpp_new_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_new", {})).call();
+    return eval(wrap_expression(expr, "cpp_new")).call();
   }
 
   object_ref eval(expr::cpp_delete_ref const expr)
   {
     /* TODO: How do we get source info here? Or can we detect this earlier? */
     cpp_util::ensure_convertible(expr).expect_ok();
-    return eval(wrap_expression(expr, "cpp_delete", {})).call();
+    return eval(wrap_expression(expr, "cpp_delete")).call();
+  }
+
+  bool safe_eval(jtl::immutable_string const &code, read::source_position const &p)
+  {
+    static auto const var_1{ __rt_ctx->find_var("clojure.core", "*1") };
+    static auto const var_2{ __rt_ctx->find_var("clojure.core", "*2") };
+    static auto const var_3{ __rt_ctx->find_var("clojure.core", "*3") };
+    static auto const var_e{ __rt_ctx->find_var("clojure.core", "*e") };
+
+    bool success{ false };
+    cpptrace::try_catch(
+      [&] {
+        auto const value{ __rt_ctx->eval_string(code, p).unwrap() };
+        success = true;
+
+        var_3->set(var_2->deref()).expect_ok();
+        var_2->set(var_1->deref()).expect_ok();
+        var_1->set(value).expect_ok();
+      },
+      [&](error_ref const e) { var_e->set(make_box<obj::exception_info>(e)).expect_ok(); },
+      [&](object_ref const e) {
+        if(e.get_type() == runtime::object_type::exception_info)
+        {
+          var_e->set(e).expect_ok();
+        }
+        else
+        {
+          auto const ex{ runtime::ex_info(e.to_string(), {}) };
+          ex->raw_trace
+            = std::make_unique<cpptrace::raw_trace>(cpptrace::raw_trace_from_current_exception());
+          var_e->set(ex).expect_ok();
+        }
+      },
+      [&](std::exception const &e) {
+        auto const ex{ runtime::ex_info(e.what(), {}) };
+        ex->raw_trace
+          = std::make_unique<cpptrace::raw_trace>(cpptrace::raw_trace_from_current_exception());
+        var_e->set(ex).expect_ok();
+      },
+      [] {
+        auto const ex{ runtime::ex_info("uncaught exception", {}) };
+        ex->raw_trace
+          = std::make_unique<cpptrace::raw_trace>(cpptrace::raw_trace_from_current_exception());
+        var_e->set(ex).expect_ok();
+      });
+
+    return success;
   }
 }

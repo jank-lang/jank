@@ -1,6 +1,5 @@
-#include <CppInterOp/CppInterOp.h>
-
 #include <jank/analyze/expr/cpp_new.hpp>
+#include <jank/analyze/cppinterop.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 
 namespace jank::analyze::expr
@@ -38,10 +37,10 @@ namespace jank::analyze::expr
 
   jtl::ptr<void> cpp_new::get_type() const
   {
-    if(Cpp::IsArrayType(type))
+    if(cppinterop::is_array_type(type))
     {
       return type;
     }
-    return Cpp::GetPointerType(type);
+    return cppinterop::get_pointer_type(type);
   }
 }

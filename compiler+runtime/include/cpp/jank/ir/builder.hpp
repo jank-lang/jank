@@ -46,8 +46,9 @@ namespace jank::ir
     void remove_block(usize const block_index);
     void enter_block(usize const blk_index);
 
-    identifier
-    parameter(analyze::expression_position const pos, jtl::immutable_string const &value);
+    identifier parameter(analyze::expression_position const pos,
+                         jtl::ptr<void> const type,
+                         jtl::immutable_string const &value);
     identifier capture(analyze::expression_position const pos,
                        jtl::ptr<void> const type,
                        jtl::immutable_string const &value);

@@ -56,7 +56,8 @@ namespace jank::jit
       /* We will intentionally introduce some bad C++ code and we don't want Clang outputting
        * compiler errors to stderr. If there are actual test issues which cause diagnostic
        * issues, the test will fail anyway and we can run it separately to see the errors. */
-      auto &diag{ runtime::__rt_ctx->jit_prc.interpreter->getCompilerInstance()->getDiagnostics() };
+      auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+      auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
       auto old_client{ diag.takeClient() };
       diag.setClient(new clang::IgnoringDiagConsumer{}, true);
       util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
@@ -79,14 +80,15 @@ namespace jank::jit
         auto const expect_failure(filename.starts_with("fail-"));
         auto const expect_throw(filename.starts_with("throw-"));
         auto const allow_failure(filename.starts_with("warn-"));
+        /* NOLINTNEXTLINE(misc-const-correctness): It's used on Windows. */
         auto skip(filename.starts_with("skip-"));
         CHECK_MESSAGE((expect_success || expect_failure || allow_failure || expect_throw || skip),
                       "Test file needs to begin with pass- or fail- or throw- or warn- or skip-: ",
                       filename);
         ++test_count;
 #ifdef JANK_WINDOWS_LIKE
-        // skip tests mentioned in file.
-        static auto const windows_skips = [] {
+        /* Skip the tests mentioned in file. */
+        static auto const windows_skips{ [] {
           std::unordered_set<std::string> s;
           std::ifstream infile("test/jit_windows_skips.txt");
           for(std::string line; std::getline(infile, line);)
@@ -98,7 +100,7 @@ namespace jank::jit
             }
           }
           return s;
-        }();
+        }() };
         if(windows_skips.contains(filename))
         {
           skip = true;

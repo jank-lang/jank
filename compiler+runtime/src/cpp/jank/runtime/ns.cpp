@@ -89,12 +89,13 @@ namespace jank::runtime
     if(redefined)
     {
       auto const v{ expect_object<var>(*found_var) };
-      error::warn(
-        util::format("'{}' already referred to {} in namespace '{}' but has been replaced by {}",
-                     unqualified_sym->to_string(),
-                     v->to_code_string(),
-                     name->to_string(),
-                     new_var->to_code_string()));
+      util::print("{}",
+                  error::warn(util::format(
+                    "'{}' already referred to {} in namespace '{}' but has been replaced by {}",
+                    unqualified_sym->to_string(),
+                    v->to_code_string(),
+                    name->to_string(),
+                    new_var->to_code_string())));
     }
     *locked_vars
       = make_box<obj::persistent_hash_map>((*locked_vars)->data.set(unqualified_sym, new_var));
@@ -161,7 +162,7 @@ namespace jank::runtime
 
   ns_ref ns::find_alias(obj::symbol_ref const sym) const
   {
-    auto locked_aliases(aliases.rlock());
+    auto const locked_aliases(aliases.rlock());
     auto const found((*locked_aliases)->data.find(sym));
     if(found)
     {
@@ -192,7 +193,7 @@ namespace jank::runtime
 
   obj::symbol_ref ns::find_referred_global(obj::symbol_ref const sym)
   {
-    auto locked_globals(referred_cpp_globals.rlock());
+    auto const locked_globals(referred_cpp_globals.rlock());
     auto const found{ (*locked_globals)->data.find(sym) };
     return found ? try_object<obj::symbol>(*found) : obj::symbol_ref{};
   }

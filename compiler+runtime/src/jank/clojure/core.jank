@@ -5605,9 +5605,11 @@
                             (let [kname (first reference)
                                   args (rest reference)]
                               (cons (symbol "clojure.core" (clojure.core/name kname))
-                                    (map (fn [a]
-                                           (list 'quote a))
-                                         args))))
+                                    (if (= :include kname)
+                                      args
+                                      (map (fn [a]
+                                             (list 'quote a))
+                                           args)))))
         refer-full-clojure? (not-any? (fn [ref]
                                         (= :refer-clojure (first ref)))
                                       references)

@@ -218,7 +218,7 @@ namespace jank::util
 
   void print_exception(error_ref const e)
   {
-    error::report(e);
+    util::print(stderr, "{}", error::report(e));
 
     /* We want to find the deepest stack trace, since that will
      * be closest to the actual problem. However, if there is no

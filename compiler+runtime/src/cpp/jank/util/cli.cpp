@@ -115,6 +115,7 @@ COMMANDS
   print-binary-version        Print the current binary version to stdout and exit.
   print-cflags                Print the Clang flags for AOT compilation of C++ source code
                               to stdout and exit.
+  help                        Print this help message and exit.
 
 OPTIONS
   -h,     --help              Print this help message and exit.
@@ -156,7 +157,8 @@ OPTIONS
                               Absolute or relative path to the directory to search dynamic
                               libraries in. Can be specified multiple times.
   -l <lib>                    Library identifiers, absolute or relative paths eg. -lfoo for
-                              libfoo.so or foo.dylib. Can be specified multiple times.)",
+                              libfoo.so or foo.dylib. Can be specified multiple times.
+          --framework <name>  Links a macOS framework. Can be specified multiple times.)",
                   JANK_VERSION);
     std::exit(1);
   }
@@ -231,6 +233,7 @@ OPTIONS
       {         "check-health",         command::check_health },
       { "print-binary-version", command::print_binary_version },
       {         "print-cflags",         command::print_cflags },
+      {                 "help",                 command::help },
     };
 
     options_scratchpad scratch;
@@ -288,6 +291,7 @@ OPTIONS
         if(check_flag(it, end, value, "-h", "--help", false))
         {
           show_help();
+          return ok();
         }
         else if(check_flag(it, end, value, "--module-path", true))
         {
@@ -377,6 +381,10 @@ OPTIONS
         else if(check_flag(it, end, value, "-l", "--link", true))
         {
           opts.libs.emplace_back(value);
+        }
+        else if(check_flag(it, end, value, "--framework", true))
+        {
+          opts.frameworks.emplace_back(value);
         }
         else if(check_flag(it, end, value, "--target-dir", true))
         {
@@ -469,6 +477,11 @@ OPTIONS
           opts.output_target = compilation_target::object;
         }
       }
+      else if(command == "help")
+      {
+        show_help();
+        return ok();
+      }
 
       /* We allow --name to be passed for any command, since lein-jank passes it.*/
       if(check_pending_flag("--name", value, pending_flags))
@@ -506,7 +519,7 @@ OPTIONS
             util::format_to(sb, " {}", flag.second);
           }
         }
-        error::warn(sb.release());
+        util::print("{}", error::warn(sb.release()));
       }
       else if(!pending_positional_args.empty())
       {

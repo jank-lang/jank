@@ -1,0 +1,6 @@
+(try
+  (throw 5)
+  (catch int _
+    :success)
+  (catch :default _
+    ))

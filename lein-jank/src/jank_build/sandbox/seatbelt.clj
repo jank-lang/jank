@@ -1,6 +1,7 @@
 (ns jank-build.sandbox.seatbelt
   (:require [clojure.string :as string]
-            [babashka.fs :as fs]))
+            [babashka.fs :as fs]
+            [babashka.process :as process]))
 
 ;; Note that sandbox-exec is technically deprecated, but its replacement, App Sandbox, requires
 ;; a signed application and doesn't provide a per-process policy for an arbitrary CLI build.
@@ -25,10 +26,12 @@
    [:ro-bind "/var/select/developer_dir" "/var/select/developer_dir"]
 
    [:ro-bind "/Library/Developer/CommandLineTools" "/Library/Developer/CommandLineTools"]
-   [:ro-bind "/Applications/Xcode.app/Contents/Developer" "/Applications/Xcode.app/Contents/Developer"]
+   ;; This is where XCode stores things like whether or not you've accepted its license.
+   [:ro-bind "/Library/Preferences/com.apple.dt.Xcode.plist" "/Library/Preferences/com.apple.dt.Xcode.plist"]
    [:ro-bind "/Library/Apple/usr" "/Library/Apple/usr"]
 
    [:ro-bind "/opt/homebrew" "/opt/homebrew"]
+   [:ro-bind "/opt/local" "/opt/local"]
    [:ro-bind "/usr/local" "/usr/local"]
    [:ro-bind "/nix" "/nix"]])
 
@@ -39,14 +42,27 @@
    "/bin"
    "/sbin"
    "/Library/Developer/CommandLineTools"
-   "/Applications/Xcode.app/Contents/Developer"
    "/opt/homebrew"
+   "/opt/local"
    "/usr/local"
    "/nix"])
 
 (def sandbox-exec-path "/usr/bin/sandbox-exec")
 
 (def default-options {:ro-binds [] :writable-paths [] :scratch-paths [] :network? false})
+
+(defn selected-xcode-root []
+  (try
+    (let [{:keys [exit out]} (process/shell {:out :string :err :string :continue true}
+                                             "xcode-select" "-p")]
+      (when (zero? exit)
+        (let [dir (string/trim out)]
+          (when (seq dir)
+            (if-let [[_ bundle-root] (re-matches #"(.*\.app)/Contents/Developer/?" dir)]
+              bundle-root
+              dir)))))
+    (catch Exception _
+      nil)))
 
 (defn which-sandbox-exec
   "Find Apple's system `sandbox-exec` executable, or nil if it is unavailable."
@@ -169,12 +185,15 @@
    - [:net enabled?]"
   [cmds]
   (let [{:keys [ro-binds writable-paths scratch-paths network?]} (parse-options cmds)
-        standard-paths (->> standard-binds
+        xcode-root (selected-xcode-root)
+        standard-paths (->> (cond-> (map second standard-binds)
+                              xcode-root (conj xcode-root))
                             (map second)
                             (filter fs/exists?)
                             (map str)
                             distinct)
-        executable-standard-paths (->> standard-executable-paths
+        executable-standard-paths (->> (cond-> standard-executable-paths
+                                         xcode-root (conj xcode-root))
                                        (filter fs/exists?)
                                        (map str)
                                        distinct)

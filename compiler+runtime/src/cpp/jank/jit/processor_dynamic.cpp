@@ -1,3 +1,6 @@
+#include <cstdlib>
+#include <filesystem>
+
 #include <clang/AST/Type.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -16,13 +19,11 @@
 #include <llvm/IRReader/IRReader.h>
 #include <llvm/Support/Signals.h>
 
-#include <cstdlib>
-#include <filesystem>
-
 #include <CppInterOp/Compatibility.h>
 #include <CppInterOp/CppInterOp.h>
 
 #include <jank/jit/object.hpp>
+#include <jank/jit/parse_ld_script.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/environment.hpp>
@@ -39,6 +40,10 @@
 #include <jank/error/system.hpp>
 #include <jank/error/runtime.hpp>
 #include <jank/error/codegen.hpp>
+
+#ifdef JANK_MACOS_LIKE
+  #include <dlfcn.h>
+#endif
 
 namespace jank::jit
 {
@@ -90,14 +95,53 @@ namespace jank::jit
     std::exit(gen_crash_diag ? 70 : 1);
   }
 
-  processor::processor(jtl::immutable_string const &binary_version)
+  native_vector<std::filesystem::path> processor::build_library_dirs()
   {
-    profile::timer const timer{ "jit ctor" };
+    native_vector<std::filesystem::path> library_dirs;
 
     for(auto const &library_dir : util::cli::opts.library_dirs)
     {
       library_dirs.emplace_back(std::filesystem::absolute(library_dir.c_str()));
     }
+
+    library_dirs.emplace_back(util::multi_arch_lib_path().c_str());
+
+    /* JANK_JIT_FLAGS come from how jank was configured with CMake.
+     * JANK_EXTRA_FLAGS comes from the environment. Any `-L` flags in these need
+     * to be included in the library search paths too. */
+    {
+      std::stringstream flags{ JANK_JIT_FLAGS };
+      if(auto const extra{ getenv("JANK_EXTRA_FLAGS") }; extra)
+      {
+        flags << " " << extra;
+      }
+
+      std::string flag;
+      while(std::getline(flags, flag, ' '))
+      {
+        if(flag.starts_with("-L"))
+        {
+          library_dirs.emplace_back(flag.substr(2));
+        }
+      }
+    }
+
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      /* Homebrew. */
+      library_dirs.emplace_back("/opt/homebrew/lib");
+      /* Macports. */
+      library_dirs.emplace_back("/opt/local/lib");
+    }
+
+    return library_dirs;
+  }
+
+  processor::processor(jtl::immutable_string const &binary_version)
+  {
+    profile::timer const timer{ "jit ctor" };
+
+    library_dirs = build_library_dirs();
 
     /* When we AOT compile the jank compiler/runtime, we keep track of the compiler
      * flags used so we can use the same set during JIT compilation. Here we parse these
@@ -158,6 +202,15 @@ namespace jank::jit
     args.emplace_back("-L");
     args.emplace_back(strdup(util::format("{}/lib", jank_resource_dir).c_str()));
 
+    /* TODO: Helper for include dirs. */
+    if constexpr(jtl::current_platform == jtl::platform::macos_like)
+    {
+      /* Homebrew. */
+      args.emplace_back("-I/opt/homebrew/include");
+      /* Macports. */
+      args.emplace_back("-I/opt/local/include");
+    }
+
     /* We add the JANK_JIT_FLAGS, which come from how jank was configured with CMake,
      * after all of these others so that the include paths we add above will have
      * precedence over the system include paths found in JANK_JIT_FLAGS.
@@ -210,6 +263,12 @@ namespace jank::jit
     for(auto const &define_macro : util::cli::opts.define_macros)
     {
       args.emplace_back(strdup(util::format("-D{}", define_macro).c_str()));
+    }
+
+    for(auto const &framework : util::cli::opts.frameworks)
+    {
+      args.emplace_back(strdup("-framework"));
+      args.emplace_back(strdup(framework.c_str()));
     }
 
     switch(util::cli::opts.runtime_optimization_level)
@@ -291,9 +350,10 @@ namespace jank::jit
     }
 
     /* We need to include our special runtime PCH. */
-    interpreter.reset(created_interpreter);
+    auto const locked_interpreter{ interpreter.lock() };
+    locked_interpreter->reset(created_interpreter);
 
-    auto const ee{ interpreter->getExecutionEngine() };
+    auto const ee{ (*locked_interpreter)->getExecutionEngine() };
 
     if constexpr(jtl::current_platform != jtl::platform::windows_like)
     {
@@ -335,7 +395,7 @@ namespace jank::jit
     {
       if(util::cli::opts.perf_profiling_enabled)
       {
-        auto const ee{ interpreter->getExecutionEngine() };
+        auto const ee{ (*locked_interpreter)->getExecutionEngine() };
         auto &es{ ee->getExecutionSession() };
         auto &ol{ ee->getObjLinkingLayer() };
         auto &oll{ llvm::cast<llvm::orc::ObjectLinkingLayer>(ol) };
@@ -529,7 +589,8 @@ namespace jank::jit
       formatted = util::format_cpp_source(s).expect_ok();
       util::println("\n{}\n", formatted);
     }
-    auto err(interpreter->ParseAndExecute({ formatted.data(), formatted.size() }, ret));
+    auto const locked_interpreter{ interpreter.lock() };
+    auto err((*locked_interpreter)->ParseAndExecute({ formatted.data(), formatted.size() }, ret));
     if(err)
     {
       llvm::logAllUnhandledErrors(jtl::move(err), llvm::errs(), "error: ");
@@ -539,7 +600,8 @@ namespace jank::jit
 
   void processor::load_object(jtl::immutable_string_view const &path) const
   {
-    auto const ee{ interpreter->getExecutionEngine() };
+    auto const locked_interpreter{ interpreter.lock() };
+    auto const ee{ (*locked_interpreter)->getExecutionEngine() };
     auto file{ llvm::MemoryBuffer::getFile(std::string_view{ path }) };
     if(!file)
     {
@@ -612,7 +674,8 @@ namespace jank::jit
       jtl::immutable_string_view{ module_name.data(), module_name.size() }) };
     //m->print(llvm::outs(), nullptr);
 
-    auto const ee(interpreter->getExecutionEngine());
+    auto const locked_interpreter{ interpreter.lock() };
+    auto const ee((*locked_interpreter)->getExecutionEngine());
     llvm::cantFail(ee->addIRModule(jtl::move(m)));
     llvm::cantFail(ee->initialize(ee->getMainJITDylib()));
   }
@@ -638,7 +701,8 @@ namespace jank::jit
 
   jtl::string_result<void> processor::remove_symbol(jtl::immutable_string const &name) const
   {
-    auto const ee{ interpreter->getExecutionEngine() };
+    auto const locked_interpreter{ interpreter.lock() };
+    auto const ee{ (*locked_interpreter)->getExecutionEngine() };
     llvm::orc::SymbolNameSet to_remove{};
     to_remove.insert(ee->mangleAndIntern(name.c_str()));
     auto const error{ ee->getMainJITDylib().remove(to_remove) };
@@ -652,7 +716,8 @@ namespace jank::jit
 
   jtl::string_result<void *> processor::find_symbol(jtl::immutable_string const &name) const
   {
-    if(auto symbol{ interpreter->getSymbolAddress(name.c_str()) })
+    auto const locked_interpreter{ interpreter.lock() };
+    if(auto symbol{ (*locked_interpreter)->getSymbolAddress(name.c_str()) })
     {
       return symbol.get().toPtr<void *>();
     }
@@ -660,7 +725,9 @@ namespace jank::jit
     return err(util::format("Failed to find symbol: '{}'", name));
   }
 
-  jtl::option<jtl::immutable_string> processor::find_lib(jtl::immutable_string const &lib) const
+  jtl::option<jtl::immutable_string>
+  processor::find_lib(native_vector<std::filesystem::path> const &library_dirs,
+                      jtl::immutable_string const &lib)
   {
     std::filesystem::path const lib_path{ lib.c_str() };
     if(lib_path.is_absolute())
@@ -692,29 +759,39 @@ namespace jank::jit
       }
     }
 
+    /* On macOS, since Big Sur, dylib files aren't just stored on the filesystem. So, if we
+     * want to load libz.dylib, we can't just look for it normally. Instead, there's a whole
+     * dyld shared cache, a new .tbd file format, and custom linker support. We could add all
+     * of that into jank, but a simpler way is to just try to open the lib via `dlopen`, which
+     * will handle all of this for us. If it opens, we clearly found it and we can just
+     * return the lib name as is. This short-circuits the rest of the searching machinery. */
+#ifdef JANK_MACOS_LIKE
+    if(::dlopen(lib.c_str(), RTLD_LAZY | RTLD_GLOBAL))
+    {
+      return lib;
+    }
+#endif
+
     return none;
   }
 
-  jtl::result<void, jtl::immutable_string>
-  processor::load_libs(native_vector<jtl::immutable_string> const &libs) const
+  jtl::result<native_vector<resolved_lib>, jtl::immutable_string>
+  processor::resolve_libs(native_vector<jtl::immutable_string> const &libs)
   {
+    auto const library_dirs{ build_library_dirs() };
+    native_vector<resolved_lib> resolved;
+    resolved.reserve(libs.size());
+
     for(auto const &lib : libs)
     {
       /* Try finding the lib literally, in case it contains a file name or a path.
        * Example: -llibfoo.a or -l./libfoo.so or -l/path/to/libfoo.a */
       {
-        auto const result{ processor::find_lib(lib) };
+        auto const result{ processor::find_lib(library_dirs, lib) };
         if(result.is_some())
         {
           auto const &found_lib{ result.unwrap() };
-          if(is_static_lib(found_lib))
-          {
-            load_static_library(found_lib);
-          }
-          else
-          {
-            load_dynamic_library(found_lib);
-          }
+          resolved.emplace_back(found_lib, is_static_lib(found_lib));
           continue;
         }
       }
@@ -724,7 +801,7 @@ namespace jank::jit
        * Example: -l:foo or -l:libfoo.a or -l:./libfoo.so or -l:/path/to/libfoo.a */
       if(lib.starts_with(':'))
       {
-        auto result{ processor::find_lib(lib.substr(1)) };
+        auto result{ processor::find_lib(library_dirs, lib.substr(1)) };
         if(result.is_some())
         {
           if(!is_static_lib(result.unwrap()))
@@ -733,12 +810,12 @@ namespace jank::jit
               util::format("Failed to find static library '{}'. This library is not static.",
                            lib.substr(1)));
           }
-          load_static_library(result.unwrap());
+          resolved.emplace_back(result.unwrap(), true);
           continue;
         }
 
         auto const &stat{ static_lib_name(lib.substr(1)) };
-        result = processor::find_lib(stat);
+        result = processor::find_lib(library_dirs, stat);
         if(result.is_none())
         {
           return err(util::format("Failed to find static library '{}'.", lib.substr(1)));
@@ -751,7 +828,7 @@ namespace jank::jit
               util::format("Failed to find static library '{}'. This library is not static.",
                            lib.substr(1)));
           }
-          load_static_library(result.unwrap());
+          resolved.emplace_back(result.unwrap(), true);
         }
       }
       /* Otherwise, just try to find the lib as first a dynamic lib and then a static lib.
@@ -760,38 +837,130 @@ namespace jank::jit
       else
       {
         auto const &shared{ shared_lib_name(lib) };
-        auto result{ processor::find_lib(shared) };
+        auto result{ processor::find_lib(library_dirs, shared) };
         if(result.is_none())
         {
           auto const &stat{ static_lib_name(lib) };
-          result = processor::find_lib(stat);
+          result = processor::find_lib(library_dirs, stat);
           if(result.is_none())
           {
             return err(util::format("Failed to find library '{}'.", lib));
           }
           else
           {
-            load_static_library(result.unwrap());
+            resolved.emplace_back(result.unwrap(), true);
           }
         }
         else
         {
-          load_dynamic_library(result.unwrap());
+          resolved.emplace_back(result.unwrap(), false);
         }
+      }
+    }
+
+    return ok(jtl::move(resolved));
+  }
+
+  jtl::result<void, jtl::immutable_string>
+  processor::load_libs(native_vector<jtl::immutable_string> const &libs) const
+  {
+    auto result{ resolve_libs(libs) };
+    if(result.is_err())
+    {
+      return err(result.expect_err());
+    }
+
+    for(auto const &lib : result.expect_ok())
+    {
+      if(lib.is_static)
+      {
+        load_static_library(lib.lib);
+      }
+      else
+      {
+        load_dynamic_library(lib.lib);
       }
     }
 
     return ok();
   }
 
+  namespace
+  {
+    constexpr usize max_ld_script_depth{ 8 };
+
+    /* On Linux, shared libraries (.so files) can actually be text files which are ld scripts
+     * teling the linker which libs to bring in. The LLVM JIT doesn't handle these, so we do
+     * our own handling here. This is recursive, since the referenced .so in a ld script
+     * may be a ld script itself. We don't want to get stuck in a loop with this, though. */
+    void load_dynamic_library_impl(processor const &prc,
+                                   jtl::immutable_string const &path,
+                                   usize const depth)
+    {
+      if constexpr(jtl::current_platform == jtl::platform::linux_like)
+      {
+        if(!is_elf_file(path))
+        {
+          if(auto const resolved{ parse_ld_script(path) }; resolved.is_some())
+          {
+            if(depth >= max_ld_script_depth)
+            {
+              throw std::runtime_error{ util::format(
+                "Exceeded the maximum GNU ld script nesting depth while loading `{}`.",
+                path) };
+            }
+
+            auto const script_path{ std::filesystem::path{ path.c_str() } };
+            auto resolved_path{ std::filesystem::path{ resolved.unwrap().c_str() } };
+            if(resolved_path.is_relative())
+            {
+              resolved_path = script_path.parent_path() / resolved_path;
+            }
+            resolved_path = resolved_path.lexically_normal();
+
+            if(resolved_path == script_path.lexically_normal())
+            {
+              throw std::runtime_error{ util::format("This GNU ld script `{}` refers to itself.",
+                                                     path) };
+            }
+
+            load_dynamic_library_impl(prc,
+                                      jtl::immutable_string{ resolved_path.string() },
+                                      depth + 1);
+            return;
+          }
+        }
+      }
+
+
+      auto const locked_interpreter{ prc.interpreter.lock() };
+      llvm::cantFail(
+        static_cast<clang::Interpreter &>(**locked_interpreter).LoadDynamicLibrary(path.data()));
+    }
+  }
+
   void processor::load_dynamic_library(jtl::immutable_string const &path) const
   {
-    llvm::cantFail(static_cast<clang::Interpreter &>(*interpreter).LoadDynamicLibrary(path.data()));
+    load_dynamic_library_impl(*this, path, 0);
   }
 
   void processor::load_static_library(jtl::immutable_string const &path) const
   {
-    auto const ee{ interpreter->getExecutionEngine() };
+    auto const locked_interpreter{ interpreter.lock() };
+    auto const ee{ (*locked_interpreter)->getExecutionEngine() };
     llvm::cantFail(ee->linkStaticLibraryInto(ee->getMainJITDylib(), path.c_str()));
+  }
+
+  util::scope_exit processor::push_diagnostics_consumer(jtl::ref<clang::DiagnosticConsumer> const d)
+  {
+    auto const locked_interpreter{ interpreter.lock() };
+    auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
+    auto old_client{ diag.takeClient().release() };
+    diag.setClient(d.data, true);
+    return { [this, old_client] {
+      auto const locked_interpreter{ interpreter.lock() };
+      auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
+      diag.setClient(old_client, true);
+    } };
   }
 }

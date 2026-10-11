@@ -4,6 +4,8 @@
 #include <set>
 #include <string>
 
+#include <unistd.h>
+
 #include <isocline.h>
 
 #include <jtl/terminal.hpp>
@@ -279,7 +281,7 @@ namespace jank::terminal_repl
     auto const tmp{ std::filesystem::temp_directory_path() };
     std::string path_tmp{ (tmp / "jank-repl-XXXXXX").string() };
     int const fd{ mkstemp(path_tmp.data()) };
-    ::close(fd);
+    close(fd);
 
     auto const first_res_var{ __rt_ctx->find_var("clojure.core", "*1") };
     auto const second_res_var{ __rt_ctx->find_var("clojure.core", "*2") };

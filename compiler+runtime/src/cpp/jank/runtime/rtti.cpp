@@ -29,11 +29,11 @@ namespace jank::runtime
     if(o.get_type() != object_type::small_integer)
     {
       jtl::string_builder sb;
-      sb("invalid object type (expected ");
+      sb("An object of type `");
       sb(object_type_str(object_type::small_integer));
-      sb(" found ");
+      sb("` was expected here, but a `");
       sb(object_type_str(o.get_type()));
-      sb(")");
+      sb("` was provided instead.");
       throw std::runtime_error{ sb.str() };
     }
     return static_cast<obj::small_integer *>(o.ptr())->data;
@@ -45,11 +45,11 @@ namespace jank::runtime
     if(o.get_type() != object_type::small_real)
     {
       jtl::string_builder sb;
-      sb("invalid object type (expected ");
+      sb("An object of type `");
       sb(object_type_str(object_type::small_real));
-      sb(" found ");
+      sb("` was expected here, but a `");
       sb(object_type_str(o.get_type()));
-      sb(")");
+      sb("` was provided instead.");
       throw std::runtime_error{ sb.str() };
     }
     return static_cast<obj::small_real *>(o.ptr())->data;

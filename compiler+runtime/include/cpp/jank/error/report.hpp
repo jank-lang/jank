@@ -1,9 +1,10 @@
 #pragma once
 
 #include <jank/error.hpp>
+#include <jtl/immutable_string.hpp>
 
 namespace jank::error
 {
-  void report(error_ref e);
-  void warn(jtl::immutable_string const &);
+  jtl::immutable_string report(error_ref e);
+  jtl::immutable_string warn(jtl::immutable_string const &);
 }

@@ -1,0 +1,5 @@
+(let* [f (fn* [o]
+           (let* [i (cpp/cast jank.runtime.obj.small_integer_ref o)]
+             (if (= 1 (.-data i))
+               :success)))]
+  (f 1))

@@ -118,8 +118,8 @@ namespace jank::runtime::obj
 
   persistent_list_ref persistent_list::conj(object_ref const head) const
   {
-    auto l(data.conj(head));
-    auto ret(make_box<persistent_list>(meta, std::move(l)));
+    auto const l(data.conj(head));
+    auto ret(make_box<persistent_list>(meta, l));
     return ret;
   }
 

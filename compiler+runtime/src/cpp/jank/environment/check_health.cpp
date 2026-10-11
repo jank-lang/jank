@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include <unistd.h>
+
 #include <llvm/TargetParser/Host.h>
 #include <llvm/Support/Program.h>
 
@@ -103,7 +105,9 @@ namespace jank::environment
 
   static jtl::immutable_string jank_resource_dir()
   {
-    std::filesystem::path dir{ JANK_RESOURCE_DIR };
+    std::filesystem::path dir{ util::resource_dir_override.empty()
+                                 ? JANK_RESOURCE_DIR
+                                 : util::resource_dir_override.c_str() };
     bool relative{};
     std::filesystem::path const jank_path{ util::process_dir().c_str() };
     if(!dir.is_absolute())
@@ -129,7 +133,7 @@ namespace jank::environment
                     icon,
                     text_style::reset,
                     text_style::blue,
-                    JANK_RESOURCE_DIR,
+                    dir.string(),
                     text_style::reset,
                     text_style::bright_black,
                     /* NOLINTNEXTLINE(readability-avoid-nested-conditional-operator) */
@@ -290,8 +294,10 @@ namespace jank::environment
   static jtl::immutable_string check_cpp_jit()
   {
     bool error{};
-    auto def_err{ runtime::__rt_ctx->jit_prc.interpreter->ParseAndExecute(
-      "std::string jank_cpp_health_check(){ return \"healthy\"; }") };
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto def_err{ (*locked_interpreter)
+                    ->ParseAndExecute(
+                      "std::string jank_cpp_health_check(){ return \"healthy\"; }") };
     if(def_err)
     {
       error = true;
@@ -299,9 +305,7 @@ namespace jank::environment
     else
     {
       clang::Value v;
-      auto call_err{
-        runtime::__rt_ctx->jit_prc.interpreter->ParseAndExecute("jank_cpp_health_check()", &v)
-      };
+      auto call_err{ (*locked_interpreter)->ParseAndExecute("jank_cpp_health_check()", &v) };
       if(call_err)
       {
         error = true;
@@ -340,7 +344,7 @@ namespace jank::environment
         auto const tmp{ std::filesystem::temp_directory_path() };
         std::string path_tmp{ (tmp / "jank-aot-XXXXXX").string() };
         int const fd{ mkstemp(path_tmp.data()) };
-        ::close(fd);
+        close(fd);
         std::filesystem::remove(path_tmp);
         std::filesystem::create_directories(path_tmp);
 

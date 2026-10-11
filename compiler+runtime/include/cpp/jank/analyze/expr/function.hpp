@@ -32,11 +32,17 @@ namespace jank::analyze::expr
 
   using function_context_ref = jtl::ref<function_context>;
 
+  struct parameter
+  {
+    runtime::obj::symbol_ref name;
+    jtl::ptr<void> type;
+  };
+
   struct function_arity
   {
     runtime::object_ref to_runtime_data() const;
 
-    native_vector<runtime::obj::symbol_ref> params;
+    native_vector<parameter> params;
     do_ref body;
     local_frame_ptr frame;
     function_context_ref fn_ctx;

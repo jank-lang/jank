@@ -32,7 +32,7 @@ namespace jank::analyze::expr
     object_ref param_maps(make_box<obj::persistent_vector>());
     for(auto const &e : params)
     {
-      param_maps = conj(param_maps, e);
+      param_maps = conj(param_maps, e.name);
     }
 
     return obj::persistent_array_map::create_unique(make_box("params"),
@@ -96,7 +96,7 @@ namespace std
   size_t hash<jank::analyze::expr::arity_key>::operator()(
     jank::analyze::expr::arity_key const &k) const noexcept
   {
-    static auto hasher(std::hash<decltype(jank::analyze::expr::arity_key::param_count)>{});
+    static auto const hasher(std::hash<decltype(jank::analyze::expr::arity_key::param_count)>{});
     return jank::hash::combine(hasher(k.param_count), k.is_variadic);
   }
 }

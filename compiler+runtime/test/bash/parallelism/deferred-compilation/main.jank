@@ -1,0 +1,18 @@
+(defn work-0 [n] (loop [i n acc 0] (if (zero? i) acc (recur (dec i) (+ acc i)))))
+(defn work-1 [n] (loop [i n acc 0] (if (zero? i) acc (recur (dec i) (+ acc i)))))
+(defn work-2 [n] (loop [i n acc 0] (if (zero? i) acc (recur (dec i) (+ acc i)))))
+(defn work-3 [n] (loop [i n acc 0] (if (zero? i) acc (recur (dec i) (+ acc i)))))
+(defn work-4 [n] (loop [i n acc 0] (if (zero? i) acc (recur (dec i) (+ acc i)))))
+(defn work-5 [n] (loop [i n acc 0] (if (zero? i) acc (recur (dec i) (+ acc i)))))
+(defn work-6 [n] (loop [i n acc 0] (if (zero? i) acc (recur (dec i) (+ acc i)))))
+(defn work-7 [n] (loop [i n acc 0] (if (zero? i) acc (recur (dec i) (+ acc i)))))
+(defn work-8 [n] (loop [i n acc 0] (if (zero? i) acc (recur (dec i) (+ acc i)))))
+(defn work-9 [n] (loop [i n acc 0] (if (zero? i) acc (recur (dec i) (+ acc i)))))
+(defn work-10 [n] (loop [i n acc 0] (if (zero? i) acc (recur (dec i) (+ acc i)))))
+
+(def all [work-0 work-1 work-2 work-3 work-4 work-5 work-6 work-7 work-8 work-9 work-10])
+
+(let [fs (doall (map (fn [f] (future (f 10000))) all))
+      res (reduce + (map deref fs))]
+  (when-not (= 550055000 res)
+    (throw (ex-info "invaid result" {:res res}))))

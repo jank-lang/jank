@@ -29,12 +29,16 @@
   (find-deprecated-flags project)
   (when (:verbose opts)
     (reset! ljc/verbose? true))
-  (let [project     (ljc/native-build project opts)
-        cp-str      (ljc/build-module-path project)]
-    (ljc/shell-out! project cp-str cmd jank-args prog-args)))
+  (when (:debug opts)
+    (ljc/verify-executable! ljc/debug-tool))
+  (let [project (ljc/native-build project opts)
+        prefix  (when (:debug opts) ljc/debug-tool)
+        cp-str  (ljc/build-module-path project)]
+    (ljc/shell-out! project cp-str prefix cmd jank-args prog-args)))
 
 (def run-cli-options
-  [["-m" "--main NAMESPACE" "override main namespace"]])
+  [["-m" "--main NAMESPACE" "override main namespace"]
+   ["-d" "--debug" "run in the debugger"]])
 
 (defn run!
   "Run your project, starting at the :main entrypoint.
@@ -52,6 +56,17 @@ Calls the -main function in the given namespace."
       (dispatch-jank project opts "run-main" [main] args)
       (lmain/warn "No :main entrypoint for project."))))
 
+(defn debug!
+  "Run your project under the debugger, starting at the :main entrypoint.
+
+USAGE: lein debug [--] [ARGS...]
+(see lein run)
+
+USAGE: lein debug -m/--main NAMESPACE [--] [ARGS...]
+(see lein run)"
+  [project & args]
+  (apply run! project (conj args "--debug")))
+
 (defn repl!
   "Start a terminal REPL and nREPL server in your :main ns, or the user ns if no
 :main is specified."
@@ -61,7 +76,8 @@ Calls the -main function in the given namespace."
     (dispatch-jank project opts "repl" (if main [main] []) args)))
 
 (def compile-cli-options
-  [["-n" "--name FILE" "the output file name"]])
+  [["-m" "--main NAMESPACE" "override main namespace"]
+   ["-n" "--name FILE" "the output file name"]])
 
 (defn compile!
   "Ahead of time compile your project to an executable, starting at the :main
@@ -74,7 +90,7 @@ To override the executable output file, pass `--name FILE`."
   (let [cli-options (into ljc/standard-options compile-cli-options)
         [opts args] (ljc/parse-opts #'compile! args cli-options)
         name-opts   (when (:name opts) ["--name" (:name opts)])]
-    (if-let [main (:main project)]
+    (if-let [main (or (:main opts) (:main project))]
       (dispatch-jank project opts "compile" (concat [main] name-opts) args)
       (lmain/warn "No :main entrypoint for project."))))
 
@@ -124,6 +140,7 @@ namespaces or files."
     (dispatch-jank project opts "check-health" [] args)))
 
 (def subtask-kw->var {:run #'run!
+                      :debug #'debug!
                       :repl #'repl!
                       :compile #'compile!
                       :compile-module #'compile-module!
@@ -157,6 +174,9 @@ namespaces or files."
   {:jank     {:name (:name project)}
    :aliases  {"run" ^{:doc "Run your project, starting at the main entrypoint."}
               ["jank" "run"]
+
+              "debug" ^{:doc "Run your project under the debugger, starting at the :main entrypoint."}
+              ["jank" "debug"]
 
               "repl" ^{:doc "Start a terminal REPL in your :main or user ns."}
               ["jank" "repl"]

@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::cpp::throw_::pass_throw_non_trait_convertible_in_return_position
+          { struct foo{ int a{}; }; }")
+
+(defn foo []
+  (println (throw (cpp/jank.cpp.throw_.pass_throw_non_trait_convertible_in_return_position.foo 5))))
+
+(try
+  (foo)
+  (catch jank.cpp.throw_.pass_throw_non_trait_convertible_in_return_position.foo f
+    (if (= 5 (.-a f))
+      :success)))

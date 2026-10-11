@@ -1,0 +1,5 @@
+(defmacro foo []
+  [])
+
+(if (= [] (foo))
+  :success)

@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Features, Bug Reports, Questions
-    url: https://github.com/jank-lang/jank/discussions/new/choose
-    about: Our preferred starting point if you have any questions or suggestions about jank.
+  - name: The official jank Slack
+    url: https://clojurians.net/
+    about: Join us and ask your questions in Slack!
+  - name: The official jank Discord
+    url: https://discord.gg/7sSMfKDBU3
+    about: Join us and ask your questions in Discord!

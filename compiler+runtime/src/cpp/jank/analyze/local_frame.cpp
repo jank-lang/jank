@@ -6,6 +6,7 @@
 #include <jank/analyze/processor.hpp>
 #include <jank/analyze/local_frame.hpp>
 #include <jank/analyze/cpp_util.hpp>
+#include <jank/analyze/cppinterop.hpp>
 #include <jank/detail/to_runtime_data.hpp>
 #include <jank/util/fmt.hpp>
 
@@ -96,8 +97,9 @@ namespace jank::analyze
     for(auto const &crossed_fn : result.crossed_fns)
     {
       /* We intentionally copy the binding here. */
-      auto res(crossed_fn->captures.emplace(result.binding->name,
-                                            local_capture{ *result.binding, result.binding }));
+      auto const res(
+        crossed_fn->captures.emplace(result.binding->name,
+                                     local_capture{ *result.binding, result.binding }));
 
       res.first->second.binding.is_capture = true;
       /* We know it needs a box, since it's captured. */
@@ -108,7 +110,8 @@ namespace jank::analyze
 
       /* Native values which are captured get copied, so we need to adjust the type
        * of the binding. */
-      res.first->second.binding.type = Cpp::GetNonReferenceType(res.first->second.binding.type);
+      res.first->second.binding.type
+        = cppinterop::get_non_reference_type(res.first->second.binding.type);
     }
   }
 
