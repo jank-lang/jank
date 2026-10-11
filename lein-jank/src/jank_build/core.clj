@@ -127,6 +127,7 @@
                             [:tmpfs build-dir]
                             [:chdir build-dir]
                             [:net false]
+                            ; Wherever bb is, try to bring it in.
                             [:ro-bind (str bb) (str bb)]]
                            (map (fn [dir] [:ro-bind dir dir])
                                 (concat (vals (:inputs op))
