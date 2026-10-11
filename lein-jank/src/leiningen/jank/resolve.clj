@@ -23,7 +23,7 @@
         coordinates   (aether/merge-versions-from-managed-coords [dep] managed-deps)
         opts          (merge (default-aether-args project) {:coordinates         coordinates
                                                             :managed-coordinates managed-deps})
-        full-tree     (aether/resolve-dependencies opts)
+        full-tree     (apply aether/resolve-dependencies (apply concat opts))
         dep-with-meta (first (filter #{dep} (keys full-tree)))]
     (when dep-with-meta
       {:coord        dep
