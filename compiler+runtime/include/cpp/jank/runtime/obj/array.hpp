@@ -85,9 +85,27 @@ namespace jank::runtime::obj
                                                     | object_behavior::array_like };
     static constexpr bool pointer_free{ false };
 
+    static usize validate_size(i64 const size)
+    {
+      if(size < 0)
+      {
+        throw std::runtime_error{ util::format(
+          "An array requires a non-negative integer for size, but `{}` was provided.",
+          size) };
+      }
+      return size;
+    }
+
     array(usize const size)
       : object{ obj_type, obj_behaviors }
       , size{ size }
+      , data{ new(UseGC) T[size]{} }
+    {
+    }
+
+    array(i64 const size)
+      : object{ obj_type, obj_behaviors }
+      , size{ validate_size(size) }
       , data{ new(UseGC) T[size]{} }
     {
     }
@@ -98,6 +116,17 @@ namespace jank::runtime::obj
       , data{ new(UseGC) T[size]{} }
     {
       for(usize i{}; i < size; ++i)
+      {
+        data[i] = init_value;
+      }
+    }
+
+    array(i64 const size, T init_value)
+      : object{ obj_type, obj_behaviors }
+      , size{ validate_size(size) }
+      , data{ new(UseGC) T[size]{} }
+    {
+      for(usize i{}; i < this->size; ++i)
       {
         data[i] = init_value;
       }
