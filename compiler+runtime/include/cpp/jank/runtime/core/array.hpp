@@ -21,9 +21,9 @@ namespace jank::runtime
     if(actual_element_type != expected_element_type)
     {
       throw std::runtime_error{ util::format(
-        "Array with element type of `{}` cannot be cast to array of element type `{}`.",
-        element_type_str(actual_element_type),
-        element_type_str(expected_element_type)) };
+        "An array of `{}` was needed here, but an array of `{}` was provided.",
+        element_type_str(expected_element_type),
+        element_type_str(actual_element_type)) };
     }
 
     return a;

@@ -824,9 +824,9 @@ namespace jank::analyze::cpp_util
                 return type;
               }
             default:
-              throw error::codegen_internal_failure(util::format(
-                "Unable to resolve literal_type for `array` with element type of `{}`.",
-                element_type_str(type)));
+              throw error::codegen_internal_failure(
+                util::format("Encountered invalid array object while performing visit `{}`.",
+                             o.to_code_string()));
           }
         }
       default:
