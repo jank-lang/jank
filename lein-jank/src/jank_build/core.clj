@@ -48,15 +48,25 @@
       (fs/path "_cache" (str dep-name "-" type "-" fprint))
       fs/absolutize))
 
+(defn relative-to
+  "If `p` is a relative path, absolutize it assuming it's relative to the
+  `default-parent` dir. Otherwise return it as-is."
+  [default-parent p]
+  (->>
+   (if (fs/relative? p)
+     (fs/path default-parent p)
+     p)
+   (str)))
+
 (defn process-build-directive
   "Process an output line from a build script, parsing it if it begins with the
   jank-build:: prefix. Otherwise returns nil. "
-  [line]
+  [out-dir line]
   (when-let [[_ k v] (re-matches #"jank-build::(.*?)=(.*)" line)]
     (case k
       "define"               (let [[a b] (string/split v #"=" 2)] {:defines {a b}})
-      "include-dir"          {:include-dirs [v]}
-      "link-dir"             {:library-dirs [v]}
+      "include-dir"          {:include-dirs [(relative-to out-dir v)]}
+      "link-dir"             {:library-dirs [(relative-to out-dir v)]}
       "link-library"         {:linked-libraries [v]}
       "link-static-library"  {:linked-static-libraries [v]}
       "link-framework"       {:linked-frameworks [v]}
@@ -126,7 +136,9 @@
                             [:bind out-dir out-dir]
                             [:tmpfs build-dir]
                             [:chdir build-dir]
-                            [:net false]]
+                            [:net false]
+                            ; Wherever bb is, try to bring it in.
+                            [:ro-bind (str bb) (str bb)]]
                            (map (fn [dir] [:ro-bind dir dir])
                                 (concat (vals (:inputs op))
                                         (:build-inputs op))))
@@ -135,7 +147,7 @@
         ;; Include all build input jars into the classpath.
         bb-classpath (string/join ":" (:build-inputs op))
         build-input  (build-script-input op)
-        cmd ["bb" "--classpath" bb-classpath "--stream" (str (fs/path src-dir jank-build-file))]
+        cmd (mapv str [bb "--classpath" bb-classpath "--stream" (fs/path src-dir jank-build-file)])
         proc         (sandbox/process
                       (not *disable-sandbox*)
                       sandbox-args
@@ -265,7 +277,7 @@
     (when (fs/regular-file? path)
       (->> path
            (fs/read-all-lines)
-           (keep process-build-directive)
+           (keep #(process-build-directive out-dir %))
            (apply merge-with into)))))
 
 (defn rerun-fingerprint

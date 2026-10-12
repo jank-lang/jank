@@ -133,8 +133,8 @@
     ;; These are the results from the test-grandchild jank-build.bb script.
     (is (match?
          {:defines          {"I_LIKE" "TURTLES"}
-          :include-dirs     ["foobar"]
-          :library-dirs     ["somepath"]
+          :include-dirs     [(m/pred #(= (fs/file-name %) "foobar"))]
+          :library-dirs     [(m/pred #(= (fs/file-name %) "somepath"))]
           :linked-libraries ["foolib" "barlib"]}
          result))))
 
