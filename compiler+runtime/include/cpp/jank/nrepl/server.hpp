@@ -30,7 +30,6 @@ namespace jank::nrepl::server
     struct impl;
 
     native_server();
-    native_server(i64 port);
 
     jtl::immutable_string get_endpoint() const;
     u16 get_port() const;

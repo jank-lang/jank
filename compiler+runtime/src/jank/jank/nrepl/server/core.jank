@@ -12,7 +12,13 @@
             [jank.nrepl.server.handler.lookup]))
 
 (def *verbose (atom false))
-(def *ready? (promise))
+(def *ready?
+  "A promise that is fulfilled when the nrepl server is ready or if an error
+  occurs during initialization.
+
+  The value of the promise will be nil on success or an error message on
+  failure."
+  (promise))
 
 (defn log [& args]
   (when @*verbose
@@ -81,17 +87,25 @@
   (when (some #{"-v" "--verbose"} args)
     (reset! *verbose true))
 
-  (let [server* (listen)
-        server (cpp/unbox (:* jank.nrepl.server.native_server) server*)]
-    (spit ".nrepl-port" (str (.get_port server)))
-    ;; Certain nREPL clients, such as Calva, depend on this exact string
-    ;; format to assist with setting up a REPL via jack-in.
-    (println "nREPL server started on port" (str (.get_port server))
-             "on host 127.0.0.1 -" (.get_endpoint server))
-    (deliver *ready? true)
-    (while true
-      (let [client* (accept server*)]
-        (future (handle-client client*))))))
+  (let [[err server*]
+        (try
+          [nil (listen)]
+          (catch cpp/std.exception e
+            [(str "Error binding server address: " (.-repl_port #cpp jank.util.cli.opts)
+                  "\n" (.what e))
+             nil]))]
+    (if err
+      (deliver *ready? err)
+      (let [server (cpp/unbox (:* jank.nrepl.server.native_server) server*)]
+        (spit ".nrepl-port" (str (.get_port server)))
+        ;; Certain nREPL clients, such as Calva, depend on this exact string
+        ;; format to assist with setting up a REPL via jack-in.
+        (println "nREPL server started on port" (str (.get_port server))
+                 "on host 127.0.0.1 -" (.get_endpoint server))
+        (deliver *ready? nil)
+        (while true
+          (let [client* (accept server*)]
+            (future (handle-client client*))))))))
 
 (defn background-main
   "Starts the nREPL server as a background thread. Returns a promise which will be delivered
@@ -99,31 +113,3 @@
   [& args]
   (future (apply -main args))
   *ready?)
-
-(defn ^:private jank-repl-main [port]
-  (let [*err (promise)]
-    (future
-      (let [[err server*]
-            (try
-              [nil
-               (cpp/box
-                (cpp/new jank.nrepl.server.native_server port))]
-              (catch cpp/std.exception e
-                [(str "Error binding server address: " port
-                        "\n" (.what e))
-                 nil]))]
-        (if err
-          (deliver *err err)
-          (let [server (cpp/unbox (:* jank.nrepl.server.native_server) server*)]
-            (spit ".nrepl-port" (str (.get_port server)))
-            ;; Certain nREPL clients, such as Calva, depend on this exact string
-            ;; format to assist with setting up a REPL via jack-in.
-            (println "nREPL server started on port" (str (.get_port server))
-                     "on host 127.0.0.1 -" (.get_endpoint server))
-            (deliver *err nil)
-
-            (while true
-              (let [client* (.accept server)]
-                (future (handle-client (cpp/box client*)))))))))
-    *err))
-

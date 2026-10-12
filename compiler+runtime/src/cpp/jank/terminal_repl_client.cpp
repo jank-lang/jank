@@ -250,7 +250,7 @@ namespace jank::terminal_repl
      * some stuff for this thread and then we'll later block on an nREPL promise to ensure
      * that it's completely running before we prompt the user. */
     auto const repl_main{
-      __rt_ctx->intern_var("jank.nrepl.server.core", "jank-repl-main").expect_ok()
+      __rt_ctx->intern_var("jank.nrepl.server.core", "background-main").expect_ok()
     };
     auto const repl_init_errp{ repl_main.call(make_box<obj::integer>(util::cli::opts.repl_port)) };
 
