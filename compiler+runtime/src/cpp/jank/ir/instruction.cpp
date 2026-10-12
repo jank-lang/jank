@@ -299,9 +299,11 @@ namespace jank::ir::inst
   }
 
   branch_get::branch_get(identifier const &name,
+                         identifier const &shadow,
                          jtl::ptr<void> const type,
                          read::source const &location)
     : instruction{ instruction_kind::branch_get, name, type, location }
+    , shadow{ shadow }
   {
   }
 
