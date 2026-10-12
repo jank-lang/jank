@@ -298,7 +298,8 @@ namespace jank::terminal_repl
      * its promise. */
     auto repl_init_err = repl_init_errp.deref();
 
-    if (repl_init_err.is_some()){
+    if(repl_init_err.is_some())
+    {
       throw repl_init_err;
     }
 

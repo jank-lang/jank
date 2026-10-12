@@ -96,9 +96,9 @@ namespace jank::nrepl::server
     tcp::acceptor acceptor_;
   };
 
-
   native_server::native_server()
-    : impl_{ std::make_shared<native_server::impl>(tcp::endpoint(ip::address_v4::loopback(), jank::util::cli::opts.repl_port)) }
+    : impl_{ std::make_shared<native_server::impl>(
+        tcp::endpoint(ip::address_v4::loopback(), jank::util::cli::opts.repl_port)) }
   {
   }
 

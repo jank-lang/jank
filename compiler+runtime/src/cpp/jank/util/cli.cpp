@@ -420,7 +420,8 @@ OPTIONS
             throw util::format("Could not parse port: '{}'.", value);
           }
 
-          if ( parsed_long > std::numeric_limits<u16>::max() || parsed_long < 0){
+          if(parsed_long > std::numeric_limits<u16>::max() || parsed_long < 0)
+          {
             throw util::format("Port out of range [0...65,535]: '{}'.", value);
           }
 
