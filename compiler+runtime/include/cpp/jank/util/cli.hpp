@@ -156,7 +156,7 @@ namespace jank::util::cli
     compilation_target output_target{ compilation_target::unspecified };
 
     /* Repl command. */
-    i64 repl_port{};
+    u16 repl_port{};
 
     /* Error reporting. */
     u8 max_error_candidates{ 3 };

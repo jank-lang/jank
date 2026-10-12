@@ -404,11 +404,11 @@ OPTIONS
         else if(check_flag(it, end, value, "-p", "--port", true))
         {
           size_t parsed_upto{};
-          i64 parsed_long{};
+          i32 parsed_long{};
 
           try
           {
-            parsed_long = std::stoll(value, &parsed_upto);
+            parsed_long = std::stoi(value, &parsed_upto);
           }
           catch(...)
           {
