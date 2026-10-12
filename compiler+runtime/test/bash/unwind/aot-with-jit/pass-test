@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+cd src
+rm -rf target
+jank run-main --module-path . throw-test | grep ":success"
+
+jank compile-module --module-path . foo
+
+jank run-main --module-path . throw-test | grep ":success"
