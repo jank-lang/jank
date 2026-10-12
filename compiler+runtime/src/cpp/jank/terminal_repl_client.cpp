@@ -296,7 +296,7 @@ namespace jank::terminal_repl
 
     /* We want to wait until the nREPL server is completely initialized, so we'll block on
      * its promise. */
-    auto repl_init_err = repl_init_errp.deref();
+    auto const repl_init_err{ repl_init_errp.deref() };
 
     if(repl_init_err.is_some())
     {
