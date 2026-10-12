@@ -1,0 +1,11 @@
+(loop* [x 0
+        prev 0
+        n 0]
+  (if (< n 3)
+    (let* [; Aliasing.
+           old-x x
+           new-x (inc x)
+           new-n (inc n)]
+      (recur new-x old-x new-n))
+    (if (= [3 2 3] [x prev n])
+      :success)))
