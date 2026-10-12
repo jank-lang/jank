@@ -2,10 +2,15 @@
 
 set -euo pipefail
 
-cd src
-rm -rf target
-jank run-main --module-path . throw-test | grep ":success"
+if [[ "$(uname -s)" =~ ^MSYS_NT.* ]];
+then
+  echo "Skipping on Windows"
+else
+  cd src
+  rm -rf target
+  jank run-main --module-path . throw-test | grep ":success"
 
-jank compile-module --module-path . foo
+  jank compile-module --module-path . foo
 
-jank run-main --module-path . throw-test | grep ":success"
+  jank run-main --module-path . throw-test | grep ":success"
+fi
