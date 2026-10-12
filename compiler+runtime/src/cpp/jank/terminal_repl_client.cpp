@@ -252,7 +252,7 @@ namespace jank::terminal_repl
     auto const repl_main{
       __rt_ctx->intern_var("jank.nrepl.server.core", "background-main").expect_ok()
     };
-    auto const repl_init_errp{ repl_main.call(make_box<obj::integer>(util::cli::opts.repl_port)) };
+    auto const repl_init_errp{ repl_main.call() };
 
     __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>("user"));
     __rt_ctx->intern_var("clojure.core", "refer")
