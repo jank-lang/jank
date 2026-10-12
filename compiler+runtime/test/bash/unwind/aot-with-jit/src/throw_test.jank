@@ -1,0 +1,5 @@
+(ns throw-test
+  (:require [foo]))
+
+(defn -main [& args]
+  (println (foo/do-try #(throw 1))))

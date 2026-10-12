@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+case "$(uname -s)" in
+  MSYS_NT*|MINGW*_NT*|CLANG*_NT*|CYGWIN_NT*)
+    echo "Skipping on Windows"
+    exit 0
+    ;;
+esac
+
+cd src
+rm -rf target
+jank run-main --module-path . throw-test | grep ":success"
+
+jank compile-module --module-path . foo
+
+jank run-main --module-path . throw-test | grep ":success"

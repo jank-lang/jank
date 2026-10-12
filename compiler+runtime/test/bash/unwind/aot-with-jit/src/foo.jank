@@ -1,0 +1,7 @@
+(ns foo)
+
+(defn do-try [f]
+  (try
+    (f)
+    (catch :default _
+      :success)))

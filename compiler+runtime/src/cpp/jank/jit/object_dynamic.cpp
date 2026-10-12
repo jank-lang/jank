@@ -142,6 +142,27 @@ namespace jank::jit
                           llvm::jitlink::LinkGraph &,
                           llvm::jitlink::PassConfiguration &config) override
     {
+      /* Each `.eh_frame` entry keeps the 8-byte alignment it had in the object file. When JITLink
+       * dead-strips an entry whose size isn't a multiple of 8, such as one for a weak function which
+       * was already defined by an earlier module (e.g. `__clang_call_terminate`), the next entry's
+       * alignment forces zero padding between records. The unwinder treats a zero-length record
+       * as the end of the section, so every entry after the padding becomes invisible and
+       * exceptions can't be caught by the frames they describe. Records are only 4-byte aligned,
+       * so relax the alignment to keep the section packed. */
+      config.PostPrunePasses.emplace_back([](llvm::jitlink::LinkGraph &graph) -> llvm::Error {
+        auto const eh_frame{ graph.findSectionByName(".eh_frame") };
+        if(eh_frame == nullptr)
+        {
+          return llvm::Error::success();
+        }
+        for(auto const block : eh_frame->blocks())
+        {
+          block->setAlignment(4);
+          block->setAlignmentOffset(0);
+        }
+        return llvm::Error::success();
+      });
+
       auto const resource_key{ get_resource_key(mr) };
       if(resource_key.is_none())
       {
