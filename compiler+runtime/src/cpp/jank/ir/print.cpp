@@ -330,8 +330,9 @@ namespace jank::ir
   void inst::branch_get::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb,
-                    "{:name {} :op :branch-get :type \"{}\"}",
+                    "{:name {} :op :branch-get :shadow {} :type \"{}\"}",
                     name,
+                    shadow,
                     get_qualified_type_name(type));
   }
 

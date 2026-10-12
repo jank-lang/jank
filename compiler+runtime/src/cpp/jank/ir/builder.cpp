@@ -416,10 +416,13 @@ namespace jank::ir
     return name;
   }
 
-  identifier builder::branch_get(identifier const &name, jtl::ptr<void> const type) const
+  identifier builder::branch_get(identifier const &shadow, jtl::ptr<void> const type)
   {
+    /* The value is copied out of the shadow, since a later branch-set to the shadow must not
+     * change what this local refers to. */
+    auto name{ next_ident() };
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::branch_get>(name, type, location));
+      jtl::make_ref<inst::branch_get>(name, shadow, type, location));
     return name;
   }
 

@@ -963,6 +963,7 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::branch_get_ref const inst, builder &b)
   {
     b.next_instruction();
+    util::format_to(b.body_buffer, "auto {}({});\n", inst->name, inst->shadow);
     return inst->name;
   }
 

@@ -471,9 +471,14 @@ namespace jank::ir
 
     struct branch_get : instruction
     {
-      branch_get(identifier const &name, jtl::ptr<void> const type, read::source const &location);
+      branch_get(identifier const &name,
+                 identifier const &shadow,
+                 jtl::ptr<void> const type,
+                 read::source const &location);
 
       void print(jtl::string_builder &sb, usize indent) const override;
+
+      identifier shadow;
     };
 
     using branch_get_ref = jtl::ref<branch_get>;

@@ -105,7 +105,7 @@ namespace jank::ir
     identifier jump(usize const index);
     identifier jump(usize const index, bool const loop);
     identifier branch_set(identifier const &shadow, identifier const &value);
-    identifier branch_get(identifier const &name, jtl::ptr<void> const type) const;
+    identifier branch_get(identifier const &shadow, jtl::ptr<void> const type);
     identifier branch(identifier const &condition,
                       identifier const &then_blk,
                       identifier const &else_blk,
