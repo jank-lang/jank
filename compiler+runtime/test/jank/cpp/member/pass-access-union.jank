@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::member::pass_access_union
+          {
+            struct bar
+            {
+              union { int i; float f; char bytes[5]; };
+            };
+          }")
+(let* [b (cpp/jank.cpp.member.pass_access_union.bar.)
+       _ (cpp/= (.-f b) 3.14)]
+  (if (= 0x4048f5c3 (.-i b))
+    (do
+      (cpp/= (.-i b) 0x44434241)
+      (if (= "ABCD" (.-bytes b))
+        :success))))
