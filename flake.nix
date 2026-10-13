@@ -168,7 +168,7 @@
             nixd
             shellcheck
             # For clangd & clang-tidy.
-            clang-tools
+            llvmPackages.clang-tools
             gdb
             clangbuildanalyzer
             openjdk
