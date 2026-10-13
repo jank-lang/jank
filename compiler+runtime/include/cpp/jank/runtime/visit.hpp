@@ -280,8 +280,8 @@ namespace jank::runtime
               return fn(expect_object<obj::array<object_ref>>(erased), std::forward<Args>(args)...);
             default:
               throw error::runtime_internal_failure(
-                util::format("Encountered invalid array object while performing visit `{}`.",
-                             erased.to_code_string()));
+                util::format("An array with elements of type `{}` cannot be visited.",
+                             object_type_str(erased.get_type())));
           }
         }
       case object_type::reader_conditional:
