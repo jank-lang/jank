@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-b320106a.js";
+            window.path_to_searchindex_js = "searchindex-b7242cae.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-846aad8b.js"></script>
@@ -382,7 +382,7 @@ will look similar to this:</p>
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
   :dependencies []
-  :plugins [[org.jank-lang/lein-jank "2026.06-2"]]
+  :plugins [[org.jank-lang/lein-jank "2026.10-1"]]
   :middleware [leiningen.jank/middleware]
   :main hello-lein.main
   :profiles {:debug {:target-dir "target/debug"
@@ -1332,7 +1332,7 @@ run Leiningen with <code>--disable-sandbox</code>. For example: <code>lein run -
 <p>Your build scripts may have dependencies of their own, which are not available
 to your jank application. This is handled by adding <code>:build-dependencies</code> to
 your <code>project.clj</code>. For example:</p>
-<pre><code class="language-clojure">:build-dependencies [[org.jank-lang.commons/jank-build-cmake "2026.06-6"]]
+<pre><code class="language-clojure">:build-dependencies [[org.jank-lang.commons/jank-build "2026.10-1"]]
 </code></pre>
 <h2 id="top-level-build-scripts"><a class="header" href="#top-level-build-scripts">Top-level build scripts</a></h2>
 <p>Your jank project may also have a <code>jank-build.bb</code> of its own, stored in the
@@ -1450,9 +1450,9 @@ Here’s an example <code>project.clj</code>:</p>
   :description "Raw package for sqlite3."
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
-  :plugins [[org.jank-lang/lein-jank "2026.07-1"]]
+  :plugins [[org.jank-lang/lein-jank "2026.10-1"]]
   :middleware [leiningen.jank/middleware]
-  :build-dependencies [[org.jank-lang.commons/jank-build-pkg-config "2026.06-1"]])
+  :build-dependencies [[org.jank-lang.commons/jank-build "2026.10-1"]])
 </code></pre>
 <p>Note that we add <code>:build-dependencies</code> so that we can grab
 <code>jank-build-pkg-config</code>. This is a helper for the <code>jank-build.bb</code> we’re going to
@@ -1460,7 +1460,7 @@ write. It’s going to call <code>pkg-config</code> for us and then turn the out
 into jank build system directives. Here’s our <code>jank-build.bb</code>:</p>
 <pre><code class="language-clojure">(require '[jank.build.pkg-config :refer [pkg-config]])
 
-(pkg-config "sqlite3")
+(pkg-config *input* "sqlite3")
 </code></pre>
 <p>That’s it! Now, if we wanted to use this package locally, we could install it
 with <code>lein install</code> and then add it as a dependency to another project.</p>
@@ -1511,7 +1511,7 @@ Tools like <code>pkg-config</code> can do a lot of this for us! Some packages do
 <code>pkg-config</code> entries, which can make this work more manual. Other packages have
 their own version of <code>pkg-config</code>, like <code>curl-config</code>, which accept similar
 flags. Take a look at the <code>pkg-config</code> build script helper
-<a href="https://github.com/jank-lang/commons/blob/main/jank-build-pkg-config/src/jank/build/pkg_config.bb">here</a>
+<a href="https://github.com/jank-lang/commons/blob/main/jank-build/src/jank/build/pkg_config.clj">here</a>
 for a peek behind the scenes of what we used for this guide.</p>
 <p>Also, take a look at the official
 <a href="https://github.com/jank-lang/commons/tree/main/sqlite3-sys">sqlite3-sys</a> jank
@@ -1578,31 +1578,30 @@ raylib/libraylib.so
   :description "Raw package for raylib."
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
-  :plugins [[org.jank-lang/lein-jank "2026.07-1"]]
+  :plugins [[org.jank-lang/lein-jank "2026.10-1"]]
   :middleware [leiningen.jank/middleware]
-  :build-dependencies [[org.jank-lang.commons/jank-build-cmake "2026.06-6"]]
+  :build-dependencies [[org.jank-lang.commons/jank-build "2026.10-1"]]
   :verbatim-paths ["raylib"])
 </code></pre>
-<p>Note the <code>jank-build-cmake</code> helper in the <code>:build-dependencies</code>. This is going
-to do the heavy lifting for us. Also note the <code>:verbatim-paths</code>, which tells
-Leiningen that we want the entire <code>raylib</code> directory to be included in our
-<code>raylib-sys</code> package.</p>
+<p>Note the <code>jank-build</code> helper in the <code>:build-dependencies</code>. This is going to do
+the heavy lifting for us. Also note the <code>:verbatim-paths</code>, which tells Leiningen
+that we want the entire <code>raylib</code> directory to be included in our <code>raylib-sys</code>
+package.</p>
 <p>Now we just need our <code>jank-build.bb</code>.</p>
 <pre><code class="language-clojure">;; Part 1.
 (require '[babashka.fs :as fs]
-         '[jank.build.cmake :as cmake])
+         '[jank.build.cmake :refer [cmake]]
+         '[jank.build.util :as util])
 
 ;; Part 2.
-(let [out-dir (:out-dir *input*)
-      src-dir (fs/path (:src-dir *input*) "raylib")
+(let [src-dir (fs/path (:src-dir *input*) "raylib")
       input   (assoc *input* :src-dir src-dir)]
-  (cmake/build input {:defines {"BUILD_EXAMPLES" false}})
+  (cmake input {:defines {"BUILD_EXAMPLES" false}})
 
   ;; Part 3.
-  (println (str "jank-build::include-dir=" (fs/path out-dir "include")))
-  (println (str "jank-build::link-dir=" (fs/path out-dir "lib")))
-  (println (str "jank-build::link-dir=" (fs/path out-dir "lib64")))
-  (println (str "jank-build::link-library=" "raylib")))
+  (util/include-dir "include")
+  (util/link-dir "lib")
+  (util/link-library "raylib"))
 </code></pre>
 <p>We’ll go over this part by part. Firstly, we require <code>babashka.fs</code> so we can do
 some path manipulation. This namespace is available to all Babashka programs
@@ -1613,7 +1612,7 @@ directory to be the nested <code>raylib</code> directory. The CMake helper expec
 <code>CMakeLists.txt</code> file to be within the source directory. The CMake helper will
 automatically handle building the project in the build directory and installing
 the final artifacts to the output directory.</p>
-<p>In part three, we just print the necessary directives to tell the jank build
+<p>In part three, we just emit the necessary directives to tell the jank build
 system where to find headers, libraries, and which libraries to link.</p>
 <p>That’s it! Now, if we wanted to use this package locally, we could install it
 with <code>lein install</code> and then add it as a dependency to another project.</p>

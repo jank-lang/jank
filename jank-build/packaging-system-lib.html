@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-b320106a.js";
+            window.path_to_searchindex_js = "../searchindex-b7242cae.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-846aad8b.js"></script>
@@ -225,9 +225,9 @@ Here’s an example <code>project.clj</code>:</p>
   :description "Raw package for sqlite3."
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
-  :plugins [[org.jank-lang/lein-jank "2026.07-1"]]
+  :plugins [[org.jank-lang/lein-jank "2026.10-1"]]
   :middleware [leiningen.jank/middleware]
-  :build-dependencies [[org.jank-lang.commons/jank-build-pkg-config "2026.06-1"]])
+  :build-dependencies [[org.jank-lang.commons/jank-build "2026.10-1"]])
 </code></pre>
 <p>Note that we add <code>:build-dependencies</code> so that we can grab
 <code>jank-build-pkg-config</code>. This is a helper for the <code>jank-build.bb</code> we’re going to
@@ -235,7 +235,7 @@ write. It’s going to call <code>pkg-config</code> for us and then turn the out
 into jank build system directives. Here’s our <code>jank-build.bb</code>:</p>
 <pre><code class="language-clojure">(require '[jank.build.pkg-config :refer [pkg-config]])
 
-(pkg-config "sqlite3")
+(pkg-config *input* "sqlite3")
 </code></pre>
 <p>That’s it! Now, if we wanted to use this package locally, we could install it
 with <code>lein install</code> and then add it as a dependency to another project.</p>
@@ -286,7 +286,7 @@ Tools like <code>pkg-config</code> can do a lot of this for us! Some packages do
 <code>pkg-config</code> entries, which can make this work more manual. Other packages have
 their own version of <code>pkg-config</code>, like <code>curl-config</code>, which accept similar
 flags. Take a look at the <code>pkg-config</code> build script helper
-<a href="https://github.com/jank-lang/commons/blob/main/jank-build-pkg-config/src/jank/build/pkg_config.bb">here</a>
+<a href="https://github.com/jank-lang/commons/blob/main/jank-build/src/jank/build/pkg_config.clj">here</a>
 for a peek behind the scenes of what we used for this guide.</p>
 <p>Also, take a look at the official
 <a href="https://github.com/jank-lang/commons/tree/main/sqlite3-sys">sqlite3-sys</a> jank
