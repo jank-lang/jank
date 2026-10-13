@@ -825,8 +825,8 @@ namespace jank::analyze::cpp_util
               }
             default:
               throw error::codegen_internal_failure(
-                util::format("Encountered invalid array object while performing visit `{}`.",
-                             o.to_code_string()));
+                util::format("An array with elements of type `{}` cannot be visited.",
+                             object_type_str(o.get_type())));
           }
         }
       default:
