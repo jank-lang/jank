@@ -89,7 +89,7 @@ Now we just need our `jank-build.bb`.
          '[jank.build.util :as util])
 
 ;; Part 2.
-(let [src-dir (fs/path (:src-dir *input*) "lib" "raylib")
+(let [src-dir (fs/path (:src-dir *input*) "raylib")
       input   (assoc *input* :src-dir src-dir)]
   (cmake input {:defines {"BUILD_EXAMPLES" false}})
 
