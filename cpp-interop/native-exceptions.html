@@ -36,7 +36,7 @@
             const path_to_root = "../";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "../searchindex-b7242cae.js";
+            window.path_to_searchindex_js = "../searchindex-c8511182.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-846aad8b.js"></script>
@@ -202,7 +202,7 @@ throw a <code>std::out_of_range</code> exception, which derives from <code>std::
 can catch the exception by the base type and then rely on the virtual <code>.what</code>
 member function to get the exception message.</p>
 <pre><code class="language-clojure">
-(let [v (#cpp (std::vector int))]
+(let [v (#cpp (std.vector int))]
   (try
     ; This will throw.
     (.at v 0)
