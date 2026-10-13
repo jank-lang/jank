@@ -61,7 +61,7 @@ will look similar to this:
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
   :dependencies []
-  :plugins [[org.jank-lang/lein-jank "2026.06-2"]]
+  :plugins [[org.jank-lang/lein-jank "2026.10-1"]]
   :middleware [leiningen.jank/middleware]
   :main hello-lein.main
   :profiles {:debug {:target-dir "target/debug"

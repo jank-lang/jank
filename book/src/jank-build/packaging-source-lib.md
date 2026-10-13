@@ -69,35 +69,34 @@ Let's add our basic project:
   :description "Raw package for raylib."
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
-  :plugins [[org.jank-lang/lein-jank "2026.07-1"]]
+  :plugins [[org.jank-lang/lein-jank "2026.10-1"]]
   :middleware [leiningen.jank/middleware]
-  :build-dependencies [[org.jank-lang.commons/jank-build-cmake "2026.06-6"]]
+  :build-dependencies [[org.jank-lang.commons/jank-build "2026.10-1"]]
   :verbatim-paths ["raylib"])
 ```
 
-Note the `jank-build-cmake` helper in the `:build-dependencies`. This is going
-to do the heavy lifting for us. Also note the `:verbatim-paths`, which tells
-Leiningen that we want the entire `raylib` directory to be included in our
-`raylib-sys` package.
+Note the `jank-build` helper in the `:build-dependencies`. This is going to do
+the heavy lifting for us. Also note the `:verbatim-paths`, which tells Leiningen
+that we want the entire `raylib` directory to be included in our `raylib-sys`
+package.
 
 Now we just need our `jank-build.bb`. 
 
 ```clojure
 ;; Part 1.
 (require '[babashka.fs :as fs]
-         '[jank.build.cmake :as cmake])
+         '[jank.build.cmake :refer [cmake]]
+         '[jank.build.util :as util])
 
 ;; Part 2.
-(let [out-dir (:out-dir *input*)
-      src-dir (fs/path (:src-dir *input*) "raylib")
+(let [src-dir (fs/path (:src-dir *input*) "raylib")
       input   (assoc *input* :src-dir src-dir)]
-  (cmake/build input {:defines {"BUILD_EXAMPLES" false}})
+  (cmake input {:defines {"BUILD_EXAMPLES" false}})
 
   ;; Part 3.
-  (println (str "jank-build::include-dir=" (fs/path out-dir "include")))
-  (println (str "jank-build::link-dir=" (fs/path out-dir "lib")))
-  (println (str "jank-build::link-dir=" (fs/path out-dir "lib64")))
-  (println (str "jank-build::link-library=" "raylib")))
+  (util/include-dir "include")
+  (util/link-dir "lib")
+  (util/link-library "raylib"))
 ```
 
 We'll go over this part by part. Firstly, we require `babashka.fs` so we can do
@@ -111,7 +110,7 @@ directory to be the nested `raylib` directory. The CMake helper expects the
 automatically handle building the project in the build directory and installing
 the final artifacts to the output directory.
 
-In part three, we just print the necessary directives to tell the jank build
+In part three, we just emit the necessary directives to tell the jank build
 system where to find headers, libraries, and which libraries to link.
 
 That's it! Now, if we wanted to use this package locally, we could install it
