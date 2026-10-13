@@ -498,6 +498,7 @@ if(jank_test)
 endif()
 
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+find_package(ZLIB REQUIRED)
 
 # CMake changed its mechanism for finding Boost. The old behavior uses
 # a CMake-provided FindBoost script. The new behavior relies on locating
@@ -901,7 +902,7 @@ target_link_libraries(
   ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a ${jank_link_whole_end}
   LLVM clang-cpp
   isocline
-  z
+  ZLIB::ZLIB
   OpenSSL::Crypto
 )
 
@@ -1020,7 +1021,7 @@ if(jank_test)
   target_link_libraries(
     jank_test_exe PUBLIC
     ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a ${jank_link_whole_end}
-    z
+    ZLIB::ZLIB
     LLVM clang-cpp
     OpenSSL::Crypto
     doctest::doctest
