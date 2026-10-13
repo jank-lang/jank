@@ -49,8 +49,6 @@ extern "C"
                                                        &jank_load_jank_nrepl_server_util);
     jank::runtime::__rt_ctx->module_loader.add_load_fn("jank.nrepl.server.eval",
                                                        &jank_load_jank_nrepl_server_eval);
-    jank::runtime::__rt_ctx->module_loader.add_load_fn("jank.nrepl.server.parsec",
-                                                       &jank_load_jank_nrepl_server_parsec);
     jank::runtime::__rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.close",
                                                        &jank_load_jank_nrepl_server_handler_close);
     jank::runtime::__rt_ctx->module_loader.add_load_fn("jank.nrepl.server.handler.clone",

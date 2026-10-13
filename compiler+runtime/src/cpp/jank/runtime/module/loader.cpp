@@ -271,7 +271,6 @@ namespace jank::runtime::module
                                                             "jank.nrepl.server.capture",
                                                             "jank.nrepl.server.util",
                                                             "jank.nrepl.server.eval",
-                                                            "jank.nrepl.server.parsec",
                                                             "jank.nrepl.server.handler.close",
                                                             "jank.nrepl.server.handler.clone",
                                                             "jank.nrepl.server.handler.describe",
