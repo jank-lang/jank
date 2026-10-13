@@ -141,7 +141,7 @@ to your jank application. This is handled by adding `:build-dependencies` to
 your `project.clj`. For example:
 
 ```clojure
-:build-dependencies [[org.jank-lang.commons/jank-build-cmake "2026.06-6"]]
+:build-dependencies [[org.jank-lang.commons/jank-build "2026.10-1"]]
 ```
 
 ## Top-level build scripts

@@ -52,9 +52,9 @@ Here's an example `project.clj`:
   :description "Raw package for sqlite3."
   :license {:name "MPL 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
-  :plugins [[org.jank-lang/lein-jank "2026.07-1"]]
+  :plugins [[org.jank-lang/lein-jank "2026.10-1"]]
   :middleware [leiningen.jank/middleware]
-  :build-dependencies [[org.jank-lang.commons/jank-build-pkg-config "2026.06-1"]])
+  :build-dependencies [[org.jank-lang.commons/jank-build "2026.10-1"]])
 ```
 
 Note that we add `:build-dependencies` so that we can grab
@@ -65,7 +65,7 @@ into jank build system directives. Here's our `jank-build.bb`:
 ```clojure
 (require '[jank.build.pkg-config :refer [pkg-config]])
 
-(pkg-config "sqlite3")
+(pkg-config *input* "sqlite3")
 ```
 
 That's it! Now, if we wanted to use this package locally, we could install it
@@ -134,7 +134,7 @@ Tools like `pkg-config` can do a lot of this for us! Some packages don't have
 `pkg-config` entries, which can make this work more manual. Other packages have
 their own version of `pkg-config`, like `curl-config`, which accept similar
 flags. Take a look at the `pkg-config` build script helper
-[here](https://github.com/jank-lang/commons/blob/main/jank-build-pkg-config/src/jank/build/pkg_config.bb)
+[here](https://github.com/jank-lang/commons/blob/main/jank-build/src/jank/build/pkg_config.clj)
 for a peek behind the scenes of what we used for this guide.
 
 Also, take a look at the official
