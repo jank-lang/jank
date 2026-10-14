@@ -1,0 +1,4 @@
+(refer-global :only '[jtl.u8])
+(let* [i (#cpp jtl.u8 42)]
+  (if (= 42 i)
+    :success))
