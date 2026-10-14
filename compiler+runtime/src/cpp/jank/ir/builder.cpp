@@ -1,4 +1,5 @@
 #include <jank/ir/builder.hpp>
+#include <jank/debug/local_names.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/munge.hpp>
@@ -329,6 +330,16 @@ namespace jank::ir
       return ret(name, type);
     }
     return name;
+  }
+
+  void builder::source_binding(jtl::immutable_string const &raw_name,
+                               identifier const &value,
+                               jtl::ptr<void> const type)
+  {
+    identifier name{ debug::encode_local(raw_name.c_str(), ident_count++).c_str() };
+    used_identifiers.emplace(name);
+    current_function()->blocks[block_index].instructions.emplace_back(
+      jtl::make_ref<inst::source_binding>(name, type, location, value));
   }
 
   identifier builder::dynamic_call(analyze::expression_position const pos,

@@ -125,6 +125,12 @@ namespace jank::ir
           rewritten |= rewrite(i.value, old_name, new_name);
         }
         break;
+      case instruction_kind::source_binding:
+        {
+          auto &i{ static_cast<inst::source_binding &>(*inst.data) };
+          rewritten |= rewrite(i.value, old_name, new_name);
+        }
+        break;
       case instruction_kind::dynamic_call:
         {
           auto &i{ static_cast<inst::dynamic_call &>(*inst.data) };

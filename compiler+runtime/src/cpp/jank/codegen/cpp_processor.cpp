@@ -587,6 +587,15 @@ namespace jank::codegen
     return inst->name;
   }
 
+  jtl::option<identifier> gen(ir::inst::source_binding_ref const inst, builder &b)
+  {
+    b.next_instruction();
+
+    /* This is a reference alias so there are no copies and lifetimes don't change. */
+    util::format_to(b.body_buffer, "[[maybe_unused]] auto &&{}({});\n", inst->name, inst->value);
+    return inst->name;
+  }
+
   jtl::option<identifier> gen(ir::inst::dynamic_call_ref const inst, builder &b)
   {
     b.next_instruction();

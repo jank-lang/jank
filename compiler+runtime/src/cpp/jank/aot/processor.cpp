@@ -10,6 +10,7 @@
 #include <jank/error/aot.hpp>
 #include <jank/error/system.hpp>
 #include <jank/aot/processor.hpp>
+#include <jank/debug/local_names.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/module/loader.hpp>
@@ -529,6 +530,7 @@ int main(int argc, const char** argv)
       return compiler_args_res.expect_err();
     }
     std::vector<char const *> compiler_args{ jtl::move(compiler_args_res.expect_ok()) };
+    auto const base_args{ compiler_args };
 
     /* TODO: Use runtime::context::get_output_module_name. */
     std::filesystem::path const module_path{
@@ -558,9 +560,16 @@ int main(int argc, const char** argv)
     compiler_args.push_back(prelude_path_str.c_str());
 
     std::string const module_path_str{ module_path.string() };
+    /* With debug info, we go through bitcode so that the encoded local names can be swapped
+     * back to their raw jank spelling before the object is emitted. */
+    std::string const bitcode_path{ path_tmp + ".bc" };
+    if(util::cli::opts.debug)
+    {
+      compiler_args.push_back("-emit-llvm");
+    }
     compiler_args.push_back("-c");
     compiler_args.push_back("-o");
-    compiler_args.push_back(module_path_str.c_str());
+    compiler_args.push_back(util::cli::opts.debug ? bitcode_path.c_str() : module_path_str.c_str());
 
     compiler_args.push_back("-x");
     compiler_args.push_back("c++");
@@ -578,6 +587,36 @@ int main(int argc, const char** argv)
     if(res.is_err())
     {
       return res.expect_err();
+    }
+
+    if(util::cli::opts.debug)
+    {
+      util::scope_exit const remove_bitcode{ [&]() {
+        std::error_code ec;
+        std::filesystem::remove(bitcode_path, ec);
+      } };
+
+      auto const rewrite_error{ debug::rewrite_bitcode_file(bitcode_path) };
+      if(rewrite_error.is_some())
+      {
+        return error::system_failure(
+          util::format("Unable to restore local names in '{}': {}",
+                       module_path_str,
+                       rewrite_error.unwrap().c_str()));
+      }
+
+      std::vector<char const *> object_args{ base_args };
+      object_args.push_back("-c");
+      object_args.push_back("-o");
+      object_args.push_back(module_path_str.c_str());
+      object_args.push_back(bitcode_path.c_str());
+      object_args.push_back("-w");
+
+      auto const object_res{ util::invoke_clang(object_args) };
+      if(object_res.is_err())
+      {
+        return object_res.expect_err();
+      }
     }
 
     return ok();

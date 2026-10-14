@@ -92,6 +92,14 @@ namespace jank::ir
     f(instr, s.current_block());
   }
 
+  void walk_typed(ir::inst::source_binding_ref const instr,
+                  instruction_walk_function const &f,
+                  state &s)
+  {
+    s.next_instruction();
+    f(instr, s.current_block());
+  }
+
   void
   walk_typed(ir::inst::dynamic_call_ref const instr, instruction_walk_function const &f, state &s)
   {
@@ -511,6 +519,12 @@ namespace jank::ir
   }
 
   void walk_references_typed(ir::inst::type_erase_ref const instr, reference_walk_function const &f)
+  {
+    f(instr->value);
+  }
+
+  void walk_references_typed(ir::inst::source_binding_ref const instr,
+                             reference_walk_function const &f)
   {
     f(instr->value);
   }

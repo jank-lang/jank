@@ -1,5 +1,6 @@
 #include <jank/ir/processor.hpp>
 #include <jank/ir/print.hpp>
+#include <jank/util/cli.hpp>
 #include <jank/ir/dominance.hpp>
 #include <jank/ir/opt/hoist_scoped_values.hpp>
 #include <jank/ir/opt/hoist_literals.hpp>
@@ -225,6 +226,10 @@ namespace jank::ir
       auto const &name{ runtime::munge(param.name->get_name()) };
       b.locals[name]
         = b.parameter(analyze::expression_position::value, param.type, runtime::munge(name));
+      if(util::cli::opts.debug)
+      {
+        b.source_binding(param.name->get_name(), b.locals[name], param.type);
+      }
     }
 
     for(auto const &capture : arity.frame->captures)
@@ -261,6 +266,10 @@ namespace jank::ir
       {
         auto const &name{ runtime::munge(param.name->get_name()) };
         b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
+        if(util::cli::opts.debug)
+        {
+          b.source_binding(param.name->get_name(), b.locals[name], untyped_object_ref_type());
+        }
       }
 
       jtl::option<identifier> body_res;
@@ -486,6 +495,13 @@ namespace jank::ir
         auto &local{ b.locals[name] };
         local = b.type_erase(analyze::expression_position::value, local);
       }
+
+      if(expr->loop_kind == analyze::expr::let::loop_kind::normal && util::cli::opts.debug)
+      {
+        b.source_binding(pair.first->name->get_name(),
+                         b.locals[name],
+                         expression_type(pair.second));
+      }
     }
 
     if(expr->loop_kind == analyze::expr::let::loop_kind::loop_with_recur)
@@ -518,6 +534,12 @@ namespace jank::ir
       {
         auto const &name{ runtime::munge(pair.first->name->get_name()) };
         b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], expression_type(pair.second));
+        if(util::cli::opts.debug)
+        {
+          b.source_binding(pair.first->name->get_name(),
+                           b.locals[name],
+                           expression_type(pair.second));
+        }
       }
 
       auto const body_res{ gen(expr->body, b) };

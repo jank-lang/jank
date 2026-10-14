@@ -742,6 +742,7 @@ add_library(
   src/cpp/jank/jit/object_dynamic.cpp
   src/cpp/jank/jit/parse_ld_script.cpp
   src/cpp/jank/jit/processor_dynamic.cpp
+  src/cpp/jank/debug/local_names.cpp
   src/cpp/jank/codegen/api_dynamic.cpp
   src/cpp/jank/environment/check_health.cpp
 )
@@ -975,6 +976,7 @@ if(jank_test)
     test/cpp/jtl/string_builder.cpp
     test/cpp/jank/util/fmt.cpp
     test/cpp/jank/util/path.cpp
+    test/cpp/jank/debug/local_names.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/runtime/behavior/call.cpp

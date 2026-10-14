@@ -44,3 +44,10 @@ $ lldb -- jank run foo.jank
 > [!NOTE]
 > If you want to break when an exception is thrown, use the
 > `breakpoint set -E c++` command in lldb before you `run`.
+
+## Local variable names
+When debug info is enabled (the default; `--no-debug` disables it), locals and parameters bound
+by `let`, `loop`, and `fn` are shown in the debugger using the names you wrote in
+jank, such as `foo-bar?`, rather than the munged C++ spelling. Use `info
+locals` in gdb or `frame variable` in lldb. Optimized builds may still merge or
+drop locals.

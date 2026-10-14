@@ -92,6 +92,10 @@ namespace jank::ir
     identifier
     var_ref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var);
     identifier type_erase(analyze::expression_position const pos, identifier const &value);
+    /* Gives `value` a debugger-visible alias carrying the raw jank name. */
+    void source_binding(jtl::immutable_string const &raw_name,
+                        identifier const &value,
+                        jtl::ptr<void> const type);
     identifier dynamic_call(analyze::expression_position const pos,
                             identifier const &fn,
                             native_vector<identifier> &&args);

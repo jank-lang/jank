@@ -255,6 +255,15 @@ namespace jank::ir
                     get_qualified_type_name(type));
   }
 
+  void inst::source_binding::print(jtl::string_builder &sb, usize const) const
+  {
+    util::format_to(sb,
+                    "{:name {} :op :source-binding :value {} :type \"{}\"}",
+                    name,
+                    value,
+                    get_qualified_type_name(type));
+  }
+
   void inst::dynamic_call::print(jtl::string_builder &sb, usize const) const
   {
     util::format_to(sb, "{:name {} :op :dynamic-call :fn {} :args [", name, fn);

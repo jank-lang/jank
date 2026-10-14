@@ -23,6 +23,7 @@
 #include <CppInterOp/CppInterOp.h>
 
 #include <jank/jit/object.hpp>
+#include <jank/debug/local_names.hpp>
 #include <jank/jit/parse_ld_script.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/make_array.hpp>
@@ -376,6 +377,18 @@ namespace jank::jit
         {
           oll.addPlugin(llvm::cantFail(llvm::orc::DebugInfoPreservationPlugin::Create()));
         }
+      }
+
+      /* User locals are declared with encoded names which C++ can express. This swaps them
+       * back to the raw jank spelling in the debug info, before the object is emitted. */
+      if(util::cli::opts.debug)
+      {
+        ee->getIRTransformLayer().setTransform(
+          [](llvm::orc::ThreadSafeModule tsm,
+             llvm::orc::MaterializationResponsibility &) -> llvm::Expected<llvm::orc::ThreadSafeModule> {
+            tsm.withModuleDo([](llvm::Module &module) { debug::rewrite_local_names(module); });
+            return std::move(tsm);
+          });
       }
 
       jit::install_object_tracking_plugin();

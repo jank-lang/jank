@@ -225,6 +225,15 @@ namespace jank::ir::inst
   {
   }
 
+  source_binding::source_binding(identifier const &name,
+                                 jtl::ptr<void> const type,
+                                 read::source const &location,
+                                 identifier const &value)
+    : instruction{ instruction_kind::source_binding, name, type, location }
+    , value{ value }
+  {
+  }
+
   dynamic_call::dynamic_call(identifier const &name,
                              jtl::ptr<void> const type,
                              read::source const &location,

@@ -52,6 +52,7 @@ namespace jank::ir
     var_deref,
     var_ref,
     type_erase,
+    source_binding,
     dynamic_call,
     named_recursion,
     recursion_reference,
@@ -374,6 +375,23 @@ namespace jank::ir
     };
 
     using type_erase_ref = jtl::ref<type_erase>;
+
+    /* `source_binding` names a user-written local so that debuggers can show it. The name of
+     * this instruction encodes the original, unmunged jank spelling (see `debug::encode_local`)
+     * and it refers to `value` without copying it. */
+    struct source_binding : instruction
+    {
+      source_binding(identifier const &name,
+                     jtl::ptr<void> const type,
+                     read::source const &location,
+                     identifier const &value);
+
+      void print(jtl::string_builder &sb, usize) const override;
+
+      identifier value;
+    };
+
+    using source_binding_ref = jtl::ref<source_binding>;
 
     struct dynamic_call : instruction
     {
