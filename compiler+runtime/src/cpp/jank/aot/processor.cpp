@@ -64,6 +64,11 @@ extern "C" jank_object_ref jank_parse_command_line_args(int, char const **);
     auto const namespaces{ __rt_ctx->all_ns() };
     for(auto const n : namespaces)
     {
+      if(n->name->name == "user")
+      {
+        continue;
+      }
+
       util::format_to(sb,
                       R"(extern "C" void {}();)",
                       module::module_to_load_function(n->name->name));
@@ -99,6 +104,11 @@ int main(int argc, const char** argv)
     for(auto const n : namespaces)
     {
       auto const &mod{ n->name->name };
+      if(mod == "user")
+      {
+        continue;
+      }
+
       util::format_to(sb,
                       "jank_module_register(\"{}\", &{});\n",
                       mod,
