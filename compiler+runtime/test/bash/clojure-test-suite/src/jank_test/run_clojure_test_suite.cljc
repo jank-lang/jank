@@ -37,7 +37,7 @@
     ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
     clojure.core-test.char
     clojure.core-test.char-qmark
-    ; clojure.core-test.coll-qmark ; FIXME: `seq` does not satisfy `coll?`
+    clojure.core-test.coll-qmark
     clojure.core-test.comment
     clojure.core-test.compare
     clojure.core-test.concat

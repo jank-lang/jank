@@ -1,4 +1,5 @@
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/seq_ext.hpp>
@@ -130,9 +131,8 @@ namespace jank::runtime::obj
     return make_box<cons>(head, runtime::detail::untagged(this));
   }
 
-  persistent_vector_sequence_ref persistent_vector_sequence::empty()
+  persistent_list_ref persistent_vector_sequence::empty()
   {
-    static persistent_vector_sequence const ret;
-    return &ret;
+    return persistent_list::empty();
   }
 }

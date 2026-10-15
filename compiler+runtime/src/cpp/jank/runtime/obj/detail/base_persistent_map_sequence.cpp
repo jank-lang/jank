@@ -1,4 +1,5 @@
 #include <jank/runtime/obj/detail/base_persistent_map_sequence.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/seq.hpp>
 
@@ -142,6 +143,12 @@ namespace jank::runtime::obj::detail
   obj::cons_ref base_persistent_map_sequence<PT, IT>::conj(object_ref const head)
   {
     return make_box<obj::cons>(head, runtime::detail::untagged(static_cast<PT *>(this)));
+  }
+
+  template <typename PT, typename IT>
+  persistent_list_ref base_persistent_map_sequence<PT, IT>::empty()
+  {
+    return persistent_list::empty();
   }
 
   template struct base_persistent_map_sequence<
