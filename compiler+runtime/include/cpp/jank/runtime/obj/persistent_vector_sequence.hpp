@@ -5,6 +5,7 @@
 namespace jank::runtime::obj
 {
   using cons_ref = oref<struct cons>;
+  using persistent_list_ref = oref<struct persistent_list>;
   using persistent_vector_ref = oref<struct persistent_vector>;
   using persistent_vector_sequence_ref = oref<struct persistent_vector_sequence>;
 
@@ -43,6 +44,9 @@ namespace jank::runtime::obj
 
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head);
+
+    /* behavior::collection_like */
+    static persistent_list_ref empty();
 
     /* behavior::sequence_like_in_place */
     object_ref next_in_place() override;

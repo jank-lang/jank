@@ -5,6 +5,7 @@
 namespace jank::runtime::obj
 {
   using cons_ref = oref<struct cons>;
+  using persistent_list_ref = oref<struct persistent_list>;
 }
 
 namespace jank::runtime::obj::detail
@@ -47,6 +48,9 @@ namespace jank::runtime::obj::detail
 
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head);
+
+    /* behavior::collection_like */
+    static persistent_list_ref empty();
 
     object_ref coll{};
     /* Not default constructible. */
