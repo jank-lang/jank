@@ -55,7 +55,7 @@ namespace jank::runtime::obj::detail
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head);
 
-    // /* behavior::collection_like */
+    /* behavior::collection_like */
     static persistent_list_ref empty();
 
     /*** XXX: Everything here is immutable after initialization. ***/
