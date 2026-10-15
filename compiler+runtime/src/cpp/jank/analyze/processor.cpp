@@ -2504,14 +2504,14 @@ namespace jank::analyze
                               || common_type };
 
     /* If one of the branches has a native type, we need to match one of these scenarios.
-       *
-       * 1. The other branch has the same native type.
-       * 2. The other branch has a native type and the two native types are compatible.
-       * 3. The other branch has an object type and the native branch is trait convertible.
-       * 4. Both branches are trait convertible.
-       * 5. One of the branches recurs, meaning we have no comparison to do.
-       *
-       * If neither of these are the case, we have an error. */
+     *
+     * 1. The other branch has the same native type.
+     * 2. The other branch has a native type and the two native types are compatible.
+     * 3. The other branch has an object type and the native branch is trait convertible.
+     * 4. Both branches are trait convertible.
+     * 5. One of the branches recurs, meaning we have no comparison to do.
+     *
+     * If neither of these are the case, we have an error. */
     if(is_same_type || is_compatible
        || ((is_else_object && is_then_convertible) || (is_then_object && is_else_convertible))
        || (is_then_convertible && is_else_convertible) || has_recur)
@@ -2541,8 +2541,6 @@ namespace jank::analyze
       auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
         cpp_util::non_void_type(final_else_type),
         cpp_util::non_void_type(final_then_type)) };
-      auto const final_is_same_type{ cppinterop::get_canonical_type(final_then_type)
-                                     == cppinterop::get_canonical_type(final_else_type) };
       auto const final_common_type{ cppinterop::get_common_type(final_then_type, final_else_type) };
 
       /* If we have a typed object on one side, and anything other than that same typed object
@@ -2556,7 +2554,7 @@ namespace jank::analyze
       {
         chosen_type = cpp_util::untyped_object_ref_type();
       }
-      else if(!final_is_same_type && final_common_type)
+      else if(final_common_type)
       {
         chosen_type = final_common_type;
       }
