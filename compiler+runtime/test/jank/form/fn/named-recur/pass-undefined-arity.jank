@@ -1,0 +1,6 @@
+(defn foo []
+  (foo 2))
+(try
+  (foo)
+  (catch (jank.runtime.invalid_arity 1) _
+    :success))

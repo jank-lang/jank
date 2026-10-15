@@ -441,10 +441,25 @@ namespace jank::ir
       arg_idents.emplace_back(gen(arg_expr, b).unwrap());
     }
 
+    /* We can only elide the dynamic call if we're doing named recursion into a fixed arity
+      * which is defined. If we do a named recursion into a variadic arity or an undefined
+      * arity, we need the dynamic call.
+      *
+      * In the variadic arity case, the dynamic call will be doing argument packing for us.
+      *
+      * In the undefined arity case, the dynamic call will handle throwing an invalid arity
+      * exception for us. */
     bool needs_dynamic_call{ true };
     if(!expr->recursion_ref.fn_ctx->fn->is_variadic)
     {
-      needs_dynamic_call = false;
+      for(auto const &arity : expr->recursion_ref.fn_ctx->fn->arities)
+      {
+        if(arity.fn_ctx->param_count == expr->arg_exprs.size())
+        {
+          needs_dynamic_call = false;
+          break;
+        }
+      }
     }
     else
     {

@@ -1436,6 +1436,8 @@ namespace jank::analyze
     auto const var(__rt_ctx->find_var(qualified_sym));
     if(var.is_nil())
     {
+      /* We only want to analyze it as a C++ symbol if we have a referred global. Otherwise,
+       * it's just a normal unresolved symbol, rather than an unresolved C++ symbol. */
       auto const found_referred_global{ runtime::__rt_ctx->current_ns()->find_referred_global(
         sym) };
       if(found_referred_global.is_some())
@@ -2866,14 +2868,9 @@ namespace jank::analyze
               auto const catch_type_res(analyze_type(catch_type_form, current_frame, fn_ctx));
               if(catch_type_res.is_err())
               {
-                return error::analyze_invalid_try(
-                         catch_type_res.expect_err()->message,
-                         object_source(item),
-                         error::note{
-                           "An exception type is required before this form.",
-                           object_source(catch_sym_form),
-                         },
-                         latest_expansion(macro_expansions))
+                return error::analyze_invalid_try(catch_type_res.expect_err()->message,
+                                                  object_source(catch_type_form),
+                                                  latest_expansion(macro_expansions))
                   ->add_usage(read::parse::reparse_nth(item, 1));
               }
               catch_type = catch_type_res.expect_ok();
@@ -4659,13 +4656,20 @@ namespace jank::analyze
   }
 
   processor::expression_result
-  processor::analyze_cpp_dsl_impl(object_ref const o,
+  processor::analyze_cpp_dsl_impl(object_ref o,
                                   local_frame_ptr const current_frame,
                                   expression_position const position,
                                   jtl::option<expr::function_context_ref> const &fn_ctx)
   {
     if(o.get_type() == object_type::symbol)
     {
+      auto const found_referred_global{ runtime::__rt_ctx->current_ns()->find_referred_global(
+        expect_object<obj::symbol>(o)) };
+      if(found_referred_global.is_some())
+      {
+        o = found_referred_global;
+      }
+
       auto const res{ analyze_cpp_symbol(expect_object<obj::symbol>(o),
                                          current_frame,
                                          expression_position::type,

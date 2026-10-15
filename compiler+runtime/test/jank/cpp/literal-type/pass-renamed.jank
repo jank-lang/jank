@@ -1,0 +1,4 @@
+(refer-global :rename '{jtl.u8 u8})
+(let* [i (#cpp u8 42)]
+  (if (= 42 i)
+    :success))
