@@ -9,10 +9,16 @@
 #include <clang/Driver/Compilation.h>
 #include <clang/Driver/Driver.h>
 #include <clang/Driver/ToolChain.h>
+#include <clang/CodeGen/BackendUtil.h>
+#include <clang/CodeGen/CodeGenAction.h>
+#include <clang/Frontend/CompilerInstance.h>
+#include <clang/Frontend/CompilerInvocation.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 
 #include <CppInterOp/Compatibility.h>
 
+#include <llvm/IR/Module.h>
+#include <llvm/Support/raw_ostream.h>
 #include <llvm/TargetParser/Host.h>
 #include <llvm/Support/Program.h>
 #include <llvm/Support/VirtualFileSystem.h>
@@ -212,6 +218,119 @@ namespace jank::util
     }
 
     if(diags.hasErrorOccurred() || execution_exit_code != 0)
+    {
+      return err(error::system_failure(format("Clang failed with errors.\n{}", buffer)));
+    }
+
+    return ok();
+  }
+
+  jtl::result<void, error_ref>
+  invoke_clang_with_module_transform(std::vector<char const *> args,
+                                     std::function<void(llvm::Module &)> const &transform)
+  {
+    std::string buffer;
+    llvm::raw_string_ostream diag_stream{ buffer };
+    clang::DiagnosticOptions diag_opts{};
+    auto * const diag_client{
+      new clang::TextDiagnosticPrinter{ diag_stream, diag_opts }
+    };
+    clang::IntrusiveRefCntPtr<clang::DiagnosticIDs> const diag_id{ new clang::DiagnosticIDs() };
+    clang::DiagnosticsEngine diags{ diag_id, diag_opts, diag_client, /*ShouldOwnClient=*/true };
+    auto const vfs{ llvm::vfs::getRealFileSystem() };
+    auto const &target_triple{ llvm::sys::getDefaultTargetTriple() };
+    auto const clang_path_res{ find_clang() };
+    if(clang_path_res.is_none())
+    {
+      return err(error::system_clang_executable_not_found());
+    }
+    auto const &clang_path{ clang_path_res.unwrap() };
+
+    clang::driver::Driver driver{ clang_path.c_str(), target_triple, diags, "jank", vfs };
+    driver.setCheckInputsExist(true);
+
+    args.insert(args.begin(), clang_path.c_str());
+    util::add_system_flags(args);
+
+    if(auto const extra{ getenv("JANK_EXTRA_FLAGS") }; extra)
+    {
+      std::stringstream flags{ extra };
+      std::string flag;
+      while(std::getline(flags, flag, ' '))
+      {
+        args.emplace_back(strdup(flag.c_str()));
+      }
+    }
+
+    auto const compilation{ driver.BuildCompilation(args) };
+    if(!compilation || compilation->containsError())
+    {
+      return err(error::system_failure(format("Failed to build Clang steps.\n{}", buffer)));
+    }
+
+    /* The driver turns our flags into a `-cc1` command, which is what actually compiles. We
+     * reuse that so every flag jank passes keeps its usual meaning. */
+    clang::driver::Command const *cc1_job{};
+    for(auto const &job : compilation->getJobs())
+    {
+      if(!job.getArguments().empty() && llvm::StringRef{ job.getArguments()[0] } == "-cc1")
+      {
+        if(cc1_job)
+        {
+          return err(error::system_failure(
+            "Expected exactly one compile job when transforming an LLVM module."));
+        }
+        cc1_job = &job;
+      }
+    }
+    if(!cc1_job)
+    {
+      return err(error::system_failure("Unable to find a compile job to transform."));
+    }
+
+    auto invocation{ std::make_shared<clang::CompilerInvocation>() };
+    if(!clang::CompilerInvocation::CreateFromArgs(*invocation,
+                                                  cc1_job->getArguments(),
+                                                  diags,
+                                                  clang_path.c_str()))
+    {
+      return err(error::system_failure(format("Failed to set up Clang.\n{}", buffer)));
+    }
+
+    clang::CompilerInstance instance{ invocation };
+    instance.setVirtualFileSystem(vfs);
+    instance.createDiagnostics(new clang::TextDiagnosticPrinter{ diag_stream, diag_opts });
+
+    clang::EmitLLVMOnlyAction action;
+    if(!instance.ExecuteAction(action) || instance.getDiagnostics().hasErrorOccurred())
+    {
+      return err(error::system_failure(format("Clang failed with errors.\n{}", buffer)));
+    }
+
+    auto module{ action.takeModule() };
+    if(!module)
+    {
+      return err(error::system_failure("Clang did not produce an LLVM module."));
+    }
+    transform(*module);
+
+    auto const &output_path{ invocation->getFrontendOpts().OutputFile };
+    std::error_code ec;
+    auto out{ std::make_unique<llvm::raw_fd_ostream>(output_path, ec, llvm::sys::fs::OF_None) };
+    if(ec)
+    {
+      return err(error::system_failure(
+        format("Unable to write '{}': {}.", output_path, ec.message())));
+    }
+
+    clang::emitBackendOutput(instance,
+                             invocation->getCodeGenOpts(),
+                             instance.getTarget().getDataLayoutString(),
+                             module.get(),
+                             clang::Backend_EmitObj,
+                             vfs,
+                             std::move(out));
+    if(instance.getDiagnostics().hasErrorOccurred())
     {
       return err(error::system_failure(format("Clang failed with errors.\n{}", buffer)));
     }
