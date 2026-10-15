@@ -681,11 +681,22 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::throw_ref const expr, builder &b)
   {
+    identifier ret{};
     if(expr->value.is_some())
     {
-      return b.throw_(gen(expr->value.unwrap(), b).unwrap(), expr->value.unwrap()->get_type());
+      ret = b.throw_(gen(expr->value.unwrap(), b).unwrap(), expr->value.unwrap()->get_type());
     }
-    return b.throw_();
+    else
+    {
+      ret = b.throw_();
+    }
+
+    if(expr->position == analyze::expression_position::tail)
+    {
+      return b.ret(ret, untyped_object_ref_type());
+    }
+
+    return ret;
   }
 
   jtl::option<identifier> gen(analyze::expr::try_ref const expr, builder &b)
