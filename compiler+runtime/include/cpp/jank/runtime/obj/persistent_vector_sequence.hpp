@@ -44,6 +44,9 @@ namespace jank::runtime::obj
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head);
 
+    /* behavior::collection_like */
+    static persistent_vector_sequence_ref empty();
+
     /* behavior::sequence_like_in_place */
     object_ref next_in_place() override;
 
