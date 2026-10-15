@@ -294,6 +294,7 @@ namespace jank::ir
   {
     native_deque<identifier> rpo;
     native_set<identifier> seen;
+
     build_rpo(fn, fn.blocks[0], rpo, seen);
     build_idom(fn, rpo);
 

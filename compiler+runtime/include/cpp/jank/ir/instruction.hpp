@@ -611,9 +611,6 @@ namespace jank::ir
 
     using finally_ref = jtl::ref<finally>;
 
-    /* Throw is a terminator, but we currently allow it in the middle of a block as well. This
-     * is mainly just a convenience. We can have a pass which strips out all instructions in
-     * a block after a throw. */
     struct throw_ : instruction
     {
       throw_(identifier const &name, read::source const &location);
@@ -622,7 +619,6 @@ namespace jank::ir
              identifier const &value,
              jtl::ptr<void> const value_type);
 
-      bool is_terminator() const override;
       void print(jtl::string_builder &sb, usize indent) const override;
 
       jtl::option<detail::typed_identifier> value;

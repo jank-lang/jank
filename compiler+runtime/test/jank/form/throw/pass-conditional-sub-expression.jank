@@ -1,0 +1,7 @@
+(try
+  (let* []
+    (if true
+      (println (throw 2))))
+  (catch int i
+    (if (= 2 i)
+      :success)))

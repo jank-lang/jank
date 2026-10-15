@@ -518,8 +518,7 @@ namespace jank::codegen
           break;
         }
       }
-      else if(current_inst->kind == ir::instruction_kind::ret
-              || current_inst->kind == ir::instruction_kind::throw_)
+      else if(current_inst->kind == ir::instruction_kind::ret)
       {
         break;
       }
@@ -1047,16 +1046,9 @@ namespace jank::codegen
       util::format_to(b.body_buffer, "throw;\n");
     }
 
-    util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->name);
+    util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {};\n", inst->name);
 
-    /* If there are any instructions after the throw, like scope closes, we need to handle
-     * them, too. */
-    while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-    {
-      gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
-    }
-
-    return none;
+    return inst->name;
   }
 
   jtl::option<identifier> gen(ir::inst::try_ref const inst, builder &b)
@@ -1194,7 +1186,7 @@ namespace jank::codegen
       return none;
     }
 
-    util::format_to(b.body_buffer, "{\n");
+    util::format_to(b.body_buffer, "{ // {}\n", inst->name);
 
     return none;
   }
@@ -1208,7 +1200,7 @@ namespace jank::codegen
       return none;
     }
 
-    util::format_to(b.body_buffer, "}\n");
+    util::format_to(b.body_buffer, "} // {}\n", inst->name);
 
     return none;
   }

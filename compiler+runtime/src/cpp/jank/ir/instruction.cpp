@@ -422,11 +422,6 @@ namespace jank::ir::inst
   {
   }
 
-  bool throw_::is_terminator() const
-  {
-    return true;
-  }
-
   ret::ret(identifier const &name,
            jtl::ptr<void> const type,
            read::source const &location,

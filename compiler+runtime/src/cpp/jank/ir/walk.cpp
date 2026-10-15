@@ -59,8 +59,7 @@ namespace jank::ir
           break;
         }
       }
-      else if(current_inst->kind == ir::instruction_kind::ret
-              || current_inst->kind == ir::instruction_kind::throw_)
+      else if(current_inst->kind == ir::instruction_kind::ret)
       {
         break;
       }
