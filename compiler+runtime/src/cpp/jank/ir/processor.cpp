@@ -236,8 +236,14 @@ namespace jank::ir
     for(auto const &capture : arity.frame->captures)
     {
       auto const &name{ runtime::munge(capture.first->get_name()) };
-      b.locals[name]
-        = b.capture(analyze::expression_position::value, capture.second.binding.type, name);
+      auto value{ b.capture(analyze::expression_position::value,
+                            capture.second.binding.type,
+                            name) };
+      if(util::cli::opts.debug)
+      {
+        value = b.source_binding(capture.first->get_name(), value, capture.second.binding.type);
+      }
+      b.locals[name] = value;
     }
 
     if(arity.fn_ctx->is_recur_recursive)

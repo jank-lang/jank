@@ -337,7 +337,8 @@ namespace jank::ir
    * or drop the named definition, so they are deliberately absent here. */
   static bool is_renamable_definition(instruction_kind const kind)
   {
-    return kind == instruction_kind::persistent_list ||
+    return kind == instruction_kind::capture
+           || kind == instruction_kind::persistent_list ||
            kind == instruction_kind::persistent_vector ||
            kind == instruction_kind::persistent_array_map ||
            kind == instruction_kind::persistent_hash_map ||
