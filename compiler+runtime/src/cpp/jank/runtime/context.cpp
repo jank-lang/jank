@@ -362,7 +362,11 @@ namespace jank::runtime
   {
     static jtl::immutable_string const dot{ "\\." };
     auto const ns{ current_ns() };
-    return util::format("{}-{}-{}",
+#ifdef JANK_WINDOWS_LIKE
+    return util::format("{}_JJJ_{}_{}",
+#else
+    return util::format("{}${}_{}",
+#endif
                         runtime::munge_and_replace(ns->name->get_name(), dot, "_"),
                         prefix.c_str(),
                         ++ns->symbol_counter);
@@ -376,12 +380,12 @@ namespace jank::runtime
   jtl::immutable_string context::unique_string(jtl::immutable_string const &prefix) const
   {
     auto const ns{ current_ns() };
-    return util::format("{}-{}", prefix.c_str(), ++ns->symbol_counter);
+    return util::format("{}_{}", prefix.c_str(), ++ns->symbol_counter);
   }
 
   obj::symbol_ref context::unique_symbol() const
   {
-    return unique_symbol("G-");
+    return unique_symbol("G_");
   }
 
   obj::symbol_ref context::unique_symbol(jtl::immutable_string const &prefix) const
