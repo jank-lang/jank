@@ -338,20 +338,13 @@ OPTIONS
             throw util::format("Invalid optimization level '{}'.", value);
           }
         }
-        else if(check_flag(it, end, value, "--eagerness", true))
+        else if(check_flag(it, end, value, "--eager", false))
         {
-          if(value == "lazy")
-          {
-            opts.eagerness = compilation_eagerness::lazy;
-          }
-          else if(value == "eager")
-          {
-            opts.eagerness = compilation_eagerness::eager;
-          }
-          else
-          {
-            throw util::format("Invalid eagerness type '{}'.", value);
-          }
+          opts.eagerness = compilation_eagerness::eager;
+        }
+        else if(check_flag(it, end, value, "--lazy", false))
+        {
+          opts.eagerness = compilation_eagerness::lazy;
         }
         else if(check_flag(it, end, value, "--runtime", true))
         {
