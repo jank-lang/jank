@@ -131,8 +131,10 @@ OPTIONS
   -O,     --optimization <0 - 3>
                               The optimization level to use for AOT compilation.
   -Odirect-call               Elides the dereferencing of vars for improved performance. (not yet implemented)
-          --eagerness <lazy, eager> [default: lazy]
-                              How eagerly to JIT compile functions.
+          --eager
+                              Eagerly JIT compile functions.
+          --lazy
+                              Lazily JIT compile functions (default).
           --runtime <static, dynamic> [default: static]
                               The AOT runtime to target. The static runtime bakes in
                               all functionality and does not link to Clang/LLVM for easier

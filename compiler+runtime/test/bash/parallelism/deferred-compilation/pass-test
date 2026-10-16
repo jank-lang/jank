@@ -2,4 +2,4 @@
 
 set -euo pipefail
 
-jank --eagerness lazy run main.jank
+jank --lazy run main.jank
