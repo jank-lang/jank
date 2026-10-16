@@ -69,11 +69,13 @@ case "${command}" in
 
   # This follows merge, but also bundles in the Clojure core library object files, following
   # jank's phase 2 building.
-  merge-phase-2)
+  merge-phase-2-dynamic)
     object_files="$(find_objects common) $(find_objects dynamic) $(find_objects phase-2) @jank_clojure_core_binary_output@ @jank_nrepl_server_outputs_str@"
     merge_output="${cmake_binary_dir}/libjank-dynamic-runtime.a"
     build_archive "${object_files}" "${merge_output}"
+    ;;
 
+  merge-phase-2-static)
     object_files="$(find_objects common) $(find_objects static) $(find_objects phase-2) @jank_clojure_core_binary_output@ @jank_nrepl_server_outputs_str@"
     merge_output="${cmake_binary_dir}/libjank-static-runtime.a"
     build_archive "${object_files}" "${merge_output}"

@@ -470,10 +470,11 @@ add_custom_target(
 
 add_custom_command(
   DEPENDS ${jank_standalone_dynamic_lib_deps} jank_exe_phase_2
-  OUTPUT ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime.a
+  OUTPUT ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime.a ${CMAKE_BINARY_DIR}/libjank-static-runtime.a
   COMMAND_EXPAND_LISTS
   VERBATIM
-  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2
+  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2-dynamic
+  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2-static
 )
 add_custom_target(
   jank_standalone_dynamic_lib_phase_2
