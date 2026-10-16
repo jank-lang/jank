@@ -73,8 +73,11 @@
     (string? x)
     (str (count x) ":" x)
 
-    (keyword? x)
-    (write (name x))
+    (or (symbol? x)
+        (keyword? x))
+    (if-let [ns (namespace x)]
+      (write (str ns "/" (name x)))
+      (write (name x)))
 
     (map? x)
     (str "d" (reduce-kv (fn [s k v] (str s (write k) (write v))) "" x) "e")
@@ -83,4 +86,6 @@
     (str "l" (apply str (map write x)) "e")
 
     (nil? x)
-    (throw (ex-info "cannot write nil as bencode" {}))))
+    (throw (ex-info "cannot write nil as bencode" {}))
+
+    :else (throw (ex-info "Unexpected data type for bencode" {:x x}))))
