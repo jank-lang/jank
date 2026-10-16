@@ -92,10 +92,13 @@ namespace jank::ir
     identifier
     var_ref(analyze::expression_position const pos, jtl::immutable_string const &qualified_var);
     identifier type_erase(analyze::expression_position const pos, identifier const &value);
-    /* Gives `value` a debugger-visible alias carrying the raw jank name. */
-    void source_binding(jtl::immutable_string const &raw_name,
-                        identifier const &value,
-                        jtl::ptr<void> const type);
+    /* Gives the binding of `value` a name which debuggers show as `raw_name`. Where `value` is
+     * only visible under this one binding, its defining instruction is renamed, so no extra
+     * C++ is generated. Otherwise, a reference alias is declared. Returns the identifier which
+     * later uses of the binding must use. */
+    identifier source_binding(jtl::immutable_string const &raw_name,
+                              identifier const &value,
+                              jtl::ptr<void> const type);
     identifier dynamic_call(analyze::expression_position const pos,
                             identifier const &fn,
                             native_vector<identifier> &&args);
@@ -169,6 +172,7 @@ namespace jank::ir
     usize fn_index{};
     usize block_index{};
     usize ident_count{};
+    usize debug_name_count{};
     native_unordered_map<jtl::immutable_string, identifier> locals{};
     native_unordered_map<jtl::immutable_string, identifier> local_to_loop_shadow{};
     native_set<jtl::immutable_string> allowed_defers{};

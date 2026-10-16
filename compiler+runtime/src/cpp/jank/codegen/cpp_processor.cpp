@@ -3,6 +3,7 @@
 #include <jank/ir/processor.hpp>
 #include <jank/ir/visit.hpp>
 #include <jank/codegen/cpp_processor.hpp>
+#include <jank/debug/local_names.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/munge.hpp>
 #include <jank/runtime/core/seq.hpp>
@@ -1977,11 +1978,12 @@ namespace jank::codegen
      * to get it to the right type. */
     native_vector<jtl::immutable_string> param_names;
 
+    usize signature_index{};
     for(auto const &param : fn.arity->params)
     {
       if(is_untyped_object(param.type))
       {
-        auto const munged{ munge(param.name->name) };
+        jtl::immutable_string const munged{ debug::parameter_name(param.name->name.c_str(), signature_index).c_str() };
         util::format_to(b.body_buffer, ", jank::runtime::object_ref {}", munged);
         param_names.emplace_back(munged);
       }
@@ -1991,6 +1993,7 @@ namespace jank::codegen
         util::format_to(b.body_buffer, ", jank::runtime::object_ref {}", munged);
         param_names.emplace_back(munged);
       }
+      ++signature_index;
     }
 
     util::format_to(b.body_buffer, ") {\n");
@@ -2014,7 +2017,7 @@ namespace jank::codegen
       /* Raw pointers are unboxed from opaque boxes. */
       if(analyze::cppinterop::is_pointer_type(param.type))
       {
-        auto const munged{ munge(param.name->name) };
+        jtl::immutable_string const munged{ debug::parameter_name(param.name->name.c_str(), param_index).c_str() };
         auto const type_name{ runtime::obj::opaque_box::strip_whitespace(
           get_qualified_type_name(analyze::cppinterop::get_canonical_type(param.type))) };
         util::format_to(
@@ -2030,7 +2033,7 @@ namespace jank::codegen
       /* Any other non-object_ref uses trait conversion. */
       else if(!is_untyped_object(param.type))
       {
-        auto const munged{ munge(param.name->name) };
+        jtl::immutable_string const munged{ debug::parameter_name(param.name->name.c_str(), param_index).c_str() };
         util::format_to(b.body_buffer,
                         "auto &&{}{ jank::runtime::convert<{}>::from_object({}) };",
                         munged,

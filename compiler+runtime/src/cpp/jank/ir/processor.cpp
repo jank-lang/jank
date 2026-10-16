@@ -1,5 +1,6 @@
 #include <jank/ir/processor.hpp>
 #include <jank/ir/print.hpp>
+#include <jank/debug/local_names.hpp>
 #include <jank/util/cli.hpp>
 #include <jank/ir/dominance.hpp>
 #include <jank/ir/opt/hoist_scoped_values.hpp>
@@ -221,16 +222,16 @@ namespace jank::ir
       = b.parameter(analyze::expression_position::value,
                     analyze::cpp_util::untyped_object_ref_type(),
                     runtime::munge(fn_expr->name));
+    usize param_index{};
     for(auto const &param : arity.params)
     {
       auto const &name{ runtime::munge(param.name->get_name()) };
-      b.locals[name]
-        = b.parameter(analyze::expression_position::value, param.type, runtime::munge(name));
-      if(util::cli::opts.debug)
-      {
-        b.source_binding(param.name->get_name(), b.locals[name], param.type);
-      }
+      b.locals[name] = b.parameter(analyze::expression_position::value,
+                                   param.type,
+                                   debug::parameter_name(param.name->get_name().c_str(), param_index++)
+                                     .c_str());
     }
+    b.debug_name_count = param_index;
 
     for(auto const &capture : arity.frame->captures)
     {
@@ -265,11 +266,12 @@ namespace jank::ir
       for(auto const &param : arity.params)
       {
         auto const &name{ runtime::munge(param.name->get_name()) };
-        b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type());
+        auto value{ b.branch_get(b.local_to_loop_shadow[name], untyped_object_ref_type()) };
         if(util::cli::opts.debug)
         {
-          b.source_binding(param.name->get_name(), b.locals[name], untyped_object_ref_type());
+          value = b.source_binding(param.name->get_name(), value, untyped_object_ref_type());
         }
+        b.locals[name] = value;
       }
 
       jtl::option<identifier> body_res;
@@ -487,21 +489,20 @@ namespace jank::ir
     for(auto const &pair : expr->pairs)
     {
       auto const name{ runtime::munge(pair.first->name->get_name()) };
-      b.locals[name] = gen(pair.second, b).unwrap();
+      auto value{ gen(pair.second, b).unwrap() };
 
       auto const local_type{ pair.second->get_type() };
       if(expr->loop_kind != analyze::expr::let::loop_kind::normal && is_typed_object(local_type))
       {
-        auto &local{ b.locals[name] };
-        local = b.type_erase(analyze::expression_position::value, local);
+        value = b.type_erase(analyze::expression_position::value, value);
       }
 
       if(expr->loop_kind == analyze::expr::let::loop_kind::normal && util::cli::opts.debug)
       {
-        b.source_binding(pair.first->name->get_name(),
-                         b.locals[name],
-                         expression_type(pair.second));
+        value = b.source_binding(pair.first->name->get_name(), value, expression_type(pair.second));
       }
+
+      b.locals[name] = value;
     }
 
     if(expr->loop_kind == analyze::expr::let::loop_kind::loop_with_recur)
@@ -533,13 +534,12 @@ namespace jank::ir
       for(auto const &pair : expr->pairs)
       {
         auto const &name{ runtime::munge(pair.first->name->get_name()) };
-        b.locals[name] = b.branch_get(b.local_to_loop_shadow[name], expression_type(pair.second));
+        auto value{ b.branch_get(b.local_to_loop_shadow[name], expression_type(pair.second)) };
         if(util::cli::opts.debug)
         {
-          b.source_binding(pair.first->name->get_name(),
-                           b.locals[name],
-                           expression_type(pair.second));
+          value = b.source_binding(pair.first->name->get_name(), value, expression_type(pair.second));
         }
+        b.locals[name] = value;
       }
 
       auto const body_res{ gen(expr->body, b) };

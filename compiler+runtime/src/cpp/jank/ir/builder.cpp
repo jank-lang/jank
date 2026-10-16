@@ -1,4 +1,5 @@
 #include <jank/ir/builder.hpp>
+#include <jank/ir/rewrite.hpp>
 #include <jank/debug/local_names.hpp>
 #include <jank/util/fmt.hpp>
 #include <jank/runtime/context.hpp>
@@ -332,14 +333,89 @@ namespace jank::ir
     return name;
   }
 
-  void builder::source_binding(jtl::immutable_string const &raw_name,
-                               identifier const &value,
-                               jtl::ptr<void> const type)
+  /* Literals and var lookups get deduplicated and hoisted by later passes, which would merge
+   * or drop the named definition, so they are deliberately absent here. */
+  static bool is_renamable_definition(instruction_kind const kind)
   {
-    identifier name{ debug::encode_local(raw_name.c_str(), ident_count++).c_str() };
-    used_identifiers.emplace(name);
+    return kind == instruction_kind::persistent_list ||
+           kind == instruction_kind::persistent_vector ||
+           kind == instruction_kind::persistent_array_map ||
+           kind == instruction_kind::persistent_hash_map ||
+           kind == instruction_kind::persistent_hash_set ||
+           kind == instruction_kind::function ||
+           kind == instruction_kind::closure ||
+           kind == instruction_kind::local ||
+           kind == instruction_kind::type_erase ||
+           kind == instruction_kind::dynamic_call ||
+           kind == instruction_kind::named_recursion ||
+           kind == instruction_kind::branch_get ||
+           kind == instruction_kind::cpp_into_object ||
+           kind == instruction_kind::cpp_from_object ||
+           kind == instruction_kind::cpp_unsafe_cast ||
+           kind == instruction_kind::cpp_call ||
+           kind == instruction_kind::cpp_constructor_call ||
+           kind == instruction_kind::cpp_member_call ||
+           kind == instruction_kind::cpp_member_access ||
+           kind == instruction_kind::cpp_builtin_operator_call ||
+           kind == instruction_kind::cpp_box ||
+           kind == instruction_kind::cpp_unbox ||
+           kind == instruction_kind::cpp_new;
+  }
+
+  identifier builder::source_binding(jtl::immutable_string const &raw_name,
+                                     identifier const &value,
+                                     jtl::ptr<void> const type)
+  {
+    identifier const encoded{ debug::encode_local(raw_name.c_str(), debug_name_count++).c_str() };
+
+    /* If another local already refers to this value, it must remain visible under that name. */
+    bool shared{};
+    for(auto const &local : locals)
+    {
+      if(local.second == value)
+      {
+        shared = true;
+        break;
+      }
+    }
+
+    instruction *definition{};
+    if(!shared)
+    {
+      auto const fn{ current_function() };
+      auto const find = [&](auto &blk) -> instruction * {
+        for(auto it{ blk.instructions.rbegin() }; it != blk.instructions.rend(); ++it)
+        {
+          if((*it)->name == value)
+          {
+            return (*it).data;
+          }
+        }
+        return nullptr;
+      };
+
+      definition = find(fn->blocks[block_index]);
+      for(usize i{ fn->blocks.size() }; !definition && i > 0; --i)
+      {
+        if(i - 1 != block_index)
+        {
+          definition = find(fn->blocks[i - 1]);
+        }
+      }
+    }
+
+    if(definition && is_renamable_definition(definition->kind))
+    {
+      definition->name = encoded;
+      used_identifiers.emplace(encoded);
+      rewrite_uses(*current_function().data, value, encoded);
+      return encoded;
+    }
+
+    used_identifiers.emplace(encoded);
     current_function()->blocks[block_index].instructions.emplace_back(
-      jtl::make_ref<inst::source_binding>(name, type, location, value));
+      jtl::make_ref<inst::source_binding>(encoded, type, location, value));
+    return value;
   }
 
   identifier builder::dynamic_call(analyze::expression_position const pos,
