@@ -80,10 +80,10 @@
     clojure.core-test.fn-qmark
     clojure.core-test.fnext
     clojure.core-test.fnil
-    ; clojure.core-test.format ; TODO: port format
+    clojure.core-test.format
     clojure.core-test.get
     clojure.core-test.get-in
-    ; clojure.core-test.group-by
+    clojure.core-test.group-by
     clojure.core-test.gt
     clojure.core-test.gt-eq
     clojure.core-test.hash-map
@@ -211,7 +211,7 @@
     ; clojure.core-test.star-squote ; Assertion failed! is_tagged_pointer(val)
     clojure.core-test.str
     clojure.core-test.string-qmark
-    ; clojure.core-test.subs ; FIXME: Failing tests.
+    clojure.core-test.subs
     clojure.core-test.subvec
     ; clojure.core-test.symbol ; lex/invalid-ratio error: A ratio denominator must be an integer.
     clojure.core-test.symbol-qmark
