@@ -97,7 +97,7 @@
 
     :eager?
     (if value
-      ["--eagerness" "eager"]
+      ["--eager"]
       [])
 
     :optimization-level

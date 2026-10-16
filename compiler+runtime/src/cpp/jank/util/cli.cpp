@@ -131,8 +131,10 @@ OPTIONS
   -O,     --optimization <0 - 3>
                               The optimization level to use for AOT compilation.
   -Odirect-call               Elides the dereferencing of vars for improved performance. (not yet implemented)
-          --eagerness <lazy, eager> [default: lazy]
-                              How eagerly to JIT compile functions.
+          --eager
+                              Eagerly JIT compile functions.
+          --lazy
+                              Lazily JIT compile functions (default).
           --runtime <static, dynamic> [default: static]
                               The AOT runtime to target. The static runtime bakes in
                               all functionality and does not link to Clang/LLVM for easier
@@ -336,20 +338,13 @@ OPTIONS
             throw util::format("Invalid optimization level '{}'.", value);
           }
         }
-        else if(check_flag(it, end, value, "--eagerness", true))
+        else if(check_flag(it, end, value, "--eager", false))
         {
-          if(value == "lazy")
-          {
-            opts.eagerness = compilation_eagerness::lazy;
-          }
-          else if(value == "eager")
-          {
-            opts.eagerness = compilation_eagerness::eager;
-          }
-          else
-          {
-            throw util::format("Invalid eagerness type '{}'.", value);
-          }
+          opts.eagerness = compilation_eagerness::eager;
+        }
+        else if(check_flag(it, end, value, "--lazy", false))
+        {
+          opts.eagerness = compilation_eagerness::lazy;
         }
         else if(check_flag(it, end, value, "--runtime", true))
         {
