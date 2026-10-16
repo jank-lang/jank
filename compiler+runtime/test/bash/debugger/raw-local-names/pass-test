@@ -1,0 +1,60 @@
+#!/usr/bin/env bb
+
+^{:clj-kondo/ignore [:namespace-name-mismatch]}
+(ns jank.test.debugger.raw-local-names
+  (:require [babashka.fs :as fs]
+            [babashka.process :as proc]
+            [clojure.string :as string]
+            [clojure.test :as t :refer [deftest is testing]]))
+
+(def this-nsym (ns-name *ns*))
+
+(def module "debug-test.core")
+
+(defn gdb-available? []
+  (some? (fs/which "gdb")))
+
+(deftest jit-locals-use-raw-names
+  (if-not (gdb-available?)
+    (println "Skipping, gdb is not available.")
+    (let [script (str (fs/create-temp-file {:suffix ".gdb"}))]
+      (spit script (string/join "\n" ["set pagination off"
+                                      "set breakpoint pending on"
+                                      "break jank::runtime::println"
+                                      "run"
+                                      "frame 3"
+                                      "info locals"
+                                      "continue"
+                                      "frame 3"
+                                      "info locals"
+                                      ""]))
+      (let [{:keys [out]} (proc/sh ["gdb" "-batch" "-x" script "--args"
+                                    "jank" "--module-path" "src" "run-main" module])]
+        (testing "user locals are shown as written in jank"
+          (is (string/includes? out "foo-bar? = "))
+          (is (string/includes? out "baz = ")))
+        (testing "closure captures are shown as written in jank"
+          (is (string/includes? out "cap-val? = ")))
+        (testing "no encoded names leak"
+          (is (not (string/includes? out "_jd_"))))))))
+
+(deftest aot-object-uses-raw-names
+  (fs/with-temp-dir [target]
+    (let [{:keys [exit]} (proc/sh ["jank" "--module-path" "src" "--target-dir" (str target)
+                                   "compile-module" module])
+          objects (fs/glob target "**/core.o")
+          strings (-> (proc/sh ["strings" (str (first objects))]) :out)]
+      (is (zero? exit))
+      (is (= 1 (count objects)))
+      (is (string/includes? strings "foo-bar?"))
+      (is (string/includes? strings "cap-val?"))
+      (is (not (string/includes? strings "_jd_"))))))
+
+(defn -main []
+  (System/exit
+   (if (t/successful? (t/run-tests this-nsym))
+     0
+     1)))
+
+(when (= *file* (System/getProperty "babashka.file"))
+  (apply -main *command-line-args*))

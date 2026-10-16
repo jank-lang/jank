@@ -1,0 +1,9 @@
+(ns debug-test.core)
+
+(defn -main []
+  (let [foo-bar? 42
+        baz (+ foo-bar? 1)
+        cap-val? (inc baz)
+        show (fn [] (println cap-val?))]
+    (println baz)
+    (show)))
