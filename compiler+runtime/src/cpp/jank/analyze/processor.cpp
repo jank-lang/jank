@@ -2541,6 +2541,12 @@ namespace jank::analyze
       auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
         cpp_util::non_void_type(final_else_type),
         cpp_util::non_void_type(final_then_type)) };
+      auto const final_is_same_type{
+        (cppinterop::get_canonical_type(final_then_type)
+         == cppinterop::get_canonical_type(final_else_type))
+        /* Arrays are pushed to use the common type instead, since they can't be assigned. */
+        && !cppinterop::is_array_type(final_then_type)
+      };
       auto const final_common_type{ cppinterop::get_common_type(final_then_type, final_else_type) };
 
       /* If we have a typed object on one side, and anything other than that same typed object
@@ -2554,7 +2560,7 @@ namespace jank::analyze
       {
         chosen_type = cpp_util::untyped_object_ref_type();
       }
-      else if(final_common_type)
+      else if(!final_is_same_type && final_common_type)
       {
         chosen_type = final_common_type;
       }
