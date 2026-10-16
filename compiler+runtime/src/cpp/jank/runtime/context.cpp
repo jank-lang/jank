@@ -362,7 +362,11 @@ namespace jank::runtime
   {
     static jtl::immutable_string const dot{ "\\." };
     auto const ns{ current_ns() };
+#ifdef JANK_WINDOWS_LIKE
+    return util::format("{}_JJJ_{}_{}",
+#else
     return util::format("{}${}_{}",
+#endif
                         runtime::munge_and_replace(ns->name->get_name(), dot, "_"),
                         prefix.c_str(),
                         ++ns->symbol_counter);

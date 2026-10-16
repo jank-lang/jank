@@ -42,7 +42,11 @@ namespace jank::util
      * into `clojure.core/subs (arity 2)`. */
     if(frame.filename.ends_with(".jank") || frame.filename.ends_with(".cljc"))
     {
+#ifdef JANK_WINDOWS_LIKE
+      static std::regex const clojure_fn_name{ R"((\S+)_JJJ_(\S+)_\d+_(\d+))" };
+#else
       static std::regex const clojure_fn_name{ R"((\S+)\$(\S+)_\d+_(\d+))" };
+#endif
       std::smatch match;
       if(std::regex_search(frame.symbol, match, clojure_fn_name) && match.size() == 4)
       {
