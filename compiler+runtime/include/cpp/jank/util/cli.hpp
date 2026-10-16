@@ -155,6 +155,9 @@ namespace jank::util::cli
     jtl::immutable_string output_module_filename;
     compilation_target output_target{ compilation_target::unspecified };
 
+    /* Repl command. */
+    u16 repl_port{};
+
     /* Error reporting. */
     u8 max_error_candidates{ 3 };
 
