@@ -69,7 +69,6 @@
             buildInputs = with pkgs; [
               llvmPackages.libllvm.dev
               bzip2
-              openssl
               zstd
               libedit
               libxml2
