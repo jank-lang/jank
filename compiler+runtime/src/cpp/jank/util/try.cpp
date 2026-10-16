@@ -10,6 +10,7 @@
 #include <jank/error/report.hpp>
 #include <jank/jit/object.hpp>
 #include <jank/runtime/context.hpp>
+#include <jank/runtime/core/munge.hpp>
 
 namespace jank::util
 {
@@ -37,17 +38,18 @@ namespace jank::util
 
   static cpptrace::stacktrace_frame prettify_symbols(cpptrace::stacktrace_frame frame)
   {
-    /* Clojure functions get turned from `clojure_core_subs_XXX_2`
+    /* Clojure functions get turned from `clojure_core$subs_XXX_2`
      * into `clojure.core/subs (arity 2)`. */
     if(frame.filename.ends_with(".jank") || frame.filename.ends_with(".cljc"))
     {
-      static std::regex const clojure_fn_name{ R"((\S+)_(\S+)_\d+_(\d+))" };
+      static std::regex const clojure_fn_name{ R"((\S+)\$(\S+)_\d+_(\d+))" };
       std::smatch match;
       if(std::regex_search(frame.symbol, match, clojure_fn_name) && match.size() == 4)
       {
         auto ns{ match[1].str() };
         std::ranges::replace(ns, '_', '.');
-        frame.symbol = util::format("{}/{} (arity {})", ns, match[2].str(), match[3].str());
+        auto const name{ runtime::demunge(match[2].str()) };
+        frame.symbol = util::format("{}/{} (arity {})", ns, name, match[3].str());
         return frame;
       }
     }
