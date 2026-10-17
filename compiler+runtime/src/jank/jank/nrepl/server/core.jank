@@ -109,10 +109,14 @@
             (future
               (try
                 (handle-client client*)
-                (catch cpp/std.exception e
-                  (println (.what e)))
-                (catch cpp/jank.runtime.object_ref e
-                  (prn e))))))))))
+                (catch std.exception e
+                  (cpp/jank.util.print_exception e))
+                (catch jank.runtime.object_ref e
+                  (cpp/jank.util.print_exception e))
+                (catch jank.error_ref e
+                  (cpp/jank.util.print_exception e))
+                (catch :default _
+                  (cpp/jank.util.print_current_exception)))))))))
 
 (defn background-main
   "Starts the nREPL server as a background thread. Returns a promise which will be delivered
