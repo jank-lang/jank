@@ -18,7 +18,7 @@ function find_objects
 function subdir
 {
   case "${1}" in
-    libjank-dynamic.a|libjank-compiler.a|libjankzip.a)
+    libjank-dynamic.a|libjank-compiler.a)
       echo "dynamic"
       ;;
     libjank-phase-2.a)
