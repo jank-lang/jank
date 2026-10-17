@@ -106,7 +106,13 @@
         (deliver *ready? nil)
         (while true
           (let [client* (accept server*)]
-            (future (handle-client client*))))))))
+            (future
+              (try
+                (handle-client client*)
+                (catch cpp/std.exception e
+                  (println (.what e)))
+                (catch cpp/jank.runtime.object_ref e
+                  (prn e))))))))))
 
 (defn background-main
   "Starts the nREPL server as a background thread. Returns a promise which will be delivered
