@@ -84,6 +84,26 @@ namespace jank::runtime::obj
     return vec->data.size() - index;
   }
 
+  /* behavior::metadatable */
+  persistent_vector_sequence_ref persistent_vector_sequence::with_meta(object_ref const m) const
+  {
+    auto const meta(behavior::detail::validate_meta(m));
+    auto ret(make_box<persistent_vector_sequence>(vec, index));
+    ret->meta = meta;
+    return ret;
+  }
+
+  object_ref persistent_vector_sequence::get_meta() const
+  {
+    return meta.get();
+  }
+
+  void persistent_vector_sequence::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
+  }
+
   /* behavior::seqable */
   object_ref persistent_vector_sequence::seq() const
   {
