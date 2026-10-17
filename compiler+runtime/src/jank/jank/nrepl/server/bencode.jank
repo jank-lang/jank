@@ -1,7 +1,12 @@
 (ns jank.nrepl.server.bencode)
 
 (defmacro nth-byte [data i]
-  `(int (cpp/aget (cpp/cast jtl.immutable_string ~data) (int ~i))))
+  `(let [s# (cpp/cast jtl.immutable_string ~data)
+         size# (~'.size s#)]
+     (if (< ~i size#)
+       (int (cpp/aget s# (int ~i)))
+       (throw (ex-info "IndexOutOfBounds" {:index ~i
+                                           :size size#})))))
 
 (defmacro index-of [data start c]
   `(loop [i# (int ~start)]
@@ -45,6 +50,8 @@
                          (parse-recur position data))))))
 
     ;; netstring `<length>:<contents>`
+    ;; 0-9
+    (48 49 50 51 52 53 54 55 56 57)
     (let [start @position
           end   (index-of data start 58) ;; \:
           bytes (parse-long (subs data start end))
