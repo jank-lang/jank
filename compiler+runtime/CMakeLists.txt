@@ -498,7 +498,6 @@ if(jank_test)
   include(cmake/dependency/doctest.cmake)
 endif()
 
-find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 find_package(ZLIB REQUIRED)
 
 # CMake changed its mechanism for finding Boost. The old behavior uses
@@ -664,7 +663,6 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/json/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/isocline/include>"
-  ${OPENSSL_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
 )
 
@@ -904,7 +902,6 @@ target_link_libraries(
   LLVM clang-cpp
   isocline
   ZLIB::ZLIB
-  OpenSSL::Crypto
 )
 
 if(WIN32)
@@ -977,6 +974,7 @@ if(jank_test)
     test/cpp/jtl/string_builder.cpp
     test/cpp/jank/util/fmt.cpp
     test/cpp/jank/util/path.cpp
+    test/cpp/jank/util/sha256.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/runtime/behavior/call.cpp
@@ -1024,7 +1022,6 @@ if(jank_test)
     ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a ${jank_link_whole_end}
     ZLIB::ZLIB
     LLVM clang-cpp
-    OpenSSL::Crypto
     doctest::doctest
   )
 

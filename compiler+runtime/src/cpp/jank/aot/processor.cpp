@@ -346,7 +346,7 @@ int main(int argc, const char** argv)
     else
     {
       for(auto const &lib :
-          { "-ljank-dynamic-runtime", "-lLLVM", "-lclang-cpp", "-lcrypto", "-lm", "-lz", "-lzstd" })
+          { "-ljank-dynamic-runtime", "-lLLVM", "-lclang-cpp", "-lm", "-lz", "-lzstd" })
       {
         linker_args.push_back(strdup(lib));
       }
