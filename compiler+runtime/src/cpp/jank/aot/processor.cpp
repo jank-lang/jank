@@ -329,7 +329,7 @@ int main(int argc, const char** argv)
 
     if(util::cli::opts.target_runtime == util::cli::compilation_runtime::static_)
     {
-      for(auto const &lib : { "-ljank-static-runtime", "-lm", "-lz", "-lzstd" })
+      for(auto const &lib : { "-ljank-static-runtime", "-lm", "-lz" })
       {
         linker_args.push_back(strdup(lib));
       }
@@ -345,8 +345,7 @@ int main(int argc, const char** argv)
     }
     else
     {
-      for(auto const &lib :
-          { "-ljank-dynamic-runtime", "-lLLVM", "-lclang-cpp", "-lm", "-lz", "-lzstd" })
+      for(auto const &lib : { "-ljank-dynamic-runtime", "-lLLVM", "-lclang-cpp", "-lm", "-lz" })
       {
         linker_args.push_back(strdup(lib));
       }
@@ -354,6 +353,7 @@ int main(int argc, const char** argv)
 
 #if defined(__MINGW64__)
     linker_args.push_back(strdup("-lpthread"));
+    linker_args.push_back(strdup("-lzstd"));
 #endif
 
     for(auto const &library_dir : util::cli::opts.library_dirs)
