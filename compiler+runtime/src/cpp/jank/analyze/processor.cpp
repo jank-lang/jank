@@ -1360,9 +1360,7 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const default_expr_obj{ it.first().unwrap() };
-    auto const default_expr{
-      analyze(default_expr_obj, current_frame, position, fn_ctx, needs_box)
-    };
+    auto default_expr{ analyze(default_expr_obj, current_frame, position, fn_ctx, needs_box) };
 
     it = it.rest();
     if(it.first().is_none())
@@ -1379,9 +1377,12 @@ namespace jank::analyze
       native_vector<expression_ref> exprs{};
     };
 
+    cppinterop::clang_type chosen_type{ cpp_util::expression_type(default_expr.expect_ok()) };
+
     auto keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
         keys_and_exprs ret{};
+
         for(auto seq{ typed_imap_obj.fresh_seq() }; seq.is_some(); seq = seq.next_in_place())
         {
           auto const e{ seq.first().seq() };
@@ -1392,11 +1393,100 @@ namespace jank::analyze
             return err("Each key in a `case*` map must be an integer.");
           }
           auto const key{ runtime::to_i64(k_obj) };
-          auto const expr{ analyze(v_obj, current_frame, position, fn_ctx, needs_box) };
+          auto expr{ analyze(v_obj, current_frame, position, fn_ctx, needs_box) };
           if(expr.is_err())
           {
             return err(expr.expect_err()->message);
           }
+
+          auto const expr_type{ cpp_util::expression_type(expr.expect_ok()) };
+          auto const is_chosen_type_object{ cpp_util::is_any_object(chosen_type) };
+          auto const is_expr_object{ cpp_util::is_any_object(expr_type) };
+          auto const is_chosen_type_convertible{ cpp_util::is_trait_convertible(chosen_type) };
+          auto const is_expr_convertible{ cpp_util::is_trait_convertible(expr_type) };
+          auto const common_type{ cppinterop::get_common_type(expr_type, chosen_type) };
+          auto const is_same_type{ cppinterop::get_canonical_type(expr_type)
+                                   == cppinterop::get_canonical_type(chosen_type) };
+          auto const is_compatible{ cpp_util::is_implicitly_convertible(expr_type, chosen_type)
+                                    || cpp_util::is_implicitly_convertible(chosen_type, expr_type)
+                                    || common_type };
+
+          /* TODO: Handle `recur`. */
+          if(is_same_type || is_compatible
+             || ((is_expr_object && is_chosen_type_convertible)
+                 || (is_chosen_type_object && is_expr_convertible))
+             || (is_expr_convertible && is_chosen_type_convertible))
+          {
+            auto const expr_needs_conversion{ !is_same_type && !is_compatible && is_expr_convertible
+                                              && (is_chosen_type_object
+                                                  || is_chosen_type_convertible) };
+            auto const chosen_type_needs_conversion{ !is_same_type && !is_compatible
+                                                     && is_chosen_type_convertible
+                                                     && (is_expr_object || is_expr_convertible) };
+
+            if(expr_needs_conversion)
+            {
+              expr = apply_implicit_conversion(expr.expect_ok(),
+                                               cpp_util::untyped_object_ref_type(),
+                                               macro_expansions);
+            }
+
+            if(chosen_type_needs_conversion)
+            {
+              default_expr = apply_implicit_conversion(default_expr.expect_ok(),
+                                                       cpp_util::untyped_object_ref_type(),
+                                                       macro_expansions);
+            }
+
+            auto const final_expr_type{ expr.expect_ok()->get_type() };
+            auto const final_chosen_type{ default_expr.expect_ok()->get_type() };
+            auto [chosen_type_, other_type]{ cpp_util::select_most_native_type(
+              cpp_util::non_void_type(final_expr_type),
+              cpp_util::non_void_type(final_chosen_type)) };
+            auto const final_is_same_type{
+              (cppinterop::get_canonical_type(final_chosen_type)
+               == cppinterop::get_canonical_type(final_expr_type))
+              /* Arrays are pushed to use the common type instead, since they can't be assigned. */
+              && !cppinterop::is_array_type(final_expr_type)
+            };
+            auto const final_common_type{ cppinterop::get_common_type(final_expr_type,
+                                                                      final_chosen_type) };
+
+            /* If we have a typed object on one side, and anything other than that same typed object
+             * on the other side, we need to type-erase to find the common type.
+             *
+             * We also calculate the types again, since they may have changed due to the implicit
+             * conversions above. */
+            if(cpp_util::is_typed_object(chosen_type_) && cpp_util::is_any_object(other_type)
+               && cppinterop::get_canonical_type(chosen_type_)
+                 != cppinterop::get_canonical_type(other_type))
+            {
+              chosen_type = cpp_util::untyped_object_ref_type();
+            }
+            else if(!final_is_same_type && final_common_type)
+            {
+              chosen_type = final_common_type;
+            }
+            /* If the chosen type is implicitly convertible to the other type, and both are native types,
+             * we fall into option 2 from above. In that case, we actually want the other type.
+             *
+             * Example: if branch returning std::string and C string literal. Regardless of which branch
+             * it's in, we want to take the std::string as our chosen type. */
+            else if(!cpp_util::is_any_object(chosen_type_) && !cpp_util::is_any_object(other_type)
+                    && is_compatible
+                    && cpp_util::is_implicitly_convertible(chosen_type_, other_type))
+            {
+              std::swap(chosen_type, other_type);
+            }
+          }
+          else
+          {
+            return err(
+              util::format("Incompatible types in two branches. Branch: {} - Common Type: {}",
+                           cpp_util::get_qualified_type_name(expr_type),
+                           cpp_util::get_qualified_type_name(common_type)));
+          }
+
           ret.keys.push_back(key);
           ret.exprs.push_back(expr.expect_ok());
         }
@@ -1420,6 +1510,7 @@ namespace jank::analyze
                                       current_frame,
                                       needs_box,
                                       o,
+                                      chosen_type,
                                       value_expr.expect_ok(),
                                       shift,
                                       mask,
