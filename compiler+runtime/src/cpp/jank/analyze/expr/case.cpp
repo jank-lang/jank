@@ -10,6 +10,7 @@ namespace jank::analyze::expr
                local_frame_ptr const frame,
                bool const needs_box,
                object_ref const form,
+               jtl::ptr<void> const type,
                expression_ref const value_expr,
                i64 const shift,
                i64 const mask,
@@ -17,6 +18,7 @@ namespace jank::analyze::expr
                native_vector<i64> &&keys,
                native_vector<expression_ref> &&exprs)
     : expression{ expr_kind, position, frame, needs_box, form }
+    , type{ type }
     , value_expr{ value_expr }
     , shift{ shift }
     , mask{ mask }
@@ -64,5 +66,10 @@ namespace jank::analyze::expr
       f(expr);
     }
     expression::walk(f);
+  }
+
+  jtl::ptr<void> case_::get_type() const
+  {
+    return type;
   }
 }
