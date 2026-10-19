@@ -11,6 +11,12 @@
             [jank.nrepl.server.handler.eval]
             [jank.nrepl.server.handler.lookup]))
 
+(cpp/raw "
+namespace jank::util
+{
+  void print_exception(error_ref e);
+}")
+
 (def *verbose (atom false))
 (def *ready?
   "A promise that is fulfilled when the nrepl server is ready or if an error
@@ -110,13 +116,15 @@
               (try
                 (handle-client client*)
                 (catch std.exception e
-                  (cpp/jank.util.print_exception e))
+                  (println "An exception was thrown from the nREPL server thread:" (.what e)))
                 (catch jank.runtime.object_ref e
-                  (cpp/jank.util.print_exception e))
+                  (println "An exception was thrown from the nREPL server thread.")
+                  (prn e))
                 (catch jank.error_ref e
+                  (println "An exception was thrown from the nREPL server thread.")
                   (cpp/jank.util.print_exception e))
                 (catch :default _
-                  (cpp/jank.util.print_current_exception))))))))))
+                  (println "An unknown exception was thrown from the nREPL server thread."))))))))))
 
 (defn background-main
   "Starts the nREPL server as a background thread. Returns a promise which will be delivered
