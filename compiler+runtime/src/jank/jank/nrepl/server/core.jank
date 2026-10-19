@@ -116,7 +116,7 @@
                 (catch jank.error_ref e
                   (cpp/jank.util.print_exception e))
                 (catch :default _
-                  (cpp/jank.util.print_current_exception)))))))))
+                  (cpp/jank.util.print_current_exception))))))))))
 
 (defn background-main
   "Starts the nREPL server as a background thread. Returns a promise which will be delivered
