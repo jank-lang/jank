@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime::obj
 {
@@ -44,6 +45,11 @@ namespace jank::runtime::obj
     /* behavior::countable */
     usize count() const;
 
+    /* behavior::metadatable */
+    native_array_sequence_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
+    void set_meta(object_ref const o);
+
     /* behavior::sequence_like */
     object_ref first() const override;
     object_ref next() const override;
@@ -58,5 +64,9 @@ namespace jank::runtime::obj
     jtl::ptr<object_ref> arr{};
     usize index{};
     usize size{};
+
+    /*** XXX: Everything here is thread-safe. ***/
+  protected:
+    lazy_meta meta;
   };
 }

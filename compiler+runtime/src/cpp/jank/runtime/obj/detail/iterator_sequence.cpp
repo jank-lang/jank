@@ -86,6 +86,29 @@ namespace jank::runtime::obj::detail
     return size;
   }
 
+  /* behavior::metadatable */
+  template <typename Derived, typename It>
+  object_ref iterator_sequence<Derived, It>::with_meta(object_ref const m) const
+  {
+    auto const meta(behavior::detail::validate_meta(m));
+    auto ret(make_box<Derived>(coll, begin, end, size));
+    ret->meta = meta;
+    return ret;
+  }
+
+  template <typename Derived, typename It>
+  object_ref iterator_sequence<Derived, It>::get_meta() const
+  {
+    return meta.get();
+  }
+
+  template <typename Derived, typename It>
+  void iterator_sequence<Derived, It>::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
+  }
+
   template <typename Derived, typename It>
   object_ref iterator_sequence<Derived, It>::first() const
   {

@@ -86,6 +86,26 @@ namespace jank::runtime::obj
     return count;
   }
 
+  /* behavior::metadatable */
+  persistent_string_sequence_ref persistent_string_sequence::with_meta(object_ref const m) const
+  {
+    auto const meta(behavior::detail::validate_meta(m));
+    auto ret(make_box<persistent_string_sequence>(str, index));
+    ret->meta = meta;
+    return ret;
+  }
+
+  object_ref persistent_string_sequence::get_meta() const
+  {
+    return meta.get();
+  }
+
+  void persistent_string_sequence::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
+  }
+
   /* behavior::seqable */
   object_ref persistent_string_sequence::seq() const
   {
