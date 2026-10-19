@@ -14,10 +14,13 @@
   (let [ns  (get msg "ns")
         sym (get msg "sym")]
     (if-let [m (lookup ns sym)]
-      {:info   {:ns           ns
-                :name         sym
-                :arglists     (:arglists m)
-                :arglists-str (str (:arglists m))
-                :doc          (str (:doc m))}
+      {:info (merge
+              {:ns ns
+               :name sym}
+              (when-let [doc (:doc m)]
+                {:doc (str doc)})
+              (when-let [arglists (:arglists m)]
+                {:arglists arglists
+                 :arglists-str (str arglists)}))
        :status [:done]}
       {:status [:error :done]})))
