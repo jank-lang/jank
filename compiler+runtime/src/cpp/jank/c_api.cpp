@@ -380,7 +380,7 @@ extern "C"
 
   jank_object_ref jank_const_nil()
   {
-    return jank_nil.raw();
+    return jank_nil.erase().raw();
   }
 
   jank_object_ref jank_const_true()
