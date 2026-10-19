@@ -76,7 +76,7 @@ namespace jank::runtime::obj
   native_array_sequence_ref native_array_sequence::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<native_array_sequence>(arr, index, size));
+    auto const ret(make_box<native_array_sequence>(arr, index, size));
     ret->meta = meta;
     return ret;
   }

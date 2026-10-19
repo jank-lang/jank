@@ -88,7 +88,7 @@ namespace jank::runtime::obj
   persistent_vector_sequence_ref persistent_vector_sequence::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<persistent_vector_sequence>(vec, index));
+    auto const ret(make_box<persistent_vector_sequence>(vec, index));
     ret->meta = meta;
     return ret;
   }

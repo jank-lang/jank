@@ -91,7 +91,7 @@ namespace jank::runtime::obj::detail
   object_ref iterator_sequence<Derived, It>::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<Derived>(coll, begin, end, size));
+    auto const ret(make_box<Derived>(coll, begin, end, size));
     ret->meta = meta;
     return ret;
   }

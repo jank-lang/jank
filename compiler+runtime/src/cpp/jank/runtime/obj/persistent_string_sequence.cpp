@@ -90,7 +90,7 @@ namespace jank::runtime::obj
   persistent_string_sequence_ref persistent_string_sequence::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<persistent_string_sequence>(str, index));
+    auto const ret(make_box<persistent_string_sequence>(str, index));
     ret->meta = meta;
     return ret;
   }

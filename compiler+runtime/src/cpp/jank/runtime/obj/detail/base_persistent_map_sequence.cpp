@@ -97,7 +97,7 @@ namespace jank::runtime::obj::detail
   object_ref base_persistent_map_sequence<PT, IT>::with_meta(object_ref const m) const
   {
     auto const meta(behavior::detail::validate_meta(m));
-    auto ret(make_box<PT>(coll, begin, end));
+    auto const ret(make_box<PT>(coll, begin, end));
     ret->meta = meta;
     return ret;
   }
