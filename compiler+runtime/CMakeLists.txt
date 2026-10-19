@@ -780,6 +780,7 @@ add_library(
   src/cpp/jank/jit/object_static.cpp
   src/cpp/jank/jit/processor_static.cpp
   src/cpp/jank/codegen/api_static.cpp
+  src/cpp/jank/util/uncompress.cpp
 )
 set_target_properties(jank_static_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
 set_property(TARGET jank_static_lib PROPERTY OUTPUT_NAME jank-static)
