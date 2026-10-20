@@ -1912,7 +1912,9 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer, "GC_free({});\n", inst->value);
 
-    return "jank::runtime::jank_nil";
+    util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {};\n", inst->name);
+
+    return inst->name;
   }
 
   jtl::option<identifier> gen(ir::instruction_ref const inst, builder &b)
