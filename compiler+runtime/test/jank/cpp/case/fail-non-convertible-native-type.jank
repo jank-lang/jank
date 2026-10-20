@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::case_::fail_one_native_type
+          {
+            struct foo
+            { };
+          }")
+(let* [i (cpp/jank.cpp.case_.fail_one_native_type.foo)
+       r (case true
+           true :success
+           false i)]
+  r)
