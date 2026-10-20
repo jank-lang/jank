@@ -74,6 +74,10 @@
   "Parse a bencode value from a string, returning jank data."
   [s]
   (try
+    ;; When presented with incomplete input, parse simply returns nil. This means
+    ;; we cannot resume a previous parse and must start from the beginning every
+    ;; time. In the worst case, this means parsing a message could become O(n^2).
+    ;; For now, this trade-off is acceptable to keep the implementation simple.
     (when s
       (let [position (volatile! 0)
             value (parse-recur position s)]
