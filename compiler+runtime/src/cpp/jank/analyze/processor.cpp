@@ -423,7 +423,8 @@ namespace jank::analyze
       case expr::cpp_value::value_kind::enum_constant:
       case expr::cpp_value::value_kind::member_access:
         return error::analyze_invalid_cpp_call(
-                 util::format("This value is not callable.", scope_name),
+                 util::format("Values of type `{}` are not callable.",
+                              cpp_util::get_qualified_type_name(val->get_type())),
                  object_source(val->form),
                  latest_expansion(macro_expansions))
           ->add_usage(object_source(form));
