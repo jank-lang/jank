@@ -1347,24 +1347,22 @@ namespace jank::analyze
             return branch_common_type_result.expect_err();
           }
 
-          auto const [common_type,
-                      expr_needs_conversion,
-                      default_expr_needs_conversion]{ branch_common_type_result.expect_ok() };
+          auto const branch_common_type{ branch_common_type_result.expect_ok() };
 
-          if(expr_needs_conversion)
+          if(branch_common_type.then_needs_conversion)
           {
             expr = apply_implicit_conversion(expr.expect_ok(),
                                              cpp_util::untyped_object_ref_type(),
                                              macro_expansions);
           }
-          if(default_expr_needs_conversion)
+          if(branch_common_type.else_needs_conversion)
           {
             default_expr = apply_implicit_conversion(default_expr.expect_ok(),
                                                      cpp_util::untyped_object_ref_type(),
                                                      macro_expansions);
           }
 
-          chosen_type = common_type;
+          chosen_type = branch_common_type.type;
           ret.keys.push_back(key);
           ret.exprs.push_back(expr.expect_ok());
         }
@@ -2532,17 +2530,15 @@ namespace jank::analyze
                                                 latest_expansion(macro_expansions));
     }
 
-    auto const [common_type,
-                then_needs_conversion,
-                else_needs_conversion]{ branch_common_type_result.expect_ok() };
+    auto const branch_common_type{ branch_common_type_result.expect_ok() };
 
-    if(then_needs_conversion)
+    if(branch_common_type.then_needs_conversion)
     {
       then_expr = apply_implicit_conversion(then_expr.expect_ok(),
                                             cpp_util::untyped_object_ref_type(),
                                             macro_expansions);
     }
-    if(else_expr_opt.is_some() && else_needs_conversion)
+    if(else_expr_opt.is_some() && branch_common_type.else_needs_conversion)
     {
       else_expr_opt = apply_implicit_conversion(else_expr_opt.unwrap(),
                                                 cpp_util::untyped_object_ref_type(),
@@ -2554,7 +2550,7 @@ namespace jank::analyze
                                     current_frame,
                                     needs_box,
                                     o,
-                                    common_type,
+                                    branch_common_type.type,
                                     condition_expr.expect_ok(),
                                     then_expr.expect_ok(),
                                     else_expr_opt);
