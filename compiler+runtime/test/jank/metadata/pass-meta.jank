@@ -1,3 +1,8 @@
+; Default
+(assert (= nil (meta 'foo)))
+(assert (= nil (meta [])))
+(assert (= nil (meta ^{} [])))
+
 ; Metadatable
 (assert (:foo (meta ^:foo {})))
 (assert (:foo (meta ^:foo [])))

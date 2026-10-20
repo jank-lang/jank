@@ -229,7 +229,13 @@ namespace jank::runtime
   object_ref strip_source_from_meta(object_ref const meta)
   {
     auto const kw{ __rt_ctx->intern_keyword("jank/source").expect_ok() };
-    return dissoc(meta, kw);
+    auto const res{ dissoc(meta, kw) };
+    /* We turn empty meta into nil, since it's preferable to not have meta at all. */
+    if(is_empty(res))
+    {
+      return {};
+    }
+    return res;
   }
 
   object_ref with_source_meta(object_ref const o, read::source const &source)
