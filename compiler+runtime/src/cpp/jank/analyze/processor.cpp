@@ -1279,6 +1279,32 @@ namespace jank::analyze
     return jtl::make_ref<expr::def>(position, current_frame, true, l, qualified_sym, value_expr);
   }
 
+  /* We use this to find `recur` expressions. We need to recursively dig into `do` and `let`
+   * expressions to see if their tail expression is a `recur`. Every other expression is
+   * just returned as is. */
+  static expression_ref resolve_tail_expression(expression_ref const expr)
+  {
+    if(expr->kind == expression_kind::do_)
+    {
+      auto const do_{ static_box_cast<expr::do_>(expr) };
+      if(!do_->values.empty())
+      {
+        return resolve_tail_expression(do_->values.back());
+      }
+      return expr;
+    }
+    if(expr->kind == expression_kind::let)
+    {
+      auto const let{ static_box_cast<expr::let>(expr) };
+      if(!let->body->values.empty())
+      {
+        return resolve_tail_expression(let->body->values.back());
+      }
+      return expr;
+    }
+    return expr;
+  }
+
   processor::expression_result
   processor::analyze_case(obj::persistent_list_ref const o,
                           local_frame_ptr const current_frame,
@@ -1378,6 +1404,8 @@ namespace jank::analyze
     };
 
     auto chosen_type{ cpp_util::expression_type(default_expr.expect_ok()) };
+    auto has_recur{ resolve_tail_expression(default_expr.expect_ok())->kind
+                    == expression_kind::recur };
 
     auto keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
@@ -1398,14 +1426,14 @@ namespace jank::analyze
             return err(expr.expect_err()->message);
           }
 
+          has_recur = has_recur
+            || resolve_tail_expression(expr.expect_ok())->kind == expression_kind::recur;
           auto const branch_common_type_result{
-            /* TODO: Handle the `recur` case. */
-            cpp_util::find_branch_common_type(expr.expect_ok(), default_expr.expect_ok(), false)
+            cpp_util::find_branch_common_type(expr.expect_ok(), default_expr.expect_ok(), has_recur)
           };
 
           if(branch_common_type_result.is_err())
           {
-            /* TODO: Attach error info. better. */
             return branch_common_type_result.expect_err();
           }
 
@@ -2494,32 +2522,6 @@ namespace jank::analyze
     }
 
     return let;
-  }
-
-  /* We use this to find `recur` expressions. We need to recursively dig into `do` and `let`
-   * expressions to see if their tail expression is a `recur`. Every other expression is
-   * just returned as is. */
-  static expression_ref resolve_tail_expression(expression_ref const expr)
-  {
-    if(expr->kind == expression_kind::do_)
-    {
-      auto const do_{ static_box_cast<expr::do_>(expr) };
-      if(!do_->values.empty())
-      {
-        return resolve_tail_expression(do_->values.back());
-      }
-      return expr;
-    }
-    if(expr->kind == expression_kind::let)
-    {
-      auto const let{ static_box_cast<expr::let>(expr) };
-      if(!let->body->values.empty())
-      {
-        return resolve_tail_expression(let->body->values.back());
-      }
-      return expr;
-    }
-    return expr;
   }
 
   processor::expression_result

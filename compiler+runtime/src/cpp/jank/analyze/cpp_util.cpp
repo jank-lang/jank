@@ -1845,7 +1845,6 @@ namespace jank::analyze::cpp_util
                                         && (is_else_object || is_else_convertible) };
       auto const else_needs_conversion{ !is_same_type && !is_compatible && is_else_convertible
                                         && (is_then_object || is_then_convertible) };
-      /* TODO: Not sure if this works with subtyping. For ex. whan if a candidate type for the branch is a `persistent_vector_ref`? */
       auto const final_then_type{ then_needs_conversion ? cpp_util::untyped_object_ref_type()
                                                         : then_expr->get_type() };
       auto const final_else_type{ else_expr_opt.is_some() && !else_needs_conversion
