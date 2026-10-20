@@ -1,0 +1,5 @@
+(let* [s (cpp/std.string)
+       r (case true
+           true s
+           "")]
+  :success)
