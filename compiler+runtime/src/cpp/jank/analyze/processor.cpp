@@ -3526,7 +3526,23 @@ namespace jank::analyze
                                             expr::cpp_value::value_kind::function);
     }
 
-    auto type{ cppinterop::get_type_from_scope(scope) };
+    auto resolved_scope{ scope };
+    if(cppinterop::is_class_template(scope) && (is_ctor || position == expression_position::call))
+    {
+      auto const instantiated_scope{ cpp_util::instantiate(scope, {}) };
+      if(instantiated_scope.is_err())
+      {
+        return error::analyze_invalid_cpp_constructor_call(
+          util::format("`{}` cannot be constructed because it is missing the necessary "
+                       "template parameters.",
+                       cpp_util::get_qualified_name(scope)),
+          object_source(sym),
+          latest_expansion(macro_expansions));
+      }
+      resolved_scope = instantiated_scope.expect_ok();
+    }
+
+    auto type{ cppinterop::get_type_from_scope(resolved_scope) };
 
     /* Primitive types through an alias use a scope which needs to be resolved before
      * we can figure out that we're working with a primitive type. */
@@ -3541,7 +3557,8 @@ namespace jank::analyze
                                             expr::cpp_value::value_kind::constructor);
     }
 
-    if(cppinterop::is_class(scope) || cppinterop::is_template_specialization(scope)
+    if(cppinterop::is_class(resolved_scope)
+       || cppinterop::is_template_specialization(resolved_scope)
        || ((position == expression_position::type || position == expression_position::call)
            && cppinterop::is_enum_type(type) && !cppinterop::is_enum_constant(scope)))
     {
@@ -3552,14 +3569,14 @@ namespace jank::analyze
                                               needs_box,
                                               sym,
                                               type,
-                                              scope,
+                                              resolved_scope,
                                               expr::cpp_value::value_kind::constructor);
       }
 
       return jtl::make_ref<expr::cpp_type>(position, current_frame, needs_box, sym, type);
     }
 
-    if(cppinterop::is_class_template(scope) && is_ctor)
+    if(cppinterop::is_class_template(resolved_scope) && is_ctor)
     {
       /* TODO: Specify what's missing, where the template is defined, etc. */
       return error::analyze_invalid_cpp_constructor_call(
