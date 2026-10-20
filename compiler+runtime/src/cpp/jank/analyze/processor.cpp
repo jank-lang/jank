@@ -1287,7 +1287,7 @@ namespace jank::analyze
       native_vector<expression_ref> exprs{};
     };
 
-    cppinterop::clang_type chosen_type{ cpp_util::expression_type(default_expr.expect_ok()) };
+    auto chosen_type{ cpp_util::expression_type(default_expr.expect_ok()) };
 
     auto keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
