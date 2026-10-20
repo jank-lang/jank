@@ -369,6 +369,12 @@ namespace jank::analyze::cppinterop
     return Cpp::IsTemplatedFunction(func);
   }
 
+  bool is_bodyless_function_template_specialization(clang_decl func)
+  {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    return Cpp::IsBodylessFunctionTemplateSpecialization(func);
+  }
+
   void
   lookup_constructors(std::string const &name, clang_decl parent, std::vector<clang_decl> &funcs)
   {
