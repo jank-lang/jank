@@ -50,6 +50,13 @@ namespace jank::analyze::cpp_util
      * be found. */
     if(cppinterop::is_template_specialization(scope) || cppinterop::is_templated_function(scope))
     {
+      /* A function template without a body in any header can't be instantiated, but it
+       * might be explicitly instantiated in a library which we can JIT link against later. */
+      if(cppinterop::is_bodyless_function_template_specialization(scope))
+      {
+        return ok();
+      }
+
       //util::println("instantiating {}", get_qualified_name(scope));
       /* TODO: Get template arg info and specify all of it? */
       if(cppinterop::instantiate_template(scope))

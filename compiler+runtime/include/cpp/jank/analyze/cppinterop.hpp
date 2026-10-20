@@ -95,6 +95,7 @@ namespace jank::analyze::cppinterop
   bool is_function_deleted(clang_decl function);
   bool is_function_type_const(clang_type function_type);
   bool is_templated_function(clang_decl func);
+  bool is_bodyless_function_template_specialization(clang_decl func);
   void
   lookup_constructors(std::string const &name, clang_decl parent, std::vector<clang_decl> &funcs);
   bool is_method(clang_decl method);
