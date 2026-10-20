@@ -1,8 +1,8 @@
 #pragma once
 
+#include <atomic>
 #include <functional>
-
-#include <folly/Synchronized.h>
+#include <folly/SharedMutex.h>
 
 #include <jtl/result.hpp>
 
@@ -143,7 +143,8 @@ namespace jank::runtime
 
     /*** XXX: Everything here is thread-safe. ***/
   private:
-    folly::Synchronized<object_ref> root;
+    folly::SharedMutex write_mutex;
+    std::atomic<object_ref> root;
     lazy_meta meta;
 
   public:
