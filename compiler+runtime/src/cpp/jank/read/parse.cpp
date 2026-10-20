@@ -1438,12 +1438,10 @@ namespace jank::read::parse
     }
 
     auto const sym(runtime::expect_object<runtime::obj::symbol>(form));
-    if(sym->ns.empty())
+    if(sym->ns.empty()
+       && (sym->name == "finally" || sym->name == "catch" || sym->name.starts_with(".")))
     {
-      if(sym->name == "finally" || sym->name == "catch" || sym->name.starts_with("."))
-      {
-        return true;
-      }
+      return true;
     }
 
     static native_set<jtl::immutable_string> const specials{
