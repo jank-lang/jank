@@ -143,6 +143,10 @@ jobs:
           curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
           ./install-bb
 
+          curl -sL https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein -o lein
+          chmod +x lein
+          mv lein /usr/local/bin/lein
+
           curl -sL https://raw.githubusercontent.com/borkdude/deps.clj/master/install > install_clojure
           ./install_clojure --as-clj
 
