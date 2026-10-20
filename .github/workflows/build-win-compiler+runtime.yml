@@ -91,7 +91,7 @@ jobs:
       - name: Install Homebrew packages
         if: runner.os == 'macOS'
         run: |
-          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib doctest boost clojure/tools/clojure
+          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib doctest boost clojure/tools/clojure leiningen
       - uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows'
         with:
