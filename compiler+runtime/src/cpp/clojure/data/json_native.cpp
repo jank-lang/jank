@@ -90,23 +90,13 @@ namespace clojure::data::json_native
         {
           auto map(nlohmann::json::object());
 
-          if(!truthy(opts.value_fn))
+          for(auto const &kv : typed_o->data)
           {
-            for(auto const &kv : typed_o->data)
+            auto const value(truthy(opts.value_fn) ? opts.value_fn.call(kv.first, kv.second)
+                                                   : kv.second);
+            if(!truthy(opts.value_fn) || opts.value_fn != value)
             {
-              map[resolve_key(kv.first, opts)] = write(kv.second, opts);
-            }
-          }
-          else
-          {
-            for(auto const &kv : typed_o->data)
-            {
-              auto const value(opts.value_fn.call(kv.first, kv.second));
-
-              if(opts.value_fn != value)
-              {
-                map[resolve_key(kv.first, opts)] = write(value, opts);
-              }
+              map[resolve_key(kv.first, opts)] = write(value, opts);
             }
           }
 
@@ -177,24 +167,17 @@ namespace clojure::data::json_native
         {
           obj::transient_hash_map m{};
 
-          if(!truthy(opts.value_fn))
+          for(auto const &[k, v] : json.items())
           {
-            for(auto const &[k, v] : json.items())
-            {
-              m.assoc_in_place(make_box<obj::persistent_string>(k), read(v, opts));
-            }
-          }
-          else
-          {
-            for(auto const &[k, v] : json.items())
-            {
-              auto const key(opts.key_fn.call(make_box<obj::persistent_string>(k)));
-              auto const value(opts.value_fn.call(key, read(v, opts)));
+            auto const key_initial(make_box<obj::persistent_string>(k));
+            auto const value_initial(read(v, opts));
 
-              if(opts.value_fn != value)
-              {
-                m.assoc_in_place(key, value);
-              }
+            auto const key(truthy(opts.key_fn) ? opts.key_fn.call(key_initial) : key_initial);
+            auto const value(truthy(opts.value_fn) ? opts.value_fn.call(key, value_initial)
+                                                   : value_initial);
+            if(!truthy(opts.value_fn) || opts.value_fn != value)
+            {
+              m.assoc_in_place(key, value);
             }
           }
 
