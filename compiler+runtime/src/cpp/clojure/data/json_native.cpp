@@ -8,7 +8,6 @@
 #include <jank/runtime/behavior/nameable.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/make_box.hpp>
-#include <jank/runtime/core/truthy.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/transient_hash_map.hpp>
 #include <jank/runtime/obj/transient_vector.hpp>
@@ -21,7 +20,7 @@ namespace clojure::data::json_native
 
   static jtl::immutable_string resolve_key(object_ref const key, write_options const &opts)
   {
-    if(truthy(opts.key_fn))
+    if(opts.key_fn.is_some())
     {
       return try_object<obj::persistent_string>(opts.key_fn.call(key))->data;
     }
@@ -74,7 +73,7 @@ namespace clojure::data::json_native
 
         if constexpr(jtl::is_any_same<T, obj::inst>)
         {
-          if(truthy(opts.date_formatter))
+          if(opts.date_formatter.is_some())
           {
             return try_object<obj::persistent_string>(opts.date_formatter.call(o))->data;
           }
@@ -88,13 +87,13 @@ namespace clojure::data::json_native
 
         if constexpr(behavior::map_like<T>)
         {
-          nlohmann::json map{};
+          auto map(nlohmann::json::object());
 
           for(auto const &kv : typed_o->data)
           {
-            auto const value(truthy(opts.value_fn) ? opts.value_fn.call(kv.first, kv.second)
-                                                   : kv.second);
-            if(opts.value_fn != value)
+            auto const value(opts.value_fn.is_some() ? opts.value_fn.call(kv.first, kv.second)
+                                                     : kv.second);
+            if(opts.value_fn.is_nil() || opts.value_fn != value)
             {
               map[resolve_key(kv.first, opts)] = write(value, opts);
             }
@@ -172,10 +171,10 @@ namespace clojure::data::json_native
             auto const key_initial(make_box<obj::persistent_string>(k));
             auto const value_initial(read(v, opts));
 
-            auto const key(truthy(opts.key_fn) ? opts.key_fn.call(key_initial) : key_initial);
-            auto const value(truthy(opts.value_fn) ? opts.value_fn.call(key, value_initial)
-                                                   : value_initial);
-            if(opts.value_fn != value)
+            auto const key(opts.key_fn.is_some() ? opts.key_fn.call(key_initial) : key_initial);
+            auto const value(opts.value_fn.is_some() ? opts.value_fn.call(key, value_initial)
+                                                     : value_initial);
+            if(opts.value_fn.is_nil() || opts.value_fn != value)
             {
               m.assoc_in_place(key, value);
             }
