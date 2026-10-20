@@ -27,6 +27,7 @@ TEST_CASE("numeric equality preserves numeric categories")
   auto const check_symmetric_equal
     = [](object_ref const lhs, object_ref const rhs, bool const expected) {
         CHECK(equal(lhs, rhs) == expected);
+        /* NOLINTNEXTLINE(readability-suspicious-call-argument) */
         CHECK(equal(rhs, lhs) == expected);
       };
 

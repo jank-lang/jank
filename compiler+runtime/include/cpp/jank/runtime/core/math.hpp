@@ -2,6 +2,7 @@
 
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/core/make_box.hpp>
+#include <jank/runtime/obj/big_integer.hpp>
 #include <jank/util/fmt.hpp>
 
 namespace jank::runtime
@@ -16,6 +17,11 @@ namespace jank::runtime
     using big_decimal_ref = oref<struct big_decimal>;
     using character_ref = oref<struct character>;
   }
+
+  using obj::operator*;
+  using obj::operator+;
+  using obj::operator-;
+  using obj::operator/;
 
   namespace detail
   {
