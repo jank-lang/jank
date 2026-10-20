@@ -1438,7 +1438,8 @@ namespace jank::read::parse
     }
 
     auto const sym(runtime::expect_object<runtime::obj::symbol>(form));
-    if(sym->ns.empty() && (sym->name == "finally" || sym->name == "catch"))
+    if(sym->ns.empty()
+       && (sym->name == "finally" || sym->name == "catch" || sym->name.starts_with(".")))
     {
       return true;
     }
@@ -1497,7 +1498,7 @@ namespace jank::read::parse
           sym = make_box<obj::symbol>(var->n->name->name, sym->name);
         }
       }
-      else if(!sym->ns.empty() && sym->name != "&")
+      else if(!sym->ns.empty())
       {
         sym = __rt_ctx->qualify_symbol(sym);
       }
