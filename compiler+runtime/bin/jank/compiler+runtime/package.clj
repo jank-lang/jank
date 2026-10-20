@@ -30,7 +30,7 @@ Architecture: amd64
 Section: devel
 Priority: optional
 Maintainer: Jeaye Wilkerson <jeaye@jank-lang.org>
-Depends: libssl-dev, gcc, libbz2-dev, libzstd-dev, libxml2-dev, %s, zlib1g-dev, libboost-all-dev
+Depends: gcc, libbz2-dev, libzstd-dev, libxml2-dev, %s, zlib1g-dev, libboost-all-dev
 Description: The native Clojure dialect with seamless C++ interop.
 " jank-version group libstdc++)]
     (util/quiet-shell {:dir compiler+runtime-dir
