@@ -91,7 +91,7 @@ jobs:
       - name: Install Homebrew packages
         if: runner.os == 'macOS'
         run: |
-          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib doctest boost clojure/tools/clojure
+          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib doctest boost clojure/tools/clojure leiningen
       - uses: msys2/setup-msys2@v2
         if: runner.os == 'Windows'
         with:
@@ -142,6 +142,10 @@ jobs:
         run: |
           curl -sL -o install-bb https://raw.githubusercontent.com/babashka/babashka/master/install
           ./install-bb
+
+          curl -sL https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein -o lein
+          chmod +x lein
+          mv lein /usr/local/bin/lein
 
           curl -sL https://raw.githubusercontent.com/borkdude/deps.clj/master/install > install_clojure
           ./install_clojure --as-clj

@@ -1,13 +1,19 @@
 (ns jank.nrepl.server.bencode)
 
 (defmacro nth-byte [data i]
-  `(int (cpp/aget (cpp/cast jtl.immutable_string ~data) (int ~i))))
+  `(when (< ~i (count ~data))
+     (int (cpp/aget (cpp/cast jtl.immutable_string ~data) (int ~i)))))
 
 (defmacro index-of [data start c]
   `(loop [i# (int ~start)]
-     (if (== ~c (nth-byte ~data i#))
-       i#
-       (recur (inc i#)))))
+     (when-let [b# (nth-byte ~data i#)]
+       (if (== ~c b#)
+         i#
+         (recur (inc i#))))))
+
+(defmacro subs+ [data start end]
+  `(when (and ~start ~end (<= ~start ~end (count ~data)))
+     (subs ~data ~start ~end)))
 
 (defmacro peek-byte [position data]
   `(nth-byte ~data (deref ~position)))
@@ -17,49 +23,65 @@
     105 ;; \i - int `i<base 10 integer>e`
     (let [start (vswap! position inc)
           n     (index-of data start 101) ;; \e
-          out   (parse-long (subs data start n))]
-      (vreset! position (inc n))
-      out)
+          ]
+      (when-let [s (subs+ data start n)]
+        (let [out (parse-long s)]
+          (vreset! position (inc n))
+          out)))
 
     108 ;; \l - list `l<items>e`
     (do
       (vswap! position inc)
       (loop [out (transient [])]
-        (if (== (peek-byte position data) 101) ;; \e
-          (do
-            (vswap! position inc)
-            (persistent! out))
-          (recur (conj! out
-                        (parse-recur position data))))))
+        (when-let [b (peek-byte position data)]
+          (if (== b 101) ;; \e
+            (do
+              (vswap! position inc)
+              (persistent! out))
+            (let [v (parse-recur position data)]
+              (when v (recur (conj! out v))))))))
 
     100 ;; \d - dict `d<pairs>e`
     (do
       (vswap! position inc)
       (loop [out (transient {})]
-        (if (== (peek-byte position data) 101) ;; \e
-          (do
-            (vswap! position inc)
-            (persistent! out))
-          (recur (assoc! out
-                         (parse-recur position data)
-                         (parse-recur position data))))))
+        (when-let [b (peek-byte position data)]
+          (if (== b 101) ;; \e
+            (do
+              (vswap! position inc)
+              (persistent! out))
+            (let [k (parse-recur position data)
+                  v (parse-recur position data)]
+              (when (and k v) (recur (assoc! out k v))))))))
 
     ;; netstring `<length>:<contents>`
+    ;; 0-9
+    (48 49 50 51 52 53 54 55 56 57)
     (let [start @position
           end   (index-of data start 58) ;; \:
-          bytes (parse-long (subs data start end))
-          start (inc end)
-          out   (subs data start (+ start bytes))]
-      (vreset! position (+ start bytes))
-      out)))
+          ]
+      (when-let [n (subs+ data start end)]
+        (let [bytes (parse-long n)
+              start (inc end)
+              out   (subs+ data start (+ start bytes))]
+          (when out
+            (vreset! position (+ start bytes))
+            out))))
+
+    nil))
 
 (defn parse
   "Parse a bencode value from a string, returning jank data."
   [s]
   (try
+    ;; When presented with incomplete input, parse simply returns nil. This means
+    ;; we cannot resume a previous parse and must start from the beginning every
+    ;; time. In the worst case, this means parsing a message could become O(n^2).
+    ;; For now, this trade-off is acceptable to keep the implementation simple.
     (when s
-      (let [position (volatile! 0)]
-        [(parse-recur position s) (not-empty (subs s @position))]))
+      (let [position (volatile! 0)
+            value (parse-recur position s)]
+        (when value [value (not-empty (subs s @position))])))
     (catch :default _
       nil)))
 
