@@ -1808,6 +1808,97 @@ namespace jank::analyze::cpp_util
     return member_types;
   }
 
+  jtl::string_result<branch_common_type>
+  find_branch_common_type(expression_ref const then_expr,
+                          jtl::option<expression_ref> const &else_expr_opt,
+                          bool const has_recur)
+  {
+    auto const then_type{ cpp_util::expression_type(then_expr) };
+    auto const else_type{ else_expr_opt.is_some()
+                            ? cpp_util::expression_type(else_expr_opt.unwrap())
+                            : cpp_util::untyped_object_ref_type() };
+    auto const is_then_object{ cpp_util::is_any_object(then_type) };
+    auto const is_else_object{ cpp_util::is_any_object(else_type) };
+    auto const is_then_convertible{ cpp_util::is_trait_convertible(then_type) };
+    auto const is_else_convertible{ cpp_util::is_trait_convertible(else_type) };
+    auto const common_type{ cppinterop::get_common_type(then_type, else_type) };
+    auto const is_same_type{ cppinterop::get_canonical_type(then_type)
+                             == cppinterop::get_canonical_type(else_type) };
+    auto const is_compatible{ cpp_util::is_implicitly_convertible(then_type, else_type)
+                              || cpp_util::is_implicitly_convertible(else_type, then_type)
+                              || common_type };
+
+    /* If one of the branches has a native type, we need to match one of these scenarios.
+     *
+     * 1. The other branch has the same native type.
+     * 2. The other branch has a native type and the two native types are compatible.
+     * 3. The other branch has an object type and the native branch is trait convertible.
+     * 4. Both branches are trait convertible.
+     * 5. One of the branches recurs, meaning we have no comparison to do.
+     *
+     * If neither of these are the case, we have an error. */
+    if(is_same_type || is_compatible
+       || ((is_else_object && is_then_convertible) || (is_then_object && is_else_convertible))
+       || (is_then_convertible && is_else_convertible) || has_recur)
+    {
+      auto const then_needs_conversion{ !is_same_type && !is_compatible && is_then_convertible
+                                        && (is_else_object || is_else_convertible) };
+      auto const else_needs_conversion{ !is_same_type && !is_compatible && is_else_convertible
+                                        && (is_then_object || is_then_convertible) };
+      /* TODO: Not sure if this works with subtyping. For ex. whan if a candidate type for the branch is a `persistent_vector_ref`? */
+      auto const final_then_type{ then_needs_conversion ? cpp_util::untyped_object_ref_type()
+                                                        : then_expr->get_type() };
+      auto const final_else_type{ else_expr_opt.is_some() && !else_needs_conversion
+                                    ? else_expr_opt.unwrap()->get_type()
+                                    : cpp_util::untyped_object_ref_type() };
+      auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
+        cpp_util::non_void_type(final_else_type),
+        cpp_util::non_void_type(final_then_type)) };
+      auto const final_is_same_type{
+        (cppinterop::get_canonical_type(final_then_type)
+         == cppinterop::get_canonical_type(final_else_type))
+        /* Arrays are pushed to use the common type instead, since they can't be assigned. */
+        && !cppinterop::is_array_type(final_then_type)
+      };
+      auto const final_common_type{ cppinterop::get_common_type(final_then_type, final_else_type) };
+
+      /* If we have a typed object on one side, and anything other than that same typed object
+       * on the other side, we need to type-erase to find the common type.
+       *
+       * We also calculate the types again, since they may have changed due to the implicit
+       * conversions above. */
+      if(cpp_util::is_typed_object(chosen_type) && cpp_util::is_any_object(other_type)
+         && cppinterop::get_canonical_type(chosen_type)
+           != cppinterop::get_canonical_type(other_type))
+      {
+        chosen_type = cpp_util::untyped_object_ref_type();
+      }
+      else if(!final_is_same_type && final_common_type)
+      {
+        chosen_type = final_common_type;
+      }
+      /* If the chosen type is implicitly convertible to the other type, and both are native types,
+       * we fall into option 2 from above. In that case, we actually want the other type.
+       *
+       * Example: if branch returning std::string and C string literal. Regardless of which branch
+       * it's in, we want to take the std::string as our chosen type. */
+      else if(!cpp_util::is_any_object(chosen_type) && !cpp_util::is_any_object(other_type)
+              && is_compatible && cpp_util::is_implicitly_convertible(chosen_type, other_type))
+      {
+        std::swap(chosen_type, other_type);
+      }
+
+      return branch_common_type{ chosen_type, then_needs_conversion, else_needs_conversion };
+    }
+    else
+    {
+      return err(util::format("Mismatched branch types `{}` and `{}`. Each branch must have the "
+                              "same type, a common type, or a trait conversion.",
+                              cpp_util::get_qualified_type_name(then_type),
+                              cpp_util::get_qualified_type_name(else_type)));
+    }
+  }
+
   /* By the time we get here, we know that the types are compatible in *some* fashion. This
    * is because we only apply this after using Clang to match types in the first place.
    * However, Clang doesn't tell us what needs to happen, so we then need to figure that
