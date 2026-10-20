@@ -1005,6 +1005,11 @@ extern "C"
   {
     object_ref const o_obj(reinterpret_cast<object *>(o));
     auto integer{ to_integer_or_hash(o_obj) };
+    util::println("o {}, integer {}, shift {}, mask {}",
+                  o_obj.to_code_string(),
+                  integer,
+                  shift,
+                  mask);
     if(mask != 0)
     {
       if(is_integer(o_obj))
@@ -1016,8 +1021,10 @@ extern "C"
           ? integer
           : hash::integer(integer);
       }
+      util::println("integer hash {}", integer);
       integer = (integer >> shift) & mask;
     }
+    util::println("ret {}", integer);
     return integer;
   }
 
