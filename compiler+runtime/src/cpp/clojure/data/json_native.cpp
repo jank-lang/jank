@@ -88,15 +88,25 @@ namespace clojure::data::json_native
 
         if constexpr(behavior::map_like<T>)
         {
-          nlohmann::json map{};
+          auto map(nlohmann::json::object());
 
-          for(auto const &kv : typed_o->data)
+          if(!truthy(opts.value_fn))
           {
-            auto const value(truthy(opts.value_fn) ? opts.value_fn.call(kv.first, kv.second)
-                                                   : kv.second);
-            if(opts.value_fn != value)
+            for(auto const &kv : typed_o->data)
             {
-              map[resolve_key(kv.first, opts)] = write(value, opts);
+              map[resolve_key(kv.first, opts)] = write(kv.second, opts);
+            }
+          }
+          else
+          {
+            for(auto const &kv : typed_o->data)
+            {
+              auto const value(opts.value_fn.call(kv.first, kv.second));
+
+              if(opts.value_fn != value)
+              {
+                map[resolve_key(kv.first, opts)] = write(value, opts);
+              }
             }
           }
 
@@ -167,17 +177,24 @@ namespace clojure::data::json_native
         {
           obj::transient_hash_map m{};
 
-          for(auto const &[k, v] : json.items())
+          if(!truthy(opts.value_fn))
           {
-            auto const key_initial(make_box<obj::persistent_string>(k));
-            auto const value_initial(read(v, opts));
-
-            auto const key(truthy(opts.key_fn) ? opts.key_fn.call(key_initial) : key_initial);
-            auto const value(truthy(opts.value_fn) ? opts.value_fn.call(key, value_initial)
-                                                   : value_initial);
-            if(opts.value_fn != value)
+            for(auto const &[k, v] : json.items())
             {
-              m.assoc_in_place(key, value);
+              m.assoc_in_place(make_box<obj::persistent_string>(k), read(v, opts));
+            }
+          }
+          else
+          {
+            for(auto const &[k, v] : json.items())
+            {
+              auto const key(opts.key_fn.call(make_box<obj::persistent_string>(k)));
+              auto const value(opts.value_fn.call(key, read(v, opts)));
+
+              if(opts.value_fn != value)
+              {
+                m.assoc_in_place(key, value);
+              }
             }
           }
 
