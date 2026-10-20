@@ -1,0 +1,25 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::pass_template_default_args
+          {
+            template <typename T = int, int N = 7>
+            struct foo
+            {
+              foo() = default;
+
+              foo(T const value)
+                : value{ value }
+              { }
+
+              T value{};
+              int size{ N };
+            };
+          }")
+(let* [no-args (cpp/jank.cpp.constructor.complex.pass_template_default_args.foo)
+       all-defaults (cpp/jank.cpp.constructor.complex.pass_template_default_args.foo 5)
+       partial (#cpp (jank.cpp.constructor.complex.pass_template_default_args.foo double) 6.0)]
+  (if (and (= 0 (cpp/.-value no-args))
+           (= 7 (cpp/.-size no-args))
+           (= 5 (cpp/.-value all-defaults))
+           (= 7 (cpp/.-size all-defaults))
+           (= 6.0 (cpp/.-value partial))
+           (= 7 (cpp/.-size partial)))
+    :success))
