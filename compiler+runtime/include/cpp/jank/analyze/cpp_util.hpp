@@ -107,6 +107,18 @@ namespace jank::analyze::cpp_util
 
   std::vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> scope);
 
+  struct branch_common_type
+  {
+    cppinterop::clang_type type;
+    bool then_needs_conversion;
+    bool else_needs_conversion;
+  };
+
+  jtl::string_result<branch_common_type>
+  find_branch_common_type(expression_ref const then_expr_,
+                          jtl::option<expression_ref> const &else_expr_opt_,
+                          bool const has_recur = false);
+
   enum class implicit_conversion_action : u8
   {
     unknown,

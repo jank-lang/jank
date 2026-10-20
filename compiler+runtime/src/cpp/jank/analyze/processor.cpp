@@ -1189,125 +1189,6 @@ namespace jank::analyze
     return jtl::make_ref<expr::def>(position, current_frame, true, l, qualified_sym, value_expr);
   }
 
-  struct branch_type
-  {
-    expression_ref then_expr;
-    jtl::option<expression_ref> else_expr_opt;
-    cppinterop::clang_type type;
-  };
-
-  static jtl::result<branch_type, error_ref>
-  common_branch_type(runtime::obj::persistent_list_ref const o,
-                     expression_ref const then_expr_,
-                     jtl::option<expression_ref> const &else_expr_opt_,
-                     native_vector<runtime::object_ref> const &macro_expansions,
-                     bool const has_recur = false)
-  {
-    auto then_expr{ then_expr_ };
-    auto else_expr_opt{ else_expr_opt_ };
-    auto const then_type{ cpp_util::expression_type(then_expr) };
-    auto const else_type{ else_expr_opt.is_some()
-                            ? cpp_util::expression_type(else_expr_opt.unwrap())
-                            : cpp_util::untyped_object_ref_type() };
-    auto const is_then_object{ cpp_util::is_any_object(then_type) };
-    auto const is_else_object{ cpp_util::is_any_object(else_type) };
-    auto const is_then_convertible{ cpp_util::is_trait_convertible(then_type) };
-    auto const is_else_convertible{ cpp_util::is_trait_convertible(else_type) };
-    auto const common_type{ cppinterop::get_common_type(then_type, else_type) };
-    auto const is_same_type{ cppinterop::get_canonical_type(then_type)
-                             == cppinterop::get_canonical_type(else_type) };
-    auto const is_compatible{ cpp_util::is_implicitly_convertible(then_type, else_type)
-                              || cpp_util::is_implicitly_convertible(else_type, then_type)
-                              || common_type };
-
-    /* If one of the branches has a native type, we need to match one of these scenarios.
-     *
-     * 1. The other branch has the same native type.
-     * 2. The other branch has a native type and the two native types are compatible.
-     * 3. The other branch has an object type and the native branch is trait convertible.
-     * 4. Both branches are trait convertible.
-     * 5. One of the branches recurs, meaning we have no comparison to do.
-     *
-     * If neither of these are the case, we have an error. */
-    if(is_same_type || is_compatible
-       || ((is_else_object && is_then_convertible) || (is_then_object && is_else_convertible))
-       || (is_then_convertible && is_else_convertible) || has_recur)
-    {
-      auto const then_needs_conversion{ !is_same_type && !is_compatible && is_then_convertible
-                                        && (is_else_object || is_else_convertible) };
-      auto const else_needs_conversion{ !is_same_type && !is_compatible && is_else_convertible
-                                        && (is_then_object || is_then_convertible) };
-
-      if(then_needs_conversion)
-      {
-        then_expr = apply_implicit_conversion(then_expr,
-                                              cpp_util::untyped_object_ref_type(),
-                                              macro_expansions)
-                      .expect_ok();
-      }
-      if(else_expr_opt.is_some() && else_needs_conversion)
-      {
-        else_expr_opt = apply_implicit_conversion(else_expr_opt.unwrap(),
-                                                  cpp_util::untyped_object_ref_type(),
-                                                  macro_expansions)
-                          .expect_ok();
-      }
-
-      auto const final_then_type{ then_expr->get_type() };
-      auto const final_else_type{ else_expr_opt.is_some() ? else_expr_opt.unwrap()->get_type()
-                                                          : cpp_util::untyped_object_ref_type() };
-      auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
-        cpp_util::non_void_type(final_else_type),
-        cpp_util::non_void_type(final_then_type)) };
-      auto const final_is_same_type{
-        (cppinterop::get_canonical_type(final_then_type)
-         == cppinterop::get_canonical_type(final_else_type))
-        /* Arrays are pushed to use the common type instead, since they can't be assigned. */
-        && !cppinterop::is_array_type(final_then_type)
-      };
-      auto const final_common_type{ cppinterop::get_common_type(final_then_type, final_else_type) };
-
-      /* If we have a typed object on one side, and anything other than that same typed object
-       * on the other side, we need to type-erase to find the common type.
-       *
-       * We also calculate the types again, since they may have changed due to the implicit
-       * conversions above. */
-      if(cpp_util::is_typed_object(chosen_type) && cpp_util::is_any_object(other_type)
-         && cppinterop::get_canonical_type(chosen_type)
-           != cppinterop::get_canonical_type(other_type))
-      {
-        chosen_type = cpp_util::untyped_object_ref_type();
-      }
-      else if(!final_is_same_type && final_common_type)
-      {
-        chosen_type = final_common_type;
-      }
-      /* If the chosen type is implicitly convertible to the other type, and both are native types,
-       * we fall into option 2 from above. In that case, we actually want the other type.
-       *
-       * Example: if branch returning std::string and C string literal. Regardless of which branch
-       * it's in, we want to take the std::string as our chosen type. */
-      else if(!cpp_util::is_any_object(chosen_type) && !cpp_util::is_any_object(other_type)
-              && is_compatible && cpp_util::is_implicitly_convertible(chosen_type, other_type))
-      {
-        std::swap(chosen_type, other_type);
-      }
-
-      return branch_type{ then_expr, else_expr_opt, chosen_type };
-    }
-    else
-    {
-      return error::analyze_mismatched_if_types(
-        util::format("Mismatched 'if'/'case' branch types `{}` and `{}`. Each branch of an "
-                     "'if'/'case' must have "
-                     "the same type, a common type, or a trait conversion.",
-                     cpp_util::get_qualified_type_name(then_type),
-                     cpp_util::get_qualified_type_name(else_type)),
-        object_source(o->first()),
-        latest_expansion(macro_expansions));
-    }
-  }
-
   processor::expression_result
   processor::analyze_case(obj::persistent_list_ref const o,
                           local_frame_ptr const current_frame,
@@ -1421,33 +1302,43 @@ namespace jank::analyze
             return err("Each key in a `case*` map must be an integer.");
           }
           auto const key{ runtime::to_i64(k_obj) };
-          auto const expr{ analyze(v_obj, current_frame, position, fn_ctx, needs_box) };
+          auto expr{ analyze(v_obj, current_frame, position, fn_ctx, needs_box) };
           if(expr.is_err())
           {
             return err(expr.expect_err()->message);
           }
 
-          auto const common_branch_type_result{ /* TODO: Handle the `recur` case. */
-                                                common_branch_type(o,
-                                                                   expr.expect_ok(),
-                                                                   default_expr.expect_ok(),
-                                                                   macro_expansions,
-                                                                   false)
+          auto const branch_common_type_result{
+            /* TODO: Handle the `recur` case. */
+            cpp_util::find_branch_common_type(expr.expect_ok(), default_expr.expect_ok(), false)
           };
 
-          if(common_branch_type_result.is_err())
+          if(branch_common_type_result.is_err())
           {
-            return err(common_branch_type_result.expect_err()->message);
+            /* TODO: Attach error info. better. */
+            return branch_common_type_result.expect_err();
           }
 
-          auto const [final_expr,
-                      final_default_expr,
-                      common_type]{ common_branch_type_result.expect_ok() };
+          auto const [common_type,
+                      expr_needs_conversion,
+                      default_expr_needs_conversion]{ branch_common_type_result.expect_ok() };
+
+          if(expr_needs_conversion)
+          {
+            expr = apply_implicit_conversion(expr.expect_ok(),
+                                             cpp_util::untyped_object_ref_type(),
+                                             macro_expansions);
+          }
+          if(default_expr_needs_conversion)
+          {
+            default_expr = apply_implicit_conversion(default_expr.expect_ok(),
+                                                     cpp_util::untyped_object_ref_type(),
+                                                     macro_expansions);
+          }
 
           chosen_type = common_type;
-          default_expr = final_default_expr.unwrap();
           ret.keys.push_back(key);
-          ret.exprs.push_back(final_expr);
+          ret.exprs.push_back(expr.expect_ok());
         }
         return ret;
       },
@@ -2628,18 +2519,34 @@ namespace jank::analyze
       else_expr_opt = else_expr.expect_ok();
     }
 
-    auto const common_branch_type_result{
-      common_branch_type(o, then_expr.expect_ok(), else_expr_opt, macro_expansions, has_recur)
+    auto const branch_common_type_result{
+      cpp_util::find_branch_common_type(then_expr.expect_ok(), else_expr_opt, has_recur)
     };
 
-    if(common_branch_type_result.is_err())
+    if(branch_common_type_result.is_err())
     {
-      return common_branch_type_result.expect_err();
+      return error::analyze_mismatched_if_types(branch_common_type_result.expect_err(),
+                                                object_source(o->first()),
+                                                latest_expansion(macro_expansions));
     }
 
-    auto const [final_then_expr,
-                final_else_expr_opt,
-                common_type]{ common_branch_type_result.expect_ok() };
+    auto const [common_type,
+                then_needs_conversion,
+                else_needs_conversion]{ branch_common_type_result.expect_ok() };
+
+    if(then_needs_conversion)
+    {
+      then_expr = apply_implicit_conversion(then_expr.expect_ok(),
+                                            cpp_util::untyped_object_ref_type(),
+                                            macro_expansions);
+    }
+    if(else_expr_opt.is_some() && else_needs_conversion)
+    {
+      else_expr_opt = apply_implicit_conversion(else_expr_opt.unwrap(),
+                                                cpp_util::untyped_object_ref_type(),
+                                                macro_expansions)
+                        .expect_ok();
+    }
 
     return jtl::make_ref<expr::if_>(position,
                                     current_frame,
@@ -2647,8 +2554,8 @@ namespace jank::analyze
                                     o,
                                     common_type,
                                     condition_expr.expect_ok(),
-                                    final_then_expr,
-                                    final_else_expr_opt);
+                                    then_expr.expect_ok(),
+                                    else_expr_opt);
   }
 
   processor::expression_result
