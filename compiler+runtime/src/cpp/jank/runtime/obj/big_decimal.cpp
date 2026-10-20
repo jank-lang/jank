@@ -145,12 +145,13 @@ namespace jank::runtime::obj
 
   bool big_decimal::equal(object const &o) const
   {
-    return visit_number_like(
-      [this](auto const typed_o) -> bool {
-        return abs(data - typed_o->data) < std::numeric_limits<f64>::epsilon();
-      },
-      [&]() -> bool { return false; },
-      runtime::detail::untagged(&o));
+    if(o.type != object_type::big_decimal)
+    {
+      return false;
+    }
+
+    auto const typed_o(expect_object<big_decimal>(runtime::detail::untagged(&o)));
+    return abs(data - typed_o->data) < std::numeric_limits<f64>::epsilon();
   }
 
   jtl::immutable_string big_decimal::to_string() const

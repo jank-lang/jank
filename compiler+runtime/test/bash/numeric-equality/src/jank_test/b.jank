@@ -1,0 +1,11 @@
+(ns jank-test.b
+  (:require [jank-test.a]))
+
+(defn -main [& _]
+  (let [value [0 0 0]]
+    (assert (= "[0 0 0]" (pr-str value)))
+    (assert (integer? (first value)))
+    (assert (not (= value [0.0 0.0 0.0])))
+    (assert (not (= 0 0.0)))
+    (assert (== 0 0.0)))
+  (println :success))

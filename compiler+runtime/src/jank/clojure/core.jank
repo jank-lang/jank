@@ -650,9 +650,9 @@
 
 (def ^{:arglists '([x] [x y] [x y & more])
        :doc "Equality. Returns true if x equals y, false if not. It also works
-       for nil and compares numbers and collections in a type-independent
-       manner. Clojure's immutable data structures define equals() (and
-       thus =) as a value, not an identity, comparison."
+       for nil and compares collections by value. Numeric values from the same
+       numeric category compare equal, while different numeric categories do
+       not; use == for type-independent numeric comparison."
        ; TODO: Add template to support this.
        ;:inline (fn* [x y]
        ;          (list 'cpp/jank.runtime.equal x y))
