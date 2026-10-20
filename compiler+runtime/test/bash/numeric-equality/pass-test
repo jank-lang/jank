@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Regression testing this issue: https://github.com/jank-lang/jank/issues/1062
+
+jank --module-path src run-main jank-test.b | grep '^:success$'

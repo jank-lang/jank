@@ -138,26 +138,6 @@ namespace jank::runtime::obj
 
   bool ratio::equal(object const &o) const
   {
-    if(o.type == object_type::integer)
-    {
-      return data == expect_object<integer>(runtime::detail::untagged(&o))->data;
-    }
-
-    if(o.type == object_type::small_integer)
-    {
-      return data == expect_object<small_integer>(runtime::detail::untagged(&o))->data;
-    }
-
-    if(o.type == object_type::real)
-    {
-      return data == expect_object<real>(runtime::detail::untagged(&o))->data;
-    }
-
-    if(o.type == object_type::small_real)
-    {
-      return data == expect_object<small_real>(runtime::detail::untagged(&o))->data;
-    }
-
     if(o.type == object_type::ratio)
     {
       return data == expect_object<ratio>(runtime::detail::untagged(&o))->data;

@@ -266,12 +266,6 @@ namespace jank::runtime::obj
 
   bool real::equal(object const &o) const
   {
-    if(o.type == object_type::big_decimal)
-    {
-      auto const i(expect_object<big_decimal>(runtime::detail::untagged(&o)));
-      return data == i->data;
-    }
-
     if(o.type == object_type::small_real)
     {
       auto const i(expect_object<small_real>(runtime::detail::untagged(&o)));
@@ -390,12 +384,6 @@ namespace jank::runtime::obj
 
   bool small_real::equal(object const &o) const
   {
-    if(o.type == object_type::big_decimal)
-    {
-      auto const i(expect_object<big_decimal>(runtime::detail::untagged(&o)));
-      return data == i->data;
-    }
-
     if(o.type == object_type::real)
     {
       auto const i(expect_object<real>(runtime::detail::untagged(&o)));
