@@ -1,0 +1,7 @@
+(cpp/raw "namespace jank::cpp::call::functor::pass_global
+          {
+            std::function<int (int)> foo{ [](int i){ return i; } };
+          }")
+(let* [f (cpp/jank.cpp.call.functor.pass_global.foo 45)]
+  (if (= 45 f)
+    :success))

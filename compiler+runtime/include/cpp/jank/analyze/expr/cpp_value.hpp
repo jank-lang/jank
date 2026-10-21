@@ -31,6 +31,35 @@ namespace jank::analyze::expr
       operator_call
     };
 
+    static constexpr char const *value_kind_str(value_kind const kind)
+    {
+      switch(kind)
+      {
+        case value_kind::null:
+          return "null";
+        case value_kind::bool_true:
+          return "bool_true";
+        case value_kind::bool_false:
+          return "bool_false";
+        case value_kind::constructor:
+          return "constructor";
+        case value_kind::variable:
+          return "variable";
+        case value_kind::enum_constant:
+          return "enum_constant";
+        case value_kind::function:
+          return "function";
+        case value_kind::member_access:
+          return "member_access";
+        case value_kind::member_call:
+          return "member_call";
+        case value_kind::operator_call:
+          return "operator_call";
+        default:
+          return "unknown";
+      }
+    }
+
     cpp_value(expression_position position,
               local_frame_ptr frame,
               bool needs_box,

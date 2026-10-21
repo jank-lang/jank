@@ -744,7 +744,7 @@ namespace jank::analyze
                           bool const needs_box,
                           native_vector<runtime::object_ref> const &macro_expansions)
   {
-    auto source_type{ cpp_util::expression_type(source) };
+    auto source_type{ cppinterop::get_non_reference_type(cpp_util::expression_type(source)) };
 
     if(cppinterop::is_pointer_to_member_type(source_type))
     {
@@ -3880,7 +3880,10 @@ namespace jank::analyze
       arg_scopes.emplace_back(scope);
     }
 
-    if(source->kind == expression_kind::cpp_value)
+    auto const direct_call{ source->kind == expression_kind::cpp_value
+                            && llvm::cast<expr::cpp_value>(source.data)->val_kind
+                              != expr::cpp_value::value_kind::variable };
+    if(direct_call)
     {
       auto const value{ llvm::cast<expr::cpp_value>(source.data) };
       return build_cpp_call(value,
