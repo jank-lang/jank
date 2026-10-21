@@ -48,21 +48,25 @@ namespace jank::analyze::cppinterop
 
   bool is_namespace(clang_decl scope)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsNamespace(scope);
   }
 
   bool is_class(clang_decl scope)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsClass(scope);
   }
 
   bool is_class_template(clang_decl handle)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsClassTemplate(handle);
   }
 
   bool is_function(clang_decl scope)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsFunction(scope);
   }
 
@@ -86,6 +90,7 @@ namespace jank::analyze::cppinterop
 
   bool is_builtin(clang_type type)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsBuiltin(type);
   }
 
@@ -109,11 +114,13 @@ namespace jank::analyze::cppinterop
 
   bool is_template(clang_decl handle)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsTemplate(handle);
   }
 
   bool is_template_specialization(clang_decl handle)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsTemplateSpecialization(handle);
   }
 
@@ -125,6 +132,7 @@ namespace jank::analyze::cppinterop
 
   bool is_typedefed(clang_decl handle)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsTypedefed(handle);
   }
 
@@ -160,26 +168,31 @@ namespace jank::analyze::cppinterop
 
   bool is_enum_scope(clang_decl handle)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsEnumScope(handle);
   }
 
   bool is_enum_constant(clang_decl handle)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsEnumConstant(handle);
   }
 
   bool is_enum_type(clang_type type)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsEnumType(type);
   }
 
   bool has_type_qualifier(clang_type type, qualifier q)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::HasTypeQualifier(type, static_cast<Cpp::QualKind>(q));
   }
 
   bool is_variable(clang_decl scope)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsVariable(scope);
   }
 
@@ -386,6 +399,7 @@ namespace jank::analyze::cppinterop
 
   bool is_method(clang_decl method)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsMethod(method);
   }
 
@@ -403,11 +417,13 @@ namespace jank::analyze::cppinterop
 
   bool is_constructor(clang_decl method)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsConstructor(method);
   }
 
   bool is_destructor(clang_decl method)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsDestructor(method);
   }
 
@@ -465,26 +481,31 @@ namespace jank::analyze::cppinterop
 
   bool is_static_variable(clang_decl var)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsStaticVariable(var);
   }
 
   bool is_non_static_variable(clang_decl scope)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsNonStaticVariable(scope);
   }
 
   bool is_const_type(clang_type type)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsConstType(type);
   }
 
   bool is_pointer_type(clang_type type)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsPointerType(type);
   }
 
   bool is_pointer_to_member_type(clang_type type)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsPointerToMemberType(type);
   }
 
@@ -514,11 +535,13 @@ namespace jank::analyze::cppinterop
 
   bool is_array_type(clang_type type)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsArrayType(type);
   }
 
   bool is_sized_array_type(clang_type type)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsSizedArrayType(type);
   }
 
@@ -584,16 +607,19 @@ namespace jank::analyze::cppinterop
 
   bool is_reference_type(clang_type type)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsReferenceType(type);
   }
 
   bool is_rvalue_reference_type(clang_type type)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsRvalueReferenceType(type);
   }
 
   value_category get_value_category(clang_type type)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return static_cast<value_category>(Cpp::GetValueKind(type));
   }
 

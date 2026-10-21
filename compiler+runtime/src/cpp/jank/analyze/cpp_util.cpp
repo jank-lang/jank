@@ -754,79 +754,79 @@ namespace jank::analyze::cpp_util
           {
             case runtime::array_element_type::boolean:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.bool_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::character:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.char_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::u8:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.u8_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::i8:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.i8_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::u16:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.u16_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::i16:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.i16_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::u32:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.u32_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::i32:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.i32_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::u64:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.u64_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::i64:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.i64_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::f32:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.f32_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::f64:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.f64_array_ref").expect_ok()) };
                 return type;
               }
             case runtime::array_element_type::object:
               {
-                static auto const type{ Cpp::GetTypeFromScope(
+                static auto const type{ cppinterop::get_type_from_scope(
                   resolve_scope("jank.runtime.obj.object_array_ref").expect_ok()) };
                 return type;
               }

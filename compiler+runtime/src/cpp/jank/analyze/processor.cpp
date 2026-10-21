@@ -2880,7 +2880,7 @@ namespace jank::analyze
               }
               catch_type = catch_type_res.expect_ok();
 
-              if(cppinterop::is_void(Cpp::GetNonReferenceType(catch_type)))
+              if(cppinterop::is_void(cppinterop::get_non_reference_type(catch_type)))
               {
                 return error::analyze_invalid_try("Void is not a valid exception type to catch.",
                                                   object_source(catch_type_form),
