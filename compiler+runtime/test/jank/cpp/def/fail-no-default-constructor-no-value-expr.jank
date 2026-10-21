@@ -1,0 +1,5 @@
+(cpp/raw "namespace jank::cpp::def::fail_no_default_constructor_no_value_expr { struct Foo { Foo() = delete; }; }")
+
+(cpp/def cpp/jank.cpp.def.fail_no_default_constructor_no_value_expr.Foo jank-cpp-def-fail-no-default-constructor-no-value-expr-foo)
+
+:success
