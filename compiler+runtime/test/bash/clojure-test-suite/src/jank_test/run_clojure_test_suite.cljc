@@ -54,6 +54,7 @@
     clojure.core-test.denominator
     ; clojure.core-test.derive ; analyze/unresolved-symbol error: Unable to resolve symbol 'String'.
     ; clojure.core-test.descendants ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
+    clojure.core-test.destructure
     clojure.core-test.disj
     clojure.core-test.disj-bang
     clojure.core-test.dissoc
