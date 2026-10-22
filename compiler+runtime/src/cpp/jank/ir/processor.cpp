@@ -869,7 +869,9 @@ namespace jank::ir
       args.emplace_back(gen(arg, b).unwrap());
     }
 
-    if(expr->source_expr->kind == analyze::expression_kind::cpp_value)
+    auto const source_type{ analyze::cpp_util::expression_type(expr->source_expr) };
+    if(expr->source_expr->kind == analyze::expression_kind::cpp_value
+       && (!source_type || !analyze::cppinterop::is_pointer_to_member_type(source_type)))
     {
       return b.cpp_call(none, jtl::move(args), expr);
     }

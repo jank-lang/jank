@@ -3886,6 +3886,19 @@ namespace jank::analyze
     if(direct_call)
     {
       auto const value{ llvm::cast<expr::cpp_value>(source.data) };
+      auto const source_type{ cpp_util::expression_type(source) };
+      if(source_type && cppinterop::is_pointer_to_member_type(source_type))
+      {
+        return build_indirect_cpp_call(o,
+                                       source,
+                                       jtl::move(arg_exprs),
+                                       jtl::move(arg_types),
+                                       jtl::move(arg_scopes),
+                                       current_frame,
+                                       position,
+                                       needs_box,
+                                       macro_expansions);
+      }
       return build_cpp_call(value,
                             jtl::move(arg_exprs),
                             jtl::move(arg_types),

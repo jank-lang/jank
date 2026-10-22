@@ -1361,7 +1361,8 @@ namespace jank::codegen
 
     auto const source_type{ expression_type(inst->expr->source_expr) };
 
-    if(inst->expr->source_expr->kind == analyze::expression_kind::cpp_value)
+    if(inst->expr->source_expr->kind == analyze::expression_kind::cpp_value
+       && (!source_type || !analyze::cppinterop::is_pointer_to_member_type(source_type)))
     {
       auto const source{ static_box_cast<analyze::expr::cpp_value>(inst->expr->source_expr) };
       auto const is_void{ analyze::cppinterop::is_void(
