@@ -48,6 +48,7 @@ namespace jank::analyze::cppinterop
 
   void dump(clang_decl scope)
   {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     Cpp::DumpScope(scope);
   }
 
