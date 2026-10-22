@@ -1868,8 +1868,10 @@ namespace jank::analyze::cpp_util
              == cppinterop::get_canonical_type(cppinterop::get_non_reference_type(expected_type))
            && !cppinterop::is_reference_type(expr_type)
            && cppinterop::is_reference_type(expected_type))
-       /* Matching nullptr to any pointer type. */
-       || (cpp_util::is_nullptr(expr_type) && cppinterop::is_pointer_type(expected_type))
+       /* Matching nullptr to any pointer type or array parameter, which adjusts to a pointer. */
+       || (cpp_util::is_nullptr(expr_type)
+           && (cppinterop::is_pointer_type(expected_type)
+               || cppinterop::is_array_type(expected_type)))
        /* TODO: Array size. */
        || (cppinterop::is_array_type(expr_type) && cppinterop::is_array_type(expected_type)
            && cppinterop::get_array_element_type(expr_type)

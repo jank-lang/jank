@@ -4071,13 +4071,18 @@ namespace jank::analyze
 
     auto const value_expr{ value_expr_res.expect_ok() };
     auto const value_type{ cpp_util::expression_type(value_expr) };
-    if(cppinterop::get_canonical_type(type) == cppinterop::get_canonical_type(value_type))
+    auto const nullptr_to_array{ cpp_util::is_nullptr(value_type)
+                                 && cppinterop::is_array_type(type) };
+    auto const cast_type{ nullptr_to_array
+                            ? cppinterop::get_pointer_type(cppinterop::get_array_element_type(type))
+                            : type };
+    if(cppinterop::get_canonical_type(cast_type) == cppinterop::get_canonical_type(value_type))
     {
       return value_expr;
     }
-    else if(cpp_util::is_constructible(type, value_type)
-            || cppinterop::is_implicitly_convertible(value_type, type)
-            || cpp_util::is_pointer_to_void_conversion(value_type, type))
+    else if(nullptr_to_array || cpp_util::is_constructible(cast_type, value_type)
+            || cppinterop::is_implicitly_convertible(value_type, cast_type)
+            || cpp_util::is_pointer_to_void_conversion(value_type, cast_type))
     {
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
         position,
@@ -4086,8 +4091,8 @@ namespace jank::analyze
         l,
         /* TODO: We don't want to be limited to symbols. */
         runtime::try_object<obj::symbol>(l->first()),
-        type,
-        cppinterop::get_scope_from_type(type),
+        cast_type,
+        cppinterop::get_scope_from_type(cast_type),
         expr::cpp_value::value_kind::constructor) };
 
       /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
@@ -4190,20 +4195,25 @@ namespace jank::analyze
 
     auto const value_expr{ value_expr_res.expect_ok() };
     auto const value_type{ cpp_util::expression_type(value_expr) };
-    if(cppinterop::get_canonical_type(type) == cppinterop::get_canonical_type(value_type))
+    auto const nullptr_to_array{ cpp_util::is_nullptr(value_type)
+                                 && cppinterop::is_array_type(type) };
+    auto const cast_type{ nullptr_to_array
+                            ? cppinterop::get_pointer_type(cppinterop::get_array_element_type(type))
+                            : type };
+    if(cppinterop::get_canonical_type(cast_type) == cppinterop::get_canonical_type(value_type))
     {
       return value_expr;
     }
     /* TODO: Share this with cpp/cast more cleanly? */
-    else if(cpp_util::is_constructible(type, value_type))
+    else if(cpp_util::is_constructible(cast_type, value_type))
     {
       auto const cpp_value{ jtl::make_ref<expr::cpp_value>(
         position,
         current_frame,
         needs_box,
         runtime::try_object<obj::symbol>(l->first()),
-        type,
-        cppinterop::get_scope_from_type(type),
+        cast_type,
+        cppinterop::get_scope_from_type(cast_type),
         expr::cpp_value::value_kind::constructor) };
 
       /* Since we're reusing analyze_cpp_call, we need to rebuild our list a bit. We
@@ -4212,13 +4222,13 @@ namespace jank::analyze
       auto const call_l{ make_box(l->data.rest().rest().conj({})) };
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
-    else if(cppinterop::is_c_style_convertible(value_type, type))
+    else if(nullptr_to_array || cppinterop::is_c_style_convertible(value_type, cast_type))
     {
       return jtl::make_ref<expr::cpp_unsafe_cast>(position,
                                                   current_frame,
                                                   needs_box,
                                                   l,
-                                                  type,
+                                                  cast_type,
                                                   value_expr);
     }
 
