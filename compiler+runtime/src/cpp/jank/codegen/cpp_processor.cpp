@@ -1186,7 +1186,7 @@ namespace jank::codegen
       return none;
     }
 
-    util::format_to(b.body_buffer, "{ // {}\n", inst->name);
+    util::format_to(b.body_buffer, "{\n");
 
     return none;
   }
@@ -1200,7 +1200,7 @@ namespace jank::codegen
       return none;
     }
 
-    util::format_to(b.body_buffer, "} // {}\n", inst->name);
+    util::format_to(b.body_buffer, "}\n");
 
     return none;
   }
@@ -1363,10 +1363,9 @@ namespace jank::codegen
 
     if(inst->expr->source_expr->kind == analyze::expression_kind::cpp_value)
     {
-      auto const source{ static_cast<analyze::expr::cpp_value *>(inst->expr->source_expr.data) };
-
+      auto const source{ static_box_cast<analyze::expr::cpp_value>(inst->expr->source_expr) };
       auto const is_void{ analyze::cppinterop::is_void(
-        analyze::cppinterop::get_function_return_type(source->scope)) };
+        analyze::cpp_util::get_function_return_type(source)) };
       if(is_void)
       {
         util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {};\n", inst->name);
@@ -1393,7 +1392,7 @@ namespace jank::codegen
         auto const arg_expr{ inst->expr->arg_exprs[arg_idx] };
         auto const arg_type{ expression_type(arg_expr) };
         /* This will be null in variadic positions. */
-        auto const param_type{ analyze::cppinterop::get_function_arg_type(source->scope, arg_idx) };
+        auto const param_type{ analyze::cpp_util::get_function_parameter_type(source, arg_idx) };
         auto const &arg_tmp{ inst->args[arg_idx] };
 
         if(need_comma)

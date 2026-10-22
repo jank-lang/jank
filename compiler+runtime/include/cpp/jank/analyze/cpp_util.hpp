@@ -62,6 +62,9 @@ namespace jank::analyze::cpp_util
   find_aggregate_match_with_conversions(std::vector<cppinterop::clang_type> const &aggregate_types,
                                         std::vector<cppinterop::clang_type> const &arg_types);
 
+  jtl::ptr<void> get_function_return_type(expression_ref expr);
+  jtl::ptr<void> get_function_parameter_type(expression_ref expr, usize param_idx);
+
   bool is_trait_convertible(jtl::ptr<void> type);
   bool is_untyped_object(jtl::ptr<void> type);
   bool is_typed_object(jtl::ptr<void> type);
