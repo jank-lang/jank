@@ -7322,8 +7322,7 @@ fails, attempts to require sym's namespace and retries."
   and f is not called. Note that reduce-kv is supported on vectors,
   where the keys will be the ordinals."
   ([f init coll]
-    ;;  (clojure.core.protocols/kv-reduce coll f init)
-   (reduce (fn [s [k v]] (f s k v)) init coll)))
+   (cpp/jank.runtime.reduce_kv f init coll)))
 
 (defn slurp
   "Reads the file at the specified path into a string."
