@@ -57,3 +57,25 @@ namespace jank::runtime::obj
     folly::Synchronized<mutable_state> state;
   };
 }
+
+namespace std
+{
+  template <>
+  struct hash<jank::runtime::obj::future_ref>
+  {
+    size_t operator()(jank::runtime::obj::future_ref const o) const;
+  };
+
+  template <>
+  struct hash<jank::runtime::obj::future>
+  {
+    size_t operator()(jank::runtime::obj::future const &o) const;
+  };
+
+  template <>
+  struct equal_to<jank::runtime::obj::future_ref>
+  {
+    bool operator()(jank::runtime::obj::future_ref const lhs,
+                    jank::runtime::obj::future_ref const rhs) const noexcept;
+  };
+}

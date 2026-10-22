@@ -773,4 +773,16 @@ namespace jank::runtime
     }
     return tbfs->second.front().bindings;
   }
+
+  void context::register_future(obj::future_ref const fut)
+  {
+    auto const locked_futures{ active_futures.wlock() };
+    locked_futures->emplace(fut);
+  }
+
+  void context::unregister_future(obj::future_ref const fut)
+  {
+    auto const locked_futures{ active_futures.wlock() };
+    locked_futures->erase(fut);
+  }
 }
