@@ -1,0 +1,49 @@
+(ns jank.nrepl.server.bencode-test
+  (:require [clojure.test :refer [deftest is testing are]]
+            [jank.nrepl.server.bencode :as bencode]))
+
+(def examples
+  [;; netstrings
+   "0:"                ""
+   "13:Hello, World!"  "Hello, World!"
+   "16:Hällö, Würld!"  "Hällö, Würld!"
+   "25:Здравей, Свят!" "Здравей, Свят!"
+
+   ;; integers
+   "i0e"     0
+   "i42e"   42
+   "i-42e" -42
+
+   ;; lists
+   "le"                    []
+   "l6:cheesee"            ["cheese"]
+   "l6:cheese3:ham4:eggse" ["cheese" "ham" "eggs"]
+
+   ;; maps
+   "de"            {}
+   "d3:ham4:eggse" {"ham" "eggs"}
+
+   ;; nested
+   "l6:cheesei42ed3:ham4:eggsee" ["cheese" 42 {"ham" "eggs"}]
+   "d6:cheesei42e3:haml4:eggsee" {"cheese" 42 "ham" ["eggs"]}])
+
+
+(deftest basic-examples
+  (doseq [[x y] (partition 2 examples)]
+    (testing y
+      (testing "bencode/parse"
+        (is (= [y nil] (bencode/parse x))))
+      (testing "bencode/write"
+        (is (= x (bencode/write y)))))))
+
+(deftest incomplete-input
+  (doseq [[x _] (partition 2 examples)
+          n (range (dec (count x)))
+          :let [partial-input (subs x 0 n)]]
+    (is (nil? (bencode/parse partial-input)))))
+
+(deftest extra-input
+  (are [input output]
+       (= output (bencode/parse input))
+    "5:helloi42e" ["hello" "i42e"]
+    "i42e5:hello" [42 "5:hello"]))

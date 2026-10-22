@@ -92,21 +92,23 @@ namespace jank::runtime
   object_ref var::get_root() const
   {
     profile::timer const timer{ "var get_root" };
-    return *root.rlock();
+    return root.load();
   }
 
   var_ref var::bind_root(object_ref const r)
   {
     profile::timer const timer{ "var bind_root" };
-    *root.wlock() = r;
+    std::lock_guard<folly::SharedMutex> const write_lock{ write_mutex };
+    root.store(r);
     return detail::untagged(this);
   }
 
   object_ref var::alter_root(object_ref const f, object_ref const args)
   {
-    auto locked_root(root.wlock());
-    *locked_root = apply_to(f, cons(*locked_root, args));
-    return *locked_root;
+    std::lock_guard<folly::SharedMutex> const write_lock{ write_mutex };
+    auto const new_root{ apply_to(f, cons(root.load(), args)) };
+    root.store(new_root);
+    return new_root;
   }
 
   jtl::string_result<void> var::set(object_ref const r) const
@@ -281,7 +283,7 @@ namespace jank::runtime
     {
       return binding->value;
     }
-    return *root.rlock();
+    return root.load();
   }
 
   var_ref var::with_meta(object_ref const m)

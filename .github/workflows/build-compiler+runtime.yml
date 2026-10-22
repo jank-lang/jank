@@ -260,7 +260,7 @@ jobs:
       - name: Install Homebrew packages
         if: runner.os == 'macOS'
         run: |
-          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib boost clojure/tools/clojure
+          brew install cmake ninja double-conversion pkg-config llvm ccache boost openssl zlib boost clojure/tools/clojure leiningen
       - name: Cache Clang/LLVM
         uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684
         with:

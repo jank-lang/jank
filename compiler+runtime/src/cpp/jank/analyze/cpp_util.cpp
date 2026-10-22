@@ -180,6 +180,14 @@ namespace jank::analyze::cpp_util
       scope = cppinterop::get_underlying_scope(cppinterop::get_named(subs, scope));
       if(!scope)
       {
+        auto const old_scope_name{ cppinterop::get_qualified_name(old_scope) };
+        if(old_scope_name.empty())
+        {
+          return err(util::format("Unable to find `{}` within the global namespace.",
+                                  subs,
+                                  cppinterop::get_qualified_name(old_scope)));
+        }
+
         return err(
           util::format("Unable to find `{}` within namespace `{}` while trying to resolve `{}`.",
                        subs,
@@ -1590,6 +1598,40 @@ namespace jank::analyze::cpp_util
     }
 
     return converted_args;
+  }
+
+  jtl::ptr<void> get_function_return_type(expression_ref const expr)
+  {
+    if(expr->kind == expression_kind::cpp_value)
+    {
+      auto const source{ expr::static_box_cast<expr::cpp_value>(expr) };
+      auto const type{ cppinterop::get_non_reference_type(source->type) };
+      if(cppinterop::is_function_pointer_type(type))
+      {
+        return cppinterop::get_function_return_type_from_type(type);
+      }
+      return analyze::cppinterop::get_function_return_type(source->scope);
+    }
+
+    /* TODO: Handle other cases? */
+    return nullptr;
+  }
+
+  jtl::ptr<void> get_function_parameter_type(expression_ref const expr, usize const param_idx)
+  {
+    if(expr->kind == expression_kind::cpp_value)
+    {
+      auto const source{ expr::static_box_cast<expr::cpp_value>(expr) };
+      auto const type{ cppinterop::get_non_reference_type(source->type) };
+      if(cppinterop::is_function_pointer_type(type))
+      {
+        return cppinterop::get_function_arg_type_from_type(type, param_idx);
+      }
+      return analyze::cppinterop::get_function_arg_type(source->scope, param_idx);
+    }
+
+    /* TODO: Handle other cases? */
+    return nullptr;
   }
 
   /* TODO: Cache result. */
