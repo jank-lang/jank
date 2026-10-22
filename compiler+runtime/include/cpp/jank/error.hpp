@@ -83,6 +83,7 @@ namespace jank::error
     analyze_invalid_throw,
     analyze_invalid_try,
     analyze_unresolved_var,
+    analyze_private_var,
     analyze_unresolved_symbol,
     analyze_macro_expansion_exception,
     analyze_invalid_cpp_operator_call,

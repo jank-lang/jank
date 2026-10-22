@@ -1,0 +1,6 @@
+(ns jank.var.ref.pass-private)
+(def ^:private foo 42)
+
+(ns user)
+(if (= 42 @#'jank.var.ref.pass-private/foo)
+  :success)

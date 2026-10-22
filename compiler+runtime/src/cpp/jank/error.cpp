@@ -138,6 +138,8 @@ namespace jank::error
         return "Invalid try.";
       case kind::analyze_unresolved_var:
         return "Unresolved var.";
+      case kind::analyze_private_var:
+        return "This var is private.";
       case kind::analyze_unresolved_symbol:
         return "Unresolved symbol.";
       case kind::analyze_macro_expansion_exception:
@@ -363,6 +365,8 @@ namespace jank::error
         return "analyze/invalid-try";
       case kind::analyze_unresolved_var:
         return "analyze/unresolved-var";
+      case kind::analyze_private_var:
+        return "analyze/private-var";
       case kind::analyze_unresolved_symbol:
         return "analyze/unresolved-symbol";
       case kind::analyze_macro_expansion_exception:
