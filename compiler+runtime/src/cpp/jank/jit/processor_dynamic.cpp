@@ -312,9 +312,12 @@ namespace jank::jit
     auto const create_interpreter{ [&] {
       pch_out_of_date = false;
       auto const created{ analyze::cppinterop::create_interpreter(
-        args, {}, vfs, static_cast<int>(llvm::CodeModel::Large), &pch_out_of_date) };
-      return static_cast<CppInternal::Interpreter *>(
-        created.data);
+        args,
+        {},
+        vfs,
+        static_cast<int>(llvm::CodeModel::Large),
+        &pch_out_of_date) };
+      return static_cast<CppInternal::Interpreter *>(created.data);
     } };
 
     auto *created_interpreter{ create_interpreter() };
