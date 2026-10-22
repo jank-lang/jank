@@ -1,0 +1,18 @@
+(cpp/raw "namespace jank::cpp::cast::pass_nullptr_to_array
+          {
+            int unsized(char const a[])
+            {
+              return a == nullptr ? 1 : 0;
+            }
+
+            int sized(char const a[5])
+            {
+              return a == nullptr ? 1 : 0;
+            }
+          }")
+(let* [unsized (cpp/jank.cpp.cast.pass_nullptr_to_array.unsized
+                 (cpp/cast (:array char) cpp/nullptr))
+       sized (cpp/jank.cpp.cast.pass_nullptr_to_array.sized
+              (cpp/cast (:array char 5) cpp/nullptr))]
+  (if (and (= 1 unsized) (= 1 sized))
+    :success))
