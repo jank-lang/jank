@@ -913,6 +913,62 @@ namespace jank::runtime
     return res;
   }
 
+  object_ref reduce_kv(object_ref const f, object_ref const init, object_ref const coll)
+  {
+    return visit_object(
+      [=](auto const typed_o) -> object_ref {
+        using T = typename jtl::decay_t<decltype(typed_o)>::value_type;
+
+        if constexpr(std::same_as<T, obj::nil>)
+        {
+          return init;
+        }
+        else if constexpr(std::same_as<T, obj::persistent_vector>)
+        {
+          usize i{};
+          object_ref res{ init };
+
+          for(auto const &e : typed_o->data)
+          {
+            res = f.call(res, make_box(i), e);
+            if(res.get_type() == object_type::reduced)
+            {
+              res = expect_object<obj::reduced>(res)->val;
+              break;
+            }
+            ++i;
+          }
+
+          return res;
+        }
+        else if constexpr(jtl::is_any_same<T,
+                                           obj::persistent_array_map,
+                                           obj::persistent_hash_map,
+                                           obj::persistent_sorted_map>)
+        {
+          object_ref res{ init };
+
+          for(auto const &[k, v] : typed_o->data)
+          {
+            res = f.call(res, k, v);
+            if(res.get_type() == object_type::reduced)
+            {
+              res = expect_object<obj::reduced>(res)->val;
+              break;
+            }
+          }
+
+          return res;
+        }
+        else
+        {
+          throw std::runtime_error{ util::format("Objects of type `{}` do not support `reduce-kv`.",
+                                                 object_type_str(typed_o.get_type())) };
+        }
+      },
+      coll);
+  }
+
   object_ref reduced(object_ref const o)
   {
     return make_box<obj::reduced>(o);

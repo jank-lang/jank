@@ -133,6 +133,7 @@ namespace jank::runtime
   usize sequence_length(object_ref const s, usize const max);
 
   object_ref reduce(object_ref const f, object_ref const init, object_ref const s);
+  object_ref reduce_kv(object_ref const f, object_ref const init, object_ref const coll);
   object_ref reduced(object_ref const o);
   bool is_reduced(object_ref const o);
 
