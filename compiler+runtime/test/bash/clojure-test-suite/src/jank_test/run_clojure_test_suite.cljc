@@ -177,6 +177,7 @@
     ; clojure.core-test.rationalize ; TODO: port rationalize
     ; clojure.core-test.realized-qmark ; TODO: port promise
     clojure.core-test.reduce
+    clojure.core-test.reduce-kv
     ; clojure.core-test.rem ; FIXME: Failing tests.
     clojure.core-test.remove
     ; clojure.core-test.remove-watch ; TODO: port sync
