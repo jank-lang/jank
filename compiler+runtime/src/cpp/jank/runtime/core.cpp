@@ -892,8 +892,10 @@ namespace jank::runtime
   {
     auto const bindings{ __rt_ctx->get_thread_bindings() };
     auto const ret{ make_box<obj::future>() };
+    ret->function = fn;
+    ret->bindings = bindings;
     /* NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage): False positive. */
-    ret->thread = std::thread{ [=]() {
+    ret->thread = std::thread{ [ret]() {
       /* GC threads should be explicitly registered so that the GC is prepared to perform
        * allocations from this thread. Unregistering is equally important.
        *
@@ -912,11 +914,13 @@ namespace jank::runtime
         }
       } };
 
+      auto const bindings{ ret->bindings };
+      auto const function{ ret->function };
       __rt_ctx->push_thread_bindings(bindings).expect_ok();
 
       try
       {
-        auto const res{ fn.call() };
+        auto const res{ function.call() };
         {
           auto const locked_state{ ret->state.wlock() };
           locked_state->status = obj::future_status::done;
