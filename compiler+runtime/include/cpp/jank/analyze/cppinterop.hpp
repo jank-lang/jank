@@ -39,6 +39,8 @@ namespace jank::analyze::cppinterop
 
   std::string mangle_rtti(clang_type type);
   void enable_debug_output(bool value = true);
+  void dump(clang_decl scope);
+
   bool is_namespace(clang_decl scope);
   bool is_class(clang_decl scope);
   bool is_class_template(clang_decl handle);

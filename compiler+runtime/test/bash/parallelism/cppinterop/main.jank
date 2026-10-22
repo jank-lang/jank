@@ -1,8 +1,14 @@
-(cpp/raw "int result{};
+(cpp/raw "#include <mutex>
+
+          std::mutex result_mutex{};
+          int result{};
 
           template <typename T>
           void add(T t)
-          { result += t; }")
+          {
+            std::lock_guard<std::mutex> const lock{ result_mutex };
+            result += t;
+          }")
 
 (def futures (mapv (fn [_]
                      (future (eval '(cpp/add 1))))

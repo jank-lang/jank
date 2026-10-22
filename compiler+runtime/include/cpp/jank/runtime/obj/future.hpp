@@ -40,6 +40,11 @@ namespace jank::runtime::obj
      * deadlocks. */
     folly::Synchronized<std::thread> thread;
 
+    /* std::thread stores its callable in ordinary C++ heap memory, which BDWGC does not scan.
+     * We keep these references on the GC-managed future object for the lifetime of the task. */
+    object_ref function;
+    object_ref bindings;
+
     struct mutable_state
     {
       object_ref result;
