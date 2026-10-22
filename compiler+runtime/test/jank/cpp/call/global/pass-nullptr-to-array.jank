@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::call::global::pass_nullptr_to_array
+          {
+            int foo(char const (a)[])
+            { return 42; }
+
+            int foo_sized(char const (a)[5])
+            { return 42; }
+          }")
+(let* [ret (cpp/jank.cpp.call.global.pass_nullptr_to_array.foo cpp/nullptr)
+       sized-ret (cpp/jank.cpp.call.global.pass_nullptr_to_array.foo_sized cpp/nullptr)]
+  (if (and (= 42 ret) (= 42 sized-ret))
+    :success))
