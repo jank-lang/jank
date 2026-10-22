@@ -180,6 +180,14 @@ namespace jank::analyze::cpp_util
       scope = cppinterop::get_underlying_scope(cppinterop::get_named(subs, scope));
       if(!scope)
       {
+        auto const old_scope_name{ cppinterop::get_qualified_name(old_scope) };
+        if(old_scope_name.empty())
+        {
+          return err(util::format("Unable to find `{}` within the global namespace.",
+                                  subs,
+                                  cppinterop::get_qualified_name(old_scope)));
+        }
+
         return err(
           util::format("Unable to find `{}` within namespace `{}` while trying to resolve `{}`.",
                        subs,

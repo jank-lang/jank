@@ -1,0 +1,15 @@
+(cpp/raw "namespace jank::cpp::call::member::pass_member_function_template
+          {
+            struct foo
+            {
+              template <typename T>
+              T bar()
+              { return 42; }
+            };
+          }")
+(let* [bar-int #cpp (jank.cpp.call.member.pass_member_function_template.foo.bar int)
+       bar-float #cpp (jank.cpp.call.member.pass_member_function_template.foo.bar float)
+       f (cpp/jank.cpp.call.member.pass_member_function_template.foo)]
+  (if (and (= 42 (bar-int f))
+           (= 42.0 (bar-float f)))
+    :success))

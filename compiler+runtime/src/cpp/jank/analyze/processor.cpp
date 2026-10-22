@@ -5462,6 +5462,11 @@ namespace jank::analyze
           vk = expr::cpp_value::value_kind::enum_constant;
           inst_type = cppinterop::get_non_reference_type(inst_type);
         }
+        else if(cppinterop::is_method(inst_scope))
+        {
+          vk = expr::cpp_value::value_kind::function;
+          inst_type = cppinterop::get_pointer_to_member_type(inst_scope);
+        }
         else if(cppinterop::is_function(inst_scope))
         {
           vk = expr::cpp_value::value_kind::function;
