@@ -53,35 +53,24 @@ namespace jank::runtime::obj
   using keyword_ref = oref<keyword>;
 }
 
-/* TODO: Move to .cpp */
 namespace std
 {
   template <>
   struct hash<jank::runtime::obj::keyword_ref>
   {
-    size_t operator()(jank::runtime::obj::keyword_ref const o) const
-    {
-      return o.to_hash();
-    }
+    size_t operator()(jank::runtime::obj::keyword_ref const o) const;
   };
 
   template <>
   struct hash<jank::runtime::obj::keyword>
   {
-    size_t operator()(jank::runtime::obj::keyword const &o) const
-    {
-      static auto const hasher(std::hash<jank::runtime::obj::keyword_ref>{});
-      return hasher(const_cast<jank::runtime::obj::keyword *>(&o));
-    }
+    size_t operator()(jank::runtime::obj::keyword const &o) const;
   };
 
   template <>
   struct equal_to<jank::runtime::obj::keyword_ref>
   {
     bool operator()(jank::runtime::obj::keyword_ref const lhs,
-                    jank::runtime::obj::keyword_ref const rhs) const noexcept
-    {
-      return lhs.raw() == rhs.raw();
-    }
+                    jank::runtime::obj::keyword_ref const rhs) const noexcept;
   };
 }

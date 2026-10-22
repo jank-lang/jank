@@ -1,0 +1,16 @@
+(def n 1000)
+(def done (atom 0))
+
+(defn generate-garbage! []
+  (dorun (map str (range 1000))))
+
+(dotimes [_ n]
+  (future
+    (generate-garbage!)
+    (swap! done inc)))
+
+(while (< @done n)
+  (generate-garbage!))
+
+(when-not (= n @done)
+  (throw (ex-info "invalid result" {:result @done})))

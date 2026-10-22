@@ -892,8 +892,14 @@ namespace jank::runtime
   {
     auto const bindings{ __rt_ctx->get_thread_bindings() };
     auto const ret{ make_box<obj::future>() };
+    /* The future hangs onto its function to keep it alive. */
     ret->function = fn;
     ret->bindings = bindings;
+
+    /* We then register this future with the RT context so it will be kept alive. The GC
+     * can't find the future from scanning std::thread memory, since that's on the system heap. */
+    __rt_ctx->register_future(ret);
+
     /* NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage): False positive. */
     ret->thread = std::thread{ [ret]() {
       /* GC threads should be explicitly registered so that the GC is prepared to perform
@@ -907,7 +913,8 @@ namespace jank::runtime
         GC_get_stack_base(&sb);
         GC_register_my_thread(&sb);
       }
-      util::scope_exit const unregister{ []() {
+      util::scope_exit const unregister{ [=]() {
+        __rt_ctx->unregister_future(ret);
         if constexpr(jtl::current_platform != jtl::platform::macos_like)
         {
           GC_unregister_my_thread();

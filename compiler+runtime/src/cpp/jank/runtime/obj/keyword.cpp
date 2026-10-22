@@ -82,3 +82,25 @@ namespace jank::runtime::obj
     return this == &rhs;
   }
 }
+
+namespace std
+{
+  size_t
+  hash<jank::runtime::obj::keyword_ref>::operator()(jank::runtime::obj::keyword_ref const o) const
+  {
+    return o.to_hash();
+  }
+
+  size_t hash<jank::runtime::obj::keyword>::operator()(jank::runtime::obj::keyword const &o) const
+  {
+    static auto const hasher(std::hash<jank::runtime::obj::keyword_ref>{});
+    return hasher(const_cast<jank::runtime::obj::keyword *>(&o));
+  }
+
+  bool equal_to<jank::runtime::obj::keyword_ref>::operator()(
+    jank::runtime::obj::keyword_ref const lhs,
+    jank::runtime::obj::keyword_ref const rhs) const noexcept
+  {
+    return lhs.raw() == rhs.raw();
+  }
+}
