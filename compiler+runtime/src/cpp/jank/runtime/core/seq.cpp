@@ -941,10 +941,7 @@ namespace jank::runtime
 
           return res;
         }
-        else if constexpr(jtl::is_any_same<T,
-                                           obj::persistent_array_map,
-                                           obj::persistent_hash_map,
-                                           obj::persistent_sorted_map>)
+        else if constexpr(requires(T *) { T::is_map_like; })
         {
           object_ref res{ init };
 
