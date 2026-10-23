@@ -3110,7 +3110,7 @@ namespace jank::analyze
     {
       return meta_result.expect_err();
     }
-    auto const meta{ meta_result.expect_ok() };
+    auto const &meta{ meta_result.expect_ok() };
 
     native_vector<expression_ref> exprs;
     exprs.reserve(o->count());
@@ -3163,7 +3163,7 @@ namespace jank::analyze
     {
       return meta_result.expect_err();
     }
-    auto const meta{ meta_result.expect_ok() };
+    auto const &meta{ meta_result.expect_ok() };
 
     /* TODO: Detect literal and act accordingly. */
     return visit_map_like(
@@ -3224,7 +3224,7 @@ namespace jank::analyze
     {
       return meta_result.expect_err();
     }
-    auto const meta{ meta_result.expect_ok() };
+    auto const &meta{ meta_result.expect_ok() };
 
     return visit_set_like(
       [&](auto const typed_o) -> processor::expression_result {
