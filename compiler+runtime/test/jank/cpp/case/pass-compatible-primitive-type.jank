@@ -1,0 +1,7 @@
+(let* [i (cpp/int 77)
+       f (cpp/float)
+       r (case true
+           true i
+           f)]
+  (if (= 77.0 r)
+    :success))

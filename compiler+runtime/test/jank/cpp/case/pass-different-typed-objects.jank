@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::case_::pass_different_typed_objects
+          {
+            runtime::obj::small_real_ref foo()
+            { return runtime::make_box(2222.0); }
+            runtime::obj::persistent_string_ref bar()
+            { return runtime::make_box(\"meow\"); }
+          }")
+(let* [r (case true
+           true (cpp/jank.cpp.case_.pass_different_typed_objects.foo)
+           (cpp/jank.cpp.case_.pass_different_typed_objects.bar))]
+  (if (= r 2222.0)
+    :success))
