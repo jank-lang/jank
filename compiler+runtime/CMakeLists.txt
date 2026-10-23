@@ -979,6 +979,7 @@ if(jank_test)
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/runtime/behavior/call.cpp
+    test/cpp/jank/runtime/convert/function.cpp
     test/cpp/jank/runtime/core/seq.cpp
     test/cpp/jank/runtime/detail/native_persistent_list.cpp
     test/cpp/jank/runtime/obj/big_integer.cpp

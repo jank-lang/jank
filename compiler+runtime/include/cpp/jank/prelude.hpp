@@ -4,6 +4,7 @@
  * to provide fast access to jank's C++ API. */
 
 #include <jank/runtime/convert/builtin.hpp>
+#include <jank/runtime/convert/function.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/context.hpp>
 #include <jank/runtime/core/truthy.hpp>
