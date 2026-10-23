@@ -7342,10 +7342,13 @@ fails, attempts to require sym's namespace and retries."
   "Opposite of slurp.  Opens f with writer, writes content, then
   closes f. Options passed to clojure.java.io/writer."
   [f content & options]
-  (let [file (cpp/std.ofstream.)]
-    (cpp/.open file (cpp/cast (:* (:const char)) f))
-    (cpp/<< file (cpp/cast (:* (:const char)) content))
-    (cpp/.close file)
+  (let [{:keys [append]} (apply hash-map options)
+        file (cpp/std.ofstream.)
+        path (cpp/cast jtl.immutable_string f)]
+    (if-not append
+      (.open file path)
+      (.open file path cpp/std.ios_base.app))
+    (cpp/<< file (cpp/cast jtl.immutable_string content))
     nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; futures (needs proxy);;;;;;;;;;;;;;;;;;
