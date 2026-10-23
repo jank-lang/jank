@@ -9,7 +9,11 @@
           }")
 (let* [bar-int #cpp (jank.cpp.call.member.pass_member_function_template.foo.bar int)
        bar-float #cpp (jank.cpp.call.member.pass_member_function_template.foo.bar float)
-       f (cpp/jank.cpp.call.member.pass_member_function_template.foo)]
+       f (cpp/jank.cpp.call.member.pass_member_function_template.foo)
+       inline-int (#cpp (jank.cpp.call.member.pass_member_function_template.foo.bar int) f)
+       inline-float (#cpp (jank.cpp.call.member.pass_member_function_template.foo.bar float) f)]
   (if (and (= 42 (bar-int f))
-           (= 42.0 (bar-float f)))
+           (= 42.0 (bar-float f))
+           (= 42 inline-int)
+           (= 42.0 inline-float))
     :success))
