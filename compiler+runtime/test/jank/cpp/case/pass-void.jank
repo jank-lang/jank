@@ -1,4 +1,4 @@
-(cpp/raw "namespace jank::cpp::if_::pass_void_then_and_else
+(cpp/raw "namespace jank::cpp::case_::pass_void
           {
             void foo()
             { }
