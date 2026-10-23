@@ -1825,7 +1825,7 @@ namespace jank::analyze::cpp_util
     //              cppinterop::get_type_as_string(expected_type),
     //              cppinterop::get_type_as_string(cppinterop::get_canonical_type(expected_type)),
     //              cppinterop::is_type_derived_from(cppinterop::get_underlying_type(expr_type),
-    //                                     cppinterop::get_underlying_type(expected_type)));
+    //                                               cppinterop::get_underlying_type(expected_type)));
 
     expr_type = cppinterop::get_non_reference_type(expr_type);
     if(cppinterop::get_canonical_type(expr_type) == cppinterop::get_canonical_type(expected_type)

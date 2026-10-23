@@ -140,6 +140,13 @@ namespace jank::analyze
                             jtl::ptr<void> const expected_type,
                             native_vector<runtime::object_ref> const &macro_expansions);
   static jtl::result<void, error_ref>
+  apply_implicit_conversions(std::vector<cppinterop::clang_type> const &param_types,
+                             bool const is_non_static_member,
+                             /* Out param. */
+                             native_vector<expression_ref> &arg_exprs,
+                             std::vector<cppinterop::clang_type> const &arg_types,
+                             native_vector<runtime::object_ref> const &macro_expansions);
+  static jtl::result<void, error_ref>
   apply_implicit_conversions(jtl::ptr<void> const fn,
                              /* Out param. */
                              native_vector<expression_ref> &arg_exprs,
@@ -719,6 +726,14 @@ namespace jank::analyze
                                                                                   arg_types) };
       if(aggregate_match.is_some())
       {
+        auto const conversion_res{
+          apply_implicit_conversions(aggregate_types, false, arg_exprs, arg_types, macro_expansions)
+        };
+        if(conversion_res.is_err())
+        {
+          return conversion_res.expect_err();
+        }
+
         //util::println("using aggregate initialization");
         return jtl::make_ref<expr::cpp_constructor_call>(position,
                                                          current_frame,
@@ -1014,20 +1029,21 @@ namespace jank::analyze
   }
 
   static jtl::result<void, error_ref>
-  apply_implicit_conversions(jtl::ptr<void> const fn,
+  apply_implicit_conversions(std::vector<cppinterop::clang_type> const &param_types,
+                             bool const is_non_static_member,
                              /* Out param. */
                              native_vector<expression_ref> &arg_exprs,
                              std::vector<cppinterop::clang_type> const &arg_types,
                              native_vector<runtime::object_ref> const &macro_expansions)
   {
-    auto const member_offset{ cpp_util::is_non_static_member_function(fn) ? 1 : 0 };
+    auto const member_offset{ is_non_static_member ? 1 : 0 };
     /* We loop through the args rather than the params, since there may be
      * more params than args, if some of them support default values. */
     for(usize i{}; i < arg_exprs.size() - member_offset; ++i)
     {
       /* For variadic C functions, we won't have a parameter type for anything which goes
        * into the va_list. For those, we'll just take the arg type as is. */
-      auto const param_type{ cppinterop::get_function_arg_type(fn, i) };
+      auto const param_type{ param_types[i] };
       cppinterop::clang_type const arg_type{ arg_types[i + member_offset] };
       auto const res{ apply_implicit_conversion(arg_exprs[i + member_offset],
                                                 arg_type,
@@ -1040,6 +1056,26 @@ namespace jank::analyze
       arg_exprs[i + member_offset] = res.expect_ok();
     }
     return ok();
+  }
+
+  static jtl::result<void, error_ref>
+  apply_implicit_conversions(jtl::ptr<void> const fn,
+                             /* Out param. */
+                             native_vector<expression_ref> &arg_exprs,
+                             std::vector<cppinterop::clang_type> const &arg_types,
+                             native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    std::vector<jtl::ptr<void>> param_types;
+    param_types.reserve(arg_exprs.size());
+    for(usize i{}; i < arg_exprs.size(); ++i)
+    {
+      param_types.emplace_back(cppinterop::get_function_arg_type(fn, i));
+    }
+    return apply_implicit_conversions(param_types,
+                                      cpp_util::is_non_static_member_function(fn),
+                                      arg_exprs,
+                                      arg_types,
+                                      macro_expansions);
   }
 
   static auto &specials()
