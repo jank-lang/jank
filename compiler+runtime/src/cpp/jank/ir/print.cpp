@@ -78,7 +78,10 @@ namespace jank::ir
       needs_space = true;
       sb(value);
     }
-    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+    util::format_to(sb,
+                    "] :meta {} :type \"{}\"}",
+                    meta.is_some() ? meta.unwrap() : "",
+                    get_qualified_type_name(type));
   }
 
   void inst::persistent_vector::print(jtl::string_builder &sb, usize const) const
@@ -94,7 +97,10 @@ namespace jank::ir
       needs_space = true;
       sb(value);
     }
-    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+    util::format_to(sb,
+                    "] :meta {} :type \"{}\"}",
+                    meta.is_some() ? meta.unwrap() : "",
+                    get_qualified_type_name(type));
   }
 
   void inst::persistent_array_map::print(jtl::string_builder &sb, usize const) const
@@ -110,7 +116,10 @@ namespace jank::ir
       needs_space = true;
       util::format_to(sb, "[{} {}]", value.first, value.second);
     }
-    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+    util::format_to(sb,
+                    "] :meta {} :type \"{}\"}",
+                    meta.is_some() ? meta.unwrap() : "",
+                    get_qualified_type_name(type));
   }
 
   void inst::persistent_hash_map::print(jtl::string_builder &sb, usize const) const
@@ -126,7 +135,10 @@ namespace jank::ir
       needs_space = true;
       util::format_to(sb, "[{} {}]", value.first, value.second);
     }
-    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+    util::format_to(sb,
+                    "] :meta {} :type \"{}\"}",
+                    meta.is_some() ? meta.unwrap() : "",
+                    get_qualified_type_name(type));
   }
 
   void inst::persistent_hash_set::print(jtl::string_builder &sb, usize const) const
@@ -142,7 +154,10 @@ namespace jank::ir
       needs_space = true;
       sb(value);
     }
-    util::format_to(sb, "] :type \"{}\"}", get_qualified_type_name(type));
+    util::format_to(sb,
+                    "] :meta {} :type \"{}\"}",
+                    meta.is_some() ? meta.unwrap() : "",
+                    get_qualified_type_name(type));
   }
 
   void inst::function::print(jtl::string_builder &sb, usize const) const

@@ -146,6 +146,46 @@ namespace jank::analyze
                              std::vector<cppinterop::clang_type> const &arg_types,
                              native_vector<runtime::object_ref> const &macro_expansions);
 
+  static jtl::result<jtl::option<expression_ref>, error_ref>
+  analyze_collection_meta(processor &proc,
+                          object_ref const meta,
+                          local_frame_ptr const current_frame,
+                          jtl::option<expr::function_context_ref> const &fn_ctx)
+  {
+    if(meta.is_nil())
+    {
+      return jtl::option<expression_ref>{};
+    }
+
+    auto const runtime_meta{ runtime::strip_source_from_meta(meta) };
+    if(runtime_meta.is_nil())
+    {
+      return jtl::option<expression_ref>{};
+    }
+
+    /* The metadata map's own reader metadata describes the metadata form, not the target
+     * collection. It must not be recursively analyzed as another collection metadata map. */
+    auto const meta_form{ runtime::with_meta(runtime_meta, jank_nil) };
+    auto meta_expr{
+      proc.analyze(meta_form, current_frame, expression_position::value, fn_ctx, true)
+    };
+    if(meta_expr.is_err())
+    {
+      return meta_expr.expect_err();
+    }
+
+    meta_expr = apply_implicit_conversion(meta_expr.expect_ok(),
+                                          cpp_util::expression_type(meta_expr.expect_ok()),
+                                          cpp_util::untyped_object_ref_type(),
+                                          proc.macro_expansions);
+    if(meta_expr.is_err())
+    {
+      return meta_expr.expect_err();
+    }
+
+    return jtl::option<expression_ref>{ meta_expr.expect_ok() };
+  }
+
   static processor::expression_result
   build_builtin_operator_call(expr::cpp_value_ref const val,
                               Cpp::Operator const op,
@@ -3088,10 +3128,16 @@ namespace jank::analyze
                             bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
+    auto const meta_result{ analyze_collection_meta(*this, o->get_meta(), current_frame, fn_ctx) };
+    if(meta_result.is_err())
+    {
+      return meta_result.expect_err();
+    }
+    auto const &meta{ meta_result.expect_ok() };
 
     native_vector<expression_ref> exprs;
     exprs.reserve(o->count());
-    bool literal{ true };
+    bool literal{ meta.is_none() };
     for(auto d = o->fresh_seq(); d.is_some(); d = d.next_in_place())
     {
       auto res(analyze(d.first(), current_frame, expression_position::value, fn_ctx, true));
@@ -3116,22 +3162,13 @@ namespace jank::analyze
     if(literal)
     {
       /* Eval the literal to resolve exprs such as quotes. */
-      auto const pre_eval_expr(jtl::make_ref<expr::vector>(position,
-                                                           current_frame,
-                                                           true,
-                                                           o,
-                                                           std::move(exprs),
-                                                           o->get_meta()));
+      auto const pre_eval_expr(
+        jtl::make_ref<expr::vector>(position, current_frame, true, o, std::move(exprs), meta));
       auto const oref(evaluate::eval(pre_eval_expr));
       return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o, oref);
     }
 
-    return jtl::make_ref<expr::vector>(position,
-                                       current_frame,
-                                       true,
-                                       o,
-                                       std::move(exprs),
-                                       o->get_meta());
+    return jtl::make_ref<expr::vector>(position, current_frame, true, o, std::move(exprs), meta);
   }
 
   processor::expression_result
@@ -3142,6 +3179,14 @@ namespace jank::analyze
                          bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
+    auto const meta_result{
+      analyze_collection_meta(*this, runtime::meta(o), current_frame, fn_ctx)
+    };
+    if(meta_result.is_err())
+    {
+      return meta_result.expect_err();
+    }
+    auto const &meta{ meta_result.expect_ok() };
 
     /* TODO: Detect literal and act accordingly. */
     return visit_map_like(
@@ -3182,12 +3227,7 @@ namespace jank::analyze
           exprs.emplace_back(k_expr.expect_ok(), v_expr.expect_ok());
         }
 
-        return jtl::make_ref<expr::map>(position,
-                                        current_frame,
-                                        true,
-                                        o,
-                                        std::move(exprs),
-                                        typed_o->get_meta());
+        return jtl::make_ref<expr::map>(position, current_frame, true, o, std::move(exprs), meta);
       },
       o);
   }
@@ -3200,6 +3240,14 @@ namespace jank::analyze
                          bool const)
   {
     auto const pop_macro_expansions{ push_macro_expansions(*this, o) };
+    auto const meta_result{
+      analyze_collection_meta(*this, runtime::meta(o), current_frame, fn_ctx)
+    };
+    if(meta_result.is_err())
+    {
+      return meta_result.expect_err();
+    }
+    auto const &meta{ meta_result.expect_ok() };
 
     return visit_set_like(
       [&](auto const typed_o) -> processor::expression_result {
@@ -3230,23 +3278,14 @@ namespace jank::analyze
         if(literal)
         {
           /* Eval the literal to resolve exprs such as quotes. */
-          auto const pre_eval_expr(jtl::make_ref<expr::set>(position,
-                                                            current_frame,
-                                                            true,
-                                                            o,
-                                                            std::move(exprs),
-                                                            typed_o->get_meta()));
+          auto const pre_eval_expr(
+            jtl::make_ref<expr::set>(position, current_frame, true, o, std::move(exprs), meta));
           auto const constant(evaluate::eval(pre_eval_expr));
 
           return jtl::make_ref<expr::primitive_literal>(position, current_frame, true, o, constant);
         }
 
-        return jtl::make_ref<expr::set>(position,
-                                        current_frame,
-                                        true,
-                                        o,
-                                        std::move(exprs),
-                                        typed_o->get_meta());
+        return jtl::make_ref<expr::set>(position, current_frame, true, o, std::move(exprs), meta);
       },
       o);
   }
@@ -3264,6 +3303,22 @@ namespace jank::analyze
     auto const count(o->count());
     if(count == 0)
     {
+      auto const meta_result{
+        analyze_collection_meta(*this, o->get_meta(), current_frame, fn_ctx)
+      };
+      if(meta_result.is_err())
+      {
+        return meta_result.expect_err();
+      }
+      if(meta_result.expect_ok().is_some())
+      {
+        return jtl::make_ref<expr::list>(position,
+                                         current_frame,
+                                         needs_box,
+                                         o,
+                                         native_vector<expression_ref>{},
+                                         meta_result.expect_ok());
+      }
       return analyze_primitive_literal(o, current_frame, position, fn_ctx, needs_box);
     }
 
@@ -3485,7 +3540,7 @@ namespace jank::analyze
                                                        needs_arg_box,
                                                        o,
                                                        std::move(packed_arg_exprs),
-                                                       jank_nil));
+                                                       jtl::option<expression_ref>{}));
     }
 
     auto const recursion_ref(llvm::dyn_cast<expr::recursion_reference>(source.data));

@@ -535,6 +535,10 @@ namespace jank::ir
     {
       f(arg);
     }
+    if(instr->meta.is_some())
+    {
+      f(instr->meta.unwrap());
+    }
   }
 
   void walk_references_typed(ir::inst::persistent_vector_ref const instr,
@@ -543,6 +547,10 @@ namespace jank::ir
     for(auto const &arg : instr->values)
     {
       f(arg);
+    }
+    if(instr->meta.is_some())
+    {
+      f(instr->meta.unwrap());
     }
   }
 
@@ -554,6 +562,10 @@ namespace jank::ir
       f(arg.first);
       f(arg.second);
     }
+    if(instr->meta.is_some())
+    {
+      f(instr->meta.unwrap());
+    }
   }
 
   void walk_references_typed(ir::inst::persistent_hash_map_ref const instr,
@@ -564,6 +576,10 @@ namespace jank::ir
       f(arg.first);
       f(arg.second);
     }
+    if(instr->meta.is_some())
+    {
+      f(instr->meta.unwrap());
+    }
   }
 
   void walk_references_typed(ir::inst::persistent_hash_set_ref const instr,
@@ -572,6 +588,10 @@ namespace jank::ir
     for(auto const &arg : instr->values)
     {
       f(arg);
+    }
+    if(instr->meta.is_some())
+    {
+      f(instr->meta.unwrap());
     }
   }
 
