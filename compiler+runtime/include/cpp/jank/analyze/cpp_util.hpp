@@ -110,8 +110,8 @@ namespace jank::analyze::cpp_util
   struct branch_common_type
   {
     cppinterop::clang_type type;
-    bool then_needs_conversion;
-    bool else_needs_conversion;
+    bool then_needs_conversion{};
+    bool else_needs_conversion{};
   };
 
   jtl::string_result<branch_common_type>
