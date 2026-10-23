@@ -34,22 +34,32 @@ jank::runtime::obj::persistent_string_ref _jank_string(char const * const s);
 jank::runtime::obj::persistent_list_ref _jank_list(jank::u64 const elems, ...);
 jank::runtime::obj::persistent_list_ref
 _jank_list(char const * const meta, jank::u64 const elems, ...);
+jank::runtime::obj::persistent_list_ref
+_jank_list(jank::runtime::object_ref const meta, jank::u64 const elems, ...);
 
 jank::runtime::obj::persistent_vector_ref _jank_vec(jank::u64 const elems, ...);
 jank::runtime::obj::persistent_vector_ref
 _jank_vec(char const * const meta, jank::u64 const elems, ...);
+jank::runtime::obj::persistent_vector_ref
+_jank_vec(jank::runtime::object_ref const meta, jank::u64 const elems, ...);
 
 jank::runtime::obj::persistent_hash_set_ref _jank_hset(jank::u64 const elems, ...);
 jank::runtime::obj::persistent_hash_set_ref
 _jank_hset(char const * const meta, jank::u64 const elems, ...);
+jank::runtime::obj::persistent_hash_set_ref
+_jank_hset(jank::runtime::object_ref const meta, jank::u64 const elems, ...);
 
 jank::runtime::obj::persistent_array_map_ref _jank_amap(jank::u64 const pairs, ...);
 jank::runtime::obj::persistent_array_map_ref
 _jank_amap(char const * const meta, jank::u64 const pairs, ...);
+jank::runtime::obj::persistent_array_map_ref
+_jank_amap(jank::runtime::object_ref const meta, jank::u64 const pairs, ...);
 
 jank::runtime::obj::persistent_hash_map_ref _jank_hmap(jank::u64 const pairs, ...);
 jank::runtime::obj::persistent_hash_map_ref
 _jank_hmap(char const * const meta, jank::u64 const pairs, ...);
+jank::runtime::obj::persistent_hash_map_ref
+_jank_hmap(jank::runtime::object_ref const meta, jank::u64 const pairs, ...);
 
 jank::runtime::obj::jit_function_ref _jank_fn(jank::runtime::callable_arity_flags const flags);
 jank::runtime::obj::jit_variadic_function_ref

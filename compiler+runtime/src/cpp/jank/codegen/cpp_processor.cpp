@@ -617,9 +617,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_list(", inst->name);
-    if(!is_empty(inst->meta))
+    if(inst->meta.is_some())
     {
-      util::format_to(b.body_buffer, "\"{}\", ", util::escape(inst->meta.to_code_string()));
+      util::format_to(b.body_buffer, "{}.erase(), ", inst->meta.unwrap());
     }
     util::format_to(b.body_buffer, "{}", inst->values.size());
     for(auto const &val : inst->values)
@@ -635,9 +635,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_vec(", inst->name);
-    if(!is_empty(inst->meta))
+    if(inst->meta.is_some())
     {
-      util::format_to(b.body_buffer, "\"{}\", ", util::escape(inst->meta.to_code_string()));
+      util::format_to(b.body_buffer, "{}.erase(), ", inst->meta.unwrap());
     }
     util::format_to(b.body_buffer, "{}", inst->values.size());
     for(auto const &val : inst->values)
@@ -653,9 +653,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_amap(", inst->name);
-    if(!is_empty(inst->meta))
+    if(inst->meta.is_some())
     {
-      util::format_to(b.body_buffer, "\"{}\",", util::escape(inst->meta.to_code_string()));
+      util::format_to(b.body_buffer, "{}.erase(),", inst->meta.unwrap());
     }
 
     util::format_to(b.body_buffer, "{}", inst->values.size());
@@ -672,9 +672,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_hmap(", inst->name);
-    if(!is_empty(inst->meta))
+    if(inst->meta.is_some())
     {
-      util::format_to(b.body_buffer, "\"{}\",", util::escape(inst->meta.to_code_string()));
+      util::format_to(b.body_buffer, "{}.erase(),", inst->meta.unwrap());
     }
 
     util::format_to(b.body_buffer, "{}", inst->values.size());
@@ -691,9 +691,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_hset(", inst->name);
-    if(!is_empty(inst->meta))
+    if(inst->meta.is_some())
     {
-      util::format_to(b.body_buffer, "\"{}\",", util::escape(inst->meta.to_code_string()));
+      util::format_to(b.body_buffer, "{}.erase(),", inst->meta.unwrap());
     }
 
     util::format_to(b.body_buffer, "{}", inst->values.size());
