@@ -127,8 +127,8 @@ _jank_list_impl(jank::runtime::object_ref const meta, jank::u64 const elems, va_
   return jank::runtime::make_box<jank::runtime::obj::persistent_list>(meta, jtl::move(list));
 }
 
-/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 jank::runtime::obj::persistent_list_ref
+/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 _jank_list(jank::runtime::object_ref const meta, jank::u64 const elems, ...)
 {
   /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
@@ -196,8 +196,8 @@ _jank_vec_impl(jank::runtime::object_ref const meta, jank::u64 const elems, va_l
   return trans.to_persistent()->with_meta(meta);
 }
 
-/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 jank::runtime::obj::persistent_vector_ref
+/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 _jank_vec(jank::runtime::object_ref const meta, jank::u64 const elems, ...)
 {
   /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
@@ -265,8 +265,8 @@ _jank_hset_impl(jank::runtime::object_ref const meta, jank::u64 const elems, va_
   return trans.to_persistent()->with_meta(meta);
 }
 
-/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 jank::runtime::obj::persistent_hash_set_ref
+/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 _jank_hset(jank::runtime::object_ref const meta, jank::u64 const elems, ...)
 {
   /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
@@ -340,8 +340,8 @@ _jank_amap_impl(jank::runtime::object_ref const meta, jank::u64 const pairs, va_
   return trans.to_persistent()->with_meta(meta);
 }
 
-/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 jank::runtime::obj::persistent_array_map_ref
+/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 _jank_amap(jank::runtime::object_ref const meta, jank::u64 const pairs, ...)
 {
   /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
@@ -413,8 +413,8 @@ _jank_hmap_impl(jank::runtime::object_ref const meta, jank::u64 const pairs, va_
   return trans.to_persistent()->with_meta(meta);
 }
 
-/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 jank::runtime::obj::persistent_hash_map_ref
+/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 _jank_hmap(jank::runtime::object_ref const meta, jank::u64 const pairs, ...)
 {
   /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
