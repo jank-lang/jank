@@ -7349,7 +7349,6 @@ fails, attempts to require sym's namespace and retries."
       (.open file path)
       (.open file path cpp/std.ios_base.app))
     (cpp/<< file (cpp/cast jtl.immutable_string content))
-    (.close file)
     nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; futures (needs proxy);;;;;;;;;;;;;;;;;;
