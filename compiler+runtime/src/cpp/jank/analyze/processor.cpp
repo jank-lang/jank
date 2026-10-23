@@ -121,6 +121,19 @@ namespace jank::analyze
     return expansions.back();
   }
 
+  static bool is_private_var(runtime::var_ref const var)
+  {
+    static auto const private_kw{ __rt_ctx->intern_keyword("", "private").expect_ok() };
+    return runtime::truthy(runtime::get(var->get_meta(), private_kw));
+  }
+
+  static bool can_access_var(runtime::var_ref const var, bool const from_macro_expansion)
+  {
+    /* Macro expansions may intentionally reference private implementation vars, such as
+     * clojure.core's *loaded-libs* var. */
+    return from_macro_expansion || !is_private_var(var) || var->n == __rt_ctx->current_ns();
+  }
+
   static jtl::result<expression_ref, error_ref>
   apply_implicit_conversion(expression_ref const expr,
                             jtl::ptr<void> expr_type,
@@ -1452,6 +1465,16 @@ namespace jank::analyze
 
       return error::analyze_unresolved_symbol(
         util::format("The symbol `{}` could not be resolved.", sym->to_string()),
+        meta_source(sym->get_meta()),
+        latest_expansion(macro_expansions));
+    }
+
+    if(!can_access_var(var, !macro_expansions.empty()))
+    {
+      return error::analyze_private_var(
+        util::format("The var `{}` is private and can only be accessed from namespace `{}`.",
+                     qualified_sym->to_string(),
+                     var->n->to_string()),
         meta_source(sym->get_meta()),
         latest_expansion(macro_expansions));
     }
