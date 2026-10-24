@@ -230,25 +230,24 @@ namespace jank::runtime
             using LeftType = std::decay_t<T>;
             using RightType = std::decay_t<decltype(typed_r->data)>;
 
-            constexpr bool float_branch{ std::is_same_v<LeftType, f32>
-                                         || std::is_same_v<LeftType, f64>
-                                         || std::is_same_v<RightType, f32>
-                                         || std::is_same_v<RightType, f64> };
+            constexpr bool is_float{ std::is_same_v<LeftType, f32> || std::is_same_v<LeftType, f64>
+                                     || std::is_same_v<RightType, f32>
+                                     || std::is_same_v<RightType, f64> };
 
-            constexpr bool ratio_branch{ std::is_same_v<LeftType, obj::ratio_data>
-                                         || std::is_same_v<RightType, obj::ratio_data> };
+            constexpr bool is_ratio{ std::is_same_v<LeftType, obj::ratio_data>
+                                     || std::is_same_v<RightType, obj::ratio_data> };
 
-            constexpr bool big_decimal_branch{ std::is_same_v<LeftType, native_big_decimal>
-                                               || std::is_same_v<RightType, native_big_decimal> };
+            constexpr bool is_big_decimal{ std::is_same_v<LeftType, native_big_decimal>
+                                           || std::is_same_v<RightType, native_big_decimal> };
 
-            constexpr bool big_integer_branch{ std::is_same_v<LeftType, native_big_integer>
-                                               || std::is_same_v<RightType, native_big_integer> };
+            constexpr bool is_big_integer{ std::is_same_v<LeftType, native_big_integer>
+                                           || std::is_same_v<RightType, native_big_integer> };
 
-            if constexpr(float_branch)
+            if constexpr(is_float)
             {
               return make_box(rem(to_real(typed_l_data), to_real(typed_r->data))).erase();
             }
-            else if constexpr(ratio_branch)
+            else if constexpr(is_ratio)
             {
               if constexpr(std::is_same_v<LeftType, obj::ratio_data>
                            && std::is_same_v<RightType, obj::ratio_data>)
@@ -270,7 +269,7 @@ namespace jank::runtime
                 return rem(l, typed_r->data);
               }
             }
-            else if constexpr(big_decimal_branch)
+            else if constexpr(is_big_decimal)
             {
               if(typed_r->data == 0)
               {
@@ -284,7 +283,7 @@ namespace jank::runtime
 
               return make_box<obj::big_decimal>(typed_l_data < 0 ? -result : result).erase();
             }
-            else if constexpr(big_integer_branch)
+            else if constexpr(is_big_integer)
             {
               if(typed_r->data == 0)
               {
@@ -302,7 +301,10 @@ namespace jank::runtime
               {
                 throw std::runtime_error{ "Division by zero is not permitted." };
               }
-              else if(typed_r->data == -1) // prevents a floating point exception
+              /* Prevents a floating point exception num = -2147483648 and div = -1,
+               * and for all div = -1, rem = 0.
+               */
+              else if(typed_r->data == -1)
               {
                 return make_box(0).erase();
               }
