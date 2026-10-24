@@ -276,11 +276,11 @@ namespace jank::runtime
                 throw std::runtime_error{ "Division by zero is not permitted." };
               }
 
-              native_big_decimal const l{ typed_l_data };
-              native_big_decimal const r{ typed_r->data };
-              auto const result{ boost::multiprecision::fmod(abs(l), abs(r)) };
-              /* boost::multiprecision::fmod doesn't account for negatives, so we need to do it manually */
+              auto const result{ boost::multiprecision::fmod(
+                abs(native_big_decimal{ typed_l_data }),
+                abs(native_big_decimal{ typed_r->data })) };
 
+              /* boost::multiprecision::fmod doesn't account for negatives, so we need to do it manually */
               return make_box<obj::big_decimal>(typed_l_data < 0 ? -result : result).erase();
             }
             else if constexpr(is_big_integer)
@@ -290,10 +290,9 @@ namespace jank::runtime
                 throw std::runtime_error{ "Division by zero is not permitted." };
               }
 
-              native_big_integer const l{ typed_l_data };
-              native_big_integer const r{ typed_r->data };
-
-              return make_box(l % r).erase();
+              return make_box(native_big_integer{ typed_l_data }
+                              % native_big_integer{ typed_r->data })
+                .erase();
             }
             else
             {
