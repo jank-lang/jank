@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::new_::complex::pass_aggregate_with_trait_conversion
+          {
+            struct foo
+            {
+              int a{}, b{};
+            };
+          }")
+(let* [f (cpp/new cpp/jank.cpp.new_.complex.pass_aggregate_with_trait_conversion.foo 17 23)]
+  (if (and (= 17 (.-a f)) (= 23 (.-b f)))
+    :success))
