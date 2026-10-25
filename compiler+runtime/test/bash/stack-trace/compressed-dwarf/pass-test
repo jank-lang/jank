@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+rm -rf target
+mkdir -p target
+
+clang++ -gz -c src/lib.cpp -o target/lib.o $(jank print-cflags)
+ar qc target/libtest.a target/lib.o
+
+jank -Ltarget -ltest --module-path src run-main main
