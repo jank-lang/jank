@@ -2,6 +2,13 @@
 
 set -euo pipefail
 
+case "$(uname -s)" in
+  MSYS_NT*|MINGW*_NT*|CLANG*_NT*|CYGWIN_NT*)
+    echo "Skipping on Windows"
+    exit 0
+    ;;
+esac
+
 rm -rf target
 mkdir -p target
 
