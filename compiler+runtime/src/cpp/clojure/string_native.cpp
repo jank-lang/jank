@@ -387,7 +387,7 @@ namespace clojure::string_native
    * - Positive: The result contains at most n elements, where the last element
    *             can contain the remainder of a string, unsplit.
    * -     Zero: The result has no limit, but all trailing empty string are removed
-   * - Negative: The result has no limit, and all trailing  are kept
+   * - Negative: The result has no limit, and all trailing empty string are kept
    */
   obj::persistent_vector_ref
   split(jtl::immutable_string const &s, obj::re_pattern_ref const re, i64 const limit)
@@ -403,17 +403,17 @@ namespace clojure::string_native
       std::cregex_iterator it(s.begin(), s.end(), re->regex);
       std::cregex_iterator const end{};
 
+      /* Ignore leading empty strings just like Java */
+      if(it != end && it->length(0) == 0 && it->position(0) == 0)
+      {
+        ++it;
+      }
+
       if(limit > 0)
       {
         auto prev(s.begin());
         for(int i{}; it != end && i < limit - 1; ++i, ++it)
         {
-          /* Ignore leading empty strings just like Java. Don't count it towards the limit either. */
-          if(it->length(0) == 0 && it->position(0) == 0)
-          {
-            --i;
-            continue;
-          }
           vec.push_back(
             make_box<obj::persistent_string>(jtl::immutable_string{ prev, (*it)[0].first }));
           prev = (*it)[0].second;
@@ -425,11 +425,6 @@ namespace clojure::string_native
         auto prev(s.begin());
         for(; it != end; ++it)
         {
-          /* Ignore leading empty strings just like Java */
-          if(it->length(0) == 0 && it->position(0) == 0)
-          {
-            continue;
-          }
           vec.push_back(
             make_box<obj::persistent_string>(jtl::immutable_string{ prev, (*it)[0].first }));
           prev = (*it)[0].second;
