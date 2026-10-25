@@ -168,14 +168,14 @@
   the maximum number of parts. Not lazy. Returns vector of the parts.
   Trailing empty strings are not returned - pass limit of -1 to return all."
   ([s re]
-   (cpp/clojure.string_native.split s re))
+   (cpp/clojure.string_native.split s re 0))
   ([s re limit]
    (cpp/clojure.string_native.split s re limit)))
 
 (defn split-lines
   "Splits s on \\n or \\r\\n. Trailing empty lines are not returned."
   [s]
-  (cpp/clojure.string_native.split s #"\r?\n"))
+  (cpp/clojure.string_native.split s #"\r?\n" 0))
 
 (defn trim
   "Removes whitespace from both ends of string."
