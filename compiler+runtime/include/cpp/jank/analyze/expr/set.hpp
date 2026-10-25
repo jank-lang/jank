@@ -1,5 +1,7 @@
 #pragma once
 
+#include <jtl/option.hpp>
+
 #include <jank/analyze/expression.hpp>
 
 namespace jank::analyze::expr
@@ -15,12 +17,12 @@ namespace jank::analyze::expr
         bool needs_box,
         runtime::object_ref form,
         native_vector<expression_ref> &&data_exprs,
-        runtime::object_ref const meta);
+        jtl::option<expression_ref> const &meta);
 
     runtime::object_ref to_runtime_data() const override;
     void walk(std::function<void(jtl::ref<expression>)> const &f) override;
 
     native_vector<expression_ref> data_exprs;
-    runtime::object_ref meta;
+    jtl::option<expression_ref> meta;
   };
 }

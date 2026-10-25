@@ -18,14 +18,7 @@ namespace jank::analyze::pass
         [](auto const typed_e) -> expression_ref {
           using T = typename decltype(typed_e)::value_type;
 
-          if constexpr(jtl::is_any_same<T, expr::list, expr::vector, expr::set, expr::map>)
-          {
-            if(typed_e->meta.is_some())
-            {
-              typed_e->meta = runtime::strip_source_from_meta(typed_e->meta);
-            }
-          }
-          else if constexpr(jtl::is_same<T, expr::primitive_literal>)
+          if constexpr(jtl::is_same<T, expr::primitive_literal>)
           {
             /* TODO: Port visit_object: metadatable. */
             runtime::visit_object(

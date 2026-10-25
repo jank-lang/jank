@@ -110,6 +110,35 @@ _jank_list(char const * const meta, jank::u64 const elems, ...)
   return ret;
 }
 
+static jank::runtime::obj::persistent_list_ref
+/* NOLINTNEXTLINE(readability-non-const-parameter) */
+_jank_list_impl(jank::runtime::object_ref const meta, jank::u64 const elems, va_list args)
+{
+  jank::native_vector<jank::runtime::object_ref> trans;
+  trans.reserve(elems);
+
+  for(jank::u64 i{}; i < elems; ++i)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    trans.emplace_back(va_arg(args, jank::runtime::object *));
+  }
+
+  jank::runtime::detail::native_persistent_list list{ trans.rbegin(), trans.rend() };
+  return jank::runtime::make_box<jank::runtime::obj::persistent_list>(meta, jtl::move(list));
+}
+
+jank::runtime::obj::persistent_list_ref
+/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
+_jank_list(jank::runtime::object_ref const meta, jank::u64 const elems, ...)
+{
+  /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+  va_list args{};
+  va_start(args, elems);
+  auto const ret{ _jank_list_impl(meta, elems, args) };
+  va_end(args);
+  return ret;
+}
+
 static jank::runtime::obj::persistent_vector_ref
 /* NOLINTNEXTLINE(readability-non-const-parameter) */
 _jank_vec_impl(char const * const meta, jank::u64 const elems, va_list args)
@@ -152,6 +181,33 @@ _jank_vec(char const * const meta, jank::u64 const elems, ...)
   return ret;
 }
 
+static jank::runtime::obj::persistent_vector_ref
+/* NOLINTNEXTLINE(readability-non-const-parameter) */
+_jank_vec_impl(jank::runtime::object_ref const meta, jank::u64 const elems, va_list args)
+{
+  jank::runtime::obj::transient_vector trans;
+
+  for(jank::u64 i{}; i < elems; ++i)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    trans.conj_in_place(va_arg(args, jank::runtime::object *));
+  }
+
+  return trans.to_persistent()->with_meta(meta);
+}
+
+jank::runtime::obj::persistent_vector_ref
+/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
+_jank_vec(jank::runtime::object_ref const meta, jank::u64 const elems, ...)
+{
+  /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+  va_list args{};
+  va_start(args, elems);
+  auto const ret{ _jank_vec_impl(meta, elems, args) };
+  va_end(args);
+  return ret;
+}
+
 static jank::runtime::obj::persistent_hash_set_ref
 /* NOLINTNEXTLINE(readability-non-const-parameter) */
 _jank_hset_impl(char const * const meta, jank::u64 const elems, va_list args)
@@ -185,6 +241,33 @@ jank::runtime::obj::persistent_hash_set_ref _jank_hset(jank::u64 const elems, ..
 jank::runtime::obj::persistent_hash_set_ref
 /* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 _jank_hset(char const * const meta, jank::u64 const elems, ...)
+{
+  /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+  va_list args{};
+  va_start(args, elems);
+  auto const ret{ _jank_hset_impl(meta, elems, args) };
+  va_end(args);
+  return ret;
+}
+
+static jank::runtime::obj::persistent_hash_set_ref
+/* NOLINTNEXTLINE(readability-non-const-parameter) */
+_jank_hset_impl(jank::runtime::object_ref const meta, jank::u64 const elems, va_list args)
+{
+  jank::runtime::obj::transient_hash_set trans;
+
+  for(jank::u64 i{}; i < elems; ++i)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    trans.conj_in_place(va_arg(args, jank::runtime::object *));
+  }
+
+  return trans.to_persistent()->with_meta(meta);
+}
+
+jank::runtime::obj::persistent_hash_set_ref
+/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
+_jank_hset(jank::runtime::object_ref const meta, jank::u64 const elems, ...)
 {
   /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
   va_list args{};
@@ -239,6 +322,36 @@ _jank_amap(char const * const meta, jank::u64 const pairs, ...)
   return ret;
 }
 
+static jank::runtime::obj::persistent_array_map_ref
+/* NOLINTNEXTLINE(readability-non-const-parameter) */
+_jank_amap_impl(jank::runtime::object_ref const meta, jank::u64 const pairs, va_list args)
+{
+  jank::runtime::obj::transient_array_map trans;
+  trans.data.reserve(pairs);
+
+  for(jank::u64 i{}; i < pairs; ++i)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    trans.assoc_in_place(va_arg(args, jank::runtime::object *),
+                         /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+                         va_arg(args, jank::runtime::object *));
+  }
+
+  return trans.to_persistent()->with_meta(meta);
+}
+
+jank::runtime::obj::persistent_array_map_ref
+/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
+_jank_amap(jank::runtime::object_ref const meta, jank::u64 const pairs, ...)
+{
+  /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+  va_list args{};
+  va_start(args, pairs);
+  auto const ret{ _jank_amap_impl(meta, pairs, args) };
+  va_end(args);
+  return ret;
+}
+
 static jank::runtime::obj::persistent_hash_map_ref
 /* NOLINTNEXTLINE(readability-non-const-parameter) */
 _jank_hmap_impl(char const * const meta, jank::u64 const pairs, va_list args)
@@ -274,6 +387,35 @@ jank::runtime::obj::persistent_hash_map_ref _jank_hmap(jank::u64 const pairs, ..
 jank::runtime::obj::persistent_hash_map_ref
 /* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
 _jank_hmap(char const * const meta, jank::u64 const pairs, ...)
+{
+  /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+  va_list args{};
+  va_start(args, pairs);
+  auto const ret{ _jank_hmap_impl(meta, pairs, args) };
+  va_end(args);
+  return ret;
+}
+
+static jank::runtime::obj::persistent_hash_map_ref
+/* NOLINTNEXTLINE(readability-non-const-parameter) */
+_jank_hmap_impl(jank::runtime::object_ref const meta, jank::u64 const pairs, va_list args)
+{
+  jank::runtime::obj::transient_hash_map trans;
+
+  for(jank::u64 i{}; i < pairs; ++i)
+  {
+    /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+    trans.assoc_in_place(va_arg(args, jank::runtime::object *),
+                         /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
+                         va_arg(args, jank::runtime::object *));
+  }
+
+  return trans.to_persistent()->with_meta(meta);
+}
+
+jank::runtime::obj::persistent_hash_map_ref
+/* NOLINTNEXTLINE(modernize-avoid-variadic-functions) */
+_jank_hmap(jank::runtime::object_ref const meta, jank::u64 const pairs, ...)
 {
   /* NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg) */
   va_list args{};

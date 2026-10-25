@@ -10,7 +10,7 @@ namespace jank::analyze::expr
            bool const needs_box,
            object_ref const form,
            native_vector<std::pair<expression_ref, expression_ref>> &&data_exprs,
-           runtime::object_ref const meta)
+           jtl::option<expression_ref> const &meta)
     : expression{ expr_kind, position, frame, needs_box, form }
     , data_exprs{ std::move(data_exprs) }
     , meta{ meta }
@@ -28,10 +28,11 @@ namespace jank::analyze::expr
     }
 
     return merge(expression::to_runtime_data(),
-                 obj::persistent_array_map::create_unique(make_box("data_exprs"),
-                                                          pair_maps,
-                                                          make_box("meta"),
-                                                          jank::detail::to_runtime_data(meta)));
+                 obj::persistent_array_map::create_unique(
+                   make_box("data_exprs"),
+                   pair_maps,
+                   make_box("meta"),
+                   meta.is_some() ? meta.unwrap()->to_runtime_data() : jank_nil));
   }
 
   void map::walk(std::function<void(jtl::ref<expression>)> const &f)
@@ -40,6 +41,10 @@ namespace jank::analyze::expr
     {
       f(p.first);
       f(p.second);
+    }
+    if(meta.is_some())
+    {
+      f(meta.unwrap());
     }
     expression::walk(f);
   }
