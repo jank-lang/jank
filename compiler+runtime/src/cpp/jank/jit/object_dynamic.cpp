@@ -164,11 +164,10 @@ namespace jank::jit
         return llvm::Error::success();
       });
 
-      /* JITLink graphs compressed DWARF sections (SHF_COMPRESSED) using their compressed bytes, but
-       * the `.rela.debug_*` relocations still carry offsets into the uncompressed data. Applying
-       * them writes past the end of the smaller block, corrupting the heap. The flags are lost by
-       * the time we have a graph, so detect the ELF compression header at the start of the block.
-       * Dropping these edges is harmless, since DWARF consumers read the original object. */
+      /* We need to detect compressed DWARF nodes and drop them, since the relative offsets we
+       * have are for the uncompressed sections, which will result in buffer overflows if applied
+       * to the compressed sections. We identify these nodes here and then drop them, which is
+       * fine since we have the uncompressed versions already. */
       config.PrePrunePasses.emplace_back([](llvm::jitlink::LinkGraph &graph) -> llvm::Error {
         for(auto &section : graph.sections())
         {
