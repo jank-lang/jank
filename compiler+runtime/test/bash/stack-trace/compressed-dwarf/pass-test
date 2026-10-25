@@ -8,4 +8,9 @@ mkdir -p target
 clang++ -gz -c src/lib.cpp -o target/lib.o $(jank print-cflags)
 ar qc target/libtest.a target/lib.o
 
-jank -Ltarget -ltest --module-path src run-main main
+output="$(jank -Ltarget -ltest --module-path src run-main main 2>&1 || true)"
+grep "error: :success" <<< "${output}"
+grep "test_lib::do_call" <<< "${output}"
+grep "main/thrower (arity 0)" <<< "${output}"
+
+echo "All good"

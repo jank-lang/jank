@@ -7,4 +7,5 @@
           { return o.raw(); }")
 
 (defn -main [& args]
-  (cpp/test_lib.do_call (cpp/get_raw #(throw :success))))
+  (cpp/test_lib.do_call (cpp/get_raw (fn thrower []
+                                       (throw :success)))))
