@@ -4,7 +4,7 @@
             { }
           }")
 (let* [r (case false
-           true (cpp/jank.cpp.if_.pass_void_then_and_else.foo)
-           (cpp/jank.cpp.if_.pass_void_then_and_else.foo))]
+           true (cpp/jank.cpp.case_.pass_void.foo)
+           (cpp/jank.cpp.case_.pass_void.foo))]
   (if (= nil r)
     :success))
