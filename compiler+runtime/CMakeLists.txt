@@ -727,6 +727,10 @@ target_compile_options(
 )
 target_link_options(jank_common_lib PRIVATE ${jank_linker_flags})
 set_target_properties(jank_common_lib PROPERTIES ENABLE_EXPORTS 1)
+
+# Most of our TUs spend the bulk of their time parsing the same runtime headers, so we share one PCH
+# across the libraries which have matching compile flags.
+target_precompile_headers(jank_common_lib PRIVATE "${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp")
 # ---- libjank-common.a ----
 
 # ---- libjank-dynamic.a ----
@@ -746,6 +750,7 @@ add_library(
   src/cpp/jank/environment/check_health.cpp
 )
 set_target_properties(jank_dynamic_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
+target_precompile_headers(jank_dynamic_lib REUSE_FROM jank_common_lib)
 set_property(TARGET jank_dynamic_lib PROPERTY OUTPUT_NAME jank-dynamic)
 target_compile_features(jank_dynamic_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_dynamic_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
@@ -783,6 +788,7 @@ add_library(
   src/cpp/jank/util/uncompress.cpp
 )
 set_target_properties(jank_static_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
+target_precompile_headers(jank_static_lib REUSE_FROM jank_common_lib)
 set_property(TARGET jank_static_lib PROPERTY OUTPUT_NAME jank-static)
 target_compile_features(jank_static_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_static_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
@@ -863,6 +869,7 @@ add_library(
   src/cpp/jank/nrepl/server.cpp
 )
 set_target_properties(jank_compiler_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
+target_precompile_headers(jank_compiler_lib REUSE_FROM jank_common_lib)
 set_property(TARGET jank_compiler_lib PROPERTY OUTPUT_NAME jank-compiler)
 target_compile_features(jank_compiler_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_compiler_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
