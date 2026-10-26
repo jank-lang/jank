@@ -1,5 +1,5 @@
 (let* [i (cpp/int 77)
        r (case true
            true i)]
-  (if (= 77 r)
+  (if (cpp/== 77 r)
     :success))

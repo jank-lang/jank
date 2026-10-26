@@ -3,5 +3,5 @@
        r (case true
            true i
            f)]
-  (if (= 77.0 r)
+  (if (cpp/== 77.0 r)
     :success))
