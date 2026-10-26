@@ -382,69 +382,67 @@ namespace clojure::string_native
     return s.substr(0, r);
   }
 
-  obj::persistent_vector_ref split(jtl::immutable_string const &s, obj::re_pattern_ref const re)
+  /**
+   * `limit` has three distinct meanings for split:
+   * - Positive: The result contains at most n elements, where the last element
+   *             can contain the remainder of a string, unsplit.
+   * -     Zero: The result has no limit, but all trailing empty string are removed
+   * - Negative: The result has no limit, and all trailing empty string are kept
+   */
+  obj::persistent_vector_ref
+  split(jtl::immutable_string const &s, obj::re_pattern_ref const re, i64 const limit)
   {
     detail::native_transient_vector vec;
 
-    if(s.empty())
+    if(s.empty() || limit == 1)
     {
       vec.push_back(make_box<obj::persistent_string>(s));
     }
     else
     {
-      auto const regex(re->regex);
+      std::cregex_iterator it(s.begin(), s.end(), re->regex);
+      std::cregex_iterator const end{};
 
-      std::string const search_str{ s.c_str() };
-
-      std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
-      std::sregex_token_iterator const end;
-
-      for(; iter != end; ++iter)
+      /* Ignore leading empty strings just like Java */
+      if(it != end && it->length(0) == 0 && it->position(0) == 0)
       {
-        vec.push_back(make_box<obj::persistent_string>(iter->str()));
+        ++it;
       }
 
-      /* Discard all trailing empty strings to match java.lang.String/split behavior. */
-      auto n(vec.size());
-      for(; n > 0; --n)
+      auto prev(s.begin());
+      if(limit > 0)
       {
-        if(!expect_object<obj::persistent_string>(vec[n - 1])->data.empty())
+        for(int i{}; it != end && i < limit - 1; ++i, ++it)
         {
-          break;
+          vec.push_back(
+            make_box<obj::persistent_string>(jtl::immutable_string{ prev, (*it)[0].first }));
+          prev = (*it)[0].second;
         }
       }
-      vec.take(n);
-    }
+      else
+      {
+        for(; it != end; ++it)
+        {
+          vec.push_back(
+            make_box<obj::persistent_string>(jtl::immutable_string{ prev, (*it)[0].first }));
+          prev = (*it)[0].second;
+        }
+      }
+      vec.push_back(make_box<obj::persistent_string>(jtl::immutable_string{ prev, s.end() }));
 
-    return make_box<obj::persistent_vector>(vec.persistent());
-  }
-
-  obj::persistent_vector_ref
-  split(jtl::immutable_string const &s, obj::re_pattern_ref const re, i64 const limit)
-  {
-    if(limit < 1)
-    {
-      return split(s, re);
-    }
-
-    auto const regex(re->regex);
-
-    std::string const search_str{ s.c_str() };
-
-    detail::native_transient_vector vec;
-
-    std::sregex_token_iterator iter(search_str.begin(), search_str.end(), regex, -1);
-    std::sregex_token_iterator const end;
-
-    int i{ 1 };
-    for(; i < limit && iter != end; ++i, ++iter)
-    {
-      vec.push_back(make_box<obj::persistent_string>(iter->str().c_str()));
-    }
-
-    if(i == limit)
-    {
-      vec.push_back(make_box(s.substr(iter->first - search_str.begin())));
+      /* Discard all trailing empty strings to match java.lang.String/split behavior. */
+      if(std::cmp_equal(0, limit))
+      {
+        auto n(vec.size());
+        for(; n > 0; --n)
+        {
+          if(!expect_object<obj::persistent_string>(vec[n - 1])->data.empty())
+          {
+            break;
+          }
+        }
+        vec.take(n);
+      }
     }
 
     return make_box<obj::persistent_vector>(vec.persistent());
