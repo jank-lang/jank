@@ -409,28 +409,26 @@ namespace clojure::string_native
         ++it;
       }
 
+      auto prev(s.begin());
       if(limit > 0)
       {
-        auto prev(s.begin());
         for(int i{}; it != end && i < limit - 1; ++i, ++it)
         {
           vec.push_back(
             make_box<obj::persistent_string>(jtl::immutable_string{ prev, (*it)[0].first }));
           prev = (*it)[0].second;
         }
-        vec.push_back(make_box<obj::persistent_string>(jtl::immutable_string{ prev, s.end() }));
       }
       else
       {
-        auto prev(s.begin());
         for(; it != end; ++it)
         {
           vec.push_back(
             make_box<obj::persistent_string>(jtl::immutable_string{ prev, (*it)[0].first }));
           prev = (*it)[0].second;
         }
-        vec.push_back(make_box<obj::persistent_string>(jtl::immutable_string{ prev, s.end() }));
       }
+      vec.push_back(make_box<obj::persistent_string>(jtl::immutable_string{ prev, s.end() }));
 
       /* Discard all trailing empty strings to match java.lang.String/split behavior. */
       if(std::cmp_equal(0, limit))
