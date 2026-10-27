@@ -734,7 +734,13 @@ namespace jank::read::lex
             {
               break;
             }
-            if(auto const [c, len](result.unwrap_or(codepoint{ ' ', 1 })); c == '.')
+            auto const [c, len](result.unwrap_or(codepoint{ ' ', 1 }));
+            auto const is_digit(std::iswdigit(static_cast<wint_t>(c)) != 0);
+            if(!contains_leading_digit && !is_digit)
+            {
+              break;
+            }
+            if(c == '.')
             {
               if(contains_dot || is_scientific || !contains_leading_digit || found_N)
               {
@@ -760,7 +766,7 @@ namespace jank::read::lex
               }
               radix = 10; /* numbers like 02.3 should be parsed as decimal numbers. */
             }
-            else if(contains_leading_digit && (c == 'e' || c == 'E'))
+            else if(c == 'e' || c == 'E')
             {
               if(found_r)
               {
@@ -918,7 +924,7 @@ namespace jank::read::lex
               return denominator.expect_err();
             }
             /* Not a digit */
-            else if(std::iswdigit(static_cast<wint_t>(c)) == 0)
+            else if(!is_digit)
             {
               if(expecting_exponent)
               {

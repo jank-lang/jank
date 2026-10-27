@@ -1644,6 +1644,26 @@ namespace jank::read::lex
         }));
       }
 
+      SUBCASE("Starting with -r")
+      {
+        processor p{ "-resolve" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 8, token_kind::symbol, "-resolve"sv }
+        }));
+      }
+
+      SUBCASE("Starting with -R")
+      {
+        processor p{ "-RESOLVE" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_tokens({
+                { 0, 8, token_kind::symbol, "-RESOLVE"sv }
+        }));
+      }
+
       SUBCASE("Double hyphen")
       {
         processor p{ "--" };
@@ -1695,16 +1715,15 @@ namespace jank::read::lex
         }));
       }
 
-      //TODO: https://github.com/jank-lang/jank/issues/223
-      //SUBCASE("Negative no leading digit")
-      //{
-      //  processor p{ "-.0" };
-      //  native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
-      //  CHECK(tokens
-      //        == make_results({
-      //          token{ 0, 3, token_kind::symbol, "-.0"sv },
-      //  }));
-      //}
+      SUBCASE("Negative no leading digit")
+      {
+        processor p{ "-.0" };
+        native_vector<jtl::result<token, error_ref>> const tokens(p.begin(), p.end());
+        CHECK(tokens
+              == make_results({
+                token{ 0, 3, token_kind::symbol, "-.0"sv },
+        }));
+      }
     }
 
     TEST_CASE("Keyword")
