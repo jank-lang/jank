@@ -125,6 +125,9 @@ OPTIONS
   -p,     --port <port number>
                               The port number to bind when running a jank nrepl server.
                               Pass 0 or omit to use a random available port.
+          --nrepl-middleware <symbols>
+                              A comma separated list of fully qualified middleware fns
+                              that wrap the nrepl handler.
           --profile           Enable compiler and runtime profiling.
           --profile-output <path> [default: jank.profile]
                               The file to write profile entries (will be overwritten).
@@ -421,6 +424,10 @@ OPTIONS
           }
 
           opts.repl_port = parsed_long;
+        }
+        else if(check_flag(it, end, value, "--nrepl-middleware", true))
+        {
+          opts.nrepl_middleware = value;
         }
 
         /**** These are command-specific flags which we will store until we know the command. ****/
