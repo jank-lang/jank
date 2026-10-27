@@ -26,6 +26,7 @@
 #include <jank/debug/local_names.hpp>
 #include <jank/jit/parse_ld_script.hpp>
 #include <jank/jit/processor.hpp>
+#include <jank/analyze/cppinterop.hpp>
 #include <jank/util/make_array.hpp>
 #include <jank/util/environment.hpp>
 #include <jank/util/fmt/print.hpp>
@@ -311,12 +312,13 @@ namespace jank::jit
     bool pch_out_of_date{};
     auto const create_interpreter{ [&] {
       pch_out_of_date = false;
-      return static_cast<CppInternal::Interpreter *>(
-        Cpp::CreateInterpreter(args,
-                               {},
-                               vfs,
-                               static_cast<int>(llvm::CodeModel::Large),
-                               &pch_out_of_date));
+      auto const created{ analyze::cppinterop::create_interpreter(
+        args,
+        {},
+        vfs,
+        static_cast<int>(llvm::CodeModel::Large),
+        &pch_out_of_date) };
+      return static_cast<CppInternal::Interpreter *>(created.data);
     } };
 
     auto *created_interpreter{ create_interpreter() };

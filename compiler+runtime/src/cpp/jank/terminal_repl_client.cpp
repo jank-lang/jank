@@ -252,7 +252,7 @@ namespace jank::terminal_repl
     auto const repl_main{
       __rt_ctx->intern_var("jank.nrepl.server.core", "background-main").expect_ok()
     };
-    auto const repl_ready{ repl_main.call() };
+    auto const repl_init_errp{ repl_main.call() };
 
     __rt_ctx->in_ns_var->deref().call(make_box<obj::symbol>("user"));
     __rt_ctx->intern_var("clojure.core", "refer")
@@ -296,7 +296,12 @@ namespace jank::terminal_repl
 
     /* We want to wait until the nREPL server is completely initialized, so we'll block on
      * its promise. */
-    repl_ready.deref();
+    auto const repl_init_err{ repl_init_errp.deref() };
+
+    if(repl_init_err.is_some())
+    {
+      throw repl_init_err;
+    }
 
     while(true)
     {

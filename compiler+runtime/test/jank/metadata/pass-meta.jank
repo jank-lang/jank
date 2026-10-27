@@ -1,9 +1,20 @@
+; Default
+(assert (= nil (meta 'foo)))
+(assert (= nil (meta [])))
+(assert (= nil (meta ^{} [])))
+
 ; Metadatable
 (assert (:foo (meta ^:foo {})))
 (assert (:foo (meta ^:foo [])))
 (assert (:foo (meta ^:foo ())))
 (assert (:foo (meta (quote ^:foo bar))))
 (assert (:foo (meta ^:foo #{})))
+
+; Local values in metadata
+(let [x 1]
+  (assert (= 1 (:x (meta ^{:x x} [])))))
+(let [x 1]
+  (assert (= 2 (:x (meta ^{:x (+ x 1)} [])))))
 
 ; Non-metadatable
 (assert (= nil (meta "")))

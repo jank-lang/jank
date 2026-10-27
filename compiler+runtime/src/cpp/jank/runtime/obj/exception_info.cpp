@@ -131,7 +131,7 @@ namespace jank::runtime::obj
     for(exception_info_ref cause_it{ runtime::detail::untagged(this) }; cause_it.is_some();
         cause_it = cause_it->cause)
     {
-      via_trans.push_back(cause_to_via(cause));
+      via_trans.push_back(cause_to_via(cause_it));
     }
     trans.insert_unique(via_kw, make_box<obj::persistent_vector>(via_trans.persistent()));
 

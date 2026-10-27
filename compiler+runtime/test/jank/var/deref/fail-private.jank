@@ -1,0 +1,7 @@
+(ns jank.var.deref.fail-private)
+(def ^:private foo 42)
+
+(ns user)
+jank.var.deref.fail-private/foo
+
+:success

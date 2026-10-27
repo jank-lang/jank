@@ -1,4 +1,5 @@
 (let* [f (fn* []
-           (cpp/delete (cpp/new cpp/int 1)))]
+           (let* [p (cpp/new cpp/int 1)]
+             (cpp/delete p)))]
   (if (nil? (f))
     :success))

@@ -69,7 +69,6 @@
             buildInputs = with pkgs; [
               llvmPackages.libllvm.dev
               bzip2
-              openssl
               zstd
               libedit
               libxml2
@@ -168,7 +167,7 @@
             nixd
             shellcheck
             # For clangd & clang-tidy.
-            clang-tools
+            llvmPackages.clang-tools
             gdb
             clangbuildanalyzer
             openjdk

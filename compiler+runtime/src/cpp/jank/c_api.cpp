@@ -380,7 +380,7 @@ extern "C"
 
   jank_object_ref jank_const_nil()
   {
-    return jank_nil.raw();
+    return jank_nil.erase().raw();
   }
 
   jank_object_ref jank_const_true()
@@ -988,6 +988,30 @@ extern "C"
     return to_hash(o);
   }
 
+  static i64 to_case_integer_or_hash(object_ref const o)
+  {
+    if(is_integer(o))
+    {
+      auto const integer{ to_i64(o) };
+      return integer >= std::numeric_limits<i32>::min()
+          && integer <= std::numeric_limits<i32>::max()
+        ? integer
+        : hash::integer(integer);
+    }
+
+    if(is_big_integer(o))
+    {
+      auto const big_integer{ to_big_integer(o) };
+      if(big_integer->data >= std::numeric_limits<i32>::min()
+         && big_integer->data <= std::numeric_limits<i32>::max())
+      {
+        return big_integer->to_integer();
+      }
+    }
+
+    return to_hash(o);
+  }
+
   jank_i64 jank_to_integer(jank_object_ref const o)
   {
     object_ref const o_obj(reinterpret_cast<object *>(o));
@@ -1004,18 +1028,9 @@ extern "C"
   jank_shift_mask_case_integer(jank_object_ref const o, jank_i64 const shift, jank_i64 const mask)
   {
     object_ref const o_obj(reinterpret_cast<object *>(o));
-    auto integer{ to_integer_or_hash(o_obj) };
+    auto integer{ to_case_integer_or_hash(o_obj) };
     if(mask != 0)
     {
-      if(is_integer(o_obj))
-      {
-        /* We don't hash the integer if it's within an i32 value.
-         * This is to be consistent with how keys are hashed in jank's case macro. */
-        integer = (integer >= std::numeric_limits<i32>::min()
-                   && integer <= std::numeric_limits<i32>::max())
-          ? integer
-          : hash::integer(integer);
-      }
       integer = (integer >> shift) & mask;
     }
     return integer;
@@ -1093,13 +1108,13 @@ extern "C"
      * Usage of the local locale allows better localization.
      * Notably, this might make text encoding become more platform dependent. */
     std::locale::global(std::locale(""));
+#endif
 
     /* Number parsing needs to remain as the US default of decimal separators so that folks
      * in other locales can have their numbers parsed properly. Otherwise, someone with a
      * locale which uses comma as the decimal point might input 3.14 in some jank source
      * and not have it parse properly. */
     std::setlocale(LC_NUMERIC, "C");
-#endif
 
     /* The GC needs to initialized even before arg parsing, since our native types,
      * like strings, use the GC for allocations. It can still be configured later. */

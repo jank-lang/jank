@@ -86,12 +86,20 @@ namespace jank::evaluate
       {
         walk(form, f);
       }
+      if(expr.meta.is_some())
+      {
+        walk(expr.meta.unwrap(), f);
+      }
     }
     else if constexpr(std::same_as<T, expr::vector>)
     {
       for(auto const &form : expr.data_exprs)
       {
         walk(form, f);
+      }
+      if(expr.meta.is_some())
+      {
+        walk(expr.meta.unwrap(), f);
       }
     }
     else if constexpr(std::same_as<T, expr::set>)
@@ -100,6 +108,10 @@ namespace jank::evaluate
       {
         walk(form, f);
       }
+      if(expr.meta.is_some())
+      {
+        walk(expr.meta.unwrap(), f);
+      }
     }
     else if constexpr(std::same_as<T, expr::map>)
     {
@@ -107,6 +119,10 @@ namespace jank::evaluate
       {
         walk(form.first, f);
         walk(form.second, f);
+      }
+      if(expr.meta.is_some())
+      {
+        walk(expr.meta.unwrap(), f);
       }
     }
     /* TODO: function */
@@ -367,7 +383,7 @@ namespace jank::evaluate
     runtime::detail::native_persistent_list const npl{ ret.rbegin(), ret.rend() };
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_list>(__rt_ctx->eval(expr->meta), jtl::move(npl));
+      return make_box<obj::persistent_list>(eval(expr->meta.unwrap()), jtl::move(npl));
     }
     else
     {
@@ -384,7 +400,7 @@ namespace jank::evaluate
     }
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_vector>(__rt_ctx->eval(expr->meta), ret.persistent());
+      return make_box<obj::persistent_vector>(eval(expr->meta.unwrap()), ret.persistent());
     }
     else
     {
@@ -407,7 +423,7 @@ namespace jank::evaluate
 
       if(expr->meta.is_some())
       {
-        return make_box<obj::persistent_array_map>(__rt_ctx->eval(expr->meta),
+        return make_box<obj::persistent_array_map>(eval(expr->meta.unwrap()),
                                                    runtime::detail::in_place_unique{},
                                                    array_box,
                                                    size * 2);
@@ -429,7 +445,7 @@ namespace jank::evaluate
 
       if(expr->meta.is_some())
       {
-        return make_box<obj::persistent_hash_map>(__rt_ctx->eval(expr->meta), trans.persistent());
+        return make_box<obj::persistent_hash_map>(eval(expr->meta.unwrap()), trans.persistent());
       }
       else
       {
@@ -447,7 +463,7 @@ namespace jank::evaluate
     }
     if(expr->meta.is_some())
     {
-      return make_box<obj::persistent_hash_set>(__rt_ctx->eval(expr->meta),
+      return make_box<obj::persistent_hash_set>(eval(expr->meta.unwrap()),
                                                 jtl::move(ret).persistent());
     }
     else

@@ -136,7 +136,13 @@ namespace jank::ir
       values.emplace_back(gen(value_expr, b).unwrap());
     }
 
-    return b.persistent_list(expr->position, jtl::move(values), expr->meta);
+    jtl::option<identifier> meta;
+    if(expr->meta.is_some())
+    {
+      meta = gen(expr->meta.unwrap(), b).unwrap();
+    }
+
+    return b.persistent_list(expr->position, jtl::move(values), meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::vector_ref const expr, builder &b)
@@ -148,7 +154,13 @@ namespace jank::ir
       values.emplace_back(gen(value_expr, b).unwrap());
     }
 
-    return b.persistent_vector(expr->position, jtl::move(values), expr->meta);
+    jtl::option<identifier> meta;
+    if(expr->meta.is_some())
+    {
+      meta = gen(expr->meta.unwrap(), b).unwrap();
+    }
+
+    return b.persistent_vector(expr->position, jtl::move(values), meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::map_ref const expr, builder &b)
@@ -160,11 +172,17 @@ namespace jank::ir
       values.emplace_back(gen(value_expr.first, b).unwrap(), gen(value_expr.second, b).unwrap());
     }
 
+    jtl::option<identifier> meta;
+    if(expr->meta.is_some())
+    {
+      meta = gen(expr->meta.unwrap(), b).unwrap();
+    }
+
     if(expr->data_exprs.size() <= runtime::obj::persistent_array_map::max_size)
     {
-      return b.persistent_array_map(expr->position, jtl::move(values), expr->meta);
+      return b.persistent_array_map(expr->position, jtl::move(values), meta);
     }
-    return b.persistent_hash_map(expr->position, jtl::move(values), expr->meta);
+    return b.persistent_hash_map(expr->position, jtl::move(values), meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::set_ref const expr, builder &b)
@@ -176,7 +194,13 @@ namespace jank::ir
       values.emplace_back(gen(value_expr, b).unwrap());
     }
 
-    return b.persistent_hash_set(expr->position, jtl::move(values), expr->meta);
+    jtl::option<identifier> meta;
+    if(expr->meta.is_some())
+    {
+      meta = gen(expr->meta.unwrap(), b).unwrap();
+    }
+
+    return b.persistent_hash_set(expr->position, jtl::move(values), meta);
   }
 
   jtl::option<identifier> gen(analyze::expr::local_reference_ref const expr, builder &b)
@@ -458,10 +482,25 @@ namespace jank::ir
       arg_idents.emplace_back(gen(arg_expr, b).unwrap());
     }
 
+    /* We can only elide the dynamic call if we're doing named recursion into a fixed arity
+      * which is defined. If we do a named recursion into a variadic arity or an undefined
+      * arity, we need the dynamic call.
+      *
+      * In the variadic arity case, the dynamic call will be doing argument packing for us.
+      *
+      * In the undefined arity case, the dynamic call will handle throwing an invalid arity
+      * exception for us. */
     bool needs_dynamic_call{ true };
     if(!expr->recursion_ref.fn_ctx->fn->is_variadic)
     {
-      needs_dynamic_call = false;
+      for(auto const &arity : expr->recursion_ref.fn_ctx->fn->arities)
+      {
+        if(arity.fn_ctx->param_count == expr->arg_exprs.size())
+        {
+          needs_dynamic_call = false;
+          break;
+        }
+      }
     }
     else
     {
@@ -694,11 +733,22 @@ namespace jank::ir
 
   jtl::option<identifier> gen(analyze::expr::throw_ref const expr, builder &b)
   {
+    identifier ret{};
     if(expr->value.is_some())
     {
-      return b.throw_(gen(expr->value.unwrap(), b).unwrap(), expr->value.unwrap()->get_type());
+      ret = b.throw_(gen(expr->value.unwrap(), b).unwrap(), expr->value.unwrap()->get_type());
     }
-    return b.throw_();
+    else
+    {
+      ret = b.throw_();
+    }
+
+    if(expr->position == analyze::expression_position::tail)
+    {
+      return b.ret(ret, untyped_object_ref_type());
+    }
+
+    return ret;
   }
 
   jtl::option<identifier> gen(analyze::expr::try_ref const expr, builder &b)
@@ -871,7 +921,9 @@ namespace jank::ir
       args.emplace_back(gen(arg, b).unwrap());
     }
 
-    if(expr->source_expr->kind == analyze::expression_kind::cpp_value)
+    auto const source_type{ analyze::cpp_util::expression_type(expr->source_expr) };
+    if(expr->source_expr->kind == analyze::expression_kind::cpp_value
+       && (!source_type || !analyze::cppinterop::is_pointer_to_member_type(source_type)))
     {
       return b.cpp_call(none, jtl::move(args), expr);
     }

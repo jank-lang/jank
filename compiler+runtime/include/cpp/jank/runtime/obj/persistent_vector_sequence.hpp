@@ -1,10 +1,12 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime::obj
 {
   using cons_ref = oref<struct cons>;
+  using persistent_list_ref = oref<struct persistent_list>;
   using persistent_vector_ref = oref<struct persistent_vector>;
   using persistent_vector_sequence_ref = oref<struct persistent_vector_sequence>;
 
@@ -33,6 +35,11 @@ namespace jank::runtime::obj
     /* behavior::countable */
     usize count() const;
 
+    /* behavior::metadatable */
+    persistent_vector_sequence_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
+    void set_meta(object_ref const o);
+
     /* behavior::seqable */
     object_ref seq() const override;
     object_ref fresh_seq() const override;
@@ -44,11 +51,18 @@ namespace jank::runtime::obj
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head);
 
+    /* behavior::collection_like */
+    static persistent_list_ref empty();
+
     /* behavior::sequence_like_in_place */
     object_ref next_in_place() override;
 
     /*** XXX: Everything here is immutable after initialization. ***/
     obj::persistent_vector_ref vec{};
     usize index{};
+
+    /*** XXX: Everything here is thread-safe. ***/
+  protected:
+    lazy_meta meta;
   };
 }

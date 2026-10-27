@@ -1,0 +1,7 @@
+(cpp/raw "namespace jank::cpp::operator_::equal::pass_global
+          {
+            int foo{};
+          }")
+(let* [_ (cpp/= cpp/jank.cpp.operator_.equal.pass_global.foo 5)]
+  (if (= 5 cpp/jank.cpp.operator_.equal.pass_global.foo)
+    :success))

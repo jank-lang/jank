@@ -1,4 +1,5 @@
 #include <jank/runtime/obj/detail/base_persistent_map_sequence.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/visit.hpp>
 #include <jank/runtime/core/seq.hpp>
 
@@ -91,6 +92,29 @@ namespace jank::runtime::obj::detail
     return std::distance(begin, end);
   }
 
+  /* behavior::metadatable */
+  template <typename PT, typename IT>
+  object_ref base_persistent_map_sequence<PT, IT>::with_meta(object_ref const m) const
+  {
+    auto const meta(behavior::detail::validate_meta(m));
+    auto const ret(make_box<PT>(coll, begin, end));
+    ret->meta = meta;
+    return ret;
+  }
+
+  template <typename PT, typename IT>
+  object_ref base_persistent_map_sequence<PT, IT>::get_meta() const
+  {
+    return meta.get();
+  }
+
+  template <typename PT, typename IT>
+  void base_persistent_map_sequence<PT, IT>::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
+  }
+
   template <typename PT, typename IT>
   object_ref base_persistent_map_sequence<PT, IT>::seq() const
   {
@@ -142,6 +166,12 @@ namespace jank::runtime::obj::detail
   obj::cons_ref base_persistent_map_sequence<PT, IT>::conj(object_ref const head)
   {
     return make_box<obj::cons>(head, runtime::detail::untagged(static_cast<PT *>(this)));
+  }
+
+  template <typename PT, typename IT>
+  persistent_list_ref base_persistent_map_sequence<PT, IT>::empty()
+  {
+    return persistent_list::empty();
   }
 
   template struct base_persistent_map_sequence<

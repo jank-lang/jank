@@ -11,8 +11,20 @@
             [jank.nrepl.server.handler.eval]
             [jank.nrepl.server.handler.lookup]))
 
+(cpp/raw "
+namespace jank::util
+{
+  void print_exception(error_ref e);
+}")
+
 (def *verbose (atom false))
-(def *ready? (promise))
+(def *ready?
+  "A promise that is fulfilled when the nrepl server is ready or if an error
+  occurs during initialization.
+
+  The value of the promise will be nil on success or an exception info on
+  failure."
+  (promise))
 
 (defn log [& args]
   (when @*verbose
@@ -81,17 +93,38 @@
   (when (some #{"-v" "--verbose"} args)
     (reset! *verbose true))
 
-  (let [server* (listen)
-        server (cpp/unbox (:* jank.nrepl.server.native_server) server*)]
-    (spit ".nrepl-port" (str (.get_port server)))
-    ;; Certain nREPL clients, such as Calva, depend on this exact string
-    ;; format to assist with setting up a REPL via jack-in.
-    (println "nREPL server started on port" (str (.get_port server))
-             "on host 127.0.0.1 -" (.get_endpoint server))
-    (deliver *ready? true)
-    (while true
-      (let [client* (accept server*)]
-        (future (handle-client client*))))))
+  (let [[err server*]
+        (try
+          [nil (listen)]
+          (catch cpp/std.exception e
+            (let [port (.-repl_port #cpp jank.util.cli.opts)]
+              [(ex-info (str "Error binding server address: " port)
+                        {:port port})
+               nil])))]
+    (if err
+      (deliver *ready? err)
+      (let [server (cpp/unbox (:* jank.nrepl.server.native_server) server*)]
+        (spit ".nrepl-port" (str (.get_port server)))
+        ;; Certain nREPL clients, such as Calva, depend on this exact string
+        ;; format to assist with setting up a REPL via jack-in.
+        (println "nREPL server started on port" (str (.get_port server))
+                 "on host 127.0.0.1 -" (.get_endpoint server))
+        (deliver *ready? nil)
+        (while true
+          (let [client* (accept server*)]
+            (future
+              (try
+                (handle-client client*)
+                (catch std.exception e
+                  (println "An exception was thrown from the nREPL server thread:" (.what e)))
+                (catch jank.runtime.object_ref e
+                  (println "An exception was thrown from the nREPL server thread.")
+                  (prn e))
+                (catch jank.error_ref e
+                  (println "An exception was thrown from the nREPL server thread.")
+                  (cpp/jank.util.print_exception e))
+                (catch :default _
+                  (println "An unknown exception was thrown from the nREPL server thread."))))))))))
 
 (defn background-main
   "Starts the nREPL server as a background thread. Returns a promise which will be delivered

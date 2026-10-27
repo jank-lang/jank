@@ -59,3 +59,5 @@ pass-rethrow-catch-type.jank
 throw-rethrow.jank
 fail-catch-void.jank
 throw-nested-throws.jank
+pass-conditional-sub-expression.jank
+pass-undefined-arity.jank

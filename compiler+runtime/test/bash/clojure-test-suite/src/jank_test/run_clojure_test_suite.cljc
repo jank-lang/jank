@@ -34,10 +34,10 @@
     clojure.core-test.bound-fn-star
     clojure.core-test.butlast
     ; clojure.core-test.byte ; TODO: port byte, Expecting whitespace after the last token. due to M.
-    ; clojure.core-test.case ; analyze/invalid-case error: Unable to resolve symbol 'of'.
+    clojure.core-test.case
     clojure.core-test.char
     clojure.core-test.char-qmark
-    ; clojure.core-test.coll-qmark ; FIXME: `seq` does not satisfy `coll?`
+    clojure.core-test.coll-qmark
     clojure.core-test.comment
     clojure.core-test.compare
     clojure.core-test.concat
@@ -54,6 +54,7 @@
     clojure.core-test.denominator
     ; clojure.core-test.derive ; analyze/unresolved-symbol error: Unable to resolve symbol 'String'.
     ; clojure.core-test.descendants ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
+    clojure.core-test.destructure
     clojure.core-test.disj
     clojure.core-test.disj-bang
     clojure.core-test.dissoc
@@ -80,10 +81,10 @@
     clojure.core-test.fn-qmark
     clojure.core-test.fnext
     clojure.core-test.fnil
-    ; clojure.core-test.format ; TODO: port format
+    clojure.core-test.format
     clojure.core-test.get
     clojure.core-test.get-in
-    ; clojure.core-test.group-by
+    clojure.core-test.group-by
     clojure.core-test.gt
     clojure.core-test.gt-eq
     clojure.core-test.hash-map
@@ -176,7 +177,8 @@
     ; clojure.core-test.rationalize ; TODO: port rationalize
     ; clojure.core-test.realized-qmark ; TODO: port promise
     clojure.core-test.reduce
-    ; clojure.core-test.rem ; FIXME: Failing tests.
+    clojure.core-test.reduce-kv
+    clojure.core-test.rem
     clojure.core-test.remove
     ; clojure.core-test.remove-watch ; TODO: port sync
     clojure.core-test.repeat
@@ -211,7 +213,7 @@
     ; clojure.core-test.star-squote ; Assertion failed! is_tagged_pointer(val)
     clojure.core-test.str
     clojure.core-test.string-qmark
-    ; clojure.core-test.subs ; FIXME: Failing tests.
+    clojure.core-test.subs
     clojure.core-test.subvec
     ; clojure.core-test.symbol ; lex/invalid-ratio error: A ratio denominator must be an integer.
     clojure.core-test.symbol-qmark
@@ -236,6 +238,7 @@
     clojure.core-test.when-first
     clojure.core-test.when-let
     clojure.core-test.when-not
+    clojure.core-test.with-meta
     clojure.core-test.with-out-str
     ; clojure.core-test.with-precision ; TODO: port with-precision, INFO: SKIP - defprotocol
     clojure.core-test.zero-qmark
@@ -250,6 +253,7 @@
     clojure.string-test.lower-case
     clojure.string-test.replace
     clojure.string-test.reverse
+    clojure.string-test.split
     clojure.string-test.split-lines
     clojure.string-test.starts-with-qmark
     clojure.string-test.upper-case

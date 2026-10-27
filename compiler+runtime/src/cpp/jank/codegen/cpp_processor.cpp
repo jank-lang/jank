@@ -519,8 +519,7 @@ namespace jank::codegen
           break;
         }
       }
-      else if(current_inst->kind == ir::instruction_kind::ret
-              || current_inst->kind == ir::instruction_kind::throw_)
+      else if(current_inst->kind == ir::instruction_kind::ret)
       {
         break;
       }
@@ -628,9 +627,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_list(", inst->name);
-    if(!is_empty(inst->meta))
+    if(inst->meta.is_some())
     {
-      util::format_to(b.body_buffer, "\"{}\", ", util::escape(inst->meta.to_code_string()));
+      util::format_to(b.body_buffer, "{}.erase(), ", inst->meta.unwrap());
     }
     util::format_to(b.body_buffer, "{}", inst->values.size());
     for(auto const &val : inst->values)
@@ -646,9 +645,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_vec(", inst->name);
-    if(!is_empty(inst->meta))
+    if(inst->meta.is_some())
     {
-      util::format_to(b.body_buffer, "\"{}\", ", util::escape(inst->meta.to_code_string()));
+      util::format_to(b.body_buffer, "{}.erase(), ", inst->meta.unwrap());
     }
     util::format_to(b.body_buffer, "{}", inst->values.size());
     for(auto const &val : inst->values)
@@ -664,9 +663,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_amap(", inst->name);
-    if(!is_empty(inst->meta))
+    if(inst->meta.is_some())
     {
-      util::format_to(b.body_buffer, "\"{}\",", util::escape(inst->meta.to_code_string()));
+      util::format_to(b.body_buffer, "{}.erase(),", inst->meta.unwrap());
     }
 
     util::format_to(b.body_buffer, "{}", inst->values.size());
@@ -683,9 +682,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_hmap(", inst->name);
-    if(!is_empty(inst->meta))
+    if(inst->meta.is_some())
     {
-      util::format_to(b.body_buffer, "\"{}\",", util::escape(inst->meta.to_code_string()));
+      util::format_to(b.body_buffer, "{}.erase(),", inst->meta.unwrap());
     }
 
     util::format_to(b.body_buffer, "{}", inst->values.size());
@@ -702,9 +701,9 @@ namespace jank::codegen
   {
     b.next_instruction();
     util::format_to(b.body_buffer, "auto const {}(_jank_hset(", inst->name);
-    if(!is_empty(inst->meta))
+    if(inst->meta.is_some())
     {
-      util::format_to(b.body_buffer, "\"{}\",", util::escape(inst->meta.to_code_string()));
+      util::format_to(b.body_buffer, "{}.erase(),", inst->meta.unwrap());
     }
 
     util::format_to(b.body_buffer, "{}", inst->values.size());
@@ -1057,16 +1056,9 @@ namespace jank::codegen
       util::format_to(b.body_buffer, "throw;\n");
     }
 
-    util::format_to(b.body_buffer, "jank::runtime::object_ref {};\n", inst->name);
+    util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {};\n", inst->name);
 
-    /* If there are any instructions after the throw, like scope closes, we need to handle
-     * them, too. */
-    while(b.instruction_index < b.function->blocks[b.block_index].instructions.size())
-    {
-      gen(b.function->blocks[b.block_index].instructions[b.instruction_index], b);
-    }
-
-    return none;
+    return inst->name;
   }
 
   jtl::option<identifier> gen(ir::inst::try_ref const inst, builder &b)
@@ -1379,12 +1371,12 @@ namespace jank::codegen
 
     auto const source_type{ expression_type(inst->expr->source_expr) };
 
-    if(inst->expr->source_expr->kind == analyze::expression_kind::cpp_value)
+    if(inst->expr->source_expr->kind == analyze::expression_kind::cpp_value
+       && (!source_type || !analyze::cppinterop::is_pointer_to_member_type(source_type)))
     {
-      auto const source{ static_cast<analyze::expr::cpp_value *>(inst->expr->source_expr.data) };
-
+      auto const source{ static_box_cast<analyze::expr::cpp_value>(inst->expr->source_expr) };
       auto const is_void{ analyze::cppinterop::is_void(
-        analyze::cppinterop::get_function_return_type(source->scope)) };
+        analyze::cpp_util::get_function_return_type(source)) };
       if(is_void)
       {
         util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {};\n", inst->name);
@@ -1411,7 +1403,7 @@ namespace jank::codegen
         auto const arg_expr{ inst->expr->arg_exprs[arg_idx] };
         auto const arg_type{ expression_type(arg_expr) };
         /* This will be null in variadic positions. */
-        auto const param_type{ analyze::cppinterop::get_function_arg_type(source->scope, arg_idx) };
+        auto const param_type{ analyze::cpp_util::get_function_parameter_type(source, arg_idx) };
         auto const &arg_tmp{ inst->args[arg_idx] };
 
         if(need_comma)
@@ -1843,9 +1835,8 @@ namespace jank::codegen
   {
     b.next_instruction();
     auto const value_expr_type{ expression_type(inst->expr->value_expr) };
-    auto const type_str{ runtime::obj::opaque_box::strip_whitespace(
-      get_qualified_type_name(analyze::cppinterop::get_canonical_type(
-        analyze::cppinterop::get_non_reference_type(value_expr_type)))) };
+    auto const type_str{ get_qualified_type_name(analyze::cppinterop::get_canonical_type(
+      analyze::cppinterop::get_non_reference_type(value_expr_type))) };
 
     util::format_to(
       b.body_buffer,
@@ -1867,8 +1858,8 @@ namespace jank::codegen
   jtl::option<identifier> gen(ir::inst::cpp_unbox_ref const inst, builder &b)
   {
     b.next_instruction();
-    auto const type_name{ runtime::obj::opaque_box::strip_whitespace(
-      get_qualified_type_name(analyze::cppinterop::get_canonical_type(inst->expr->type))) };
+    auto const type_name{ get_qualified_type_name(
+      analyze::cppinterop::get_canonical_type(inst->expr->type)) };
     util::format_to(
       b.body_buffer,
       "auto {}{ "
@@ -1931,7 +1922,9 @@ namespace jank::codegen
 
     util::format_to(b.body_buffer, "GC_free({});\n", inst->value);
 
-    return "jank::runtime::jank_nil";
+    util::format_to(b.body_buffer, "jank::runtime::obj::nil_ref {};\n", inst->name);
+
+    return inst->name;
   }
 
   jtl::option<identifier> gen(ir::instruction_ref const inst, builder &b)
@@ -2018,8 +2011,8 @@ namespace jank::codegen
       if(analyze::cppinterop::is_pointer_type(param.type))
       {
         jtl::immutable_string const munged{ debug::parameter_name(param.name->name.c_str(), param_index).c_str() };
-        auto const type_name{ runtime::obj::opaque_box::strip_whitespace(
-          get_qualified_type_name(analyze::cppinterop::get_canonical_type(param.type))) };
+        auto const type_name{ get_qualified_type_name(
+          analyze::cppinterop::get_canonical_type(param.type)) };
         util::format_to(
           b.body_buffer,
           "auto {}{ "

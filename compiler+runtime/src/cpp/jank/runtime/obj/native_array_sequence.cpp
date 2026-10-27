@@ -72,6 +72,26 @@ namespace jank::runtime::obj
     return size - index;
   }
 
+  /* behavior::metadatable */
+  native_array_sequence_ref native_array_sequence::with_meta(object_ref const m) const
+  {
+    auto const meta(behavior::detail::validate_meta(m));
+    auto const ret(make_box<native_array_sequence>(arr, index, size));
+    ret->meta = meta;
+    return ret;
+  }
+
+  object_ref native_array_sequence::get_meta() const
+  {
+    return meta.get();
+  }
+
+  void native_array_sequence::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
+  }
+
   /* behavior::sequence */
   object_ref native_array_sequence::first() const
   {

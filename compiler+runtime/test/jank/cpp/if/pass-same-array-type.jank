@@ -1,0 +1,2 @@
+(if (= "a" ((fn* [] (if true "a" "b"))))
+  :success)

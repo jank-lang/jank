@@ -61,28 +61,24 @@ namespace jank::runtime::obj
         CHECK_FALSE(bi_i3.equal(i1));
       }
 
-      SUBCASE("big_integer vs real (epsilon comparison)")
+      SUBCASE("big_integer vs real")
       {
         auto const bi_r1(make_box<big_integer>(12345LL));
         auto const bi_r_large(make_box(nbi("123456789012345")));
 
-        CHECK(bi_r1.equal(r1));
+        CHECK_FALSE(bi_r1.equal(r1));
         CHECK_FALSE(bi_r1.equal(r2));
-        CHECK(bi_r1.equal(r3));
+        CHECK_FALSE(bi_r1.equal(r3));
+        CHECK_FALSE(bi_r_large.equal(r_large_exact));
+        CHECK_FALSE(bi_r_large.equal(r_large_approx));
 
-
-        CHECK(bi_r_large.equal(r_large_exact));
-        CHECK(bi_r_large.equal(r_large_approx));
-
-        /* Numbers that cause overflow during conversion in `equal`. */
-        /* Create a BI larger than double can represent. */
+        /* Numbers that cause overflow during conversion in comparison. */
         native_big_integer const huge_val{ nbi("1") << 1024 };
         auto const bi_huge_pos(make_box<big_integer>(huge_val));
         auto const bi_huge_neg(make_box<big_integer>(-huge_val));
         auto const r_inf_pos{ make_box<real>(std::numeric_limits<f64>::infinity()) };
         auto const r_inf_neg{ make_box<real>(-std::numeric_limits<f64>::infinity()) };
 
-        /* Conversion works, but comparison should use epsilon logic which fails for inf. */
         CHECK_FALSE(bi_huge_pos.equal(r_inf_pos));
         CHECK_FALSE(bi_huge_neg.equal(r_inf_neg));
         CHECK_FALSE(bi_huge_pos.equal(r1));

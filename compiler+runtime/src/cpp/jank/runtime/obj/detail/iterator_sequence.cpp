@@ -1,4 +1,5 @@
 #include <jank/runtime/obj/detail/iterator_sequence.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/runtime/visit.hpp>
@@ -85,6 +86,29 @@ namespace jank::runtime::obj::detail
     return size;
   }
 
+  /* behavior::metadatable */
+  template <typename Derived, typename It>
+  object_ref iterator_sequence<Derived, It>::with_meta(object_ref const m) const
+  {
+    auto const meta(behavior::detail::validate_meta(m));
+    auto const ret(make_box<Derived>(coll, begin, end, size));
+    ret->meta = meta;
+    return ret;
+  }
+
+  template <typename Derived, typename It>
+  object_ref iterator_sequence<Derived, It>::get_meta() const
+  {
+    return meta.get();
+  }
+
+  template <typename Derived, typename It>
+  void iterator_sequence<Derived, It>::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
+  }
+
   template <typename Derived, typename It>
   object_ref iterator_sequence<Derived, It>::first() const
   {
@@ -122,6 +146,12 @@ namespace jank::runtime::obj::detail
   obj::cons_ref iterator_sequence<Derived, It>::conj(object_ref const head)
   {
     return make_box<obj::cons>(head, runtime::detail::untagged(static_cast<Derived *>(this)));
+  }
+
+  template <typename Derived, typename It>
+  persistent_list_ref iterator_sequence<Derived, It>::empty()
+  {
+    return persistent_list::empty();
   }
 
   template struct iterator_sequence<persistent_sorted_set_sequence,

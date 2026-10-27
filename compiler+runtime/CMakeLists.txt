@@ -60,6 +60,7 @@ execute_process(
 )
 
 set(jank_version "jank-${CMAKE_PROJECT_VERSION}-alpha")
+set(jank_core_lib_optimization "-O0")
 
 set(jank_cxx_standard cxx_std_20)
 
@@ -140,8 +141,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags -Werror -O0 -g)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   list(APPEND jank_common_compiler_flags -O2 -DNDEBUG)
+  set(jank_core_lib_optimization "-O3")
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
   list(APPEND jank_common_compiler_flags -Og -g -DNDEBUG)
+  set(jank_core_lib_optimization "-Og")
 endif()
 
 # Enabling phase 2 builds means that we will compile all of our core jank
@@ -470,10 +473,11 @@ add_custom_target(
 
 add_custom_command(
   DEPENDS ${jank_standalone_dynamic_lib_deps} jank_exe_phase_2
-  OUTPUT ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime.a
+  OUTPUT ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime.a ${CMAKE_BINARY_DIR}/libjank-static-runtime.a
   COMMAND_EXPAND_LISTS
   VERBATIM
-  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2
+  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2-dynamic
+  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2-static
 )
 add_custom_target(
   jank_standalone_dynamic_lib_phase_2
@@ -497,7 +501,7 @@ if(jank_test)
   include(cmake/dependency/doctest.cmake)
 endif()
 
-find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+find_package(ZLIB REQUIRED)
 
 # CMake changed its mechanism for finding Boost. The old behavior uses
 # a CMake-provided FindBoost script. The new behavior relies on locating
@@ -662,7 +666,6 @@ target_include_directories(
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/stduuid/include/>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/json/include>"
   "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/third-party/isocline/include>"
-  ${OPENSSL_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
 )
 
@@ -727,6 +730,10 @@ target_compile_options(
 )
 target_link_options(jank_common_lib PRIVATE ${jank_linker_flags})
 set_target_properties(jank_common_lib PROPERTIES ENABLE_EXPORTS 1)
+
+# Most of our TUs spend the bulk of their time parsing the same runtime headers, so we share one PCH
+# across the libraries which have matching compile flags.
+target_precompile_headers(jank_common_lib PRIVATE "${PROJECT_SOURCE_DIR}/include/cpp/jank/prelude.hpp")
 # ---- libjank-common.a ----
 
 # ---- libjank-dynamic.a ----
@@ -747,6 +754,7 @@ add_library(
   src/cpp/jank/environment/check_health.cpp
 )
 set_target_properties(jank_dynamic_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
+target_precompile_headers(jank_dynamic_lib REUSE_FROM jank_common_lib)
 set_property(TARGET jank_dynamic_lib PROPERTY OUTPUT_NAME jank-dynamic)
 target_compile_features(jank_dynamic_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_dynamic_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
@@ -781,8 +789,10 @@ add_library(
   src/cpp/jank/jit/object_static.cpp
   src/cpp/jank/jit/processor_static.cpp
   src/cpp/jank/codegen/api_static.cpp
+  src/cpp/jank/util/uncompress.cpp
 )
 set_target_properties(jank_static_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
+target_precompile_headers(jank_static_lib REUSE_FROM jank_common_lib)
 set_property(TARGET jank_static_lib PROPERTY OUTPUT_NAME jank-static)
 target_compile_features(jank_static_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_static_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
@@ -863,6 +873,7 @@ add_library(
   src/cpp/jank/nrepl/server.cpp
 )
 set_target_properties(jank_compiler_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
+target_precompile_headers(jank_compiler_lib REUSE_FROM jank_common_lib)
 set_property(TARGET jank_compiler_lib PROPERTY OUTPUT_NAME jank-compiler)
 target_compile_features(jank_compiler_lib PUBLIC ${jank_cxx_standard})
 target_compile_options(jank_compiler_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
@@ -902,8 +913,7 @@ target_link_libraries(
   ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a ${jank_link_whole_end}
   LLVM clang-cpp
   isocline
-  z
-  OpenSSL::Crypto
+  ZLIB::ZLIB
 )
 
 if(WIN32)
@@ -977,6 +987,7 @@ if(jank_test)
     test/cpp/jank/util/fmt.cpp
     test/cpp/jank/util/path.cpp
     test/cpp/jank/debug/local_names.cpp
+    test/cpp/jank/util/sha256.cpp
     test/cpp/jank/read/lex.cpp
     test/cpp/jank/read/parse.cpp
     test/cpp/jank/runtime/behavior/call.cpp
@@ -1022,9 +1033,8 @@ if(jank_test)
   target_link_libraries(
     jank_test_exe PUBLIC
     ${jank_link_whole_start} ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a ${jank_link_whole_end}
-    z
+    ZLIB::ZLIB
     LLVM clang-cpp
-    OpenSSL::Crypto
     doctest::doctest
   )
 
@@ -1113,9 +1123,9 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_clojure_core_sources} ${jank_other_core_sources} ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output} ${jank_nrepl_server_outputs}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} clojure.core
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_core_lib_optimization} --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_core_lib_optimization} --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_core_lib_optimization} --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(

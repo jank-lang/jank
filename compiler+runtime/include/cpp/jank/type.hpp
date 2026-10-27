@@ -2,6 +2,7 @@
 
 #include <map>
 #include <set>
+#include <unordered_set>
 #include <string_view>
 #include <unordered_map>
 #include <deque>
@@ -45,6 +46,9 @@ namespace jank
   using native_map = std::map<K, V, std::less<K>, native_allocator<std::pair<K const, V>>>;
   template <typename T>
   using native_set = std::set<T, std::less<T>, native_allocator<T>>;
+  template <typename T>
+  using native_unordered_set
+    = std::unordered_set<T, std::hash<T>, std::equal_to<T>, native_allocator<T>>;
 
   template <typename K, typename V, typename Hash = std::hash<K>, typename Pred = std::equal_to<K>>
   using native_unordered_map

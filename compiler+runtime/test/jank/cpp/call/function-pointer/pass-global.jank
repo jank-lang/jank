@@ -2,8 +2,12 @@
           {
             int foo(int a)
             { return a + 2; }
+
+            int (*bar)(int){ &foo };
           }")
 (let* [fp cpp/jank.cpp.call.function_pointer.pass_global.foo
-       r (fp (cpp/int. 5))]
-  (if (= 7 r)
+       r1 (fp 5)
+       r2 (cpp/jank.cpp.call.function_pointer.pass_global.bar 10)
+       r3 (#cpp jank.cpp.call.function_pointer.pass_global.bar 20)]
+  (if (and (= 7 r1) (= 12 r2) (= 22 r3))
     :success))

@@ -1,10 +1,12 @@
 #pragma once
 
 #include <jank/runtime/object.hpp>
+#include <jank/runtime/lazy_meta.hpp>
 
 namespace jank::runtime::obj
 {
   using cons_ref = oref<struct cons>;
+  using persistent_list_ref = oref<struct persistent_list>;
 }
 
 namespace jank::runtime::obj::detail
@@ -38,6 +40,11 @@ namespace jank::runtime::obj::detail
     /* behavior::countable */
     usize count() const;
 
+    /* behavior::metadatable */
+    object_ref with_meta(object_ref const m) const;
+    object_ref get_meta() const;
+    void set_meta(object_ref const o);
+
     /* behavior::sequence_like */
     object_ref first() const override;
     object_ref next() const override;
@@ -48,9 +55,16 @@ namespace jank::runtime::obj::detail
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head);
 
+    /* behavior::collection_like */
+    static persistent_list_ref empty();
+
     object_ref coll{};
     /* Not default constructible. */
     It begin, end;
     usize size{};
+
+    /*** XXX: Everything here is thread-safe. ***/
+  protected:
+    lazy_meta meta;
   };
 }

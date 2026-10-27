@@ -1,4 +1,5 @@
 #include <jank/runtime/obj/persistent_vector_sequence.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_vector.hpp>
 #include <jank/runtime/core.hpp>
 #include <jank/runtime/core/seq_ext.hpp>
@@ -83,6 +84,26 @@ namespace jank::runtime::obj
     return vec->data.size() - index;
   }
 
+  /* behavior::metadatable */
+  persistent_vector_sequence_ref persistent_vector_sequence::with_meta(object_ref const m) const
+  {
+    auto const meta(behavior::detail::validate_meta(m));
+    auto const ret(make_box<persistent_vector_sequence>(vec, index));
+    ret->meta = meta;
+    return ret;
+  }
+
+  object_ref persistent_vector_sequence::get_meta() const
+  {
+    return meta.get();
+  }
+
+  void persistent_vector_sequence::set_meta(object_ref const o)
+  {
+    auto const new_meta(behavior::detail::validate_meta(o));
+    meta.set(new_meta);
+  }
+
   /* behavior::seqable */
   object_ref persistent_vector_sequence::seq() const
   {
@@ -128,5 +149,10 @@ namespace jank::runtime::obj
   cons_ref persistent_vector_sequence::conj(object_ref const head)
   {
     return make_box<cons>(head, runtime::detail::untagged(this));
+  }
+
+  persistent_list_ref persistent_vector_sequence::empty()
+  {
+    return persistent_list::empty();
   }
 }

@@ -9,6 +9,7 @@
 
 /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
 #define LOG(...) (void)0;
+
 /* NOLINTNEXTLINE(cppcoreguidelines-macro-usage) */
 //#define LOG(...) jank::util::println(__VA_ARGS__);
 

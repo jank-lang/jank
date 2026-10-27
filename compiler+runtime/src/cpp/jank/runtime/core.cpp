@@ -892,8 +892,16 @@ namespace jank::runtime
   {
     auto const bindings{ __rt_ctx->get_thread_bindings() };
     auto const ret{ make_box<obj::future>() };
+    /* The future hangs onto its function to keep it alive. */
+    ret->function = fn;
+    ret->bindings = bindings;
+
+    /* We then register this future with the RT context so it will be kept alive. The GC
+     * can't find the future from scanning std::thread memory, since that's on the system heap. */
+    __rt_ctx->register_future(ret);
+
     /* NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage): False positive. */
-    ret->thread = std::thread{ [=]() {
+    ret->thread = std::thread{ [ret]() {
       /* GC threads should be explicitly registered so that the GC is prepared to perform
        * allocations from this thread. Unregistering is equally important.
        *
@@ -905,18 +913,21 @@ namespace jank::runtime
         GC_get_stack_base(&sb);
         GC_register_my_thread(&sb);
       }
-      util::scope_exit const unregister{ []() {
+      util::scope_exit const unregister{ [=]() {
+        __rt_ctx->unregister_future(ret);
         if constexpr(jtl::current_platform != jtl::platform::macos_like)
         {
           GC_unregister_my_thread();
         }
       } };
 
+      auto const bindings{ ret->bindings };
+      auto const function{ ret->function };
       __rt_ctx->push_thread_bindings(bindings).expect_ok();
 
       try
       {
-        auto const res{ fn.call() };
+        auto const res{ function.call() };
         {
           auto const locked_state{ ret->state.wlock() };
           locked_state->status = obj::future_status::done;
@@ -938,7 +949,7 @@ namespace jank::runtime
       /* When we cancel, pthread will implicitly throw this force unwind. We want to intercept
        * that so we can mark our thread as cancelled. We then rethrow, since pthread is excepting
        * this to unwind all the way. */
-#ifdef JANK_LINUX_LIKE
+#ifdef __GLIBCXX__
       catch(abi::__forced_unwind const &fu)
       {
         auto const locked_state{ ret->state.wlock() };

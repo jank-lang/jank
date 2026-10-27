@@ -9,6 +9,7 @@
 #include <jank/runtime/module/loader.hpp>
 #include <jank/runtime/ns.hpp>
 #include <jank/runtime/var.hpp>
+#include <jank/runtime/obj/future.hpp>
 #include <jank/jit/processor.hpp>
 #include <jank/util/cli.hpp>
 
@@ -143,6 +144,9 @@ namespace jank::runtime
     void pop_thread_bindings();
     obj::persistent_hash_map_ref get_thread_bindings() const;
 
+    void register_future(obj::future_ref const fut);
+    void unregister_future(obj::future_ref const fut);
+
     /*** XXX: Everything here is immutable after initialization. ***/
     jtl::immutable_string binary_version;
     /* TODO: This needs to be a dynamic var. */
@@ -171,6 +175,7 @@ namespace jank::runtime
     folly::Synchronized<native_unordered_map<jtl::immutable_string, obj::keyword_ref>> keywords;
     folly::Synchronized<native_unordered_map<std::thread::id, native_list<thread_binding_frame>>>
       thread_binding_frames;
+    folly::Synchronized<native_unordered_set<obj::future_ref>> active_futures;
 
     /* This must go last, since it'll try to access other bits in the runtime context during
      * its initialization and we need them to be ready. */

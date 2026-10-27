@@ -122,6 +122,9 @@ OPTIONS
           --module-path <path>
                               A colon separated list of directories, JAR files, and ZIP files
                               to search for modules.
+  -p,     --port <port number>
+                              The port number to bind when running a jank nrepl server.
+                              Pass 0 or omit to use a random available port.
           --profile           Enable compiler and runtime profiling.
           --profile-output <path> [default: jank.profile]
                               The file to write profile entries (will be overwritten).
@@ -131,8 +134,10 @@ OPTIONS
   -O,     --optimization <0 - 3>
                               The optimization level to use for AOT compilation.
   -Odirect-call               Elides the dereferencing of vars for improved performance. (not yet implemented)
-          --eagerness <lazy, eager> [default: lazy]
-                              How eagerly to JIT compile functions.
+          --eager
+                              Eagerly JIT compile functions.
+          --lazy
+                              Lazily JIT compile functions (default).
           --runtime <static, dynamic> [default: static]
                               The AOT runtime to target. The static runtime bakes in
                               all functionality and does not link to Clang/LLVM for easier
@@ -336,20 +341,13 @@ OPTIONS
             throw util::format("Invalid optimization level '{}'.", value);
           }
         }
-        else if(check_flag(it, end, value, "--eagerness", true))
+        else if(check_flag(it, end, value, "--eager", false))
         {
-          if(value == "lazy")
-          {
-            opts.eagerness = compilation_eagerness::lazy;
-          }
-          else if(value == "eager")
-          {
-            opts.eagerness = compilation_eagerness::eager;
-          }
-          else
-          {
-            throw util::format("Invalid eagerness type '{}'.", value);
-          }
+          opts.eagerness = compilation_eagerness::eager;
+        }
+        else if(check_flag(it, end, value, "--lazy", false))
+        {
+          opts.eagerness = compilation_eagerness::lazy;
         }
         else if(check_flag(it, end, value, "--runtime", true))
         {
@@ -397,6 +395,32 @@ OPTIONS
         else if(check_flag(it, end, value, "--force-binary-version", true))
         {
           scratch.forced_binary_version = value;
+        }
+        else if(check_flag(it, end, value, "-p", "--port", true))
+        {
+          size_t parsed_upto{};
+          i32 parsed_long{};
+
+          try
+          {
+            parsed_long = std::stoi(value, &parsed_upto);
+          }
+          catch(...)
+          {
+            throw util::format("Could not parse port: '{}'.", value);
+          }
+
+          if(parsed_upto != value.size())
+          {
+            throw util::format("Could not parse port: '{}'.", value);
+          }
+
+          if(std::cmp_greater(parsed_long, std::numeric_limits<u16>::max()) || parsed_long < 0)
+          {
+            throw util::format("Port out of range [0...65,535]: '{}'.", value);
+          }
+
+          opts.repl_port = parsed_long;
         }
 
         /**** These are command-specific flags which we will store until we know the command. ****/

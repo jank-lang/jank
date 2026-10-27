@@ -6,4 +6,20 @@
     :default)
   :many-nines))
 
+(assert
+ (=
+  (case 1N
+    ((foo bar)) :list
+    1N          :big-int
+    :default)
+  :big-int))
+
+(assert
+ (=
+  (case 1N
+    ((foo bar)) :list
+    1           :integer
+    :default)
+  :integer))
+
 :success

@@ -33,7 +33,7 @@ This will automatically compile Clang/LLVM, so you can skip directly to compilin
 For macOS:
 
 ```bash
-brew install curl git git-lfs entr openssl double-conversion pkg-config ninja python cmake gnupg zlib boost
+brew install curl git git-lfs entr double-conversion pkg-config ninja python cmake gnupg zlib boost
 
 # Ensure you have this set up in your shell.
 export SDKROOT=$(xcrun --sdk macosx --show-sdk-path)

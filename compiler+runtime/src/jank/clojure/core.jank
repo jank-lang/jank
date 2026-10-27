@@ -650,9 +650,9 @@
 
 (def ^{:arglists '([x] [x y] [x y & more])
        :doc "Equality. Returns true if x equals y, false if not. It also works
-       for nil and compares numbers and collections in a type-independent
-       manner. Clojure's immutable data structures define equals() (and
-       thus =) as a value, not an identity, comparison."
+       for nil and compares collections by value. Numeric values from the same
+       numeric category compare equal, while different numeric categories do
+       not; use == for type-independent numeric comparison."
        ; TODO: Add template to support this.
        ;:inline (fn* [x y]
        ;          (list 'cpp/jank.runtime.equal x y))
@@ -3431,7 +3431,10 @@
                                       (conj gmap) (conj v)
                                       (conj gmap) (conj `(if (seq? ~gmap)
                                                            (if (next ~gmap)
-                                                             (into {} ~gmap)
+                                                             (if (even? (count ~gmap))
+                                                               (apply hash-map ~gmap)
+                                                               (conj (apply hash-map (butlast ~gmap))
+                                                                     (last ~gmap)))
                                                              (if (seq ~gmap)
                                                                (first ~gmap)
                                                                {}))
@@ -4303,13 +4306,13 @@
 
 (defn- i64? [n]
   (and (integer? n)
-       (>= n ((cpp/dsl (:member (std.numeric_limits jtl.i64) min))))
-       (<= n ((cpp/dsl (:member (std.numeric_limits jtl.i64) max))))))
+       (>= n (#cpp (:member (std.numeric_limits jtl.i64) min)))
+       (<= n (#cpp (:member (std.numeric_limits jtl.i64) max)))))
 
 (defn- i32? [n]
   (and (integer? n)
-       (>= n ((cpp/dsl (:member (std.numeric_limits jtl.i32) min))))
-       (<= n ((cpp/dsl (:member (std.numeric_limits jtl.i32) max))))))
+       (>= n (#cpp (:member (std.numeric_limits jtl.i32) min)))
+       (<= n (#cpp (:member (std.numeric_limits jtl.i32) max)))))
 
 (defn- shift-mask [shift mask x]
   (-> x (bit-shift-right shift) (bit-and mask)))
@@ -4326,15 +4329,11 @@
 (defn- maybe-min-hash
   "Takes a collection of hashes and returns [shift mask] or nil if none found"
   [hashes]
-  (first
-   (filter
-    (fn [[s m]]
-      (apply distinct? (map #(shift-mask s m %) hashes)))
-    (for [mask
-          (map #(dec (bit-shift-left 1 %)) (range 1 (inc max-mask-bits)))
-          shift
-          (range 0 31)]
-      [shift mask]))))
+  (first (filter (fn [[s m]]
+                   (apply distinct? (map #(shift-mask s m %) hashes)))
+                 (for [mask (map #(dec (bit-shift-left 1 %)) (range 1 (inc max-mask-bits)))
+                       shift (range 0 31)]
+                   [shift mask]))))
 
 (defn- case-map-with-check
   "Transforms a sequence of test constants and their corresponding branch expressions
@@ -4346,16 +4345,14 @@
   [expr-sym default case-f test-f tests thens]
   (into (sorted-map)
         (zipmap (map case-f tests)
-                (map
-                 (fn [key then]
-                   (let [key
-                         (if (symbol? key)
-                           (list 'quote key)
-                           key)]
-                     `(condp = ~expr-sym ~key ~then
-                       ~default)))
-                 (map test-f tests)
-                 thens))))
+                (map (fn [key then]
+                       (let [key (if (or (symbol? key) (list? key))
+                                   (list 'quote key)
+                                   key)]
+                         `(condp = ~expr-sym ~key ~then
+                            ~default)))
+                     (map test-f tests)
+                     thens))))
 
 (defn- case-map-collison-merged
   "Transforms a sequence of test constants and their corresponding branch expressions
@@ -4368,8 +4365,7 @@
 
    Returns a sorted map mapping each transformed test constant directly to its branch expression."
   [case-f test-f tests thens]
-  (into (sorted-map)
-        (zipmap (map case-f tests) thens)))
+  (into (sorted-map) (zipmap (map case-f tests) thens)))
 
 (defn- case-map
   [expr-sym default case-f test-f tests thens skip-check]
@@ -4414,34 +4410,32 @@
    The skip-check is a set of case ints for which post-switch equivalence
    checking must not be done (the cases holding the above condp thens)."
   [expr-sym default tests thens]
-  (let [buckets
-        (loop [m  {}
-               ks tests
-               vs thens]
-          (if (and ks vs)
-            (recur
-              (update m (case-hash (first ks)) (fnil conj []) [(first ks) (first vs)])
-              (next ks) (next vs))
-            m))
-        assoc-multi
-        (fn [m h bucket]
-          (let [testexprs
-                (mapcat (fn [kv] [(list 'quote (first kv)) (second kv)]) bucket)
-                expr
-                `(condp = ~expr-sym ~@testexprs ~default)]
-            (assoc m h expr)))
-        hmap
-        (reduce
-         (fn [m [h bucket]]
-           (if (== 1 (count bucket))
-             (assoc m (ffirst bucket) (second (first bucket)))
-             (assoc-multi m h bucket)))
-         {} buckets)
-        skip-check
-        (->> buckets
-             (filter #(< 1 (count (second %))))
-             (map first)
-             (into #{}))]
+  (let [buckets (loop [m  {}
+                       ks tests
+                       vs thens]
+                  (if (and ks vs)
+                    (recur
+                      (update m (case-hash (first ks)) (fnil conj []) [(first ks) (first vs)])
+                      (next ks)
+                      (next vs))
+                    m))
+        assoc-multi (fn [m h bucket]
+                      (let [testexprs (mapcat (fn [kv]
+                                                [(list 'quote (first kv)) (second kv)])
+                                              bucket)
+                            expr `(condp = ~expr-sym ~@testexprs ~default)]
+                        (assoc m h expr)))
+        hmap (reduce
+               (fn [m [h bucket]]
+                 (if (== 1 (count bucket))
+                   (assoc m (ffirst bucket) (second (first bucket)))
+                   (assoc-multi m h bucket)))
+               {}
+               buckets)
+        skip-check (->> buckets
+                        (filter #(< 1 (count (second %))))
+                        (map first)
+                        (into #{}))]
     [(keys hmap) (vals hmap) skip-check]))
 
 (defn- prep-hashes
@@ -4500,54 +4494,45 @@
   {:added "1.2"}
 
   [e & clauses]
-  (let [ge
-        (gensym)
-        default
-        (if (odd? (count clauses))
-          (last clauses)
-          `(throw (str "No matching clause: " ~ge)))]
+  (let [ge (gensym)
+        default (if (odd? (count clauses))
+                  (last clauses)
+                  `(throw (str "No matching clause: " ~ge)))]
     (if (> 2 (count clauses))
-      `(let [~ge ~e] ~default)
-      (let [pairs
-            (partition 2 clauses)
-            assoc-test
-            (fn assoc-test [m test expr]
-              (if (contains? m test)
-                (throw (str "Duplicate case test constant: " test))
-                (assoc m test expr)))
-            pairs
-            (reduce
-              (fn [m [test expr]]
-                (if (seq? test)
-                  (reduce #(assoc-test %1 %2 expr) m test)
-                  (assoc-test m test expr)))
-              {} pairs)
-            tests
-            (keys pairs)
-            thens
-            (vals pairs)
-            mode
-            (cond
-              (every? i64? tests)
-              :ints
+      `(let [~ge ~e]
+         ~default)
+      (let [pairs (partition 2 clauses)
+            assoc-test (fn assoc-test [m test expr]
+                         (if (contains? m test)
+                           (throw (str "Duplicate case test constant: " test))
+                           (assoc m test expr)))
+            pairs (reduce
+                    (fn [m [test expr]]
+                      (if (seq? test)
+                        (reduce #(assoc-test %1 %2 expr) m test)
+                        (assoc-test m test expr)))
+                    {} pairs)
+            tests (keys pairs)
+            thens (vals pairs)
+            mode (cond
+                   (every? i64? tests)
+                   :ints
 
-              (every? keyword? tests)
-              :identity
+                   (every? keyword? tests)
+                   :identity
 
-              :else
-              :hashes)]
+                   :else
+                   :hashes)]
         (condp = mode
           :ints
           (let [[shift mask imap] (prep-ints ge default tests thens)]
             `(let [~ge ~e] (case* ~ge ~shift ~mask ~default ~imap)))
           :hashes
-          (let [[shift mask imap]
-                (prep-hashes ge default tests thens #{})]
+          (let [[shift mask imap] (prep-hashes ge default tests thens #{})]
             `(let [~ge ~e]
                (case* ~ge ~shift ~mask ~default ~imap)))
           :identity
-          (let [[shift mask imap]
-                (prep-hashes ge default tests thens #{})]
+          (let [[shift mask imap] (prep-hashes ge default tests thens #{})]
             `(let [~ge ~e]
                (case* ~ge ~shift ~mask ~default ~imap))))))))
 
@@ -4668,9 +4653,9 @@
     (reduce (fn [acc kv]
               (let [k (first kv)
                     v (second kv)]
-                ; TODO: Check for visibility.
                 (if (var? v)
-                  (if (= ns (cpp/clojure.core_native.var_ns v))
+                  (if (and (= ns (cpp/clojure.core_native.var_ns v))
+                           (not (:private (meta v))))
                     (assoc acc k v)
                     acc)
                   acc)))
@@ -7337,8 +7322,7 @@ fails, attempts to require sym's namespace and retries."
   and f is not called. Note that reduce-kv is supported on vectors,
   where the keys will be the ordinals."
   ([f init coll]
-    ;;  (clojure.core.protocols/kv-reduce coll f init)
-   (reduce (fn [s [k v]] (f s k v)) init coll)))
+   (cpp/jank.runtime.reduce_kv f init coll)))
 
 (defn slurp
   "Reads the file at the specified path into a string."
@@ -7358,10 +7342,13 @@ fails, attempts to require sym's namespace and retries."
   "Opposite of slurp.  Opens f with writer, writes content, then
   closes f. Options passed to clojure.java.io/writer."
   [f content & options]
-  (let [file (cpp/std.ofstream.)]
-    (cpp/.open file (cpp/cast (:* (:const char)) f))
-    (cpp/<< file (cpp/cast (:* (:const char)) content))
-    (cpp/.close file)
+  (let [{:keys [append]} (apply hash-map options)
+        file (cpp/std.ofstream.)
+        path (cpp/cast jtl.immutable_string f)]
+    (if-not append
+      (.open file path)
+      (.open file path cpp/std.ios_base.app))
+    (cpp/<< file (cpp/cast jtl.immutable_string content))
     nil))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; futures (needs proxy);;;;;;;;;;;;;;;;;;
@@ -7720,7 +7707,7 @@ fails, attempts to require sym's namespace and retries."
 (defonce ^:private tapset (atom #{}))
 
 (defonce ^:private tapq
-  (cpp/box (cpp/jank.runtime.detail.create_native_array_blocking_queue 1024)))
+  (cpp/box (cpp/new jank.runtime.detail.native_array_blocking_queue 1024)))
 
 (defonce ^:private tap-loop
   (delay

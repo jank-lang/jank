@@ -1,0 +1,11 @@
+(ns main)
+
+(cpp/raw "namespace test_lib
+          { void do_call(jank_object_ref const o); }
+
+          jank_object_ref get_raw(jank::runtime::object_ref o)
+          { return o.raw(); }")
+
+(defn -main [& args]
+  (cpp/test_lib.do_call (cpp/get_raw (fn thrower []
+                                       (throw :success)))))

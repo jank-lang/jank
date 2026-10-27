@@ -1,0 +1,4 @@
+(assert (= '.foo `.foo) `.foo)
+(assert (= '.-foo `.-foo) `.-foo)
+
+:success

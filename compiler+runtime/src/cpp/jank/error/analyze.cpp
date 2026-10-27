@@ -155,6 +155,13 @@ namespace jank::error
     return make_error(kind::analyze_unresolved_var, message, source, expansion);
   }
 
+  error_ref analyze_private_var(jtl::immutable_string const &message,
+                                read::source const &source,
+                                runtime::object_ref const expansion)
+  {
+    return make_error(kind::analyze_private_var, message, source, expansion);
+  }
+
   error_ref analyze_unresolved_symbol(jtl::immutable_string const &message,
                                       read::source const &source,
                                       runtime::object_ref const expansion)

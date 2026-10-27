@@ -74,6 +74,9 @@ namespace jank::error
   error_ref analyze_unresolved_var(jtl::immutable_string const &message,
                                    read::source const &source,
                                    runtime::object_ref const expansion);
+  error_ref analyze_private_var(jtl::immutable_string const &message,
+                                read::source const &source,
+                                runtime::object_ref const expansion);
   error_ref analyze_unresolved_symbol(jtl::immutable_string const &message,
                                       read::source const &source,
                                       runtime::object_ref const expansion);

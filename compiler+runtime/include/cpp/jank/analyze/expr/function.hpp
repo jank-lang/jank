@@ -13,6 +13,7 @@ namespace jank::analyze::expr
 {
   using function_ref = jtl::ref<struct function>;
 
+  /* TODO: Rename to function_arity_context. */
   struct function_context
   {
     static constexpr bool pointer_free{ false };
@@ -82,6 +83,8 @@ namespace jank::analyze::expr
     jtl::immutable_string unique_name;
     native_vector<function_arity> arities;
     runtime::obj::persistent_hash_map_ref meta{};
+    /* TODO: This should just be a function, rather than copying state from the arity
+     * function contexts. */
     bool is_variadic{};
   };
 }

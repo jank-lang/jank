@@ -1,3 +1,4 @@
+#include <cstring>
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
@@ -159,6 +160,42 @@ namespace jank::jit
         {
           block->setAlignment(4);
           block->setAlignmentOffset(0);
+        }
+        return llvm::Error::success();
+      });
+
+      /* We need to detect compressed DWARF nodes and drop them, since the relative offsets we
+       * have are for the uncompressed sections, which will result in buffer overflows if applied
+       * to the compressed sections. We identify these nodes here and then drop them, which is
+       * fine since we have the uncompressed versions already. */
+      config.PrePrunePasses.emplace_back([](llvm::jitlink::LinkGraph &graph) -> llvm::Error {
+        for(auto &section : graph.sections())
+        {
+          if(!section.getName().starts_with(".debug_"))
+          {
+            continue;
+          }
+          for(auto const block : section.blocks())
+          {
+            /* An Elf64_Chdr is a u32 type (1 = zlib, 2 = zstd), a u32 reserved field, and then
+             * the u64 uncompressed size. */
+            if(block->isZeroFill() || block->getSize() < 24)
+            {
+              continue;
+            }
+            uint32_t type{};
+            uint32_t reserved{};
+            std::memcpy(&type, block->getContent().data(), sizeof(type));
+            std::memcpy(&reserved, block->getContent().data() + sizeof(type), sizeof(reserved));
+            if((type != 1 && type != 2) || reserved != 0)
+            {
+              continue;
+            }
+            while(block->edges_size() > 0)
+            {
+              block->removeEdge(block->edges().begin());
+            }
+          }
         }
         return llvm::Error::success();
       });

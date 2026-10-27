@@ -48,7 +48,6 @@ namespace clojure::string_native
   jtl::immutable_string trim(jtl::immutable_string const &s);
   jtl::immutable_string trim_newline(jtl::immutable_string const &s);
 
-  obj::persistent_vector_ref split(jtl::immutable_string const &s, obj::re_pattern_ref const re);
   obj::persistent_vector_ref
   split(jtl::immutable_string const &s, obj::re_pattern_ref const re, i64 const limit);
 }

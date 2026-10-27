@@ -175,6 +175,52 @@ namespace jank::runtime
       r);
   }
 
+  static f64 rem(f64 const l, f64 const r)
+  {
+    if(r == 0)
+    {
+      throw std::runtime_error{ "Division by zero is not permitted." };
+    }
+    else if(std::isnan(l))
+    {
+      throw std::runtime_error{ "`##NaN` is not permitted as `num` parameter to `rem`." };
+    }
+    else if(std::isinf(l))
+    {
+      throw std::runtime_error{ "`##Inf` is not permitted as `num` parameter to `rem`." };
+    }
+    else if(std::isnan(r))
+    {
+      throw std::runtime_error{ "`##NaN` is not permitted as `div` parameter to `rem`." };
+    }
+    else if(std::isinf(r))
+    {
+      return NAN;
+    }
+
+    return std::fmod(l, r);
+  }
+
+  static object_ref rem(obj::ratio_data const &l, obj::ratio_data const &r)
+  {
+    if(r.numerator == 0)
+    {
+      throw std::runtime_error{ "Division by zero is not permitted." };
+    }
+
+    /* https://github.com/clojure/clojure/blob/clojure-1.12.5/src/jvm/clojure/lang/Numbers.java#L809 */
+    auto const quot{ (l.numerator * r.denominator) / (l.denominator * r.numerator) };
+    auto const numerator{ l.numerator * r.denominator - quot * r.numerator * l.denominator };
+    auto const denominator{ l.denominator * r.denominator };
+
+    if(numerator % denominator == 0)
+    {
+      return make_box<obj::big_integer>(numerator / denominator).erase();
+    }
+
+    return make_box<obj::ratio>(obj::ratio_data{ numerator, denominator }).erase();
+  }
+
   object_ref rem(object_ref const l, object_ref const r)
   {
     return visit_number_like(
@@ -184,40 +230,85 @@ namespace jank::runtime
             using LeftType = std::decay_t<T>;
             using RightType = std::decay_t<decltype(typed_r->data)>;
 
-            constexpr bool left_is_int_like{ std::is_same_v<LeftType, i64>
-                                             || std::is_same_v<LeftType, native_big_integer> };
-            constexpr bool right_is_int_like{ std::is_same_v<RightType, i64>
-                                              || std::is_same_v<RightType, native_big_integer> };
+            constexpr bool is_float{ std::is_same_v<LeftType, f32> || std::is_same_v<LeftType, f64>
+                                     || std::is_same_v<RightType, f32>
+                                     || std::is_same_v<RightType, f64> };
 
-            if constexpr(left_is_int_like && right_is_int_like)
+            constexpr bool is_ratio{ std::is_same_v<LeftType, obj::ratio_data>
+                                     || std::is_same_v<RightType, obj::ratio_data> };
+
+            constexpr bool is_big_decimal{ std::is_same_v<LeftType, native_big_decimal>
+                                           || std::is_same_v<RightType, native_big_decimal> };
+
+            constexpr bool is_big_integer{ std::is_same_v<LeftType, native_big_integer>
+                                           || std::is_same_v<RightType, native_big_integer> };
+
+            if constexpr(is_float)
             {
-              if constexpr(std::is_same_v<LeftType, i64>
-                           && std::is_same_v<RightType, native_big_integer>)
+              return make_box(rem(to_real(typed_l_data), to_real(typed_r->data))).erase();
+            }
+            else if constexpr(is_ratio)
+            {
+              if constexpr(std::is_same_v<LeftType, obj::ratio_data>
+                           && std::is_same_v<RightType, obj::ratio_data>)
               {
-                return make_box(native_big_integer(typed_l_data) % typed_r->data).erase();
+                return rem(typed_l_data, typed_r->data);
               }
-              else if constexpr(std::is_same_v<LeftType, native_big_integer>
-                                && std::is_same_v<RightType, i64>)
+              else if constexpr(std::is_same_v<LeftType, obj::ratio_data>)
               {
-                return make_box(typed_l_data % native_big_integer(typed_r->data)).erase();
+                auto const r(
+                  obj::ratio_data{ native_big_integer(typed_r->data), native_big_integer(1) });
+
+                return rem(typed_l_data, r);
               }
               else
               {
-                return make_box(typed_l_data % typed_r->data).erase();
+                auto const l(
+                  obj::ratio_data{ native_big_integer(typed_l_data), native_big_integer(1) });
+
+                return rem(l, typed_r->data);
               }
             }
-            else
+            else if constexpr(is_big_decimal)
             {
-              auto const r_real{ to_real(typed_r->data) };
-
-              if(r_real == 0)
+              if(typed_r->data == 0)
               {
                 throw std::runtime_error{ "Division by zero is not permitted." };
               }
 
-              auto const l_real{ to_real(typed_l_data) };
+              auto const result{ boost::multiprecision::fmod(
+                abs(native_big_decimal{ typed_l_data }),
+                abs(native_big_decimal{ typed_r->data })) };
 
-              return make_box(std::fmod(l_real, r_real)).erase();
+              /* boost::multiprecision::fmod doesn't account for negatives, so we need to do it manually */
+              return make_box<obj::big_decimal>(typed_l_data < 0 ? -result : result).erase();
+            }
+            else if constexpr(is_big_integer)
+            {
+              if(typed_r->data == 0)
+              {
+                throw std::runtime_error{ "Division by zero is not permitted." };
+              }
+
+              return make_box(native_big_integer{ typed_l_data }
+                              % native_big_integer{ typed_r->data })
+                .erase();
+            }
+            else
+            {
+              if(typed_r->data == 0)
+              {
+                throw std::runtime_error{ "Division by zero is not permitted." };
+              }
+              /* Prevents a floating point exception num = -2147483648 and div = -1,
+               * and for all div = -1, rem = 0.
+               */
+              else if(typed_r->data == -1)
+              {
+                return make_box(0).erase();
+              }
+
+              return make_box(typed_l_data % typed_r->data).erase();
             }
           },
           r_obj,
