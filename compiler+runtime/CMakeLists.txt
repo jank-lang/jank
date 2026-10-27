@@ -60,6 +60,7 @@ execute_process(
 )
 
 set(jank_version "jank-${CMAKE_PROJECT_VERSION}-alpha")
+set(jank_core_lib_optimization "-O0")
 
 set(jank_cxx_standard cxx_std_20)
 
@@ -140,8 +141,10 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   list(APPEND jank_common_compiler_flags -Werror -O0 -g)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   list(APPEND jank_common_compiler_flags -O2 -DNDEBUG)
+  set(jank_core_lib_optimization "-O3")
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
   list(APPEND jank_common_compiler_flags -Og -g -DNDEBUG)
+  set(jank_core_lib_optimization "-Og")
 endif()
 
 # Enabling phase 2 builds means that we will compile all of our core jank
@@ -1118,9 +1121,9 @@ add_custom_command(
   DEPENDS ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_clojure_core_sources} ${jank_other_core_sources} ${jank_incremental_pch_flag}
   OUTPUT ${jank_core_libraries_flag}
   BYPRODUCTS ${jank_clojure_core_output} ${jank_nrepl_server_outputs}
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} clojure.core
-  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} -O3 --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_core_lib_optimization} --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs --output-target object clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_core_lib_optimization} --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} clojure.core
+  COMMAND ${CMAKE_BINARY_DIR}/jank-phase-1${CMAKE_EXECUTABLE_SUFFIX} ${jank_core_lib_optimization} --force-binary-version 0 compile-module --target-dir ${CMAKE_BINARY_DIR}/core-libs ${jank_core_lib_output_target} jank.nrepl.server.core
   COMMAND touch ${jank_core_libraries_flag}
 )
 add_custom_target(
