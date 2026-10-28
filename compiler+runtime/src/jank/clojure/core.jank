@@ -4622,7 +4622,7 @@
     ns-or-sym
     (let [found (find-ns ns-or-sym)]
       (if (nil? found)
-        (throw (ex-info :not-an-ns-or-sym {:value ns-or-sym}))
+        (throw (ex-info "The provided value was not resolvable as a namespace." {:value ns-or-sym}))
         found))))
 
 (defn ns-name
@@ -4655,6 +4655,23 @@
             {}
             (ns-map ns))))
 
+(defn- filter-key [keyfn pred amap]
+  (loop [ret {} es (seq amap)]
+    (if es
+      (if (pred (keyfn (first es)))
+        (recur (assoc ret (key (first es)) (val (first es))) (next es))
+        (recur ret (next es)))
+      ret)))
+
+(defn ns-interns
+  "Returns a map of the intern mappings for the namespace."
+  [ns]
+  (let [ns (the-ns ns)]
+    (filter-key val
+                (fn [v]
+                  (and (var? v) (= (ns-name ns) (-> v symbol namespace symbol))))
+                (ns-map ns))))
+
 (defn ns-resolve
   "Returns the var to which a symbol will be resolved in the
    namespace (unless found in the environment), else nil.  Note that
@@ -4686,7 +4703,7 @@
 
 (defn- throw-if [pred msg]
   (when pred
-    (throw (ex-info :assertion-failure {:msg msg}))))
+    (throw (ex-info "Assertion failed." {:msg msg}))))
 
 (defn alias
   "Add an alias in the current namespace to another
@@ -4715,7 +4732,7 @@
   [ns-sym & filters]
   (let [ns (find-ns ns-sym)
         _ (when (nil? ns)
-            (throw (ex-info :unknown-namespace {:value ns-sym})))
+            (throw (ex-info "Unknown namespace." {:value ns-sym})))
         filters (apply hash-map filters)
         rename (or (:rename filters) {})
         exclude? (set (:exclude filters))
@@ -4729,7 +4746,10 @@
                 (let [v (get sym->var sym)
                       sym (rename sym sym)]
                   (when (nil? v)
-                    (throw (ex-info :var-does-not-exist {:value sym})))
+                    (throw (ex-info (if (get (ns-interns ns) sym)
+                                      (str ns "/" sym " cannot be referred, since it is private.")
+                                      (str ns "/" sym " does not exist."))
+                                    {:value sym})))
                   (cpp/jank.runtime.refer *ns* sym v))))
             nil
             to-refer)))
@@ -6164,15 +6184,6 @@
   ;;   (load-reader rdr))
   (throw (ex-info "TODO: port load-string"  {})))
 
-(defn-
-  filter-key [keyfn pred amap]
-    (loop [ret {} es (seq amap)]
-      (if es
-        (if (pred (keyfn (first es)))
-          (recur (assoc ret (key (first es)) (val (first es))) (next es))
-          (recur ret (next es)))
-        ret)))
-
 (defn all-ns
   "Returns a sequence of all namespaces."
   []
@@ -6188,14 +6199,6 @@
   [ns]
   ;; (filter-key val (partial instance? Class) (ns-map ns))
   (throw (ex-info "TODO: port ns-imports"  {})))
-
-(defn ns-interns
-  "Returns a map of the intern mappings for the namespace."
-  [ns]
-  (let [ns (the-ns ns)]
-    (filter-key val (fn [v] (and (var? v)
-                                 (= (ns-name ns) (-> v symbol namespace symbol))))
-                (ns-map ns))))
 
 (defn ns-refers
   "Returns a map of the refer mappings for the namespace."
