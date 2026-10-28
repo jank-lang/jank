@@ -1,10 +1,11 @@
 (ns leiningen.jank
   (:refer-clojure :exclude [run!])
-  (:require [leiningen.core.main :as lmain]
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [leiningen.core.main :as lmain]
             [leiningen.core.project :as lproj]
-            [leiningen.jank.core :as ljc]
             [leiningen.help :as lhelp]
-            [clojure.java.io :as io])
+            [leiningen.jank.core :as ljc])
   (:import [java.nio.file Files]))
 
 (defn find-deprecated-flags [project]
@@ -72,8 +73,10 @@ USAGE: lein debug -m/--main NAMESPACE [--] [ARGS...]
 :main is specified."
   [project & args]
   (let [[opts args] (ljc/parse-opts #'repl! args ljc/standard-options)
-        main        (:main project)]
-    (dispatch-jank project opts "repl" (if main [main] []) args)))
+        main        (:main project)
+        nrepl-opts  (when-let [middleware (seq (get-in project [:repl-options :nrepl-middleware]))]
+                      ["--nrepl-middleware" (str/join "," middleware)])]
+    (dispatch-jank project opts "repl" (concat nrepl-opts (when main [main])) args)))
 
 (def compile-cli-options
   [["-m" "--main NAMESPACE" "override main namespace"]

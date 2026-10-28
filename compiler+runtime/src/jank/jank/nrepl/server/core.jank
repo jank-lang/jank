@@ -1,6 +1,7 @@
 (ns jank.nrepl.server.core
   (:include "jank/nrepl/server.hpp")
-  (:require [jank.nrepl.server.handler :refer [handle-message]]
+  (:require [clojure.string :as str]
+            [jank.nrepl.server.handler :refer [handle-message]]
             [jank.nrepl.server.util :refer [abbreviate]]
             [jank.nrepl.server.bencode :as bencode]
             ;; handler implementations
@@ -76,14 +77,62 @@ namespace jank::util
     (.write_some client (cpp/cast std.string msg-str))
     nil))
 
+(defn- wrap-middleware [handler middleware]
+  (try
+    (cond
+      (fn? middleware)
+      (or (middleware handler) handler)
+
+      (sequential? middleware)
+      (reduce wrap-middleware handler (reverse middleware))
+
+      (var? middleware)
+      (wrap-middleware handler (deref middleware))
+
+      (string? middleware)
+      (wrap-middleware handler (symbol middleware))
+
+      (symbol? middleware)
+      ;; Many nREPL clients will automatically attempt to load cider, this will
+      ;; fast fail those loads.
+      ;; TODO: Remove if/when cider is supported on jank
+      (if (= "cider.nrepl" (namespace middleware))
+        (do
+          (log "Cider nREPL middleware not supported on jank:" middleware)
+          handler)
+        (wrap-middleware handler (requiring-resolve middleware)))
+
+      :else
+      (do
+        (log "Invalid nREPL middleware:" middleware)
+        handler))
+    (catch std.exception e
+      (log "An exception was thrown while applying middleware:" middleware (.what e))
+      handler)
+    (catch jank.runtime.object_ref e
+      (log "An exception was thrown while applying middleware:" middleware e)
+      handler)
+    (catch jank.error_ref e
+      (log "An exception was thrown while applying middleware:" middleware)
+      (cpp/jank.util.print_exception e)
+      handler)
+    (catch :default _
+      (log "An exception was thrown while applying middleware:" middleware)
+      handler)))
+
+(defn- get-middleware []
+  (remove
+   str/blank?
+   (str/split (.-nrepl_middleware cpp/jank.util.cli.opts) #",")))
+
 (defn handle-client
   "For as long as the client is connected, read requests and write replies."
-  [client*]
+  [handler client*]
   (loop [[req remainder] nil]
     (when (connected? client*)
       (when req
         (log "<-" (pr-str (abbreviate req 20)))
-        (let [resps (responses-for req (handle-message req))]
+        (let [resps (responses-for req (handler req))]
           (doseq [resp resps]
             (log "->" (pr-str (abbreviate resp 20)))
             (write-message client* resp))))
@@ -103,7 +152,8 @@ namespace jank::util
                nil])))]
     (if err
       (deliver *ready? err)
-      (let [server (cpp/unbox (:* jank.nrepl.server.native_server) server*)]
+      (let [server  (cpp/unbox (:* jank.nrepl.server.native_server) server*)
+            handler (wrap-middleware handle-message (get-middleware))]
         (spit ".nrepl-port" (str (.get_port server)))
         ;; Certain nREPL clients, such as Calva, depend on this exact string
         ;; format to assist with setting up a REPL via jack-in.
@@ -114,7 +164,7 @@ namespace jank::util
           (let [client* (accept server*)]
             (future
               (try
-                (handle-client client*)
+                (handle-client handler client*)
                 (catch std.exception e
                   (println "An exception was thrown from the nREPL server thread:" (.what e)))
                 (catch jank.runtime.object_ref e
