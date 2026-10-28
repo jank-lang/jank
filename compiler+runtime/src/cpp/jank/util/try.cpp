@@ -216,6 +216,13 @@ namespace jank::util
     {
       print_exception(e.to_string());
     }
+    else if(e.get_type() == runtime::object_type::exception_info)
+    {
+      /* TODO: I think the better solution may be to extract the stack trace to print
+       * with cpptrace, and the message to print as an error_ref, but I don't know if
+       * some REPL tooling relies on ex-infos printing a certain way. I suspect there is. */
+      util::println("{}", e.to_code_string());
+    }
     else
     {
       print_exception(e.to_code_string());
