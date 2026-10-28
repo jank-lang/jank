@@ -144,7 +144,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
   set(jank_core_lib_optimization "-O3")
 elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
   list(APPEND jank_common_compiler_flags -Og -g -DNDEBUG)
-  set(jank_core_lib_optimization "-Og")
+  set(jank_core_lib_optimization "-O3")
 endif()
 
 # Enabling phase 2 builds means that we will compile all of our core jank
