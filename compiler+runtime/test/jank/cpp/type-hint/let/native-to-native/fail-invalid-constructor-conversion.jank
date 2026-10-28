@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::type_hint::let::native_to_native::fail_invalid_constructor_conversion
+          {
+            struct foo
+            {
+              std::string data{};
+            };
+          }")
+(let* [^int i 7
+       ^jank.cpp.type_hint.let.native_to_native.fail_invalid_constructor_conversion.foo f i]
+  :success)

@@ -1,0 +1,9 @@
+(cpp/raw "namespace jank::cpp::type_hint::let::native_to_object::fail_mismatched_untyped_object
+          {
+            struct foo
+            {
+            };
+          }")
+(let* [f (cpp/jank.cpp.type_hint.let.native_to_object.fail_mismatched_untyped_object.foo)
+       ^jank.runtime.object o f]
+  :success)

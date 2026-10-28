@@ -1,0 +1,6 @@
+(defn foo []
+  (cpp/box (cpp/new int 5)))
+
+(let* [^(:* int) i (foo)]
+  (if (cpp/== 5 (cpp/* i))
+    :success))

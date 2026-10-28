@@ -1817,15 +1817,15 @@ namespace jank::analyze::cpp_util
   implicit_conversion_action
   determine_implicit_conversion(jtl::ptr<void> expr_type, jtl::ptr<void> const expected_type)
   {
-    //util::println("determine_implicit_conversion expr type {} (canon {}), expected type {} (canon "
-    //              "{}), underlying "
-    //              "subclass {}",
-    //              cppinterop::get_type_as_string(expr_type),
-    //              cppinterop::get_type_as_string(cppinterop::get_canonical_type(expr_type)),
-    //              cppinterop::get_type_as_string(expected_type),
-    //              cppinterop::get_type_as_string(cppinterop::get_canonical_type(expected_type)),
-    //              cppinterop::is_type_derived_from(cppinterop::get_underlying_type(expr_type),
-    //                                               cppinterop::get_underlying_type(expected_type)));
+    util::println("determine_implicit_conversion expr type {} (canon {}), expected type {} (canon "
+                  "{}), underlying "
+                  "subclass {}",
+                  cppinterop::get_type_as_string(expr_type),
+                  cppinterop::get_type_as_string(cppinterop::get_canonical_type(expr_type)),
+                  cppinterop::get_type_as_string(expected_type),
+                  cppinterop::get_type_as_string(cppinterop::get_canonical_type(expected_type)),
+                  cppinterop::is_type_derived_from(cppinterop::get_underlying_type(expr_type),
+                                                   cppinterop::get_underlying_type(expected_type)));
 
     expr_type = cppinterop::get_non_reference_type(expr_type);
     if(cppinterop::get_canonical_type(expr_type) == cppinterop::get_canonical_type(expected_type)

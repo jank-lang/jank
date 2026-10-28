@@ -990,21 +990,21 @@ namespace jank::analyze
 
       auto const type{ type_expr.expect_ok() };
 
-      if(Cpp::IsReferenceType(type))
+      if(cppinterop::is_reference_type(type))
       {
         return error::analyze_invalid_cpp_type("Type-hints for values cannot be reference types.",
                                                object_source(sym),
                                                latest_expansion(macro_expansions));
       }
 
-      if(Cpp::IsVoid(type))
+      if(cppinterop::is_void(type))
       {
         return error::analyze_invalid_cpp_type("Type-hints for values cannot be void.",
                                                object_source(sym),
                                                latest_expansion(macro_expansions));
       }
 
-      if(!cpp_util::is_trait_convertible(type) && !Cpp::IsPointerType(type))
+      if(!cpp_util::is_trait_convertible(type) && !cppinterop::is_pointer_type(type))
       {
         return error::analyze_invalid_cpp_type(
           "Type-hints for values either need to be jank object types, trait-convertible "
@@ -1025,8 +1025,8 @@ namespace jank::analyze
                             native_vector<runtime::object_ref> const &macro_expansions)
   {
     auto const action{ cpp_util::determine_implicit_conversion(expr_type, expected_type) };
-    //util::println("implicit conversion action: {}",
-    //              cpp_util::implicit_conversion_action_str(action));
+    util::println("implicit conversion action: {}",
+                  cpp_util::implicit_conversion_action_str(action));
     switch(action)
     {
       case cpp_util::implicit_conversion_action::none:
@@ -2227,7 +2227,7 @@ namespace jank::analyze
       {
         return tag_type_res.expect_err();
       }
-      auto const tag_type_opt{ tag_type_res.expect_ok() };
+      auto const &tag_type_opt{ tag_type_res.expect_ok() };
 
       auto const value_res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
       if(value_res.is_err())
@@ -2262,6 +2262,7 @@ namespace jank::analyze
         }
         value_expr = res.expect_ok();
         expr_type = value_expr->get_type();
+        util::println("hinted let binding type {}", cpp_util::get_qualified_type_name(expr_type));
       }
 
       /* Loop bindings are mutable, so if we have a typed object, force it to be untyped since

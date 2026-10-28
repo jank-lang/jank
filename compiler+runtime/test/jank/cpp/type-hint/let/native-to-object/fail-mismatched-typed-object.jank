@@ -1,0 +1,3 @@
+(let* [^int i 5
+       ^jank.runtime.obj.persistent_string_ref o i]
+  :success)

@@ -1,0 +1,5 @@
+(let* [^int i 7
+       ^float f i
+       ^int i2 f]
+  (if (and (cpp/== 7 i) (cpp/== 7.0 f) (cpp/== 7 i2))
+    :success))

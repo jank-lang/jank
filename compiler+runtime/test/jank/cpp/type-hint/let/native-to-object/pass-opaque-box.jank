@@ -1,0 +1,4 @@
+(let* [i* (cpp/new int 5)
+       ^jank.runtime.object o i*]
+  (if (= 5 (cpp/* (cpp/unbox (:* int) o)))
+    :success))

@@ -1,0 +1,5 @@
+(let* [^int i 5
+       ^jank.runtime.obj.small_integer_ref o1 i
+       ^jank.runtime.obj.integer_ref o2 i]
+  (if (and (= 5 o1) (= 5 o2))
+    :success))

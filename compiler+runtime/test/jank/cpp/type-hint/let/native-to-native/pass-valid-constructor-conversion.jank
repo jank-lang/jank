@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::cpp::type_hint::let::native_to_native::pass_valid_constructor_conversion
+          {
+            struct foo
+            {
+              int data{};
+            };
+          }")
+(let* [^int i 7
+       ^jank.cpp.type_hint.let.native_to_native.pass_valid_constructor_conversion.foo f i]
+  (if (cpp/== 7 (.-data f))
+    :success))

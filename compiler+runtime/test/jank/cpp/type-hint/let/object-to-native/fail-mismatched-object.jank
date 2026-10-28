@@ -1,0 +1,5 @@
+(defn foo []
+  :bad)
+
+(let* [^int i (foo)]
+  :success)

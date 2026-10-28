@@ -1,0 +1,6 @@
+(defn foo []
+  5)
+
+(let* [^int i (foo)]
+  (if (cpp/== 5 i)
+    :success))
