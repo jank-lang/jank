@@ -22,8 +22,6 @@
 #include <jank/util/try.hpp>
 #include <jank/c_api.h>
 
-#include <clojure/core_native.hpp>
-
 #ifdef JANK_PHASE_2
 extern "C" void jank_load_clojure_core();
 #endif
@@ -480,7 +478,6 @@ namespace jank::environment
     {
       util::println("{}", header("jank runtime", max_width));
       auto const ret{ jank_init_dynamic(0, nullptr, true, nullptr, 0, [](int const, char const **) {
-        jank_load_clojure_core_native();
         util::println("{}─ ✅{} jank runtime initialized", text_style::green, text_style::reset);
         util::println("{}", pch_location());
         util::println("{}", check_cpp_jit());

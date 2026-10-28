@@ -22,6 +22,15 @@
 
 namespace jank::runtime
 {
+  bool not_(object_ref const o)
+  {
+    if(runtime::is_nil(o))
+    {
+      return true;
+    }
+    return runtime::is_false(o);
+  }
+
   jtl::immutable_string type(object_ref const o)
   {
     return object_type_str(o.get_type());
@@ -546,9 +555,69 @@ namespace jank::runtime
     return o.get_type() == object_type::keyword && !expect_object<obj::keyword>(o)->sym->ns.empty();
   }
 
+  bool is_fn(object_ref const o)
+  {
+    return o.get_type() == object_type::native_function_wrapper
+      || o.get_type() == object_type::jit_function
+      || o.get_type() == object_type::jit_variadic_function
+      || o.get_type() == object_type::jit_closure
+      || o.get_type() == object_type::jit_variadic_closure
+      || o.get_type() == object_type::deferred_cpp_function;
+  }
+
   bool is_callable(object_ref const o)
   {
     return o.has_behavior(object_behavior::call);
+  }
+
+  bool is_multi_fn(object_ref const o)
+  {
+    return o.get_type() == object_type::multi_function;
+  }
+
+  object_ref multi_fn(object_ref const name,
+                      object_ref const dispatch_fn,
+                      object_ref const default_,
+                      object_ref const hierarchy)
+  {
+    return make_box<obj::multi_function>(name, dispatch_fn, default_, hierarchy);
+  }
+
+  object_ref defmethod(object_ref const multifn, object_ref const dispatch_val, object_ref const fn)
+  {
+    return try_object<obj::multi_function>(multifn)->add_method(dispatch_val, fn);
+  }
+
+  object_ref remove_all_methods(object_ref const multifn)
+  {
+    return try_object<obj::multi_function>(multifn)->reset();
+  }
+
+  object_ref remove_method(object_ref const multifn, object_ref const dispatch_val)
+  {
+    return try_object<obj::multi_function>(multifn)->remove_method(dispatch_val);
+  }
+
+  object_ref prefer_method(object_ref const multifn,
+                           object_ref const dispatch_val_x,
+                           object_ref const dispatch_val_y)
+  {
+    return try_object<obj::multi_function>(multifn)->prefer_method(dispatch_val_x, dispatch_val_y);
+  }
+
+  object_ref methods(object_ref const multifn)
+  {
+    return try_object<obj::multi_function>(multifn)->method_table;
+  }
+
+  object_ref get_method(object_ref const multifn, object_ref const dispatch_val)
+  {
+    return try_object<obj::multi_function>(multifn)->get_fn(dispatch_val);
+  }
+
+  object_ref prefers(object_ref const multifn)
+  {
+    return try_object<obj::multi_function>(multifn)->prefer_table;
   }
 
   uhash to_hash(object_ref const o)
@@ -707,13 +776,144 @@ namespace jank::runtime
     return __rt_ctx->get_thread_bindings();
   }
 
-  object_ref force(object_ref const o)
+  bool is_var(object_ref const o)
   {
-    if(o.get_type() == object_type::delay)
+    return o.get_type() == object_type::var;
+  }
+
+  object_ref var_get(object_ref const o)
+  {
+    return try_object<var>(o)->deref();
+  }
+
+  object_ref intern_var(object_ref const sym)
+  {
+    return __rt_ctx->intern_var(try_object<obj::symbol>(sym)).expect_ok();
+  }
+
+  object_ref var_get_root(object_ref const o)
+  {
+    return try_object<var>(o)->get_root();
+  }
+
+  object_ref var_bind_root(object_ref const v, object_ref const o)
+  {
+    return try_object<var>(v)->bind_root(o);
+  }
+
+  object_ref alter_var_root(object_ref const o, object_ref const fn, object_ref const args)
+  {
+    return try_object<var>(o)->alter_root(fn, args);
+  }
+
+  bool is_var_bound(object_ref const o)
+  {
+    return try_object<runtime::var>(o)->is_bound();
+  }
+
+  bool is_var_thread_bound(object_ref const o)
+  {
+    return try_object<runtime::var>(o)->get_thread_binding().is_some();
+  }
+
+  object_ref in_ns(object_ref const sym)
+  {
+    __rt_ctx->current_ns_var->set(__rt_ctx->intern_ns(try_object<obj::symbol>(sym))).expect_ok();
+    return {};
+  }
+
+  object_ref intern_ns(object_ref const sym)
+  {
+    return __rt_ctx->intern_ns(try_object<obj::symbol>(sym));
+  }
+
+  object_ref find_ns(object_ref const sym)
+  {
+    return __rt_ctx->find_ns(try_object<obj::symbol>(sym));
+  }
+
+  object_ref find_var(object_ref const sym)
+  {
+    return __rt_ctx->find_var(try_object<obj::symbol>(sym));
+  }
+
+  object_ref remove_ns(object_ref const sym)
+  {
+    return __rt_ctx->remove_ns(try_object<obj::symbol>(sym));
+  }
+
+  bool is_ns(object_ref const ns_or_sym)
+  {
+    return ns_or_sym.get_type() == object_type::ns;
+  }
+
+  object_ref ns_name(object_ref const ns)
+  {
+    return try_object<runtime::ns>(ns)->name;
+  }
+
+  object_ref ns_map(object_ref const ns)
+  {
+    return try_object<runtime::ns>(ns)->get_mappings();
+  }
+
+  object_ref var_ns(object_ref const v)
+  {
+    return try_object<runtime::var>(v)->n;
+  }
+
+  object_ref ns_resolve(object_ref const ns, object_ref const sym)
+  {
+    auto const n(try_object<runtime::ns>(ns));
+    auto const found(n->find_var(try_object<obj::symbol>(sym)));
+    return found;
+  }
+
+  object_ref alias(object_ref const current_ns, object_ref const remote_ns, object_ref const alias)
+  {
+    try_object<ns>(current_ns)
+      ->add_alias(try_object<obj::symbol>(alias), try_object<ns>(remote_ns))
+      .expect_ok();
+    return {};
+  }
+
+  object_ref ns_unalias(object_ref const current_ns, object_ref const alias)
+  {
+    try_object<ns>(current_ns)->remove_alias(try_object<obj::symbol>(alias));
+    return {};
+  }
+
+  object_ref ns_unmap(object_ref const current_ns, object_ref const sym)
+  {
+    try_object<ns>(current_ns)->unmap(try_object<obj::symbol>(sym)).expect_ok();
+    return {};
+  }
+
+  object_ref refer(object_ref const current_ns, object_ref const sym, object_ref const var)
+  {
+    expect_object<runtime::ns>(current_ns)
+      ->refer(try_object<obj::symbol>(sym), expect_object<runtime::var>(var))
+      .expect_ok();
+    return {};
+  }
+
+  object_ref refer_global(object_ref const sym)
+  {
+    auto const current_ns{ __rt_ctx->current_ns() };
+    current_ns->refer_global(sym).expect_ok();
+    return {};
+  }
+
+  object_ref rename_referred_globals(object_ref const rename_map)
+  {
+    if(is_empty(rename_map))
     {
-      return expect_object<obj::delay>(o)->deref();
+      return {};
     }
-    return o;
+
+    auto const current_ns{ __rt_ctx->current_ns() };
+    current_ns->rename_referred_globals(rename_map).expect_ok();
+    return {};
   }
 
   obj::tagged_literal_ref tagged_literal(object_ref const tag, object_ref const form)
@@ -1050,9 +1250,36 @@ namespace jank::runtime
 #endif
   }
 
+  obj::delay_ref delay(object_ref const fn)
+  {
+    return make_box<obj::delay>(fn);
+  }
+
+  object_ref force(object_ref const o)
+  {
+    if(o.get_type() == object_type::delay)
+    {
+      return expect_object<obj::delay>(o)->deref();
+    }
+    return o;
+  }
+
   obj::promise_ref promise()
   {
     return make_box<obj::promise>();
+  }
+
+  object_ref sleep(object_ref const ms)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(to_int(ms)));
+    return {};
+  }
+
+  object_ref current_time()
+  {
+    using namespace std::chrono;
+    auto const t(high_resolution_clock::now());
+    return make_box(duration_cast<nanoseconds>(t.time_since_epoch()).count());
   }
 
   object_ref read_string(object_ref const form_string, object_ref const opts)
@@ -1126,5 +1353,26 @@ namespace jank::runtime
   obj::persistent_array_map_ref ex_map(object_ref const o)
   {
     return try_object<obj::exception_info>(o)->to_map();
+  }
+
+  object_ref compile(object_ref const path)
+  {
+    __rt_ctx->compile_module(path.to_string()).expect_ok();
+    return {};
+  }
+
+  object_ref eval(object_ref const expr)
+  {
+    return __rt_ctx->eval(expr);
+  }
+
+  jtl::u32 hash_unordered(object_ref const coll)
+  {
+    return hash::unordered(coll);
+  }
+
+  jtl::immutable_string jank_version()
+  {
+    return JANK_VERSION;
   }
 }

@@ -27,6 +27,8 @@ namespace jank::runtime
     using exception_info_ref = oref<struct exception_info>;
   }
 
+  bool not_(object_ref const o);
+
   jtl::immutable_string type(object_ref const o);
   bool is_nil(object_ref const o);
   bool is_true(object_ref const o);
@@ -64,7 +66,23 @@ namespace jank::runtime
   bool is_simple_keyword(object_ref const o);
   bool is_qualified_keyword(object_ref const o);
 
+  bool is_fn(object_ref const o);
   bool is_callable(object_ref const o);
+  bool is_multi_fn(object_ref const o);
+  object_ref multi_fn(object_ref const name,
+                      object_ref const dispatch_fn,
+                      object_ref const default_,
+                      object_ref const hierarchy);
+  object_ref
+  defmethod(object_ref const multifn, object_ref const dispatch_val, object_ref const fn);
+  object_ref remove_all_methods(object_ref const multifn);
+  object_ref remove_method(object_ref const multifn, object_ref const dispatch_val);
+  object_ref prefer_method(object_ref const multifn,
+                           object_ref const dispatch_val_x,
+                           object_ref const dispatch_val_y);
+  object_ref methods(object_ref const multifn);
+  object_ref get_method(object_ref const multifn, object_ref const dispatch_val);
+  object_ref prefers(object_ref const multifn);
 
   uhash to_hash(object_ref const o);
 
@@ -113,7 +131,31 @@ namespace jank::runtime
   void pop_thread_bindings();
   object_ref get_thread_bindings();
 
-  object_ref force(object_ref const o);
+  bool is_var(object_ref const o);
+  object_ref var_get(object_ref const o);
+  object_ref intern_var(object_ref const sym);
+  object_ref var_get_root(object_ref const o);
+  object_ref var_bind_root(object_ref const v, object_ref const o);
+  object_ref alter_var_root(object_ref const o, object_ref const fn, object_ref const args);
+  bool is_var_bound(object_ref const o);
+  bool is_var_thread_bound(object_ref const o);
+
+  object_ref in_ns(object_ref const sym);
+  object_ref intern_ns(object_ref const sym);
+  object_ref find_ns(object_ref const sym);
+  object_ref find_var(object_ref const sym);
+  object_ref remove_ns(object_ref const sym);
+  bool is_ns(object_ref const ns_or_sym);
+  object_ref ns_name(object_ref const ns);
+  object_ref ns_map(object_ref const ns);
+  object_ref var_ns(object_ref const v);
+  object_ref ns_resolve(object_ref const ns, object_ref const sym);
+  object_ref alias(object_ref const current_ns, object_ref const remote_ns, object_ref const alias);
+  object_ref ns_unalias(object_ref const current_ns, object_ref const alias);
+  object_ref ns_unmap(object_ref const current_ns, object_ref const sym);
+  object_ref refer(object_ref const current_ns, object_ref const sym, object_ref const var);
+  object_ref refer_global(object_ref const sym);
+  object_ref rename_referred_globals(object_ref const rename_map);
 
   obj::tagged_literal_ref tagged_literal(object_ref const tag, object_ref const form);
   bool is_tagged_literal(object_ref const o);
@@ -141,7 +183,12 @@ namespace jank::runtime
   void cancel_future(obj::future_ref const future);
   bool is_future_cancelled(obj::future_ref const future);
 
+  obj::delay_ref delay(object_ref const fn);
+  object_ref force(object_ref const o);
   obj::promise_ref promise();
+
+  object_ref sleep(object_ref const ms);
+  object_ref current_time();
 
   object_ref read_string(object_ref const form_string, object_ref const opts);
   object_ref read_file(object_ref const file_path, object_ref const opts);
@@ -156,4 +203,9 @@ namespace jank::runtime
   object_ref ex_data(object_ref const o);
   obj::exception_info_ref ex_cause(object_ref const o);
   obj::persistent_array_map_ref ex_map(object_ref const o);
+
+  object_ref compile(object_ref const path);
+  object_ref eval(object_ref const expr);
+  jtl::u32 hash_unordered(object_ref const coll);
+  jtl::immutable_string jank_version();
 }

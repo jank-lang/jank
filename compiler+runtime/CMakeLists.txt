@@ -632,7 +632,6 @@ add_library(
   src/cpp/jank/aot/resource.cpp
 
   # Native module sources.
-  src/cpp/clojure/core_native.cpp
   src/cpp/clojure/string_native.cpp
   src/cpp/clojure/data/json_native.cpp
 )
