@@ -50,7 +50,6 @@ extern "C" int jank_init_static(int const argc,
                          char const ** const argv,
                          jank_bool const init_default_ctx,
                          int (*fn)(int const, char const ** const));
-extern "C" void jank_load_clojure_core_native();
 extern "C" void jank_load_clojure_core();
 extern "C" void jank_load_jank_compiler_native();
 extern "C" jank_object_ref jank_var_intern_c(char const *, char const *);
@@ -96,7 +95,6 @@ namespace
 int main(int argc, const char** argv)
 {
   auto const fn{ [](int const argc, char const **argv) {
-    jank_load_clojure_core_native();
     jank_load_clojure_core();
 
     )");

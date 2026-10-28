@@ -1196,4 +1196,8 @@ namespace jank::runtime
       coll);
   }
 
+  object_ref lazy_seq(object_ref const o)
+  {
+    return make_box<obj::lazy_sequence>(o);
+  }
 }

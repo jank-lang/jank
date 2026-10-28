@@ -14,7 +14,6 @@
 #include <jank/runtime/core/to_string.hpp>
 #include <jank/util/fmt/print.hpp>
 #include <jank/error/report.hpp>
-#include <clojure/core_native.hpp>
 
 #ifdef JANK_PHASE_2
 extern "C" void jank_load_clojure_core();
@@ -31,8 +30,6 @@ try
     doctest::Context context;
     context.applyCommandLine(argc, argv);
     context.setOption("no-breaks", true);
-
-    jank_load_clojure_core_native();
 
 #ifdef JANK_PHASE_2
     jank_load_clojure_core();

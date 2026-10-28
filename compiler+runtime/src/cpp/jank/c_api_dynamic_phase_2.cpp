@@ -7,7 +7,6 @@
 #include <jank/environment/check_health.hpp>
 
 #include <jank/compiler_native.hpp>
-#include <clojure/core_native.hpp>
 #include <clojure/string_native.hpp>
 
 extern "C"

@@ -66,6 +66,7 @@
 (cpp/raw "#include <sstream>")
 (cpp/raw "#include <filesystem>")
 
+(cpp/raw "#include <jank/error/parse.hpp>")
 (cpp/raw "#include <jank/runtime/core/array.hpp>")
 (cpp/raw "#include <jank/runtime/core/equal.hpp>")
 (cpp/raw "#include <jank/runtime/core/meta.hpp>")
@@ -88,11 +89,13 @@
 (def ^{:arglists '([_])}
   unquote
   (fn* unquote [arg]
-    (cpp/clojure.core_native.throw_parse_invalid_syntax_unquote "~ cannot be used outside of a syntax quote.")))
+    (throw (cpp/jank.error.parse_invalid_syntax_unquote "~ cannot be used outside of a syntax quote."
+                                                        (cpp/jank.read.source.unknown)))))
 (def ^{:arglists '([_])}
   unquote-splicing
   (fn* unquote-splicing [arg]
-    (cpp/clojure.core_native.throw_parse_invalid_syntax_unquote_splice "~@ cannot be used outside of a syntax quote.")))
+    (throw (cpp/jank.error.parse_invalid_syntax_unquote_splice "~@ cannot be used outside of a syntax quote."
+                                                               (cpp/jank.read.source.unknown)))))
 
 (def ^{:arglists '([o])}
   type
@@ -556,10 +559,10 @@
 (def ^{:arglists '([x])
        :doc "Returns true if x is logical false, false otherwise."
        :inline (fn* [x]
-                 (list 'cpp/clojure.core_native.not_ x))}
+                 (list 'cpp/jank.runtime.not_ x))}
   not
   (fn* not [x]
-    (cpp/clojure.core_native.not_ x)))
+    (cpp/jank.runtime.not_ x)))
 
 (def ^{:arglists '([x])
        :doc "Returns true if x is not nil, false otherwise."
@@ -1350,15 +1353,13 @@
   [x]
   (cpp/jank.runtime.is_volatile x))
 
-(defn- delay* [f] (cpp/clojure.core_native.delay f))
-
 (defmacro delay
   "Takes a body of expressions and yields a Delay object that will
    invoke the body only the first time it is forced (with force or deref/@), and
    will cache the result and return it on all subsequent force
    calls. See also - realized?"
   [& body]
-  (list `delay* (cons `fn (cons '[] body))))
+  (list `cpp/jank.runtime.delay (cons `fn (cons '[] body))))
 
 (defn force
   "If x is a Delay, returns the (possibly cached) value of its expression, else returns x"
@@ -2022,15 +2023,13 @@
    ; TODO: LazilyPersistentVector
    (vec (concat* [a b c d e f] args))))
 
-(defn- lazy-seq* [o] (cpp/clojure.core_native.lazy_seq o))
-
 (defmacro lazy-seq
   "Takes a body of expressions that returns an ISeq or nil, and yields
    a Seqable object that will invoke the body only the first time seq
    is called, and will cache the result and return it on all subsequent
    seq calls. See also - realized?"
   [& body]
-  (list `lazy-seq* (list* `fn `lazy-seq# [] body)))
+  (list `cpp/jank.runtime.lazy_seq (list* `fn `lazy-seq# [] body)))
 
 (defn chunk-buffer
   [capacity]
@@ -2515,30 +2514,30 @@
 (defn var?
   "Returns true if v is a var."
   [x]
-  (cpp/clojure.core_native.is_var x))
+  (cpp/jank.runtime.is_var x))
 
 (defn var-get
   "Gets the value in the var object."
   [x]
-  (cpp/clojure.core_native.var_get x))
+  (cpp/jank.runtime.var_get x))
 
 (defn alter-var-root
   "Atomically alters the root binding of var v by applying f to its
    current value plus any args"
    [v f & args]
-  (cpp/clojure.core_native.alter_var_root v f args))
+  (cpp/jank.runtime.alter_var_root v f args))
 
 (defn bound?
   "Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
    Implies that deref'ing the provided vars will succeed. Returns true if no vars are provided."
   [& vars]
-  (every? #(cpp/clojure.core_native.is_var_bound %) vars))
+  (every? #(cpp/jank.runtime.is_var_bound %) vars))
 
 (defn thread-bound?
   "Returns true if all of the vars provided as arguments have thread-local bindings.
    Implies that set!'ing the provided vars will succeed.  Returns true if no vars are provided."
   [& vars]
-  (every? #(cpp/clojure.core_native.is_var_thread_bound %) vars))
+  (every? #(cpp/jank.runtime.is_var_thread_bound %) vars))
 
 ;; Keywords.
 (defn keyword?
@@ -4055,7 +4054,7 @@
 (defn fn?
   "Returns true if x implements Fn, i.e. is an object created via fn."
   [x]
-  (cpp/clojure.core_native.is_fn x))
+  (cpp/jank.runtime.is_fn x))
 
 ;; Multimethods.
 (defn- check-valid-options
@@ -4066,14 +4065,6 @@
     (throw (apply str "Only these options are valid: "
                   (first valid-keys)
                   (map #(str ", " %) (rest valid-keys))))))
-
-(defn- multi-fn?
-  [x]
-  (cpp/clojure.core_native.is_multi_fn x))
-
-(defn- multi-fn*
-  [name dispatch_fn default hierarchy]
-  (cpp/clojure.core_native.multi_fn name dispatch_fn default hierarchy))
 
 (def global-hierarchy)
 
@@ -4128,12 +4119,15 @@
       (check-valid-options options :default :hierarchy)
       ; TODO: This returns nil, due to an issue with let*. Why?
       `(let [v# (def ~mm-name)]
-         (when-not (multi-fn? (deref v#))
-           (def ~mm-name (multi-fn* '~(symbol *ns* mm-name) ~dispatch-fn ~default ~hierarchy)))))))
+         (when-not (cpp/jank.runtime.is_multi_fn (deref v#))
+           (def ~mm-name (cpp/jank.runtime.multi_fn '~(symbol *ns* mm-name)
+                                                    ~dispatch-fn
+                                                    ~default
+                                                    ~hierarchy)))))))
 
 (defn- defmethod*
   [multifn dispatch-val f]
-  (cpp/clojure.core_native.defmethod multifn dispatch-val f))
+  (cpp/jank.runtime.defmethod multifn dispatch-val f))
 
 (defmacro defmethod
   "Creates and installs a new method of multimethod associated with dispatch-value. "
@@ -4143,34 +4137,34 @@
 (defn remove-all-methods
   "Removes all of the methods of multimethod."
   [multifn]
-  (cpp/clojure.core_native.remove_all_methods multifn))
+  (cpp/jank.runtime.remove_all_methods multifn))
 
 (defn remove-method
   "Removes the method of multimethod associated with dispatch-value."
   [multifn dispatch-val]
-  (cpp/clojure.core_native.remove_method multifn dispatch-val))
+  (cpp/jank.runtime.remove_method multifn dispatch-val))
 
 (defn prefer-method
   "Causes the multimethod to prefer matches of dispatch-val-x over dispatch-val-y
    when there is a conflict"
   [multifn dispatch-val-x dispatch-val-y]
-  (cpp/clojure.core_native.prefer_method multifn dispatch-val-x dispatch-val-y))
+  (cpp/jank.runtime.prefer_method multifn dispatch-val-x dispatch-val-y))
 
 (defn methods
   "Given a multimethod, returns a map of dispatch values -> dispatch fns"
   [multifn]
-  (cpp/clojure.core_native.methods multifn))
+  (cpp/jank.runtime.methods multifn))
 
 (defn get-method
   "Given a multimethod and a dispatch value, returns the dispatch fn
    that would apply to that value, or nil if none apply and no default"
   [multifn dispatch-val]
-  (cpp/clojure.core_native.get_method multifn dispatch-val))
+  (cpp/jank.runtime.get_method multifn dispatch-val))
 
 (defn prefers
   "Given a multimethod, returns a map of preferred value -> set of other values"
   [multifn]
-  (cpp/clojure.core_native.prefers multifn))
+  (cpp/jank.runtime.prefers multifn))
 
 ;; Hierarchies.
 (defn make-hierarchy
@@ -4539,9 +4533,9 @@
 ;; Miscellaneous.
 ; TODO: jank.util
 (defn- sleep [ms]
-  (cpp/clojure.core_native.sleep ms))
+  (cpp/jank.runtime.sleep ms))
 (defn- current-time []
-  (cpp/clojure.core_native.current_time))
+  (cpp/jank.runtime.current_time))
 
 (defmacro time
   "Evaluates expr and prints the time it took. Returns the value of expr."
@@ -4562,9 +4556,9 @@
   [binding-map fun]
   (let [root-bind (fn root-bind [m]
                     (doseq [kv m]
-                      (cpp/clojure.core_native.var_bind_root (first kv) (second kv))))
+                      (cpp/jank.runtime.var_bind_root (first kv) (second kv))))
         old-vals (zipmap (keys binding-map)
-                         (map #(cpp/clojure.core_native.var_get_root %) (keys binding-map)))]
+                         (map #(cpp/jank.runtime.var_get_root %) (keys binding-map)))]
     (try
       (root-bind binding-map)
       (fun)
@@ -4593,39 +4587,38 @@
 (defn in-ns
   "Sets *ns* to the namespace named by the symbol, creating it if needed."
   [name]
-  (cpp/clojure.core_native.in_ns name))
+  (cpp/jank.runtime.in_ns name))
 
 (defn create-ns
   "Create a new namespace named by the symbol if one doesn't already
    exist, returns it or the already-existing namespace of the same
    name."
   [sym]
-  (cpp/clojure.core_native.intern_ns sym))
-
+  (cpp/jank.runtime.intern_ns sym))
 
 (defn find-ns
   "Returns the namespace named by the symbol or nil if it doesn't exist."
   [sym]
-  (cpp/clojure.core_native.find_ns sym))
+  (cpp/jank.runtime.find_ns sym))
 
 (defn find-var
   "Returns the global var named by the namespace-qualified symbol, or
   nil if no var with that name."
   [sym]
-  (cpp/clojure.core_native.find_var sym))
+  (cpp/jank.runtime.find_var sym))
 
 (defn remove-ns
   "Removes the namespace named by the symbol. Use with caution.
    Cannot be used to remove the clojure namespace."
   [sym]
-  (cpp/clojure.core_native.remove_ns sym))
+  (cpp/jank.runtime.remove_ns sym))
 
 (defn the-ns
   "If passed a namespace, returns it. Else, when passed a symbol,
    returns the namespace named by it, throwing an exception if not
    found."
   [ns-or-sym]
-  (if (cpp/clojure.core_native.is_ns ns-or-sym)
+  (if (cpp/jank.runtime.is_ns ns-or-sym)
     ns-or-sym
     (let [found (find-ns ns-or-sym)]
       (if (nil? found)
@@ -4636,13 +4629,13 @@
   "Returns the name of the namespace, a symbol."
   [ns-sym]
   (let [ns (the-ns ns-sym)]
-    (cpp/clojure.core_native.ns_name ns)))
+    (cpp/jank.runtime.ns_name ns)))
 
 (defn ns-map
   "Returns a map of all the mappings for the namespace."
   [ns-sym]
   (let [ns (the-ns ns-sym)]
-    (cpp/clojure.core_native.ns_map ns)))
+    (cpp/jank.runtime.ns_map ns)))
 
 (defn ns-publics
   "Returns a map of the public intern mappings for the namespace."
@@ -4654,7 +4647,7 @@
               (let [k (first kv)
                     v (second kv)]
                 (if (var? v)
-                  (if (and (= ns (cpp/clojure.core_native.var_ns v))
+                  (if (and (= ns (cpp/jank.runtime.var_ns v))
                            (not (:private (meta v))))
                     (assoc acc k v)
                     acc)
@@ -4671,7 +4664,7 @@
    (ns-resolve ns nil sym))
   ([ns env sym]
    (when-not (contains? env sym)
-     (cpp/clojure.core_native.ns_resolve (the-ns ns) sym))))
+     (cpp/jank.runtime.ns_resolve (the-ns ns) sym))))
 
 (defn resolve
   "Same as (ns-resolve *ns* symbol) or (ns-resolve *ns* &env symbol)"
@@ -4702,7 +4695,7 @@
    to calling this directly."
   [alias ns-sym]
   (let [ns-obj (the-ns ns-sym)]
-    (cpp/clojure.core_native.alias *ns* ns-obj alias)))
+    (cpp/jank.runtime.alias *ns* ns-obj alias)))
 
 (defn refer
   "refers to all public vars of ns, subject to filters.
@@ -4737,7 +4730,7 @@
                       sym (rename sym sym)]
                   (when (nil? v)
                     (throw (ex-info :var-does-not-exist {:value sym})))
-                  (cpp/clojure.core_native.refer *ns* sym v))))
+                  (cpp/jank.runtime.refer *ns* sym v))))
             nil
             to-refer)))
 
@@ -4748,15 +4741,16 @@
   (let [actions (apply hash-map filters)
         _ (reduce (fn [acc [k v]]
                     (if-some [existing (get acc v)]
-                      ; TODO: Throw this error_ref directly here, once we can.
-                      (cpp/clojure.core_native.throw_runtime_invalid_referred_global_rename (str "Referred global '" k "' is being renamed to '" v "', but '" v "' is already a referred global.")
-                                                                                            v existing)
-                                                                                                                                                                                                 (conj acc v)))
+                      (let [s (str "Referred global '" k "' is being renamed to '" v "', but '" v "' is already a referred global.")
+                            v-source (cpp/jank.runtime.object_source v)
+                            existing-source (cpp/jank.runtime.object_source existing)]
+                        (throw (cpp/jank.error.runtime_invalid_referred_global_rename s v-source existing-source)))
+                      (conj acc v)))
                     (into #{} (concat (:only actions) (keys (:rename actions))))
-                                                                                                                                                                                                 (:rename actions))]
+                              (:rename actions))]
     (doseq [only (:only actions)]
-      (cpp/clojure.core_native.refer_global only))
-    (cpp/clojure.core_native.rename_referred_globals (:rename actions))))
+      (cpp/jank.runtime.refer_global only))
+    (cpp/jank.runtime.rename_referred_globals (:rename actions))))
 
 ;; TODO: Should be a ref instead of atom
 (defonce
@@ -4793,7 +4787,9 @@
     (check-cyclic-dependency path)
     (when-not (= path (first *pending-paths*))
       (binding [*pending-paths* (conj *pending-paths* path)]
-        (clojure.core-native/load-module path)))))
+        (-> cpp/jank.runtime.__rt_ctx
+            (.load_module (.to_string path) cpp/jank.runtime.module.origin.latest)
+            .expect_ok)))))
 
 (defn- load-one
   "Loads a lib given its name. If `need-ns?`, ensures that the associated
@@ -4879,7 +4875,7 @@
    directory specified by *compile-path*, and that directory too must
    be in the module path."
   [path]
-  (cpp/clojure.core_native.compile path))
+  (cpp/jank.runtime.compile path))
 
 (defn require
   "Loads libs, skipping any that are already loaded. Each argument is
@@ -4971,16 +4967,16 @@
   to val if supplied. The namespace must exist. The var will adopt any
   metadata from the name symbol.  Returns the var."
   ([ns name]
-     (let [v (cpp/clojure.core_native.intern_var
+     (let [v (cpp/jank.runtime.intern_var
                (cpp/jank.runtime.to_qualified_symbol
                  (the-ns ns) name))]
        (when (meta name) (cpp/jank.runtime.reset_meta v (meta name)))
        v))
   ([ns name val]
-     (let [v (cpp/clojure.core_native.intern_var
+     (let [v (cpp/jank.runtime.intern_var
                (cpp/jank.runtime.to_qualified_symbol
                  (the-ns ns) name))]
-       (cpp/clojure.core_native.var_bind_root v val)
+       (cpp/jank.runtime.var_bind_root v val)
        (when (meta name) (cpp/jank.runtime.reset_meta v (meta name)))
        v)))
 
@@ -5670,7 +5666,7 @@
 (defn eval
   "Evaluates the form data structure (not text!) and returns the result."
   [form]
-  (cpp/clojure.core_native.eval form))
+  (cpp/jank.runtime.eval form))
 
 (defn await
   "Blocks the current thread (indefinitely!) until all actions
@@ -6185,7 +6181,7 @@
 (defn ns-unmap
   "Removes the mappings for the symbol from the namespace."
   [ns sym]
-  (cpp/clojure.core_native.ns_unmap (the-ns ns) sym))
+  (cpp/jank.runtime.ns_unmap (the-ns ns) sym))
 
 (defn ns-imports
   "Returns a map of the import mappings for the namespace."
@@ -6219,7 +6215,7 @@
 (defn ns-unalias
   "Removes the alias for the symbol from the namespace."
   [ns sym]
-  (cpp/clojure.core_native.ns_unalias (the-ns ns) sym))
+  (cpp/jank.runtime.ns_unalias (the-ns ns) sym))
 
 (defn var-set
   "Sets the value in the var object to val. The var must be
@@ -6579,7 +6575,7 @@
      (hash-ordered-coll [k v]).
    See http://clojure.org/data_structures#hash for full algorithms."
    [coll]
-   (cpp/clojure.core_native.hash_unordered coll))
+   (cpp/jank.runtime.hash_unordered coll))
 
 (defmacro definline
   "Experimental - like defmacro, except defines a named function whose
@@ -7450,7 +7446,7 @@ fails, attempts to require sym's namespace and retries."
 (defn clojure-version
   "Returns clojure version as a printable string."
   []
-  (cpp/clojure.core_native.jank_version))
+  (cpp/jank.runtime.jank_version))
 
 (defn promise
   "Returns a promise object that can be read with deref/@, and set,

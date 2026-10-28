@@ -14,7 +14,6 @@
 #include <jank/environment/check_health.hpp>
 
 #include <jank/compiler_native.hpp>
-#include <clojure/core_native.hpp>
 #include <clojure/string_native.hpp>
 
 extern "C"
@@ -37,8 +36,6 @@ extern "C"
 
   void jank_init_core_libs_phase_1()
   {
-    jank_load_clojure_core_native();
-
     jank::runtime::__rt_ctx->module_loader.add_load_fn("jank.compiler-native",
                                                        &jank_load_jank_compiler_native);
   }
