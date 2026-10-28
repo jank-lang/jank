@@ -959,6 +959,65 @@ namespace jank::analyze
     return expr;
   }
 
+  static jtl::result<jtl::option<jtl::ptr<void>>, error_ref>
+  extract_tag_type(processor &p,
+                   runtime::obj::symbol_ref const sym,
+                   local_frame_ptr const current_frame,
+                   native_vector<runtime::object_ref> const &macro_expansions)
+  {
+    static auto const tag_kw(__rt_ctx->intern_keyword("", "tag").expect_ok());
+    auto type_meta{ sym->get_meta().get(tag_kw) };
+    if(type_meta.is_some())
+    {
+      type_meta = __rt_ctx->eval(type_meta);
+      if(type_meta.get_type() != object_type::symbol
+         && type_meta.get_type() != object_type::persistent_list)
+      {
+        return error::analyze_invalid_cpp_type(
+          util::format(
+            "Value type meta data is expected to be a symbol or list which resolves to a "
+            "C++ type. The `:tag` meta for this value is a `{}` instead.",
+            object_type_str(type_meta.get_type())),
+          object_source(sym),
+          latest_expansion(macro_expansions));
+      }
+
+      auto const type_expr(p.analyze_type(type_meta, current_frame, none));
+      if(type_expr.is_err())
+      {
+        return type_expr.expect_err();
+      }
+
+      auto const type{ type_expr.expect_ok() };
+
+      if(Cpp::IsReferenceType(type))
+      {
+        return error::analyze_invalid_cpp_type("Type-hints for values cannot be reference types.",
+                                               object_source(sym),
+                                               latest_expansion(macro_expansions));
+      }
+
+      if(Cpp::IsVoid(type))
+      {
+        return error::analyze_invalid_cpp_type("Type-hints for values cannot be void.",
+                                               object_source(sym),
+                                               latest_expansion(macro_expansions));
+      }
+
+      if(!cpp_util::is_trait_convertible(type) && !Cpp::IsPointerType(type))
+      {
+        return error::analyze_invalid_cpp_type(
+          "Type-hints for values either need to be jank object types, trait-convertible "
+          "types, or raw pointers which will be extracted from opaque boxes.",
+          object_source(sym),
+          latest_expansion(macro_expansions));
+      }
+      return some(type);
+    }
+
+    return none;
+  }
+
   static jtl::result<expression_ref, error_ref>
   apply_implicit_conversion(expression_ref const expr,
                             jtl::ptr<void> expr_type,
@@ -1639,49 +1698,13 @@ namespace jank::analyze
         continue;
       }
 
-      static auto const tag_kw(__rt_ctx->intern_keyword("", "tag").expect_ok());
-      auto type_meta{ sym->get_meta().get(tag_kw) };
-      auto param_type{ cpp_util::untyped_object_ref_type() };
-      if(type_meta.is_some())
+      auto const param_type_res{ extract_tag_type(*this, sym, current_frame, macro_expansions) };
+      if(param_type_res.is_err())
       {
-        type_meta = __rt_ctx->eval(type_meta);
-        if(type_meta.get_type() != object_type::symbol
-           && type_meta.get_type() != object_type::persistent_list)
-        {
-          return error::analyze_invalid_cpp_type(
-            util::format(
-              "Parameter type meta data is expected to be a symbol or list which resolves to a "
-              "C++ type. The `:tag` meta for this parameter is a `{}` instead.",
-              object_type_str(type_meta.get_type())),
-            object_source(p),
-            latest_expansion(macro_expansions));
-        }
-
-        auto const type_expr(analyze_type(type_meta, current_frame, none));
-        if(type_expr.is_err())
-        {
-          return type_expr.expect_err();
-        }
-
-        param_type = type_expr.expect_ok();
-
-        if(cppinterop::is_reference_type(param_type))
-        {
-          return error::analyze_invalid_cpp_type(
-            "Type-hints for parameters cannot be reference types.",
-            object_source(p),
-            latest_expansion(macro_expansions));
-        }
-
-        if(!cpp_util::is_trait_convertible(param_type) && !cppinterop::is_pointer_type(param_type))
-        {
-          return error::analyze_invalid_cpp_type(
-            "Type-hints for parameters either need to be jank object types, trait-convertible "
-            "types, or raw pointers which will be extracted from opaque boxes.",
-            object_source(p),
-            latest_expansion(macro_expansions));
-        }
+        return param_type_res.expect_err();
       }
+      auto const param_type{ param_type_res.expect_ok().unwrap_or(
+        cpp_util::untyped_object_ref_type()) };
 
       auto const unique_res(unique_param_symbols.emplace(*sym));
       if(!unique_res.second)
@@ -2191,13 +2214,20 @@ namespace jank::analyze
                  latest_expansion(macro_expansions))
           ->add_usage(read::parse::reparse_nth(bindings, i));
       }
-      auto const &sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
+      auto const sym(runtime::expect_object<runtime::obj::symbol>(sym_obj));
       if(!sym->ns.empty())
       {
         return error::analyze_invalid_let("The binding symbols in `let` must be unqualified.",
                                           object_source(sym_obj),
                                           latest_expansion(macro_expansions));
       }
+
+      auto const tag_type_res{ extract_tag_type(*this, sym, current_frame, macro_expansions) };
+      if(tag_type_res.is_err())
+      {
+        return tag_type_res.expect_err();
+      }
+      auto const tag_type_opt{ tag_type_res.expect_ok() };
 
       auto const value_res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
       if(value_res.is_err())
@@ -2219,6 +2249,19 @@ namespace jank::analyze
                                                          conversion_policy::into_object,
                                                          value_expr);
         expr_type = cpp_util::untyped_object_ref_type();
+      }
+
+      if(tag_type_opt.is_some())
+      {
+        auto const res{
+          apply_implicit_conversion(value_expr, tag_type_opt.unwrap(), macro_expansions)
+        };
+        if(res.is_err())
+        {
+          return res.expect_err();
+        }
+        value_expr = res.expect_ok();
+        expr_type = value_expr->get_type();
       }
 
       /* Loop bindings are mutable, so if we have a typed object, force it to be untyped since
