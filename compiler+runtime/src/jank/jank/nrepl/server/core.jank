@@ -73,7 +73,7 @@ namespace jank::util
   "Encode the given message and write it to the client socket."
   [^(:* jank.nrepl.server.native_client) client msg]
   (let [msg-str (bencode/write msg)]
-    (.write_some client (cpp/cast std.string msg-str))
+    (.write client (cpp/cast std.string msg-str))
     nil))
 
 (defn handle-client
