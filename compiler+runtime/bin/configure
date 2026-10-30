@@ -21,7 +21,12 @@ fi
 
 CMAKE_INSTALL_PREFIX=""
 if [[ -n "${MSYSTEM:-}" ]]; then
-  CMAKE_INSTALL_PREFIX="-DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX}"
+  # Derive install prefix from MSYSTEM (not MINGW_PREFIX which may be
+  # an absolute windows path in non login shells). MSYS2_ARG_CONV_EXCL
+  # prevents MSYS2 from converting it back.
+  _msys_install_prefix="/${MSYSTEM,,}"
+  CMAKE_INSTALL_PREFIX="-DCMAKE_INSTALL_PREFIX=${_msys_install_prefix}"
+  export MSYS2_ARG_CONV_EXCL="-DCMAKE_INSTALL_PREFIX="
 fi
 
 cmake ${CMAKE_INSTALL_PREFIX:+$CMAKE_INSTALL_PREFIX} -S . -B "${build_dir}" -DCMAKE_COLOR_DIAGNOSTICS="${CMAKE_COLOR_DIAGNOSTICS}" "$@"
