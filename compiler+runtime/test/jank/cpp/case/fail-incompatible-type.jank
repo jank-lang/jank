@@ -3,4 +3,5 @@
        f2 (cpp/float)]
   (case :foo
     :bar &f1
-    f2))
+    f2)
+  :success)
