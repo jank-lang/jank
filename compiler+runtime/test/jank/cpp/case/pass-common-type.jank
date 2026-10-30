@@ -5,5 +5,5 @@
            ; This is a char const[5]
            true "meow"
            s)]
-  (if (= "meow" r)
+  (if (cpp/== "meow" r)
     :success))

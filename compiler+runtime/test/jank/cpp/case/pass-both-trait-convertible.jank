@@ -1,6 +1,6 @@
-(let* [f (fn* [o]
-           (case (nil? o)
-             true (cpp/jank.runtime.to_string o)
-             (cpp/jank.runtime.to_string o)))
-       s (f "success")]
-  (keyword s))
+(let* [s1 (cpp/std.string "success")
+       s2 (cpp/std.string "failure")
+       r (case true
+           true s1
+           s2)]
+  (keyword r))
