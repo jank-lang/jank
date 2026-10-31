@@ -1,0 +1,3 @@
+(cpp/def int :fail-invalid-identifier 1)
+
+:success
