@@ -82,11 +82,27 @@ namespace jank::util
   (loop [[req remainder] nil]
     (when (connected? client*)
       (when req
-        (log "<-" (pr-str (abbreviate req 20)))
-        (let [resps (responses-for req (handle-message req))]
-          (doseq [resp resps]
-            (log "->" (pr-str (abbreviate resp 20)))
-            (write-message client* resp))))
+        (try
+          (log "<-" (pr-str (abbreviate req 20)))
+          (let [resps (responses-for req (handle-message req))]
+            (doseq [resp resps]
+              (log "->" (pr-str (abbreviate resp 20)))
+              (write-message client* resp)))
+          (catch std.exception e
+            (write-message
+             client*
+             (response-for req {:status [:error :done]
+                                :err    (str "An exception was thrown from the nREPL handler:" (.what e))})))
+          (catch jank.runtime.object_ref e
+            (write-message
+             client*
+             (response-for req {:status [:error :done]
+                                :err    (str "An exception was thrown from the nREPL handler:" (pr-str e))})))
+          (catch jank.error_ref e
+            (write-message
+             client*
+             (response-for req {:status [:error :done]
+                                :err    (str "An exception was thrown from the nREPL handler:" (.-message (cpp/* e)))})))))
       (recur (read-message client* remainder)))))
 
 (defn -main [& args]
