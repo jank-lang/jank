@@ -174,6 +174,7 @@
             leiningen
             expect
             nodejs
+            go # for proof
 
             # Examples.
             pkg-config
