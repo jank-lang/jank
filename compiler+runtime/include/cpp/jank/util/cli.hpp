@@ -157,6 +157,8 @@ namespace jank::util::cli
 
     /* Repl command. */
     u16 repl_port{};
+    /* Comma separated, fully qualified middleware symbols. */
+    jtl::immutable_string nrepl_middleware;
 
     /* Error reporting. */
     u8 max_error_candidates{ 3 };
