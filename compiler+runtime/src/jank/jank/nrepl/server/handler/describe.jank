@@ -9,7 +9,9 @@
               :eval        {}
               :load-file   {}
               :lookup      {}
+              :info        {}
               :completions {}
+              :complete    {}
               :close       {}}
    :versions {:jank {:version-string cpp/JANK_VERSION}}
    :status   [:done]})
