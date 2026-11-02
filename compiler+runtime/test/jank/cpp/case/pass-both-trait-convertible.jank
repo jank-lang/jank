@@ -1,0 +1,6 @@
+(let* [f (fn* [o]
+           (case (nil? o)
+             true (cpp/jank.runtime.to_string o)
+             (cpp/jank.runtime.to_string o)))
+       s (f "success")]
+  (keyword s))

@@ -1,0 +1,6 @@
+(let* [f1 (cpp/float 77)
+       &f1 (cpp/& f1)
+       f2 (cpp/float)]
+  (case :foo
+    :bar &f1
+    f2))
