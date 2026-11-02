@@ -34,7 +34,7 @@ namespace jank::nrepl::server
       boost::system::error_code error;
 
       auto const length{ socket_.read_some(buffer(rx_buf_, rx_capacity), error) };
-      if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset)
+      if(error)
       {
         connected_ = false;
         return "";
@@ -48,7 +48,7 @@ namespace jank::nrepl::server
       boost::system::error_code error;
       boost::asio::write(socket_, buffer(message), error);
 
-      if(error == boost::asio::error::broken_pipe || error == boost::asio::error::connection_reset)
+      if(error)
       {
         connected_ = false;
       }
