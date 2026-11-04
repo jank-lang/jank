@@ -1,0 +1,5 @@
+;; The reader/runtime error originates in native code, then enters a JIT catch.
+(try
+  (seq :not-seqable)
+  (catch jank.error_ref _
+    :success))

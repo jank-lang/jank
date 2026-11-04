@@ -1,4 +1,7 @@
 #include <algorithm>
+#if defined(__FreeBSD__)
+  #include <dlfcn.h>
+#endif
 
 #include <clang/Sema/Sema.h>
 #include <CppInterOp/Compatibility.h>
@@ -435,9 +438,22 @@ namespace jank::analyze::cpp_util
   void register_rtti(jtl::ptr<void> const type)
   {
     auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    auto &jit{ *(*locked_interpreter)->getExecutionEngine() };
+    auto const symbol{ cppinterop::mangle_rtti(type) };
+
+#if defined(__FreeBSD__)
+    /* libcxxrt compares RTTI by address, so prefer the host's RTTI when it has one.
+     * Otherwise, JIT code would get its own copy and C++ exceptions thrown by the host
+     * wouldn't be caught by JIT code, or vice versa. */
+    if(auto const host_rtti{ dlsym(RTLD_DEFAULT, symbol.c_str()) })
+    {
+      jit::define_rtti_symbol(jit, symbol, host_rtti);
+      return;
+    }
+#endif
+
     auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
     clang::DiagnosticErrorTrap const trap{ diag };
-    auto const alias{ runtime::__rt_ctx->unique_namespaced_string() };
     auto const code{ util::format("&typeid({})", cppinterop::get_type_as_string(type)) };
     clang::Value value;
     auto exec_res{ (*locked_interpreter)->ParseAndExecute(code.c_str(), &value) };
@@ -447,18 +463,7 @@ namespace jank::analyze::cpp_util
         util::format("Unable to get RTTI for `{}`.", cppinterop::get_type_as_string(type)));
     }
 
-    auto const lljit{ (*locked_interpreter)->getExecutionEngine() };
-    llvm::orc::SymbolMap symbols;
-    llvm::orc::MangleAndInterner interner{ lljit->getExecutionSession(), lljit->getDataLayout() };
-    auto const &symbol{ cppinterop::mangle_rtti(type) };
-    symbols[interner(symbol)] = llvm::orc::ExecutorSymbolDef(
-      llvm::orc::ExecutorAddr(llvm::pointerToJITTargetAddress(value.getPtr())),
-      llvm::JITSymbolFlags());
-
-    auto res{ lljit->getMainJITDylib().define(llvm::orc::absoluteSymbols(symbols)) };
-    /* We may have duplicate definitions of RTTI in some circumstances, but we
-     * can just ignore those. */
-    llvm::consumeError(jtl::move(res));
+    jit::define_rtti_symbol(jit, symbol, value.getPtr());
   }
 
   jtl::ptr<void> untyped_object_ptr_type()

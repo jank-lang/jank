@@ -20,6 +20,7 @@ namespace llvm
   namespace orc
   {
     class ThreadSafeModule;
+    class LLJIT;
   }
 }
 
@@ -46,6 +47,14 @@ namespace jank::runtime::obj
 
 namespace jank::jit
 {
+  /* Binds a mangled RTTI symbol in the JIT's main dylib to an existing `std::type_info`.
+   * Duplicate definitions are ignored, so the first binding wins. This is how we make JIT
+   * code share the host's RTTI, which matters for C++ runtimes like libcxxrt (FreeBSD) that
+   * compare exception types by address rather than by name. */
+  void define_rtti_symbol(llvm::orc::LLJIT &jit,
+                          jtl::immutable_string const &mangled_name,
+                          void const *type_info);
+
   struct resolved_lib
   {
     /* The resolved lib name/path. */
