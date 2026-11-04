@@ -1,0 +1,425 @@
+diff --git a/src/binary/elf.cpp b/src/binary/elf.cpp
+index 9268384..e2e0c76 100644
+--- a/src/binary/elf.cpp
++++ b/src/binary/elf.cpp
+@@ -7,7 +7,7 @@
+ #include "utils/io/file.hpp"
+ #include "utils/string_view.hpp"
+ 
+-#if IS_LINUX
++#if IS_LINUX || IS_FREEBSD
+ 
+ #include <array>
+ #include <cstdint>
+diff --git a/src/binary/elf.hpp b/src/binary/elf.hpp
+index 9775b54..76b281f 100644
+--- a/src/binary/elf.hpp
++++ b/src/binary/elf.hpp
+@@ -7,7 +7,7 @@
+ #include "utils/span.hpp"
+ #include "utils/utils.hpp"
+ 
+-#if IS_LINUX
++#if IS_LINUX || IS_FREEBSD
+ 
+ #include <cstdint>
+ #include <string>
+diff --git a/src/binary/module_base.cpp b/src/binary/module_base.cpp
+index ec78b03..9a0322f 100644
+--- a/src/binary/module_base.cpp
++++ b/src/binary/module_base.cpp
+@@ -7,7 +7,7 @@
+ #include <mutex>
+ #include <unordered_map>
+ 
+-#if IS_LINUX || IS_APPLE
++#if IS_LINUX || IS_APPLE || IS_FREEBSD
+  #include <unistd.h>
+  #include <dlfcn.h>
+  #if IS_APPLE
+@@ -21,7 +21,7 @@
+ 
+ CPPTRACE_BEGIN_NAMESPACE
+ namespace detail {
+-    #if IS_LINUX
++    #if IS_LINUX || IS_FREEBSD
+     Result<std::uintptr_t, internal_error> get_module_image_base(const std::string& object_path) {
+         static std::mutex mutex;
+         std::lock_guard<std::mutex> lock(mutex);
+diff --git a/src/binary/object.cpp b/src/binary/object.cpp
+index 55a53d5..b6c7c04 100644
+--- a/src/binary/object.cpp
++++ b/src/binary/object.cpp
+@@ -11,7 +11,7 @@
+ #include <mutex>
+ #include <unordered_map>
+ 
+-#if IS_LINUX || IS_APPLE
++#if IS_LINUX || IS_APPLE || IS_FREEBSD
+  #include <unistd.h>
+  #include <dlfcn.h>
+  #if IS_LINUX
+@@ -26,7 +26,7 @@
+ 
+ CPPTRACE_BEGIN_NAMESPACE
+ namespace detail {
+-    #if IS_LINUX || IS_APPLE
++    #if IS_LINUX || IS_APPLE || IS_FREEBSD
+     #if defined(CPPTRACE_HAS_DL_FIND_OBJECT) || defined(CPPTRACE_HAS_DLADDR1)
+     std::string resolve_l_name(const char* l_name) {
+         if(l_name != nullptr && l_name[0] != 0) {
+diff --git a/src/binary/safe_dl.cpp b/src/binary/safe_dl.cpp
+index 0ccfd78..9e0c4c1 100644
+--- a/src/binary/safe_dl.cpp
++++ b/src/binary/safe_dl.cpp
+@@ -11,7 +11,7 @@
+ #include <iostream>
+ 
+ #ifdef CPPTRACE_HAS_DL_FIND_OBJECT
+-#if IS_LINUX || IS_APPLE
++#if IS_LINUX || IS_APPLE || IS_FREEBSD
+  #include <unistd.h>
+  #include <dlfcn.h>
+  #include <link.h>
+diff --git a/src/jit/jit_objects.cpp b/src/jit/jit_objects.cpp
+index f84fb56..8a5261e 100644
+--- a/src/jit/jit_objects.cpp
++++ b/src/jit/jit_objects.cpp
+@@ -19,7 +19,7 @@
+ 
+ CPPTRACE_BEGIN_NAMESPACE
+ namespace detail {
+-    #if IS_LINUX || IS_APPLE
++    #if IS_LINUX || IS_APPLE || IS_FREEBSD
+     class jit_object_manager {
+         struct object_entry {
+             const char* object_start;
+@@ -62,7 +62,7 @@ namespace detail {
+                 #endif
+             };
+             #ifdef CPPTRACE_GET_SYMBOLS_WITH_LIBDWARF
+-            #if IS_LINUX || IS_APPLE
++            #if IS_LINUX || IS_APPLE || IS_FREEBSD
+             auto dwarf_object_res = entry.object->get_object_data();
+             if(dwarf_object_res) {
+                 try {
+@@ -183,7 +183,7 @@ namespace detail {
+         manager.clear_all_jit_objects();
+     }
+ 
+-    #if IS_LINUX || IS_APPLE
++    #if IS_LINUX || IS_APPLE || IS_FREEBSD
+     optional<jit_object_lookup_result> lookup_jit_object(frame_ptr pc) {
+         return get_jit_object_manager().lookup(pc);
+     }
+diff --git a/src/jit/jit_objects.hpp b/src/jit/jit_objects.hpp
+index 69dcfa7..787e8db 100644
+--- a/src/jit/jit_objects.hpp
++++ b/src/jit/jit_objects.hpp
+@@ -18,8 +18,8 @@ namespace detail {
+     void unregister_jit_object(const char*);
+     void clear_all_jit_objects();
+ 
+-    #if IS_LINUX || IS_APPLE
+-    #if IS_LINUX
++    #if IS_LINUX || IS_APPLE || IS_FREEBSD
++    #if IS_LINUX || IS_FREEBSD
+      using jit_object_type = elf;
+     #elif IS_APPLE
+      using jit_object_type = mach_o;
+diff --git a/src/platform/memory_mapping.cpp b/src/platform/memory_mapping.cpp
+index e0b092a..818a843 100644
+--- a/src/platform/memory_mapping.cpp
++++ b/src/platform/memory_mapping.cpp
+@@ -3,6 +3,9 @@
+ #include "utils/optional.hpp"
+ #include "utils/utils.hpp"
+ 
++#include <cerrno>
++#include <cstddef>
++
+ #ifndef _MSC_VER
+ 
+ #if IS_WINDOWS
+@@ -18,6 +21,9 @@
+   #ifdef CPPTRACE_HAS_MACH_VM
+    #include <mach/mach_vm.h>
+   #endif
++ #elif IS_FREEBSD
++  #include <sys/sysctl.h>
++  #include <sys/user.h>
+  #else
+   #include <fstream>
+   #include <ios>
+@@ -107,6 +113,73 @@ namespace detail {
+         }
+         return perms;
+     }
++    #elif IS_FREEBSD
++    int get_page_protections(void* page) {
++        // FreeBSD exposes the current process' mappings through KERN_PROC_VMMAP.
++        // The records are variable-sized, so walk kve_structsize rather than
++        // assuming the buffer is an array of sizeof(struct kinfo_vmentry).
++        int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_VMMAP, getpid() };
++        size_t required = 0;
++        if(sysctl(mib, 4, nullptr, &required, nullptr, 0) != 0) {
++            throw internal_error("sysctl KERN_PROC_VMMAP size query failed: {}",
++                                 std::system_error(errno, std::system_category()).what());
++        }
++        if(required == 0) {
++            throw internal_error("sysctl KERN_PROC_VMMAP returned an empty map size");
++        }
++
++        std::vector<char> buffer(required);
++        size_t returned = 0;
++        bool loaded = false;
++        for(int attempt = 0; attempt < 4; ++attempt) {
++            returned = buffer.size();
++            if(sysctl(mib, 4, buffer.data(), &returned, nullptr, 0) == 0) {
++                loaded = true;
++                break;
++            }
++            const int error = errno;
++            if(error != ENOMEM || buffer.size() > std::numeric_limits<size_t>::max() / 2) {
++                throw internal_error("sysctl KERN_PROC_VMMAP failed: {}",
++                                     std::system_error(error, std::system_category()).what());
++            }
++            buffer.resize(buffer.size() * 2);
++        }
++        if(!loaded) {
++            throw internal_error("sysctl KERN_PROC_VMMAP changed repeatedly while reading");
++        }
++        if(returned > buffer.size()) {
++            throw internal_error("sysctl KERN_PROC_VMMAP returned an invalid size");
++        }
++
++        const auto target = reinterpret_cast<uintptr_t>(page);
++        constexpr size_t minimum_record_size = offsetof(struct kinfo_vmentry, kve_path);
++        size_t offset = 0;
++        while(offset < returned) {
++            const size_t remaining = returned - offset;
++            if(remaining < minimum_record_size) {
++                throw internal_error("truncated kinfo_vmentry fixed prefix in KERN_PROC_VMMAP result");
++            }
++            const auto& entry = *reinterpret_cast<const struct kinfo_vmentry*>(buffer.data() + offset);
++            const size_t record_size = entry.kve_structsize;
++            if(record_size == 0 || record_size < minimum_record_size || record_size > remaining) {
++                throw internal_error("invalid kve_structsize in KERN_PROC_VMMAP result");
++            }
++            const auto low = static_cast<uintptr_t>(entry.kve_start);
++            const auto high = static_cast<uintptr_t>(entry.kve_end);
++            if(low > high) {
++                throw internal_error("invalid address range in KERN_PROC_VMMAP result");
++            }
++            if(target >= low && target < high) {
++                int perms = 0;
++                if(entry.kve_protection & KVME_PROT_READ) perms |= PROT_READ;
++                if(entry.kve_protection & KVME_PROT_WRITE) perms |= PROT_WRITE;
++                if(entry.kve_protection & KVME_PROT_EXEC) perms |= PROT_EXEC;
++                return perms;
++            }
++            offset += record_size;
++        }
++        throw internal_error("page address is absent from KERN_PROC_VMMAP result");
++    }
+     #else
+     // Code for reading /proc/self/maps
+     // Unfortunately this is the canonical and only way to get memory permissions on linux
+diff --git a/src/platform/platform.hpp b/src/platform/platform.hpp
+index 89206e8..cf3c9a5 100644
+--- a/src/platform/platform.hpp
++++ b/src/platform/platform.hpp
+@@ -4,6 +4,7 @@
+ #define IS_WINDOWS 0
+ #define IS_LINUX 0
+ #define IS_APPLE 0
++#define IS_FREEBSD 0
+ 
+ #if defined(_WIN32)
+  #undef IS_WINDOWS
+@@ -11,6 +12,9 @@
+ #elif defined(__linux)
+  #undef IS_LINUX
+  #define IS_LINUX 1
++#elif defined(__FreeBSD__)
++ #undef IS_FREEBSD
++ #define IS_FREEBSD 1
+ #elif defined(__APPLE__)
+  #undef IS_APPLE
+  #define IS_APPLE 1
+diff --git a/src/platform/program_name.hpp b/src/platform/program_name.hpp
+index 769d13b..8b0e540 100644
+--- a/src/platform/program_name.hpp
++++ b/src/platform/program_name.hpp
+@@ -70,7 +70,6 @@ CPPTRACE_END_NAMESPACE
+ 
+ #include <sys/types.h>
+ #include <unistd.h>
+-
+ #define CPPTRACE_MAX_PATH CPPTRACE_PATH_MAX
+ 
+ CPPTRACE_BEGIN_NAMESPACE
+@@ -97,6 +96,39 @@ namespace detail {
+ }
+ CPPTRACE_END_NAMESPACE
+ 
++#elif IS_FREEBSD
++
++#include <sys/types.h>
++#include <sys/sysctl.h>
++#include <unistd.h>
++
++#define CPPTRACE_MAX_PATH CPPTRACE_PATH_MAX
++
++CPPTRACE_BEGIN_NAMESPACE
++namespace detail {
++    inline const char* program_name() {
++        static std::mutex mutex;
++        const std::lock_guard<std::mutex> lock(mutex);
++        static std::string name;
++        static bool did_init = false;
++        static bool valid = false;
++        if(!did_init) {
++            did_init = true;
++            char buffer[CPPTRACE_MAX_PATH + 1];
++            size_t size = sizeof(buffer) - 1;
++            const int mib[4] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, getpid() };
++            if(sysctl(mib, 4, buffer, &size, nullptr, 0) != 0) {
++                return nullptr;
++            }
++            buffer[size] = 0;
++            name = buffer;
++            valid = true;
++        }
++        return valid && !name.empty() ? name.c_str() : nullptr;
++    }
++}
++CPPTRACE_END_NAMESPACE
++
+ #endif
+ 
+ #endif
+diff --git a/src/symbols/dwarf/dwarf_resolver.cpp b/src/symbols/dwarf/dwarf_resolver.cpp
+index 8681447..603d127 100644
+--- a/src/symbols/dwarf/dwarf_resolver.cpp
++++ b/src/symbols/dwarf/dwarf_resolver.cpp
+@@ -21,7 +21,7 @@
+ #include <mach-o/reloc.h>
+ #include <mach-o/x86_64/reloc.h>
+ #endif
+-#if IS_LINUX
++#if IS_LINUX || IS_FREEBSD
+ #include <elf.h>
+ #include <stddef.h>
+ #include <zlib.h>
+@@ -61,7 +61,7 @@ namespace libdwarf {
+         dwarf_resolver& resolver;
+     };
+ 
+-    #if IS_LINUX
++    #if IS_LINUX || IS_FREEBSD
+     struct in_memory_dwarf_object {
+         elf::object_data object_data;
+         Dwarf_Obj_Access_Interface_a_s interface;
+@@ -752,7 +752,7 @@ namespace libdwarf {
+         std::unordered_map<Dwarf_Off, std::unique_ptr<dwarf_resolver>> split_full_cu_resolvers;
+         // info for resolving a dwo object
+         optional<skeleton_info> skeleton;
+-        #if IS_LINUX || IS_APPLE
++        #if IS_LINUX || IS_APPLE || IS_FREEBSD
+         std::unique_ptr<in_memory_dwarf_object> memory_object;
+         #endif
+ 
+@@ -879,7 +879,7 @@ namespace libdwarf {
+             initialize_post_open();
+         }
+ 
+-        #if IS_LINUX
++        #if IS_LINUX || IS_FREEBSD
+         CPPTRACE_FORCE_NO_INLINE_FOR_PROFILING
+         explicit dwarf_resolver(elf::object_data object_data_, optional<skeleton_info> split_ = nullopt)
+             : object_path("<jit>"),
+@@ -1790,7 +1790,7 @@ namespace libdwarf {
+     std::unique_ptr<symbol_resolver> make_dwarf_resolver(cstring_view object_path) {
+         return detail::make_unique<dwarf_resolver>(object_path);
+     }
+-    #if IS_LINUX
++    #if IS_LINUX || IS_FREEBSD
+     std::unique_ptr<symbol_resolver> make_dwarf_resolver(elf::object_data object_data) {
+         return detail::make_unique<dwarf_resolver>(std::move(object_data));
+     }
+diff --git a/src/symbols/dwarf/resolver.hpp b/src/symbols/dwarf/resolver.hpp
+index bf6eccb..5812a73 100644
+--- a/src/symbols/dwarf/resolver.hpp
++++ b/src/symbols/dwarf/resolver.hpp
+@@ -49,7 +49,7 @@ namespace libdwarf {
+     };
+ 
+     std::unique_ptr<symbol_resolver> make_dwarf_resolver(cstring_view object_path);
+-    #if IS_LINUX
++    #if IS_LINUX || IS_FREEBSD
+      std::unique_ptr<symbol_resolver> make_dwarf_resolver(elf::object_data object_data);
+     #endif
+     #if IS_APPLE
+diff --git a/src/symbols/symbols_with_addr2line.cpp b/src/symbols/symbols_with_addr2line.cpp
+index d5f430e..066117a 100644
+--- a/src/symbols/symbols_with_addr2line.cpp
++++ b/src/symbols/symbols_with_addr2line.cpp
+@@ -15,7 +15,7 @@
+ #include <utility>
+ #include <vector>
+ 
+-#if IS_LINUX || IS_APPLE
++#if IS_LINUX || IS_APPLE || IS_FREEBSD
+  #include <unistd.h>
+  #include <sys/types.h>
+  #include <sys/wait.h>
+@@ -27,7 +27,7 @@
+ CPPTRACE_BEGIN_NAMESPACE
+ namespace detail {
+ namespace addr2line {
+-    #if IS_LINUX || IS_APPLE
++    #if IS_LINUX || IS_APPLE || IS_FREEBSD
+     bool has_addr2line() {
+         static std::mutex mutex;
+         static bool has_addr2line = false;
+diff --git a/src/symbols/symbols_with_libdwarf.cpp b/src/symbols/symbols_with_libdwarf.cpp
+index e4ea3de..543aa82 100644
+--- a/src/symbols/symbols_with_libdwarf.cpp
++++ b/src/symbols/symbols_with_libdwarf.cpp
+@@ -90,7 +90,7 @@ namespace libdwarf {
+         return final_trace;
+     }
+ 
+-    #if IS_LINUX || IS_APPLE
++    #if IS_LINUX || IS_APPLE || IS_FREEBSD
+     CPPTRACE_FORCE_NO_INLINE_FOR_PROFILING
+     void try_resolve_jit_frame(const cpptrace::object_frame& dlframe, frame_with_inlines& frame) {
+         auto object_res = lookup_jit_object(dlframe.raw_address);
+@@ -141,7 +141,7 @@ namespace libdwarf {
+             try {
+                 const auto& object_name = group.first;
+                 if(object_name.empty()) {
+-                    #if IS_LINUX || IS_APPLE
++                    #if IS_LINUX || IS_APPLE || IS_FREEBSD
+                     for(const auto& entry : group.second) {
+                         try_resolve_jit_frame(entry.first.get(), entry.second.get());
+                     }
+@@ -149,7 +149,7 @@ namespace libdwarf {
+                     continue;
+                 }
+                 // TODO PERF: Potentially a duplicate open and parse with module base stuff (and debug map resolver)
+-                #if IS_LINUX
++                #if IS_LINUX || IS_FREEBSD
+                 auto object = open_elf_cached(object_name);
+                 #elif IS_APPLE
+                 auto object = open_mach_o_cached(object_name);
+@@ -159,7 +159,7 @@ namespace libdwarf {
+                     const auto& dlframe = entry.first.get();
+                     auto& frame = entry.second.get();
+                     try_resolve_frame(resolver.get(), dlframe, frame);
+-                    #if IS_LINUX || IS_APPLE
++                    #if IS_LINUX || IS_APPLE || IS_FREEBSD
+                     // fallback to symbol tables
+                     if(frame.frame.symbol.empty() && object.has_value()) {
+                         frame.frame.symbol = object
