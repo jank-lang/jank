@@ -1,0 +1,94 @@
+#!/bin/sh
+# freebsd-container-test - build, test and package jank on FreeBSD from any Linux host
+# with Docker (or Podman). The container boots FreeBSD under QEMU, using KVM when
+# /dev/kvm is available. CI runs exactly this.
+#
+# Usage: bin/freebsd-container-test [options]
+#   --build-only   Build without the test suite or packaging.
+#   --jobs N       Parallel build jobs inside the VM (default: --cpus).
+#   --cpus N       VM CPUs (default: 4).
+#   --mem MIB      VM memory in MiB (default: 8192).
+#   --out DIR      Results directory: .pkg and logs (default: <repo>/freebsd-out).
+#   --cache DIR    Host directory for the FreeBSD image cache
+#                  (default: the jank-freebsd-vm-cache volume).
+#   --keep-vm      Leave the VM running after the run, for debugging.
+#   --engine CMD   Container engine (default: $CONTAINER_ENGINE, docker, then podman).
+set -eu
+
+here="$(cd "$(dirname "$0")" && pwd)"
+cr_dir="$(cd "$here/.." && pwd)"
+repo_root="$(cd "$cr_dir/.." && pwd)"
+image="jank-freebsd-vm-test"
+cache_volume="jank-freebsd-vm-cache"
+
+die() { printf 'freebsd-container-test: error: %s\n' "$*" >&2; exit 1; }
+
+build_only=0
+jobs=""
+cpus=4
+mem=8192
+out_dir="$repo_root/freebsd-out"
+keep_vm=0
+engine="${CONTAINER_ENGINE:-}"
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --build-only) build_only=1 ;;
+    --jobs) shift; jobs="${1:?missing value}" ;;
+    --cpus) shift; cpus="${1:?missing value}" ;;
+    --mem) shift; mem="${1:?missing value}" ;;
+    --out) shift; out_dir="${1:?missing value}" ;;
+    --cache) shift; cache_volume="$(mkdir -p "${1:?missing value}" && cd "$1" && pwd)" ;;
+    --keep-vm) keep_vm=1 ;;
+    --engine) shift; engine="${1:?missing value}" ;;
+    -h|--help) sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) die "unknown argument: $1 (try --help)" ;;
+  esac
+  shift
+done
+
+if [ -z "$engine" ]; then
+  for candidate in docker podman; do
+    if command -v "$candidate" >/dev/null 2>&1; then engine="$candidate"; break; fi
+  done
+fi
+[ -n "$engine" ] || die "neither docker nor podman found"
+[ -f "$cr_dir/third-party/cpptrace/CMakeLists.txt" ] \
+  || die "submodules are missing; run: git submodule update --init --recursive"
+
+kvm_args=""
+if [ -e /dev/kvm ]; then
+  kvm_args="--device /dev/kvm"
+else
+  printf 'freebsd-container-test: warning: no /dev/kvm; the VM will be emulated and very slow\n' >&2
+fi
+
+# The VM's memory is reserved from the host; warn before the OOM killer surprises us.
+if [ -r /proc/meminfo ]; then
+  avail_mib="$(awk '/^MemAvailable:/ { print int($2 / 1024) }' /proc/meminfo)"
+  if [ -n "$avail_mib" ] && [ "$avail_mib" -lt "$mem" ]; then
+    printf 'freebsd-container-test: warning: only %s MiB free but the VM wants %s; try --mem\n' \
+      "$avail_mib" "$mem" >&2
+  fi
+fi
+
+# SELinux hosts (Fedora/RHEL with podman) otherwise deny access to the bind mounts.
+selinux_args=""
+case "$engine" in
+  *podman*) selinux_args="--security-opt label=disable" ;;
+esac
+
+mkdir -p "$out_dir"
+out_dir="$(cd "$out_dir" && pwd)"
+
+"$engine" build -t "$image" "$cr_dir/test/freebsd-container"
+
+# shellcheck disable=SC2086 # kvm_args and selinux_args are intentionally empty or word-split.
+exec "$engine" run --rm $kvm_args $selinux_args \
+  -v "$repo_root:/src:ro" \
+  -v "$cache_volume:/cache" \
+  -v "$out_dir:/out" \
+  -e VM_CPUS="$cpus" -e VM_MEM="$mem" -e JOBS="${jobs:-$cpus}" \
+  -e BUILD_ONLY="$build_only" -e KEEP_VM="$keep_vm" \
+  ${FREEBSD_RELEASE:+-e FREEBSD_RELEASE="$FREEBSD_RELEASE"} \
+  "$image"

@@ -6,6 +6,9 @@ instead. You can find details for that
 jank requires LLVM 22. If you don't have access to this, we have a script to
 compile it from source. See the section on compiling Clang/LLVM below.
 
+For the FreeBSD 14.4 build, test, and native package workflow, see the
+[FreeBSD build guide](freebsd.md).
+
 ## Dependencies
 For Debian-based distros, this should be all you need:
 
