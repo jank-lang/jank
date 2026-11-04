@@ -1,0 +1,267 @@
+#!/bin/sh
+# freebsd-package - stage + package jank for FreeBSD as a native pkg artifact.
+#
+# POSIX sh. Never requires root and never mutates system directories:
+#   1. cmake --install into a private DESTDIR staging tree (DESTDIR is
+#      exported as an ENVIRONMENT variable, never as a cmake argument).
+#   2. Generate a +MANIFEST (plus plist) and call `pkg create` to produce a
+#      real .pkg archive.
+#
+# Runtime dependency metadata (LLVM and boost-libs) is derived from the host
+# pkg database at package time. Never hardcode a potentially stale version.
+set -eu
+
+here="$(cd "$(dirname "$0")" && pwd)"
+cr_dir="$(cd "${here}/.." && pwd)"
+
+build_dir="${JANK_BUILD_DIR:-$cr_dir/build-freebsd}"
+pkg_output_dir=""
+staging_parent="${JANK_PKG_STAGING:-$(pwd)/pkg-staging}"
+prefix="${JANK_INSTALL_PREFIX:-/usr/local}"
+nick="jank-jit"
+llvm_major="${JANK_LLVM_MAJOR:-22}"
+verbose="0"
+cmake_bin="${JANK_CMAKE:-}"
+pkg_bin=""
+pkg_bin_for_query=""
+
+die() { printf 'freebsd-package: error: %s\n' "$*" >&2; exit 1; }
+note() { printf 'freebsd-package: %s\n' "$*" >&2; }
+cmd() {
+  if [ "$verbose" = "1" ]; then
+    printf '+ ' >&2
+    for w in "$@"; do printf "'%s' " "$w" >&2; done
+    printf '\n' >&2
+  fi
+  "$@"
+}
+have_cmd() { command -v "$1" >/dev/null 2>&1; }
+
+usage() {
+cat <<'EOF'
+freebsd-package - build a real FreeBSD pkg artifact for jank
+
+Usage:
+  bin/freebsd-package [options]
+
+Stages a CMake install into a DESTDIR under the intended prefix, assembles
+a pkg manifest + plist, and produces a real .pkg archive via FreeBSD's
+pkg(8). Does not require root. Does not touch anything outside a private
+staging/output directory.
+
+Options:
+  -h, --help                Show this help.
+  --preflight               Check prerequisites (pkg, cmake install tree).
+  -B, --build-dir DIR       Configured+built build directory (which must
+                            contain CMakeCache.txt). No build happens here.
+                            Default: <repo>/compiler+runtime/build-freebsd.
+  -o, --output-dir DIR      Where to write the .pkg.
+                            Default: pkg-out under the private staging root.
+  --staging-root DIR        Parent directory for the DESTDIR staging tree
+                            (default: ./pkg-staging, created if missing).
+  --prefix P                Install prefix *inside the package*
+                            (default: /usr/local).
+  --cmake PATH              CMake command/binary to use for --install
+                            (default: the cmake that configured the build
+                            tree, else $JANK_CMAKE, else PATH). Use this to
+                            point at a userspace CMake binary.
+  --llvm-major N            Major version of the LLVM runtime dependency
+                            (default: 22).
+  --nick NAME               Package name (default: jank-jit).
+  -v                        Verbose command echo.
+
+Environment overrides (CLI flags win):
+  JANK_BUILD_DIR, JANK_PKG_STAGING, JANK_INSTALL_PREFIX, JANK_CMAKE,
+  JANK_LLVM_MAJOR
+
+No system state is modified. Nothing is installed. See
+compiler+runtime/doc/freebsd.md for the full surface.
+
+Prerequisites (all must already be installed on the host):
+  - pkg(8)          (for pkg create and pkg query)
+  - sh, coreutils-style base tools (present on FreeBSD base)
+  - a configured AND built jank build tree (via bin/freebsd-build)
+EOF
+}
+
+mode="pkg"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help) mode="help"; ;;
+    --preflight) mode="preflight"; ;;
+    -B|--build-dir) shift; build_dir="${1:?missing value}"; ;;
+    -o|--output-dir) shift; pkg_output_dir="${1:?missing value}"; ;;
+    --staging-root) shift; staging_parent="${1:?missing value}"; ;;
+    --prefix) shift; prefix="${1:?missing value}"; ;;
+    --cmake) shift; cmake_bin="${1:?missing value}"; ;;
+    --llvm-major) shift; llvm_major="${1:?missing value}"; ;;
+    --nick) shift; nick="${1:?missing value}"; ;;
+    -v) verbose="1"; ;;
+    -*) die "unknown option: $1 (try --help)"; ;;
+    *) die "unexpected positional arg: $1"; ;;
+  esac
+  shift
+done
+
+if [ "$mode" = "help" ]; then usage; exit 0; fi
+
+if [ ! -d "$build_dir" ]; then die "build dir not found: $build_dir (run bin/freebsd-build first)"; fi
+if [ ! -f "$build_dir/CMakeCache.txt" ]; then
+  die "$build_dir does not look like a configured CMake tree (no CMakeCache.txt)"
+fi
+
+# Resolve the CMake binary: --cmake / $JANK_CMAKE wins, then the one
+# recorded in the build tree's cache, then PATH.
+if [ -z "$cmake_bin" ]; then
+  cmake_bin="$(sed -n 's/^CMAKE_COMMAND:INTERNAL=//p' "$build_dir/CMakeCache.txt" 2>/dev/null || true)"
+fi
+[ -n "$cmake_bin" ] || cmake_bin="cmake"
+if ! have_cmd "$cmake_bin" && [ ! -x "$cmake_bin" ]; then
+  die "cmake binary not found: $cmake_bin (pass --cmake or set JANK_CMAKE)"
+fi
+
+for c in pkg pkg-static; do
+  if have_cmd "$c"; then pkg_bin="$c"; break; fi
+done
+if [ -z "$pkg_bin" ]; then
+  die "pkg(8) not found; install pkg first"
+fi
+pkg_bin_for_query="$pkg_bin"
+if [ "$pkg_bin" = "pkg-static" ] && have_cmd pkg; then
+  pkg_bin_for_query="pkg"
+fi
+
+pkg_query() {
+  "$pkg_bin_for_query" query '%n|%v|%o' "$1" 2>/dev/null | head -1 || true
+}
+
+if [ "$mode" = "preflight" ]; then
+  printf 'freebsd-package: preflight\n'
+  printf 'cmake       %s\n' "$cmake_bin"
+  printf 'pkg         %s\n' "$pkg_bin"
+  if [ ! -x "${build_dir}/jank" ] && [ ! -x "${build_dir}/jank-phase-2" ]; then
+    note "no jank binary yet under $build_dir (build it first)"
+  fi
+  exit 0
+fi
+
+# Staging/output guards: never overwrite an existing staging root, DESTDIR
+# or output dir. Callers must pass fresh directories when re-packaging.
+if [ -e "$staging_parent" ] && [ -n "$(ls -A "$staging_parent" 2>/dev/null || true)" ]; then
+  die "staging root not empty: $staging_parent (move it aside or pass a different --staging-root)"
+fi
+mkdir -p "$staging_parent" || die "cannot create staging root: $staging_parent"
+staging_parent="$(cd "$staging_parent" && pwd -P)"
+destdir="$staging_parent/destdir"
+if [ -e "$destdir" ]; then
+  die "unexpected existing staging dir: $destdir (refusing to reuse)"
+fi
+mkdir -p "$destdir" || die "cannot create destdir: $destdir"
+
+out_dir="$pkg_output_dir"
+if [ -z "$out_dir" ]; then
+  out_dir="$staging_parent/pkg-out"
+fi
+if [ -e "$out_dir" ]; then
+  die "output dir already exists: $out_dir (refusing to overwrite)"
+fi
+mkdir -p "$out_dir" || die "cannot create output dir: $out_dir"
+
+# ---------------------------------------------------------------------------
+# Stage: cmake --install with DESTDIR exported as an ENVIRONMENT variable
+# ---------------------------------------------------------------------------
+
+note "staging cmake install into $destdir (DESTDIR as environment variable)"
+cmd env "DESTDIR=$destdir" "$cmake_bin" --install "$build_dir" --prefix "$prefix" \
+  || die "cmake install failed"
+
+if [ ! -d "$destdir$prefix" ]; then
+  die "$destdir$prefix does not exist after install (check --install prefix)"
+fi
+
+# ---------------------------------------------------------------------------
+# Manifest metadata: derive runtime deps from the installed pkg database
+# ---------------------------------------------------------------------------
+
+os_ver="$(uname -r | sed 's/-.*//')"
+arch="$(uname -m)"
+
+version="$(sed -n 's/^CMAKE_PROJECT_VERSION:STATIC=//p' "$build_dir/CMakeCache.txt" 2>/dev/null || true)"
+[ -n "$version" ] || die "CMakeCache.txt does not contain CMAKE_PROJECT_VERSION; configure the build tree first"
+
+# Query each runtime dependency. Any absence is a hard error, not invented
+# metadata. llvm22 is required (embedded JIT/AOT runtime); boost-libs is
+# required because jank's installed headers (lib/jank/<version>/include)
+# still consume Boost headers at JIT/AOT time.
+note "deriving runtime pkg dependency metadata for: llvm${llvm_major} boost-libs"
+deps_json=""
+missing_deps=""
+for dep in "llvm${llvm_major}" "boost-libs"; do
+  line="$(pkg_query "$dep")"
+  if [ -z "$line" ]; then
+    missing_deps="$missing_deps $dep"
+    continue
+  fi
+  d_name="$(printf '%s' "$line" | cut -d'|' -f1)"
+  d_ver="$(printf '%s' "$line" | cut -d'|' -f2)"
+  d_origin="$(printf '%s' "$line" | cut -d'|' -f3)"
+  if [ -z "$d_name" ] || [ -z "$d_ver" ] || [ -z "$d_origin" ]; then
+    missing_deps="$missing_deps $dep"
+    continue
+  fi
+  deps_json="$deps_json\"$d_name\":{\"origin\":\"$d_origin\",\"version\":\"$d_ver\"},"
+  note "runtime dep ok: $d_name $d_ver ($d_origin)"
+done
+if [ -n "$missing_deps" ]; then
+  die "required runtime dependencies not found in the installed pkg database:$missing_deps.
+Install them via pkg before creating the manifest."
+fi
+deps_json="$(printf '%s' "$deps_json" | sed 's/,$//')"
+
+our_origin="devel/$nick"
+pkg_abi="$($pkg_bin config abi 2>/dev/null || true)"
+[ -n "$pkg_abi" ] || pkg_abi="FreeBSD:${os_ver%%.*}:$arch"
+
+manifest="$staging_parent/+MANIFEST"
+cat >"$manifest" <<EOF
+{
+  "name": "$nick",
+  "version": "$version",
+  "origin": "$our_origin",
+  "comment": "jank - native Clojure dialect on LLVM (FreeBSD)",
+  "desc": "Native Clojure dialect on LLVM. See https://github.com/jank-lang/jank",
+  "maintainer": "Jeaye Wilkerson <jeaye@jank-lang.org>",
+  "www": "https://jank-lang.org/",
+  "prefix": "$prefix",
+  "abi": "$pkg_abi",
+  "categories": ["lang", "devel"],
+  "licenselogic": "single",
+  "licenses": ["MPL-2.0"],
+  "deps": {$deps_json}
+}
+EOF
+
+# Plist from the staged tree, relative to $destdir (no absolute paths leak
+# into the install).
+plist="$staging_parent/plist"
+(cd "$destdir" && find . -type f -o -type l) | sed 's/^\.//' | sort >"$plist"
+
+note "packaging via $pkg_bin create -> $out_dir"
+cmd "$pkg_bin" create \
+  -M "$manifest" \
+  -r "$destdir" \
+  -p "$plist" \
+  -o "$out_dir" \
+  || die "pkg create failed"
+
+# pkg names the artifact itself (name-version.pkg); surface whatever it wrote.
+pkg_file="$(find "$out_dir" -type f -name '*.pkg' 2>/dev/null | head -1 || true)"
+[ -n "$pkg_file" ] || die "pkg create returned success but produced no .pkg archive in $out_dir"
+
+note "pkg created: $pkg_file"
+ls -l "$out_dir" >&2
+
+printf 'freebsd-package: done\n' >&2
+printf '  pkg file:        %s\n' "$pkg_file" >&2
+printf '  (staging root:   %s)\n' "$staging_parent" >&2
+printf '  runtime deps:    %s\n' "$deps_json" >&2

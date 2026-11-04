@@ -1,0 +1,47 @@
+#!/bin/sh
+# freebsd-provision - install everything needed to build, test and package jank on
+# FreeBSD. Must run as root. Used by the FreeBSD container test and suitable for
+# any fresh FreeBSD 14.x host or CI VM.
+#
+# Usage: bin/freebsd-provision [--build-only]
+#   --build-only  Skip the packages only needed by the full test suite.
+set -eu
+
+die() { printf 'freebsd-provision: error: %s\n' "$*" >&2; exit 1; }
+
+full_test="1"
+case "${1:-}" in
+  '') ;;
+  --build-only) full_test="0" ;;
+  -h|--help) sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  *) die "unknown argument: $1" ;;
+esac
+
+[ "$(uname -s)" = "FreeBSD" ] || die "this script only runs on FreeBSD"
+[ "$(id -u)" = "0" ] || die "must run as root"
+
+# Keep this list in sync with doc/freebsd.md.
+build_pkgs="shells/bash cmake ninja pkgconf git python3 llvm22 boost-libs libzip libffi"
+test_pkgs="babashka clojure leiningen openjdk25"
+
+if [ "$full_test" = "1" ]; then
+  # FreeBSD's babashka package is the Linux binary. It depends on linux_base, whose
+  # pre-install script refuses to run unless the kernel already has 64-bit Linux support,
+  # so the Linuxulator must be up before the packages are installed.
+  sysrc linux_enable="YES"
+  service linux start || true
+  # kldstat -n matches the module file, not the internal module name (linux64elf).
+  kldstat -q -n linux64 \
+    || die "the linux64 kernel module is not loaded (needed by babashka's linux_base)"
+fi
+
+export ASSUME_ALWAYS_YES=yes
+pkg bootstrap -f >/dev/null 2>&1 || true
+# shellcheck disable=SC2086 # Package lists are intentionally word-split.
+if [ "$full_test" = "1" ]; then
+  pkg install --yes $build_pkgs $test_pkgs
+else
+  pkg install --yes $build_pkgs
+fi
+
+printf 'freebsd-provision: done\n'

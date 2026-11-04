@@ -1,0 +1,363 @@
+#!/bin/sh
+# freebsd-build - reproducible FreeBSD build/test/install entrypoint for jank.
+#
+# POSIX sh (dash and bash tested via sh -n plus the local fixture suite).
+# Never installs system packages, never requires root, never wipes existing
+# build trees, never relies on /tmp bootstrap locations.
+set -eu
+
+mode="build"            # build | configure | help | preflight
+here="$(cd "$(dirname "$0")" && pwd)"
+cr_dir="$(cd "${here}/.." && pwd)"
+repo_root="$(cd "${here}/../.." && pwd)"
+
+source_dir="${JANK_SOURCE_DIR:-$repo_root}"
+build_dir="${JANK_BUILD_DIR:-$cr_dir/build-freebsd}"
+cmake_bin="${JANK_CMAKE:-cmake}"
+cmake_gen=""
+jobs=""
+max_jobs="8"
+llvm_prefix="${JANK_LLVM_PREFIX:-/usr/local/llvm22}"
+llvm_version="${JANK_LLVM_VERSION:-22}"
+install_prefix="${JANK_INSTALL_PREFIX:-/usr/local}"
+cmake_prefix_paths="${JANK_CMAKE_PREFIX_PATH:-}"
+test_policy="full"
+want_install="0"
+allow_missing_patches="0"
+verbose="0"
+
+die() { printf 'freebsd-build: error: %s\n' "$*" >&2; exit 1; }
+note() { printf 'freebsd-build: %s\n' "$*" >&2; }
+cmd() {
+  if [ "$verbose" = "1" ]; then
+    printf '+ ' >&2
+    for w in "$@"; do printf "'%s' " "$w" >&2; done
+    printf '\n' >&2
+  fi
+  "$@"
+}
+
+usage() {
+cat <<'EOF'
+freebsd-build - build, test and install jank on FreeBSD
+
+Usage:
+  bin/freebsd-build [options]
+
+Build and test jank from source on a FreeBSD host and (optionally, after all
+requested checks pass) install it. POSIX sh; no root and no package installs.
+
+Options:
+  -h, --help              Show this help.
+  --preflight             Check prerequisites, print versions, exit.
+  --configure-only        Run configure, no compile/tests.
+  --build-only            Configure + compile; tests are skipped (NOT full
+                          validation).
+  --full-test             Configure, compile, then run the native jank-test
+                          binary AND the complete shell e2e test suite via
+                          babashka (this is the default when tests run).
+  --install               After requested checks pass, install to --prefix
+                          (use bin/freebsd-package for DESTDIR staging).
+  -S, --source-dir DIR    jank repository root (containing compiler+runtime/).
+                          Default: the repository root containing this script.
+  -B, --build-dir DIR     Build directory
+                          (default: <repo>/compiler+runtime/build-freebsd).
+                          Never wiped; configure is incremental.
+  -j, --jobs N            Parallel jobs (default: probed via sysctl hw.ncpu
+                          or getconf _NPROCESSORS_ONLN).
+  --max-jobs N            Upper cap on jobs (default: 8).
+  --llvm-prefix DIR       LLVM/Clang install prefix (default: /usr/local/llvm22).
+  --llvm-version N        LLVM major version of the compiler used to build
+                          jank and of the LLVM/Clang embedded in jank.
+                          Default: 22; 23 is also accepted.
+  --cmake PATH            CMake command/binary
+                          (default: $JANK_CMAKE or cmake). Point this at a
+                          userspace CMake when the host has none on PATH.
+  --generator GEN         CMake generator (default: Ninja when present,
+                          otherwise "Unix Makefiles").
+  --prefix DIR            Intended install prefix (default: /usr/local;
+                          use bin/freebsd-package to stage under a DESTDIR).
+  --cmake-prefix-path L   CMake semicolon-list value for CMAKE_PREFIX_PATH.
+  --allow-missing-patches Do not fail if bin/apply-freebsd-patches is absent.
+  -v                      Verbose command echo.
+
+Extra positional arguments are appended to the cmake configure invocation
+as individual -D definitions, e.g.:
+  bin/freebsd-build -- -Djank_unity_build=on -DCMAKE_BUILD_TYPE=Debug
+
+Environment overrides (CLI flags win):
+  JANK_SOURCE_DIR, JANK_BUILD_DIR, JANK_CMAKE, JANK_LLVM_PREFIX,
+  JANK_LLVM_VERSION, JANK_INSTALL_PREFIX, JANK_CMAKE_PREFIX_PATH
+
+JANK_CMAKE_PREFIX_PATH must use CMake's semicolon-separated list syntax.
+
+Prerequisites (pkg install on FreeBSD; nothing installed by this script):
+  pkg install shells/bash cmake ninja pkgconf git babashka clojure \
+              leiningen openjdk25 python3 llvm22 boost-libs libzip libffi
+
+Full-surface details: compiler+runtime/doc/freebsd.md
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help) mode="help"; ;;
+    --preflight) mode="preflight"; ;;
+    --configure-only) mode="configure"; ;;
+    --build-only) test_policy="skip"; ;;
+    --full-test) test_policy="full"; ;;
+    --install) want_install="1"; ;;
+    -S|--source-dir) shift; source_dir="${1:?missing value}"; ;;
+    -B|--build-dir) shift; build_dir="${1:?missing value}"; ;;
+    --llvm-prefix) shift; llvm_prefix="${1:?missing value}"; ;;
+    --llvm-version) shift; llvm_version="${1:?missing value}"; ;;
+    --cmake) shift; cmake_bin="${1:?missing value}"; ;;
+    --generator) shift; cmake_gen="${1:?missing value}"; ;;
+    -j|--jobs) shift; jobs="${1:?missing value}"; ;;
+    --max-jobs) shift; max_jobs="${1:?missing value}"; ;;
+    --prefix) shift; install_prefix="${1:?missing value}"; ;;
+    --cmake-prefix-path) shift; cmake_prefix_paths="${1:?missing value}"; ;;
+    --allow-missing-patches) allow_missing_patches="1"; ;;
+    -v) verbose="1"; ;;
+    --) shift; break; ;;
+    -*) die "unknown option: $1 (try --help)"; ;;
+    *) die "unexpected positional argument: $1 (put CMake definitions after --)"; ;;
+  esac
+  shift
+done
+case "$mode" in
+  help) usage; exit 0; ;;
+esac
+
+have_cmd() { command -v "$1" >/dev/null 2>&1; }
+
+check_source_tree() {
+  if [ ! -f "${source_dir}/compiler+runtime/CMakeLists.txt" ]; then
+    die "no compiler+runtime/CMakeLists.txt under $source_dir; pass -S/--source-dir pointing at the jank repository root"
+  fi
+}
+
+case "$source_dir" in
+  /*) ;;
+  *) source_dir="$(cd "$(dirname "$source_dir")" 2>/dev/null && pwd)/$(basename "$source_dir")" || die "cannot resolve source dir: $source_dir" ;;
+esac
+
+case "$llvm_version" in
+  22|23) ;;
+  *) die "unsupported --llvm-version '$llvm_version'; supported: 22, 23"; ;;
+esac
+
+cmd_clang() {
+  if [ -x "${llvm_prefix}/bin/clang" ]; then printf '%s' "${llvm_prefix}/bin/clang"; return 0; fi
+  if have_cmd clang; then printf '%s' "clang"; return 0; fi
+  return 1
+}
+cmd_clangxx() {
+  if [ -x "${llvm_prefix}/bin/clang++" ]; then printf '%s' "${llvm_prefix}/bin/clang++"; return 0; fi
+  if have_cmd clang++; then printf '%s' "clang++"; return 0; fi
+  return 1
+}
+
+preflight() {
+  status=0
+  printf -- '--- freebsd-build preflight ---\n'
+  ncpu="$(sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
+  printf 'cpus detected: %s\n' "$ncpu"
+  uname -sr 2>/dev/null || true
+  check_cmd() {
+    if command -v "$1" >/dev/null 2>&1; then
+      printf 'ok    %-14s %s\n' "$1" "$(command -v "$1")"
+    else
+      printf 'MISSING %-12s (see --help prerequisites)\n' "$1" >&2
+      status=1
+    fi
+  }
+  check_cmd "$cmake_bin"
+  if have_cmd ninja; then printf 'ok    ninja      %s\n' "$(ninja --version 2>/dev/null || true)"
+  else note 'ninja missing (configure will fall back to Unix Makefiles)'; fi
+  if have_cmd pkg-config; then check_cmd pkg-config
+  elif have_cmd pkgconf; then check_cmd pkgconf
+  else printf 'MISSING pkg-config/pkgconf (prerequisite)\n' >&2; status=1; fi
+  check_cmd pkg
+  check_cmd bash
+  check_cmd git
+  if [ "$test_policy" = "full" ]; then
+    check_cmd python3
+    if have_cmd bb; then
+      if bb_version="$(bb --version 2>&1)"; then
+        if [ -n "$bb_version" ]; then
+          printf 'ok    bb         %s\n' "$bb_version"
+        else
+          printf 'MISMATCH bb: --version returned no output; check FreeBSD Linuxulator setup\n' >&2
+          status=1
+        fi
+      else
+        printf 'MISMATCH bb: --version failed; check FreeBSD Linuxulator setup (%s)\n' "$bb_version" >&2
+        status=1
+      fi
+    else
+      printf 'MISSING bb (Babashka; required for --full-test)\n' >&2
+      status=1
+    fi
+    if have_cmd clojure; then
+      clojure_cli_version="$(clojure -Sdescribe 2>/dev/null | sed -n 's/.*:version "\([^"]*\)".*/\1/p' | head -1 || true)"
+      if [ -n "$clojure_cli_version" ]; then
+        printf 'ok    clojure CLI %s\n' "$clojure_cli_version"
+      else
+        printf 'MISMATCH clojure: command lacks Clojure CLI -Sdescribe support\n' >&2
+        status=1
+      fi
+    else
+      printf 'MISSING clojure (Clojure CLI; required by shell tests)\n' >&2
+      status=1
+    fi
+    if have_cmd lein; then printf 'ok    lein       %s\n' "$(lein version 2>&1 | head -1 || true)"
+    else printf 'MISSING lein (Leiningen; required by shell tests)\n' >&2; status=1; fi
+    if have_cmd java; then printf 'ok    java       %s\n' "$(java -version 2>&1 | head -1 || true)"
+    else printf 'MISSING java (JDK; required by Clojure and Leiningen tests)\n' >&2; status=1; fi
+  elif have_cmd bb; then
+    printf 'ok    bb         %s (optional in --build-only mode)\n' "$(bb --version 2>/dev/null || true)"
+  else
+    note 'babashka (bb) missing; it is required for --full-test, not --build-only'
+  fi
+  cc="$(cmd_clang || true)"; cxx="$(cmd_clangxx || true)"
+  if [ -z "$cc" ]; then printf 'MISSING compiler: clang under %s\n' "$llvm_prefix" >&2; status=1
+  else printf 'ok    clang      %s\n' "$cc"; "$cc" --version 2>&1 | head -1 || true; fi
+  if [ -z "$cxx" ]; then printf 'MISSING compiler: clang++ under %s\n' "$llvm_prefix" >&2; status=1
+  else
+    compiler_line="$("$cxx" --version 2>&1 | head -1 || true)"
+    compiler_major="$(printf '%s\n' "$compiler_line" | sed -n 's/.*clang version \([0-9][0-9]*\).*/\1/p')"
+    if [ "$compiler_major" != "$llvm_version" ]; then
+      printf 'MISMATCH clang++ major: expected %s, got %s (%s)\n' \
+        "$llvm_version" "${compiler_major:-unknown}" "$compiler_line" >&2
+      status=1
+    else
+      printf 'ok    clang++    %s (%s)\n' "$cxx" "$compiler_line"
+    fi
+  fi
+  for c in lib/cmake/llvm/LLVMConfig.cmake lib/cmake/clang/ClangConfig.cmake; do
+    if [ -f "${llvm_prefix}/$c" ]; then printf 'ok    %s\n' "$c"
+    else printf 'MISSING %s under %s\n' "$c" "$llvm_prefix" >&2; status=1; fi
+  done
+  printf 'preflight status: %s\n' "$([ "$status" = "0" ] && echo ok || echo FAIL)"
+  return "$status"
+}
+
+check_source_tree
+
+if [ "$mode" = "preflight" ]; then
+  preflight && exit 0
+  exit 1
+fi
+
+pf_out="${TMPDIR:-/tmp}/freebsd-build-preflight.$$"
+if ! preflight >"$pf_out" 2>&1; then
+  cat "$pf_out" >&2
+  rm -f "$pf_out"
+  die "preflight failed - see above; install missing prerequisites"
+fi
+rm -f "$pf_out"
+
+cr_dir="$source_dir/compiler+runtime"
+cd "$cr_dir"
+
+if [ -z "$jobs" ]; then
+  jobs="$(sysctl -n hw.ncpu 2>/dev/null || getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)"
+fi
+case "$jobs" in ''|*[!0-9]*) die "--jobs must be a positive integer, got '$jobs'"; ;; esac
+case "$max_jobs" in ''|*[!0-9]*) die "--max-jobs must be a positive integer, got '$max_jobs'"; ;; esac
+[ "$jobs" -gt 0 ] || die "--jobs must be greater than zero"
+[ "$max_jobs" -gt 0 ] || die "--max-jobs must be greater than zero"
+if [ "$jobs" -gt "$max_jobs" ]; then
+  note "capping jobs at $max_jobs (requested: $jobs)"
+  jobs="$max_jobs"
+fi
+
+if [ "$test_policy" = "full" ] && ! have_cmd bb; then
+  die "babashka (bb) required for the full test suite; install it or pass --build-only"
+fi
+
+patch_script="$cr_dir/bin/apply-freebsd-patches"
+if [ -x "$patch_script" ]; then
+  cmd "$patch_script"
+elif [ "$allow_missing_patches" = "1" ]; then
+  note "bin/apply-freebsd-patches missing (allowed by --allow-missing-patches)"
+else
+  die "bin/apply-freebsd-patches not found or not executable.
+It is required before configure on FreeBSD. Pass --allow-missing-patches
+only if the tree already carries the equivalent changes."
+fi
+
+mkdir -p "$build_dir" || die "cannot create build dir: $build_dir"
+build_dir="$(cd "$build_dir" && pwd -P)"
+
+cc="$(cmd_clang)"; cxx="$(cmd_clangxx)"
+[ -z "$cc" ] && die "no clang under --llvm-prefix=$llvm_prefix and none on PATH"
+[ -z "$cxx" ] && die "no clang++ under --llvm-prefix=$llvm_prefix and none on PATH"
+
+export CC="$cc"
+export CXX="$cxx"
+
+if [ -z "$cmake_gen" ]; then
+  if have_cmd ninja; then cmake_gen="Ninja"; else cmake_gen="Unix Makefiles"; fi
+fi
+
+# Build the configure command as the positional list. User-supplied -D
+# definitions (already in "$@") stay at the end, so they win.
+test_flag=""
+[ "$test_policy" = "full" ] && test_flag="-Djank_test=on"
+prefix_path="$cmake_prefix_paths"
+if [ -z "$prefix_path" ] && [ "$llvm_prefix" != "/usr/local" ]; then
+  prefix_path="$llvm_prefix"
+fi
+set -- -G "$cmake_gen" -S "$cr_dir" -B "$build_dir" \
+  ${prefix_path:+"-DCMAKE_PREFIX_PATH=$prefix_path"} \
+  -Djank_local_clang=off -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX="$install_prefix" \
+  -DCMAKE_C_COMPILER="$cc" -DCMAKE_CXX_COMPILER="$cxx" \
+  ${test_flag:+"$test_flag"} "$@"
+
+note "configuring with $cmake_bin (generator: $cmake_gen)"
+cmd "$cmake_bin" "$@" || die "configure failed"
+
+if [ "$mode" = "configure" ]; then
+  note "configure-only requested, stopping here"
+  exit 0
+fi
+
+note "compiling with $jobs jobs"
+cmd "$cmake_bin" --build "$build_dir" --parallel "$jobs" || die "build failed"
+
+if [ "$test_policy" = "full" ]; then
+  note "running native jank tests (jank-test)"
+  if [ -x "$build_dir/jank-test" ]; then
+    cmd "$build_dir/jank-test" || die "native tests failed"
+  elif [ -x "$build_dir/test_exe/jank-test" ]; then
+    cmd "$build_dir/test_exe/jank-test" || die "native tests failed"
+  else
+    die "jank-test binary not found under $build_dir after build"
+  fi
+
+  # Use the same runner as the project, with both source roots available.
+  note "running complete compiler+runtime shell e2e test suite with babashka"
+  cmd env "PATH=$build_dir:$PATH" "JANK_BUILD_DIR=$build_dir" \
+    bb --classpath "$cr_dir/bin:$source_dir/bin" \
+       "$cr_dir/bin/jank/compiler+runtime/bash_test.clj" \
+    || die "shell e2e suite failed"
+fi
+
+if [ "$test_policy" = "skip" ]; then
+  note "TESTS SKIPPED (--build-only): this was NOT full validation"
+else
+  printf 'freebsd-build: PASS build + full test suite\n' >&2
+fi
+
+if [ "$want_install" = "1" ]; then
+  note "installing to $install_prefix (may need write access to it)"
+  cmd "$cmake_bin" --install "$build_dir" --prefix "$install_prefix" \
+    || die "install failed"
+  printf 'freebsd-build: installed to %s\n' "$install_prefix" >&2
+fi
+
+printf 'freebsd-build: complete (build dir: %s, install prefix: %s)\n' \
+  "$build_dir" "$install_prefix" >&2
