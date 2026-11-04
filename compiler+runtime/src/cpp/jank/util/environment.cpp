@@ -1,6 +1,10 @@
 #if defined(__APPLE__)
   #include <mach-o/dyld.h>
   #include <string>
+#elif defined(__FreeBSD__)
+  #include <climits>
+  #include <sys/types.h>
+  #include <sys/sysctl.h>
 #endif
 
 #include <filesystem>
@@ -99,6 +103,16 @@ namespace jank::util
     return std::filesystem::canonical(path).string();
 #elif defined(__linux__)
     return std::filesystem::canonical("/proc/self/exe").string();
+#elif defined(__FreeBSD__)
+    /* procfs isn't mounted by default on FreeBSD, so we ask the kernel directly. */
+    int mib[]{ CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
+    char path[PATH_MAX]{};
+    size_t size{ sizeof(path) };
+    if(sysctl(mib, 4, path, &size, nullptr, 0) == -1 || path[0] == '\0')
+    {
+      return {};
+    }
+    return std::filesystem::canonical(path).string();
 #elif defined(JANK_WINDOWS_LIKE)
     char path[MAX_PATH]{};
     const DWORD size{ GetModuleFileNameA(nullptr, path, MAX_PATH) };
