@@ -1,0 +1,80 @@
+name: FreeBSD build, test and package
+
+# Runs compiler+runtime/bin/freebsd-container-test, the same entrypoint developers use
+# locally: a container which boots FreeBSD under QEMU/KVM, then builds jank, runs the
+# native and shell test suites, packages it, and smoke tests a real `pkg add`.
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+    paths:
+      - 'compiler\+runtime/**'
+      - '.github/workflows/freebsd.yml'
+
+  # A full run takes hours, so PRs only run it when FreeBSD-specific files change.
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'compiler\+runtime/bin/freebsd-*'
+      - 'compiler\+runtime/bin/apply-freebsd-patches'
+      - 'compiler\+runtime/patches/freebsd/**'
+      - 'compiler\+runtime/test/freebsd*/**'
+      - 'compiler\+runtime/doc/freebsd.md'
+      - '.github/workflows/freebsd.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  freebsd:
+    name: FreeBSD 14.4 build, test and package
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      FREEBSD_RELEASE: "14.4"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Cache FreeBSD image
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
+        with:
+          path: ~/freebsd-image-cache
+          key: freebsd-image-${{ env.FREEBSD_RELEASE }}
+
+      - name: Build, test and package in FreeBSD
+        run: |
+          compiler+runtime/bin/freebsd-container-test \
+            --cpus 4 --mem 12288 --jobs 3 \
+            --cache ~/freebsd-image-cache \
+            --out freebsd-out
+
+      - name: Upload FreeBSD logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jank-freebsd-logs
+          path: freebsd-out/*.log
+          if-no-files-found: ignore
+
+      - name: Upload FreeBSD pkg
+        uses: actions/upload-artifact@v4
+        with:
+          name: jank-freebsd-pkg
+          path: freebsd-out/*.pkg
+          if-no-files-found: error
