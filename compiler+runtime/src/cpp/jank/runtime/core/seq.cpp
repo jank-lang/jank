@@ -1098,7 +1098,7 @@ namespace jank::runtime
           vec.push_back(e);
         }
 
-        if(vec.size() == 0)
+        if(vec.empty())
         {
           return obj::persistent_list::empty();
         }
@@ -1131,7 +1131,7 @@ namespace jank::runtime
           vec.push_back(e);
         }
 
-        if(vec.size() == 0)
+        if(vec.empty())
         {
           return obj::persistent_list::empty();
         }
