@@ -43,31 +43,46 @@ namespace jank::runtime::obj
   /* behavior::object_like */
   bool native_vector_sequence::equal(object const &o) const
   {
-    return runtime::equal(o, data.begin(), data.end());
+    return runtime::equal(o,
+                          data.begin() + static_cast<decltype(data)::difference_type>(index),
+                          data.end());
   }
 
   void native_vector_sequence::to_string(jtl::string_builder &buff) const
   {
-    runtime::to_string(data.begin(), data.end(), "(", ')', buff);
+    runtime::to_string(data.begin() + static_cast<decltype(data)::difference_type>(index),
+                       data.end(),
+                       "(",
+                       ')',
+                       buff);
   }
 
   jtl::immutable_string native_vector_sequence::to_string() const
   {
     jtl::string_builder buff;
-    runtime::to_string(data.begin(), data.end(), "(", ')', buff);
+    runtime::to_string(data.begin() + static_cast<decltype(data)::difference_type>(index),
+                       data.end(),
+                       "(",
+                       ')',
+                       buff);
     return buff.release();
   }
 
   jtl::immutable_string native_vector_sequence::to_code_string() const
   {
     jtl::string_builder buff;
-    runtime::to_code_string(data.begin(), data.end(), "(", ')', buff);
+    runtime::to_code_string(data.begin() + static_cast<decltype(data)::difference_type>(index),
+                            data.end(),
+                            "(",
+                            ')',
+                            buff);
     return buff.release();
   }
 
   uhash native_vector_sequence::to_hash() const
   {
-    return hash::ordered(data.begin(), data.end());
+    return hash::ordered(data.begin() + static_cast<decltype(data)::difference_type>(index),
+                         data.end());
   }
 
   /* behavior::seqable */
