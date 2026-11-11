@@ -20,44 +20,48 @@
 ;; eval helps preserve correct source information relative to the entire file,
 ;; which is useful for things such as error reporting and logging.
 (defn- do-eval [ns code file-path line col inspect?]
-  ;; TODO: Once we have threads, we can spawn a background thread to capture and
-  ;; send interleaved output during a long eval.
-  (let [target-ns        (or (some-> ns symbol find-ns) default-ns)
+  (if (empty? code)
+    {:status [:no-code :done]}
+    ;; TODO: Once we have threads, we can spawn a background thread to capture and
+    ;; send interleaved output during a long eval.
+    (let [target-ns (if ns (-> ns symbol find-ns) default-ns)]
+      (if-not target-ns
+        {:status [:namespace-not-found :done]}
         ;; do the eval, capturing anything on stdout
-        {:keys [ret stdout stderr]} (with-capture
-                                      (fn []
-                                        (binding [*ns* target-ns
-                                                  *file* file-path]
-                                          ;; the evaluation may change the namespace
-                                          [(safe-eval code line col) *ns*])))
-        [success res-ns] ret]
-    (cond
-      ;; Eval results in error.
-      (not success)
-      [(when-not (blank? stdout) {:out stdout})
-       (when-not (blank? stderr) {:err stderr})
-       ;; The error contents will be in :ex for CIDER, but also
-       ;; populate :err for clients which don't specially handle :ex
-       ;; responses.
-       {:err (str *e)}
-       {:ex     (str *e)
-        :status [:done :eval-error]}]
+        (let [{:keys [ret stdout stderr]} (with-capture
+                                            (fn []
+                                              (binding [*ns*   target-ns
+                                                        *file* file-path]
+                                                ;; the evaluation may change the namespace
+                                                [(safe-eval code line col) *ns*])))
+              [success res-ns]            ret]
+          (cond
+            ;; Eval results in error.
+            (not success)
+            [(when-not (blank? stdout) {:out stdout})
+             (when-not (blank? stderr) {:err stderr})
+             ;; The error contents will be in :ex for CIDER, but also
+             ;; populate :err for clients which don't specially handle :ex
+             ;; responses.
+             {:err (str *e)}
+             {:ex     (str *e)
+              :status [:done :eval-error]}]
 
-      ;; Client requests an inspection of the last result.
-      inspect?
-      {:value  (inspect-str *1)
-       :status [:done]}
+            ;; Client requests an inspection of the last result.
+            inspect?
+            {:value  (inspect-str *1)
+             :status [:done]}
 
-      ;; Normal eval result.
-      :else
-      [(when-not (blank? stdout) {:out stdout})
-       (when-not (blank? stderr) {:err stderr})
-       {:value  (pr-str *1)
-        :ns     (str res-ns)}
-       ;; CIDER expects :status in a separate response message
-       ;; from :value.
-       ;; see: https://github.com/clojure-emacs/cider/issues/3869
-       {:status [:done]}])))
+            ;; Normal eval result.
+            :else
+            [(when-not (blank? stdout) {:out stdout})
+             (when-not (blank? stderr) {:err stderr})
+             {:value (pr-str *1)
+              :ns    (str res-ns)}
+             ;; CIDER expects :status in a separate response message
+             ;; from :value.
+             ;; see: https://github.com/clojure-emacs/cider/issues/3869
+             {:status [:done]}]))))))
 
 (defmethod handle-message :eval [msg]
   (do-eval (get msg "ns")

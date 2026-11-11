@@ -3,4 +3,4 @@
    [jank.nrepl.server.handler :refer [handle-message]]))
 
 (defmethod handle-message :close [_]
-  {:status [:done]})
+  {:status [:session-closed :done]})

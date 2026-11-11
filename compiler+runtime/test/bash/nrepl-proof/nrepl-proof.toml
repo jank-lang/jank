@@ -1,0 +1,66 @@
+# derived from https://github.com/nrepl/proof/blob/main/profiles/jank.toml
+
+# jank's built-in nREPL server. There's no headless mode, so this starts
+# the terminal REPL, which runs the server alongside it.
+name = "jank"
+homepage = "https://github.com/jank-lang/jank"
+
+[launch]
+command = ["jank", "repl"]
+port-pattern = 'nREPL server started on port (\d+)'
+startup-timeout = "120s"
+
+[capabilities]
+namespaces = true
+clojure = true
+
+[snippets.value]
+code = "(+ 1 2)"
+value = "3"
+
+[snippets.stdout]
+code = '(print "proof")'
+out = "proof"
+
+[snippets.stderr]
+code = '(binding [*out* *err*] (print "proof"))'
+err = "proof"
+
+[snippets.throw]
+code = '(throw (ex-info "proof" {}))'
+
+[snippets.define]
+code = "(def proof-answer 42)"
+use = "proof-answer"
+value = "42"
+
+# Leaves session-local state behind (*1 is per session).
+[snippets.session-state]
+code = ":proof-marker"
+use = "*1"
+value = ":proof-marker"
+
+[snippets.multiple]
+code = "1 2"
+values = ["1", "2"]
+
+# Reads a line from stdin.
+[snippets.read-line]
+code = "(read-line)"
+value = '"proof"'
+eof = "nil"
+
+# A prefix, and something it completes to.
+[snippets.completion]
+code = "printl"
+value = "println"
+
+# A function to look up.
+[snippets.lookup]
+code = "println"
+
+[expected-failures]
+"eval.multiple-forms" = "multiple forms not handled"
+"session.closed" = "session bookkeeping not implemented"
+"session.isolated" = "session bookkeeping not implemented"
+"session.unknown" = "session bookkeeping not implemented"

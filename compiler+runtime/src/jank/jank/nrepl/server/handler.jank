@@ -2,6 +2,7 @@
 
 (defmulti handle-message #(some-> (get % "op") keyword))
 
-(defmethod handle-message :default [_]
+(defmethod handle-message :default [msg]
   ;; Behavior from: https://github.com/nrepl/nrepl/blob/3cc751a/src/clojure/nrepl/server.clj#L111
-  {:status [:error :unknown-op :done]})
+  {:status [:error :unknown-op :done]
+   :op     (get msg "op")})

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+case "$(uname -s)" in
+  MSYS_NT*|MINGW*_NT*|CLANG*_NT*|CYGWIN_NT*)
+    echo "Skipping on Windows"
+    exit 0
+    ;;
+  Darwin)
+    echo "Currently failing on macOS. See https://github.com/jank-lang/jank/issues/1184"
+    exit 0
+    ;;
+esac
+
+go run github.com/nrepl/proof/cmd/proof@v0.1.0 run "${here}/nrepl-proof.toml"
