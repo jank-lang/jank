@@ -1090,17 +1090,17 @@ namespace jank::runtime
 
   object_ref sort(object_ref const coll)
   {
-    if(coll.is_nil())
-    {
-      return obj::persistent_list::empty();
-    }
-
     return visit_seqable(
       [](auto const typed_coll) -> object_ref {
         native_vector<object_ref> vec;
         for(auto const e : make_sequence_range(typed_coll))
         {
           vec.push_back(e);
+        }
+
+        if(vec.size() == 0)
+        {
+          return obj::persistent_list::empty();
         }
 
         std::stable_sort(vec.begin(), vec.end(), [](object_ref const a, object_ref const b) {
@@ -1123,17 +1123,17 @@ namespace jank::runtime
 
   object_ref sort(object_ref const comp, object_ref const coll)
   {
-    if(coll.is_nil())
-    {
-      return obj::persistent_list::empty();
-    }
-
     return visit_seqable(
       [=](auto const typed_coll) -> object_ref {
         native_vector<object_ref> vec;
         for(auto const e : make_sequence_range(typed_coll))
         {
           vec.push_back(e);
+        }
+
+        if(vec.size() == 0)
+        {
+          return obj::persistent_list::empty();
         }
 
         std::stable_sort(vec.begin(), vec.end(), [=](object_ref const a, object_ref const b) {
