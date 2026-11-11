@@ -3,4 +3,4 @@ set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-"${here}/../../../bin/test-proof"
+go run github.com/nrepl/proof/cmd/proof@v0.1.0 run "${here}/nrepl-proof.toml"
