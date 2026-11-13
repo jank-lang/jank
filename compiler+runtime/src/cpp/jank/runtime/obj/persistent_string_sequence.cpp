@@ -1,6 +1,7 @@
 #include <jtl/utf8.hpp>
 
 #include <jank/runtime/obj/persistent_string_sequence.hpp>
+#include <jank/runtime/obj/persistent_list.hpp>
 #include <jank/runtime/obj/persistent_string.hpp>
 #include <jank/runtime/obj/character.hpp>
 #include <jank/runtime/core/seq_ext.hpp>
@@ -151,5 +152,10 @@ namespace jank::runtime::obj
   cons_ref persistent_string_sequence::conj(object_ref const head)
   {
     return make_box<cons>(head, runtime::detail::untagged(this));
+  }
+
+  persistent_list_ref persistent_string_sequence::empty()
+  {
+    return persistent_list::empty();
   }
 }
