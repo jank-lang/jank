@@ -1,0 +1,18 @@
+(cpp/raw "namespace jank::cpp::literal_type::template_::pass_inline_ctor_and_dtor
+          {
+            template <typename T>
+            struct foo
+            {
+              foo()
+                : value{ 42 }
+              { }
+
+              ~foo()
+              { value = 0; }
+
+              int value{};
+            };
+          }")
+(let* [v (#cpp (jank.cpp.literal_type.template_.pass_inline_ctor_and_dtor.foo int))]
+  (if (= 42 (.-value v))
+    :success))

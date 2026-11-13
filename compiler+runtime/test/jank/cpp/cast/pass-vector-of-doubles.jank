@@ -1,0 +1,3 @@
+(let* [a (cpp/cast (std.vector double) [1.0 2.0])]
+  (if (and (= 2 (.size a)) (= [1.0 2.0] a))
+    :success))
