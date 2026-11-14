@@ -1,0 +1,4 @@
+(cpp/def std.string jank-cpp-def-pass-only-declaration-str)
+
+(if (.empty jank-cpp-def-pass-only-declaration-str)
+  :success)
