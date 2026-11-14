@@ -1403,10 +1403,10 @@ namespace jank::analyze
       native_vector<expression_ref> exprs{};
     };
 
+    auto needs_conversion{ false };
     auto chosen_type{ cpp_util::expression_type(default_expr.expect_ok()) };
     auto has_recur{ resolve_tail_expression(default_expr.expect_ok())->kind
                     == expression_kind::recur };
-
     auto keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
         keys_and_exprs ret{};
@@ -1439,19 +1439,8 @@ namespace jank::analyze
 
           auto const branch_common_type{ branch_common_type_result.expect_ok() };
 
-          if(branch_common_type.then_needs_conversion)
-          {
-            expr = apply_implicit_conversion(expr.expect_ok(),
-                                             cpp_util::untyped_object_ref_type(),
-                                             macro_expansions);
-          }
-          if(branch_common_type.else_needs_conversion)
-          {
-            default_expr = apply_implicit_conversion(default_expr.expect_ok(),
-                                                     cpp_util::untyped_object_ref_type(),
-                                                     macro_expansions);
-          }
-
+          needs_conversion = needs_conversion || branch_common_type.then_needs_conversion
+            || branch_common_type.else_needs_conversion;
           chosen_type = branch_common_type.type;
           ret.keys.push_back(key);
           ret.exprs.push_back(expr.expect_ok());
@@ -1471,6 +1460,34 @@ namespace jank::analyze
     }
 
     auto pairs{ keys_exprs.expect_ok() };
+    native_vector<expression_ref> exprs{};
+    exprs.reserve(pairs.exprs.size());
+
+    if(needs_conversion)
+    {
+      auto conveted_default_expr{
+        apply_implicit_conversion(default_expr.expect_ok(), chosen_type, macro_expansions)
+      };
+
+      if(conveted_default_expr.is_err())
+      {
+        return conveted_default_expr.expect_err();
+      }
+
+      default_expr = conveted_default_expr.expect_ok();
+
+      for(auto const expr : keys_exprs.expect_ok().exprs)
+      {
+        auto converted_expr{ apply_implicit_conversion(expr, chosen_type, macro_expansions) };
+
+        if(converted_expr.is_err())
+        {
+          return converted_expr.expect_err();
+        }
+
+        exprs.push_back(converted_expr.expect_ok());
+      }
+    }
 
     return jtl::make_ref<expr::case_>(position,
                                       current_frame,
@@ -1482,7 +1499,7 @@ namespace jank::analyze
                                       mask,
                                       default_expr.expect_ok(),
                                       std::move(pairs.keys),
-                                      std::move(pairs.exprs));
+                                      std::move(needs_conversion ? exprs : pairs.exprs));
   }
 
   processor::expression_result
