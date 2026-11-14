@@ -1,0 +1,19 @@
+(cpp/raw "namespace jank::cpp::case_::pass_implicitly_compatible_native_type
+         {
+           struct foo{};
+
+           struct bar{
+             /* Required to initialize the result variable for codegen. */
+             bar() {}
+
+             bar(foo const & _) {}
+           };
+         }")
+
+(let* [foo (cpp/jank.cpp.case_.pass_implicitly_compatible_native_type.foo)
+       bar (cpp/jank.cpp.case_.pass_implicitly_compatible_native_type.bar foo)
+       res (case true
+             true bar
+             foo)
+       _ (cpp/cast cpp/jank.cpp.case_.pass_implicitly_compatible_native_type.bar res)]
+  :success)

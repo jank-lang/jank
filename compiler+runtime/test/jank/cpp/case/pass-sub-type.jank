@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::case_::pass_sub_type
+          {
+            struct foo {};
+
+            struct bar : foo{};
+          }")
+
+(let* [foo (cpp/jank.cpp.case_.pass_sub_type.foo)
+       bar (cpp/jank.cpp.case_.pass_sub_type.bar)
+       res (case true
+             true bar
+             foo)
+       _ (cpp/cast cpp/jank.cpp.case_.pass_sub_type.foo res)]
+  :success)
