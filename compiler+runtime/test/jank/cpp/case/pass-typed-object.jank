@@ -1,0 +1,13 @@
+(cpp/raw "namespace jank::cpp::case_::pass_typed_object
+          {
+            jank::runtime::obj::persistent_string_ref make_string(std::string const & s)
+            {
+              return jank::runtime::make_box(s);
+            }
+          }")
+
+(let* [foo (cpp/std.string)
+       res (case true
+             true foo
+             (cpp/jank.cpp.case_.pass_typed_object.make_string foo))]
+  :success)

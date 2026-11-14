@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::case_::pass_same_native_type
+          {
+            struct foo{};
+          }")
+
+(let* [foo (cpp/jank.cpp.case_.pass_same_native_type.foo)
+       bar (cpp/jank.cpp.case_.pass_same_native_type.foo)
+       res (case true true foo bar)
+       _ (cpp/cast cpp/jank.cpp.case_.pass_same_native_type.foo res)]
+  :success)

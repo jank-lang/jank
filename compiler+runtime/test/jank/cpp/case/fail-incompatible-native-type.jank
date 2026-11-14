@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::case_::fail_incompatible_native_type
+          {
+            struct foo{};
+
+            struct bar{};
+          }")
+
+(let* [foo (cpp/jank.cpp.case_.fail_incompatible_native_type.foo)
+       bar (cpp/jank.cpp.case_.fail_incompatible_native_type.bar)
+       res (case true true foo bar)
+       _ (cpp/cast cpp/jank.cpp.case_.fail_incompatible_native_type.foo res)]
+  :success)
