@@ -76,6 +76,9 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
   set(jank_link_whole_start "-Wl,-force_load")
   set(jank_link_whole_end "")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "FreeBSD")
+  set(jank_link_whole_start "-Wl,--whole-archive")
+  set(jank_link_whole_end "-Wl,--no-whole-archive")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
   set(jank_link_whole_start "-Wl,--whole-archive")
   set(jank_link_whole_end "-Wl,--no-whole-archive")
@@ -128,6 +131,19 @@ set(
 
 if(WIN32)
   list(APPEND jank_linker_flags "-Wl,--export-all-symbols" -lws2_32 -ldbghelp)
+elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  list(APPEND jank_linker_flags -pthread)
+  # As on Windows, Clang may emit calls to compiler-rt builtins, both in jank and in
+  # JIT/AOT compiled code, which FreeBSD's base runtime libraries don't fully provide.
+  # We link Clang's own builtins archive, so those symbols resolve in the host process.
+  execute_process(
+    COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libclang_rt.builtins.a
+    OUTPUT_VARIABLE jank_clang_builtins
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  if(NOT EXISTS "${jank_clang_builtins}")
+    message(FATAL_ERROR "Could not locate Clang compiler-rt builtins")
+  endif()
 endif()
 
 # If the user opts into a specific build type, we will provide sane defaults. However, for
@@ -712,6 +728,9 @@ endforeach()
 list(APPEND jank_lib_linker_flags_list ${jank_linker_flags})
 list(APPEND jank_lib_linker_flags_list ${CMAKE_CXX_FLAGS})
 list(APPEND jank_lib_linker_flags_list ${CMAKE_SHARED_LINKER_FLAGS})
+if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  list(APPEND jank_lib_linker_flags_list "${jank_clang_builtins}")
+endif()
 list(JOIN jank_lib_linker_flags_list " " jank_lib_linker_flags_unescaped)
 string(REPLACE "\"" "\\\"" jank_lib_linker_flags_str "${jank_lib_linker_flags_unescaped}")
 
@@ -924,6 +943,8 @@ if(WIN32)
     pthread
     zstd
   )
+elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  target_link_libraries(jank_exe_phase_1 PUBLIC "${jank_clang_builtins}")
 endif()
 # ---- jank phase 1 executable ----
 
@@ -1045,6 +1066,8 @@ if(jank_test)
       pthread
       zstd
     )
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+    target_link_libraries(jank_test_exe PUBLIC "${jank_clang_builtins}")
   endif()
 
   # Symbol exporting for JIT.

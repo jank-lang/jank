@@ -42,18 +42,38 @@
 #include <jank/error/runtime.hpp>
 #include <jank/error/codegen.hpp>
 
-#ifdef JANK_MACOS_LIKE
+#if defined(JANK_MACOS_LIKE) || defined(__FreeBSD__)
   #include <dlfcn.h>
+#endif
+#if defined(__FreeBSD__)
+  #include <array>
+  #include <typeinfo>
+  #include <utility>
+  #include <jank/runtime/core/call.hpp>
+  #include <jank/runtime/obj/native_function_wrapper.hpp>
 #endif
 
 namespace jank::jit
 {
+  void define_rtti_symbol(llvm::orc::LLJIT &jit,
+                          jtl::immutable_string const &mangled_name,
+                          void const * const type_info)
+  {
+    llvm::orc::SymbolMap symbols;
+    llvm::orc::MangleAndInterner interner{ jit.getExecutionSession(), jit.getDataLayout() };
+    symbols[interner({ mangled_name.data(), mangled_name.size() })]
+      = { llvm::orc::ExecutorAddr::fromPtr(type_info), llvm::JITSymbolFlags::Exported };
+    /* We may have duplicate definitions of RTTI in some circumstances, but we can just
+     * ignore those. */
+    llvm::consumeError(jit.getMainJITDylib().define(llvm::orc::absoluteSymbols(symbols)));
+  }
+
   static jtl::immutable_string shared_lib_name(jtl::immutable_string const &lib)
 #if defined(__APPLE__)
   {
     return util::format("lib{}.dylib", lib);
   }
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__FreeBSD__)
   {
     return util::format("lib{}.so", lib);
   }
@@ -421,6 +441,24 @@ namespace jank::jit
                                                                      true));
       }
     }
+
+#if defined(__FreeBSD__)
+    /* libcxxrt compares exception RTTI by address. Bind the native exception types jank
+     * throws before JIT modules can emit their own weak definitions. Every arity which
+     * `invalid_arity` is thrown with, including the variadic one, needs to be here. */
+    auto const native_exception_types{ []<usize... Arity>(std::integer_sequence<usize, Arity...>) {
+      return std::array{ &typeid(runtime::object_ref),
+                         &typeid(error_ref),
+                         &typeid(runtime::invalid_arity<Arity>)... };
+    }(std::make_integer_sequence<usize, runtime::max_params + 2>{}) };
+    for(auto const *type : native_exception_types)
+    {
+      /* The Itanium ABI RTTI symbol is _ZTI followed by type_info::name(). We use the native
+       * RTTI directly, since asking Clang to look up a template-id can fail before
+       * instantiation. */
+      define_rtti_symbol(*ee, util::format("_ZTI{}", type->name()), type);
+    }
+#endif
 
     auto const &load_result{ load_libs(util::cli::opts.libs) };
     if(load_result.is_err())

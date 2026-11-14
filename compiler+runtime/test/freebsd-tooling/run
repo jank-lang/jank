@@ -1,0 +1,639 @@
+#!/bin/sh
+# Local functional test harness for the freebsd-build / freebsd-package lane
+# scripts, plus static checks for the CI workflow. Runs on any POSIX sh host
+# (Linux CI included); never touches a real FreeBSD VM and never modifies
+# anything outside a private fixture dir under $TMPDIR.
+set -u
+
+here="$(cd "$(dirname "$0")" && pwd)"
+cr_dir="$(cd "${here}/../.." && pwd)"
+repo_root="$(cd "${cr_dir}/.." && pwd)"
+tmp="$(mktemp -d "${TMPDIR:-/tmp}/freebsd-tooling.XXXXXX")" || exit 1
+status=0
+
+cleanup() { rm -rf "$tmp"; }
+trap cleanup EXIT
+
+fail() { printf 'FAIL: %s\n' "$*" >&2; status=1; }
+pass() { printf 'ok: %s\n' "$*"; }
+notrun() { printf 'NOT RUN: %s\n' "$*"; }
+
+# ---------------------------------------------------------------------------
+# Fixture: jank source tree (repo root -> compiler+runtime/CMakeLists.txt)
+# plus a mocked toolchain.
+# ---------------------------------------------------------------------------
+mkfixture() {
+  fixture="$1"
+  rm -rf "$fixture"
+  mkdir -p "$fixture/bin" \
+           "$fixture/lib/cmake/llvm" "$fixture/lib/cmake/clang" \
+           "$fixture/src/compiler+runtime/bin" \
+           "$fixture/src/bin/jank"
+
+  # Both the required source marker and a fake repository layout so the
+  # scripts can resolve default paths from this fake root.
+  printf '# fixture\n' >"$fixture/src/compiler+runtime/CMakeLists.txt"
+
+  # LLVM/Clang cmake package config files preflight looks for.
+  : >"$fixture/lib/cmake/llvm/LLVMConfig.cmake"
+  : >"$fixture/lib/cmake/clang/ClangConfig.cmake"
+
+  # Mock apply-freebsd-patches (dependency lane contract).
+  cat >"$fixture/src/compiler+runtime/bin/apply-freebsd-patches" <<'EOF'
+#!/bin/sh
+echo "mock patches applied"
+EOF
+  chmod +x "$fixture/src/compiler+runtime/bin/apply-freebsd-patches"
+
+  # The scripts themselves, copied into the fixture tree so their
+  # location-based default paths resolve inside the fixture (script at
+  # compiler+runtime/bin/<script> => default repo root = compiler+runtime/..).
+  cp "$cr_dir/bin/freebsd-build" "$fixture/src/compiler+runtime/bin/freebsd-build"
+  cp "$cr_dir/bin/freebsd-package" "$fixture/src/compiler+runtime/bin/freebsd-package"
+  chmod +x "$fixture/src/compiler+runtime/bin/freebsd-build" \
+           "$fixture/src/compiler+runtime/bin/freebsd-package"
+
+  # Mock clang/clang++/ninja.
+  cat >"$fixture/bin/clang" <<'EOF'
+#!/bin/sh
+echo "mock clang version 22.1.4"
+EOF
+  cp "$fixture/bin/clang" "$fixture/bin/clang++"
+  cat >"$fixture/bin/ninja" <<'EOF'
+#!/bin/sh
+echo "mock ninja 1.11"
+EOF
+  chmod +x "$fixture/bin/clang" "$fixture/bin/clang++" "$fixture/bin/ninja"
+
+  # Mock cmake that records every invocation so tests can assert exact argv.
+  cat >"$fixture/bin/cmake" <<'EOF'
+#!/bin/sh
+LOG="${MOCK_LOG:?}"
+{
+  echo "--- cmake invocation"
+  i=0
+  for a in "$@"; do
+    i=$((i+1))
+    printf 'argv%d=%s\n' "$i" "$a"
+  done
+  echo "DESTDIR_env=${DESTDIR-unset}"
+  # Reject stray DESTDIR= arguments: staging must use the environment.
+  for a in "$@"; do
+    case "$a" in
+      DESTDIR=*) echo "ERROR_STRAY_DESTDIR_ARGUMENT"; exit 3;;
+    esac
+  done
+} >>"$LOG"
+if [ "${1:-}" = "--version" ]; then echo "cmake version 3.28.0"; exit 0; fi
+case "${1:-}" in
+  --build)
+    mkdir -p "$2"
+    printf '#!/bin/sh\nprintf "native tests invoked\\n" >> "$MOCK_LOG"\n' > "$2/jank-test"
+    chmod +x "$2/jank-test"
+    echo "mock build"
+    exit 0;;
+  --install)
+    # Emulate a real cmake --install honoring $DESTDIR and --prefix.
+    destdir="${DESTDIR:-}"
+    prefix=""
+    prev=""
+    for a in "$@"; do
+      if [ "$prev" = "--prefix" ]; then prefix="$a"; fi
+      prev="$a"
+    done
+    if [ -n "$destdir" ] && [ -n "$prefix" ]; then
+      mkdir -p "$destdir$prefix/bin"
+      : >"$destdir$prefix/bin/jank"
+      chmod +x "$destdir$prefix/bin/jank"
+    fi
+    echo "mock install"
+    exit 0;;
+esac
+# Default: configure-like invocation.
+echo "mock configure"
+exit 0
+EOF
+  chmod +x "$fixture/bin/cmake"
+
+  # Mock pkg: capable of answering query/config/create.
+  cat >"$fixture/bin/pkg" <<'EOF'
+#!/bin/sh
+LOG="${MOCK_LOG:?}"
+case "${1:-}" in
+  config) echo "FreeBSD:14:amd64";;
+  query)
+    shift
+    [ "${1:-}" = '%n|%v|%o' ] || exit 2
+    shift
+    case "${1:-}" in
+      llvm22) printf 'llvm22|22.1.4|devel/llvm22\n';;
+      boost-libs) printf 'boost-libs|1.89.0|devel/boost-libs\n';;
+      *) : ;;
+    esac;;
+  create)
+    { echo "--- pkg create"; for a in "$@"; do printf 'argv=%s\n' "$a"; done; } >>"$LOG"
+    # Emulate pkg create producing an archive next to -o output dir.
+    out=""
+    prev=""
+    for a in "$@"; do
+      if [ "$prev" = "-o" ]; then out="$a"; fi
+      prev="$a"
+    done
+    if [ -n "$out" ]; then : >"$out/jank-jit-0.1-amd64.pkg"; fi
+    echo "mock pkg create";;
+  *) : ;;
+esac
+EOF
+  chmod +x "$fixture/bin/pkg"
+
+  # Mock bb: records invocation, exercises the exact runner path.
+  cat >"$fixture/bin/bb" <<'EOF'
+#!/bin/sh
+LOG="${MOCK_LOG:?}"
+{ echo "--- bb invocation"; echo "JANK_BUILD_DIR=${JANK_BUILD_DIR-unset}"; for a in "$@"; do printf 'argv=%s\n' "$a"; done; } >>"$LOG"
+echo "mock bb version"
+exit 0
+EOF
+  chmod +x "$fixture/bin/bb"
+
+  # Other tools the scripts probe for but mocks can satisfy minimally.
+  for t in bash git pkg-config pkgconf; do
+    printf '#!/bin/sh\necho mock %s\n' "$t" >"$fixture/bin/$t"
+    chmod +x "$fixture/bin/$t"
+  done
+  printf '#!/bin/sh\necho 8\n' >"$fixture/bin/sysctl"
+  chmod +x "$fixture/bin/sysctl"
+  cat >"$fixture/bin/clojure" <<'EOF'
+#!/bin/sh
+if [ "${1:-}" = "-Sdescribe" ]; then echo '{:version "1.12.0.1488"}'; exit 0; fi
+exit 0
+EOF
+  cat >"$fixture/bin/lein" <<'EOF'
+#!/bin/sh
+echo 'Leiningen 2.11.1 on Java 25'
+EOF
+  cat >"$fixture/bin/java" <<'EOF'
+#!/bin/sh
+echo 'openjdk version "25.0.4"' >&2
+EOF
+  chmod +x "$fixture/bin/clojure" "$fixture/bin/lein" "$fixture/bin/java"
+}
+
+expect_pass() {
+  expect_out="$2"
+  if [ "$1" = "0" ]; then
+    pass "$expect_out"
+  else
+    fail "$expect_out (exit $1)"
+  fi
+}
+
+fixture="$tmp/fixture"
+mkfixture "$fixture"
+export MOCK_LOG="$tmp/mock.log"
+: >"$MOCK_LOG"
+PATH="$fixture/bin:$PATH"
+export PATH
+
+# ---------------------------------------------------------------------------
+# Test 1: scripts are syntactically valid POSIX sh.
+# ---------------------------------------------------------------------------
+if sh -n "${cr_dir}/bin/freebsd-build" 2>"$tmp/1.err"; then
+  pass "freebsd-build sh -n"
+else
+  fail "freebsd-build sh -n: $(cat "$tmp/1.err")"
+fi
+if sh -n "${cr_dir}/bin/freebsd-package" 2>"$tmp/1p.err"; then
+  pass "freebsd-package sh -n"
+else
+  fail "freebsd-package sh -n: $(cat "$tmp/1p.err")"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 2: --help exits 0 and mentions the key options; no stale zlib.
+# ---------------------------------------------------------------------------
+sh "${cr_dir}/bin/freebsd-build" --help 2>/dev/null | grep -q -- '--preflight' \
+  && pass "freebsd-build --help lists --preflight" \
+  || fail "freebsd-build --help missing --preflight"
+sh "${cr_dir}/bin/freebsd-build" --help 2>/dev/null | grep -q -- '--full-test' \
+  && pass "freebsd-build --help lists --full-test" \
+  || fail "freebsd-build --help missing --full-test"
+sh "${cr_dir}/bin/freebsd-package" --help 2>/dev/null | grep -q -- 'pkg create' \
+  && pass "freebsd-package --help mentions pkg create" \
+  || fail "freebsd-package --help missing pkg create"
+sh "${cr_dir}/bin/freebsd-build" --help 2>/dev/null | grep -q 'zlib' \
+  && fail "freebsd-build --help still advertises zlib (FreeBSD has it in base)" \
+  || pass "freebsd-build --help omits zlib prerequisite"
+
+# Record this run so failures are easier to see.
+# ---------------------------------------------------------------------------
+# Test 3: default invocation from compiler+runtime works with NO source-dir
+# or build-dir flags (default source root = repo root CONTAINING
+# compiler+runtime). Real script, mocked toolchain; asserts exact cmake argv.
+# ---------------------------------------------------------------------------
+cd "$fixture/src/compiler+runtime" || exit 1
+: >"$MOCK_LOG"
+env PATH="$fixture/bin:$PATH" \
+    JANK_LLVM_PREFIX="$fixture" \
+    JANK_CMAKE="$fixture/bin/cmake" \
+    JANK_CMAKE_PREFIX_PATH="$fixture" \
+    sh "$fixture/src/compiler+runtime/bin/freebsd-build" --configure-only \
+    >"$tmp/t3.out" 2>&1
+rc=$?
+expect_pass "$rc" "default invocation from compiler+runtime --configure-only"
+[ "$rc" = 0 ] || { cat "$tmp/t3.out"; }
+if grep -q "argv3=-S$" "$MOCK_LOG" && grep -qF "argv4=$fixture/src/compiler+runtime" "$MOCK_LOG"; then
+  pass "cmake -S points at repo root containing compiler+runtime"
+else
+  fail "cmake -S wrong: $(grep 'argv[0-9]*=-S' "$MOCK_LOG" | head -1)"
+fi
+if grep -q "argv5=-B$" "$MOCK_LOG" && grep -qF "argv6=$fixture/src/compiler+runtime/build-freebsd" "$MOCK_LOG"; then
+  pass "default build dir is <repo>/compiler+runtime/build-freebsd"
+else
+  fail "default build dir wrong: $(grep 'argv[0-9]*=-B' "$MOCK_LOG" | head -1)"
+fi
+if grep -qF "argv2=Ninja" "$MOCK_LOG"; then
+  pass "default generator Ninja when mock ninja present"
+else
+  fail "default generator not Ninja: $(grep 'argv[0-9]*=-G' "$MOCK_LOG" | head -1)"
+fi
+if grep -qF "argv13=-Djank_test=on" "$MOCK_LOG"; then
+  pass "configure includes -Djank_test=on by default"
+else
+  fail "configure missing -Djank_test=on: $(grep jank_test "$MOCK_LOG" || true)"
+fi
+if grep -qF "argv11=-DCMAKE_C_COMPILER=$fixture/bin/clang" "$MOCK_LOG"; then
+  pass "default configure uses the executable mock compiler from LLVM prefix"
+else
+  fail "configure fell back from the executable mock compiler"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 4: source/build/prefix paths with spaces survive exactly, and an
+# explicitly-chosen generator with an embedded space is one argument.
+# ---------------------------------------------------------------------------
+space_dir="$tmp/dir with spaces"
+mkdir -p "$space_dir/src/compiler+runtime/bin"
+cp "$fixture/src/compiler+runtime/CMakeLists.txt" "$space_dir/src/compiler+runtime/"
+cp "$fixture/src/compiler+runtime/bin/apply-freebsd-patches" "$space_dir/src/compiler+runtime/bin/"
+: >"$MOCK_LOG"
+env PATH="$fixture/bin:$PATH" \
+    JANK_CMAKE="$fixture/bin/cmake" \
+    JANK_CMAKE_PREFIX_PATH="$fixture" \
+    sh "$fixture/src/compiler+runtime/bin/freebsd-build" --configure-only \
+       --source-dir "$space_dir/src" --build-dir "$space_dir/build" \
+       --prefix "$space_dir/prefix" --generator "Unix Makefiles" \
+       --llvm-version 22 --llvm-prefix "$fixture" -j 1 --allow-missing-patches \
+       --cmake-prefix-path "$fixture;$space_dir/deps" \
+       -- '-DTEST_EXTRA=kept value' \
+    >"$tmp/t4.out" 2>&1
+rc=$?
+expect_pass "$rc" "--configure-only with spaces in all paths"
+[ "$rc" = 0 ] || { cat "$tmp/t4.out"; }
+if grep -q "argv3=-S$" "$MOCK_LOG" \
+   && grep -qF "argv4=$space_dir/src/compiler+runtime" "$MOCK_LOG"; then
+  pass "-S path with spaces preserved as one argument"
+else
+  fail "-S spaces not preserved: $(grep 'argv[0-9]*=-S' "$MOCK_LOG" | head -1)"
+fi
+if grep -q "argv5=-B$" "$MOCK_LOG" \
+   && grep -qF "argv6=$space_dir/build" "$MOCK_LOG"; then
+  pass "-B path with spaces preserved"
+else
+  fail "-B spaces not preserved: $(grep 'argv[0-9]*=-B' "$MOCK_LOG" | head -1)"
+fi
+if grep -qF "argv2=Unix Makefiles" "$MOCK_LOG" \
+   && grep -qF "argv10=-DCMAKE_INSTALL_PREFIX=$space_dir/prefix" "$MOCK_LOG"; then
+  pass "--prefix path with spaces preserved exactly (generator one arg)"
+else
+  fail "--prefix/generator spaces not preserved: $(grep INSTALL_PREFIX "$MOCK_LOG" | head -1)"
+fi
+if grep -qF "=-DCMAKE_PREFIX_PATH=$fixture;$space_dir/deps" "$MOCK_LOG"; then
+  pass "semicolon-separated CMAKE_PREFIX_PATH preserved as one argument"
+else
+  fail "CMAKE_PREFIX_PATH list was not preserved as one argument"
+fi
+if grep -qF '=-DTEST_EXTRA=kept value' "$MOCK_LOG"; then
+  pass "extra CMake argument after -- survives parsing with its spaces"
+else
+  fail "extra CMake argument after -- was lost or split"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 5: full test mode actually invokes the compiler+runtime bash e2e
+# suite (bb.edn + bash_test.clj) with correct cwd, NOT lein-jank's.
+# ---------------------------------------------------------------------------
+: >"$MOCK_LOG"
+env PATH="$fixture/bin:$PATH" \
+    JANK_CMAKE="$fixture/bin/cmake" \
+    JANK_CMAKE_PREFIX_PATH="$fixture" \
+    sh "$fixture/src/compiler+runtime/bin/freebsd-build" --full-test -j 1 \
+       --allow-missing-patches --llvm-prefix "$fixture" \
+       -S "$fixture/src" -B "$tmp/full-test-build" \
+    >"$tmp/t5.out" 2>&1
+rc=$?
+expect_pass "$rc" "full-test mode runs e2e shell suite"
+[ "$rc" = 0 ] || { cat "$tmp/t5.out"; }
+if grep -qF 'argv=--classpath' "$MOCK_LOG" && \
+   grep -qF "argv=$fixture/src/compiler+runtime/bin:$fixture/src/bin" "$MOCK_LOG"; then
+  pass "bb invoked with both project source roots"
+else
+  fail "bb classpath does not contain both project source roots"
+fi
+if grep -qF "argv=$fixture/src/compiler+runtime/bin/jank/compiler+runtime/bash_test.clj" "$MOCK_LOG"; then
+  pass "bb runs compiler+runtime bash e2e suite runner"
+else
+  fail "bb didn't run compiler+runtime bash_test.clj: $(grep bash_test "$MOCK_LOG" | head -1)"
+fi
+if grep -qE 'argv=.*lein-jank' "$MOCK_LOG"; then
+  fail "lein-jank suite accidentally invoked"
+else
+  pass "lein-jank suite not invoked"
+fi
+grep -qF "JANK_BUILD_DIR=$tmp/full-test-build" "$MOCK_LOG" \
+  && pass "custom build dir is passed through to bash integration suite" \
+  || fail "custom build dir not propagated to bb runner"
+
+# ---------------------------------------------------------------------------
+# Test 6: empty/invalid source tree rejected cleanly, no build dir made.
+# ---------------------------------------------------------------------------
+: >"$MOCK_LOG"
+env PATH="$fixture/bin:$PATH" \
+    JANK_CMAKE="$fixture/bin/cmake" \
+    sh "$fixture/src/compiler+runtime/bin/freebsd-build" --configure-only \
+       --source-dir "$fixture/nonexistent" -B "$fixture/no-such-build" \
+    >"$tmp/t6.out" 2>&1
+rc=$?
+[ "$rc" != 0 ] && pass "bad source tree rejected" || fail "bad source tree accepted (rc=0)"
+if grep -q "compiler+runtime/CMakeLists.txt" "$tmp/t6.out"; then
+  pass "rejection message names the missing marker"
+else
+  fail "rejection message unhelpful: $(cat "$tmp/t6.out")"
+fi
+[ ! -e "$fixture/no-such-build" ] \
+  && pass "no build dir created on early failure" \
+  || fail "build dir created despite early failure"
+
+# ---------------------------------------------------------------------------
+# Test 7: unsupported --llvm-version rejected fast.
+# ---------------------------------------------------------------------------
+env PATH="$fixture/bin:$PATH" \
+    JANK_CMAKE="$fixture/bin/cmake" \
+    sh "$fixture/src/compiler+runtime/bin/freebsd-build" --llvm-version 30 -S "$fixture/src" -B "$tmp/x" \
+    >"$tmp/t7.out" 2>&1
+rc=$?
+if [ "$rc" != 0 ] && grep -q "unsupported --llvm-version" "$tmp/t7.out"; then
+  pass "unsupported --llvm-version rejected"
+else
+  fail "--llvm-version 30 (expected rejection, rc=$rc): $(cat "$tmp/t7.out")"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 8: preflight reports missing LLVM cmake configs.
+# ---------------------------------------------------------------------------
+env PATH="$fixture/bin:$PATH" \
+    JANK_CMAKE="$fixture/bin/cmake" \
+    sh "$fixture/src/compiler+runtime/bin/freebsd-build" --preflight --llvm-version 22 \
+       --llvm-prefix "$fixture/no-such-llvm" -S "$fixture/src" \
+    >"$tmp/t8.out" 2>&1
+rc=$?
+if [ "$rc" != 0 ] && grep -q "LLVMConfig.cmake" "$tmp/t8.out"; then
+  pass "preflight reports missing LLVM cmake config"
+else
+  fail "preflight missing LLVM cmake config diagnostic (rc=$rc): $(head -30 "$tmp/t8.out")"
+fi
+
+# Test 9: full-test preflight distinguishes the Clojure CLI from a generic
+# `clojure` executable by requiring the -Sdescribe capability it uses.
+mkdir -p "$tmp/no-clojure-cli"
+cat >"$tmp/no-clojure-cli/clojure" <<'EOF'
+#!/bin/sh
+echo 'unknown option: -Sdescribe' >&2
+exit 1
+EOF
+chmod +x "$tmp/no-clojure-cli/clojure"
+env PATH="$tmp/no-clojure-cli:$fixture/bin:$PATH" \
+    JANK_CMAKE="$fixture/bin/cmake" \
+    sh "$fixture/src/compiler+runtime/bin/freebsd-build" --preflight \
+       --llvm-version 22 --llvm-prefix "$fixture" -S "$fixture/src" \
+    >"$tmp/t9.out" 2>&1
+rc=$?
+if [ "$rc" != 0 ] && grep -q 'lacks Clojure CLI -Sdescribe support' "$tmp/t9.out"; then
+  pass "preflight rejects a non-CLI clojure executable for full tests"
+else
+  fail "Clojure CLI capability not checked (rc=$rc): $(cat "$tmp/t9.out")"
+fi
+mkdir -p "$tmp/no-linux-bb"
+cat >"$tmp/no-linux-bb/bb" <<'EOF'
+#!/bin/sh
+echo 'Exec format error' >&2
+exit 126
+EOF
+chmod +x "$tmp/no-linux-bb/bb"
+env PATH="$tmp/no-linux-bb:$fixture/bin:$PATH" \
+    JANK_CMAKE="$fixture/bin/cmake" \
+    sh "$fixture/src/compiler+runtime/bin/freebsd-build" --preflight \
+       --llvm-version 22 --llvm-prefix "$fixture" -S "$fixture/src" \
+    >"$tmp/t9b.out" 2>&1
+rc=$?
+if [ "$rc" != 0 ] && grep -q 'check FreeBSD Linuxulator setup' "$tmp/t9b.out"; then
+  pass "preflight detects Babashka that cannot execute without Linuxulator"
+else
+  fail "Babashka execution failure not diagnosed (rc=$rc): $(cat "$tmp/t9b.out")"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 10: no privileged or destructive commands in the scripts.
+# ---------------------------------------------------------------------------
+for f in "$cr_dir/bin/freebsd-build" "$cr_dir/bin/freebsd-package"; do
+  if grep -nE '(^|[^[:alnum:]])(sudo|doas)([^[:alnum:]]|$)' "$f" >/dev/null 2>&1; then
+    fail "$f contains a privileged command"
+  else
+    pass "$f has no sudo/doas"
+  fi
+  if grep -n 'rm -rf /' "$f" >/dev/null 2>&1; then
+    fail "$f contains rm -rf /"
+  else
+    pass "$f has no rm -rf /"
+  fi
+done
+
+# ---------------------------------------------------------------------------
+# Test 10: freebsd-package passes no DESTDIR into cmake ARGV; it MUST be
+# environment only. Mock cmake asserts this directly and refuses stray
+# DESTDIR= arguments.
+# ---------------------------------------------------------------------------
+stage="$tmp/stage-ok"
+fake_build="$tmp/pkg-build"
+mkdir -p "$fake_build"
+printf 'CMAKE_COMMAND:INTERNAL=%s/bin/cmake\nCMAKE_PROJECT_VERSION:STATIC=0.1\n' \
+  "$fixture" >"$fake_build/CMakeCache.txt"
+: >"$MOCK_LOG"
+env PATH="$fixture/bin:$PATH" \
+    sh "$fixture/src/compiler+runtime/bin/freebsd-package" -B "$fake_build" \
+       --cmake "$fixture/bin/cmake" --staging-root "$stage" \
+       --prefix /usr/local --llvm-major 22 \
+    >"$tmp/t10.out" 2>&1
+rc=$?
+expect_pass "$rc" "freebsd-package end-to-end with mocked toolchain"
+[ "$rc" = 0 ] || { cat "$tmp/t10.out"; }
+if grep -q "ERROR_STRAY_DESTDIR_ARGUMENT" "$MOCK_LOG"; then
+  fail "DESTDIR leaked into cmake arguments (must be env-only)"
+else
+  pass "DESTDIR was not among cmake arguments (mock rejects stray DESTDIR=)"
+fi
+if grep -qF "DESTDIR_env=$stage/destdir" "$MOCK_LOG"; then
+  pass "DESTDIR was exported as an environment variable to cmake"
+else
+  fail "cmake did not see DESTDIR as environment: $(grep DESTDIR_env "$MOCK_LOG" || true)"
+fi
+test -x "$stage/destdir/usr/local/bin/jank" \
+  && pass "staging output contains installed bin/jank" \
+  || fail "staging tree missing bin/jank after install"
+if grep -q '^--- pkg create' "$MOCK_LOG"; then
+  pass "pkg create was invoked"
+else
+  fail "pkg create never invoked: $(grep -c '--- pkg create' "$MOCK_LOG" || true)"
+fi
+test -f "$stage/pkg-out/jank-jit-0.1-amd64.pkg" \
+  && pass "mock pkg produced staged .pkg artifact" \
+  || fail "no .pkg artifact produced: $(ls "$stage/pkg-out" 2>/dev/null || echo none)"
+
+# ---------------------------------------------------------------------------
+# Test 11: manifest lists BOTH llvm22 and boost-libs runtime deps, with
+# versions/origins from pkg query; not zlib.
+# ---------------------------------------------------------------------------
+manifest="$stage/+MANIFEST"
+if [ -f "$manifest" ]; then
+  grep -q '"llvm22":{"origin":"devel/llvm22","version":"22.1.4"}' "$manifest" \
+    && pass "manifest contains llvm22 dep from pkg query" \
+    || fail "manifest missing llvm22 with expected origin/version"
+  grep -q '"boost-libs":{"origin":"devel/boost-libs","version":"1.89.0"}' "$manifest" \
+    && pass "manifest contains boost-libs dep from pkg query" \
+    || fail "manifest missing boost-libs with expected origin/version"
+  grep -q 'zlib' "$manifest" \
+    && fail "manifest mentions zlib (not a FreeBSD pkg)" \
+    || pass "manifest does not list zlib"
+else
+  fail "no +MANIFEST produced at $manifest"
+fi
+if python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$manifest" 2>/dev/null; then
+  pass "pkg +MANIFEST is valid JSON"
+else
+  fail "pkg +MANIFEST is not valid JSON"
+fi
+
+# Test 12: zero jobs is rejected, and requested compiler major is checked.
+if env PATH="$fixture/bin:$PATH" sh "$fixture/src/compiler+runtime/bin/freebsd-build" \
+     --llvm-prefix "$fixture" --jobs 0 --configure-only >"$tmp/t12a.out" 2>&1; then
+  fail "--jobs 0 unexpectedly accepted"
+else
+  grep -q -- '--jobs must be greater than zero' "$tmp/t12a.out" \
+    && pass "--jobs 0 rejected with a clear message" \
+    || fail "--jobs 0 error unclear: $(cat "$tmp/t12a.out")"
+fi
+mkdir -p "$tmp/wrong-llvm/bin" "$tmp/wrong-llvm/lib/cmake/llvm" "$tmp/wrong-llvm/lib/cmake/clang"
+cat >"$tmp/wrong-llvm/bin/clang" <<'EOF'
+#!/bin/sh
+echo 'clang version 21.1.0'
+EOF
+cp "$tmp/wrong-llvm/bin/clang" "$tmp/wrong-llvm/bin/clang++"
+chmod +x "$tmp/wrong-llvm/bin/clang" "$tmp/wrong-llvm/bin/clang++"
+: >"$tmp/wrong-llvm/lib/cmake/llvm/LLVMConfig.cmake"
+: >"$tmp/wrong-llvm/lib/cmake/clang/ClangConfig.cmake"
+if env PATH="$fixture/bin:$PATH" sh "$fixture/src/compiler+runtime/bin/freebsd-build" \
+     --llvm-prefix "$tmp/wrong-llvm" --configure-only >"$tmp/t12b.out" 2>&1; then
+  fail "compiler major mismatch unexpectedly accepted"
+else
+  grep -q 'MISMATCH clang++ major: expected 22, got 21' "$tmp/t12b.out" \
+    && pass "preflight rejects compiler major mismatch" \
+    || fail "compiler mismatch error unclear: $(cat "$tmp/t12b.out")"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 13: missing boost-libs is a hard error (no invented version).
+# ---------------------------------------------------------------------------
+stage2="$tmp/stage-missing-dep"
+mkdir -p "$tmp/pkgfail"
+cat >"$tmp/pkgfail/pkg" <<INNER
+#!/bin/sh
+if [ "\${1:-}" = "query" ] && [ "\${3:-}" = "boost-libs" ]; then
+  exit 1
+fi
+exec "$fixture/bin/pkg" "\$@"
+INNER
+chmod +x "$tmp/pkgfail/pkg"
+: >"$MOCK_LOG"
+env PATH="$tmp/pkgfail:$fixture/bin:$PATH" \
+    JANK_CMAKE="$fixture/bin/cmake" \
+    sh "$fixture/src/compiler+runtime/bin/freebsd-package" -B "$fake_build" --staging-root "$stage2" -v \
+    >"$tmp/t12.out" 2>&1
+rc=$?
+if [ "$rc" != 0 ] && grep -q "required runtime dependencies not found" "$tmp/t12.out" \
+   && grep -q "boost-libs" "$tmp/t12.out"; then
+  pass "missing boost-libs triggers a clear hard error"
+else
+  fail "missing boost-libs handling wrong (rc=$rc): $(cat "$tmp/t12.out")"
+fi
+
+# ---------------------------------------------------------------------------
+# Test 14: YAML structure of the CI workflow (real parser, not grep).
+# ---------------------------------------------------------------------------
+wf="$repo_root/.github/workflows/freebsd.yml"
+if python3 -c 'import yaml' 2>/dev/null; then
+  if python3 - "$wf" <<'PYEOF'
+import sys, yaml, pathlib
+wf_path = pathlib.Path(sys.argv[1])
+cr = wf_path.parents[2] / "compiler+runtime"
+with open(wf_path) as f:
+    doc = yaml.safe_load(f)
+on = doc["on"] if "on" in doc else doc[True]
+job = doc["jobs"]["freebsd"]
+assert any("checkout@" in s.get("uses", "") for s in job["steps"]), "missing actions/checkout"
+assert "workflow_dispatch" in on, "missing workflow_dispatch"
+if isinstance(on["workflow_dispatch"], dict):
+    assert not ("branches" in on["workflow_dispatch"] or "paths" in on["workflow_dispatch"]), \
+        "workflow_dispatch must not have branches/paths (invalid for GH)"
+for trig in ("pull_request", "push"):
+    assert trig in on and "paths" in on[trig], f"{trig} missing path filter"
+    assert any("freebsd.yml" in p for p in on[trig]["paths"]), \
+        f"{trig} paths do not include this workflow"
+# CI must run the same entrypoint developers run locally.
+run_text = "\n".join(s.get("run", "") for s in job["steps"])
+assert "bin/freebsd-container-test" in run_text, "CI must use bin/freebsd-container-test"
+assert "--jobs" in run_text, "CI build must use bounded parallelism"
+# The shared pieces it relies on.
+provision = (cr / "bin/freebsd-provision").read_text()
+for package in ("babashka", "clojure", "leiningen", "openjdk25", "python3", "llvm22"):
+    assert package in provision, f"provisioning missing prerequisite {package}"
+assert "linux_enable" in provision and "service linux start" in provision, \
+    "provisioning must enable the Linuxulator for the FreeBSD Babashka package"
+entry = (cr / "test/freebsd-container/entrypoint.sh").read_text()
+assert "test/freebsd/smoke" in entry, "must run the package smoke test"
+smoke = (cr / "test/freebsd/smoke").read_text()
+assert "pkg add" in smoke, "smoke must genuinely pkg add"
+assert "check-health" in smoke and "bash_test.clj" in smoke, \
+    "smoke must run the repo e2e proof (check-health and the bash test suite)"
+assert "JANK_BUILD_DIR=/usr/local/bin" in smoke, "e2e must run against the installed package"
+assert "staging/destdir/usr/local/bin/jank" in smoke, "must smoke the staged DESTDIR too"
+assert " run " in smoke and " -e " not in smoke, "smoke must use jank run with a real file"
+print("yaml-structure-ok")
+PYEOF
+  then
+    pass "freebsd.yml YAML structure validated (incl. no invalid dispatch filters)"
+  else
+    fail "freebsd.yml YAML structure validation failed"
+  fi
+else
+  notrun "yaml (python3+yaml unavailable)"
+fi
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+if [ "$status" = 0 ]; then
+  printf 'all freebsd-tooling tests passed\n'
+else
+  printf 'some freebsd-tooling tests FAILED\n'
+fi
+exit "$status"

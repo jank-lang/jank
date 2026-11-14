@@ -8,10 +8,19 @@
 
 (def this-nsym (ns-name *ns*))
 
-(def os-name (str/lower-case (System/getProperty "os.name")))
+(def os-name
+  (try
+    (let [res (proc/sh {:out :string :err :string :continue true}
+                       "jank" "print-binary-version")]
+      (str/lower-case (str/trim (if (zero? (:exit res))
+                                  (:out res)
+                                  (System/getProperty "os.name")))))
+    (catch Exception _
+      (str/lower-case (System/getProperty "os.name")))))
 (def os (cond
+          (or (str/includes? os-name "darwin") (str/includes? os-name "mac")) :macos
+          (str/includes? os-name "freebsd") :freebsd
           (str/includes? os-name "win") :windows
-          (str/includes? os-name "mac") :macos
           (or (str/includes? os-name "nix")
               (str/includes? os-name "nux")
               (str/includes? os-name "linux")) :linux
@@ -26,14 +35,17 @@
 (def dynamic-lib (case os
                    :linux "libfoo.so"
                    :macos "libfoo.dylib"
+                   :freebsd "libfoo.so"
                    :windows "libfoo.dll"))
 (def static-lib (case os
                    :linux "libfoo.a"
                    :macos "libfoo.a"
+                   :freebsd "libfoo.a"
                    :windows "libfoo.lib"))
 (def missing-lib (case os
                    :linux "libmissing.a"
                    :macos "libmissing.a"
+                   :freebsd "libmissing.a"
                    :windows "libmissing.lib"))
 
 (defn jank [link-dir lib]
@@ -57,7 +69,7 @@
   (fs/delete-tree "./target")
   (fs/create-dirs both-dir)
   (proc/sh (format "clang++ -fPIC -shared src/dynamic.cpp -o %s/%s" both-dir dynamic-lib))
-  (proc/sh (format "clang++ -c src/static.cpp -o %s/static.o" both-dir))
+  (proc/sh (format "clang++ -fPIC -c src/static.cpp -o %s/static.o" both-dir))
   (proc/sh (format "ar qc %s/%s %s/static.o" both-dir static-lib both-dir))
 
   (fs/create-dirs static-dir)
