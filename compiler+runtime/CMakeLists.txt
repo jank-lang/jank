@@ -46,7 +46,7 @@ option(jank_debug_gc "Enable GC debug assertions" OFF)
 option(jank_profile_gc "Enable GC profiling (via massif or heaptrack)" OFF)
 option(jank_force_phase_2 "Force the linking of core libs into the jank binary" OFF)
 option(jank_cross_compile "Whether or not we are cross-compiling the static runtime" OFF)
-option(jank_emulated_tls "Use -femulated-tls (not supported on some platforms like musl)" OFF)
+option(jank_emulated_tls "Use -femulated-tls (not supported on some platforms like musl)" ON)
 set(jank_host_compiler "" CACHE FILEPATH "When cross-compiling, use this as the native compiler")
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 set(jank_resource_dir
@@ -661,6 +661,7 @@ add_library(
   src/cpp/jank/runtime/behavior/metadatable.cpp
   src/cpp/jank/codegen/api.cpp
   src/cpp/jank/aot/resource.cpp
+  src/cpp/jank/aot/target_config.cpp
 
   # Native module sources.
   src/cpp/clojure/string_native.cpp
@@ -734,29 +735,10 @@ foreach(dir ${jank_lib_includes_prop})
   endif()
 endforeach()
 
-set(jank_lib_linker_flags_list "")
-
-get_target_property(jank_lib_link_dirs_prop jank_common_lib LINK_DIRECTORIES)
-foreach(lib ${jank_lib_link_dirs_prop})
-  list(APPEND jank_lib_linker_flags_list -L${lib})
-endforeach()
-list(APPEND jank_lib_linker_flags_list ${jank_linker_flags})
-list(APPEND jank_lib_linker_flags_list ${CMAKE_CXX_FLAGS})
-list(APPEND jank_lib_linker_flags_list ${CMAKE_SHARED_LINKER_FLAGS})
-list(JOIN jank_lib_linker_flags_list " " jank_lib_linker_flags_unescaped)
-string(REPLACE "\"" "\\\"" jank_lib_linker_flags_str "${jank_lib_linker_flags_unescaped}")
-
-# Build a string of all of our JIT compilation flags so we can load them up in the runtime.
-set(jank_jit_compile_flags_list ${jank_common_compiler_flags} ${jank_jit_compiler_flags} ${jank_lib_includes})
-list(JOIN jank_jit_compile_flags_list " " jank_jit_compile_flags_str_unescaped)
-string(REPLACE "\"" "\\\"" jank_jit_compile_flags_str "${jank_jit_compile_flags_str_unescaped}")
-
 target_compile_options(
   jank_common_lib
   PUBLIC
   -DJANK_CLANG_PREFIX="${CLANG_INSTALL_PREFIX}"
-  -DJANK_JIT_FLAGS="${jank_jit_compile_flags_str}"
-  -DJANK_AOT_FLAGS="${jank_lib_linker_flags_str}"
 )
 target_link_options(jank_common_lib PRIVATE ${jank_linker_flags})
 set_target_properties(jank_common_lib PROPERTIES ENABLE_EXPORTS 1)
@@ -1192,6 +1174,10 @@ add_custom_target(
 # installed alongside jank, for the same reason.
 file(COPY ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION ${CMAKE_BINARY_DIR})
 # ---- Clang format YAML ----
+
+# ---- Compilation target ----
+include(cmake/target_json.cmake)
+# ---- Compilation target ----
 
 # ---- Install rules ----
 if(NOT CMAKE_SKIP_INSTALL_RULES AND jank_enable_phase_2 AND NOT jank_cross_compile)

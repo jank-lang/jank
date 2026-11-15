@@ -8,6 +8,7 @@
 
 #include <jtl/string_builder.hpp>
 
+#include <jank/aot/target_config.hpp>
 #include <jank/util/environment.hpp>
 #include <jank/util/cli.hpp>
 #include <jank/util/sha256.hpp>
@@ -126,6 +127,8 @@ namespace jank::util
       return util::cli::opts.forced_binary_version;
     }
 
+    auto const target_config{ aot::load_target_config(util::cli::opts.target_config).expect_ok() };
+
     static jtl::immutable_string res;
     if(!res.empty())
     {
@@ -149,7 +152,7 @@ namespace jank::util
       util::format("{}.{}.{}.{}.{}.{}",
                    JANK_VERSION,
                    clang::getClangRevision(),
-                   JANK_JIT_FLAGS,
+                   target_config.jit_flags,
                    util::cli::opts.codegen_optimization_level,
                    util::cli::compilation_runtime_str(util::cli::opts.target_runtime),
                    sb.release()));

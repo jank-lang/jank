@@ -7,6 +7,7 @@
 #include <jtl/result.hpp>
 #include <jtl/string_builder.hpp>
 
+#include <jank/aot/target_config.hpp>
 #include <jank/error/aot.hpp>
 #include <jank/error/system.hpp>
 #include <jank/aot/processor.hpp>
@@ -167,21 +168,22 @@ int main(int argc, const char** argv)
 
   jtl::result<std::vector<char const *>, error_ref> build_compiler_args()
   {
+    auto const target_config{ load_target_config(util::cli::opts.target_config).expect_ok() };
+
     std::vector<char const *> compiler_args{};
 
-    auto const clang_path_str{ util::find_clang() };
-    if(clang_path_str.is_none())
-    {
-      return error::system_failure(
-        util::format("Unable to find Clang {}.", JANK_CLANG_MAJOR_VERSION));
-    }
-    auto const clang_dir{ std::filesystem::path{ clang_path_str.unwrap().c_str() }.parent_path() };
+    auto const clang_path_str{ target_config.clang_bin };
+    auto const clang_dir{ std::filesystem::path{ clang_path_str.c_str() }.parent_path() };
     compiler_args.emplace_back(strdup("-I"));
     compiler_args.emplace_back(strdup((clang_dir / "../include").string().c_str()));
 #ifndef __MINGW64__
     compiler_args.emplace_back(
       strdup(util::format("-Wl,-rpath,{}", (clang_dir / "../lib").string()).c_str()));
 #endif
+
+    // TODO: We should actually find the jank libs/resources w.r.t. the target
+    // config file, since we may be cross-compiling from a host jank compiler to
+    // some other target.
 
     std::filesystem::path const jank_path{ util::process_dir().c_str() };
     std::string const jank_path_str(jank_path.string());
@@ -207,7 +209,7 @@ int main(int argc, const char** argv)
       compiler_args.push_back(strdup("-I/opt/local/include"));
     }
 
-    std::stringstream flags{ JANK_JIT_FLAGS };
+    std::stringstream flags{ target_config.jit_flags };
     std::string flag;
     while(std::getline(flags, flag, ' '))
     {
@@ -215,7 +217,7 @@ int main(int argc, const char** argv)
     }
 
     {
-      std::string_view const flags{ JANK_AOT_FLAGS };
+      std::string_view const flags{ target_config.aot_flags.view() };
       size_t start{};
       while(start < flags.size())
       {

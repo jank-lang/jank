@@ -102,6 +102,7 @@ namespace jank::util::cli
   struct options
   {
     /* Runtime. */
+    jtl::immutable_string target_config;
     jtl::immutable_string module_path;
     jtl::immutable_string profiler_file{ "jank.profile" };
     bool profiler_enabled{};
