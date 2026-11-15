@@ -787,6 +787,9 @@ namespace jank::jit
     native_vector<resolved_lib> resolved;
     resolved.reserve(libs.size());
 
+    // TODO: clang++ -o /dev/null -x c++ - <<<'int main(){}' -Wl,--verbose
+    // to find the effective link dirs
+
     for(auto const &lib : libs)
     {
       /* Try finding the lib literally, in case it contains a file name or a path.

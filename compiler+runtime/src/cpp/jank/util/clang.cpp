@@ -1,21 +1,14 @@
+#include <cstdlib>
+#include <sstream>
 #include <filesystem>
 #include <fstream>
 
 #include <unistd.h>
 
-#include <clang/Basic/Diagnostic.h>
-#include <clang/Basic/DiagnosticIDs.h>
-#include <clang/Basic/DiagnosticOptions.h>
-#include <clang/Driver/Compilation.h>
-#include <clang/Driver/Driver.h>
-#include <clang/Driver/ToolChain.h>
-#include <clang/Frontend/TextDiagnosticPrinter.h>
-
 #include <CppInterOp/Compatibility.h>
 
-#include <llvm/TargetParser/Host.h>
+#include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Program.h>
-#include <llvm/Support/VirtualFileSystem.h>
 
 #include <jank/util/clang.hpp>
 #include <jank/util/environment.hpp>
@@ -160,27 +153,12 @@ namespace jank::util
 
   jtl::result<void, error_ref> invoke_clang(std::vector<char const *> args)
   {
-    std::string buffer;
-    llvm::raw_string_ostream diag_stream{ buffer };
-    clang::DiagnosticOptions diag_opts{};
-    auto * const diag_client{
-      new clang::TextDiagnosticPrinter{ diag_stream, diag_opts }
-    };
-    clang::IntrusiveRefCntPtr<clang::DiagnosticIDs> const diag_id{ new clang::DiagnosticIDs() };
-    clang::DiagnosticsEngine diags{ diag_id, diag_opts, diag_client, /*ShouldOwnClient=*/true };
-    auto const vfs{ llvm::vfs::getRealFileSystem() };
-    auto const &target_triple{ llvm::sys::getDefaultTargetTriple() };
     auto const clang_path_res{ find_clang() };
     if(clang_path_res.is_none())
     {
       return err(error::system_clang_executable_not_found());
     }
     auto const &clang_path{ clang_path_res.unwrap() };
-
-    /* Building the driver doesn't actually run the commands yet. All of the flags will
-     * be checked, though. */
-    clang::driver::Driver driver{ clang_path.c_str(), target_triple, diags, "jank", vfs };
-    driver.setCheckInputsExist(true);
 
     /* The first argument should be the clang executable. */
     args.insert(args.begin(), clang_path.c_str());
@@ -196,24 +174,36 @@ namespace jank::util
       }
     }
 
-    auto const compilation_result{ driver.BuildCompilation(args) };
-    if(!compilation_result || compilation_result->containsError())
+    std::vector<llvm::StringRef> argv;
+    argv.reserve(args.size());
+    for(auto const arg : args)
     {
-      return err(error::system_failure(format("Failed to build Clang steps.\n{}", buffer)));
+      argv.emplace_back(arg);
     }
 
-    /* Execute the compilation jobs (preprocess, compile, assemble).
-     * This actually runs the commands determined by BuildCompilation. */
-    int execution_exit_code{ 1 };
-    if(compilation_result && !compilation_result->containsError())
+    llvm::SmallString<256> stderr_path;
+    if(auto const ec{ llvm::sys::fs::createTemporaryFile("jank-clang-out", "", stderr_path) }; ec)
     {
-      llvm::SmallVector<std::pair<int, clang::driver::Command const *>> failures;
-      execution_exit_code = driver.ExecuteCompilation(*compilation_result, failures);
+      return err(error::system_failure(
+        util::format("Could not create temporary file for clang output: {}", ec.message())));
     }
+    util::scope_exit const cleanup{ [&]() { (void)llvm::sys::fs::remove(stderr_path).value(); } };
 
-    if(diags.hasErrorOccurred() || execution_exit_code != 0)
+    auto const exit_code{ llvm::sys::ExecuteAndWait(
+      clang_path.c_str(),
+      argv,
+      std::nullopt,
+      /*Redirects=*/{ std::nullopt, std::nullopt, llvm::StringRef(stderr_path) },
+      /*SecondsToWait=*/0,
+      /*MemoryLimit=*/0,
+      nullptr) };
+    if(exit_code != 0)
     {
-      return err(error::system_failure(format("Clang failed with errors.\n{}", buffer)));
+      std::ifstream stderr_stream{ stderr_path.c_str() };
+      std::string stderr_str{ std::istreambuf_iterator<char>{ stderr_stream },
+                              std::istreambuf_iterator<char>{} };
+      return err(
+        error::system_failure(format("Clang failed (exit code {}).\n{}", exit_code, stderr_str)));
     }
 
     return ok();
