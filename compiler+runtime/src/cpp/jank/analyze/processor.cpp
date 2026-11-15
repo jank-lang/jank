@@ -1476,7 +1476,7 @@ namespace jank::analyze
 
       default_expr = conveted_default_expr.expect_ok();
 
-      for(auto const expr : keys_exprs.expect_ok().exprs)
+      for(auto const expr : pairs.exprs)
       {
         auto converted_expr{ apply_implicit_conversion(expr, chosen_type, macro_expansions) };
 
