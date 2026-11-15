@@ -1841,10 +1841,10 @@ namespace jank::analyze::cpp_util
        || ((is_else_object && is_then_convertible) || (is_then_object && is_else_convertible))
        || (is_then_convertible && is_else_convertible) || has_recur)
     {
-      auto const then_needs_conversion{ !is_same_type && !is_compatible && is_then_convertible
-                                        && (is_else_object || is_else_convertible) };
-      auto const else_needs_conversion{ !is_same_type && !is_compatible && is_else_convertible
-                                        && (is_then_object || is_then_convertible) };
+      auto const then_needs_conversion{ !is_same_type && (is_else_object || !is_compatible)
+                                        && is_then_convertible && is_else_convertible };
+      auto const else_needs_conversion{ !is_same_type && (is_then_object || !is_compatible)
+                                        && is_else_convertible && is_then_convertible };
       auto const final_then_type{ then_needs_conversion ? cpp_util::untyped_object_ref_type()
                                                         : then_expr->get_type() };
       auto const final_else_type{ else_expr_opt.is_some() && !else_needs_conversion
