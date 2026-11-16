@@ -235,7 +235,7 @@ namespace jank::runtime
       {
         return static_cast<T>(detail::as_integer(o.raw()));
       }
-      return static_cast<T>(try_object<obj::integer>(o)->data);
+      return static_cast<T>(o.to_integer());
     }
 
     static T from_object(obj::integer_ref const o)
@@ -285,7 +285,7 @@ namespace jank::runtime
       {
         return static_cast<T>(detail::as_real(o.raw()));
       }
-      return static_cast<T>(try_object<obj::real>(o)->data);
+      return static_cast<T>(o.to_real());
     }
 
     static T from_object(obj::real_ref const o)

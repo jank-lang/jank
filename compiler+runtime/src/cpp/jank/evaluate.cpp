@@ -274,7 +274,21 @@ namespace jank::evaluate
     profile::timer const timer{ util::format("eval ast node {}",
                                              analyze::expression_kind_str(ex->kind)) };
     object_ref ret{};
-    visit_expr([&ret](auto const typed_ex) { ret = eval(typed_ex); }, ex);
+    visit_expr(
+      [&ret, ex](auto const typed_ex) {
+        try
+        {
+          ret = eval(typed_ex);
+        }
+        catch(error_ref const e)
+        {
+          /* We keep the original form from the call expression so we can point
+           * back to it if an exception is thrown during eval. */
+          e->add_usage(object_source(ex->form));
+          throw e;
+        }
+      },
+      ex);
     return ret;
   }
 
@@ -335,30 +349,20 @@ namespace jank::evaluate
       source = deref(source);
     }
 
-    try
+    if(expr->arg_exprs.empty())
     {
-      if(expr->arg_exprs.empty())
-      {
-        return source.call();
-      }
-      else
-      {
-        native_vector<object_ref> arg_vals;
-        arg_vals.reserve(expr->arg_exprs.size());
-        for(auto const &arg_expr : expr->arg_exprs)
-        {
-          arg_vals.emplace_back(eval(arg_expr));
-        }
-
-        return apply_to(source, make_box<obj::native_vector_sequence>(jtl::move(arg_vals)), true);
-      }
+      return source.call();
     }
-    catch(error_ref const e)
+    else
     {
-      /* We keep the original form from the call expression so we can point
-       * back to it if an exception is thrown during eval. */
-      e->add_usage(object_source(expr->form));
-      throw e;
+      native_vector<object_ref> arg_vals;
+      arg_vals.reserve(expr->arg_exprs.size());
+      for(auto const &arg_expr : expr->arg_exprs)
+      {
+        arg_vals.emplace_back(eval(arg_expr));
+      }
+
+      return apply_to(source, make_box<obj::native_vector_sequence>(jtl::move(arg_vals)), true);
     }
   }
 

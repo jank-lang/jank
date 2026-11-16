@@ -1,0 +1,5 @@
+(defn foo [^int a]
+  (if (cpp/== 3 a)
+    :success))
+
+(foo 3.14)
