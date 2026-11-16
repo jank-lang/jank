@@ -1137,6 +1137,10 @@ namespace jank::analyze::cpp_util
     for(auto const fn : fns)
     {
       auto const num_args{ cppinterop::get_function_num_args(fn) };
+      if(cppinterop::is_function_deleted(fn))
+      {
+        continue;
+      }
       if(cppinterop::get_function_required_args(fn) <= arg_count && arg_count <= num_args)
       {
         matching_fns.emplace_back(fn);
@@ -1185,12 +1189,43 @@ namespace jank::analyze::cpp_util
         auto const trait_type{ is_arg_obj ? param_type : arg_type };
         if(is_trait_convertible(trait_type))
         {
+          /* If we're handling trait conversion for a parameter which can be T&& and also a
+           * T const& in another overload, we detect this case and prefer the T&&. Any other
+           * scenarios where this parameter is trait convertible for both fns is considered
+           * ambiguous. */
+          bool apply{ true };
           if(needed_conversion.is_some())
           {
-            return err("No matching overload was found. When considering automatic trait "
-                       "conversions, this call is ambiguous.");
+            auto const prev_param_type{
+              cppinterop::get_function_arg_type(matching_fns[needed_conversion.unwrap()], arg_idx)
+            };
+            auto const same_type{ cppinterop::get_canonical_type(cppinterop::get_type_without_cv(
+                                    cppinterop::get_non_reference_type(param_type)))
+                                  == cppinterop::get_type_without_cv(cppinterop::get_canonical_type(
+                                    cppinterop::get_non_reference_type(prev_param_type))) };
+            if(same_type && cppinterop::is_rvalue_reference_type(param_type)
+               && cppinterop::get_value_category(prev_param_type)
+                 == cppinterop::value_category::lvalue)
+            {
+              /* Nothing to do. */
+            }
+            else if(same_type && cppinterop::is_rvalue_reference_type(prev_param_type)
+                    && cppinterop::get_value_category(param_type)
+                      == cppinterop::value_category::lvalue)
+            {
+              apply = false;
+            }
+            else
+            {
+              return err("No matching overload was found. When considering automatic trait "
+                         "conversions, this call is ambiguous.");
+            }
           }
-          needed_conversion = fn_idx;
+
+          if(apply)
+          {
+            needed_conversion = fn_idx;
+          }
           converted_args[arg_idx + member_offset] = param_type;
         }
       }

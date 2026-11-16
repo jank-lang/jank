@@ -1318,7 +1318,7 @@ namespace jank::codegen
     {
       util::format_to(
         b.body_buffer,
-        "auto const {}(jank::runtime::convert<{}>::{}({}));\n",
+        "auto &&{}(jank::runtime::convert<{}>::{}({}));\n",
         inst->name,
         get_qualified_type_name(
           analyze::cppinterop::get_canonical_type(analyze::cppinterop::get_type_without_cv(
