@@ -22,6 +22,7 @@
 #include <CppInterOp/Compatibility.h>
 #include <CppInterOp/CppInterOp.h>
 
+#include <jank/aot/target_config.hpp>
 #include <jank/jit/object.hpp>
 #include <jank/jit/parse_ld_script.hpp>
 #include <jank/jit/processor.hpp>
@@ -98,6 +99,7 @@ namespace jank::jit
 
   native_vector<std::filesystem::path> processor::build_library_dirs()
   {
+    auto const target_config{ aot::load_target_config(util::cli::opts.target_config).expect_ok() };
     native_vector<std::filesystem::path> library_dirs;
 
     for(auto const &library_dir : util::cli::opts.library_dirs)
@@ -107,11 +109,11 @@ namespace jank::jit
 
     library_dirs.emplace_back(util::multi_arch_lib_path().c_str());
 
-    /* JANK_JIT_FLAGS come from how jank was configured with CMake.
+    /* jit_flags come from how jank was configured with CMake.
      * JANK_EXTRA_FLAGS comes from the environment. Any `-L` flags in these need
      * to be included in the library search paths too. */
     {
-      std::stringstream flags{ JANK_JIT_FLAGS };
+      std::stringstream flags{ target_config.jit_flags };
       if(auto const extra{ getenv("JANK_EXTRA_FLAGS") }; extra)
       {
         flags << " " << extra;
@@ -142,6 +144,7 @@ namespace jank::jit
   {
     profile::timer const timer{ "jit ctor" };
 
+    auto const target_config{ aot::load_target_config(util::cli::opts.target_config).expect_ok() };
     library_dirs = build_library_dirs();
 
     /* When we AOT compile the jank compiler/runtime, we keep track of the compiler
@@ -212,14 +215,14 @@ namespace jank::jit
       args.emplace_back("-I/opt/local/include");
     }
 
-    /* We add the JANK_JIT_FLAGS, which come from how jank was configured with CMake,
+    /* We add the jit_flags, which come from how jank was configured with CMake,
      * after all of these others so that the include paths we add above will have
-     * precedence over the system include paths found in JANK_JIT_FLAGS.
+     * precedence over the system include paths found in jit_flags.
      *
      * However, we put it before -include-pch, since there are defines and such in
-     * JANK_JIT_FLAGS which are needed for our PCH. */
+     * jit_flags which are needed for our PCH. */
     {
-      std::stringstream flags{ JANK_JIT_FLAGS };
+      std::stringstream flags{ target_config.jit_flags };
       std::string flag;
       while(std::getline(flags, flag, ' '))
       {
@@ -783,6 +786,9 @@ namespace jank::jit
     auto const library_dirs{ build_library_dirs() };
     native_vector<resolved_lib> resolved;
     resolved.reserve(libs.size());
+
+    // TODO: clang++ -o /dev/null -x c++ - <<<'int main(){}' -Wl,--verbose
+    // to find the effective link dirs
 
     for(auto const &lib : libs)
     {

@@ -298,6 +298,10 @@ OPTIONS
           show_help();
           return ok();
         }
+        else if(check_flag(it, end, value, "--target-config", true))
+        {
+          opts.target_config = value;
+        }
         else if(check_flag(it, end, value, "--module-path", true))
         {
           opts.module_path = value;

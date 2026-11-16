@@ -110,6 +110,8 @@ jank_glob_install_without_prefix(
 
 # This is used for formatting C++ code at runtime.
 install(FILES ${CMAKE_SOURCE_DIR}/../.clang-format DESTINATION share)
+# TODO: probably not the right place
+install(FILES ${CMAKE_BINARY_DIR}/target_config.json DESTINATION lib)
 
 # This can be used to improve debugging in GDB.
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/../gdb DESTINATION share)
