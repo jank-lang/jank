@@ -654,7 +654,7 @@ namespace jank::analyze
     }
 
     //util::println("looking for conversion match");
-    auto const new_types_res{
+    auto new_types_res{
       cpp_util::find_best_arg_types_with_conversions(fns, arg_types, is_member_call)
     };
     if(new_types_res.is_err())
@@ -665,6 +665,24 @@ namespace jank::analyze
                object_source(val->form),
                latest_expansion(macro_expansions))
         ->add_usage(object_source(form));
+    }
+
+    /* If we're doing an operator call on a non-primitive type, we also need to consider
+     * member functions. However, `is_member_call` will be false because this isn't an explicit
+     * member call. Operators can be free fns as well, so that's why we check this last. */
+    if(is_operator_call
+       && !cpp_util::is_primitive(cppinterop::get_non_reference_type(arg_types[0])))
+    {
+      new_types_res = cpp_util::find_best_arg_types_with_conversions(fns, arg_types, true);
+      if(new_types_res.is_err())
+      {
+        return error::analyze_invalid_cpp_call(
+                 new_types_res.expect_err(),
+                 cpp_util::resolve_candidates(fns, arg_types, arg_scopes, is_member_call),
+                 object_source(val->form),
+                 latest_expansion(macro_expansions))
+          ->add_usage(object_source(form));
+      }
     }
 
     /* TODO: We don't actually use this. Is it needed? */

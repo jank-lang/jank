@@ -1,26 +1,41 @@
 (ns jank.nrepl.server.handler.lookup
-  (:require [jank.nrepl.server.handler :refer [handle-message]]))
+  (:require [jank.nrepl.server.handler :refer [handle-message]]
+            [jank.nrepl.server.handler.eval :refer [default-ns]]))
 
 (defn lookup
   "Lookup meta for the a symbol defined in a namespace, or return nil if either
   is not defined."
   [ns sym]
-  (let [ns'  (some-> ns symbol find-ns)
+  ;; TODO: Don't fall back to default-ns here. We should look up the session's
+  ;; current ns, once we do session bookkeeping.
+  (let [ns'  (or (some-> ns symbol find-ns) default-ns)
         sym' (some-> sym symbol)]
     (when (and ns' sym')
-      (some-> (ns-resolve ns' sym') meta))))
+      (some->>
+       (ns-resolve ns' sym')
+       (meta)))))
+
+(defn handle [msg]
+  (let [ns  (get msg "ns")
+        sym (or (get msg "sym") (get msg "symbol"))]
+    (if-let [m (lookup ns sym)]
+      (let [info (merge
+                  {:ns   (get-in m [:jank/source :module])
+                   :name sym}
+                  (when-let [doc (:doc m)]
+                    {:doc (str doc)})
+                  (when-let [arglists (:arglists m)]
+                    {:arglists     arglists
+                     :arglists-str (str arglists)}))]
+        (merge
+         (case (get msg "op")
+           "lookup" {:info info}
+           "info"   info)
+         {:status [:done]}))
+      {:status [:no-info :done]})))
 
 (defmethod handle-message :lookup [msg]
-  (let [ns  (get msg "ns")
-        sym (get msg "sym")]
-    (if-let [m (lookup ns sym)]
-      {:info (merge
-              {:ns ns
-               :name sym}
-              (when-let [doc (:doc m)]
-                {:doc (str doc)})
-              (when-let [arglists (:arglists m)]
-                {:arglists arglists
-                 :arglists-str (str arglists)}))
-       :status [:done]}
-      {:status [:error :done]})))
+  (handle msg))
+
+(defmethod handle-message :info [msg]
+  (handle msg))

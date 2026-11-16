@@ -1,0 +1,35 @@
+(cpp/raw "namespace jank::cpp::operator_::equal::pass_trait_convertible
+          {
+            struct foo{ int a{}; };
+
+            struct bar { foo f{}; }; bar b;
+          }
+
+          namespace jank::runtime
+          {
+            template <>
+            struct convert<jank::cpp::operator_::equal::pass_trait_convertible::foo>
+            {
+              static obj::persistent_array_map_ref into_object(jank::cpp::operator_::equal::pass_trait_convertible::foo const &v)
+              {
+                static auto const x(__rt_ctx->intern_keyword(\"a\").expect_ok());
+
+                return obj::persistent_array_map::create_unique(x, make_box(v.a));
+              }
+
+              static jank::cpp::operator_::equal::pass_trait_convertible::foo from_object(object_ref const o)
+              {
+                static auto const x(__rt_ctx->intern_keyword(\"a\").expect_ok());
+                return jank::cpp::operator_::equal::pass_trait_convertible::foo(o.get(x).to_integer());
+              }
+            };
+          }")
+
+(defn set! [n]
+  (cpp/= (.-f cpp/jank.cpp.operator_.equal.pass_trait_convertible.b) n)
+  nil)
+
+(let* []
+  (set! {:a 4747})
+  (if (= 4747 (-> cpp/jank.cpp.operator_.equal.pass_trait_convertible.b .-f .-a))
+    :success))

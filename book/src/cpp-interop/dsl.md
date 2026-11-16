@@ -1,5 +1,5 @@
 # The C++ DSL
-jank has a domain specific language (DSL) for acessing arbitrary C++ types and
+jank has a domain specific language (DSL) for accessing arbitrary C++ types and
 values. This DSL is automatically enabled when the jank compiler is expecting a
 type, such as the first argument to `cpp/new`, `cpp/unbox`, or `cpp/cast`. The
 DSL can also be explicitly enabled using the `#cpp` tag.

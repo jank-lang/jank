@@ -34,7 +34,7 @@ namespace jank::nrepl::server
       boost::system::error_code error;
 
       auto const length{ socket_.read_some(buffer(rx_buf_, rx_capacity), error) };
-      if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset)
+      if(error)
       {
         connected_ = false;
         return "";
@@ -43,10 +43,15 @@ namespace jank::nrepl::server
       return { rx_buf_, length };
     }
 
-    void write_some(std::string const &message)
+    void write(std::string const &message)
     {
-      boost::system::error_code error_code;
-      socket_.write_some(buffer(message), error_code);
+      boost::system::error_code error;
+      boost::asio::write(socket_, buffer(message), error);
+
+      if(error)
+      {
+        connected_ = false;
+      }
     }
 
     tcp::socket socket_;
@@ -71,9 +76,9 @@ namespace jank::nrepl::server
     return impl_->read_some();
   }
 
-  void native_client::write_some(std::string const &data) const
+  void native_client::write(std::string const &data) const
   {
-    impl_->write_some(data);
+    impl_->write(data);
   }
 
   // server

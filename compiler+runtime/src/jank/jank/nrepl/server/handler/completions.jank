@@ -63,12 +63,18 @@
               :type      (candidate-type v)
               :candidate (str k)})))))
 
-(defmethod handle-message :completions [msg]
+(defn handle [msg]
   (let [ns     (find-str-ns (get msg "ns"))
-        prefix (get msg "prefix")]
+        prefix (or (get msg "prefix") (get msg "symbol"))]
     (if ns
       ;; TODO: support namespace candidates, interop candidates, etc.
       {:completions (vec (concat (vars-candidates ns prefix)
                                  (special-candidates prefix)))
        :status      [:done]}
       {:status [:done :namespace-not-found]})))
+
+(defmethod handle-message :completions [msg]
+  (handle msg))
+
+(defmethod handle-message :complete [msg]
+  (handle msg))

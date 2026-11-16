@@ -96,7 +96,7 @@ jobs:
         if: runner.os == 'Windows'
         with:
           MSYSTEM: CLANG64
-          install: unzip mingw-w64-clang-x86_64-ccache base-devel curl zip mingw-w64-clang-x86_64-git-lfs mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-doctest mingw-w64-clang-x86_64-libzip mingw-w64-clang-x86_64-gc mingw-w64-clang-x86_64-boost
+          install: unzip mingw-w64-clang-x86_64-ccache base-devel curl zip mingw-w64-clang-x86_64-git-lfs mingw-w64-clang-x86_64-cmake mingw-w64-clang-x86_64-libffi mingw-w64-clang-x86_64-doctest mingw-w64-clang-x86_64-libzip mingw-w64-clang-x86_64-gc mingw-w64-clang-x86_64-boost mingw-w64-clang-x86_64-go
           update: true
       - name: Prepare java
         if: runner.os == 'Windows'

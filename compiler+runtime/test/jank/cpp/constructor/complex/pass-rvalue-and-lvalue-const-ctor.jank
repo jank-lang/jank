@@ -1,0 +1,43 @@
+(cpp/raw "
+namespace jank::cpp::constructor::complex::pass_rvalue_and_lvalue_const_ctor
+{
+  struct foo
+  {
+    foo(int a, int)
+      : a{ a }
+    { }
+    foo(foo &&) noexcept = default;
+    foo(foo const &) = default;
+
+    int a{};
+  };
+}
+
+namespace jank::runtime
+{
+  template <>
+  struct convert<jank::cpp::constructor::complex::pass_rvalue_and_lvalue_const_ctor::foo>
+  {
+    static obj::persistent_array_map_ref into_object(jank::cpp::constructor::complex::pass_rvalue_and_lvalue_const_ctor::foo const &v)
+    {
+      static auto const x(__rt_ctx->intern_keyword(\"a\").expect_ok());
+
+      return obj::persistent_array_map::create_unique(x, make_box(v.a));
+    }
+
+    static jank::cpp::constructor::complex::pass_rvalue_and_lvalue_const_ctor::foo from_object(object_ref const o)
+    {
+      static auto const x(__rt_ctx->intern_keyword(\"a\").expect_ok());
+      return jank::cpp::constructor::complex::pass_rvalue_and_lvalue_const_ctor::foo(o.get(x).to_integer(), 0);
+    }
+  };
+}
+          ")
+
+(defn create-from-object! [o]
+  (let [f (cpp/jank.cpp.constructor.complex.pass_rvalue_and_lvalue_const_ctor.foo o)]
+    (if (= 7778 (.-a f))
+      :success)))
+
+(let* [o {:a 7778}]
+  (create-from-object! o))

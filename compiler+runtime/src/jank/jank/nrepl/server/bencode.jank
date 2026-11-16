@@ -70,6 +70,11 @@
 
     nil))
 
+(defn named>string [x]
+  (if-let [ns (namespace x)]
+    (str ns "/" (name x))
+    (name x)))
+
 (defn parse
   "Parse a bencode value from a string, returning jank data."
   [s]
@@ -97,12 +102,16 @@
 
     (or (symbol? x)
         (keyword? x))
-    (if-let [ns (namespace x)]
-      (write (str ns "/" (name x)))
-      (write (name x)))
+    (write (named>string x))
 
     (map? x)
-    (str "d" (reduce-kv (fn [s k v] (str s (write k) (write v))) "" x) "e")
+    (str "d"
+         (->> (update-keys x #(if (or (symbol? %) (keyword? %))
+                                (named>string %)
+                                (str %)))
+              (into (sorted-map))
+              (reduce-kv (fn [s k v] (str s (write k) (write v))) ""))
+         "e")
 
     (coll? x)
     (str "l" (apply str (map write x)) "e")

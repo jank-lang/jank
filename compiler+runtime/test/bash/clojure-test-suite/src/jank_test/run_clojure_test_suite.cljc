@@ -41,6 +41,8 @@
     clojure.core-test.comment
     clojure.core-test.compare
     clojure.core-test.concat
+    ; clojure.core-test.cond-minus-gt ; error: brackets are not allowed here; to declare an array, place the brackets after the name
+    ; clojure.core-test.cond ; FAIL an odd number of forms is rejected
     clojure.core-test.conj
     clojure.core-test.conj-bang
     clojure.core-test.cons
@@ -51,6 +53,8 @@
     clojure.core-test.cycle
     clojure.core-test.dec
     clojure.core-test.decimal-qmark
+    clojure.core-test.defmethod
+    clojure.core-test.defn
     clojure.core-test.denominator
     ; clojure.core-test.derive ; analyze/unresolved-symbol error: Unable to resolve symbol 'String'.
     ; clojure.core-test.descendants ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
@@ -74,10 +78,12 @@
     clojure.core-test.every-qmark
     clojure.core-test.false-qmark
     clojure.core-test.ffirst
+    ; clojure.core-test.filter ; TODO: port sequence
     clojure.core-test.find
     clojure.core-test.first
     clojure.core-test.float
     clojure.core-test.float-qmark
+    clojure.core-test.fn
     clojure.core-test.fn-qmark
     clojure.core-test.fnext
     clojure.core-test.fnil
@@ -100,6 +106,7 @@
     clojure.core-test.interleave
     clojure.core-test.intern
     clojure.core-test.interpose
+    clojure.core-test.into
     clojure.core-test.juxt
     clojure.core-test.key
     clojure.core-test.keys
@@ -107,6 +114,7 @@
     clojure.core-test.keyword-qmark
     clojure.core-test.last
     clojure.core-test.lazy-seq
+    ; clojure.core-test.let ; error: brackets are not allowed here; to declare an array, place the brackets after the name
     clojure.core-test.list
     clojure.core-test.list-qmark
     clojure.core-test.long
@@ -116,10 +124,13 @@
     clojure.core-test.map
     clojure.core-test.map-qmark
     clojure.core-test.mapcat
+    clojure.core-test.mapv
     ; clojure.core-test.max ; FIXME: Failing tests.
     clojure.core-test.merge
     ; clojure.core-test.min ; FIXME: Failing tests.
     clojure.core-test.min-key
+    clojure.core-test.minus-gt
+    clojure.core-test.minus-gt-gt
     ; clojure.core-test.minus ; FIXME: Failing tests.
     ; clojure.core-test.mod ; FIXME: Failing tests.
     clojure.core-test.name
@@ -161,6 +172,7 @@
     clojure.core-test.pos-qmark
     ; clojure.core-test.pr-str ; Uncaught exception: invalid call to #object [clojure.core/pr-str jit_function 0x112436c68] with 2 args provided
     clojure.core-test.print-str
+    clojure.core-test.println
     clojure.core-test.println-str
     clojure.core-test.prn-str
     clojure.core-test.qualified-ident-qmark
@@ -183,6 +195,7 @@
     ; clojure.core-test.remove-watch ; TODO: port sync
     clojure.core-test.repeat
     clojure.core-test.repeatedly
+    clojure.core-test.reset-bang
     clojure.core-test.rest
     clojure.core-test.reverse
     ; clojure.core-test.reversible-qmark ; TODO: port reversible?, TODO: port object-array
@@ -215,6 +228,7 @@
     clojure.core-test.string-qmark
     clojure.core-test.subs
     clojure.core-test.subvec
+    clojure.core-test.swap-bang
     ; clojure.core-test.symbol ; lex/invalid-ratio error: A ratio denominator must be an integer.
     clojure.core-test.symbol-qmark
     clojure.core-test.take
