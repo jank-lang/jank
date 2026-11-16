@@ -1043,8 +1043,8 @@ namespace jank::analyze
                             native_vector<runtime::object_ref> const &macro_expansions)
   {
     auto const action{ cpp_util::determine_implicit_conversion(expr_type, expected_type) };
-    util::println("implicit conversion action: {}",
-                  cpp_util::implicit_conversion_action_str(action));
+    //util::println("implicit conversion action: {}",
+    //              cpp_util::implicit_conversion_action_str(action));
     switch(action)
     {
       case cpp_util::implicit_conversion_action::none:
