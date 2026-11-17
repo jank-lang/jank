@@ -1,14 +1,21 @@
 (cpp/raw "namespace jank::cpp::case_::pass_sub_type
           {
-            struct foo {};
+            struct foo
+            {
+              virtual bool is_foo() { return true; }
+            };
 
-            struct bar : foo{};
+            struct bar : foo
+            {
+              bool is_foo() override { return false; }
+            };
           }")
 
 (let* [foo (cpp/jank.cpp.case_.pass_sub_type.foo)
        bar (cpp/jank.cpp.case_.pass_sub_type.bar)
        res (case true
-             true bar
-             foo)
-       _ (cpp/cast cpp/jank.cpp.case_.pass_sub_type.foo res)]
-  :success)
+             true (cpp/& bar)
+             (cpp/& foo))]
+  (println (.is_foo res) (not (.is_foo res)))
+  (when (not (.is_foo res))
+    :success))

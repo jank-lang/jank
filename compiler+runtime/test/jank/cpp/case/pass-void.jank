@@ -1,10 +1,9 @@
 (cpp/raw "namespace jank::cpp::case_::pass_void
           {
-            void foo()
-            { }
+            void foo() {}
           }")
-(let* [r (case false
-           true (cpp/jank.cpp.case_.pass_void.foo)
-           (cpp/jank.cpp.case_.pass_void.foo))]
-  (if (= nil r)
+(let* [res (case false
+             true (cpp/jank.cpp.case_.pass_void.foo)
+             (cpp/jank.cpp.case_.pass_void.foo))]
+  (when (= nil res)
     :success))

@@ -1,2 +1,5 @@
-(if (= "a" ((fn* [] (case true true "a" "b"))))
+(when (= "a" ((fn* []
+                (case true
+                  true "a"
+                  "b"))))
   :success)

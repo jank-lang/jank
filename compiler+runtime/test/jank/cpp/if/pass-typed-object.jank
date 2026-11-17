@@ -2,12 +2,13 @@
           {
             jank::runtime::obj::small_real_ref make_small_real(float f)
             {
-              return jank::runtime::make_box(f);
+              return jank::runtime::make_box(f + 1);
             }
           }")
 
 (let* [foo (cpp/float 42.0)
        res (if true
-             foo
-             (cpp/jank.cpp.if_.pass_typed_object.make_small_real foo))]
-  :success)
+             (cpp/jank.cpp.if_.pass_typed_object.make_small_real foo)
+             foo)]
+  (when (= 43.0 res)
+    :success))

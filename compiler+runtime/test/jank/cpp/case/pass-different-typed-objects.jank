@@ -5,8 +5,8 @@
             runtime::obj::persistent_string_ref bar()
             { return runtime::make_box(\"meow\"); }
           }")
-(let* [r (case true
-           true (cpp/jank.cpp.case_.pass_different_typed_objects.foo)
-           (cpp/jank.cpp.case_.pass_different_typed_objects.bar))]
-  (if (= r 2222.0)
+(let* [res (case true
+             true (cpp/jank.cpp.case_.pass_different_typed_objects.foo)
+             (cpp/jank.cpp.case_.pass_different_typed_objects.bar))]
+  (when (= res 2222.0)
     :success))
