@@ -253,7 +253,7 @@ namespace jank::jit
 
     for(auto const &dir : build_library_dirs())
     {
-      args.emplace_back(strdup(util::format("-L{}", dir).c_str()));
+      args.emplace_back(strdup(util::format("-L{}", dir.string()).c_str()));
     }
 
     /********* Every flag after this line is user-provided. *********/
