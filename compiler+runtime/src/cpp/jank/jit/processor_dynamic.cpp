@@ -105,7 +105,10 @@ namespace jank::jit
       library_dirs.emplace_back(std::filesystem::absolute(library_dir.c_str()));
     }
 
-    library_dirs.emplace_back(util::multi_arch_lib_path().c_str());
+    for(auto const &dir : util::default_library_dirs())
+    {
+      library_dirs.emplace_back(dir);
+    }
 
     /* JANK_JIT_FLAGS come from how jank was configured with CMake.
      * JANK_EXTRA_FLAGS comes from the environment. Any `-L` flags in these need
@@ -133,6 +136,7 @@ namespace jank::jit
       library_dirs.emplace_back("/opt/homebrew/lib");
       /* Macports. */
       library_dirs.emplace_back("/opt/local/lib");
+      library_dirs.emplace_back("/usr/lib");
     }
 
     return library_dirs;

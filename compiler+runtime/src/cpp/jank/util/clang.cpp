@@ -219,6 +219,54 @@ namespace jank::util
     return ok();
   }
 
+  std::vector<std::string> default_library_dirs()
+  {
+    static auto const result{ []() -> std::vector<std::string> {
+      auto const clang_path_res{ find_clang() };
+      if(clang_path_res.is_none())
+      {
+        return {};
+      }
+
+      std::string buffer;
+      llvm::raw_string_ostream diag_stream{ buffer };
+      clang::DiagnosticOptions diag_opts{};
+      auto * const diag_client{
+        new clang::TextDiagnosticPrinter{ diag_stream, diag_opts }
+      };
+      clang::IntrusiveRefCntPtr<clang::DiagnosticIDs> const diag_id{ new clang::DiagnosticIDs() };
+      clang::DiagnosticsEngine diags{ diag_id, diag_opts, diag_client, true };
+      auto const &clang_path{ clang_path_res.unwrap() };
+      clang::driver::Driver driver{ clang_path.c_str(),
+                                    llvm::sys::getDefaultTargetTriple(),
+                                    diags,
+                                    "jank",
+                                    llvm::vfs::getRealFileSystem() };
+      driver.setCheckInputsExist(false);
+
+      /* Clang derives its implicit -L paths (GCC install dirs, multiarch dirs, /usr/lib, etc.)
+       * from the toolchain it selects for the target, so we ask the same toolchain rather than
+       * trying to replicate its logic. The input is just a placeholder to force a link job. */
+      std::vector<char const *> args{ clang_path.c_str(), "jank-placeholder.o" };
+      util::add_system_flags(args);
+      std::unique_ptr<clang::driver::Compilation> const compilation{ driver.BuildCompilation(
+        args) };
+      if(!compilation)
+      {
+        return {};
+      }
+
+      std::vector<std::string> dirs;
+      for(auto const &path : compilation->getDefaultToolChain().getFilePaths())
+      {
+        dirs.emplace_back(path);
+      }
+      return dirs;
+    }() };
+
+    return result;
+  }
+
   jtl::option<jtl::immutable_string> find_pch(jtl::immutable_string const &binary_version)
   {
     std::filesystem::path const jank_path{ process_dir().c_str() };
