@@ -1,0 +1,19 @@
+(cpp/raw "namespace jank::cpp::literal_type::template_::pass_member_type
+          {
+           template <class T>
+           struct S
+           {
+             using value_type = int;
+
+             value_type get()
+             { return 7; }
+           };
+          }")
+
+(defn get-s []
+  (let* [s (#cpp (jank.cpp.literal_type.template_.pass_member_type.S int))]
+    ; https://github.com/jank-lang/jank/issues/1185
+    (.get s)))
+
+(if (= 7 (get-s))
+  :success)
