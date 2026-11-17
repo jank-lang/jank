@@ -22,7 +22,6 @@ namespace jank::util
   jtl::immutable_string resource_dir();
   jtl::result<jtl::immutable_string, error_ref> prelude_hpp_path();
 
-  jtl::immutable_string multi_arch_lib_path();
   void add_system_flags(std::vector<char const *> &args);
 
   bool is_dynamic_runtime();

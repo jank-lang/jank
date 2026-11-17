@@ -359,6 +359,13 @@ int main(int argc, const char** argv)
       linker_args.push_back(strdup(util::format("-Wl,-rpath,{}", library_dir).c_str()));
     }
 
+    /* These are the paths Clang itself would pass to the linker (GCC install dirs, multiarch
+     * dirs, etc.), which we need to replicate so the same libs are found as during JIT. */
+    for(auto const &dir : util::default_library_dirs())
+    {
+      linker_args.push_back(strdup(util::format("-L{}", dir).c_str()));
+    }
+
     if constexpr(jtl::current_platform == jtl::platform::macos_like)
     {
       /* Homebrew. */
