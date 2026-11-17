@@ -89,7 +89,6 @@ namespace jank::jit
     util::scope_exit push_diagnostics_consumer(jtl::ref<clang::DiagnosticConsumer> const d);
 
     /*** XXX: Everything here is immutable after initialization. ***/
-    native_vector<std::filesystem::path> library_dirs;
 
     /* The files within this map will get added into Clang's VFS prior to the creation of
      * the `clang::Interpreter`. This allows us to embed the PCH into AOT compiled programs
