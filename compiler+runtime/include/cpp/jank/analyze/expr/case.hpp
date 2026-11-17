@@ -16,6 +16,7 @@ namespace jank::analyze::expr
           local_frame_ptr frame,
           bool needs_box,
           runtime::object_ref form,
+          jtl::ptr<void> const type,
           expression_ref value_expr,
           i64 shift,
           i64 mask,
@@ -26,7 +27,9 @@ namespace jank::analyze::expr
     void propagate_position(expression_position const pos) override;
     runtime::object_ref to_runtime_data() const override;
     void walk(std::function<void(jtl::ref<expression>)> const &f) override;
+    jtl::ptr<void> get_type() const override;
 
+    jtl::ptr<void> type;
     expression_ref value_expr;
     i64 shift{};
     i64 mask{};

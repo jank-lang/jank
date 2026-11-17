@@ -1,0 +1,22 @@
+(cpp/raw "namespace jank::cpp::case_::pass_sub_type_by_value
+          {
+            struct foo
+            {
+              virtual bool is_base() { return true; }
+            };
+
+            struct bar : foo
+            {
+              bool is_base() override { return false; }
+            };
+          }")
+
+(let* [foo (cpp/jank.cpp.case_.pass_sub_type_by_value.foo)
+       bar (cpp/jank.cpp.case_.pass_sub_type_by_value.bar)
+       ; `res` is a value of type foo. The bar binding, which is of the type bar
+       ; is sliced on copy to type foo.
+       res (case true
+             true bar
+             foo)]
+  (when (.is_base res)
+    :success))
