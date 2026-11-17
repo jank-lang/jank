@@ -169,7 +169,7 @@ namespace jank::codegen
       {
         fmt_str = "jank::runtime::jank_nil";
       }
-      else if(is_typed_object(type))
+      else if(is_typed_object_ref(type))
       {
         if(runtime::detail::is_tagged_pointer(ptr))
         {
@@ -1318,7 +1318,7 @@ namespace jank::codegen
     {
       util::format_to(
         b.body_buffer,
-        "auto const {}(jank::runtime::convert<{}>::{}({}));\n",
+        "auto &&{}(jank::runtime::convert<{}>::{}({}));\n",
         inst->name,
         get_qualified_type_name(
           analyze::cppinterop::get_canonical_type(analyze::cppinterop::get_type_without_cv(
@@ -1402,7 +1402,7 @@ namespace jank::codegen
         }
 
         if(param_type && analyze::cppinterop::is_pointer_type(param_type)
-           && is_any_object(arg_type))
+           && is_any_object_ref(arg_type))
         {
           util::format_to(b.body_buffer, "static_cast<jank::runtime::object*>(");
         }
@@ -1417,7 +1417,7 @@ namespace jank::codegen
         }
 
         if(param_type && analyze::cppinterop::is_pointer_type(param_type)
-           && is_any_object(arg_type))
+           && is_any_object_ref(arg_type))
         {
           util::format_to(b.body_buffer, ".erase().raw())");
         }

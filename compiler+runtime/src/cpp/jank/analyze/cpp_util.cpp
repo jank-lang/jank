@@ -945,6 +945,13 @@ namespace jank::analyze::cpp_util
       || can_type == cppinterop::get_canonical_type(untyped_object_ref_type());
   }
 
+  bool is_untyped_object_ref(jtl::ptr<void> const type)
+  {
+    auto const can_type{ cppinterop::get_canonical_type(
+      cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(type))) };
+    return can_type == cppinterop::get_canonical_type(untyped_object_ref_type());
+  }
+
   jtl::ptr<void> base_type(jtl::ptr<void> type)
   {
     type = cppinterop::get_non_reference_type(type);
@@ -963,7 +970,7 @@ namespace jank::analyze::cpp_util
   }
 
   /* TODO: Support for typed object raw pointers. */
-  bool is_typed_object(jtl::ptr<void> const type)
+  bool is_typed_object_ref(jtl::ptr<void> const type)
   {
     auto const can_type{ cppinterop::get_canonical_type(
       cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(type))) };
@@ -975,7 +982,12 @@ namespace jank::analyze::cpp_util
 
   bool is_any_object(jtl::ptr<void> type)
   {
-    return is_untyped_object(type) || is_typed_object(type);
+    return is_untyped_object(type) || is_typed_object_ref(type);
+  }
+
+  bool is_any_object_ref(jtl::ptr<void> type)
+  {
+    return is_untyped_object_ref(type) || is_typed_object_ref(type);
   }
 
   /* Clang treats int, long, float, etc as built-in, but not pointers. I consider
@@ -1023,7 +1035,7 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> mutable_type(jtl::ptr<void> const type)
   {
     /* foo_ref => object_ref */
-    if(is_typed_object(type))
+    if(is_typed_object_ref(type))
     {
       return untyped_object_ref_type();
     }
@@ -1058,10 +1070,10 @@ namespace jank::analyze::cpp_util
   std::pair<jtl::ptr<void>, jtl::ptr<void>>
   select_most_native_type(jtl::ptr<void> const left, jtl::ptr<void> const right)
   {
-    auto const is_left_any_object{ cpp_util::is_any_object(left) };
-    auto const is_right_any_object{ cpp_util::is_any_object(right) };
-    auto const is_left_typed_object{ cpp_util::is_typed_object(left) };
-    auto const is_right_typed_object{ cpp_util::is_typed_object(right) };
+    auto const is_left_any_object{ is_any_object(left) };
+    auto const is_right_any_object{ is_any_object(right) };
+    auto const is_left_typed_object{ is_typed_object_ref(left) };
+    auto const is_right_typed_object{ is_typed_object_ref(right) };
 
     if(!is_left_any_object)
     {
@@ -1137,6 +1149,10 @@ namespace jank::analyze::cpp_util
     for(auto const fn : fns)
     {
       auto const num_args{ cppinterop::get_function_num_args(fn) };
+      if(cppinterop::is_function_deleted(fn))
+      {
+        continue;
+      }
       if(cppinterop::get_function_required_args(fn) <= arg_count && arg_count <= num_args)
       {
         matching_fns.emplace_back(fn);
@@ -1154,7 +1170,7 @@ namespace jank::analyze::cpp_util
        * we're going to consider. Skip to the next argument. */
       auto const arg_type{ cppinterop::get_non_reference_type(arg_types[arg_idx + member_offset]) };
       auto const is_arg_untyped_obj{ is_untyped_object(arg_type) };
-      auto const is_arg_typed_obj{ is_typed_object(arg_type) };
+      auto const is_arg_typed_obj{ is_typed_object_ref(arg_type) };
       auto const is_arg_obj{ is_arg_untyped_obj || is_arg_typed_obj };
 
       jtl::option<usize> needed_conversion;
@@ -1176,7 +1192,7 @@ namespace jank::analyze::cpp_util
         {
           continue;
         }
-        auto const is_param_obj{ is_untyped_object(param_type) || is_typed_object(param_type) };
+        auto const is_param_obj{ is_untyped_object(param_type) || is_typed_object_ref(param_type) };
         if(!is_arg_obj && !is_param_obj)
         {
           continue;
@@ -1185,12 +1201,43 @@ namespace jank::analyze::cpp_util
         auto const trait_type{ is_arg_obj ? param_type : arg_type };
         if(is_trait_convertible(trait_type))
         {
+          /* If we're handling trait conversion for a parameter which can be T&& and also a
+           * T const& in another overload, we detect this case and prefer the T&&. Any other
+           * scenarios where this parameter is trait convertible for both fns is considered
+           * ambiguous. */
+          bool apply{ true };
           if(needed_conversion.is_some())
           {
-            return err("No matching overload was found. When considering automatic trait "
-                       "conversions, this call is ambiguous.");
+            auto const prev_param_type{
+              cppinterop::get_function_arg_type(matching_fns[needed_conversion.unwrap()], arg_idx)
+            };
+            auto const same_type{ cppinterop::get_canonical_type(cppinterop::get_type_without_cv(
+                                    cppinterop::get_non_reference_type(param_type)))
+                                  == cppinterop::get_type_without_cv(cppinterop::get_canonical_type(
+                                    cppinterop::get_non_reference_type(prev_param_type))) };
+            if(same_type && cppinterop::is_rvalue_reference_type(param_type)
+               && cppinterop::get_value_category(prev_param_type)
+                 == cppinterop::value_category::lvalue)
+            {
+              /* Nothing to do. */
+            }
+            else if(same_type && cppinterop::is_rvalue_reference_type(prev_param_type)
+                    && cppinterop::get_value_category(param_type)
+                      == cppinterop::value_category::lvalue)
+            {
+              apply = false;
+            }
+            else
+            {
+              return err("No matching overload was found. When considering automatic trait "
+                         "conversions, this call is ambiguous.");
+            }
           }
-          needed_conversion = fn_idx;
+
+          if(apply)
+          {
+            needed_conversion = fn_idx;
+          }
           converted_args[arg_idx + member_offset] = param_type;
         }
       }
@@ -1656,7 +1703,7 @@ namespace jank::analyze::cpp_util
 
   usize offset_to_typed_object_base(jtl::ptr<void> const type)
   {
-    jank_debug_assert(is_typed_object(type));
+    jank_debug_assert(is_typed_object_ref(type));
     auto const can_type{ cppinterop::get_canonical_type(type) };
     auto const scope{ cppinterop::get_underlying_scope(
       cppinterop::get_named("value_type", cppinterop::get_scope_from_type(can_type))) };
@@ -1866,7 +1913,7 @@ namespace jank::analyze::cpp_util
        *
        * We also calculate the types again, since they may have changed due to the implicit
        * conversions above. */
-      if(cpp_util::is_typed_object(chosen_type) && cpp_util::is_any_object(other_type)
+      if(cpp_util::is_typed_object_ref(chosen_type) && cpp_util::is_any_object(other_type)
          && cppinterop::get_canonical_type(chosen_type)
            != cppinterop::get_canonical_type(other_type))
       {
@@ -1925,27 +1972,27 @@ namespace jank::analyze::cpp_util
            == cppinterop::get_canonical_type(cppinterop::get_non_reference_type(expected_type)))
        || cppinterop::is_type_derived_from(cppinterop::get_canonical_type(expr_type),
                                            cppinterop::get_canonical_type(expected_type))
-       || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
+       || (is_untyped_object(expr_type) && is_untyped_object(expected_type)))
     {
       return implicit_conversion_action::none;
     }
 
-    if(cpp_util::is_untyped_object(expected_type) && cpp_util::is_typed_object(expr_type))
+    if(is_untyped_object(expected_type) && is_typed_object_ref(expr_type))
     {
       return implicit_conversion_action::none;
     }
 
-    if(cpp_util::is_typed_object(expected_type) && cpp_util::is_untyped_object(expr_type))
+    if(is_typed_object_ref(expected_type) && is_untyped_object(expr_type))
     {
       return implicit_conversion_action::from_object;
     }
 
-    if(cpp_util::is_any_object(expected_type) && cpp_util::is_trait_convertible(expr_type))
+    if(is_any_object(expected_type) && is_trait_convertible(expr_type))
     {
       return implicit_conversion_action::into_object;
     }
 
-    if(cpp_util::is_any_object(expr_type) && cpp_util::is_trait_convertible(expected_type))
+    if(is_any_object(expr_type) && is_trait_convertible(expected_type))
     {
       return implicit_conversion_action::from_object;
     }
@@ -1959,7 +2006,7 @@ namespace jank::analyze::cpp_util
            && !cppinterop::is_reference_type(expr_type)
            && cppinterop::is_reference_type(expected_type))
        /* Matching nullptr to any pointer type or array parameter, which adjusts to a pointer. */
-       || (cpp_util::is_nullptr(expr_type)
+       || (is_nullptr(expr_type)
            && (cppinterop::is_pointer_type(expected_type)
                || cppinterop::is_array_type(expected_type)))
        /* TODO: Array size. */

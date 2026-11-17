@@ -12,6 +12,7 @@ namespace jank::runtime::obj
 {
   using cons_ref = oref<struct cons>;
   using lazy_sequence_ref = oref<struct lazy_sequence>;
+  using persistent_list_ref = oref<struct persistent_list>;
 
   /* TODO: IPending analog, to implement `realized?`. */
   struct lazy_sequence : object
@@ -43,6 +44,9 @@ namespace jank::runtime::obj
 
     /* behavior::conjable */
     obj::cons_ref conj(object_ref const head) const;
+
+    /* behavior::collection_like */
+    static persistent_list_ref empty();
 
     /* behavior::sequence_like_in_place */
     //object_ref next_in_place() override;

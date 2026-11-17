@@ -520,7 +520,8 @@ namespace jank::ir
       b.locals[name] = gen(pair.second, b).unwrap();
 
       auto const local_type{ pair.second->get_type() };
-      if(expr->loop_kind != analyze::expr::let::loop_kind::normal && is_typed_object(local_type))
+      if(expr->loop_kind != analyze::expr::let::loop_kind::normal
+         && is_typed_object_ref(local_type))
       {
         auto &local{ b.locals[name] };
         local = b.type_erase(analyze::expression_position::value, local);

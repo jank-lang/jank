@@ -14,4 +14,4 @@ case "$(uname -s)" in
     ;;
 esac
 
-go run github.com/nrepl/proof/cmd/proof@v0.1.0 run "${here}/nrepl-proof.toml"
+go run github.com/nrepl/proof/cmd/proof@v0.2.0 run "${here}/nrepl-proof.toml"

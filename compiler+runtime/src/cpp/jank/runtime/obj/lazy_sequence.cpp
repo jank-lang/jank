@@ -110,6 +110,11 @@ namespace jank::runtime::obj
     return make_box<cons>(head, seq());
   }
 
+  persistent_list_ref lazy_sequence::empty()
+  {
+    return persistent_list::empty();
+  }
+
   object_ref lazy_sequence::realize() const
   {
     std::lock_guard<std::recursive_mutex> const lock{ mutex };
