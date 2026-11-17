@@ -1,0 +1,5 @@
+(defn foo [^float a]
+  (if (cpp/== 5.0 a)
+    :success))
+
+(foo 5)
