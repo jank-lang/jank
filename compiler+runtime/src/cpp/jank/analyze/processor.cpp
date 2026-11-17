@@ -2672,7 +2672,7 @@ namespace jank::analyze
        *
        * We also calculate the types again, since they may have changed due to the implicit
        * conversions above. */
-      if(cpp_util::is_typed_object(chosen_type) && cpp_util::is_any_object(other_type)
+      if(cpp_util::is_typed_object_ref(chosen_type) && cpp_util::is_any_object(other_type)
          && cppinterop::get_canonical_type(chosen_type)
            != cppinterop::get_canonical_type(other_type))
       {
@@ -4247,7 +4247,7 @@ namespace jank::analyze
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
 
-    if((cpp_util::is_typed_object(type) && cpp_util::is_untyped_object(value_type))
+    if((cpp_util::is_typed_object_ref(type) && cpp_util::is_untyped_object(value_type))
        || (cpp_util::is_any_object(value_type) && cpp_util::is_trait_convertible(type)))
     {
       return jtl::make_ref<expr::cpp_conversion>(position,

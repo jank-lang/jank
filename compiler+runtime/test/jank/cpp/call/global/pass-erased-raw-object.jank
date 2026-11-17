@@ -1,0 +1,11 @@
+(cpp/raw "namespace jank::cpp::call::global::pass_erased_raw_object
+          {
+            int foo(void *p)
+            { return 42; }
+          }")
+(defn bar [m]
+  (let [p (.raw (.erase m))]
+    (cpp/jank.cpp.call.global.pass_erased_raw_object.foo p)))
+
+(if (= 42 (bar {:status :good}))
+  :success)
