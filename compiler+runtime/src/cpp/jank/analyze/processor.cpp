@@ -1460,32 +1460,32 @@ namespace jank::analyze
     }
 
     auto pairs{ keys_exprs.expect_ok() };
-    native_vector<expression_ref> exprs{};
-    exprs.reserve(pairs.exprs.size());
+    native_vector<expression_ref> converted_exprs{};
+    converted_exprs.reserve(pairs.exprs.size());
 
     if(needs_conversion)
     {
-      auto conveted_default_expr{
+      auto const converted_default_expr{
         apply_implicit_conversion(default_expr.expect_ok(), chosen_type, macro_expansions)
       };
 
-      if(conveted_default_expr.is_err())
+      if(converted_default_expr.is_err())
       {
-        return conveted_default_expr.expect_err();
+        return converted_default_expr.expect_err();
       }
 
-      default_expr = conveted_default_expr.expect_ok();
+      default_expr = converted_default_expr.expect_ok();
 
       for(auto const expr : pairs.exprs)
       {
-        auto converted_expr{ apply_implicit_conversion(expr, chosen_type, macro_expansions) };
+        auto const converted_expr{ apply_implicit_conversion(expr, chosen_type, macro_expansions) };
 
         if(converted_expr.is_err())
         {
           return converted_expr.expect_err();
         }
 
-        exprs.push_back(converted_expr.expect_ok());
+        converted_exprs.push_back(converted_expr.expect_ok());
       }
     }
 
@@ -1499,7 +1499,7 @@ namespace jank::analyze
                                       mask,
                                       default_expr.expect_ok(),
                                       std::move(pairs.keys),
-                                      std::move(needs_conversion ? exprs : pairs.exprs));
+                                      std::move(needs_conversion ? converted_exprs : pairs.exprs));
   }
 
   processor::expression_result
@@ -2657,10 +2657,16 @@ namespace jank::analyze
     }
     if(else_expr_opt.is_some() && branch_common_type.else_needs_conversion)
     {
-      else_expr_opt = apply_implicit_conversion(else_expr_opt.unwrap(),
-                                                cpp_util::untyped_object_ref_type(),
-                                                macro_expansions)
-                        .expect_ok();
+      auto const converted_else_expr{ apply_implicit_conversion(else_expr_opt.unwrap(),
+                                                                cpp_util::untyped_object_ref_type(),
+                                                                macro_expansions) };
+
+      if(converted_else_expr.is_err())
+      {
+        return converted_else_expr.expect_err();
+      }
+
+      else_expr_opt = converted_else_expr.expect_ok();
     }
 
     return jtl::make_ref<expr::if_>(position,
