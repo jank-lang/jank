@@ -1,0 +1,19 @@
+(cpp/raw "namespace jank::cpp::call::global::pass_aliased
+          {
+            inline bool f(double x)
+            { return true; }
+
+            namespace nested
+            {
+              inline bool f(float x)
+              { return false; }
+              inline bool f(long double x)
+              { return false; }
+
+              using jank::cpp::call::global::pass_aliased::f;
+            }
+          }")
+
+(let* [r (cpp/jank.cpp.call.global.pass_aliased.nested.f (cpp/double 1.0))]
+  (if r
+    :success))
