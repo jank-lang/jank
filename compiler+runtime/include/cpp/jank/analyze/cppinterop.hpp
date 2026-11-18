@@ -42,6 +42,7 @@ namespace jank::analyze::cppinterop
   void dump(clang_decl scope);
 
   bool is_namespace(clang_decl scope);
+  bool is_union(clang_decl scope);
   bool is_class(clang_decl scope);
   bool is_class_template(clang_decl handle);
   bool is_function(clang_decl scope);
