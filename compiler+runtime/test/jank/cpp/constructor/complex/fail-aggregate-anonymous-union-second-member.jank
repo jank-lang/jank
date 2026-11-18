@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::fail_aggregate_anonymous_union_second_member
+          {
+            struct foo
+            {
+              union
+              {
+                char const *s;
+                int i;
+              };
+            };
+          }")
+; Aggregate initialization only initializes the first union member, which can't be built from an int.
+(let* [f (cpp/jank.cpp.constructor.complex.fail_aggregate_anonymous_union_second_member.foo. 5)]
+  :success)

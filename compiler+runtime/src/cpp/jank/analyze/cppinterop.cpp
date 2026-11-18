@@ -52,6 +52,12 @@ namespace jank::analyze::cppinterop
     Cpp::DumpScope(scope);
   }
 
+  bool is_union(clang_decl scope)
+  {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    return Cpp::IsUnion(scope);
+  }
+
   bool is_namespace(clang_decl scope)
   {
     auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
