@@ -3,6 +3,7 @@
 #include <jank/runtime/object.hpp>
 #include <jank/runtime/behavior/seqable.hpp>
 #include <jank/runtime/core/equal.hpp>
+#include <jank/runtime/core/seq.hpp>
 #include <jank/runtime/sequence_range.hpp>
 
 /* TODO: Why does this not live in seq.hpp again? Document if you find out. */
@@ -11,9 +12,9 @@ namespace jank::runtime
   template <typename It>
   bool equal(object const &o, It const &begin, It const &end)
   {
-    /* nil is seqable, but we don't want it to be equal to an empty collection.
-     * An empty seq itself is nil, but that's different. */
-    if(o.type == object_type::nil || !o.has_behavior(object_behavior::seqable))
+    /* Only sequential collections can be equal to one another. nil, sets, maps, and strings
+     * are seqable, but must never equal an ordered collection. */
+    if(!is_sequential(detail::untagged(&o)))
     {
       return false;
     }
