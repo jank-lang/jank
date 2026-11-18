@@ -876,11 +876,9 @@ namespace jank::runtime
       return true;
     }
 
-    if(!l.has_behavior(object_behavior::seqable))
-    {
-      return false;
-    }
-    if(!r.has_behavior(object_behavior::seqable))
+    /* Only sequential collections can be equal to one another. nil, sets, maps, and strings
+     * are seqable, but must never equal an ordered collection. */
+    if(!is_sequential(l) || !is_sequential(r))
     {
       return false;
     }
