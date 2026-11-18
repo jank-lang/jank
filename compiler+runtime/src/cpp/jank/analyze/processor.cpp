@@ -789,7 +789,8 @@ namespace jank::analyze
         };
         if(conversion_res.is_err())
         {
-          return conversion_res.expect_err();
+          /* TODO: Identify the exact member. */
+          return conversion_res.expect_err()->add_usage(object_source(form));
         }
 
         //util::println("using aggregate initialization");
