@@ -385,8 +385,16 @@ namespace jank::analyze::cpp_util
          llvm::dyn_cast_or_null<clang::TypedefType>(qual_type.getTypePtrOrNull()) };
        alias)
     {
+      /* Printing an alias nested in a class template specialization, like
+       * `std::vector<int>::size_type`, omits the template arguments of its parent. Such
+       * aliases are spelled using their canonical type instead. */
       if(auto const *alias_decl{ alias->getDecl() }; alias_decl)
       {
+        if(llvm::isa<clang::RecordDecl>(alias_decl->getDeclContext()))
+        {
+          return get_qualified_type_name_helper(qual_type.getCanonicalType().getAsOpaquePtr(),
+                                                truncated);
+        }
         return get_qualified_name_helper(alias_decl, truncated);
       }
     }
