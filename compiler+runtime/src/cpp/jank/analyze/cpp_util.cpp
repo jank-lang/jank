@@ -1839,8 +1839,25 @@ namespace jank::analyze::cpp_util
 
     std::vector<cppinterop::clang_type> members;
     cppinterop::get_datamembers(scope, members);
+    /* Clang flattens the members of anonymous unions and structs into the enclosing record, but
+     * an anonymous union only takes a single initializer, which goes to its first member. */
+    jtl::ptr<void> last_union{};
     for(auto const member : members)
     {
+      auto const parent{ cppinterop::get_parent_scope(member) };
+      if(parent && parent != scope && cppinterop::is_union(parent))
+      {
+        if(parent == last_union)
+        {
+          continue;
+        }
+        last_union = parent;
+      }
+      else
+      {
+        last_union = nullptr;
+      }
+
       auto const member_type{ cppinterop::get_type_from_scope(member) };
       member_types.emplace_back(member_type);
     }

@@ -1,0 +1,30 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::pass_aggregate_anonymous_union
+          {
+            struct foo
+            {
+              union
+              {
+                int i;
+                float f;
+                char bytes[5];
+              };
+            };
+
+            struct bar
+            {
+              int before;
+              union
+              {
+                int i;
+                float f;
+              };
+              int after;
+            };
+          }")
+(let* [f (cpp/jank.cpp.constructor.complex.pass_aggregate_anonymous_union.foo. 5)
+       b (cpp/jank.cpp.constructor.complex.pass_aggregate_anonymous_union.bar. 1 2 3)]
+  (if (and (= 5 (.-i f))
+           (= 1 (.-before b))
+           (= 2 (.-i b))
+           (= 3 (.-after b)))
+    :success))
