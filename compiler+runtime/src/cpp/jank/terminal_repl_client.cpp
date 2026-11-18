@@ -279,8 +279,10 @@ namespace jank::terminal_repl
     }
 
     auto const tmp{ std::filesystem::temp_directory_path() };
-    std::string path_tmp{ (tmp / "jank-repl-XXXXXX").string() };
-    int const fd{ mkstemp(path_tmp.data()) };
+    std::string path_tmp{ (tmp / "jank-repl-XXXXXX.jank").string() };
+    constexpr auto suffix_size{ static_cast<int>(std::string_view{ ".jank" }.size()) };
+    /* mkstemps lets the unique part sit before a fixed suffix, so the file ends in .jank. */
+    int const fd{ mkstemps(path_tmp.data(), suffix_size) };
     close(fd);
 
     auto const first_res_var{ __rt_ctx->find_var("clojure.core", "*1") };
