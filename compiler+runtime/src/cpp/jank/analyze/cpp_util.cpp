@@ -1220,6 +1220,12 @@ namespace jank::analyze::cpp_util
             {
               apply = false;
             }
+            else if(same_type)
+            {
+              /* Overloads, including templates, which all accept the same type for this param
+               * require the same conversion, so there's nothing ambiguous about it. The final
+               * overload resolution will pick between them. */
+            }
             else
             {
               return err("No matching overload was found. When considering automatic trait "
