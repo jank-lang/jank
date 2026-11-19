@@ -1356,7 +1356,8 @@ namespace jank::analyze
     {
       return error::analyze_invalid_case(value_expr.expect_err()->message,
                                          meta_source(o->get_meta()),
-                                         latest_expansion(macro_expansions));
+                                         latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(o, 1));
     }
     value_expr = apply_implicit_conversion(value_expr.expect_ok(),
                                            cpp_util::untyped_object_ref_type(),
@@ -1378,7 +1379,8 @@ namespace jank::analyze
     {
       return error::analyze_invalid_case("The shift value for `case*` must be an integer.",
                                          meta_source(o->get_meta()),
-                                         latest_expansion(macro_expansions));
+                                         latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(o, 2));
     }
     auto const shift{ runtime::to_i64(shift_obj) };
 
@@ -1394,7 +1396,8 @@ namespace jank::analyze
     {
       return error::analyze_invalid_case("The mask value for `case*` must be an integer.",
                                          meta_source(o->get_meta()),
-                                         latest_expansion(macro_expansions));
+                                         latest_expansion(macro_expansions))
+        ->add_usage(read::parse::reparse_nth(o, 3));
     }
     auto const mask{ runtime::to_i64(mask_obj) };
 
@@ -1407,6 +1410,10 @@ namespace jank::analyze
     }
     auto const default_expr_obj{ it.first().unwrap() };
     auto default_expr{ analyze(default_expr_obj, current_frame, position, fn_ctx, needs_box) };
+    if(default_expr.is_err())
+    {
+      return default_expr.expect_err();
+    }
 
     it = it.rest();
     if(it.first().is_none())
@@ -1428,22 +1435,27 @@ namespace jank::analyze
     auto has_recur{ resolve_tail_expression(default_expr.expect_ok())->kind
                     == expression_kind::recur };
     auto keys_exprs{ visit_map_like(
-      [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
+      [&](auto const typed_imap_obj) -> jtl::result<keys_and_exprs, error_ref> {
         keys_and_exprs ret{};
-        for(auto seq{ typed_imap_obj.fresh_seq() }; seq.is_some(); seq = seq.next_in_place())
+        for(auto [seq, count] = std::pair{ typed_imap_obj.fresh_seq(), std::size_t{ 0 } };
+            seq.is_some();
+            seq = seq.next_in_place(), count = count + 2)
         {
           auto const e{ seq.first().seq() };
           auto const k_obj{ e.first() };
           auto const v_obj{ e.next().first() };
           if(!runtime::is_integral(k_obj))
           {
-            return err("Each key in a `case*` map must be an integer.");
+            return error::analyze_invalid_case("Each key in a `case*` map must be an integer.",
+                                               meta_source(typed_imap_obj->get_meta()),
+                                               latest_expansion(macro_expansions))
+              ->add_usage(read::parse::reparse_nth(typed_imap_obj, count));
           }
           auto const key{ runtime::to_i64(k_obj) };
           auto expr{ analyze(v_obj, current_frame, position, fn_ctx, needs_box) };
           if(expr.is_err())
           {
-            return err(expr.expect_err()->message);
+            return expr.expect_err();
           }
 
           has_recur = has_recur
@@ -1454,7 +1466,10 @@ namespace jank::analyze
 
           if(branch_common_type_result.is_err())
           {
-            return branch_common_type_result.expect_err();
+            return error::analyze_invalid_case(branch_common_type_result.expect_err(),
+                                               meta_source(typed_imap_obj->get_meta()),
+                                               latest_expansion(macro_expansions))
+              ->add_usage(read::parse::reparse_nth(typed_imap_obj, count + 1));
           }
 
           auto const branch_common_type{ branch_common_type_result.expect_ok() };
@@ -1467,16 +1482,18 @@ namespace jank::analyze
         }
         return ret;
       },
-      [&]() -> jtl::string_result<keys_and_exprs> {
-        return err("The keys and expressions for `case*` must be in a map-like structure.");
+      [&]() -> jtl::result<keys_and_exprs, error_ref> {
+        return error::analyze_invalid_case(
+                 "The keys and expressions for `case*` must be in a map-like structure.",
+                 meta_source(o->get_meta()),
+                 latest_expansion(macro_expansions))
+          ->add_usage(read::parse::reparse_nth(o, 5));
       },
       imap_obj) };
 
     if(keys_exprs.is_err())
     {
-      return error::analyze_invalid_case(keys_exprs.expect_err(),
-                                         meta_source(o->get_meta()),
-                                         latest_expansion(macro_expansions));
+      return keys_exprs.expect_err();
     }
 
     auto pairs{ keys_exprs.expect_ok() };
