@@ -136,40 +136,12 @@ function prepare()
   LLVM_VERSION_PATCH=$(sed -n 's/^[[:space:]]*set(LLVM_VERSION_PATCH \([0-9]*\))/\1/p' ${llvm_src_dir}/cmake/Modules/LLVMVersion.cmake)
   LLVM_VERSION_SUFFIX=$(sed -n 's/^[[:space:]]*set(LLVM_VERSION_SUFFIX \(.*\))/\1/p'   ${llvm_src_dir}/cmake/Modules/LLVMVersion.cmake)
   LLVM_COMMIT_HASH=$(git -C ${llvm_src_dir} rev-parse --short HEAD)
+  LLVM_COMMIT_EPOCH=$(git -C ${llvm_src_dir} log -1 --format=%ct)
 
   sed -i "s/PLACEHOLDER-PKGVER/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}${LLVM_VERSION_SUFFIX}/" ${llvm_mingw_pkg_build_dir}/PKGBUILD
-  sed -i "s/PLACEHOLDER-PKGREL/jank_${LLVM_COMMIT_HASH}/" ${llvm_mingw_pkg_build_dir}/PKGBUILD
+  sed -i "s/PLACEHOLDER-PKGREL/jank_${LLVM_COMMIT_EPOCH}.${LLVM_COMMIT_HASH}/" ${llvm_mingw_pkg_build_dir}/PKGBUILD
 
   llvm_version=${LLVM_VERSION_MAJOR}
-}
-
-function build()
-{
-  mkdir -p "${llvm_build_dir}"
-  cd "${llvm_build_dir}"
-
-  cmake -DCMAKE_BUILD_TYPE=Release \
-        -DLLVM_ENABLE_RUNTIMES="libcxx;libcxxabi;libunwind;compiler-rt" \
-        -DLLVM_BUILD_LLVM_DYLIB=ON \
-        -DLLVM_LINK_LLVM_DYLIB=ON \
-        -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" \
-        -DLLVM_TARGETS_TO_BUILD="host" \
-        -DLLVM_ENABLE_EH=ON \
-        -DLLVM_ENABLE_RTTI=ON \
-        -DLLVM_INCLUDE_BENCHMARKS=OFF \
-        -DLLVM_ENABLE_BINDINGS=OFF \
-        -DLLVM_INCLUDE_EXAMPLES=OFF \
-        -DLLVM_INCLUDE_TESTS=OFF \
-        -DLLVM_ENABLE_ZSTD=OFF \
-        -DLLVM_BUILD_OCAML_BINDINGS=OFF \
-        -DLLVM_ENABLE_OCAMLDOC=OFF \
-        -G "Ninja" \
-        ${llvm_src_dir}/llvm
-
-  export DESTDIR="${llvm_dest_dir}"
-  ninja clang clang-repl compiler-rt clang-cpp clang-tidy install -j"${make_j}"
-  mkdir -p "${DESTDIR}/usr/local/lib/clang/${llvm_version}/lib"
-  cp -r lib/clang/"${llvm_version}"/lib/* "${DESTDIR}/usr/local/lib/clang/${llvm_version}/lib/"
 }
 
 function build_mingw()
