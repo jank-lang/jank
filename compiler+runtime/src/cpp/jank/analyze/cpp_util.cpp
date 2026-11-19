@@ -1204,27 +1204,31 @@ namespace jank::analyze::cpp_util
             auto const prev_param_type{
               cppinterop::get_function_arg_type(matching_fns[needed_conversion.unwrap()], arg_idx)
             };
-            auto const same_type{ cppinterop::get_canonical_type(cppinterop::get_type_without_cv(
-                                    cppinterop::get_non_reference_type(param_type)))
-                                  == cppinterop::get_type_without_cv(cppinterop::get_canonical_type(
-                                    cppinterop::get_non_reference_type(prev_param_type))) };
-            if(same_type && cppinterop::is_rvalue_reference_type(param_type)
-               && cppinterop::get_value_category(prev_param_type)
-                 == cppinterop::value_category::lvalue)
+            auto const same_type{ cppinterop::get_canonical_type(param_type)
+                                  == (cppinterop::get_canonical_type(prev_param_type)) };
+            auto const same_type_without_ref{
+              cppinterop::get_canonical_type(
+                cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(param_type)))
+              == cppinterop::get_type_without_cv(
+                cppinterop::get_canonical_type(cppinterop::get_non_reference_type(prev_param_type)))
+            };
+            if(same_type
+               || (same_type_without_ref && cppinterop::is_rvalue_reference_type(param_type)
+                   && cppinterop::get_value_category(prev_param_type)
+                     == cppinterop::value_category::lvalue))
             {
-              /* Nothing to do. */
+              /* Overloads, including templates, which all accept the same type for this param
+               * require the same conversion, so there's nothing ambiguous about it. The final
+               * overload resolution will pick between them.
+               *
+               * Or, if we're comparing against lvalue ref vs rvalue ref, we'll also rely
+               * on the final overload resolution. */
             }
-            else if(same_type && cppinterop::is_rvalue_reference_type(prev_param_type)
+            else if(same_type_without_ref && cppinterop::is_rvalue_reference_type(prev_param_type)
                     && cppinterop::get_value_category(param_type)
                       == cppinterop::value_category::lvalue)
             {
               apply = false;
-            }
-            else if(same_type)
-            {
-              /* Overloads, including templates, which all accept the same type for this param
-               * require the same conversion, so there's nothing ambiguous about it. The final
-               * overload resolution will pick between them. */
             }
             else
             {
