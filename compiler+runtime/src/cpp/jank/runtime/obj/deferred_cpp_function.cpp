@@ -1,5 +1,3 @@
-#include <clang/Interpreter/Value.h>
-
 #include <jank/runtime/obj/deferred_cpp_function.hpp>
 #include <jank/runtime/obj/jit_function.hpp>
 #include <jank/runtime/obj/nil.hpp>
