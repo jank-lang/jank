@@ -557,7 +557,7 @@ namespace jank::analyze
         is_member_call = true;
       }
 
-      if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
+      if(auto const res{ cpp_util::instantiate_if_needed(match) }; res.is_err())
       {
         return error::analyze_invalid_cpp_call(res.expect_err(),
                                                object_source(val->form),
@@ -585,14 +585,6 @@ namespace jank::analyze
         {
           value->type = arg_types[i];
         }
-      }
-
-      if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
-      {
-        return error::analyze_invalid_cpp_call(res.expect_err(),
-                                               object_source(val->form),
-                                               latest_expansion(macro_expansions))
-          ->add_usage(object_source(form));
       }
 
       if(allow_implicit_conversions)
@@ -706,6 +698,14 @@ namespace jank::analyze
       if(cpp_util::is_non_static_member_function(match))
       {
         is_member_call = true;
+      }
+
+      if(auto const res{ cpp_util::instantiate_if_needed(match) }; res.is_err())
+      {
+        return error::analyze_invalid_cpp_call(res.expect_err(),
+                                               object_source(val->form),
+                                               latest_expansion(macro_expansions))
+          ->add_usage(object_source(form));
       }
 
       //util::println("\tconversion match found with new arg types");

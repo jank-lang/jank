@@ -1,0 +1,10 @@
+(cpp/raw "namespace jank::cpp::call::global::pass_template_with_typed_object
+          {
+            template <typename T>
+            T foo(T t)
+            {
+              return t;
+            }
+          }")
+(let* [r (cpp/jank.cpp.call.global.pass_template_with_typed_object.foo :success)]
+  r)

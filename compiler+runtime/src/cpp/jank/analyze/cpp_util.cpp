@@ -1142,7 +1142,7 @@ namespace jank::analyze::cpp_util
     auto const member_offset{ (is_member_call ? 1 : 0) };
     auto const arg_count{ arg_types.size() - member_offset };
     usize max_arg_count{};
-    std::vector<void *> matching_fns;
+    std::vector<cppinterop::clang_decl> matching_fns;
 
     /* First rule out any fns not matching the arity we've specified. However, note that C++
      * fns can have default arguments which needn't be specified. */
@@ -1176,13 +1176,6 @@ namespace jank::analyze::cpp_util
       jtl::option<usize> needed_conversion;
       for(usize fn_idx{}; fn_idx < matching_fns.size(); ++fn_idx)
       {
-        /* Function templates have dependent parameter types until they are instantiated, so
-         * they cannot be considered for implicit or trait conversions here. */
-        if(cppinterop::is_templated_function(matching_fns[fn_idx]))
-        {
-          continue;
-        }
-
         auto const param_type{ cppinterop::get_function_arg_type(matching_fns[fn_idx], arg_idx) };
         if(!param_type)
         {
