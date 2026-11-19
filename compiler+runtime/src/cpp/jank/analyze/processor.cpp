@@ -5545,6 +5545,15 @@ namespace jank::analyze
         native_vector<Cpp::TemplateArgInfo> args;
         for(auto const arg : make_sequence_range(rest(o)))
         {
+          if(runtime::is_boolean(arg))
+          {
+            static auto const bool_type{ cpp_util::bool_type() };
+            /* CppInterOp parses the value as a number. */
+            auto const * const text{ expect_object<obj::boolean>(arg)->data ? "1" : "0" };
+            args.emplace_back(bool_type.data, text);
+            continue;
+          }
+
           if(runtime::is_integral(arg))
           {
             auto const int_arg{ runtime::to_i64(arg) };

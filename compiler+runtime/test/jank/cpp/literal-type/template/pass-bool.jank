@@ -1,0 +1,3 @@
+(let* [a (#cpp (std.enable_if_t true std.string) "meow")]
+  (if (= "meow" a)
+    :success))
