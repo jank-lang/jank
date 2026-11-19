@@ -1205,7 +1205,7 @@ namespace jank::analyze::cpp_util
               cppinterop::get_function_arg_type(matching_fns[needed_conversion.unwrap()], arg_idx)
             };
             auto const same_type{ cppinterop::get_canonical_type(param_type)
-                                  == (cppinterop::get_canonical_type(prev_param_type)) };
+                                  == cppinterop::get_canonical_type(prev_param_type) };
             auto const same_type_without_ref{
               cppinterop::get_canonical_type(
                 cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(param_type)))
