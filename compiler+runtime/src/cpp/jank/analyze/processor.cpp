@@ -368,6 +368,8 @@ namespace jank::analyze
     auto const is_operator_call{ val->val_kind == expr::cpp_value::value_kind::operator_call };
     if(is_operator_call)
     {
+      auto const op_name{ try_object<obj::symbol>(val->form)->name };
+      auto const op{ cpp_util::match_operator(op_name).unwrap() };
       auto const arg_count{ arg_exprs.size() };
       if(arg_count == 0)
       {
@@ -376,7 +378,8 @@ namespace jank::analyze
           object_source(val->form),
           latest_expansion(macro_expansions));
       }
-      else if(arg_count > 2)
+      /* Call operators can have any number of arguments. */
+      else if(op != Cpp::OP_Call && arg_count > 2)
       {
         return error::analyze_invalid_cpp_operator_call(
                  "Operator calls may only take one or two arguments.",
@@ -386,8 +389,6 @@ namespace jank::analyze
       }
 
       auto const obj_type{ cppinterop::get_non_reference_type(arg_types[0]) };
-      auto const op_name{ try_object<obj::symbol>(val->form)->name };
-      auto const op{ cpp_util::match_operator(op_name).unwrap() };
       auto const is_addressof{ op == Cpp::OP_Amp && arg_types.size() == 1 };
       auto const always_use_builtin{ is_addressof };
 
