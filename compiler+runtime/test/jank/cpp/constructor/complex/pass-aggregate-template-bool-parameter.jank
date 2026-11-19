@@ -1,0 +1,12 @@
+(cpp/raw "namespace jank::cpp::constructor::complex::pass_aggregate_template_bool_parameter
+          {
+            template <bool B>
+            struct foo
+            {
+              bool v{ B };
+            };
+          }")
+(let* [a (cpp/new (cpp/jank.cpp.constructor.complex.pass_aggregate_template_bool_parameter.foo true))
+       b (cpp/new (cpp/jank.cpp.constructor.complex.pass_aggregate_template_bool_parameter.foo false))]
+  (if (and (.-v a) (cpp/! (.-v b)))
+    :success))
