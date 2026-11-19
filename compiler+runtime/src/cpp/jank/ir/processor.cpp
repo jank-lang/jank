@@ -391,7 +391,7 @@ namespace jank::ir
                                                         capture.first,
                                                         capture.second };
         captured_idents[name] = { gen(analyze::expr::local_reference_ref{ &local_ref }, b).unwrap(),
-                                  mutable_type(capture.second->type) };
+                                  capture.second->type };
       }
       return b.closure(expr->position,
                        runtime::munge(expr->unique_name + "_ctx"),

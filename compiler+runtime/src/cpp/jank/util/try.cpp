@@ -40,7 +40,8 @@ namespace jank::util
   {
     /* Clojure functions get turned from `clojure_core$subs_XXX_2`
      * into `clojure.core/subs (arity 2)`. */
-    if(frame.filename.ends_with(".jank") || frame.filename.ends_with(".cljc"))
+    if(frame.filename.ends_with(".jank") || frame.filename.ends_with(".cljc")
+       || frame.filename.starts_with("jank-repl"))
     {
 #ifdef JANK_WINDOWS_LIKE
       static std::regex const clojure_fn_name{ R"((\S+)_JJJ_(\S+)_\d+_(\d+))" };
