@@ -1,0 +1,20 @@
+(cpp/raw "namespace jank::cpp::auto_box::pass_template
+          {
+            template <typename T>
+            int before(int a, T b)
+            { return a; }
+
+            template <typename T>
+            int after(T a, int b)
+            { return b; }
+          }")
+
+(defn plot-line-1 [a]
+  (cpp/jank.cpp.auto_box.pass_template.before a 5.0))
+(defn plot-line-2 [b]
+  (cpp/jank.cpp.auto_box.pass_template.after true b))
+
+(let* [pl1 (plot-line-1 42)
+       pl2 (plot-line-2 42)]
+  (if (and (= 42 pl1) (= 42 pl2))
+    :success))

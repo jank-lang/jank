@@ -1,0 +1,17 @@
+(cpp/raw "namespace jank::cpp::auto_box::fail_template_instantiation
+          {
+            template <typename T>
+            int foo(int a, T b)
+            {
+              if constexpr(std::same_as<T, double>)
+              { static_assert((T*)nullptr, \"no doubles allowed\"); }
+
+              return a;
+            }
+          }")
+
+(defn plot-line [a]
+  (cpp/jank.cpp.auto_box.fail_template_instantiation.foo a 5.0))
+
+(let* [pl (plot-line 42)]
+  :success)
