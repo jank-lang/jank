@@ -1,0 +1,50 @@
+#!/bin/sh
+# Package a finished FreeBSD build, then smoke test both the DESTDIR staging tree and a
+# real `pkg add` of the resulting package, which also runs the repo's end-to-end suite. Installs into the system, so only run it as
+# root on a disposable host (the FreeBSD container test VM or a CI VM).
+#
+# Usage: test/freebsd/smoke BUILD_DIR OUT_DIR
+#   BUILD_DIR  a tree built by bin/freebsd-build
+#   OUT_DIR    where the .pkg is copied
+set -eu
+
+[ $# -eq 2 ] || { sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 2; }
+build_dir="$1"
+out_dir="$2"
+here="$(cd "$(dirname "$0")" && pwd)"
+cr_dir="$(cd "$here/../.." && pwd)"
+
+[ "$(id -u)" = "0" ] || { echo "smoke: must run as root (pkg add)" >&2; exit 1; }
+
+work="$(mktemp -d "${TMPDIR:-/tmp}/jank-smoke.XXXXXX")"
+trap 'rm -rf "$work"' EXIT
+
+"$cr_dir/bin/freebsd-package" -B "$build_dir" -o "$work/pkg-out" \
+  --staging-root "$work/staging" --prefix /usr/local --llvm-major 22
+
+check_run() { # label jank-binary
+  printf '(prn :%s)\n' "$1" >"$work/smoke.jank"
+  "$2" run "$work/smoke.jank" | grep -q ":$1" || { echo "smoke: $1 failed" >&2; exit 1; }
+  echo "smoke: $1"
+}
+
+check_run destdir-ok "$work/staging/destdir/usr/local/bin/jank"
+
+pkg add "$work"/pkg-out/*.pkg
+pkg info jank-jit
+check_run pkg-ok /usr/local/bin/jank
+
+# The same end-to-end proof as .github/actions/e2e-test, which package-check.yml runs
+# against the Ubuntu, Arch and macOS packages: check-health, then the bash test suite,
+# both against the installed package rather than the build tree.
+# The build tree's jank, which ran the test suite earlier, cached a PCH that points at the
+# build tree's headers. Start from a clean cache like the other platforms' package checks do,
+# or the installed jank would load that PCH and see its own headers a second time.
+export XDG_CACHE_HOME="$work/xdg-cache"
+/usr/local/bin/jank check-health
+(cd "$cr_dir" && JANK_BUILD_DIR=/usr/local/bin bb bin/jank/compiler+runtime/bash_test.clj)
+echo "smoke: e2e"
+
+mkdir -p "$out_dir"
+cp "$work"/pkg-out/*.pkg "$out_dir/"
+echo "smoke: PASS"

@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# apply-freebsd-patches: apply the FreeBSD patchset to the cpptrace/cppinterop submodules.
+#
+# Idempotent and non-destructive:
+#   - each submodule must be at the pinned base commit in patches/freebsd/<sub>/base.txt
+#   - patches that are already applied (reverse-check succeeds) are skipped
+#   - every pending patch is checked with `git apply --check` before anything is written,
+#     so a failure never leaves a partially patched tree
+#
+# Never stages, commits, checks out, resets or cleans.
+#
+# Usage (from compiler+runtime, before configure; bin/freebsd-build does this for you):
+#   bin/apply-freebsd-patches [--check] [--verbose]
+# Options:
+#   --check            validate only; don't modify anything
+#   --source-root DIR  submodule parent root (default: compiler+runtime)
+#   --patch-dir DIR    patchset root (default: <source-root>/patches/freebsd)
+#   --verbose          print per-patch detail
+set -euo pipefail
+shopt -s nullglob
+
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source_root="$script_dir/.."
+patch_dir=""
+check_only=0
+verbose=0
+
+fail() { printf 'apply-freebsd-patches: error: %s\n' "$*" >&2; exit 1; }
+notice() { printf 'apply-freebsd-patches: %s\n' "$*"; }
+detail() { if [ "$verbose" -eq 1 ]; then printf '  %s\n' "$*"; fi; }
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --check) check_only=1 ;;
+    --source-root) [ $# -ge 2 ] || fail "--source-root requires an argument"; source_root="$2"; shift ;;
+    --patch-dir) [ $# -ge 2 ] || fail "--patch-dir requires an argument"; patch_dir="$2"; shift ;;
+    --verbose) verbose=1 ;;
+    -h|--help) sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) fail "unknown argument: $1" ;;
+  esac
+  shift
+done
+
+source_root="$(cd "$source_root" 2>/dev/null && pwd)" || fail "source-root not a directory: $source_root"
+[ -n "$patch_dir" ] || patch_dir="$source_root/patches/freebsd"
+[ -d "$patch_dir" ] || fail "patch dir not found: $patch_dir"
+
+# Phase 1: validate every submodule and patch, writing nothing.
+pending_subs=()
+pending_patches=()
+for sub in cpptrace cppinterop; do
+  sub_path="$source_root/third-party/$sub"
+  patches=("$patch_dir/$sub"/*.patch)
+  [ ${#patches[@]} -gt 0 ] || fail "no patch files for $sub under $patch_dir/$sub"
+  git -C "$sub_path" rev-parse --git-dir >/dev/null 2>&1 \
+    || fail "$sub is not a git worktree under $sub_path"
+
+  head="$(git -C "$sub_path" rev-parse HEAD)"
+  base="$(tr -d '[:space:]' <"$patch_dir/$sub/base.txt")"
+  [ "$head" = "$base" ] \
+    || fail "submodule $sub HEAD $head does not match pinned base $base; refusing"
+
+  for patch in "${patches[@]}"; do
+    name="$(basename "$patch")"
+    if git -C "$sub_path" apply --check -R "$patch" >/dev/null 2>&1; then
+      notice "$name already applied to $sub; skipping"
+    elif git -C "$sub_path" apply --check "$patch" >/dev/null 2>&1; then
+      detail "$name: would apply cleanly to $sub"
+      pending_subs+=("$sub_path")
+      pending_patches+=("$patch")
+    else
+      fail "$name doesn't apply cleanly to $sub and isn't already applied; refusing"
+    fi
+  done
+done
+
+if [ "$check_only" -eq 1 ]; then
+  notice "check complete: ${#pending_patches[@]} patch(es) pending, nothing modified"
+  exit 0
+fi
+
+# Phase 2: everything validated, so apply.
+for i in "${!pending_patches[@]}"; do
+  git -C "${pending_subs[$i]}" apply "${pending_patches[$i]}" \
+    || fail "apply failed for $(basename "${pending_patches[$i]}")"
+  notice "applied $(basename "${pending_patches[$i]}") to $(basename "${pending_subs[$i]}")"
+done

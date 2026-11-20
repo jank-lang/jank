@@ -17,7 +17,7 @@ export CC=clang
 export CXX=clang++
 
 set +e
-  make_j="$(nproc 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 4)"
+  make_j="$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || sysctl -n hw.logicalcpu 2>/dev/null || echo 4)"
 set -e
 
 update=0

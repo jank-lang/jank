@@ -1,0 +1,18 @@
+diff --git a/lib/CppInterOp/Compatibility.h b/lib/CppInterOp/Compatibility.h
+index afc5016..485b08f 100644
+--- a/lib/CppInterOp/Compatibility.h
++++ b/lib/CppInterOp/Compatibility.h
+@@ -230,10 +230,12 @@ public:
+                         const clang::Diagnostic &Info) override {
+     auto const IsPCHStalenessDiagnostic{
+       Info.getID() == clang::diag::err_fe_ast_file_modified
+-      || Info.getID() == clang::diag::note_fe_ast_file_modified
+       || Info.getID() == clang::diag::note_ast_file_required_by
+       || Info.getID() == clang::diag::note_ast_file_rebuild_required
++#if CLANG_VERSION_MAJOR >= 23
++      || Info.getID() == clang::diag::note_fe_ast_file_modified
+       || Info.getID() == clang::diag::note_ast_file_input_files_validation_status
++#endif
+     };
+     if (Info.getID() == clang::diag::err_fe_ast_file_modified
+ #if CLANG_VERSION_MAJOR >= 23

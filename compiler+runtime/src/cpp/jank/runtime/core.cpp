@@ -1200,8 +1200,8 @@ namespace jank::runtime
         break;
     }
 
-#if defined(JANK_MACOS_LIKE) || defined(JANK_WINDOWS_LIKE)
-    /* macOS doesn't have pthread_tryjoin_np, or any similar function, so we can only
+#if defined(JANK_MACOS_LIKE) || defined(JANK_WINDOWS_LIKE) || defined(JANK_OTHER_UNIX_LIKE)
+    /* macOS and FreeBSD don't have pthread_tryjoin_np, or any similar function, so we can only
      * pthread_join, to get the cancellation state, which is blocking. So we just have
      * to return false here. That means it's not currently possible to know if a thread
      * was cancelled on macOS. */

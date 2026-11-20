@@ -39,7 +39,9 @@ Filters:
           bash-test-dir (str compiler+runtime-dir "/test/bash")
           all-tests (b.f/glob bash-test-dir "**/{pass,fail,skip}-test")
           test-files (filter #(matches-filter? filters (str %)) all-tests)
-          extra-env (merge {"PATH" (str compiler+runtime-dir "/build" b.f/path-separator (util/get-env "PATH"))}
+          build-dir (or (not-empty (System/getenv "JANK_BUILD_DIR"))
+                        (str compiler+runtime-dir "/build"))
+          extra-env (merge {"PATH" (str build-dir b.f/path-separator (util/get-env "PATH"))}
                            (let [skip (System/getenv "JANK_SKIP_AOT_CHECK")]
                              (when-not (empty? skip)
                                {"JANK_SKIP_AOT_CHECK" skip})))
