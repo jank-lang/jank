@@ -283,7 +283,7 @@
     clojure.string-test.capitalize
     clojure.string-test.ends-with-qmark
     clojure.string-test.escape
-    ; clojure.string-test.includes-qmark ; FIXME: (p/thrown? (str/includes? nil ""))
+    clojure.string-test.includes-qmark
     clojure.string-test.join
     clojure.string-test.lower-case
     clojure.string-test.replace
