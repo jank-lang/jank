@@ -6,12 +6,16 @@
     clojure.core-test.abs
     clojure.core-test.aclone
     ; clojure.core-test.add-watch ; TODO: port sync
+    clojure.core-test.aget
     ; clojure.core-test.ancestors ; analyze/unresolved-symbol error: Unable to resolve symbol 'Object'.
     clojure.core-test.and
     clojure.core-test.any-qmark
     clojure.core-test.apply
+    ; clojure.core-test.aset ; FIXME: error: Invalid reader conditional.
+    ; clojure.core-test.assert ; FIXME: error: The symbol `set!` could not be resolved.
     clojure.core-test.assoc
     clojure.core-test.assoc-bang
+    clojure.core-test.assoc-in
     clojure.core-test.associative-qmark
     clojure.core-test.atom
     clojure.core-test.bigdec
@@ -39,6 +43,7 @@
     clojure.core-test.char-qmark
     clojure.core-test.coll-qmark
     clojure.core-test.comment
+    clojure.core-test.comp
     clojure.core-test.compare
     clojure.core-test.concat
     ; clojure.core-test.cond-minus-gt ; error: brackets are not allowed here; to declare an array, place the brackets after the name
@@ -53,9 +58,12 @@
     clojure.core-test.cycle
     clojure.core-test.dec
     clojure.core-test.decimal-qmark
+    ; clojure.core-test.defmacro ; FIXME: error: Uncaught exception while expanding macro.
     clojure.core-test.defmethod
     clojure.core-test.defn
+    ; clojure.core-test.defn-minus ; FIXME: privacy is added to, rather than a substitute for, the rest of the var's metadata
     clojure.core-test.denominator
+    ; clojure.core-test.deref ; FIXME: "TODO: port sync"
     ; clojure.core-test.derive ; analyze/unresolved-symbol error: Unable to resolve symbol 'String'.
     ; clojure.core-test.descendants ; analyze/unresolved-symbol error: Unable to resolve symbol 'defprotocol'.
     clojure.core-test.destructure
@@ -74,6 +82,7 @@
     clojure.core-test.empty-qmark
     ; clojure.core-test.eq ; TODO: port sorted-map-by, not yet implemented: sorted-set-by
     clojure.core-test.eval
+    ; clojure.core-test.ex-info ; FIXME: error: Unable to find `e` within the global namespace.
     clojure.core-test.even-qmark
     clojure.core-test.every-qmark
     clojure.core-test.false-qmark
@@ -87,6 +96,7 @@
     clojure.core-test.fn-qmark
     clojure.core-test.fnext
     clojure.core-test.fnil
+    clojure.core-test.for
     clojure.core-test.format
     clojure.core-test.get
     clojure.core-test.get-in
@@ -98,6 +108,7 @@
     clojure.core-test.ident-qmark
     clojure.core-test.identical-qmark
     ; clojure.core-test.identity ; runtime/unable-to-load-module error: "'#inst' parsing not currently supported."
+    clojure.core-test.if-let
     clojure.core-test.ifn-qmark
     clojure.core-test.inc
     clojure.core-test.int
@@ -108,6 +119,7 @@
     clojure.core-test.interpose
     clojure.core-test.into
     clojure.core-test.juxt
+    ; clojure.core-test.keep ; FIXME: "TODO: port sequence"
     clojure.core-test.key
     clojure.core-test.keys
     clojure.core-test.keyword
@@ -118,6 +130,7 @@
     clojure.core-test.list
     clojure.core-test.list-qmark
     clojure.core-test.long
+    ; clojure.core-test.loop ; FIXME: error: call to 'from_object' is ambiguous
     clojure.core-test.lt
     clojure.core-test.lt-eq
     clojure.core-test.make-hierarchy
@@ -127,6 +140,7 @@
     clojure.core-test.mapv
     ; clojure.core-test.max ; FIXME: Failing tests.
     clojure.core-test.merge
+    ; clojure.core-test.meta ; FIXME: vars carry the metadata that def attaches
     ; clojure.core-test.min ; FIXME: Failing tests.
     clojure.core-test.min-key
     clojure.core-test.minus-gt
@@ -184,9 +198,11 @@
     clojure.core-test.rand-nth
     clojure.core-test.random-sample
     clojure.core-test.random-uuid
+    clojure.core-test.range
     ; clojure.core-test.ratio-qmark ; FIXME: Failing test.
     clojure.core-test.rational-qmark
     ; clojure.core-test.rationalize ; TODO: port rationalize
+    ; clojure.core-test.re-find ; FIXME: error: Invalid '(?...)' zero-width assertion in regular expression
     ; clojure.core-test.realized-qmark ; TODO: port promise
     clojure.core-test.reduce
     clojure.core-test.reduce-kv
@@ -217,6 +233,7 @@
     ; clojure.core-test.slash ; FIXME: Failing tests.
     clojure.core-test.some
     clojure.core-test.some-fn
+    ; clojure.core-test.some-minus-gt ; FIXME: error: brackets are not allowed here; to declare an array, place the brackets after the name
     clojure.core-test.some-qmark
     clojure.core-test.sort
     clojure.core-test.sort-by
@@ -241,6 +258,7 @@
     clojure.core-test.underive
     clojure.core-test.unsigned-bit-shift-right
     clojure.core-test.update
+    clojure.core-test.update-in
     clojure.core-test.uuid-qmark
     clojure.core-test.val
     clojure.core-test.vals
@@ -255,6 +273,7 @@
     clojure.core-test.with-meta
     clojure.core-test.with-out-str
     ; clojure.core-test.with-precision ; TODO: port with-precision, INFO: SKIP - defprotocol
+    ; clojure.core-test.with-redefs ; FIXME: redefinitions are visible in all threads
     clojure.core-test.zero-qmark
     clojure.core-test.zipmap
 
@@ -264,6 +283,8 @@
     clojure.string-test.capitalize
     clojure.string-test.ends-with-qmark
     clojure.string-test.escape
+    ; clojure.string-test.includes-qmark ; FIXME: (p/thrown? (str/includes? nil ""))
+    clojure.string-test.join
     clojure.string-test.lower-case
     clojure.string-test.replace
     clojure.string-test.reverse
