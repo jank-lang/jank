@@ -267,4 +267,6 @@
 (defn includes?
   "True if s includes substr."
   [s substr]
+  (when (nil? s)
+    (throw (ex-info "includes? does not support nil"  {})))
   (cpp/clojure.string_native.includes (.to_string s) substr))
