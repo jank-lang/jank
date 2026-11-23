@@ -23,7 +23,7 @@ namespace jank::runtime::obj
 
   transient_array_map::transient_array_map(runtime::detail::native_array_map const &d)
     : object{ obj_type, obj_behaviors }
-    , data{ d }
+    , data{ d.clone() }
   {
   }
 
