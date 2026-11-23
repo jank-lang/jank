@@ -29,7 +29,10 @@ namespace jank::runtime::obj
       locked_state->val = o;
       locked_state->status = promise_status::ready;
       sync.notify_all();
+      return runtime::detail::untagged(this);
     }
-    return runtime::detail::untagged(this);
+
+    /* Clojure returns nil for deliveries to an already-realized promise. */
+    return jank_nil;
   }
 }
