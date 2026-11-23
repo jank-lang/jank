@@ -100,14 +100,8 @@ namespace jank::read::parse
     return res.expect_ok();
   }
 
-  source reparse_nth(runtime::obj::persistent_array_map_ref const o, usize const n)
+  static source reparse_nth_map(source const &source, usize n)
   {
-    auto source(object_source(o));
-    if(source == source::unknown())
-    {
-      return source;
-    }
-
     /* Add one to skip the { for the map. */
     auto const res{
       reparse_nth(source.file, source.module, source.start.offset + 1, n, source.macro_expansion)
@@ -119,23 +113,28 @@ namespace jank::read::parse
     return res.expect_ok();
   }
 
-  source reparse_nth(runtime::obj::persistent_hash_map_ref const o, usize const n)
+  source reparse_nth(runtime::obj::persistent_array_map_ref const o, usize n)
   {
     auto source(object_source(o));
+
     if(source == source::unknown())
     {
       return source;
     }
 
-    /* Add one to skip the { for the map. */
-    auto const res{
-      reparse_nth(source.file, source.module, source.start.offset + 1, n, source.macro_expansion)
-    };
-    if(res.is_err())
+    return reparse_nth_map(source, n);
+  }
+
+  source reparse_nth(runtime::obj::persistent_hash_map_ref const o, usize n)
+  {
+    auto source(object_source(o));
+
+    if(source == source::unknown())
     {
-      return source::unknown();
+      return source;
     }
-    return res.expect_ok();
+
+    return reparse_nth_map(source, n);
   }
 
   source reparse_nth(runtime::object_ref const o, usize const n)

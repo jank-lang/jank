@@ -1437,9 +1437,9 @@ namespace jank::analyze
     auto keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> jtl::result<keys_and_exprs, error_ref> {
         keys_and_exprs ret{};
-        for(auto [seq, count] = std::pair{ typed_imap_obj.fresh_seq(), std::size_t{ 0 } };
-            seq.is_some();
-            seq = seq.next_in_place(), count = count + 2)
+        usize count{};
+        for(auto seq = typed_imap_obj.fresh_seq(); seq.is_some();
+            seq = seq.next_in_place(), count += 2)
         {
           auto const e{ seq.first().seq() };
           auto const k_obj{ e.first() };
