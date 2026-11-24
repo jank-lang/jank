@@ -23,6 +23,14 @@ Do not use `static` for this.
 > Do not put static variables into `cpp/raw` forms, since the underlying machinery
 > of Clang's JIT runtime will result in those variables being duplicated.
 
+## NULL usage
+In jank, `NULL`, which is generally defined as `0`, cannot convert to a pointer
+value. Within C++, the integer `0` has special behavior allowing it be be used
+as any pointer value, but this is baggage from C which has since been replaced
+by `nullptr`. jank has correct support for `nullptr` and that's what should be
+used to represent a null pointer. When porting old code, you should be able to
+swap in `cpp/nullptr` for any previous `NULL` usage without issue.
+
 ## Math
 * Signed integer overflow is well defined and will wrap
 * Unsigned integer overflow is well defined and will wrap
