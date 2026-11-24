@@ -534,6 +534,15 @@ namespace jank::runtime
 
   object_ref merge(object_ref const m, object_ref const other)
   {
+    if(m.is_nil())
+    {
+      return other;
+    }
+    else if(other.is_nil())
+    {
+      return m;
+    }
+
     /* TODO: Port visit_object: associatively_writable. */
     return visit_object(
       [](auto const typed_m, object_ref const other) -> object_ref {
@@ -541,7 +550,7 @@ namespace jank::runtime
 
         if constexpr(jtl::is_same<T, obj::nil>)
         {
-          return typed_m;
+          return other;
         }
         else if constexpr(behavior::associatively_writable<T>)
         {
