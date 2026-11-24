@@ -53,7 +53,7 @@ Clojure.
     optionally with a `.o` file cached for quick loading
 
 ## Math
-* Signed integer overflow is well defined
-* Unsigned integer overflow is well defined
+* Signed integer overflow is well defined and will wrap
+* Unsigned integer overflow is well defined and will wrap
 * Division by integer `0` is undefined behavior
-* Division by floating point `0.0` is well defined
+* Division by floating point `0.0` is well defined and will return `##Inf`
