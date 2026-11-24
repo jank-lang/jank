@@ -1,3 +1,8 @@
 #pragma once
 
-extern "C" void jank_load_jank_compiler_native();
+#include <jank/runtime/object.hpp>
+
+namespace jank::compiler_native
+{
+  runtime::object_ref native_source(runtime::object_ref const form);
+}
