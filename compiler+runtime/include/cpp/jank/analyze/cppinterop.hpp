@@ -61,6 +61,7 @@ namespace jank::analyze::cppinterop
   bool is_implicitly_convertible(clang_type from_type, clang_type to_type);
   bool is_c_style_convertible(clang_type from_type, clang_type to_type);
   bool is_constructible(clang_type to_type, clang_type from_type);
+  bool is_assignable(clang_type to_type, clang_type from_type);
   bool is_trivially_destructible(clang_type type);
   bool is_enum_scope(clang_decl handle);
   bool is_enum_constant(clang_decl handle);
