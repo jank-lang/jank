@@ -3517,7 +3517,11 @@ namespace jank::analyze
             /* Forward metadata from the original call to the inline result. This allows us
              * to keep source info for inline calls sanely. */
             auto expanded{ apply_to(inline_fn, o->next()) };
-            expanded = runtime::with_meta_graceful(expanded, runtime::meta(o));
+            /* The inline fn may have attached its own meta to the result, so we merge rather
+             * than replace. The call's meta wins on conflicts, so source info stays accurate. */
+            expanded = runtime::with_meta_graceful(
+              expanded,
+              runtime::merge(runtime::meta(expanded), runtime::meta(o)));
             return analyze(expanded, current_frame, position, fn_ctx, needs_box);
           }
         }
