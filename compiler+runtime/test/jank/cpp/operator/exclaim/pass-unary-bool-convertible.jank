@@ -1,0 +1,17 @@
+(cpp/raw "namespace jank::cpp::operator_::exclaim::pass_unary_bool_convertible
+          {
+            struct foo
+            {
+              operator bool() const
+              {
+                return value;
+              }
+
+              bool value{};
+            };
+          }")
+(let* [t (cpp/jank.cpp.operator_.exclaim.pass_unary_bool_convertible.foo. true)
+       f (cpp/jank.cpp.operator_.exclaim.pass_unary_bool_convertible.foo. false)]
+  (if (and (= false (cpp/! t))
+           (= true (cpp/! f)))
+    :success))

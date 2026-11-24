@@ -1,0 +1,18 @@
+(cpp/raw "namespace jank::cpp::operator_::pipepipe::pass_binary_bool_convertible
+          {
+            struct foo
+            {
+              operator bool() const
+              {
+                return value;
+              }
+
+              bool value{};
+            };
+          }")
+(let* [t (cpp/jank.cpp.operator_.pipepipe.pass_binary_bool_convertible.foo. true)
+       f (cpp/jank.cpp.operator_.pipepipe.pass_binary_bool_convertible.foo. false)]
+  (if (and (= true (cpp/|| f t))
+           (= false (cpp/|| f f))
+           (= true (cpp/|| f true)))
+    :success))
