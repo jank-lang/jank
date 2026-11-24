@@ -461,6 +461,55 @@ namespace jank::analyze
       auto const arity{ arg_count == 1 ? Cpp::kUnary : Cpp::kBinary };
       cppinterop::get_operator(op, arg_types, fns, arity);
 
+      /* Logical operators contextually convert their operands to bool, so class types which
+       * are convertible to bool, but which have no overloaded operator, are still valid. */
+      auto const is_logical_op{ op == Cpp::OP_Exclaim || op == Cpp::OP_AmpAmp
+                                || op == Cpp::OP_PipePipe };
+      if(fns.empty() && is_logical_op)
+      {
+        auto const bool_type{ cpp_util::bool_type() };
+        auto convertible{ true };
+        for(usize i{}; i < arg_exprs.size(); ++i)
+        {
+          auto const arg_type{ cppinterop::get_non_reference_type(arg_types[i]) };
+          if(!cpp_util::is_primitive(arg_type)
+             && !cppinterop::is_constructible(bool_type, arg_types[i]))
+          {
+            convertible = false;
+            break;
+          }
+        }
+
+        if(convertible)
+        {
+          for(usize i{}; i < arg_exprs.size(); ++i)
+          {
+            if(cpp_util::is_primitive(cppinterop::get_non_reference_type(arg_types[i])))
+            {
+              continue;
+            }
+            auto const conversion_res{
+              apply_implicit_conversion(arg_exprs[i], arg_types[i], bool_type, macro_expansions)
+            };
+            if(conversion_res.is_err())
+            {
+              return conversion_res.expect_err();
+            }
+            arg_exprs[i] = conversion_res.expect_ok();
+            arg_types[i] = bool_type;
+          }
+          return build_builtin_operator_call(val,
+                                             op,
+                                             std::move(arg_exprs),
+                                             arg_types,
+                                             current_frame,
+                                             position,
+                                             needs_box,
+                                             form,
+                                             macro_expansions);
+        }
+      }
+
       if(fns.empty())
       {
         /* TODO: Show arg types. */
