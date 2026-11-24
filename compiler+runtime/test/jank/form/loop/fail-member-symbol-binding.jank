@@ -1,0 +1,1 @@
+(loop* [.foo 1] .foo)
