@@ -1,0 +1,3 @@
+(cpp/def int jank-cpp-def-fail-type-value-mismatch-foo "bar")
+
+:success
