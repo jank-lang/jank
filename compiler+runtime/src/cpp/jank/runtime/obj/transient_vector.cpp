@@ -52,6 +52,7 @@ namespace jank::runtime::obj
 
   object_ref transient_vector::nth(object_ref const index) const
   {
+    assert_active();
     if(is_integral(index))
     {
       auto const i(to_i64(index));
@@ -197,6 +198,7 @@ namespace jank::runtime::obj
 
   object_ref transient_vector::find(object_ref const idx) const
   {
+    assert_active();
     if(is_integral(idx))
     {
       auto const i(to_i64(idx));
@@ -217,6 +219,7 @@ namespace jank::runtime::obj
 
   bool transient_vector::contains(object_ref const elem) const
   {
+    assert_active();
     if(is_integral(elem))
     {
       auto const i(to_i64(elem));
