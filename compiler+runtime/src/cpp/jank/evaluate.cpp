@@ -183,7 +183,15 @@ namespace jank::evaluate
     expression_ref expr_to_add{ expr };
     if(!cpp_util::is_any_object(expr_type))
     {
-      jank_debug_assert(cpp_util::is_trait_convertible(expr_type));
+      if(!cpp_util::is_trait_convertible(expr_type))
+      {
+        throw error::analyze_invalid_cpp_type(
+          util::format(
+            "Unable to evaluate expression with type '{}', since it's not trait convertible.",
+            analyze::cpp_util::get_qualified_type_name(expr_type)),
+          object_source(orig_expr->form),
+          {});
+      }
       expr_to_add = jtl::make_ref<expr::cpp_conversion>(expr->position,
                                                         expr->frame,
                                                         expr->needs_box,

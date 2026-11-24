@@ -1695,9 +1695,9 @@ namespace jank::analyze::cpp_util
   /* TODO: Cache result. */
   bool is_trait_convertible(jtl::ptr<void> const type)
   {
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     static auto const convert_template{ cppinterop::get_scope_from_complete_name(
       "jank::runtime::convert") };
-    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     Cpp::TemplateArgInfo const arg{ cppinterop::get_canonical_type(
       cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(type))) };
     clang::Sema::SFINAETrap const trap{ (*locked_interpreter)->getSema(), true };
