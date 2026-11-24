@@ -35,8 +35,6 @@
 #include <jank/runtime/convert/builtin.hpp>
 #include <jank/terminal_repl_client.hpp>
 
-extern "C" void jank_init_core_libs_phase_1();
-
 #ifdef JANK_PHASE_2
 extern "C" void jank_init_core_libs();
 #endif
@@ -255,8 +253,6 @@ int main(int const argc, char const **argv)
       }
 
       __rt_ctx = new(UseGC) runtime::context{};
-
-      jank_init_core_libs_phase_1();
 
 #ifdef JANK_PHASE_2
       jank_init_core_libs();

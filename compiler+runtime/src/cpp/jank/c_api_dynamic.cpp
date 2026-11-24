@@ -34,12 +34,6 @@ extern "C"
     jank::util::cli::opts.include_dirs.emplace_back(path);
   }
 
-  void jank_init_core_libs_phase_1()
-  {
-    jank::runtime::__rt_ctx->module_loader.add_load_fn("jank.compiler-native",
-                                                       &jank_load_jank_compiler_native);
-  }
-
   int jank_init_dynamic_embedded(jank_bool const init_default_ctx,
                                  char const * const pch_data,
                                  jank_usize pch_size)
@@ -64,8 +58,6 @@ extern "C"
         {
           jank::runtime::__rt_ctx = new(UseGC) jank::runtime::context{};
         }
-
-        jank_init_core_libs_phase_1();
       },
       [&](std::exception const &e) {
         ret = 1;

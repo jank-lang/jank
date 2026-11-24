@@ -51,7 +51,6 @@ extern "C" int jank_init_static(int const argc,
                          jank_bool const init_default_ctx,
                          int (*fn)(int const, char const ** const));
 extern "C" void jank_load_clojure_core();
-extern "C" void jank_load_jank_compiler_native();
 extern "C" jank_object_ref jank_var_intern_c(char const *, char const *);
 extern "C" jank_object_ref jank_deref(jank_object_ref);
 extern "C" jank_object_ref jank_call2(jank_object_ref, jank_object_ref, jank_object_ref);
