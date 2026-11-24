@@ -42,6 +42,7 @@ namespace jank::evaluate
       source = expanded_from;
       expansion = expanded_from.macro_expansion;
     }
+    /* We trim things down to just the start of the form, rather than underline the whole thing. */
     source.end = source.start;
     return source;
   }
