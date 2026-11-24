@@ -134,7 +134,8 @@
   "Verify that we can run the executable, or crash with the reason we cannot."
   [args]
   (try
-    (util/sh {} args)
+    ;; We only care that the process can be spawned.
+    (.destroyForcibly ^Process (:process (util/sh {} args)))
     (catch Exception e
       ;; Will print a nice message on failure like "Cannot run program
       ;; 'jank': ..."
@@ -166,7 +167,7 @@
    5  "SIGTRAP: trace/breakpoint trap"})
 
 (defn shell-out! [project classpath prefix command compiler-args runtime-args]
-  (verify-executable! ["jank"])
+  (verify-executable! ["jank" "--help"])
   (let [args (concat prefix
                      ["jank" command "--module-path" classpath]
                      ; The normal build dir would be <target dir>/_cache, but we want
