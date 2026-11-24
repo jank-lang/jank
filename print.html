@@ -37,10 +37,10 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-e89f44fe.js";
+            window.path_to_searchindex_js = "searchindex-c4582e91.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-846aad8b.js"></script>
+        <script src="toc-b12c03d3.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -1757,10 +1757,48 @@ optionally with a <code>.o</code> file cached for quick loading</li>
 </ul>
 <h2 id="math"><a class="header" href="#math">Math</a></h2>
 <ul>
-<li>Signed integer overflow is well defined</li>
-<li>Unsigned integer overflow is well defined</li>
+<li>Signed integer overflow is well defined and will wrap</li>
+<li>Unsigned integer overflow is well defined and will wrap</li>
 <li>Division by integer <code>0</code> is undefined behavior</li>
-<li>Division by floating point <code>0.0</code> is well defined</li>
+<li>Division by floating point <code>0.0</code> is well defined and will return <code>##Inf</code></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="differences-from-c"><a class="header" href="#differences-from-c">Differences from C++</a></h1>
+<p>jank is C++, but it only directly exposes some C++ semantics. Some areas, such
+as JIT compilation, are not defined behavior for C++ and so the details of how
+they work are jank-specific. In other areas, undefined C++ behavior ends up
+being well-defined in jank. We would rather remove more undefined behavior than
+introduce more.</p>
+<h2 id="jit-compilation-model"><a class="header" href="#jit-compilation-model">JIT compilation model</a></h2>
+<p>When JIT compiling your project, every jank module is effectively loaded into
+one mega translation unit (TU). This means that a <code>cpp/raw</code> or <code>include</code> in one
+<code>.jank</code> file will be implicitly available to all other <code>.jank</code> files that are
+later processed. However, this differs from the normal AOT compilation behavior
+of C++ and should not be relied upon. Instead, make sure that each jank module
+has included everything it needs. You’ll know this is done correctly when your
+project can be AOT compiled.</p>
+<p>Also be sure that each function you include or define via <code>cpp/raw</code> or
+<code>include</code> is <code>inline</code>, so that it can be defined multiple times without
+violating the <a href="https://en.cppreference.com/cpp/language/definition">one definition rule</a> (ODR).
+Do not use <code>static</code> for this.</p>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>Do not put static variables into <code>cpp/raw</code> forms, since the underlying machinery
+of Clang’s JIT runtime will result in those variables being duplicated.</p>
+</blockquote>
+<h2 id="null-usage"><a class="header" href="#null-usage">NULL usage</a></h2>
+<p>In jank, <code>NULL</code>, which is generally defined as <code>0</code>, cannot convert to a pointer
+value. Within C++, the integer <code>0</code> has special behavior allowing it be be used
+as any pointer value, but this is baggage from C which has since been replaced
+by <code>nullptr</code>. jank has correct support for <code>nullptr</code> and that’s what should be
+used to represent a null pointer. When porting old code, you should be able to
+swap in <code>cpp/nullptr</code> for any previous <code>NULL</code> usage without issue.</p>
+<h2 id="math-1"><a class="header" href="#math-1">Math</a></h2>
+<ul>
+<li>Signed integer overflow is well defined and will wrap</li>
+<li>Unsigned integer overflow is well defined and will wrap</li>
+<li>Division by integer <code>0</code> is undefined behavior</li>
+<li>Division by floating point <code>0.0</code> is well defined and will return <code>##Inf</code></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h1>
