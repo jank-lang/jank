@@ -22,10 +22,11 @@
 
 (defn sh
   "A wrapper around `clojure.java.process` which forward the opts and
-  cmd, and returns a map of: :in, :out, :err, :exit."
+  cmd, and returns a map of: :process, :in, :out, :err, :exit."
   [opts cmd]
   (let [p (apply proc/start opts (mapv str cmd))]
-    {:in   (proc/stdin p)
+    {:process p
+     :in   (proc/stdin p)
      :out  (proc/stdout p)
      :err  (proc/stderr p)
      :exit (proc/exit-ref p)}))
