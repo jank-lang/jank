@@ -1513,7 +1513,7 @@ namespace jank::analyze::cpp_util
       if(is_member_call)
       {
         if(cppinterop::is_method(ranked.fn) && !arg_types.empty()
-           && !cppinterop::is_const_method(ranked.fn) && !cppinterop::is_const_type(arg_types[0]))
+           && !cppinterop::is_const_method(ranked.fn) && cppinterop::is_const_type(arg_types[0]))
         {
           return resolve_candidate(
             ranked.fn,
