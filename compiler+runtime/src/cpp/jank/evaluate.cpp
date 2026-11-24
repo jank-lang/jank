@@ -25,6 +25,27 @@ namespace jank::evaluate
   using namespace jank::runtime;
   using namespace jank::analyze;
 
+  /* Forms are usually the result of a macro expansion, so errors should point at the
+   * original macro call site instead of the macro's internals. */
+  static read::source original_source(object_ref const form)
+  {
+    auto source{ object_source(form) };
+    auto expansion{ source.macro_expansion };
+    while(expansion.is_some())
+    {
+      auto const original{ runtime::second(expansion) };
+      auto const expanded_from{ object_source(original) };
+      if(expanded_from == read::source::unknown())
+      {
+        break;
+      }
+      source = expanded_from;
+      expansion = expanded_from.macro_expansion;
+    }
+    source.end = source.start;
+    return source;
+  }
+
   /* TODO: Move postwalk into the nodes. */
   template <typename T, typename F>
   requires std::is_base_of_v<expression, T>
@@ -185,11 +206,13 @@ namespace jank::evaluate
     {
       if(!cpp_util::is_trait_convertible(expr_type))
       {
+        auto const source{ original_source(orig_expr->form) };
         throw error::analyze_invalid_cpp_type(
-          util::format(
-            "Unable to evaluate expression with type '{}', since it's not trait convertible.",
-            analyze::cpp_util::get_qualified_type_name(expr_type)),
-          object_source(orig_expr->form),
+          util::format("This top-level form was wrapped in a function in order to be evaluated, "
+                       "but it returns a '{}', which is not trait convertible. Either convert the "
+                       "value or return something else.",
+                       analyze::cpp_util::get_qualified_type_name(expr_type)),
+          source,
           {});
       }
       expr_to_add = jtl::make_ref<expr::cpp_conversion>(expr->position,
@@ -292,7 +315,7 @@ namespace jank::evaluate
         {
           /* We keep the original form from the call expression so we can point
            * back to it if an exception is thrown during eval. */
-          e->add_usage(object_source(ex->form));
+          e->add_usage(original_source(ex->form));
           throw e;
         }
       },
