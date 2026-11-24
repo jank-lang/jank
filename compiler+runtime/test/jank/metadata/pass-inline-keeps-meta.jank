@@ -1,0 +1,8 @@
+(defn
+  ^{:inline (fn []
+              (with-meta [1 2] {:from-inline true}))}
+  inlined []
+  [1 2])
+
+(if (true? (:from-inline (meta (inlined))))
+  :success)
