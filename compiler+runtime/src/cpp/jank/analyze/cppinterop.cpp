@@ -172,6 +172,12 @@ namespace jank::analyze::cppinterop
     return Cpp::IsConstructible(to_type, from_type);
   }
 
+  bool is_assignable(clang_type to_type, clang_type from_type)
+  {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    return Cpp::IsAssignable(to_type, from_type);
+  }
+
   bool is_trivially_destructible(clang_type type)
   {
     auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };

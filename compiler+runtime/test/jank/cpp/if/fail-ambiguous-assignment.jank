@@ -1,0 +1,27 @@
+; https://github.com/jank-lang/jank/issues/1049
+(cpp/raw "struct S { };
+
+          struct base
+          {
+            base() = default;
+            base(S const&) { }
+            base& operator=(base&&) = default;
+          };
+
+          struct T : base
+          {
+            T() = default;
+            T(S const&) { }
+            using base::operator=;
+            T& operator=(T&&) = default;
+          };
+
+          S s{};
+          S& get_s()
+          { return s; }")
+
+; Assigning S to T is ambiguous between T::operator= and base::operator=.
+(let* [b (if true
+           (cpp/T)
+           (cpp/get_s))]
+  :success)

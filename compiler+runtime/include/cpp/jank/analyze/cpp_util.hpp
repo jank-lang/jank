@@ -77,6 +77,7 @@ namespace jank::analyze::cpp_util
   bool is_nullptr(jtl::ptr<void> type);
   bool is_bool(jtl::ptr<void> type);
   bool is_implicitly_convertible(jtl::ptr<void> from, jtl::ptr<void> to);
+  bool is_implicitly_assignable(jtl::ptr<void> from, jtl::ptr<void> to);
   bool is_pointer_to_void_conversion(jtl::ptr<void> from, jtl::ptr<void> to);
 
   jtl::ptr<void> base_type(jtl::ptr<void> type);

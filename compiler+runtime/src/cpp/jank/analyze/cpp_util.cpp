@@ -938,6 +938,27 @@ namespace jank::analyze::cpp_util
     return cppinterop::is_implicitly_convertible(from, to);
   }
 
+  /* Implicit convertibility isn't enough for class types, since `to = from` can still be
+   * ambiguous across multiple operator= overloads. */
+  bool is_implicitly_assignable(jtl::ptr<void> const from, jtl::ptr<void> const to)
+  {
+    if(!is_implicitly_convertible(from, to))
+    {
+      return false;
+    }
+
+    auto const to_no_ref{ cppinterop::get_canonical_type(cppinterop::get_non_reference_type(to)) };
+    auto const to_scope{ cppinterop::get_scope_from_type(to_no_ref) };
+    /* Only class types can have multiple competing operator= overloads. jank objects and
+     * primitives are handled by the convertibility check above. */
+    if(is_any_object(to) || !to_scope || !cppinterop::is_class(to_scope))
+    {
+      return true;
+    }
+
+    return cppinterop::is_assignable(to_no_ref, from);
+  }
+
   bool is_pointer_to_void_conversion(jtl::ptr<void> const from, jtl::ptr<void> const to)
   {
     return (cppinterop::is_pointer_type(from) && cppinterop::is_pointer_type(to))
@@ -1899,8 +1920,8 @@ namespace jank::analyze::cpp_util
     auto const common_type{ cppinterop::get_common_type(then_type, else_type) };
     auto const is_same_type{ cppinterop::get_canonical_type(then_type)
                              == cppinterop::get_canonical_type(else_type) };
-    auto const is_compatible{ cpp_util::is_implicitly_convertible(then_type, else_type)
-                              || cpp_util::is_implicitly_convertible(else_type, then_type)
+    auto const is_compatible{ cpp_util::is_implicitly_assignable(then_type, else_type)
+                              || cpp_util::is_implicitly_assignable(else_type, then_type)
                               || common_type };
 
     /* If one of the branches has a native type, we need to match one of these scenarios.
