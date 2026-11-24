@@ -1292,6 +1292,14 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
+    /* Symbols starting with a dot are C++ member syntax, which only has meaning in call position. */
+    if(sym->name.starts_with('.'))
+    {
+      return error::analyze_invalid_cpp_position(sym->to_string(),
+                                                 object_source(sym_obj),
+                                                 latest_expansion(macro_expansions));
+    }
+
     auto qualified_sym(runtime::__rt_ctx->qualify_symbol(sym));
     qualified_sym->set_meta(sym->get_meta());
     /* We always def in the current ns, so we want an owned var. */
@@ -1758,6 +1766,12 @@ namespace jank::analyze
           object_source(p),
           latest_expansion(macro_expansions));
       }
+      else if(sym->name.starts_with('.'))
+      {
+        return error::analyze_invalid_cpp_position(sym->to_string(),
+                                                   object_source(p),
+                                                   latest_expansion(macro_expansions));
+      }
       else if(sym->name == "&")
       {
         if(it + 1 == params->data.end())
@@ -1946,6 +1960,12 @@ namespace jank::analyze
     if(first_elem.get_type() == runtime::object_type::symbol)
     {
       auto const s(runtime::expect_object<runtime::obj::symbol>(first_elem));
+      if(s->name.starts_with('.'))
+      {
+        return error::analyze_invalid_cpp_position(s->to_string(),
+                                                   object_source(first_elem),
+                                                   latest_expansion(macro_expansions));
+      }
       name = s->name;
       unique_name = __rt_ctx->unique_namespaced_string(name);
       if(length < 3)
@@ -2341,6 +2361,12 @@ namespace jank::analyze
                                           object_source(sym_obj),
                                           latest_expansion(macro_expansions));
       }
+      if(sym->name.starts_with('.'))
+      {
+        return error::analyze_invalid_cpp_position(sym->to_string(),
+                                                   object_source(sym_obj),
+                                                   latest_expansion(macro_expansions));
+      }
 
       auto const value_res(analyze(val, ret->frame, expression_position::value, fn_ctx, false));
       if(value_res.is_err())
@@ -2498,6 +2524,12 @@ namespace jank::analyze
                                             object_source(sym_obj),
                                             latest_expansion(macro_expansions))
           ->add_fallback_usage(read::parse::reparse_nth(bindings, i));
+      }
+      if(sym->name.starts_with('.'))
+      {
+        return error::analyze_invalid_cpp_position(sym->to_string(),
+                                                   object_source(sym_obj),
+                                                   latest_expansion(macro_expansions));
       }
       ret->frame->locals[sym].emplace_back(sym, sym->name, none, current_frame);
     }
@@ -3068,6 +3100,13 @@ namespace jank::analyze
                        object_source(item),
                        latest_expansion(macro_expansions))
                 ->add_usage(read::parse::reparse_nth(item, 2));
+            }
+
+            if(catch_sym->name.starts_with('.'))
+            {
+              return error::analyze_invalid_cpp_position(catch_sym->to_string(),
+                                                         object_source(catch_sym_form),
+                                                         latest_expansion(macro_expansions));
             }
 
             /* Check for duplicate catch types. */
