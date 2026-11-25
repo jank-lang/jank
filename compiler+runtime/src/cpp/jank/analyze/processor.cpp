@@ -264,7 +264,76 @@ namespace jank::analyze
     std::vector<cppinterop::clang_decl> fns;
 
     auto const is_ctor{ val->val_kind == expr::cpp_value::value_kind::constructor };
-    if(is_ctor && cpp_util::is_primitive(cppinterop::get_non_reference_type(val->type)))
+    auto const non_ref_val_type{ cppinterop::get_non_reference_type(val->type) };
+    if(is_ctor && cppinterop::is_array_type(non_ref_val_type))
+    {
+      if(cppinterop::is_void(val->type))
+      {
+        return error::analyze_invalid_cpp_constructor_call(
+                 "A `void` instance cannot be constructed.",
+                 object_source(val->form),
+                 latest_expansion(macro_expansions))
+          ->add_usage(object_source(form));
+      }
+
+      if(cppinterop::is_sized_array_type(non_ref_val_type))
+      {
+        auto const array_size{ cppinterop::get_array_size(non_ref_val_type) };
+        if(arg_types.size() > array_size)
+        {
+          return error::analyze_invalid_cpp_constructor_call(
+                   util::format("The array type `{}` can only be constructed with up to {} "
+                                "arguments, but {} arguments were specified.",
+                                cpp_util::get_qualified_type_name(val->type),
+                                array_size,
+                                arg_types.size()),
+                   object_source(val->form),
+                   latest_expansion(macro_expansions))
+            ->add_usage(object_source(form));
+        }
+      }
+
+      auto const element_type{ cppinterop::get_array_element_type(non_ref_val_type) };
+      for(usize arg_idx{}; arg_idx < arg_types.size(); ++arg_idx)
+      {
+        if(!cpp_util::is_constructible(element_type, arg_types[arg_idx]))
+        {
+          if(!(cpp_util::is_trait_convertible(element_type)
+               && cpp_util::is_any_object(arg_types[arg_idx]))
+             && !cpp_util::is_pointer_to_void_conversion(arg_types[arg_idx], element_type))
+          {
+            return error::analyze_invalid_cpp_constructor_call(
+                     util::format("The type `{}` cannot be constructed from a value of type `{}`.",
+                                  cpp_util::get_qualified_type_name(element_type),
+                                  cpp_util::get_qualified_type_name(arg_types[arg_idx])),
+                     object_source(arg_exprs[arg_idx]->form),
+                     latest_expansion(macro_expansions))
+              ->add_usage(read::parse::reparse_nth(form, arg_idx + 1));
+          }
+
+          auto const conversion_res{ apply_implicit_conversion(arg_exprs[arg_idx],
+                                                               arg_types[arg_idx],
+                                                               element_type,
+                                                               macro_expansions) };
+          if(conversion_res.is_err())
+          {
+            return conversion_res.expect_err()->add_usage(
+              read::parse::reparse_nth(form, arg_idx + 1));
+          }
+          arg_exprs[arg_idx] = conversion_res.expect_ok();
+        }
+      }
+
+      return jtl::make_ref<expr::cpp_constructor_call>(position,
+                                                       current_frame,
+                                                       needs_box,
+                                                       form,
+                                                       val->type,
+                                                       nullptr,
+                                                       false,
+                                                       jtl::move(arg_exprs));
+    }
+    else if(is_ctor && cpp_util::is_primitive(cppinterop::get_non_reference_type(val->type)))
     {
       if(arg_types.size() > 1)
       {

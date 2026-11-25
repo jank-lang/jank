@@ -1637,7 +1637,14 @@ namespace jank::codegen
         param_types.emplace_back(analyze::cppinterop::get_function_arg_type(inst->expr->fn, i));
       }
     }
-    else if(is_primitive(analyze::cppinterop::get_non_reference_type(inst->expr->type)))
+    else if(analyze::cppinterop::is_array_type(non_ref_type))
+    {
+      for(auto const arg : inst->expr->arg_exprs)
+      {
+        param_types.emplace_back(arg->get_type());
+      }
+    }
+    else if(is_primitive(non_ref_type))
     {
       param_types.emplace_back(inst->expr->type);
     }
@@ -1651,10 +1658,24 @@ namespace jank::codegen
     }
     jank_debug_assert(inst->expr->arg_exprs.size() <= param_types.size());
 
-    if(analyze::cppinterop::is_array_type(
-         analyze::cppinterop::get_non_reference_type(inst->expr->type)))
+    if(analyze::cppinterop::is_array_type(non_ref_type))
     {
-      util::format_to(b.body_buffer, "auto {} ", inst->name);
+      auto const element_type{ analyze::cppinterop::get_array_element_type(non_ref_type) };
+      if(analyze::cppinterop::is_sized_array_type(non_ref_type))
+      {
+        util::format_to(b.body_buffer,
+                        "{} {}[{}]",
+                        get_qualified_type_name(element_type),
+                        inst->name,
+                        analyze::cppinterop::get_array_size(non_ref_type));
+      }
+      else
+      {
+        util::format_to(b.body_buffer,
+                        "{} {}[]",
+                        get_qualified_type_name(element_type),
+                        inst->name);
+      }
     }
     else
     {
@@ -1680,45 +1701,19 @@ namespace jank::codegen
       need_comma = true;
 
       auto const arg_type{ expression_type(inst->expr->arg_exprs[arg_idx]) };
-      bool needs_conversion{};
-      jtl::immutable_string conversion_direction, trait_type;
-      if(is_any_object(param_types[arg_idx]) && !is_any_object(arg_type))
-      {
-        needs_conversion = true;
-        conversion_direction = "into_object";
-        trait_type = get_qualified_type_name(arg_type);
-      }
-      else if(!is_any_object(param_types[arg_idx]) && is_any_object(arg_type))
-      {
-        needs_conversion = true;
-        conversion_direction = "from_object";
-        trait_type = get_qualified_type_name(param_types[arg_idx]);
-      }
-
-      if(needs_conversion)
+      auto const needs_static_cast{ param_types[arg_idx] != arg_type };
+      if(needs_static_cast)
       {
         util::format_to(b.body_buffer,
-                        "jank::runtime::convert<{}>::{}({})",
-                        trait_type,
-                        conversion_direction,
-                        inst->args[arg_idx]);
+                        "static_cast<{}>(",
+                        get_qualified_type_name(param_types[arg_idx]));
       }
-      else
+
+      util::format_to(b.body_buffer, "{}", inst->args[arg_idx]);
+
+      if(needs_static_cast)
       {
-        auto const needs_static_cast{ param_types[arg_idx] != arg_type };
-        if(needs_static_cast)
-        {
-          util::format_to(b.body_buffer,
-                          "static_cast<{}>(",
-                          get_qualified_type_name(param_types[arg_idx]));
-        }
-
-        util::format_to(b.body_buffer, "{}", inst->args[arg_idx]);
-
-        if(needs_static_cast)
-        {
-          util::format_to(b.body_buffer, ")");
-        }
+        util::format_to(b.body_buffer, ")");
       }
     }
 
