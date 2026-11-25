@@ -2431,7 +2431,6 @@ namespace jank::analyze
         }
         value_expr = res.expect_ok();
         expr_type = value_expr->get_type();
-        util::println("hinted let binding type {}", cpp_util::get_qualified_type_name(expr_type));
       }
 
       /* Loop bindings are mutable, so if we have a typed object, force it to be untyped since

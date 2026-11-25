@@ -66,6 +66,7 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> get_function_parameter_type(expression_ref expr, usize param_idx);
 
   bool is_trait_convertible(jtl::ptr<void> type);
+  bool is_trait_convertible(jtl::ptr<void> type, jtl::ptr<void> object_type);
   bool is_untyped_object(jtl::ptr<void> type);
   bool is_typed_object_ref(jtl::ptr<void> type);
   bool is_any_object(jtl::ptr<void> type);

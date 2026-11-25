@@ -1733,6 +1733,30 @@ namespace jank::analyze::cpp_util
     return !trap.hasErrorOccurred() && cppinterop::is_complete(instantiation);
   }
 
+  /* TODO: Cache result. */
+  bool is_trait_convertible(jtl::ptr<void> const type, jtl::ptr<void> const object_type)
+  {
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    static auto const box_template{ cppinterop::get_scope_from_complete_name(
+      "jank::runtime::can_box_as") };
+    std::array<Cpp::TemplateArgInfo, 2> const args{
+      Cpp::TemplateArgInfo{ cppinterop::get_canonical_type(
+        cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(type))) },
+      Cpp::TemplateArgInfo{ cppinterop::get_canonical_type(
+        cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(object_type))) }
+    };
+    clang::Sema::SFINAETrap const trap{ (*locked_interpreter)->getSema(), true };
+    Cpp::TCppScope_t instantiation{};
+    {
+      auto &diag{ (*locked_interpreter)->getCompilerInstance()->getDiagnostics() };
+      auto old_client{ diag.takeClient() };
+      diag.setClient(new clang::IgnoringDiagConsumer{}, true);
+      util::scope_exit const finally{ [&] { diag.setClient(old_client.release(), true); } };
+      instantiation = cppinterop::instantiate_template(box_template, args.data(), args.size());
+    }
+    return !trap.hasErrorOccurred() && cppinterop::is_complete(instantiation);
+  }
+
   usize offset_to_typed_object_base(jtl::ptr<void> const type)
   {
     jank_debug_assert(is_typed_object_ref(type));
@@ -2038,7 +2062,26 @@ namespace jank::analyze::cpp_util
 
     if(is_any_object(expected_type) && is_trait_convertible(expr_type))
     {
-      return implicit_conversion_action::into_object;
+      /* We can only allow an `into_object` action under these conditions, assuming the
+       * value type is trait convertible:
+       *
+       * 1. The expected type is a type-erased object
+       * 2. The value type is integral
+       * 3. The expected type is a typed object and we do a `can_box_as` check
+       *
+       * The second case is an edge case built around the third case, since the `can_box_as`
+       * check will fail for integral types since the `into_object` function on the integral
+       * trait will return an `object_ref` rather then a typed object. This is because it might
+       * be a `small_integer` or an `integer` and we can only know at runtime. */
+      if(!is_typed_object_ref(expected_type) || is_any_object(expr_type)
+         || (cppinterop::is_integral(expr_type) && !is_bool(expr_type)
+             && cppinterop::get_canonical_type(cppinterop::get_type_without_cv(
+                  cppinterop::get_non_reference_type(expected_type)))
+               == cppinterop::get_canonical_type(integer_ref_type()))
+         || is_trait_convertible(expr_type, expected_type))
+      {
+        return implicit_conversion_action::into_object;
+      }
     }
 
     if(is_any_object(expr_type) && is_trait_convertible(expected_type))
