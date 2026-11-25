@@ -1515,7 +1515,7 @@ namespace jank::read::parse
             lex::processor lp{ "[#?@(:default [] :jank #js [])]" };
             processor p{ lp.begin(), lp.end() };
             auto const r(p.next());
-            CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_array_map>()));
+            CHECK(equal(r.expect_ok().unwrap().ptr, make_box<obj::persistent_vector>()));
           }
 
           SUBCASE("Lexer errors in unsupported reader conditionals")

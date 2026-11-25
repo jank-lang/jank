@@ -368,6 +368,8 @@ namespace jank::analyze
     auto const is_operator_call{ val->val_kind == expr::cpp_value::value_kind::operator_call };
     if(is_operator_call)
     {
+      auto const op_name{ try_object<obj::symbol>(val->form)->name };
+      auto const op{ cpp_util::match_operator(op_name).unwrap() };
       auto const arg_count{ arg_exprs.size() };
       if(arg_count == 0)
       {
@@ -376,7 +378,8 @@ namespace jank::analyze
           object_source(val->form),
           latest_expansion(macro_expansions));
       }
-      else if(arg_count > 2)
+      /* Call operators can have any number of arguments. */
+      else if(op != Cpp::OP_Call && arg_count > 2)
       {
         return error::analyze_invalid_cpp_operator_call(
                  "Operator calls may only take one or two arguments.",
@@ -386,8 +389,6 @@ namespace jank::analyze
       }
 
       auto const obj_type{ cppinterop::get_non_reference_type(arg_types[0]) };
-      auto const op_name{ try_object<obj::symbol>(val->form)->name };
-      auto const op{ cpp_util::match_operator(op_name).unwrap() };
       auto const is_addressof{ op == Cpp::OP_Amp && arg_types.size() == 1 };
       auto const always_use_builtin{ is_addressof };
 
@@ -459,6 +460,55 @@ namespace jank::analyze
 
       auto const arity{ arg_count == 1 ? Cpp::kUnary : Cpp::kBinary };
       cppinterop::get_operator(op, arg_types, fns, arity);
+
+      /* Logical operators contextually convert their operands to bool, so class types which
+       * are convertible to bool, but which have no overloaded operator, are still valid. */
+      auto const is_logical_op{ op == Cpp::OP_Exclaim || op == Cpp::OP_AmpAmp
+                                || op == Cpp::OP_PipePipe };
+      if(fns.empty() && is_logical_op)
+      {
+        auto const bool_type{ cpp_util::bool_type() };
+        auto convertible{ true };
+        for(usize i{}; i < arg_exprs.size(); ++i)
+        {
+          auto const arg_type{ cppinterop::get_non_reference_type(arg_types[i]) };
+          if(!cpp_util::is_primitive(arg_type)
+             && !cppinterop::is_constructible(bool_type, arg_types[i]))
+          {
+            convertible = false;
+            break;
+          }
+        }
+
+        if(convertible)
+        {
+          for(usize i{}; i < arg_exprs.size(); ++i)
+          {
+            if(cpp_util::is_primitive(cppinterop::get_non_reference_type(arg_types[i])))
+            {
+              continue;
+            }
+            auto const conversion_res{
+              apply_implicit_conversion(arg_exprs[i], arg_types[i], bool_type, macro_expansions)
+            };
+            if(conversion_res.is_err())
+            {
+              return conversion_res.expect_err();
+            }
+            arg_exprs[i] = conversion_res.expect_ok();
+            arg_types[i] = bool_type;
+          }
+          return build_builtin_operator_call(val,
+                                             op,
+                                             std::move(arg_exprs),
+                                             arg_types,
+                                             current_frame,
+                                             position,
+                                             needs_box,
+                                             form,
+                                             macro_expansions);
+        }
+      }
 
       if(fns.empty())
       {
@@ -557,7 +607,7 @@ namespace jank::analyze
         is_member_call = true;
       }
 
-      if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
+      if(auto const res{ cpp_util::instantiate_if_needed(match) }; res.is_err())
       {
         return error::analyze_invalid_cpp_call(res.expect_err(),
                                                object_source(val->form),
@@ -585,14 +635,6 @@ namespace jank::analyze
         {
           value->type = arg_types[i];
         }
-      }
-
-      if(auto const res = cpp_util::instantiate_if_needed(match); res.is_err())
-      {
-        return error::analyze_invalid_cpp_call(res.expect_err(),
-                                               object_source(val->form),
-                                               latest_expansion(macro_expansions))
-          ->add_usage(object_source(form));
       }
 
       if(allow_implicit_conversions)
@@ -708,6 +750,14 @@ namespace jank::analyze
         is_member_call = true;
       }
 
+      if(auto const res{ cpp_util::instantiate_if_needed(match) }; res.is_err())
+      {
+        return error::analyze_invalid_cpp_call(res.expect_err(),
+                                               object_source(val->form),
+                                               latest_expansion(macro_expansions))
+          ->add_usage(object_source(form));
+      }
+
       //util::println("\tconversion match found with new arg types");
       //for(auto const arg : new_types_res.expect_ok())
       //{
@@ -789,7 +839,8 @@ namespace jank::analyze
         };
         if(conversion_res.is_err())
         {
-          return conversion_res.expect_err();
+          /* TODO: Identify the exact member. */
+          return conversion_res.expect_err()->add_usage(object_source(form));
         }
 
         //util::println("using aggregate initialization");
@@ -1300,6 +1351,14 @@ namespace jank::analyze
         ->add_usage(read::parse::reparse_nth(l, 1));
     }
 
+    /* Symbols starting with a dot are C++ member syntax, which only has meaning in call position. */
+    if(sym->name.starts_with('.'))
+    {
+      return error::analyze_invalid_cpp_position(sym->to_string(),
+                                                 object_source(sym_obj),
+                                                 latest_expansion(macro_expansions));
+    }
+
     auto qualified_sym(runtime::__rt_ctx->qualify_symbol(sym));
     qualified_sym->set_meta(sym->get_meta());
     /* We always def in the current ns, so we want an owned var. */
@@ -1354,6 +1413,32 @@ namespace jank::analyze
     }
 
     return jtl::make_ref<expr::def>(position, current_frame, true, l, qualified_sym, value_expr);
+  }
+
+  /* We use this to find `recur` expressions. We need to recursively dig into `do` and `let`
+   * expressions to see if their tail expression is a `recur`. Every other expression is
+   * just returned as is. */
+  static expression_ref resolve_tail_expression(expression_ref const expr)
+  {
+    if(expr->kind == expression_kind::do_)
+    {
+      auto const do_{ static_box_cast<expr::do_>(expr) };
+      if(!do_->values.empty())
+      {
+        return resolve_tail_expression(do_->values.back());
+      }
+      return expr;
+    }
+    if(expr->kind == expression_kind::let)
+    {
+      auto const let{ static_box_cast<expr::let>(expr) };
+      if(!let->body->values.empty())
+      {
+        return resolve_tail_expression(let->body->values.back());
+      }
+      return expr;
+    }
+    return expr;
   }
 
   processor::expression_result
@@ -1437,9 +1522,7 @@ namespace jank::analyze
                                          latest_expansion(macro_expansions));
     }
     auto const default_expr_obj{ it.first().unwrap() };
-    auto const default_expr{
-      analyze(default_expr_obj, current_frame, position, fn_ctx, needs_box)
-    };
+    auto default_expr{ analyze(default_expr_obj, current_frame, position, fn_ctx, needs_box) };
 
     it = it.rest();
     if(it.first().is_none())
@@ -1456,6 +1539,10 @@ namespace jank::analyze
       native_vector<expression_ref> exprs{};
     };
 
+    auto needs_conversion{ false };
+    auto chosen_type{ cpp_util::expression_type(default_expr.expect_ok()) };
+    auto has_recur{ resolve_tail_expression(default_expr.expect_ok())->kind
+                    == expression_kind::recur };
     auto keys_exprs{ visit_map_like(
       [&](auto const typed_imap_obj) -> jtl::string_result<keys_and_exprs> {
         keys_and_exprs ret{};
@@ -1469,11 +1556,28 @@ namespace jank::analyze
             return err("Each key in a `case*` map must be an integer.");
           }
           auto const key{ runtime::to_i64(k_obj) };
-          auto const expr{ analyze(v_obj, current_frame, position, fn_ctx, needs_box) };
+          auto expr{ analyze(v_obj, current_frame, position, fn_ctx, needs_box) };
           if(expr.is_err())
           {
             return err(expr.expect_err()->message);
           }
+
+          has_recur = has_recur
+            || resolve_tail_expression(expr.expect_ok())->kind == expression_kind::recur;
+          auto const branch_common_type_result{
+            cpp_util::find_branch_common_type(expr.expect_ok(), default_expr.expect_ok(), has_recur)
+          };
+
+          if(branch_common_type_result.is_err())
+          {
+            return branch_common_type_result.expect_err();
+          }
+
+          auto const branch_common_type{ branch_common_type_result.expect_ok() };
+
+          needs_conversion = needs_conversion || branch_common_type.then_needs_conversion
+            || branch_common_type.else_needs_conversion;
+          chosen_type = branch_common_type.type;
           ret.keys.push_back(key);
           ret.exprs.push_back(expr.expect_ok());
         }
@@ -1492,17 +1596,46 @@ namespace jank::analyze
     }
 
     auto pairs{ keys_exprs.expect_ok() };
+    native_vector<expression_ref> converted_exprs{};
+    converted_exprs.reserve(pairs.exprs.size());
+
+    if(needs_conversion)
+    {
+      auto const converted_default_expr{
+        apply_implicit_conversion(default_expr.expect_ok(), chosen_type, macro_expansions)
+      };
+
+      if(converted_default_expr.is_err())
+      {
+        return converted_default_expr.expect_err();
+      }
+
+      default_expr = converted_default_expr.expect_ok();
+
+      for(auto const expr : pairs.exprs)
+      {
+        auto const converted_expr{ apply_implicit_conversion(expr, chosen_type, macro_expansions) };
+
+        if(converted_expr.is_err())
+        {
+          return converted_expr.expect_err();
+        }
+
+        converted_exprs.push_back(converted_expr.expect_ok());
+      }
+    }
 
     return jtl::make_ref<expr::case_>(position,
                                       current_frame,
                                       needs_box,
                                       o,
+                                      chosen_type,
                                       value_expr.expect_ok(),
                                       shift,
                                       mask,
                                       default_expr.expect_ok(),
                                       std::move(pairs.keys),
-                                      std::move(pairs.exprs));
+                                      std::move(needs_conversion ? converted_exprs : pairs.exprs));
   }
 
   processor::expression_result
@@ -1692,6 +1825,12 @@ namespace jank::analyze
           object_source(p),
           latest_expansion(macro_expansions));
       }
+      else if(sym->name.starts_with('.'))
+      {
+        return error::analyze_invalid_cpp_position(sym->to_string(),
+                                                   object_source(p),
+                                                   latest_expansion(macro_expansions));
+      }
       else if(sym->name == "&")
       {
         if(it + 1 == params->data.end())
@@ -1844,6 +1983,12 @@ namespace jank::analyze
     if(first_elem.get_type() == runtime::object_type::symbol)
     {
       auto const s(runtime::expect_object<runtime::obj::symbol>(first_elem));
+      if(s->name.starts_with('.'))
+      {
+        return error::analyze_invalid_cpp_position(s->to_string(),
+                                                   object_source(first_elem),
+                                                   latest_expansion(macro_expansions));
+      }
       name = s->name;
       unique_name = __rt_ctx->unique_namespaced_string(name);
       if(length < 3)
@@ -2239,6 +2384,12 @@ namespace jank::analyze
                                           object_source(sym_obj),
                                           latest_expansion(macro_expansions));
       }
+      if(sym->name.starts_with('.'))
+      {
+        return error::analyze_invalid_cpp_position(sym->to_string(),
+                                                   object_source(sym_obj),
+                                                   latest_expansion(macro_expansions));
+      }
 
       auto const tag_type_res{ extract_tag_type(*this, sym, current_frame, macro_expansions) };
       if(tag_type_res.is_err())
@@ -2418,6 +2569,12 @@ namespace jank::analyze
                                             latest_expansion(macro_expansions))
           ->add_fallback_usage(read::parse::reparse_nth(bindings, i));
       }
+      if(sym->name.starts_with('.'))
+      {
+        return error::analyze_invalid_cpp_position(sym->to_string(),
+                                                   object_source(sym_obj),
+                                                   latest_expansion(macro_expansions));
+      }
       ret->frame->locals[sym].emplace_back(sym, sym->name, none, current_frame);
     }
 
@@ -2527,32 +2684,6 @@ namespace jank::analyze
     return let;
   }
 
-  /* We use this to find `recur` expressions. We need to recursively dig into `do` and `let`
-   * expressions to see if their tail expression is a `recur`. Every other expression is
-   * just returned as is. */
-  static expression_ref resolve_tail_expression(expression_ref const expr)
-  {
-    if(expr->kind == expression_kind::do_)
-    {
-      auto const do_{ static_box_cast<expr::do_>(expr) };
-      if(!do_->values.empty())
-      {
-        return resolve_tail_expression(do_->values.back());
-      }
-      return expr;
-    }
-    if(expr->kind == expression_kind::let)
-    {
-      auto const let{ static_box_cast<expr::let>(expr) };
-      if(!let->body->values.empty())
-      {
-        return resolve_tail_expression(let->body->values.back());
-      }
-      return expr;
-    }
-    return expr;
-  }
-
   processor::expression_result
   processor::analyze_if(runtime::obj::persistent_list_ref const o,
                         local_frame_ptr const current_frame,
@@ -2626,7 +2757,6 @@ namespace jank::analyze
     {
       return then_expr.expect_err();
     }
-    auto const then_type{ cpp_util::non_void_expression_type(then_expr.expect_ok()) };
 
     if(resolve_tail_expression(then_expr.expect_ok())->kind == expression_kind::recur)
     {
@@ -2651,111 +2781,47 @@ namespace jank::analyze
       else_expr_opt = else_expr.expect_ok();
     }
 
-    auto const else_type{ else_expr_opt.is_some()
-                            ? cpp_util::expression_type(else_expr_opt.unwrap())
-                            : cpp_util::untyped_object_ref_type() };
-    auto const is_then_object{ cpp_util::is_any_object(then_type) };
-    auto const is_else_object{ cpp_util::is_any_object(else_type) };
-    auto const is_then_convertible{ cpp_util::is_trait_convertible(then_type) };
-    auto const is_else_convertible{ cpp_util::is_trait_convertible(else_type) };
-    auto const common_type{ cppinterop::get_common_type(then_type, else_type) };
-    auto const is_same_type{ cppinterop::get_canonical_type(then_type)
-                             == cppinterop::get_canonical_type(else_type) };
-    auto const is_compatible{ cpp_util::is_implicitly_convertible(then_type, else_type)
-                              || cpp_util::is_implicitly_convertible(else_type, then_type)
-                              || common_type };
+    auto const branch_common_type_result{
+      cpp_util::find_branch_common_type(then_expr.expect_ok(), else_expr_opt, has_recur)
+    };
 
-    /* If one of the branches has a native type, we need to match one of these scenarios.
-     *
-     * 1. The other branch has the same native type.
-     * 2. The other branch has a native type and the two native types are compatible.
-     * 3. The other branch has an object type and the native branch is trait convertible.
-     * 4. Both branches are trait convertible.
-     * 5. One of the branches recurs, meaning we have no comparison to do.
-     *
-     * If neither of these are the case, we have an error. */
-    if(is_same_type || is_compatible
-       || ((is_else_object && is_then_convertible) || (is_then_object && is_else_convertible))
-       || (is_then_convertible && is_else_convertible) || has_recur)
+    if(branch_common_type_result.is_err())
     {
-      auto const then_needs_conversion{ !is_same_type && !is_compatible && is_then_convertible
-                                        && (is_else_object || is_else_convertible) };
-      auto const else_needs_conversion{ !is_same_type && !is_compatible && is_else_convertible
-                                        && (is_then_object || is_then_convertible) };
-
-      if(then_needs_conversion)
-      {
-        then_expr = apply_implicit_conversion(then_expr.expect_ok(),
-                                              cpp_util::untyped_object_ref_type(),
-                                              macro_expansions);
-      }
-      if(else_expr_opt.is_some() && else_needs_conversion)
-      {
-        else_expr_opt = apply_implicit_conversion(else_expr_opt.unwrap(),
-                                                  cpp_util::untyped_object_ref_type(),
-                                                  macro_expansions)
-                          .expect_ok();
-      }
-
-      auto const final_then_type{ then_expr.expect_ok()->get_type() };
-      auto const final_else_type{ else_expr_opt.is_some() ? else_expr_opt.unwrap()->get_type()
-                                                          : cpp_util::untyped_object_ref_type() };
-      auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
-        cpp_util::non_void_type(final_else_type),
-        cpp_util::non_void_type(final_then_type)) };
-      auto const final_is_same_type{
-        (cppinterop::get_canonical_type(final_then_type)
-         == cppinterop::get_canonical_type(final_else_type))
-        /* Arrays are pushed to use the common type instead, since they can't be assigned. */
-        && !cppinterop::is_array_type(final_then_type)
-      };
-      auto const final_common_type{ cppinterop::get_common_type(final_then_type, final_else_type) };
-
-      /* If we have a typed object on one side, and anything other than that same typed object
-       * on the other side, we need to type-erase to find the common type.
-       *
-       * We also calculate the types again, since they may have changed due to the implicit
-       * conversions above. */
-      if(cpp_util::is_typed_object(chosen_type) && cpp_util::is_any_object(other_type)
-         && cppinterop::get_canonical_type(chosen_type)
-           != cppinterop::get_canonical_type(other_type))
-      {
-        chosen_type = cpp_util::untyped_object_ref_type();
-      }
-      else if(!final_is_same_type && final_common_type)
-      {
-        chosen_type = final_common_type;
-      }
-      /* If the chosen type is implicitly convertible to the other type, and both are native types,
-       * we fall into option 2 from above. In that case, we actually want the other type.
-       *
-       * Example: if branch returning std::string and C string literal. Regardless of which branch
-       * it's in, we want to take the std::string as our chosen type. */
-      else if(!cpp_util::is_any_object(chosen_type) && !cpp_util::is_any_object(other_type)
-              && is_compatible && cpp_util::is_implicitly_convertible(chosen_type, other_type))
-      {
-        std::swap(chosen_type, other_type);
-      }
-
-      return jtl::make_ref<expr::if_>(position,
-                                      current_frame,
-                                      needs_box,
-                                      o,
-                                      chosen_type,
-                                      condition_expr.expect_ok(),
-                                      then_expr.expect_ok(),
-                                      else_expr_opt);
+      return error::analyze_mismatched_if_types(branch_common_type_result.expect_err(),
+                                                object_source(o->first()),
+                                                latest_expansion(macro_expansions));
     }
-    else
+
+    auto const branch_common_type{ branch_common_type_result.expect_ok() };
+
+    if(branch_common_type.then_needs_conversion)
     {
-      return error::analyze_mismatched_if_types(
-        util::format("Mismatched 'if' branch types `{}` and `{}`. Each branch of an 'if' must have "
-                     "the same type, a common type, or a trait conversion.",
-                     cpp_util::get_qualified_type_name(then_type),
-                     cpp_util::get_qualified_type_name(else_type)),
-        object_source(o->first()),
-        latest_expansion(macro_expansions));
+      then_expr = apply_implicit_conversion(then_expr.expect_ok(),
+                                            cpp_util::untyped_object_ref_type(),
+                                            macro_expansions);
     }
+    if(else_expr_opt.is_some() && branch_common_type.else_needs_conversion)
+    {
+      auto const converted_else_expr{ apply_implicit_conversion(else_expr_opt.unwrap(),
+                                                                cpp_util::untyped_object_ref_type(),
+                                                                macro_expansions) };
+
+      if(converted_else_expr.is_err())
+      {
+        return converted_else_expr.expect_err();
+      }
+
+      else_expr_opt = converted_else_expr.expect_ok();
+    }
+
+    return jtl::make_ref<expr::if_>(position,
+                                    current_frame,
+                                    needs_box,
+                                    o,
+                                    branch_common_type.type,
+                                    condition_expr.expect_ok(),
+                                    then_expr.expect_ok(),
+                                    else_expr_opt);
   }
 
   processor::expression_result
@@ -3078,6 +3144,13 @@ namespace jank::analyze
                        object_source(item),
                        latest_expansion(macro_expansions))
                 ->add_usage(read::parse::reparse_nth(item, 2));
+            }
+
+            if(catch_sym->name.starts_with('.'))
+            {
+              return error::analyze_invalid_cpp_position(catch_sym->to_string(),
+                                                         object_source(catch_sym_form),
+                                                         latest_expansion(macro_expansions));
             }
 
             /* Check for duplicate catch types. */
@@ -3527,7 +3600,11 @@ namespace jank::analyze
             /* Forward metadata from the original call to the inline result. This allows us
              * to keep source info for inline calls sanely. */
             auto expanded{ apply_to(inline_fn, o->next()) };
-            expanded = runtime::with_meta_graceful(expanded, runtime::meta(o));
+            /* The inline fn may have attached its own meta to the result, so we merge rather
+             * than replace. The call's meta wins on conflicts, so source info stays accurate. */
+            expanded = runtime::with_meta_graceful(
+              expanded,
+              runtime::merge(runtime::meta(expanded), runtime::meta(o)));
             return analyze(expanded, current_frame, position, fn_ctx, needs_box);
           }
         }
@@ -4291,7 +4368,7 @@ namespace jank::analyze
       return analyze_cpp_call(call_l, cpp_value, current_frame, position, fn_ctx, needs_box);
     }
 
-    if((cpp_util::is_typed_object(type) && cpp_util::is_untyped_object(value_type))
+    if((cpp_util::is_typed_object_ref(type) && cpp_util::is_untyped_object(value_type))
        || (cpp_util::is_any_object(value_type) && cpp_util::is_trait_convertible(type)))
     {
       return jtl::make_ref<expr::cpp_conversion>(position,
@@ -5604,6 +5681,15 @@ namespace jank::analyze
         native_vector<Cpp::TemplateArgInfo> args;
         for(auto const arg : make_sequence_range(rest(o)))
         {
+          if(runtime::is_boolean(arg))
+          {
+            static auto const bool_type{ cpp_util::bool_type() };
+            /* CppInterOp parses the value as a number. */
+            auto const * const text{ expect_object<obj::boolean>(arg)->data ? "1" : "0" };
+            args.emplace_back(bool_type.data, text);
+            continue;
+          }
+
           if(runtime::is_integral(arg))
           {
             auto const int_arg{ runtime::to_i64(arg) };

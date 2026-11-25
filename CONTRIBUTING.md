@@ -29,12 +29,12 @@ This project, and everyone participating, in it is governed by the
 ## How to get support or ask questions
 Overall, the [#jank Slack channel](https://clojurians.slack.com/archives/C03SRH97FDK) is the
 best place to ask questions to the community. If you can't/won't use Slack,
-[Github Discussions](https://github.com/jank-lang/jank/discussions) is the next best place to ask.
+consider using [Discord](https://discord.gg/7sSMfKDBU3) or [Github Issues](https://github.com/jank-lang/jank/issues).
 
 ## How to report bugs
-Please use jank's Github [Discussions forum](https://github.com/jank-lang/jank/discussions/new/choose) for reporting
-bugs. Before creating a new discussion, please search for an existing discussion on your
-topic and use that if it exists. **Do not just create an issue.**
+Please use jank's [Github Issues](https://github.com/jank-lang/jank/issues) for reporting
+bugs. Before creating a new issue, please search for an existing issue on your
+topic and use that if it exists.
 
 ## Pull request process
 Once you're ready to share your changes with use for review and merge

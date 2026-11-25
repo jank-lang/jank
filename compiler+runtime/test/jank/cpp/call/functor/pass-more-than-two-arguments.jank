@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::call::functor::pass_more_than_two_arguments
+          {
+            struct two
+            {
+              long operator()(long a, long b) const
+              { return a + b; }
+              long operator()(long a, long b, long c) const
+              { return a + b + c; }
+            };
+          }")
+(let [f (cpp/jank.cpp.call.functor.pass_more_than_two_arguments.two.)]
+  (if (and (= 11 (f 5 6))
+           (= 18 (f 5 6 7)))
+    :success))

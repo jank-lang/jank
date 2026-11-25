@@ -534,6 +534,15 @@ namespace jank::runtime
 
   object_ref merge(object_ref const m, object_ref const other)
   {
+    if(m.is_nil())
+    {
+      return other;
+    }
+    else if(other.is_nil())
+    {
+      return m;
+    }
+
     /* TODO: Port visit_object: associatively_writable. */
     return visit_object(
       [](auto const typed_m, object_ref const other) -> object_ref {
@@ -541,7 +550,7 @@ namespace jank::runtime
 
         if constexpr(jtl::is_same<T, obj::nil>)
         {
-          return typed_m;
+          return other;
         }
         else if constexpr(behavior::associatively_writable<T>)
         {
@@ -876,11 +885,9 @@ namespace jank::runtime
       return true;
     }
 
-    if(!l.has_behavior(object_behavior::seqable))
-    {
-      return false;
-    }
-    if(!r.has_behavior(object_behavior::seqable))
+    /* Only sequential collections can be equal to one another. nil, sets, maps, and strings
+     * are seqable, but must never equal an ordered collection. */
+    if(!is_sequential(l) || !is_sequential(r))
     {
       return false;
     }

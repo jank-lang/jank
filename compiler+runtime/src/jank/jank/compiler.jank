@@ -1,4 +1,9 @@
 (ns jank.compiler
-  (:require [jank.compiler-native]))
+  (:include "jank/compiler_native.hpp"))
 
-(def native-source jank.compiler-native/native-source)
+(defmacro native-source
+  "Returns a formatted C++ string of the generated C++ code for a
+   particular Clojure form. Note that the form will be automatically wrapped
+   in a function. Also, the form should not be quoted."
+  [form]
+  (cpp/jank.compiler_native.native_source form))

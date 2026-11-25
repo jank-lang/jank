@@ -51,7 +51,6 @@ extern "C" int jank_init_static(int const argc,
                          jank_bool const init_default_ctx,
                          int (*fn)(int const, char const ** const));
 extern "C" void jank_load_clojure_core();
-extern "C" void jank_load_jank_compiler_native();
 extern "C" jank_object_ref jank_var_intern_c(char const *, char const *);
 extern "C" jank_object_ref jank_deref(jank_object_ref);
 extern "C" jank_object_ref jank_call2(jank_object_ref, jank_object_ref, jank_object_ref);
@@ -357,6 +356,13 @@ int main(int argc, const char** argv)
     for(auto const &library_dir : util::cli::opts.library_dirs)
     {
       linker_args.push_back(strdup(util::format("-Wl,-rpath,{}", library_dir).c_str()));
+    }
+
+    /* These are the paths Clang itself would pass to the linker (GCC install dirs, multiarch
+     * dirs, etc.), which we need to replicate so the same libs are found as during JIT. */
+    for(auto const &dir : util::default_library_dirs())
+    {
+      linker_args.push_back(strdup(util::format("-L{}", dir).c_str()));
     }
 
     if constexpr(jtl::current_platform == jtl::platform::macos_like)

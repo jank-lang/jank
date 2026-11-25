@@ -1,0 +1,13 @@
+(cpp/raw "namespace jank::cpp::case_::pass_native_type_no_default
+          {
+            struct foo
+            {
+              bool is_foo() { return true; }
+            };
+          }")
+
+(let* [foo (cpp/jank.cpp.case_.pass_native_type_no_default.foo)
+       res (case true
+             true foo)]
+  (when (.is_foo res)
+    :success))

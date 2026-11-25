@@ -67,8 +67,9 @@ namespace jank::analyze::cpp_util
 
   bool is_trait_convertible(jtl::ptr<void> type);
   bool is_untyped_object(jtl::ptr<void> type);
-  bool is_typed_object(jtl::ptr<void> type);
+  bool is_typed_object_ref(jtl::ptr<void> type);
   bool is_any_object(jtl::ptr<void> type);
+  bool is_any_object_ref(jtl::ptr<void> type);
   bool is_primitive(jtl::ptr<void> type);
   bool is_constructible(jtl::ptr<void> to_type, jtl::ptr<void> from_type);
   bool is_member_function(jtl::ptr<void> scope);
@@ -76,6 +77,7 @@ namespace jank::analyze::cpp_util
   bool is_nullptr(jtl::ptr<void> type);
   bool is_bool(jtl::ptr<void> type);
   bool is_implicitly_convertible(jtl::ptr<void> from, jtl::ptr<void> to);
+  bool is_implicitly_assignable(jtl::ptr<void> from, jtl::ptr<void> to);
   bool is_pointer_to_void_conversion(jtl::ptr<void> from, jtl::ptr<void> to);
 
   jtl::ptr<void> base_type(jtl::ptr<void> type);
@@ -109,6 +111,18 @@ namespace jank::analyze::cpp_util
   jtl::result<void, error_ref> ensure_convertible(expression_ref const expr);
 
   std::vector<jtl::ptr<void>> aggregate_initialization_types(jtl::ptr<void> scope);
+
+  struct branch_common_type
+  {
+    cppinterop::clang_type type;
+    bool then_needs_conversion{};
+    bool else_needs_conversion{};
+  };
+
+  jtl::string_result<branch_common_type>
+  find_branch_common_type(expression_ref const then_expr_,
+                          jtl::option<expression_ref> const &else_expr_opt_,
+                          bool const has_recur);
 
   enum class implicit_conversion_action : u8
   {

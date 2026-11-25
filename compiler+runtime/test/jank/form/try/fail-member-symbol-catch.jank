@@ -1,0 +1,3 @@
+(try
+  (throw 1)
+  (catch cpp/int .foo 1))

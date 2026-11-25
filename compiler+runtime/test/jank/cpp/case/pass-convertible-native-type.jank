@@ -1,0 +1,6 @@
+(let* [foo (cpp/std.string)
+       res (case true
+             true foo
+             42)]
+  (when (= res "")
+    :success))

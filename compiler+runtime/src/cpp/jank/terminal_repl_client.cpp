@@ -1,10 +1,12 @@
 #include <cctype>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
+#include <random>
 #include <set>
+#include <stdexcept>
 #include <string>
-
-#include <unistd.h>
+#include <string_view>
 
 #include <isocline.h>
 
@@ -34,6 +36,37 @@
 
 namespace jank::terminal_repl
 {
+  /* mkstemp can't preserve a suffix and doesn't exist on Windows. Instead, we pick random
+   * names and create them with the "x" (exclusive) fopen mode, which atomically fails if the
+   * file already exists, so we never reuse someone else's file. */
+  static std::string make_temp_file(std::filesystem::path const &dir,
+                                    std::string const &prefix,
+                                    std::string const &suffix)
+  {
+    static constexpr std::string_view chars{ "abcdefghijklmnopqrstuvwxyz0123456789" };
+    std::random_device rd;
+    std::uniform_int_distribution<size_t> dist{ 0, chars.size() - 1 };
+
+    for(size_t attempt{}; attempt < 100; ++attempt)
+    {
+      std::string name{ prefix };
+      for(size_t i{}; i < 8; ++i)
+      {
+        name += chars[dist(rd)];
+      }
+      name += suffix;
+
+      auto const path{ dir / name };
+      /* NOLINTNEXTLINE(cppcoreguidelines-owning-memory) */
+      if(auto const f{ std::fopen(path.string().c_str(), "wx") }; f != nullptr)
+      {
+        std::fclose(f);
+        return path.string();
+      }
+    }
+    throw std::runtime_error{ "Unable to create a temporary file for the REPL." };
+  }
+
   static bool is_clj_word_char(char const * const s, long const len)
   {
     if(s == nullptr || len <= 0)
@@ -279,9 +312,7 @@ namespace jank::terminal_repl
     }
 
     auto const tmp{ std::filesystem::temp_directory_path() };
-    std::string path_tmp{ (tmp / "jank-repl-XXXXXX").string() };
-    int const fd{ mkstemp(path_tmp.data()) };
-    close(fd);
+    auto const path_tmp{ make_temp_file(tmp, "jank-repl-", ".jank") };
 
     auto const first_res_var{ __rt_ctx->find_var("clojure.core", "*1") };
     auto const second_res_var{ __rt_ctx->find_var("clojure.core", "*2") };

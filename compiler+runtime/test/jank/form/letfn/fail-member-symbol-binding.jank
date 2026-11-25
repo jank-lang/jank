@@ -1,0 +1,2 @@
+(letfn* [.foo (fn* [] 1)]
+  :success)

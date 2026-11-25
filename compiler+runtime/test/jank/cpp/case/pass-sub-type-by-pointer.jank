@@ -1,0 +1,20 @@
+(cpp/raw "namespace jank::cpp::case_::pass_sub_type_by_pointer
+          {
+            struct foo
+            {
+              virtual bool is_base() { return true; }
+            };
+
+            struct bar : foo
+            {
+              bool is_base() override { return false; }
+            };
+          }")
+
+(let* [foo (cpp/new cpp/jank.cpp.case_.pass_sub_type_by_pointer.foo)
+       bar (cpp/new cpp/jank.cpp.case_.pass_sub_type_by_pointer.bar)
+       res (case true
+             true bar
+             foo)]
+  (when (not (.is_base res))
+    :success))

@@ -391,7 +391,7 @@ namespace jank::ir
                                                         capture.first,
                                                         capture.second };
         captured_idents[name] = { gen(analyze::expr::local_reference_ref{ &local_ref }, b).unwrap(),
-                                  mutable_type(capture.second->type) };
+                                  capture.second->type };
       }
       return b.closure(expr->position,
                        runtime::munge(expr->unique_name + "_ctx"),
@@ -520,7 +520,8 @@ namespace jank::ir
       b.locals[name] = gen(pair.second, b).unwrap();
 
       auto const local_type{ pair.second->get_type() };
-      if(expr->loop_kind != analyze::expr::let::loop_kind::normal && is_typed_object(local_type))
+      if(expr->loop_kind != analyze::expr::let::loop_kind::normal
+         && is_typed_object_ref(local_type))
       {
         auto &local{ b.locals[name] };
         local = b.type_erase(analyze::expression_position::value, local);

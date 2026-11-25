@@ -52,6 +52,12 @@ namespace jank::analyze::cppinterop
     Cpp::DumpScope(scope);
   }
 
+  bool is_union(clang_decl scope)
+  {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    return Cpp::IsUnion(scope);
+  }
+
   bool is_namespace(clang_decl scope)
   {
     auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
@@ -164,6 +170,12 @@ namespace jank::analyze::cppinterop
   {
     auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     return Cpp::IsConstructible(to_type, from_type);
+  }
+
+  bool is_assignable(clang_type to_type, clang_type from_type)
+  {
+    auto const lock{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
+    return Cpp::IsAssignable(to_type, from_type);
   }
 
   bool is_trivially_destructible(clang_type type)

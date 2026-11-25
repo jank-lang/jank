@@ -825,9 +825,23 @@ namespace jank::read::lex
                 found_exponent_sign = true;
               }
             }
+            /* Clojure only allows decimal denominators, so we report radix prefixes directly
+             * instead of falling through to a confusing base-10 digit error. */
+            else if(found_slash_after_number && (c == 'x' || c == 'X') && pos == token_start
+                    && file[token_start] == '0')
+            {
+              ++pos;
+              return error::lex_invalid_ratio("A ratio denominator must be a base-10 integer.",
+                                              { token_start, pos });
+            }
             else if(c == 'r' || c == 'R')
             {
               ++pos;
+              if(found_slash_after_number)
+              {
+                return error::lex_invalid_ratio("A ratio denominator must be a base-10 integer.",
+                                                { token_start, pos });
+              }
               if(found_r)
               {
                 continue;

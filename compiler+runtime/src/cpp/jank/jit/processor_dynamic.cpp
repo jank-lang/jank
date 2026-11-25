@@ -105,7 +105,10 @@ namespace jank::jit
       library_dirs.emplace_back(std::filesystem::absolute(library_dir.c_str()));
     }
 
-    library_dirs.emplace_back(util::multi_arch_lib_path().c_str());
+    for(auto const &dir : util::default_library_dirs())
+    {
+      library_dirs.emplace_back(dir);
+    }
 
     /* JANK_JIT_FLAGS come from how jank was configured with CMake.
      * JANK_EXTRA_FLAGS comes from the environment. Any `-L` flags in these need
@@ -133,6 +136,7 @@ namespace jank::jit
       library_dirs.emplace_back("/opt/homebrew/lib");
       /* Macports. */
       library_dirs.emplace_back("/opt/local/lib");
+      library_dirs.emplace_back("/usr/lib");
     }
 
     return library_dirs;
@@ -141,8 +145,6 @@ namespace jank::jit
   processor::processor(jtl::immutable_string const &binary_version)
   {
     profile::timer const timer{ "jit ctor" };
-
-    library_dirs = build_library_dirs();
 
     /* When we AOT compile the jank compiler/runtime, we keep track of the compiler
      * flags used so we can use the same set during JIT compilation. Here we parse these
@@ -248,6 +250,11 @@ namespace jank::jit
     args.emplace_back("-Wno-c++11-narrowing");
 
     util::add_system_flags(args);
+
+    for(auto const &dir : build_library_dirs())
+    {
+      args.emplace_back(strdup(util::format("-L{}", dir.string()).c_str()));
+    }
 
     /********* Every flag after this line is user-provided. *********/
 

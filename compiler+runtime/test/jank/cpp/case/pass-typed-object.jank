@@ -1,0 +1,14 @@
+(cpp/raw "namespace jank::cpp::case_::pass_typed_object
+          {
+            jank::runtime::obj::small_real_ref make_small_real(float f)
+            {
+              return jank::runtime::make_box(f + 1);
+            }
+          }")
+
+(let* [foo (cpp/float 42.0)
+       res (case true
+             true (cpp/jank.cpp.case_.pass_typed_object.make_small_real foo)
+             foo)]
+  (when (= res 43.0)
+    :success))

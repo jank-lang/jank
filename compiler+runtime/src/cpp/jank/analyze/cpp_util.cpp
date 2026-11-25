@@ -385,8 +385,16 @@ namespace jank::analyze::cpp_util
          llvm::dyn_cast_or_null<clang::TypedefType>(qual_type.getTypePtrOrNull()) };
        alias)
     {
+      /* Printing an alias nested in a class template specialization, like
+       * `std::vector<int>::size_type`, omits the template arguments of its parent. Such
+       * aliases are spelled using their canonical type instead. */
       if(auto const *alias_decl{ alias->getDecl() }; alias_decl)
       {
+        if(llvm::isa<clang::RecordDecl>(alias_decl->getDeclContext()))
+        {
+          return get_qualified_type_name_helper(qual_type.getCanonicalType().getAsOpaquePtr(),
+                                                truncated);
+        }
         return get_qualified_name_helper(alias_decl, truncated);
       }
     }
@@ -930,6 +938,27 @@ namespace jank::analyze::cpp_util
     return cppinterop::is_implicitly_convertible(from, to);
   }
 
+  /* Implicit convertibility isn't enough for class types, since `to = from` can still be
+   * ambiguous across multiple operator= overloads. */
+  bool is_implicitly_assignable(jtl::ptr<void> const from, jtl::ptr<void> const to)
+  {
+    if(!is_implicitly_convertible(from, to))
+    {
+      return false;
+    }
+
+    auto const to_no_ref{ cppinterop::get_canonical_type(cppinterop::get_non_reference_type(to)) };
+    auto const to_scope{ cppinterop::get_scope_from_type(to_no_ref) };
+    /* Only class types can have multiple competing operator= overloads. jank objects and
+     * primitives are handled by the convertibility check above. */
+    if(is_any_object(to) || !to_scope || !cppinterop::is_class(to_scope))
+    {
+      return true;
+    }
+
+    return cppinterop::is_assignable(to_no_ref, from);
+  }
+
   bool is_pointer_to_void_conversion(jtl::ptr<void> const from, jtl::ptr<void> const to)
   {
     return (cppinterop::is_pointer_type(from) && cppinterop::is_pointer_type(to))
@@ -943,6 +972,13 @@ namespace jank::analyze::cpp_util
       cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(type))) };
     return can_type == untyped_object_ptr_type()
       || can_type == cppinterop::get_canonical_type(untyped_object_ref_type());
+  }
+
+  bool is_untyped_object_ref(jtl::ptr<void> const type)
+  {
+    auto const can_type{ cppinterop::get_canonical_type(
+      cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(type))) };
+    return can_type == cppinterop::get_canonical_type(untyped_object_ref_type());
   }
 
   jtl::ptr<void> base_type(jtl::ptr<void> type)
@@ -963,7 +999,7 @@ namespace jank::analyze::cpp_util
   }
 
   /* TODO: Support for typed object raw pointers. */
-  bool is_typed_object(jtl::ptr<void> const type)
+  bool is_typed_object_ref(jtl::ptr<void> const type)
   {
     auto const can_type{ cppinterop::get_canonical_type(
       cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(type))) };
@@ -975,7 +1011,12 @@ namespace jank::analyze::cpp_util
 
   bool is_any_object(jtl::ptr<void> type)
   {
-    return is_untyped_object(type) || is_typed_object(type);
+    return is_untyped_object(type) || is_typed_object_ref(type);
+  }
+
+  bool is_any_object_ref(jtl::ptr<void> type)
+  {
+    return is_untyped_object_ref(type) || is_typed_object_ref(type);
   }
 
   /* Clang treats int, long, float, etc as built-in, but not pointers. I consider
@@ -1023,7 +1064,7 @@ namespace jank::analyze::cpp_util
   jtl::ptr<void> mutable_type(jtl::ptr<void> const type)
   {
     /* foo_ref => object_ref */
-    if(is_typed_object(type))
+    if(is_typed_object_ref(type))
     {
       return untyped_object_ref_type();
     }
@@ -1058,10 +1099,10 @@ namespace jank::analyze::cpp_util
   std::pair<jtl::ptr<void>, jtl::ptr<void>>
   select_most_native_type(jtl::ptr<void> const left, jtl::ptr<void> const right)
   {
-    auto const is_left_any_object{ cpp_util::is_any_object(left) };
-    auto const is_right_any_object{ cpp_util::is_any_object(right) };
-    auto const is_left_typed_object{ cpp_util::is_typed_object(left) };
-    auto const is_right_typed_object{ cpp_util::is_typed_object(right) };
+    auto const is_left_any_object{ is_any_object(left) };
+    auto const is_right_any_object{ is_any_object(right) };
+    auto const is_left_typed_object{ is_typed_object_ref(left) };
+    auto const is_right_typed_object{ is_typed_object_ref(right) };
 
     if(!is_left_any_object)
     {
@@ -1130,7 +1171,7 @@ namespace jank::analyze::cpp_util
     auto const member_offset{ (is_member_call ? 1 : 0) };
     auto const arg_count{ arg_types.size() - member_offset };
     usize max_arg_count{};
-    std::vector<void *> matching_fns;
+    std::vector<cppinterop::clang_decl> matching_fns;
 
     /* First rule out any fns not matching the arity we've specified. However, note that C++
      * fns can have default arguments which needn't be specified. */
@@ -1158,19 +1199,12 @@ namespace jank::analyze::cpp_util
        * we're going to consider. Skip to the next argument. */
       auto const arg_type{ cppinterop::get_non_reference_type(arg_types[arg_idx + member_offset]) };
       auto const is_arg_untyped_obj{ is_untyped_object(arg_type) };
-      auto const is_arg_typed_obj{ is_typed_object(arg_type) };
+      auto const is_arg_typed_obj{ is_typed_object_ref(arg_type) };
       auto const is_arg_obj{ is_arg_untyped_obj || is_arg_typed_obj };
 
       jtl::option<usize> needed_conversion;
       for(usize fn_idx{}; fn_idx < matching_fns.size(); ++fn_idx)
       {
-        /* Function templates have dependent parameter types until they are instantiated, so
-         * they cannot be considered for implicit or trait conversions here. */
-        if(cppinterop::is_templated_function(matching_fns[fn_idx]))
-        {
-          continue;
-        }
-
         auto const param_type{ cppinterop::get_function_arg_type(matching_fns[fn_idx], arg_idx) };
         if(!param_type)
         {
@@ -1180,7 +1214,7 @@ namespace jank::analyze::cpp_util
         {
           continue;
         }
-        auto const is_param_obj{ is_untyped_object(param_type) || is_typed_object(param_type) };
+        auto const is_param_obj{ is_untyped_object(param_type) || is_typed_object_ref(param_type) };
         if(!is_arg_obj && !is_param_obj)
         {
           continue;
@@ -1199,17 +1233,27 @@ namespace jank::analyze::cpp_util
             auto const prev_param_type{
               cppinterop::get_function_arg_type(matching_fns[needed_conversion.unwrap()], arg_idx)
             };
-            auto const same_type{ cppinterop::get_canonical_type(cppinterop::get_type_without_cv(
-                                    cppinterop::get_non_reference_type(param_type)))
-                                  == cppinterop::get_type_without_cv(cppinterop::get_canonical_type(
-                                    cppinterop::get_non_reference_type(prev_param_type))) };
-            if(same_type && cppinterop::is_rvalue_reference_type(param_type)
-               && cppinterop::get_value_category(prev_param_type)
-                 == cppinterop::value_category::lvalue)
+            auto const same_type{ cppinterop::get_canonical_type(param_type)
+                                  == cppinterop::get_canonical_type(prev_param_type) };
+            auto const same_type_without_ref{
+              cppinterop::get_canonical_type(
+                cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(param_type)))
+              == cppinterop::get_type_without_cv(
+                cppinterop::get_canonical_type(cppinterop::get_non_reference_type(prev_param_type)))
+            };
+            if(same_type
+               || (same_type_without_ref && cppinterop::is_rvalue_reference_type(param_type)
+                   && cppinterop::get_value_category(prev_param_type)
+                     == cppinterop::value_category::lvalue))
             {
-              /* Nothing to do. */
+              /* Overloads, including templates, which all accept the same type for this param
+               * require the same conversion, so there's nothing ambiguous about it. The final
+               * overload resolution will pick between them.
+               *
+               * Or, if we're comparing against lvalue ref vs rvalue ref, we'll also rely
+               * on the final overload resolution. */
             }
-            else if(same_type && cppinterop::is_rvalue_reference_type(prev_param_type)
+            else if(same_type_without_ref && cppinterop::is_rvalue_reference_type(prev_param_type)
                     && cppinterop::get_value_category(param_type)
                       == cppinterop::value_category::lvalue)
             {
@@ -1469,7 +1513,7 @@ namespace jank::analyze::cpp_util
       if(is_member_call)
       {
         if(cppinterop::is_method(ranked.fn) && !arg_types.empty()
-           && !cppinterop::is_const_method(ranked.fn) && !cppinterop::is_const_type(arg_types[0]))
+           && !cppinterop::is_const_method(ranked.fn) && cppinterop::is_const_type(arg_types[0]))
         {
           return resolve_candidate(
             ranked.fn,
@@ -1672,9 +1716,9 @@ namespace jank::analyze::cpp_util
   /* TODO: Cache result. */
   bool is_trait_convertible(jtl::ptr<void> const type)
   {
+    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     static auto const convert_template{ cppinterop::get_scope_from_complete_name(
       "jank::runtime::convert") };
-    auto const locked_interpreter{ runtime::__rt_ctx->jit_prc.interpreter.lock() };
     Cpp::TemplateArgInfo const arg{ cppinterop::get_canonical_type(
       cppinterop::get_type_without_cv(cppinterop::get_non_reference_type(type))) };
     clang::Sema::SFINAETrap const trap{ (*locked_interpreter)->getSema(), true };
@@ -1691,7 +1735,7 @@ namespace jank::analyze::cpp_util
 
   usize offset_to_typed_object_base(jtl::ptr<void> const type)
   {
-    jank_debug_assert(is_typed_object(type));
+    jank_debug_assert(is_typed_object_ref(type));
     auto const can_type{ cppinterop::get_canonical_type(type) };
     auto const scope{ cppinterop::get_underlying_scope(
       cppinterop::get_named("value_type", cppinterop::get_scope_from_type(can_type))) };
@@ -1827,8 +1871,25 @@ namespace jank::analyze::cpp_util
 
     std::vector<cppinterop::clang_type> members;
     cppinterop::get_datamembers(scope, members);
+    /* Clang flattens the members of anonymous unions and structs into the enclosing record, but
+     * an anonymous union only takes a single initializer, which goes to its first member. */
+    jtl::ptr<void> last_union{};
     for(auto const member : members)
     {
+      auto const parent{ cppinterop::get_parent_scope(member) };
+      if(parent && parent != scope && cppinterop::is_union(parent))
+      {
+        if(parent == last_union)
+        {
+          continue;
+        }
+        last_union = parent;
+      }
+      else
+      {
+        last_union = nullptr;
+      }
+
       auto const member_type{ cppinterop::get_type_from_scope(member) };
       member_types.emplace_back(member_type);
     }
@@ -1841,6 +1902,96 @@ namespace jank::analyze::cpp_util
     std::vector<jtl::ptr<void>> member_types;
     aggregate_initialization_types_impl(scope, member_types);
     return member_types;
+  }
+
+  jtl::string_result<branch_common_type>
+  find_branch_common_type(expression_ref const then_expr,
+                          jtl::option<expression_ref> const &else_expr_opt,
+                          bool const has_recur)
+  {
+    auto const then_type{ cpp_util::expression_type(then_expr) };
+    auto const else_type{ else_expr_opt.is_some()
+                            ? cpp_util::expression_type(else_expr_opt.unwrap())
+                            : cpp_util::untyped_object_ref_type() };
+    auto const is_then_object{ cpp_util::is_any_object(then_type) };
+    auto const is_else_object{ cpp_util::is_any_object(else_type) };
+    auto const is_then_convertible{ cpp_util::is_trait_convertible(then_type) };
+    auto const is_else_convertible{ cpp_util::is_trait_convertible(else_type) };
+    auto const common_type{ cppinterop::get_common_type(then_type, else_type) };
+    auto const is_same_type{ cppinterop::get_canonical_type(then_type)
+                             == cppinterop::get_canonical_type(else_type) };
+    auto const is_compatible{ cpp_util::is_implicitly_assignable(then_type, else_type)
+                              || cpp_util::is_implicitly_assignable(else_type, then_type)
+                              || common_type };
+
+    /* If one of the branches has a native type, we need to match one of these scenarios.
+     *
+     * 1. The other branch has the same native type.
+     * 2. The other branch has a native type and the two native types are compatible.
+     * 3. The other branch has an object type and the native branch is trait convertible.
+     * 4. Both branches are trait convertible.
+     * 5. One of the branches recurs, meaning we have no comparison to do.
+     *
+     * If neither of these are the case, we have an error. */
+    if(is_same_type || is_compatible
+       || ((is_else_object && is_then_convertible) || (is_then_object && is_else_convertible))
+       || (is_then_convertible && is_else_convertible) || has_recur)
+    {
+      auto const then_needs_conversion{ !is_same_type && (is_else_object || !is_compatible)
+                                        && is_then_convertible && is_else_convertible };
+      auto const else_needs_conversion{ !is_same_type && (is_then_object || !is_compatible)
+                                        && is_else_convertible && is_then_convertible };
+      auto const final_then_type{ then_needs_conversion ? cpp_util::untyped_object_ref_type()
+                                                        : then_expr->get_type() };
+      auto const final_else_type{ else_expr_opt.is_some() && !else_needs_conversion
+                                    ? else_expr_opt.unwrap()->get_type()
+                                    : cpp_util::untyped_object_ref_type() };
+      auto [chosen_type, other_type]{ cpp_util::select_most_native_type(
+        cpp_util::non_void_type(final_else_type),
+        cpp_util::non_void_type(final_then_type)) };
+      auto const final_is_same_type{
+        (cppinterop::get_canonical_type(final_then_type)
+         == cppinterop::get_canonical_type(final_else_type))
+        /* Arrays are pushed to use the common type instead, since they can't be assigned. */
+        && !cppinterop::is_array_type(final_then_type)
+      };
+      auto const final_common_type{ cppinterop::get_common_type(final_then_type, final_else_type) };
+
+      /* If we have a typed object on one side, and anything other than that same typed object
+       * on the other side, we need to type-erase to find the common type.
+       *
+       * We also calculate the types again, since they may have changed due to the implicit
+       * conversions above. */
+      if(cpp_util::is_typed_object_ref(chosen_type) && cpp_util::is_any_object(other_type)
+         && cppinterop::get_canonical_type(chosen_type)
+           != cppinterop::get_canonical_type(other_type))
+      {
+        chosen_type = cpp_util::untyped_object_ref_type();
+      }
+      else if(!final_is_same_type && final_common_type)
+      {
+        chosen_type = final_common_type;
+      }
+      /* If the chosen type is implicitly convertible to the other type, and both are native types,
+       * we fall into option 2 from above. In that case, we actually want the other type.
+       *
+       * Example: if branch returning std::string and C string literal. Regardless of which branch
+       * it's in, we want to take the std::string as our chosen type. */
+      else if(!cpp_util::is_any_object(chosen_type) && !cpp_util::is_any_object(other_type)
+              && is_compatible && cpp_util::is_implicitly_convertible(chosen_type, other_type))
+      {
+        std::swap(chosen_type, other_type);
+      }
+
+      return branch_common_type{ chosen_type, then_needs_conversion, else_needs_conversion };
+    }
+    else
+    {
+      return err(util::format("Mismatched branch types `{}` and `{}`. Each branch must have the "
+                              "same type, a common type, or a trait conversion.",
+                              cpp_util::get_qualified_type_name(then_type),
+                              cpp_util::get_qualified_type_name(else_type)));
+    }
   }
 
   /* By the time we get here, we know that the types are compatible in *some* fashion. This
@@ -1870,27 +2021,27 @@ namespace jank::analyze::cpp_util
            == cppinterop::get_canonical_type(cppinterop::get_non_reference_type(expected_type)))
        || cppinterop::is_type_derived_from(cppinterop::get_canonical_type(expr_type),
                                            cppinterop::get_canonical_type(expected_type))
-       || (cpp_util::is_untyped_object(expr_type) && cpp_util::is_untyped_object(expected_type)))
+       || (is_untyped_object(expr_type) && is_untyped_object(expected_type)))
     {
       return implicit_conversion_action::none;
     }
 
-    if(cpp_util::is_untyped_object(expected_type) && cpp_util::is_typed_object(expr_type))
+    if(is_untyped_object(expected_type) && is_typed_object_ref(expr_type))
     {
       return implicit_conversion_action::none;
     }
 
-    if(cpp_util::is_typed_object(expected_type) && cpp_util::is_untyped_object(expr_type))
+    if(is_typed_object_ref(expected_type) && is_untyped_object(expr_type))
     {
       return implicit_conversion_action::from_object;
     }
 
-    if(cpp_util::is_any_object(expected_type) && cpp_util::is_trait_convertible(expr_type))
+    if(is_any_object(expected_type) && is_trait_convertible(expr_type))
     {
       return implicit_conversion_action::into_object;
     }
 
-    if(cpp_util::is_any_object(expr_type) && cpp_util::is_trait_convertible(expected_type))
+    if(is_any_object(expr_type) && is_trait_convertible(expected_type))
     {
       return implicit_conversion_action::from_object;
     }
@@ -1904,7 +2055,7 @@ namespace jank::analyze::cpp_util
            && !cppinterop::is_reference_type(expr_type)
            && cppinterop::is_reference_type(expected_type))
        /* Matching nullptr to any pointer type or array parameter, which adjusts to a pointer. */
-       || (cpp_util::is_nullptr(expr_type)
+       || (is_nullptr(expr_type)
            && (cppinterop::is_pointer_type(expected_type)
                || cppinterop::is_array_type(expected_type)))
        /* TODO: Array size. */
