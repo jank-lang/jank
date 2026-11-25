@@ -46,6 +46,7 @@ TODO:
   * [Guide: Packaging a source library](jank-build/packaging-source-lib.md)
 
 * [Differences from Clojure](differences-from-clojure.md)
+* [Differences from C++](differences-from-cpp.md)
 
 * [Troubleshooting](troubleshooting/index.md)
   * [Checking jank's health](troubleshooting/health-check.md)

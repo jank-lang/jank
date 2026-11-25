@@ -42,14 +42,15 @@
 
 (defn sh
   "A wrapper around `clojure.java.process` which forward the opts and
-  cmd, and returns a map of: :in, :out, :err, :exit. On macOS, `DEVELOPER_DIR`
+  cmd, and returns a map of: :process, :in, :out, :err, :exit. On macOS, `DEVELOPER_DIR`
   is set for the child if it's not already set."
   [opts cmd]
   (let [opts (if-let [dir @developer-dir]
                (update opts :env #(merge {"DEVELOPER_DIR" dir} %))
                opts)
         p    (apply proc/start opts (mapv str cmd))]
-    {:in   (proc/stdin p)
+    {:process p
+     :in   (proc/stdin p)
      :out  (proc/stdout p)
      :err  (proc/stderr p)
      :exit (proc/exit-ref p)}))
