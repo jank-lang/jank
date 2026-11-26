@@ -1031,6 +1031,7 @@ namespace jank::analyze
   static jtl::result<jtl::option<jtl::ptr<void>>, error_ref>
   extract_tag_type(processor &p,
                    runtime::obj::symbol_ref const sym,
+                   bool const allow_non_trait_convertible,
                    local_frame_ptr const current_frame,
                    native_vector<runtime::object_ref> const &macro_expansions)
   {
@@ -1073,7 +1074,10 @@ namespace jank::analyze
                                                latest_expansion(macro_expansions));
       }
 
-      if(!cpp_util::is_trait_convertible(type) && !cppinterop::is_pointer_type(type))
+      /* Type hints on let bindings allow non-trait-convertible types, but we reuse this function
+       * for parameters too. */
+      if(!allow_non_trait_convertible && !cpp_util::is_trait_convertible(type)
+         && !cppinterop::is_pointer_type(type))
       {
         return error::analyze_invalid_cpp_type(
           "Type-hints for values either need to be jank object types, trait-convertible "
@@ -1081,6 +1085,7 @@ namespace jank::analyze
           object_source(sym),
           latest_expansion(macro_expansions));
       }
+
       return some(type);
     }
 
@@ -1855,7 +1860,9 @@ namespace jank::analyze
         continue;
       }
 
-      auto const param_type_res{ extract_tag_type(*this, sym, current_frame, macro_expansions) };
+      auto const param_type_res{
+        extract_tag_type(*this, sym, false, current_frame, macro_expansions)
+      };
       if(param_type_res.is_err())
       {
         return param_type_res.expect_err();
@@ -2391,7 +2398,9 @@ namespace jank::analyze
                                                    latest_expansion(macro_expansions));
       }
 
-      auto const tag_type_res{ extract_tag_type(*this, sym, current_frame, macro_expansions) };
+      auto const tag_type_res{
+        extract_tag_type(*this, sym, true, current_frame, macro_expansions)
+      };
       if(tag_type_res.is_err())
       {
         return tag_type_res.expect_err();
