@@ -2431,15 +2431,42 @@ namespace jank::analyze
 
       if(tag_type_opt.is_some())
       {
-        auto const res{
-          apply_implicit_conversion(value_expr, tag_type_opt.unwrap(), macro_expansions)
-        };
-        if(res.is_err())
+        /* If our tag type is a raw pointer and we have an object expression, we assume
+         * the object is an opaque box and implicitly do a cpp/unbox. */
+        if(cppinterop::is_pointer_type(tag_type_opt.unwrap()) && cpp_util::is_any_object(expr_type))
         {
-          return res.expect_err();
+          static auto const tag_kw(__rt_ctx->intern_keyword("", "tag").expect_ok());
+          auto type_meta{ __rt_ctx->eval(runtime::meta(sym).get(tag_kw)) };
+
+          auto const res{ analyze_cpp_unbox(
+            make_box<obj::persistent_list>(std::in_place,
+                                           make_box<obj::symbol>("cpp/unbox"),
+                                           type_meta,
+                                           val),
+            current_frame,
+            expression_position::value,
+            fn_ctx,
+            needs_box) };
+          if(res.is_err())
+          {
+            return res.expect_err();
+          }
+
+          value_expr = res.expect_ok();
+          expr_type = tag_type_opt.unwrap();
         }
-        value_expr = res.expect_ok();
-        expr_type = value_expr->get_type();
+        else
+        {
+          auto const res{
+            apply_implicit_conversion(value_expr, tag_type_opt.unwrap(), macro_expansions)
+          };
+          if(res.is_err())
+          {
+            return res.expect_err();
+          }
+          value_expr = res.expect_ok();
+          expr_type = value_expr->get_type();
+        }
       }
 
       /* Loop bindings are mutable, so if we have a typed object, force it to be untyped since

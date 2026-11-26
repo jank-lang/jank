@@ -116,9 +116,7 @@ namespace jank::read::parse
     }
     else
     {
-      throw error::parse_internal_failure(
-        util::format("This object of type `{}` is not supported for reparsing.",
-                     object_type_str(o.get_type())));
+      return source::unknown();
     }
   }
 }
