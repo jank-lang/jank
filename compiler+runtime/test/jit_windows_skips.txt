@@ -62,3 +62,4 @@ throw-nested-throws.jank
 pass-conditional-sub-expression.jank
 pass-undefined-arity.jank
 fail-opaque-box-mismatch.jank
+fail-mismatched-object.jank
