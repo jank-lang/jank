@@ -31,6 +31,11 @@ by `nullptr`. jank has correct support for `nullptr` and that's what should be
 used to represent a null pointer. When porting old code, you should be able to
 swap in `cpp/nullptr` for any previous `NULL` usage without issue.
 
+## Logical operators
+Although jank exposes most C++ operators, `cpp/&&` and `cpp/||` are not exposed. Use
+`and` and `or` instead, since those provide the correct short-circuiting
+mechanisms.
+
 ## Math
 * Signed integer overflow is well defined and will wrap
 * Unsigned integer overflow is well defined and will wrap

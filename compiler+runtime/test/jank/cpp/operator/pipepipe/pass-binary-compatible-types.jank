@@ -1,4 +1,0 @@
-(let* [l (cpp/long. 0)
-       f (cpp/float. 1.0)]
-  (if (cpp/|| l f)
-    :success))
