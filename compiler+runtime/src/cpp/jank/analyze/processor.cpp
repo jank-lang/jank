@@ -2436,7 +2436,7 @@ namespace jank::analyze
         if(cppinterop::is_pointer_type(tag_type_opt.unwrap()) && cpp_util::is_any_object(expr_type))
         {
           static auto const tag_kw(__rt_ctx->intern_keyword("", "tag").expect_ok());
-          auto type_meta{ __rt_ctx->eval(runtime::meta(sym).get(tag_kw)) };
+          auto const type_meta{ __rt_ctx->eval(runtime::meta(sym).get(tag_kw)) };
 
           auto const res{ analyze_cpp_unbox(
             make_box<obj::persistent_list>(std::in_place,

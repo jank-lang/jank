@@ -2060,28 +2060,26 @@ namespace jank::analyze::cpp_util
       return implicit_conversion_action::from_object;
     }
 
-    if(is_any_object(expected_type) && is_trait_convertible(expr_type))
+    /* We can only allow an `into_object` action under these conditions, assuming the
+      * value type is trait convertible:
+      *
+      * 1. The expected type is a type-erased object
+      * 2. The value type is integral
+      * 3. The expected type is a typed object and we do a `can_box_as` check
+      *
+      * The second case is an edge case built around the third case, since the `can_box_as`
+      * check will fail for integral types since the `into_object` function on the integral
+      * trait will return an `object_ref` rather then a typed object. This is because it might
+      * be a `small_integer` or an `integer` and we can only know at runtime. */
+    if((is_any_object(expected_type) && is_trait_convertible(expr_type))
+       && (!is_typed_object_ref(expected_type) || is_any_object(expr_type)
+           || (cppinterop::is_integral(expr_type) && !is_bool(expr_type)
+               && cppinterop::get_canonical_type(cppinterop::get_type_without_cv(
+                    cppinterop::get_non_reference_type(expected_type)))
+                 == cppinterop::get_canonical_type(integer_ref_type()))
+           || is_trait_convertible(expr_type, expected_type)))
     {
-      /* We can only allow an `into_object` action under these conditions, assuming the
-       * value type is trait convertible:
-       *
-       * 1. The expected type is a type-erased object
-       * 2. The value type is integral
-       * 3. The expected type is a typed object and we do a `can_box_as` check
-       *
-       * The second case is an edge case built around the third case, since the `can_box_as`
-       * check will fail for integral types since the `into_object` function on the integral
-       * trait will return an `object_ref` rather then a typed object. This is because it might
-       * be a `small_integer` or an `integer` and we can only know at runtime. */
-      if(!is_typed_object_ref(expected_type) || is_any_object(expr_type)
-         || (cppinterop::is_integral(expr_type) && !is_bool(expr_type)
-             && cppinterop::get_canonical_type(cppinterop::get_type_without_cv(
-                  cppinterop::get_non_reference_type(expected_type)))
-               == cppinterop::get_canonical_type(integer_ref_type()))
-         || is_trait_convertible(expr_type, expected_type))
-      {
-        return implicit_conversion_action::into_object;
-      }
+      return implicit_conversion_action::into_object;
     }
 
     if(is_any_object(expr_type) && is_trait_convertible(expected_type))
