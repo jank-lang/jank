@@ -1,0 +1,17 @@
+(defn accepts-one [x] x)
+(defn accepts-none [] nil)
+
+;; These errors originate in native callable methods and cross into JIT catches.
+;; Cover both ends of the native overload range as well as the common arity.
+(if (= [:zero :one :eleven]
+       [(try
+          (accepts-one)
+          (catch (jank.runtime.invalid_arity 0) _ :zero))
+        (try
+          (accepts-none 1)
+          (catch (jank.runtime.invalid_arity 1) _ :one))
+        (try
+          (accepts-one 1 2 3 4 5 6 7 8 9 10 11)
+          (catch (jank.runtime.invalid_arity 11) _ :eleven))])
+  :success
+  :failure)

@@ -312,7 +312,12 @@ OPTIONS
         }
         else if(check_flag(it, end, value, "--perf", false))
         {
+#if defined(__FreeBSD__)
+          /* LLVM's perf support relies on Linux's perf subsystem and crashes on FreeBSD. */
+          throw util::format("The '--perf' flag is not supported on FreeBSD.");
+#else
           opts.perf_profiling_enabled = true;
+#endif
         }
         else if(check_flag(it, end, value, "--no-debug", false))
         {
