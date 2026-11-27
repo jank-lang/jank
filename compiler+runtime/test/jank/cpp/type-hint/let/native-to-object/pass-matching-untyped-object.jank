@@ -1,0 +1,4 @@
+(let* [^int i 5
+       ^jank.runtime.object_ref o i]
+  (if (= 5 o)
+    :success))

@@ -372,4 +372,15 @@ namespace jank::runtime
       return ret;
     }
   };
+
+  /* The analyzer instantiates this to check, using the actual `convert` trait, if boxing a native
+   * `T` can produce a typed object `E`. It's only complete when that's possible, so it's checked
+   * with SFINAE. */
+  template <typename T, typename E>
+  requires requires(T const &t) {
+    { convert<T>::into_object(t) } -> std::convertible_to<E>;
+  }
+  struct can_box_as
+  {
+  };
 }

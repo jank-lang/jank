@@ -1,0 +1,8 @@
+(cpp/raw "namespace jank::cpp::type_hint::parameter::trait_conversion::fail_not_trait_convertible
+          {
+            struct foo
+            { };
+          }")
+(let* [f (fn* [^jank.cpp.type_hint.parameter.trait_conversion.fail_not_trait_convertible.foo i]
+           )]
+  :success)
