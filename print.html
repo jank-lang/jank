@@ -37,7 +37,7 @@
             const path_to_root = "";
             const default_light_theme = "rust";
             const default_dark_theme = "ayu";
-            window.path_to_searchindex_js = "searchindex-c4582e91.js";
+            window.path_to_searchindex_js = "searchindex-e3e6fbcb.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b12c03d3.js"></script>
@@ -1793,6 +1793,10 @@ as any pointer value, but this is baggage from C which has since been replaced
 by <code>nullptr</code>. jank has correct support for <code>nullptr</code> and that’s what should be
 used to represent a null pointer. When porting old code, you should be able to
 swap in <code>cpp/nullptr</code> for any previous <code>NULL</code> usage without issue.</p>
+<h2 id="logical-operators"><a class="header" href="#logical-operators">Logical operators</a></h2>
+<p>Although jank exposes most C++ operators, <code>cpp/&amp;&amp;</code> and <code>cpp/||</code> are not exposed. Use
+<code>and</code> and <code>or</code> instead, since those provide the correct short-circuiting
+mechanisms.</p>
 <h2 id="math-1"><a class="header" href="#math-1">Math</a></h2>
 <ul>
 <li>Signed integer overflow is well defined and will wrap</li>
