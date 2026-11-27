@@ -157,6 +157,18 @@ namespace jank::analyze::cpp_util
             auto const old_scope_name{ cppinterop::get_qualified_name(old_scope) };
             if(old_scope_name.empty())
             {
+              if(subs == "&&")
+              {
+                return err(
+                  util::format("jank doesn't expose the C++ cpp/{} operator. Instead, use `and`.",
+                               subs));
+              }
+              else if(subs == "||")
+              {
+                return err(
+                  util::format("jank doesn't expose the C++ cpp/{} operator. Instead, use `or`.",
+                               subs));
+              }
               return err(util::format("Unable to find `{}` within the global namespace.", subs));
             }
             else
@@ -1788,8 +1800,6 @@ namespace jank::analyze::cpp_util
       {   "<=",           Cpp::OP_LessEqual },
       {  "<=>",           Cpp::OP_Spaceship },
       {    "!",             Cpp::OP_Exclaim },
-      {   "&&",              Cpp::OP_AmpAmp },
-      {   "||",            Cpp::OP_PipePipe },
       {    "~",               Cpp::OP_Tilde },
       {    "&",                 Cpp::OP_Amp },
       {    "|",                Cpp::OP_Pipe },
@@ -1838,8 +1848,6 @@ namespace jank::analyze::cpp_util
       {           Cpp::OP_LessEqual,   "<=" },
       {           Cpp::OP_Spaceship,  "<=>" },
       {             Cpp::OP_Exclaim,    "!" },
-      {              Cpp::OP_AmpAmp,   "&&" },
-      {            Cpp::OP_PipePipe,   "||" },
       {               Cpp::OP_Tilde,    "~" },
       {                 Cpp::OP_Amp,    "&" },
       {                Cpp::OP_Pipe,    "|" },

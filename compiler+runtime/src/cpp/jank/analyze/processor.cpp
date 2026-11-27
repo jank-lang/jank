@@ -463,8 +463,7 @@ namespace jank::analyze
 
       /* Logical operators contextually convert their operands to bool, so class types which
        * are convertible to bool, but which have no overloaded operator, are still valid. */
-      auto const is_logical_op{ op == Cpp::OP_Exclaim || op == Cpp::OP_AmpAmp
-                                || op == Cpp::OP_PipePipe };
+      auto const is_logical_op{ op == Cpp::OP_Exclaim };
       if(fns.empty() && is_logical_op)
       {
         auto const bool_type{ cpp_util::bool_type() };
