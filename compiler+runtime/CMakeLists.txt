@@ -45,6 +45,10 @@ option(jank_unity_build "Optimize translation unit compilation for the number of
 option(jank_debug_gc "Enable GC debug assertions" OFF)
 option(jank_profile_gc "Enable GC profiling (via massif or heaptrack)" OFF)
 option(jank_force_phase_2 "Force the linking of core libs into the jank binary" OFF)
+option(jank_runtime_only "Build only the static runtime" OFF)
+set(jank_host_build_dir
+  "none"
+  CACHE PATH "Tells a device build where the host build of jank is")
 set(jank_sanitize "none" CACHE STRING "The type of Clang sanitization to use (or none)")
 set(jank_resource_dir
   "../lib/jank/${CMAKE_PROJECT_VERSION}"
@@ -76,6 +80,10 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
   set(jank_link_whole_start "-Wl,-force_load")
   set(jank_link_whole_end "")
+elseif(${CMAKE_SYSTEM_NAME} STREQUAL "iOS")
+  set(jank_link_whole_start "-Wl,-force_load")
+  set(jank_link_whole_end "")
+  set(jank_runtime_only ON)
 elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
   set(jank_link_whole_start "-Wl,--whole-archive")
   set(jank_link_whole_end "-Wl,--no-whole-archive")
@@ -107,8 +115,6 @@ set(
   -std=gnu++20
   -DJANK_VERSION="${jank_version}"
   -DJANK_CMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
-  # https://groups.google.com/g/llvm-dev/c/W-OweiAjDcU?pli=1
-  -femulated-tls
   -DGC_THREADS -DPOINTER_MASK=0x0000FFFFFFFFFFFF
   -DIMMER_HAS_LIBGC=1 -DIMMER_TAGGED_NODE=0 -DHAVE_CXX14=1
   -DCPPINTEROP_USE_REPL
@@ -119,6 +125,13 @@ set(
 
 if (WIN32)
   list(APPEND jank_common_compiler_flags -DGC_NOT_DLL -DWIN32_LEAN_AND_MEAN)
+endif()
+
+# For the JIT. A runtime only build has no JIT, and on ios nothing
+# provides the __emutls_get_address this needs.
+# https://groups.google.com/g/llvm-dev/c/W-OweiAjDcU?pli=1
+if (NOT jank_runtime_only)
+  list(APPEND jank_common_compiler_flags -femulated-tls)
 endif()
 
 set(
@@ -155,7 +168,7 @@ endif()
 # Normally, non-release builds, we compile the core jank libraries to object
 # files and then JIT load them on startup. This provides faster iteration, but
 # at the cost of a slower startup time.
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug" OR jank_force_phase_2)
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug" OR jank_force_phase_2 OR jank_runtime_only)
   set(jank_enable_phase_2 ON)
 else()
   set(jank_enable_phase_2 OFF)
@@ -226,6 +239,33 @@ if(jank_enable_phase_2)
   )
 endif()
 
+if(jank_runtime_only)
+  if(NOT EXISTS "${jank_host_build_dir}/core-libs")
+    message(
+      FATAL_ERROR
+      "jank_runtime_only needs jank_host_build_dir (a host jank build from the same source)"
+    )
+  endif()
+
+  # Here we set jank_clojure_core_output and all of the paths in
+  # jank_nrepl_server_outputs to use the host system's jank build output.
+  string(
+    REGEX REPLACE
+    "^.*/core-libs/" "${jank_host_build_dir}/core-libs/"
+    jank_clojure_core_output "${jank_clojure_core_output}"
+  )
+
+
+  list(TRANSFORM jank_nrepl_server_outputs REPLACE "^.*/core-libs/" "${jank_host_build_dir}/core-libs/")
+
+  # The runtime only build does not build jank.
+  # So files made during the jank build process will not be there
+  # where the packing step expects them to be.
+  set(jank_clojure_core_binary_output "")
+  set(jank_nrepl_server_outputs_str "")
+endif()
+
+
 if(jank_test)
   list(APPEND jank_common_compiler_flags -DJANK_TEST)
 endif()
@@ -241,37 +281,39 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 
 # ---- Clang/LLVM ----
-include(cmake/llvm.cmake)
+if (NOT jank_runtime_only)
+  include(cmake/llvm.cmake)
 
-if(
-  NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
-  OR
-  NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL CLANG_PACKAGE_VERSION
-)
-  message(
-    FATAL_ERROR
-    "Found Clang ${CLANG_PACKAGE_VERSION} to embed in jank, "
-    "but trying to use ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} to compile it. "
-    "Please ensure you're using the same Clang to compile jank as you are embedding in jank. "
-    "Follow the build.md documentation."
+  if(
+    NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang"
+    OR
+    NOT CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL CLANG_PACKAGE_VERSION
   )
+    message(
+      FATAL_ERROR
+      "Found Clang ${CLANG_PACKAGE_VERSION} to embed in jank, "
+      "but trying to use ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} to compile it. "
+      "Please ensure you're using the same Clang to compile jank as you are embedding in jank. "
+      "Follow the build.md documentation."
+    )
+  endif()
+
+  # This is needed on macOS to ensure we end up using the correct C++ stdlib.
+  function(jank_hook_llvm target)
+    set(tgt "${target}")
+    target_include_directories("${tgt}" SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
+    target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS_LIST})
+    target_link_directories("${tgt}" PRIVATE ${llvm_dir}/lib)
+  endfunction()
+
+
+  # We need to keep track of linker flags for use with AOT compilation.
+  #
+  # Also, on macOS, we need to link to LLVM's custom libunwind, instead of the system's.
+  # Otherwise, we're unable to catch exceptions thrown across JIT compiled frames.
+  list(APPEND jank_linker_flags -L${llvm_dir}/lib -L${llvm_dir}/lib/c++ -L${llvm_dir}/lib/unwind)
+  list(APPEND jank_common_compiler_flags ${LLVM_DEFINITIONS_LIST})
 endif()
-
-# This is needed on macOS to ensure we end up using the correct C++ stdlib.
-function(jank_hook_llvm target)
-  set(tgt "${target}")
-  target_include_directories("${tgt}" SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
-  target_compile_definitions("${tgt}" PRIVATE ${LLVM_DEFINITIONS_LIST})
-  target_link_directories("${tgt}" PRIVATE ${llvm_dir}/lib)
-endfunction()
-
-
-# We need to keep track of linker flags for use with AOT compilation.
-#
-# Also, on macOS, we need to link to LLVM's custom libunwind, instead of the system's.
-# Otherwise, we're unable to catch exceptions thrown across JIT compiled frames.
-list(APPEND jank_linker_flags -L${llvm_dir}/lib -L${llvm_dir}/lib/c++ -L${llvm_dir}/lib/unwind)
-list(APPEND jank_common_compiler_flags ${LLVM_DEFINITIONS_LIST})
 # ---- Clang/LLVM ----
 
 # ---- Clang JIT environment ----
@@ -458,32 +500,35 @@ set(jank_standalone_dynamic_lib_deps
 # called jank which points at jank-phase-1. This makes iteration a little faster, at the
 # cost of jank's startup being a little slower, since it's loading the core libs via their
 # object files, rather than having them baked in.
-add_custom_command(
-  DEPENDS ${jank_standalone_dynamic_lib_deps}
-  OUTPUT ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a
-  COMMAND_EXPAND_LISTS
-  VERBATIM
-  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-1
-)
-add_custom_target(
-  jank_standalone_dynamic_lib_phase_1
-  ALL
-  DEPENDS ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a
-)
 
-add_custom_command(
-  DEPENDS ${jank_standalone_dynamic_lib_deps} jank_exe_phase_2
-  OUTPUT ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime.a ${CMAKE_BINARY_DIR}/libjank-static-runtime.a
-  COMMAND_EXPAND_LISTS
-  VERBATIM
-  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2-dynamic
-  COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2-static
-)
-add_custom_target(
-  jank_standalone_dynamic_lib_phase_2
-  ALL
-  DEPENDS ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime.a
-)
+if(NOT jank_runtime_only)
+  add_custom_command(
+    DEPENDS ${jank_standalone_dynamic_lib_deps}
+    OUTPUT ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a
+    COMMAND_EXPAND_LISTS
+    VERBATIM
+    COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-1
+  )
+  add_custom_target(
+    jank_standalone_dynamic_lib_phase_1
+    ALL
+    DEPENDS ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime-phase-1.a
+  )
+
+  add_custom_command(
+    DEPENDS ${jank_standalone_dynamic_lib_deps} jank_exe_phase_2
+    OUTPUT ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime.a ${CMAKE_BINARY_DIR}/libjank-static-runtime.a
+    COMMAND_EXPAND_LISTS
+    VERBATIM
+    COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2-dynamic
+    COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2-static
+  )
+  add_custom_target(
+    jank_standalone_dynamic_lib_phase_2
+    ALL
+    DEPENDS ${CMAKE_BINARY_DIR}/libjank-dynamic-runtime.a
+  )
+endif()
 
 # ---- Other dependencies ----
 # We want all deps built as static libs.
@@ -492,10 +537,12 @@ set(BUILD_SHARED_LIBS OFF)
 include(FetchContent)
 include(cmake/dependency/bdwgc.cmake)
 include(cmake/dependency/cpptrace.cmake)
-include(cmake/dependency/cppinterop.cmake)
 include(cmake/dependency/boost-multiprecision.cmake)
 include(cmake/dependency/folly.cmake)
-include(cmake/dependency/isocline.cmake)
+if(NOT jank_runtime_only)
+  include(cmake/dependency/isocline.cmake)
+  include(cmake/dependency/cppinterop.cmake)
+endif()
 
 if(jank_test)
   include(cmake/dependency/doctest.cmake)
@@ -736,29 +783,31 @@ target_precompile_headers(jank_common_lib PRIVATE "${PROJECT_SOURCE_DIR}/include
 # ---- libjank-common.a ----
 
 # ---- libjank-dynamic.a ----
-add_library(
-  jank_dynamic_lib STATIC
-  src/cpp/jank/error/report_dynamic.cpp
-  src/cpp/jank/c_api_dynamic.cpp
-  src/cpp/jank/util/sha256.cpp
-  src/cpp/jank/util/environment_dynamic.cpp
-  src/cpp/jank/runtime/module/loader_dynamic.cpp
-  src/cpp/jank/runtime/context_dynamic.cpp
-  src/cpp/jank/runtime/ns_dynamic.cpp
-  src/cpp/jank/jit/object_dynamic.cpp
-  src/cpp/jank/jit/parse_ld_script.cpp
-  src/cpp/jank/jit/processor_dynamic.cpp
-  src/cpp/jank/codegen/api_dynamic.cpp
-  src/cpp/jank/environment/check_health.cpp
-)
-set_target_properties(jank_dynamic_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
-target_precompile_headers(jank_dynamic_lib REUSE_FROM jank_common_lib)
-set_property(TARGET jank_dynamic_lib PROPERTY OUTPUT_NAME jank-dynamic)
-target_compile_features(jank_dynamic_lib PUBLIC ${jank_cxx_standard})
-target_compile_options(jank_dynamic_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
-target_include_directories(jank_dynamic_lib SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_common_lib,INCLUDE_DIRECTORIES>")
-target_link_options(jank_dynamic_lib PRIVATE ${jank_linker_flags})
-set_target_properties(jank_dynamic_lib PROPERTIES ENABLE_EXPORTS 1)
+if(NOT jank_runtime_only)
+  add_library(
+    jank_dynamic_lib STATIC
+    src/cpp/jank/error/report_dynamic.cpp
+    src/cpp/jank/c_api_dynamic.cpp
+    src/cpp/jank/util/sha256.cpp
+    src/cpp/jank/util/environment_dynamic.cpp
+    src/cpp/jank/runtime/module/loader_dynamic.cpp
+    src/cpp/jank/runtime/context_dynamic.cpp
+    src/cpp/jank/runtime/ns_dynamic.cpp
+    src/cpp/jank/jit/object_dynamic.cpp
+    src/cpp/jank/jit/parse_ld_script.cpp
+    src/cpp/jank/jit/processor_dynamic.cpp
+    src/cpp/jank/codegen/api_dynamic.cpp
+    src/cpp/jank/environment/check_health.cpp
+  )
+  set_target_properties(jank_dynamic_lib PROPERTIES UNITY_BUILD ${jank_unity_build})
+  target_precompile_headers(jank_dynamic_lib REUSE_FROM jank_common_lib)
+  set_property(TARGET jank_dynamic_lib PROPERTY OUTPUT_NAME jank-dynamic)
+  target_compile_features(jank_dynamic_lib PUBLIC ${jank_cxx_standard})
+  target_compile_options(jank_dynamic_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
+  target_include_directories(jank_dynamic_lib SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_common_lib,INCLUDE_DIRECTORIES>")
+  target_link_options(jank_dynamic_lib PRIVATE ${jank_linker_flags})
+  set_target_properties(jank_dynamic_lib PROPERTIES ENABLE_EXPORTS 1)
+endif()
 # ---- libjank-dynamic.a ----
 
 # ---- libjank-phase-2.a ----
@@ -798,6 +847,32 @@ target_include_directories(jank_static_lib SYSTEM PRIVATE "$<TARGET_PROPERTY:jan
 target_link_options(jank_static_lib PRIVATE ${jank_linker_flags})
 set_target_properties(jank_static_lib PROPERTIES ENABLE_EXPORTS 0)
 # ---- libjank-static.a ----
+
+# ---- Runtime-only build ----
+if(jank_runtime_only)
+  add_library(jank_core_libs_lib STATIC ${jank_clojure_core_output} ${jank_nrepl_server_outputs})
+  set_property(TARGET jank_core_libs_lib PROPERTY OUTPUT_NAME jank-core-libs)
+  target_compile_features(jank_core_libs_lib PUBLIC ${jank_cxx_standard})
+  target_compile_options(jank_core_libs_lib PUBLIC "$<TARGET_PROPERTY:jank_common_lib,COMPILE_OPTIONS>")
+  target_include_directories(jank_core_libs_lib SYSTEM PRIVATE "$<TARGET_PROPERTY:jank_common_lib,INCLUDE_DIRECTORIES>")
+
+  set_source_files_properties(${jank_clojure_core_output} ${jank_nrepl_server_outputs} PROPERTIES COMPILE_FLAGS "-w -Wno-c++11-narrowing")
+  set_source_files_properties(${jank_clojure_core_output} ${jank_nrepl_server_outputs} PROPERTIES SKIP_LINTING ON)
+
+  add_custom_command(
+    DEPENDS jank_common_lib jank_static_lib jank_lib_phase_2 jank_core_libs_lib folly_lib jankzip_lib
+    OUTPUT ${CMAKE_BINARY_DIR}/libjank-static-runtime.a
+    VERBATIM
+    COMMAND "${CMAKE_BINARY_DIR}/ar-merge${EXT_AR}" merge-phase-2-static
+  )
+  add_custom_target(
+    jank_standalone_static_lib
+    ALL
+    DEPENDS ${CMAKE_BINARY_DIR}/libjank-static-runtime.a
+  )
+  return()
+endif()
+# ---- Runtime-only build ----
 
 # ---- libjank-compiler.a ----
 add_library(

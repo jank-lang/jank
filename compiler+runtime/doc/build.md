@@ -124,6 +124,38 @@ cd compiler+runtime
 ./build/jank repl
 ```
 
+## Runtime only build (iOS)
+
+> Note: For now this only works for the iOS simulator.
+
+To run jank on the iOS we need a runtime only build that does not include the
+compiler. This is because jank's compiler compiles code while the program runs,
+which iOS doesn't allow.
+
+But we need the jank compiler to build `clojure.core` and others. Thus you must
+first build jank locally on your mac using the release instructions above. This
+build will produce C++ files for `clojure.core` that the command below will
+compile for iOS.
+
+We call CMake directly here because `bin/configure` writes to `build`, which
+would overwrite the Mac (host) build this one depends on.
+
+`jank_host_build_dir` says where the Mac build is.
+
+```bash
+cd compiler+runtime
+cmake -S . -B build-iphonesimulator -GNinja -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_SYSTEM_NAME=iOS -DCMAKE_OSX_SYSROOT=iphonesimulator \
+  -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=18.0 \
+  -DCMAKE_C_COMPILER=$(xcrun -f clang) -DCMAKE_CXX_COMPILER=$(xcrun -f clang++) \
+  -DCMAKE_FIND_ROOT_PATH=/opt/homebrew \
+  -Djank_host_build_dir=build
+cmake --build build-iphonesimulator
+```
+
+The build will produce `build-iphonesimulator/libjank-static-runtime.a`.
+This is the library an iOS app links against.
+
 ## Packaging
 There's also a script for installing jank and all its necessary dependencies.
 Note that this includes a lot of header files, which are necessary for jank's
