@@ -100,6 +100,34 @@ namespace jank::read::parse
     return res.expect_ok();
   }
 
+  static source reparse_nth_map(source const &source, usize n)
+  {
+    if(source == source::unknown())
+    {
+      return source;
+    }
+
+    /* Add one to skip the { for the map. */
+    auto const res{
+      reparse_nth(source.file, source.module, source.start.offset + 1, n, source.macro_expansion)
+    };
+    if(res.is_err())
+    {
+      return source::unknown();
+    }
+    return res.expect_ok();
+  }
+
+  source reparse_nth(runtime::obj::persistent_array_map_ref const o, usize n)
+  {
+    return reparse_nth_map(object_source(o), n);
+  }
+
+  source reparse_nth(runtime::obj::persistent_hash_map_ref const o, usize n)
+  {
+    return reparse_nth_map(object_source(o), n);
+  }
+
   source reparse_nth(runtime::object_ref const o, usize const n)
   {
     /* When we have an object, but we're not sure of the type, let's just
@@ -113,6 +141,14 @@ namespace jank::read::parse
     else if(o.get_type() == object_type::persistent_vector)
     {
       return reparse_nth(expect_object<runtime::obj::persistent_vector>(o), n);
+    }
+    else if(o.get_type() == object_type::persistent_array_map)
+    {
+      return reparse_nth(expect_object<runtime::obj::persistent_array_map>(o), n);
+    }
+    else if(o.get_type() == object_type::persistent_hash_map)
+    {
+      return reparse_nth(expect_object<runtime::obj::persistent_hash_map>(o), n);
     }
     else
     {
