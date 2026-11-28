@@ -1,14 +1,18 @@
 (ns jank-build.sandbox.core
   (:require [jank-build.sandbox.bwrap :as bwrap]
             [jank-build.sandbox.seatbelt :as seatbelt]
+            [jank-build.change-detection :as change]
             [jank-build.util :as util]))
 
 (defn process-options [sandbox-opts sh-opts]
-  ; TODO: Isolate env vars.
   (if-let [chdir (some (fn [[kind dir]]
                          (when (= :chdir kind) dir))
                        sandbox-opts)]
-    (assoc sh-opts :dir (str chdir))
+    (let [env (change/env ["CC" "CXX" "LC_ALL" "LANG" "LANGUAGE"])]
+      (assoc sh-opts
+           :dir (str chdir)
+           :clear-env true
+           :env env))
     sh-opts))
 
 (defn process
